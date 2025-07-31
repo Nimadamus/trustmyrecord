@@ -7,25 +7,35 @@
     <title>Trust My Record | The Future of Transparent Sports Betting</title>
     
     <link rel="canonical" href="https://www.trustmyrecord.com/index.html">
-    <meta name="description" content="Fed up with fake sports betting gurus? Trust My Record offers 100% transparent, verifiable sports picks. Every bet, every result, forever. See the future of honest handicapping.">
-    <meta name="keywords" content="sports betting transparency, verified sports picks, honest handicapper, trustworthy sports betting, betting record tracker, no bs sports picks, sports betting community">
+    <meta name="description" content="Tired of fake sports betting gurus? Trust My Record is a 100% transparent, verifiable sports betting platform with records, stats, forums, and social features. This is the end of the bullshit.">
+    <meta name="keywords" content="sports betting transparency, verified sports picks, honest handicapper, sports betting community, sports forum, betting record tracker, no bs sports picks">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@700;900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@700;900&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --bg-color: #0a0a0a;
-            --text-color: #f0f0f0;
-            --primary-color: #FFD700; /* Gold */
-            --border-color: rgba(255, 215, 0, 0.2);
+            --bg-dark: #02040a;
+            --primary-gold: #FFD700;
+            --accent-cyan: #00ffff;
+            --text-light: #e5e7eb;
+            --text-muted: #9ca3af;
+            --glass-bg: rgba(10, 15, 25, 0.6);
+            --glass-border: rgba(0, 224, 255, 0.2);
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Open Sans', sans-serif;
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 15% 85%, rgba(0, 255, 255, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 85% 20%, rgba(255, 215, 0, 0.1) 0%, transparent 40%);
+            color: var(--text-light);
+            font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
             line-height: 1.7;
@@ -33,7 +43,7 @@
         }
 
         .container {
-            max-width: 900px;
+            max-width: 1100px;
             margin: 0 auto;
             padding: 40px 20px;
         }
@@ -41,8 +51,7 @@
         header {
             text-align: center;
             padding: 20px 0;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 60px;
+            margin-bottom: 40px;
         }
 
         .logo {
@@ -51,119 +60,174 @@
             font-weight: 900;
             letter-spacing: 1px;
             color: #fff;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
         }
 
         .logo .highlight {
-            color: var(--primary-color);
+            color: var(--primary-gold);
         }
 
         nav {
             text-align: center;
             margin: 30px 0;
+            padding: 15px 0;
+            border-top: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
         }
         
         nav a {
-            color: #ccc;
+            color: var(--text-muted);
             text-decoration: none;
-            margin: 0 15px;
-            font-weight: 600;
+            margin: 0 18px;
+            font-weight: 700;
             font-size: 1rem;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         nav a.active, nav a:hover {
-            color: var(--primary-color);
+            color: var(--accent-cyan);
+            text-shadow: 0 0 10px var(--accent-cyan);
         }
 
         .hero {
             text-align: center;
-            margin-bottom: 80px;
+            padding: 80px 20px;
         }
 
         .hero h1 {
             font-family: 'Exo 2', sans-serif;
-            font-size: clamp(2.8rem, 7vw, 4.5rem);
+            font-size: clamp(3.5rem, 8vw, 6rem);
             color: #fff;
             margin: 0 0 15px 0;
             line-height: 1.1;
+            text-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
         }
 
         .hero p {
-            font-size: 1.25rem;
-            color: #a0a0a0;
-            max-width: 700px;
+            font-size: 1.3rem;
+            color: var(--text-muted);
+            max-width: 750px;
             margin: 0 auto;
         }
         
         .section {
-            background-color: #111;
-            padding: 40px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 50px;
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.05);
+            padding: 50px 0;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
         }
 
-        h2 {
+        .section-header h2 {
             font-family: 'Exo 2', sans-serif;
-            font-size: 2.5rem;
-            color: var(--primary-color);
-            margin-top: 0;
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 15px;
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            color: #fff;
+            margin: 0 0 10px 0;
+        }
+        
+        .section-header .highlight {
+            color: var(--primary-gold);
         }
 
-        p {
+        .section-header p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .manifesto-content {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        
+        .manifesto-content h3 {
+            font-family: 'Exo 2', sans-serif;
+            font-size: 1.8rem;
+            color: var(--primary-gold);
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .manifesto-content p {
             font-size: 1.1rem;
             margin-bottom: 1.5em;
         }
-        
-        strong {
-            color: #fff;
-            font-weight: 600;
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 25px var(--glass-border);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--accent-cyan);
+            margin-bottom: 20px;
         }
         
-        .feature-list {
-            list-style: none;
-            padding: 0;
+        .feature-card h3 {
+            font-family: 'Exo 2', sans-serif;
+            font-size: 1.5rem;
+            color: var(--primary-gold);
+            margin: 0 0 10px 0;
         }
         
-        .feature-list li {
-            font-size: 1.1rem;
-            padding-left: 35px;
-            position: relative;
-            margin-bottom: 15px;
-        }
-        
-        .feature-list li::before {
-            content: '✓';
-            color: var(--primary-color);
-            font-weight: 900;
-            position: absolute;
-            left: 0;
-            top: 0;
+        .feature-card p {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin: 0;
         }
 
         .cta {
             text-align: center;
-            padding: 40px 20px;
-            background-color: transparent;
-            border-radius: 12px;
-            border: 2px dashed var(--border-color);
+            padding: 60px 20px;
         }
         
-        .cta h2 {
+        .cta-button {
+            font-family: 'Exo 2', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--bg-dark);
+            background: linear-gradient(90deg, var(--primary-gold), var(--accent-cyan));
             border: none;
-            padding: 0;
-            margin-bottom: 10px;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .cta-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
         }
 
         footer {
             text-align: center;
             padding: 40px 20px;
-            margin-top: 60px;
-            border-top: 1px solid var(--border-color);
+            margin-top: 40px;
+            border-top: 1px solid var(--glass-border);
             color: #666;
             font-size: 0.9rem;
         }
@@ -177,41 +241,61 @@
             <div class="logo">TRUST<span class="highlight">MY</span>RECORD</div>
             <nav>
                 <a href="index.html" class="active">Home</a>
-                <a href="#">Our Record</a>
-                <a href="#">Picks</a>
-                <a href="#">Community</a>
+                <a href="#">The Record</a>
+                <a href="#">The Arena</a>
+                <a href="#">Data Core</a>
                 <a href="#">Blog</a>
             </nav>
         </header>
 
         <main>
             <section class="hero">
-                <h1>The End of the Bullshit.</h1>
-                <p>A new era of sports betting has arrived. One built on absolute proof, undeniable results, and zero excuses.</p>
+                <h1>THE END OF THE BULLSHIT.</h1>
+                <p>A new standard for sports betting has arrived. Built on absolute proof, radical transparency, and zero excuses.</p>
             </section>
 
             <section class="section">
-                <h2>Our Philosophy: Full Transparency</h2>
-                <p>The sports betting world is broken. It's flooded with frauds, "gurus," and scam artists who prey on hope and disappear when they lose. They flaunt winning slips, delete their losses, and manipulate their records to sell you a fantasy.</p>
-                <p><strong>We are the antidote.</strong></p>
-                <p>At Trust My Record, we are obsessively committed to one thing: <strong>the truth.</strong> Every single pick ever made here—win, lose, or push—will be permanently archived and displayed for everyone to see. No deleted posts. No cherry-picked stats. No excuses. Our record is our resume, and it will be available 24/7/365 for full public scrutiny.</p>
-                <p>We believe that trust isn't given; it's earned through relentless, verifiable proof. That's our promise.</p>
+                <div class="section-header">
+                    <h2>Our Philosophy: <span class="highlight">The Unfiltered Truth</span></h2>
+                    <p>The sports betting industry is a cesspool of frauds and so-called "gurus." They flash winning slips, delete their losing picks, and sell you a fantasy. We are the antidote.</p>
+                </div>
+                <div class="manifesto-content">
+                    <h3>We Are a Public Utility for Honesty.</h3>
+                    <p>At Trust My Record, we are obsessively committed to one thing: <strong>the truth.</strong> Every single pick ever made here—win, lose, or push—will be permanently archived and displayed for everyone to see. No deleted posts. No cherry-picked stats. No excuses. Our record is our resume, and it will be available 24/7/365 for full public scrutiny.</p>
+                    <p>We believe that trust isn't given; it's earned through relentless, verifiable proof. That's our unbreakable promise.</p>
+                </div>
             </section>
 
             <section class="section">
-                <h2>The Future is Verifiable</h2>
-                <p>This isn't just a site for picks. We are building a platform dedicated to honest handicapping and a community that values real data over loud hype. Here's what's on the horizon:</p>
-                <ul class="feature-list">
-                    <li><strong>An Immutable Public Record:</strong> A searchable, filterable database of every bet ever tracked. Analyze our performance by sport, bet type, odds, and more.</li>
-                    <li><strong>Deep Statistical Analysis:</strong> We'll provide not just the pick, but the exhaustive "why" behind it, backed by the stats that matter.</li>
-                    <li><strong>A True Community Forum:</strong> A space to connect, debate, and share insights with other bettors who are tired of the noise and focused on results.</li>
-                    <li><strong>Integrated Social Platform:</strong> Track your own record, share your wins (and losses), and compete with friends in a transparent ecosystem.</li>
-                </ul>
+                <div class="section-header">
+                    <h2>The Platform is the <span class="highlight">Future</span></h2>
+                    <p>This is more than just a page for picks. We are building the definitive ecosystem for bettors who value real data over loud hype.</p>
+                </div>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon"></div> <!-- Bar Chart Emoji -->
+                        <h3>The Data Core</h3>
+                        <p>Access the deep statistical analysis behind every pick. We'll show you the numbers, the models, and the trends that drive our decisions. No black boxes, just pure data.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"></div> <!-- Lock Emoji -->
+                        <h3>The Public Ledger</h3>
+                        <p>An immutable, searchable database of our entire betting history. Filter by sport, bet type, or date. The proof will always be a click away. Forever.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"></div> <!-- Speech Bubble Emoji -->
+                        <h3>The Arena</h3>
+                        <p>A no-holds-barred forum and social hub. Follow other users, track your own record, talk your talk, and settle debates with data, not just opinions. This is the whole nine yards.</p>
+                    </div>
+                </div>
             </section>
             
             <section class="cta">
-                <h2>The Record Starts Now.</h2>
-                <p style="font-size: 1.1rem; color: #a0a0a0; max-width: 700px; margin: 0 auto;">Follow the journey. Witness the transparency. The era of the guru is over. The era of the record has begun.</p>
+                <div class="section-header">
+                    <h2>The Record Starts Now.</h2>
+                    <p>The era of the guru is over. The era of the record has begun. Witness the transparency from day one.</p>
+                </div>
+                <a href="#" class="cta-button">SEE THE LATEST PICKS</a>
             </section>
 
         </main>
