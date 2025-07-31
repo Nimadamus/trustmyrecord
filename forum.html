@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forums - TrustMyRecord</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0c10; --primary-text: #e1e8f0; --secondary-text: #8a99b0;
+            --glow-color: #00e0ff; --accent-color: #ffc400; --container-bg: rgba(20, 28, 41, 0.7);
+            --border-color: rgba(0, 224, 255, 0.25);
+        }
+        body {
+            margin: 0; font-family: 'Roboto', sans-serif; background-color: var(--bg-color);
+            color: var(--primary-text); background-image: url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?q=80&w=2071&auto=format&fit=crop');
+            background-size: cover; background-position: center; background-attachment: fixed;
+        }
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 30px; }
+        .page-header { text-align: center; margin-bottom: 40px; }
+        .page-title { font-family: 'Orbitron', sans-serif; font-size: 3.5rem; margin: 0; text-shadow: 0 0 15px var(--glow-color); }
+        .page-subtitle { font-size: 1.2rem; color: var(--secondary-text); margin-top: 10px; }
+
+        .forum-container {
+            background: var(--container-bg); border-radius: 10px; border: 1px solid var(--border-color);
+        }
+        .forum-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .forum-header h2 { font-family: 'Orbitron', sans-serif; margin: 0; font-size: 1.5rem; color: var(--glow-color); }
+        .btn-new-topic {
+            background-color: var(--accent-color); color: #000; padding: 10px 20px;
+            text-decoration: none; font-weight: 700; border-radius: 8px;
+            transition: box-shadow 0.3s, transform 0.2s;
+        }
+        .btn-new-topic:hover { box-shadow: 0 0 15px var(--accent-color); transform: translateY(-2px); }
+
+        .category-list .category-item {
+            display: grid;
+            grid-template-columns: 1fr 100px 250px;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .category-list .category-item:last-child { border-bottom: none; }
+        .category-info h3 { margin: 0; }
+        .category-info a { color: var(--primary-text); text-decoration: none; font-size: 1.2rem; font-weight: 700; }
+        .category-info p { margin: 5px 0 0; color: var(--secondary-text); }
+        
+        .category-stats { text-align: center; }
+        .category-stats span { display: block; }
+        .category-stats .stat-number { font-weight: 700; font-size: 1.1rem; }
+        
+        .category-last-post { font-size: 0.9rem; color: var(--secondary-text); }
+        .category-last-post a { color: var(--glow-color); text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="page-header">
+            <h1 class="page-title">Forums</h1>
+            <p class="page-subtitle">Discuss Strategy, Share Picks, and Talk Sports</p>
+        </header>
+
+        <main>
+            <div class="forum-container">
+                <div class="forum-header">
+                    <h2>Categories</h2>
+                    <a href="#" class="btn-new-topic">Start New Topic</a>
+                </div>
+                <div class="category-list">
+                    <div class="category-item">
+                        <div class="category-info">
+                            <h3><a href="#">General Discussion</a></h3>
+                            <p>Talk about anything sports betting related.</p>
+                        </div>
+                        <div class="category-stats">
+                            <span class="stat-number">1,204</span>
+                            <span>Topics</span>
+                        </div>
+                        <div class="category-last-post">
+                            <span>by <a href="#">BetFuel</a></span><br>
+                            <span>Today at 10:45 AM</span>
+                        </div>
+                    </div>
+                    <div class="category-item">
+                        <div class="category-info">
+                            <h3><a href="#">MLB Baseball</a></h3>
+                            <p>Daily games, pitching matchups, and series analysis.</p>
+                        </div>
+                        <div class="category-stats">
+                            <span class="stat-number">876</span>
+                            <span>Topics</span>
+                        </div>
+                        <div class="category-last-post">
+                            <span>by <a href="#">LineLogic</a></span><br>
+                            <span>Today at 9:15 AM</span>
+                        </div>
+                    </div>
+                    <div class="category-item">
+                        <div class="category-info">
+                            <h3><a href="#">NFL Football</a></h3>
+                            <p>Weekly lines, player props, and futures.</p>
+                        </div>
+                        <div class="category-stats">
+                            <span class="stat-number">543</span>
+                            <span>Topics</span>
+                        </div>
+                        <div class="category-last-post">
+                            <span>by <a href="#">AlphaWagers</a></span><br>
+                            <span>Yesterday at 8:30 PM</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
