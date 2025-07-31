@@ -3,44 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- The title will now be set by the backend! -->
     <title>{{ user.username }}'s Profile - TrustMyRecord</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     
-    <!-- This is the crucial link to our master stylesheet -->
+    <!-- Link to your master stylesheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <div class="container">
         <header class="profile-header">
-            <!-- We will add an avatar later. For now, a placeholder. -->
-            <img src="https://via.placeholder.com/120" alt="Avatar" class="profile-avatar">
+            <!-- 
+              DYNAMIC AVATAR:
+              This now correctly generates the URL for the user's avatar image,
+              assuming images are stored in 'static/images/'.
+              Make sure your User model has an 'avatar_image' field.
+            -->
+            <img src="{{ url_for('static', filename='images/' + user.avatar_image) }}" alt="{{ user.username }}'s Avatar" class="profile-avatar">
+            
             <div class="profile-info">
-                <!-- This now uses the REAL username from the database -->
+                <!-- Displays the username from the database -->
                 <h1>{{ user.username }}</h1>
-                <!-- We will let users edit their bio later -->
-                <p>Welcome to TrustMyRecord! This is your personal profile page.</p>
+                <!-- 
+                  DYNAMIC BIO:
+                  Displays the user's bio. Make sure your User model has a 'bio' field.
+                -->
+                <p>{{ user.bio | default('This user has not set a bio yet.', true) }}</p>
             </div>
         </header>
 
         <main>
             <section class="stats-overview">
+                <h2 class="section-title">Overall Record</h2>
                 <div class="stats-grid">
-                    <!-- The stats below are now filled by the backend. -->
-                    <!-- We'll calculate these for real once users can enter picks. -->
+                    <!-- 
+                      DYNAMIC STATS WITH CONDITIONAL STYLING:
+                      Classes 'positive' or 'negative' are added based on the value,
+                      allowing you to style them with CSS.
+                    -->
                     <div class="stat-card">
                         <h3>Overall ROI</h3>
-                        <p class="positive">{{ user_stats.roi }}%</p>
+                        <p class="{{ 'positive' if user_stats.roi > 0 else 'negative' }}">{{ '%.2f'|format(user_stats.roi) }}%</p>
                     </div>
                     <div class="stat-card">
                         <h3>Total Units</h3>
-                        <p class="positive">{{ user_stats.units }}</p>
+                        <p class="{{ 'positive' if user_stats.units > 0 else 'negative' }}">{{ '%.2f'|format(user_stats.units) }}</p>
                     </div>
                     <div class="stat-card">
                         <h3>Win %</h3>
-                        <p>{{ user_stats.win_pct }}%</p>
+                        <p>{{ '%.2f'|format(user_stats.win_pct) }}%</p>
                     </div>
                     <div class="stat-card">
                         <h3>Z-Score</h3>
@@ -48,16 +60,45 @@
                     </div>
                     <div class="stat-card">
                         <h3>CLV Score</h3>
-                        <p class="positive">{{ user_stats.clv }}%</p>
+                        <p class="{{ 'positive' if user_stats.clv > 0 else 'negative' }}">{{ user_stats.clv }}%</p>
                     </div>
                 </div>
             </section>
 
             <section class="pick-history">
                 <h2 class="section-title">Recent Picks</h2>
-                <!-- We will build the pick history table in a future step -->
                 <div class="table-container">
-                    <p style="padding: 20px; text-align: center;">No picks have been recorded yet.</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Pick</th>
+                                <th>Odds</th>
+                                <th>Units</th>
+                                <th>Result</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 
+                              DYNAMIC PICK HISTORY TABLE:
+                              This loops through the 'picks' passed from your backend.
+                              If 'picks' is empty, it displays the 'else' block.
+                            -->
+                            {% for pick in picks %}
+                            <tr>
+                                <td>{{ pick.date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ pick.selection }}</td>
+                                <td>{{ pick.odds }}</td>
+                                <td>{{ '%.2f'|format(pick.units) }}</td>
+                                <td class="{{ pick.result | lower }}">{{ pick.result }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="no-picks-message">No picks have been recorded yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </section>
         </main>
