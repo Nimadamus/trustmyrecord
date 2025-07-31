@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - TrustMyRecord</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0c10; --primary-text: #e1e8f0; --secondary-text: #8a99b0;
+            --glow-color: #00e0ff; --accent-color: #ffc400; --container-bg: rgba(20, 28, 41, 0.7);
+            --border-color: rgba(0, 224, 255, 0.25); --win-color: #39FF14; --loss-color: #FF3131;
+        }
+        body {
+            margin: 0; font-family: 'Roboto', sans-serif; background-color: var(--bg-color);
+            color: var(--primary-text); background-image: url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?q=80&w=2071&auto=format&fit=crop');
+            background-size: cover; background-position: center; background-attachment: fixed;
+        }
+        .container { width: 100%; max-width: 1400px; margin: 0 auto; padding: 30px; }
+        .page-header { text-align: center; margin-bottom: 40px; }
+        .page-title { font-family: 'Orbitron', sans-serif; font-size: 3.5rem; margin: 0; text-shadow: 0 0 15px var(--glow-color); }
+        .page-subtitle { font-size: 1.2rem; color: var(--secondary-text); margin-top: 10px; }
+
+        .filter-bar {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .filter-btn {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--secondary-text);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+        }
+        .filter-btn.active, .filter-btn:hover {
+            background-color: var(--glow-color);
+            color: #000;
+            box-shadow: 0 0 15px var(--glow-color);
+        }
+        
+        .table-container { background: var(--container-bg); border-radius: 10px; border: 1px solid var(--border-color); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 15px 20px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { font-family: 'Orbitron', sans-serif; color: var(--glow-color); text-transform: uppercase; }
+        tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background-color: rgba(0, 224, 255, 0.05); }
+
+        .rank { font-size: 1.5rem; font-weight: 700; font-family: 'Orbitron'; text-align: center; }
+        .capper-info { display: flex; align-items: center; gap: 15px; }
+        .capper-info img { width: 40px; height: 40px; border-radius: 50%; }
+        .capper-info a { color: var(--primary-text); text-decoration: none; font-weight: 700; font-size: 1.1rem; }
+        .positive { color: var(--win-color); font-weight: 700; }
+        .negative { color: var(--loss-color); font-weight: 700; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="page-header">
+            <h1 class="page-title">Leaderboard</h1>
+            <p class="page-subtitle">Top Verified Cappers Ranked by ROI</p>
+        </header>
+
+        <div class="filter-bar">
+            <button class="filter-btn active">Overall</button>
+            <button class="filter-btn">MLB</button>
+            <button class="filter-btn">NFL</button>
+            <button class="filter-btn">NBA</button>
+        </div>
+
+        <main>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Capper</th>
+                            <th>ROI</th>
+                            <th>Units</th>
+                            <th>Win %</th>
+                            <th>Picks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="rank">1</td>
+                            <td>
+                                <div class="capper-info">
+                                    <img src="https://via.placeholder.com/40" alt="Avatar">
+                                    <a href="profile.html">BetFuel</a>
+                                </div>
+                            </td>
+                            <td class="positive">+25.19%</td>
+                            <td class="positive">+94.43</td>
+                            <td>56.19%</td>
+                            <td>332</td>
+                        </tr>
+                        <tr>
+                            <td class="rank">2</td>
+                            <td>
+                                <div class="capper-info">
+                                    <img src="https://via.placeholder.com/40" alt="Avatar">
+                                    <a href="profile.html">AlphaWagers</a>
+                                </div>
+                            </td>
+                            <td class="positive">+18.50%</td>
+                            <td class="positive">+120.10</td>
+                            <td>59.80%</td>
+                            <td>512</td>
+                        </tr>
+                        <tr>
+                            <td class="rank">3</td>
+                            <td>
+                                <div class="capper-info">
+                                    <img src="https://via.placeholder.com/40" alt="Avatar">
+                                    <a href="profile.html">LineLogic</a>
+                                </div>
+                            </td>
+                            <td class="positive">+15.22%</td>
+                            <td class="positive">+75.30</td>
+                            <td>54.30%</td>
+                            <td>420</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
