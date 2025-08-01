@@ -5,11 +5,17 @@
 {% block content %}
 <div class="container page-container">
 
-    <!-- This whole profile header section remains the same -->
+    <!-- Profile Card with Stats Grid remains the same -->
     <div class="profile-card">
-        <!-- ... User avatar, username, stats grid, etc. ... -->
+        <div class="profile-card-header">
+            <!-- User avatar and identity info -->
+        </div>
+        <div class="profile-stats-grid">
+            <!-- Dynamically calculated stats -->
+        </div>
     </div>
 
+    <!-- User Bio section remains the same -->
     <div class="profile-section">
         <h2 class="section-title">User Bio</h2>
         <div class="content-box">
@@ -17,7 +23,7 @@
         </div>
     </div>
     
-    <!-- === UPGRADED SECTION: PICK HISTORY === -->
+    <!-- === UPGRADED SECTION: PICK HISTORY WITH SECRECY PROTOCOL === -->
     <div class="profile-section">
         <h2 class="section-title">Pick History</h2>
         
@@ -31,7 +37,17 @@
                         </div>
                         <div class="pick-card-body">
                             <h3 class="pick-event">{{ pick.event_details }}</h3>
-                            <p class="pick-selection">{{ pick.pick_selection }}</p>
+                            
+                            {# --- THE SECRECY PROTOCOL LOGIC --- #}
+                            {% if pick.status == 'Pending' and (not current_user.is_authenticated or current_user.id != user.id) %}
+                                {# If the pick is pending AND we are not the owner of the profile, HIDE the details. #}
+                                <p class="pick-selection pick-selection-locked">
+                                    <span class="lock-icon">🔒</span> Pick Locked Until Graded
+                                </p>
+                            {% else %}
+                                {# If the pick is graded OR we are the owner, REVEAL the details. #}
+                                <p class="pick-selection">{{ pick.pick_selection }}</p>
+                            {% endif %}
                         </div>
                         <div class="pick-card-footer">
                             <span class="pick-odds">Odds: {{ pick.odds }}</span>
