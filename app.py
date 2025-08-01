@@ -1,8 +1,18 @@
-from flask import Flask, render_template, redirect, url_for, flash, request
+from flask import Flask, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user, logout_user
 from datetime import datetime
+from functools import wraps # Required for our new decorator
 from extensions import db, login_manager
 from models import User, Team, Pick
+
+# ===> NEW: Admin Required Decorator <===
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role != 'admin':
+            abort(403) # Forbidden
+        return f(*args, **kwargs)
+    return decorated_function
 
 def create_app(config_object='config.DevelopmentConfig'):
     app = Flask(__name__)
@@ -14,20 +24,18 @@ def create_app(config_object='config.DevelopmentConfig'):
     db.init_app(app)
     login_manager.init_app(app)
     register_routes(app)
-    
-    # ===> NEW: Register the init-db command <===
-    @app.cli.command("init-db")
-    def init_db_command():
-        """Creates the database tables."""
-        db.create_all()
-        print("Initialized the database.")
-
     return app
 
 def register_routes(app):
-    # All your existing routes...
-    @app.route('/')
-    def index(): return render_template('index.html')
-    # ... etc
+    # ... all your existing user-facing routes ...
+
+    # ===> NEW: Admin Dashboard Route <===
+    @app.route('/admin')
+    @login_required
+    @admin_required
+    def admin_dashboard():
+        # For now, just show a simple page.
+        # Later, this will fetch pending picks.
+        return render_template('admin/dashboard.html')
 
 app = create_app()
