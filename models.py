@@ -1,10 +1,10 @@
-from app import db # Import the 'db' object FROM our main app file.
+from app import db
 from flask_login import UserMixin
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # ==========================================================
-#  Model #1: User
+#  Model #1: User (UPGRADED)
 # ==========================================================
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -13,11 +13,15 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     bio = db.Column(db.Text, nullable=True)
     
+    # --- NEW FIELD ---
+    # Defines the user's role. 'user' by default, 'admin' for us.
+    role = db.Column(db.String(20), nullable=False, default='user')
+    
     favorite_team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)
     
     # Relationships
     favorite_team = db.relationship('Team', backref='fans', lazy='select')
-    picks = db.relationship('Pick', backref='picker', lazy=True)
+    picks = db.relationship('Pick', backref='picker', lazy='select')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
