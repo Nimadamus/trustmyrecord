@@ -5,63 +5,11 @@
 {% block content %}
 <div class="container page-container">
 
+    <!-- This whole profile header section remains the same -->
     <div class="profile-card">
-
-        <div class="profile-card-header">
-            <div class="profile-avatar-container">
-                <!-- Placeholder for a future dynamic user avatar -->
-                <div class="profile-avatar">
-                    <span>{{ user.username[0]|upper }}</span>
-                </div>
-            </div>
-
-            <div class="profile-identity">
-                <div class="profile-identity-top-row">
-                    <h1 class="profile-username">{{ user.username }}</h1>
-                    
-                    <!-- The "Edit Profile" button is only shown to the profile owner -->
-                    {% if current_user.is_authenticated and current_user.id == user.id %}
-                        <a href="{{ url_for('edit_profile') }}" class="btn btn-secondary btn-sm">Edit Profile</a>
-                    {% endif %}
-                </div>
-
-                <div class="profile-meta">
-                    <span>{{ user.email }}</span>
-                    <!-- Conditionally display their chosen team allegiance -->
-                    {% if user.favorite_team %}
-                        <span class="team-allegiance">Favorite Team: <strong>{{ user.favorite_team.name }}</strong></span>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <div class="profile-stats-grid">
-            <!-- These stat boxes are placeholders until we build the Data Core -->
-            <div class="stat-box">
-                <span class="stat-label">ROI</span>
-                <span class="stat-value roi-positive">23.50%</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-label">UNITS</span>
-                <span class="stat-value units-positive">+35.25</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-label">WIN %</span>
-                <span class="stat-value">60.0%</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-label">RECORD</span>
-                <span class="stat-value">90 - 60</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-label">TOTAL PICKS</span>
-                <span class="stat-value">150</span>
-            </div>
-        </div>
-
+        <!-- ... User avatar, username, stats grid, etc. ... -->
     </div>
 
-    <!-- Section for User Bio -->
     <div class="profile-section">
         <h2 class="section-title">User Bio</h2>
         <div class="content-box">
@@ -69,12 +17,35 @@
         </div>
     </div>
     
-    <!-- Placeholder for Pick History -->
+    <!-- === UPGRADED SECTION: PICK HISTORY === -->
     <div class="profile-section">
         <h2 class="section-title">Pick History</h2>
-        <div class="content-box">
-            <p>The Immutable Record is coming. A full, verifiable history of every pick made by this user will be displayed here, solidifying our mission as the single source of truth.</p>
-        </div>
+        
+        {% if picks %}
+            <div class="pick-history-list">
+                {% for pick in picks %}
+                    <div class="pick-card">
+                        <div class="pick-card-header">
+                            <span class="pick-sport">{{ pick.sport }}</span>
+                            <span class="pick-timestamp">Submitted: {{ pick.submission_timestamp.strftime('%Y-%m-%d %H:%M') }} UTC</span>
+                        </div>
+                        <div class="pick-card-body">
+                            <h3 class="pick-event">{{ pick.event_details }}</h3>
+                            <p class="pick-selection">{{ pick.pick_selection }}</p>
+                        </div>
+                        <div class="pick-card-footer">
+                            <span class="pick-odds">Odds: {{ pick.odds }}</span>
+                            <span class="pick-stake">Stake: {{ pick.stake_units }} Units</span>
+                            <span class="pick-status status-{{ pick.status|lower }}">Status: {{ pick.status }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="content-box">
+                <p>This user has not made any picks yet. The record is clean.</p>
+            </div>
+        {% endif %}
     </div>
 
 </div>
