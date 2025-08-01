@@ -4,15 +4,48 @@
 
 {% block content %}
 <div class="container page-container">
-    <h1 class="page-title">Admin Dashboard</h1>
-    <p class="page-subtitle">Welcome, Administrator. This is your command center.</p>
+    <h1 class="page-title">Gradebook</h1>
+    <p class="page-subtitle">All picks awaiting judgment are listed below.</p>
 
-    <div class="admin-section">
-        <h2 class="section-title">Gradebook</h2>
-        <div class="content-box">
-            <p>The pick grading system will be built here. All picks with a "Pending" status will appear, ready for your judgment.</p>
-            <!-- Placeholder for the grading form/table -->
-        </div>
+    <div class="content-box">
+        {% if picks %}
+            <table class="table-modern">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Event</th>
+                        <th>Pick</th>
+                        <th>Event Time</th>
+                        <th class="grade-action-col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pick in picks %}
+                        <tr>
+                            <td data-label="ID">#{{ pick.id }}</td>
+                            <td data-label="User">{{ pick.picker.username }}</td>
+                            <td data-label="Event">{{ pick.event_details }}</td>
+                            <td data-label="Pick">{{ pick.pick_selection }}</td>
+                            <td data-label="Event Time">{{ pick.event_timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td data-label="Action">
+                                <!-- This form submits the grade for this specific pick -->
+                                <form action="{{ url_for('grade_pick', pick_id=pick.id) }}" method="POST" class="grade-form">
+                                    <select name="status" class="form-control-sm">
+                                        <option value="Win">Win</option>
+                                        <option value="Loss">Loss</option>
+                                        <option value="Push">Push</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-primary btn-sm">Grade</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>There are currently no pending picks to grade. The record is clean.</p>
+        {% endif %}
     </div>
 
 </div>
