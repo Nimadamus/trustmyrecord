@@ -1,3 +1,6 @@
+
+By committing this model, you are creating the official blueprint for what constitutes a "trusted record" on our platform. Once this is saved, we will proceed to build the form that allows users to create these records. The empire is growing.
+
 # Add this new class to define the teams table
 class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
