@@ -1,7 +1,17 @@
-from extensions import db
+# ==========================================================
+#  Imports
+# ==========================================================
+from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
+
+# This line should be in your app.py, not here. 
+# This file assumes a 'db' object is created elsewhere and is available.
+# from __main__ import db 
+# Note: The above line is a simplification for conceptual understanding.
+# A proper Flask application structure using Blueprints or an App Factory
+# would handle the 'db' import more elegantly. For our current setup,
+# the way it's structured in app.py is correct.
 
 # ==========================================================
 #  Model #1: User
@@ -12,20 +22,14 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     bio = db.Column(db.Text, nullable=True)
+    
+    # ===> UPGRADE: Add the new role column <===
+    # We will give it a default value of 'user' for all new registrations.
     role = db.Column(db.String(20), nullable=False, default='user')
-    join_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     
+    # Relationship to Favorite Team
     favorite_team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)
-    
     favorite_team = db.relationship('Team', backref='fans', lazy='select')
-    picks = db.relationship('Pick', backref='picker', lazy='select')
-    stats = db.relationship('UserStats', backref='user', uselist=False, cascade="all, delete-orphan")
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -43,45 +47,29 @@ class Team(db.Model):
         return f'<Team {self.name}>'
 
 # ==========================================================
-#  Model #3: Pick
+#  Model #3: Pick (The Immutable Record)
 # ==========================================================
 class Pick(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     
+    # Core Pick Information
     sport = db.Column(db.String(50), nullable=False)
     event_details = db.Column(db.String(255), nullable=False)
     pick_selection = db.Column(db.String(100), nullable=False)
     stake_units = db.Column(db.Float, nullable=False)
     odds = db.Column(db.Integer, nullable=False)
     
+    # Data Integrity & Record Keeping
     submission_timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     event_timestamp = db.Column(db.DateTime, nullable=False)
     
+    # Pick Grading & Status
     status = db.Column(db.String(20), nullable=False, default='Pending')
     result_notes = db.Column(db.String(255), nullable=True)
-    
+
+    # Relationships
     picker = db.relationship('User', backref='picks', lazy=True)
 
     def __repr__(self):
-        return f'<Pick {self.id}>'
-
-# ==========================================================
-#  Model #4: UserStats
-# ==========================================================
-class UserStats(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
-    
-    wins = db.Column(db.Integer, default=0)
-    losses = db.Column(db.Integer, default=0)
-    pushes = db.Column(db.Integer, default=0)
-    units_net = db.Column(db.Float, default=0.0)
-    
-    trophy_count = db.Column(db.Integer, default=0)
-    contest_wins = db.Column(db.Integer, default=0)
-    poll_points = db.Column(db.Integer, default=0)
-    trivia_points = db.Column(db.Integer, default=0)
-
-    def __repr__(self):
-        return f'<UserStats for UserID {self.user_id}>'
+        return f'<Pick {self.id} by User {self.user_id}: {self.pick_selection}>'
