@@ -4,20 +4,27 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
+# THIS IS THE NEW, CRITICAL IMPORT
+from flask_migrate import Migrate
+
 # --- App & Database Configuration ---
 app = Flask(__name__)
-# IMPORTANT: You must have a SECRET_KEY for sessions (flask-login) to work.
-app.config['SECRET_KEY'] = 'a-secret-key-that-is-very-secret' 
+app.config['SECRET_KEY'] = 'a-secret-key-that-is-very-secret'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///trustmyrecord.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # --- Initialize Extensions ---
 db = SQLAlchemy(app)
+
+# THIS IS THE NEW, CRITICAL INITIALIZATION
+# This line connects the migration engine to our app and database.
+migrate = Migrate(app, db)
+
 login_manager = LoginManager(app)
-login_manager.login_view = 'login' # Redirect to login page if user is not authenticated
+login_manager.login_view = 'login'
 
 # --- Import Models ---
-# This is now done AFTER db is initialized to avoid circular import errors.
+# This must come AFTER db and migrate are defined.
 from models import User, Team, Pick
 
 # --- User Loader for Flask-Login ---
@@ -33,8 +40,8 @@ def load_user(user_id):
 def index():
     return render_template('index.html')
 
-# ... (login, register, logout routes would be here) ...
-# Placeholder for now
+# --- Placeholders for core auth routes ---
+# We will build these properly later.
 @app.route('/login')
 def login():
     return "Login Page Placeholder"
@@ -46,6 +53,7 @@ def register():
 @app.route('/logout')
 def logout():
     return "Logout Placeholder"
+# ---------------------------------------------
 
 @app.route('/profile/<string:username>')
 def profile(username):
