@@ -1,68 +1,29 @@
 {% extends "layout.html" %}
-
-{% block title %}{{ user.username }}'s Profile - TrustMyRecord{% endblock %}
-
+{% block title %}{{ user.username }}'s Profile{% endblock %}
 {% block content %}
 <div class="container page-container">
-
-    <!-- Profile Card with Stats Grid remains the same -->
     <div class="profile-card">
         <div class="profile-card-header">
-            <!-- User avatar and identity info -->
+            <div class="profile-avatar">
+                <span>{{ user.username[0]|upper }}</span>
+            </div>
+            <div class="profile-identity">
+                <h1 class="profile-username">{{ user.username }}</h1>
+                <div class="user-flair">
+                    <span>🏆 {{ stats.trophy_count }} Trophies</span>
+                    <span>Record: {{ stats.wins }}-{{ stats.losses }}-{{ stats.pushes }}</span>
+                    <span>Member since: {{ user.join_date.strftime('%b %Y') }}</span>
+                </div>
+            </div>
         </div>
         <div class="profile-stats-grid">
-            <!-- Dynamically calculated stats -->
+            <div class="stat-box">
+                <span class="stat-label">UNITS</span>
+                <span class="stat-value {% if stats.units_net >= 0 %}units-positive{% else %}units-negative{% endif %}">{{ '%+.2f'|format(stats.units_net) }}</span>
+            </div>
+            <!-- Other stat boxes can be added here later -->
         </div>
     </div>
-
-    <!-- User Bio section remains the same -->
-    <div class="profile-section">
-        <h2 class="section-title">User Bio</h2>
-        <div class="content-box">
-            <p>{{ user.bio or 'This user has not written a bio yet.' }}</p>
-        </div>
-    </div>
-    
-    <!-- === UPGRADED SECTION: PICK HISTORY WITH SECRECY PROTOCOL === -->
-    <div class="profile-section">
-        <h2 class="section-title">Pick History</h2>
-        
-        {% if picks %}
-            <div class="pick-history-list">
-                {% for pick in picks %}
-                    <div class="pick-card">
-                        <div class="pick-card-header">
-                            <span class="pick-sport">{{ pick.sport }}</span>
-                            <span class="pick-timestamp">Submitted: {{ pick.submission_timestamp.strftime('%Y-%m-%d %H:%M') }} UTC</span>
-                        </div>
-                        <div class="pick-card-body">
-                            <h3 class="pick-event">{{ pick.event_details }}</h3>
-                            
-                            {# --- THE SECRECY PROTOCOL LOGIC --- #}
-                            {% if pick.status == 'Pending' and (not current_user.is_authenticated or current_user.id != user.id) %}
-                                {# If the pick is pending AND we are not the owner of the profile, HIDE the details. #}
-                                <p class="pick-selection pick-selection-locked">
-                                    <span class="lock-icon">🔒</span> Pick Locked Until Graded
-                                </p>
-                            {% else %}
-                                {# If the pick is graded OR we are the owner, REVEAL the details. #}
-                                <p class="pick-selection">{{ pick.pick_selection }}</p>
-                            {% endif %}
-                        </div>
-                        <div class="pick-card-footer">
-                            <span class="pick-odds">Odds: {{ pick.odds }}</span>
-                            <span class="pick-stake">Stake: {{ pick.stake_units }} Units</span>
-                            <span class="pick-status status-{{ pick.status|lower }}">Status: {{ pick.status }}</span>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="content-box">
-                <p>This user has not made any picks yet. The record is clean.</p>
-            </div>
-        {% endif %}
-    </div>
-
+    <!-- Bio and Pick History sections go here -->
 </div>
 {% endblock %}
