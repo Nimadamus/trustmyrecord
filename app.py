@@ -1,24 +1,31 @@
+# ============================================
+# PASTE THIS CODE INTO YOUR app.py FILE
+# ============================================
+
 from flask import Flask
-from flask_migrate import Migrate # <-- Import Migrate
-from extensions import db, login_manager
-from models import User, Team, Pick, Post, Comment # <-- Import new models
+from flask_migrate import Migrate
+from models import db  # Import the 'db' object from your models.py
 
-def create_app(config_object='config.DevelopmentConfig'):
-    app = Flask(__name__)
-    app.config.from_mapping(
-        SECRET_KEY='dev',
-        SQLALCHEMY_DATABASE_URI='sqlite:///trustmyrecord.db',
-        SQLALCHEMY_TRACK_MODIFICATIONS=False,
-    )
-    db.init_app(app)
-    login_manager.init_app(app)
-    
-    # Initialize Flask-Migrate
-    migrate = Migrate(app, db) # <-- Initialize Migrate
+# 1. Create the Flask application instance
+app = Flask(__name__)
 
-    # Register routes, commands, etc.
-    # ...
+# 2. Configure the application
+# This tells Flask where your database file is located.
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    return app
+# 3. Initialize extensions
+# Connects your database object (db) to your Flask app.
+db.init_app(app)
+# Connects the migration engine to your app and database.
+migrate = Migrate(app, db)
 
-# ... (rest of your app.py file)
+# 4. Define a simple route to test the server
+@app.route('/')
+def index():
+    # When you visit your website, it will show this message.
+    return "<h1>The Flask server is running!</h1>"
+
+# This part is optional for the 'flask run' command, but good to have
+if __name__ == '__main__':
+    app.run(debug=True)
