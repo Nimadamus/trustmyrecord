@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ title }} - TrustMyRecord{% endblock %}
+
+{% block content %}
+<div class="container page-container">
+    <div class="form-container">
+        <h1 class="page-title">Submit a New Pick</h1>
+        <p class="page-subtitle">Commit your analysis to the Immutable Record. Make it count.</p>
+
+        <form method="POST" action="">
+            {{ form.hidden_tag() }} {# CSRF Protection - Critical for Security #}
+
+            <div class="form-group">
+                {{ form.sport.label(class="form-label") }}
+                {{ form.sport(class="form-control") }}
+                {% if form.sport.errors %}
+                    <div class="form-errors">
+                        {% for error in form.sport.errors %}<span>{{ error }}</span>{% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.event_details.label(class="form-label") }}
+                {{ form.event_details(class="form-control") }}
+                {% if form.event_details.errors %}
+                    <div class="form-errors">
+                        {% for error in form.event_details.errors %}<span>{{ error }}</span>{% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.pick_selection.label(class="form-label") }}
+                {{ form.pick_selection(class="form-control") }}
+                {% if form.pick_selection.errors %}
+                    <div class="form-errors">
+                        {% for error in form.pick_selection.errors %}<span>{{ error }}</span>{% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group-half">
+                    {{ form.stake_units.label(class="form-label") }}
+                    {{ form.stake_units(class="form-control") }}
+                    {% if form.stake_units.errors %}
+                        <div class="form-errors">
+                            {% for error in form.stake_units.errors %}<span>{{ error }}</span>{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="form-group-half">
+                    {{ form.odds.label(class="form-label") }}
+                    {{ form.odds(class="form-control") }}
+                    {% if form.odds.errors %}
+                        <div class="form-errors">
+                            {% for error in form.odds.errors %}<span>{{ error }}</span>{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
