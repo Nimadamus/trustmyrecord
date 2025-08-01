@@ -1,107 +1,46 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ user.username }}'s Profile - TrustMyRecord</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    
-    <!-- Link to your master stylesheet -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <header class="profile-header">
-            <!-- 
-              DYNAMIC AVATAR:
-              This now correctly generates the URL for the user's avatar image,
-              assuming images are stored in 'static/images/'.
-              Make sure your User model has an 'avatar_image' field.
-            -->
-            <img src="{{ url_for('static', filename='images/' + user.avatar_image) }}" alt="{{ user.username }}'s Avatar" class="profile-avatar">
-            
-            <div class="profile-info">
-                <!-- Displays the username from the database -->
-                <h1>{{ user.username }}</h1>
-                <!-- 
-                  DYNAMIC BIO:
-                  Displays the user's bio. Make sure your User model has a 'bio' field.
-                -->
-                <p>{{ user.bio | default('This user has not set a bio yet.', true) }}</p>
+{% extends "layout.html" %}
+
+{% block title %}{{ user.username }}'s Profile - TrustMyRecord{% endblock %}
+
+{% block content %}
+<div class="container page-container">
+
+    <div class="profile-header">
+        <div class="profile-main-info">
+            <!-- User's Profile Picture would go here -->
+            <h1 class="profile-username">{{ user.username }}</h1>
+
+            <!-- Conditionally display their chosen team allegiance -->
+            {% if user.favorite_team %}
+            <div class="team-allegiance-badge">
+                <!-- In the future, we can add team logos -->
+                <span>Fan of the <strong>{{ user.favorite_team.name }}</strong></span>
             </div>
-        </header>
+            {% endif %}
+        </div>
 
-        <main>
-            <section class="stats-overview">
-                <h2 class="section-title">Overall Record</h2>
-                <div class="stats-grid">
-                    <!-- 
-                      DYNAMIC STATS WITH CONDITIONAL STYLING:
-                      Classes 'positive' or 'negative' are added based on the value,
-                      allowing you to style them with CSS.
-                    -->
-                    <div class="stat-card">
-                        <h3>Overall ROI</h3>
-                        <p class="{{ 'positive' if user_stats.roi > 0 else 'negative' }}">{{ '%.2f'|format(user_stats.roi) }}%</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Total Units</h3>
-                        <p class="{{ 'positive' if user_stats.units > 0 else 'negative' }}">{{ '%.2f'|format(user_stats.units) }}</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Win %</h3>
-                        <p>{{ '%.2f'|format(user_stats.win_pct) }}%</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Z-Score</h3>
-                        <p>{{ user_stats.z_score }}</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>CLV Score</h3>
-                        <p class="{{ 'positive' if user_stats.clv > 0 else 'negative' }}">{{ user_stats.clv }}%</p>
-                    </div>
-                </div>
-            </section>
-
-            <section class="pick-history">
-                <h2 class="section-title">Recent Picks</h2>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Pick</th>
-                                <th>Odds</th>
-                                <th>Units</th>
-                                <th>Result</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- 
-                              DYNAMIC PICK HISTORY TABLE:
-                              This loops through the 'picks' passed from your backend.
-                              If 'picks' is empty, it displays the 'else' block.
-                            -->
-                            {% for pick in picks %}
-                            <tr>
-                                <td>{{ pick.date.strftime('%Y-%m-%d') }}</td>
-                                <td>{{ pick.selection }}</td>
-                                <td>{{ pick.odds }}</td>
-                                <td>{{ '%.2f'|format(pick.units) }}</td>
-                                <td class="{{ pick.result | lower }}">{{ pick.result }}</td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="5" class="no-picks-message">No picks have been recorded yet.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-        </main>
+        <!-- The "Edit Profile" button is only shown to the profile owner -->
+        {% if current_user.is_authenticated and current_user.id == user.id %}
+        <div class="profile-actions">
+            <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Edit Your Profile</a>
+        </div>
+        {% endif %}
     </div>
-</body>
-</html>
+
+    <div class="profile-bio">
+        <p>{{ user.bio or 'This user has not written a bio yet.' }}</p>
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- THIS IS A PLACEHOLDER FOR PHASE 2 & 3 -->
+    <div class="profile-stats-section">
+        <h2 class="section-title">Record & Performance</h2>
+        <div class="placeholder-box">
+            <p>The Immutable Record is coming.</p>
+            <p>User stats, leaderboards, and pick history will be displayed here.</p>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
