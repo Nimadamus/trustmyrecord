@@ -1,42 +1,69 @@
+# ==========================================================
+#  Imports
+# ==========================================================
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+from datetime import datetime
 
-By committing this model, you are creating the official blueprint for what constitutes a "trusted record" on our platform. Once this is saved, we will proceed to build the form that allows users to create these records. The empire is growing.
+# You will need to define 'db' in your main app.py and import it here
+# For now, we assume it's available. If not, this line should be:
+# from . import db 
+# Or however your app is structured. This is a placeholder for now.
+db = SQLAlchemy() 
 
-# Add this new class to define the teams table
+# ==========================================================
+#  Model #1: User
+# ==========================================================
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    username = db.Column(db.String(100), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    bio = db.Column(db.Text, nullable=True)
+    
+    # Relationship to Favorite Team
+    favorite_team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)
+    favorite_team = db.relationship('Team', backref='fans', lazy='select')
+
+    def __repr__(self):
+        return f'<User {self.username}>'
+
+# ==========================================================
+#  Model #2: Team
+# ==========================================================
 class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     league = db.Column(db.String(20), nullable=False)
     name = db.Column(db.String(100), nullable=False, unique=True)
     logo_url = db.Column(db.String(255), nullable=True)
 
-# Add these two new lines to your existing User model
-class User(UserMixin, db.Model):
-    # ... all your existing columns like id, username, email, password_hash ...
+    def __repr__(self):
+        return f'<Team {self.name}>'
 
-    # ADD THIS LINE:
-    favorite_team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)
+# ==========================================================
+#  Model #3: Pick (The Immutable Record)
+# ==========================================================
+class Pick(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # Core Pick Information
+    sport = db.Column(db.String(50), nullable=False)
+    event_details = db.Column(db.String(255), nullable=False)
+    pick_selection = db.Column(db.String(100), nullable=False)
+    stake_units = db.Column(db.Float, nullable=False)
+    odds = db.Column(db.Integer, nullable=False)
+    
+    # Data Integrity & Record Keeping
+    submission_timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    event_timestamp = db.Column(db.DateTime, nullable=False)
+    
+    # Pick Grading & Status
+    status = db.Column(db.String(20), nullable=False, default='Pending')
+    result_notes = db.Column(db.String(255), nullable=True)
 
-    # AND ADD THIS LINE:
-    favorite_team = db.relationship('Team', backref='fans', lazy='select')
+    # Relationships
+    picker = db.relationship('User', backref='picks', lazy=True)
 
-# --- The Core Pick Information ---
-sport = db.Column(db.String(50), nullable=False)        # e.g., 'NFL', 'NBA', 'MLB'
-event_details = db.Column(db.String(255), nullable=False) # e.g., 'Green Bay Packers vs. Chicago Bears'
-pick_selection = db.Column(db.String(100), nullable=False) # e.g., 'Green Bay Packers -7.5'
-stake_units = db.Column(db.Float, nullable=False)         # The amount "wagered" in units
-odds = db.Column(db.Integer, nullable=False)              # American odds, e.g., -110, +220
-
-# --- Data Integrity & Record Keeping ---
-submission_timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-event_timestamp = db.Column(db.DateTime, nullable=False) # The date and time of the actual game
-
-# --- Pick Grading & Status ---
-# Status can be: 'Pending', 'Win', 'Loss', 'Push'
-status = db.Column(db.String(20), nullable=False, default='Pending')
-result_notes = db.Column(db.String(255), nullable=True) # For admin notes on grading, e.g., "Graded based on official box score."
-
-# --- Relationships ---
-# This helps us easily access the user who made the pick, e.g., my_pick.picker.username
-picker = db.relationship('User', backref='picks', lazy=True)
-
-def __repr__(self):
-    return f'<Pick {self.id} by User {self.user_id}: {self.pick_selection}>'
+    def __repr__(self):
+        return f'<Pick {self.id} by User {self.user_id}: {self.pick_selection}>'
