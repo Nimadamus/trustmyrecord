@@ -4,7 +4,6 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 from datetime import datetime
 
 # --- App & DB Initialization ---
-# This assumes your secret key and DB URI are set here or in an instance folder
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a-secret-key-that-should-be-changed' # IMPORTANT: Change this!
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///trustmyrecord.db' # Using SQLite for now
@@ -12,10 +11,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
-login_manager.login_view = 'login' # Redirect to login page if user is not authenticated
+login_manager.login_view = 'login'
 
 # --- Import Models After db is Initialized ---
-# This prevents a circular import error.
 from models import User, Team, Pick
 
 # --- User Loader for Flask-Login ---
@@ -29,20 +27,16 @@ def load_user(user_id):
 
 @app.route('/')
 def index():
-    # This will be our main dashboard later
     return render_template('index.html')
 
 # --- User & Session Routes ---
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # Placeholder for login logic
-    # In a real scenario, this would check password, etc.
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    # Placeholder for registration logic
     return render_template('register.html')
 
 @app.route('/logout')
@@ -57,7 +51,13 @@ def logout():
 @app.route('/profile/<string:username>')
 def profile(username):
     user = User.query.filter_by(username=username).first_or_404()
-    return render_template('profile.html', user=user)
+    
+    # ===> UPGRADE: We now also fetch the user's picks <===
+    # We order by the submission timestamp in descending order (newest first)
+    picks = Pick.query.filter_by(user_id=user.id).order_by(Pick.submission_timestamp.desc()).all()
+    
+    # We pass both the user and their picks to the template
+    return render_template('profile.html', user=user, picks=picks)
 
 @app.route('/profile/edit', methods=['GET', 'POST'])
 @login_required
@@ -74,7 +74,7 @@ def edit_profile():
     teams = Team.query.order_by(Team.league, Team.name).all()
     return render_template('edit_profile.html', user=current_user, teams=teams)
 
-# --- Pick Submission Route (THE NEW CORE FEATURE) ---
+# --- Pick Submission Route ---
 
 @app.route('/pick/new', methods=['GET', 'POST'])
 @login_required
@@ -103,4 +103,104 @@ def make_pick():
 
 # --- Main Application Runner ---
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True)```
+
+---
+
+### Step 2: Upgrading the Frontend (`profile.html`)
+
+Now we upgrade the profile page itself. We will replace the placeholder "Pick History" section with a dynamic table that lists every pick passed to it from our upgraded backend.
+
+**Your Instruction:**
+1.  In GitHub, navigate to and open your `templates/profile.html` file.
+2.  Select and **delete everything** inside it.
+3.  Copy the entire code block below.
+4.  Paste it into the now-empty `profile.html` file.
+5.  Save and commit the changes.
+
+```html
+{% extends "layout.html" %}
+
+{% block title %}{{ user.username }}'s Profile - TrustMyRecord{% endblock %}
+
+{% block content %}
+<div class="container page-container">
+
+    <div class="profile-card">
+        <!-- The profile header section remains the same -->
+        <div class="profile-card-header">
+            <div class="profile-avatar-container">
+                <div class="profile-avatar"><span>{{ user.username[0]|upper }}</span></div>
+            </div>
+            <div class="profile-identity">
+                <div class="profile-identity-top-row">
+                    <h1 class="profile-username">{{ user.username }}</h1>
+                    {% if current_user.is_authenticated and current_user.id == user.id %}
+                        <a href="{{ url_for('edit_profile') }}" class="btn btn-secondary btn-sm">Edit Profile</a>
+                    {% endif %}
+                </div>
+                <div class="profile-meta">
+                    <span>{{ user.email }}</span>
+                    {% if user.favorite_team %}
+                        <span class="team-allegiance">Favorite Team: <strong>{{ user.favorite_team.name }}</strong></span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <!-- The stats grid remains a placeholder for now -->
+        <div class="profile-stats-grid">
+            <div class="stat-box"><span class="stat-label">ROI</span><span class="stat-value roi-positive">TBD</span></div>
+            <div class="stat-box"><span class="stat-label">UNITS</span><span class="stat-value units-positive">TBD</span></div>
+            <div class="stat-box"><span class="stat-label">WIN %</span><span class="stat-value">TBD</span></div>
+            <div class="stat-box"><span class="stat-label">RECORD</span><span class="stat-value">TBD</span></div>
+            <div class="stat-box"><span class="stat-label">TOTAL PICKS</span><span class="stat-value">TBD</span></div>
+        </div>
+    </div>
+
+    <!-- User Bio Section remains the same -->
+    <div class="profile-section">
+        <h2 class="section-title">User Bio</h2>
+        <div class="content-box">
+            <p>{{ user.bio or 'This user has not written a bio yet.' }}</p>
+        </div>
+    </div>
+    
+    <!-- ===> UPGRADE: The Pick History placeholder is replaced with a dynamic table <=== -->
+    <div class="profile-section">
+        <h2 class="section-title">Pick History</h2>
+        <div class="content-box">
+            {% if picks %}
+                <table class="table-modern">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Event</th>
+                            <th>Pick</th>
+                            <th>Odds</th>
+                            <th>Units</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pick in picks %}
+                            <tr>
+                                <td data-label="Date">{{ pick.submission_timestamp.strftime('%Y-%m-%d') }}</td>
+                                <td data-label="Event">{{ pick.event_details }}</td>
+                                <td data-label="Pick">{{ pick.pick_selection }}</td>
+                                <td data-label="Odds">{{ '%+d'|format(pick.odds) }}</td>
+                                <td data-label="Units">{{ pick.stake_units }}</td>
+                                <td data-label="Status">
+                                    <span class="status-badge status-{{ pick.status|lower }}">{{ pick.status }}</span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>This user has not recorded any picks yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
