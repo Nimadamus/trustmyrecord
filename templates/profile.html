@@ -5,40 +5,75 @@
 {% block content %}
 <div class="container page-container">
 
-    <div class="profile-header">
-        <div class="profile-main-info">
-            <!-- User's Profile Picture would go here -->
-            <h1 class="profile-username">{{ user.username }}</h1>
+    <div class="profile-card">
 
-            <!-- Conditionally display their chosen team allegiance -->
-            {% if user.favorite_team %}
-            <div class="team-allegiance-badge">
-                <!-- In the future, we can add team logos -->
-                <span>Fan of the <strong>{{ user.favorite_team.name }}</strong></span>
+        <div class="profile-card-header">
+            <div class="profile-avatar-container">
+                <!-- Placeholder for a future dynamic user avatar -->
+                <div class="profile-avatar">
+                    <span>{{ user.username[0]|upper }}</span>
+                </div>
             </div>
-            {% endif %}
+
+            <div class="profile-identity">
+                <div class="profile-identity-top-row">
+                    <h1 class="profile-username">{{ user.username }}</h1>
+                    
+                    <!-- The "Edit Profile" button is only shown to the profile owner -->
+                    {% if current_user.is_authenticated and current_user.id == user.id %}
+                        <a href="{{ url_for('edit_profile') }}" class="btn btn-secondary btn-sm">Edit Profile</a>
+                    {% endif %}
+                </div>
+
+                <div class="profile-meta">
+                    <span>{{ user.email }}</span>
+                    <!-- Conditionally display their chosen team allegiance -->
+                    {% if user.favorite_team %}
+                        <span class="team-allegiance">Favorite Team: <strong>{{ user.favorite_team.name }}</strong></span>
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
-        <!-- The "Edit Profile" button is only shown to the profile owner -->
-        {% if current_user.is_authenticated and current_user.id == user.id %}
-        <div class="profile-actions">
-            <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Edit Your Profile</a>
+        <div class="profile-stats-grid">
+            <!-- These stat boxes are placeholders until we build the Data Core -->
+            <div class="stat-box">
+                <span class="stat-label">ROI</span>
+                <span class="stat-value roi-positive">23.50%</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">UNITS</span>
+                <span class="stat-value units-positive">+35.25</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">WIN %</span>
+                <span class="stat-value">60.0%</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">RECORD</span>
+                <span class="stat-value">90 - 60</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">TOTAL PICKS</span>
+                <span class="stat-value">150</span>
+            </div>
         </div>
-        {% endif %}
+
     </div>
 
-    <div class="profile-bio">
-        <p>{{ user.bio or 'This user has not written a bio yet.' }}</p>
+    <!-- Section for User Bio -->
+    <div class="profile-section">
+        <h2 class="section-title">User Bio</h2>
+        <div class="content-box">
+            <p>{{ user.bio or 'This user has not written a bio yet.' }}</p>
+        </div>
     </div>
-
-    <hr class="section-divider">
-
-    <!-- THIS IS A PLACEHOLDER FOR PHASE 2 & 3 -->
-    <div class="profile-stats-section">
-        <h2 class="section-title">Record & Performance</h2>
-        <div class="placeholder-box">
-            <p>The Immutable Record is coming.</p>
-            <p>User stats, leaderboards, and pick history will be displayed here.</p>
+    
+    <!-- Placeholder for Pick History -->
+    <div class="profile-section">
+        <h2 class="section-title">Pick History</h2>
+        <div class="content-box">
+            <p>The Immutable Record is coming. A full, verifiable history of every pick made by this user will be displayed here, solidifying our mission as the single source of truth.</p>
         </div>
     </div>
 
