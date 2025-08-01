@@ -1,15 +1,7 @@
-# ==========================================================
-#  Imports
-# ==========================================================
-from flask_sqlalchemy import SQLAlchemy
+from app import db # Import the 'db' object FROM our main app file.
 from flask_login import UserMixin
 from datetime import datetime
-
-# You will need to define 'db' in your main app.py and import it here
-# For now, we assume it's available. If not, this line should be:
-# from . import db 
-# Or however your app is structured. This is a placeholder for now.
-db = SQLAlchemy() 
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # ==========================================================
 #  Model #1: User
@@ -21,9 +13,17 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     bio = db.Column(db.Text, nullable=True)
     
-    # Relationship to Favorite Team
     favorite_team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)
+    
+    # Relationships
     favorite_team = db.relationship('Team', backref='fans', lazy='select')
+    picks = db.relationship('Pick', backref='picker', lazy=True)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -47,23 +47,17 @@ class Pick(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     
-    # Core Pick Information
     sport = db.Column(db.String(50), nullable=False)
     event_details = db.Column(db.String(255), nullable=False)
     pick_selection = db.Column(db.String(100), nullable=False)
     stake_units = db.Column(db.Float, nullable=False)
     odds = db.Column(db.Integer, nullable=False)
     
-    # Data Integrity & Record Keeping
     submission_timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     event_timestamp = db.Column(db.DateTime, nullable=False)
     
-    # Pick Grading & Status
     status = db.Column(db.String(20), nullable=False, default='Pending')
     result_notes = db.Column(db.String(255), nullable=True)
-
-    # Relationships
-    picker = db.relationship('User', backref='picks', lazy=True)
 
     def __repr__(self):
         return f'<Pick {self.id} by User {self.user_id}: {self.pick_selection}>'
