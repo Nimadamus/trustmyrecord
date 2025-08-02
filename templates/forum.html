@@ -1,75 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forums - TrustMyRecord</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header class="page-header">
-            <h1 class="page-title">Forums</h1>
-            <p class="page-subtitle">Discuss Strategy, Share Picks, and Talk Sports</p>
-        </header>
-
-        <main>
-            <div class="forum-container">
-                <div class="forum-header">
-                    <h2>Categories</h2>
-                    <a href="#" class="btn-new-topic">Start New Topic</a>
+{% extends "base.html" %}
+{% block content %}
+    <h1>Forum Discussions</h1>
+    <a href="{{ url_for('new_post') }}" class="btn btn-primary mb-3">Create New Post</a> {# Button to create new post #}
+    {% if posts %}
+        {% for post in posts %}
+            <article class="media content-section border p-3 mb-3 rounded">
+                <div class="media-body">
+                    {# Link to view individual post (implement view_post route later) #}
+                    <h2><a class="article-title" href="{{ url_for('view_post', post_id=post.id) }}">{{ post.title }}</a></h2>
+                    <p class="article-content">{{ post.content[:150] }}...</p> {# Truncate content for preview #}
+                    {# The 'author' attribute is available due to the backref in User model #}
+                    <small>Posted by {{ post.author.username }} on {{ post.date_posted.strftime('%Y-%m-%d %H:%M') }}</small>
                 </div>
-                <div class="category-list">
-                    <div class="category-item">
-                        <div class="category-info">
-                            <h3><a href="#">General Discussion</a></h3>
-                            <p>Talk about anything sports betting related.</p>
-                        </div>
-                        <div class="category-stats">
-                            <span class="stat-number">1,204</span>
-                            <span>Topics</span>
-                        </div>
-                        <div class="category-last-post">
-                            <span>by <a href="#">BetFuel</a></span><br>
-                            <span>Today at 10:45 AM</span>
-                        </div>
-                    </div>
-                    <div class="category-item">
-                        <div class="category-info">
-                            <h3><a href="#">MLB Baseball</a></h3>
-                            <p>Daily games, pitching matchups, and series analysis.</p>
-                        </div>
-                        <div class="category-stats">
-                            <span class="stat-number">876</span>
-                            <span>Topics</span>
-                        </div>
-                        <div class="category-last-post">
-                            <span>by <a href="#">LineLogic</a></span><br>
-                            <span>Today at 9:15 AM</span>
-                        </div>
-                    </div>
-                    <div class="category-item">
-                        <div class="category-info">
-                            <h3><a href="#">NFL Football</a></h3>
-                            <p>Weekly lines, player props, and futures.</p>
-                        </div>
-                        <div class="category-stats">
-                            <span class="stat-number">543</span>
-                            <span>Topics</span>
-                        </div>
-                        <div class="category-last-post">
-                            <span>by <a href="#">AlphaWagers</a></span><br>
-                            <span>Yesterday at 8:30 PM</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
-</body>
-</html>
+            </article>
+        {% endfor %}
+    {% else %}
+        <p>No posts yet. Be the first to start a discussion!</p>
+    {% endif %}
+{% endblock %}
