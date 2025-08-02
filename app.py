@@ -1,6 +1,7 @@
 # ==========================================================
 # PASTE THIS ENTIRE BLOCK OF CODE INTO YOUR app.py FILE
 # ==========================================================
+import os
 
 from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_migrate import Migrate
