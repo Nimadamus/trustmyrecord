@@ -8,13 +8,11 @@ from flask_sqlalchemy import SQLAlchemy
 from models import db, User, Post
 from forms import RegistrationForm, LoginForm, PostForm
 
-# --- Application Setup ---
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your_super_secret_key_change_this_now!')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# --- Initialize Extensions ---
 db.init_app(app)
 migrate = Migrate(app, db)
 login_manager = LoginManager(app)
@@ -24,8 +22,6 @@ login_manager.login_message_category = 'info'
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
-# --- Routes ---
 
 @app.route('/')
 @app.route('/home')
@@ -71,34 +67,4 @@ def logout():
 
 @app.route('/profile')
 @login_required
-def profile():
-    user_posts = Post.query.filter_by(user_id=current_user.id).order_by(Post.date_posted.desc()).all()
-    return render_template('profile.html', title='My Profile', user_posts=user_posts)
-
-@app.route('/forum')
-@login_required
-def forum():
-    posts = Post.query.join(User).order_by(Post.date_posted.desc()).all()
-    return render_template('forum.html', title='Forum', posts=posts)
-
-@app.route('/forum/new', methods=['GET', 'POST'])
-@login_required
-def new_post():
-    form = PostForm()
-    if form.validate_on_submit():
-        post = Post(
-            title=form.title.data,
-            content=form.content.data,
-            user_id=current_user.id
-        )
-        db.session.add(post)
-        db.session.commit()
-        flash('Your post has been created!', 'success')
-        return redirect(url_for('forum'))
-    return render_template('create_post.html', title='New Post', form=form, legend='New Post')
-
-# --- Database Initialization ---
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True)
+def
