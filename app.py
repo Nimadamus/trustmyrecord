@@ -5,7 +5,9 @@ from flask_migrate import Migrate
 from flask_login import LoginManager, login_user, logout_user, current_user, login_required
 from flask_sqlalchemy import SQLAlchemy
 
-from models import db, User, Post
+# These models are being imported from your models.py file
+from models import db, User, Post 
+# These forms are being imported from your forms.py file
 from forms import RegistrationForm, LoginForm, PostForm
 
 # --- Application Setup ---
@@ -15,14 +17,20 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:/
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # --- Initialize Extensions ---
-db.init_app(app)
-migrate = Migrate(app, db)
+# Initialize the database with the app
+db.init_app(app) 
+# Initialize Flask-Migrate for database migrations
+migrate = Migrate(app, db) 
+# Initialize Flask-Login for user session management
 login_manager = LoginManager(app)
-login_manager.login_view = 'login'
-login_manager.login_message_category = 'info'
+# Tell Flask-Login which route handles logging in
+login_manager.login_view = 'login' 
+# Set the style for flashed messages
+login_manager.login_message_category = 'info' 
 
 @login_manager.user_loader
 def load_user(user_id):
+    """Flask-Login function to load a user from the database."""
     return User.query.get(int(user_id))
 
 # --- Routes ---
@@ -30,10 +38,12 @@ def load_user(user_id):
 @app.route('/')
 @app.route('/home')
 def home():
+    """Renders the home page."""
     return render_template('home.html', title='Home')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    """Handles user registration."""
     if current_user.is_authenticated:
         return redirect(url_for('profile'))
     form = RegistrationForm()
@@ -48,6 +58,7 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """Handles user login."""
     if current_user.is_authenticated:
         return redirect(url_for('profile'))
     form = LoginForm()
@@ -65,6 +76,7 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
+    """Handles user logout."""
     logout_user()
     flash('You have been logged out.', 'info')
     return redirect(url_for('home'))
@@ -72,18 +84,21 @@ def logout():
 @app.route('/profile')
 @login_required
 def profile():
+    """Renders the user's profile page."""
     user_posts = Post.query.filter_by(user_id=current_user.id).order_by(Post.date_posted.desc()).all()
     return render_template('profile.html', title='My Profile', user_posts=user_posts)
 
 @app.route('/forum')
 @login_required
 def forum():
+    """Renders the main forum page with all posts."""
     posts = Post.query.join(User).order_by(Post.date_posted.desc()).all()
     return render_template('forum.html', title='Forum', posts=posts)
 
 @app.route('/forum/new', methods=['GET', 'POST'])
 @login_required
 def new_post():
+    """Handles creation of a new forum post."""
     form = PostForm()
     if form.validate_on_submit():
         post = Post(
@@ -97,8 +112,7 @@ def new_post():
         return redirect(url_for('forum'))
     return render_template('create_post.html', title='New Post', form=form, legend='New Post')
 
-# --- Database Initialization ---
+# --- Start the Application ---
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
+    # This command now ONLY starts the web server.
     app.run(debug=True)
