@@ -1,123 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Login - TrustMyRecord</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Roboto:wght@400;500;700&display=swap"
-        rel="stylesheet"
-    />
-    <style>
-        body {
-            background-color: #121212;
-            color: #fff;
-            font-family: 'Roboto', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .login-box {
-            background-color: #2b2b2b;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
-            width: 320px;
-        }
-        h2 {
-            margin-bottom: 20px;
-            font-weight: 700;
-            font-family: 'Orbitron', sans-serif;
-            color: #4caf50;
-            text-align: center;
-        }
-        input[type="email"],
-        input[type="password"] {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-            border: none;
-            font-size: 16px;
-        }
-        input[type="submit"] {
-            width: 100%;
-            padding: 12px;
-            background-color: #4caf50;
-            border: none;
-            border-radius: 4px;
-            font-weight: 700;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 16px;
-            color: white;
-            cursor: pointer;
-        }
-        input[type="submit"]:hover {
-            background-color: #43a047;
-        }
-        .error {
-            color: red;
-            margin-top: -15px;
-            margin-bottom: 15px;
-            font-weight: 600;
-            text-align: center;
-        }
-        .extra-links {
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-            margin-top: 10px;
-        }
-        .extra-links a {
-            color: #4caf50;
-            text-decoration: none;
-        }
-        .extra-links a:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-    <div class="login-box">
-        <h2>Login</h2>
-
-        <!-- Login form -->
-        <form method="POST" action="{{ url_for('auth.login') }}">
-            <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                required
-                value="{{ request.form.email or '' }}"
-            />
-            <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                required
-            />
-            <input type="submit" value="Log In" />
-        </form>
-
-        <!-- Error message -->
+{% extends "base.html" %}
+{% block content %}
+    <h2>Login</h2>
+    <form method="POST" action="">
+        {{ form.hidden_tag() }} {# CSRF protection #}
+        
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    {% if category == 'error' %}
-                        <div class="error">{{ message }}</div>
-                    {% endif %}
-                {% endfor %}
-            {% endif %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
         {% endwith %}
 
-        <div class="extra-links">
-            <a href="#">Forgot Password?</a>
-            <a href="{{ url_for('auth.register') }}">Create Account</a>
+        <div class="form-group">
+            {{ form.email.label }}
+            {{ form.email(size=50) }}
+            {% if form.email.errors %}
+                {% for error in form.email.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            {% endif %}
         </div>
-    </div>
-</body>
-</html>
+        <div class="form-group">
+            {{ form.password.label }}
+            {{ form.password(size=30) }}
+            {% if form.password.errors %}
+                {% for error in form.password.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div class="form-group">
+            {{ form.remember() }}
+            {{ form.remember.label }}
+        </div>
+        <div class="form-group">
+            {{ form.submit() }}
+        </div>
+    </form>
+    <p>Need an account? <a href="{{ url_for('auth.register') }}">Sign Up Here</a></p>
+{% endblock %}
