@@ -1,44 +1,178 @@
 {% extends "base.html" %}
-{% block content %}
-    <h2>Login</h2>
-    <form method="POST" action="">
-        {{ form.hidden_tag() }} {# CSRF protection #}
-        
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert alert-{{ category }}">
-                {{ message }}
-              </div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
 
-        <div class="form-group">
-            {{ form.email.label }}
-            {{ form.email(size=50) }}
-            {% if form.email.errors %}
-                {% for error in form.email.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
+{% block content %}
+<style>
+    /* Basic Reset & Font */
+    body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background-color: #1a1a1a; /* Dark background for the whole page */
+    }
+
+    /* Main Container for Centering */
+    .auth-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 90vh; /* Full viewport height */
+        padding: 20px;
+    }
+
+    /* The Form Box */
+    .auth-form-wrapper {
+        background: #2b2b2b; /* Slightly lighter dark shade */
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+        width: 100%;
+        max-width: 420px;
+        text-align: center;
+        color: #f0f0f0;
+        border: 1px solid #444;
+    }
+
+    .auth-form-wrapper h2 {
+        margin-bottom: 30px;
+        color: #00bfff; /* Deep sky blue for a futuristic feel */
+        font-weight: 600;
+        letter-spacing: 1px;
+    }
+
+    /* Form Groups & Labels */
+    .form-group {
+        margin-bottom: 25px;
+        text-align: left;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        color: #a0a0a0;
+    }
+
+    /* Input Fields */
+    .form-control {
+        width: 100%;
+        padding: 14px;
+        background-color: #1e1e1e;
+        border: 1px solid #555;
+        color: #f0f0f0;
+        border-radius: 6px;
+        box-sizing: border-box; /* Ensures padding doesn't affect width */
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #00bfff;
+        box-shadow: 0 0 15px rgba(0, 191, 255, 0.3);
+    }
+
+    /* Remember Me Checkbox Area */
+    .remember-me {
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+        margin-top: -10px; /* Pull it a bit closer to the password field */
+        margin-bottom: 25px;
+        color: #ccc;
+    }
+    
+    .remember-me input {
+        margin-right: 10px;
+    }
+
+    /* Submit Button */
+    .submit-btn {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(90deg, #00bfff, #0077ff);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1.1rem;
+        font-weight: 600;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 191, 255, 0.25);
+    }
+
+    /* Links for Registration */
+    .extra-links {
+        margin-top: 25px;
+        font-size: 0.9rem;
+    }
+
+    .extra-links a {
+        color: #00bfff;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .extra-links a:hover {
+        text-decoration: underline;
+    }
+
+    /* Flashed Messages (Alerts) */
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        color: #fff;
+        text-align: center;
+    }
+    .alert-danger { background-color: #5a1e22; border-color: #d43f3a; }
+    .alert-success { background-color: #1d4d29; border-color: #3c763d; }
+    .alert-info { background-color: #2a5a6a; border-color: #31708f; }
+
+</style>
+
+<div class="auth-container">
+    <div class="auth-form-wrapper">
+        <h2>Account Login</h2>
+
+        <!-- This section will display any error messages from the server -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
                 {% endfor %}
             {% endif %}
+        {% endwith %}
+        
+        <form method="POST" action="">
+            <!-- CSRF Token (Security Feature) -->
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.email.label(text="Email Address") }}
+                {{ form.email(class="form-control", placeholder="you@example.com") }}
+            </div>
+
+            <div class="form-group">
+                {{ form.password.label }}
+                {{ form.password(class="form-control", placeholder="Enter your password") }}
+            </div>
+
+            <div class="remember-me">
+                {{ form.remember() }}
+                {{ form.remember.label }}
+            </div>
+            
+            <div class="form-group">
+                {{ form.submit(class="submit-btn", value="Sign In") }}
+            </div>
+        </form>
+
+        <div class="extra-links">
+            <p>Don't have an account? <a href="{{ url_for('auth.register') }}">Register Now</a></p>
         </div>
-        <div class="form-group">
-            {{ form.password.label }}
-            {{ form.password(size=30) }}
-            {% if form.password.errors %}
-                {% for error in form.password.errors %}
-                    <span style="color: red;">[{{ error }}]</span>
-                {% endfor %}
-            {% endif %}
-        </div>
-        <div class="form-group">
-            {{ form.remember() }}
-            {{ form.remember.label }}
-        </div>
-        <div class="form-group">
-            {{ form.submit() }}
-        </div>
-    </form>
-    <p>Need an account? <a href="{{ url_for('auth.register') }}">Sign Up Here</a></p>
+    </div>
+</div>
 {% endblock %}

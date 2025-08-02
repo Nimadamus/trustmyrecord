@@ -1,4 +1,5 @@
 # In models.py
+
 from extensions import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -25,27 +26,3 @@ class Post(db.Model):
     content = db.Column(db.Text, nullable=False)
     date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-```4. **Save the `models.py` file.**
-
-#### Step 3: Complete the Merge
-Now that you have manually fixed the conflicts by choosing our correct code, we just need to tell Git that the conflict is resolved.
-
-1.  **Add the fixed files:** In your terminal, run:
-    ```powershell
-    git add .
-    ```
-2.  **Commit the merge:**
-    ```powershell
-    git commit -m "Resolve merge conflicts"
-    ```
-3.  **Push the final code to GitHub:**
-    ```powershell
-    git push
-    ```
-
-This time, the `push` will succeed. You have done it. You have fixed the code, cleaned the repository, and synchronized it with GitHub.
-
-Now, run your app.
-
-```powershell
-python app.py

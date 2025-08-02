@@ -1,44 +1,46 @@
+# In auth.py
+from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask_login import login_user, logout_user, current_user, login_required
+from werkzeug.security import check_password_hash
 
-#### 4. Replace Your `app.py` with the Factory
+from extensions import db
+from models import User
+from forms import RegistrationForm, LoginForm
 
-**File: `app.py`**
-```python
-import os
-from flask import Flask
+auth = Blueprint('auth', __name__)
 
-from extensions import db, migrate, login_manager
-from models import User # Import User for the user_loader
+@auth.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.profile'))
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = User(username=form.username.data, email=form.email.data)
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        flash('Your account has been created! You can now log in.', 'success')
+        return redirect(url_for('auth.login'))
+    return render_template('register.html', title='Register', form=form)
 
-def create_app():
-    app = Flask(__name__)
+@auth.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.profile'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and user.check_password(form.password.data):
+            login_user(user, remember=form.remember.data)
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('main.profile'))
+        else:
+            flash('Login Unsuccessful. Please check email and password.', 'danger')
+    return render_template('login.html', title='Login', form=form)
 
-    # --- Configuration ---
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a_default_secret_key')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-    # --- Initialize Extensions ---
-    db.init_app(app)
-    migrate.init_app(app, db)
-    login_manager.init_app(app)
-
-    # --- Configure Login Manager ---
-    login_manager.login_view = 'auth.login' # Points to the login route in the 'auth' blueprint
-    login_manager.login_message_category = 'info'
-    @login_manager.user_loader
-    def load_user(user_id):
-        return User.query.get(int(user_id))
-
-    # --- Register Blueprints ---
-    from routes import main as main_blueprint
-    app.register_blueprint(main_blueprint)
-
-    from auth import auth as auth_blueprint
-    app.register_blueprint(auth_blueprint, url_prefix='/')
-
-    return app
-
-# This part is only for running with 'python app.py'
-if __name__ == '__main__':
-    app = create_app()
-    app.run(debug=True)
+@auth.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('main.home'))
