@@ -116,22 +116,25 @@
 
         nav {
             display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
+            gap: 8px;
+            flex-wrap: nowrap;
             align-items: center;
+            overflow-x: auto;
         }
 
         nav a {
             color: var(--text-secondary);
             text-decoration: none;
             font-weight: 600;
-            padding: 6px 12px;
+            padding: 5px 8px;
             border: 1px solid transparent;
-            border-radius: 15px;
+            border-radius: 12px;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         nav a::before {
@@ -170,8 +173,9 @@
             font-weight: 700 !important;
             text-transform: uppercase;
             letter-spacing: 1px;
-            padding: 8px 16px !important;
-            margin-left: 8px;
+            padding: 6px 12px !important;
+            margin-left: 6px;
+            font-size: 0.75rem !important;
         }
 
         .signup-btn::before {
@@ -189,23 +193,19 @@
         /* Hero Section */
         .hero {
             text-align: center;
-            padding: 40px 20px;
+            padding: 60px 20px;
             position: relative;
         }
 
         .hero h1 {
             font-family: 'Orbitron', monospace;
-            font-size: clamp(2rem, 5vw, 3rem);
+            font-size: clamp(2.5rem, 6vw, 4rem);
             font-weight: 900;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             color: #00ffff;
-            text-shadow: 
-                0 0 3px #00ffff,
-                0 0 6px #00ffff,
-                0 0 9px #00ffff;
-            animation: neon-flash 1.5s ease-in-out infinite alternate;
             line-height: 1.1;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
 
         @keyframes neon-flash {
@@ -225,13 +225,14 @@
         }
 
         .hero p {
-            font-size: clamp(0.95rem, 2vw, 1.1rem);
+            font-size: clamp(1rem, 2.2vw, 1.3rem);
             color: var(--text-secondary);
-            margin-bottom: 25px;
-            max-width: 600px;
+            margin-bottom: 35px;
+            max-width: 700px;
             margin-left: auto;
             margin-right: auto;
-            line-height: 1.5;
+            line-height: 1.6;
+            font-weight: 400;
         }
 
         /* Glass Cards */
@@ -469,11 +470,15 @@
             <div class="header-content">
                 <div class="logo">TRUST<span style="color: var(--neon-cyan);">MY</span>RECORD</div>
                 <nav>
-                    <a href="index.html" class="active">Home</a>
                     <a href="#">The Record</a>
                     <a href="#">The Arena</a>
                     <a href="#">Data Core</a>
                     <a href="#">Blog</a>
+                    <a href="#">Forums</a>
+                    <a href="#">Make Your Picks</a>
+                    <a href="#">App</a>
+                    <a href="#">Live Odds</a>
+                    <a href="#">Leaderboards</a>
                     <a href="#" class="signup-btn">Sign Up</a>
                 </nav>
             </div>
