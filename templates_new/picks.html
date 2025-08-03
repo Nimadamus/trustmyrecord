@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Picks - TrustMyRecord{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Choose a Sport</h1>
+    <p class="centered-text">Select a sport to view available games and odds.</p>
+    <div class="sport-list">
+        <a href="{{ url_for('main.sport_odds', sport_name='nfl') }}" class="glass-card sport-card">NFL</a>
+        <a href="{{ url_for('main.sport_odds', sport_name='nba') }}" class="glass-card sport-card">NBA</a>
+        <a href="{{ url_for('main.sport_odds', sport_name='mlb') }}" class="glass-card sport-card">MLB</a>
+        <a href="{{ url_for('main.sport_odds', sport_name='nhl') }}" class="glass-card sport-card">NHL</a>
+        <a href="{{ url_for('main.sport_odds', sport_name='ncaaf') }}" class="glass-card sport-card">NCAAF</a>
+        <a href="{{ url_for('main.sport_odds', sport_name='ncaab') }}" class="glass-card sport-card">NCAAB</a>
+        <a href="{{ url_for('main.sport_odds', sport_name='soccer') }}" class="glass-card sport-card">Soccer</a>
+        <a href="{{ url_for('main.sport_odds', sport_name='mma') }}" class="glass-card sport-card">MMA</a>
+        <a href="{{ url_for('main.sport_odds', sport_name='golf') }}" class="glass-card sport-card">Golf</a>
+    </div>
+</div>
+{% endblock %}

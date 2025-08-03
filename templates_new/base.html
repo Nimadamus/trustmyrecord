@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TrustMyRecord - Future of Sports Handicapping{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/new_design.css') }}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">TRUSTMYRECORD</div>
+                <nav>
+                    <a href="{{ url_for('main.home') }}">Home</a>
+                    <a href="{{ url_for('main.picks') }}">Make Picks</a>
+                    <a href="{{ url_for('main.profile') }}">Profile</a>
+                    <a href="{{ url_for('main.forum') }}">Forum</a>
+                    <a href="{{ url_for('main.challenges') }}">Challenges</a>
+                    <a href="{{ url_for('main.live_odds') }}">Live Odds</a>
+                    <a href="{{ url_for('main.user_messages') }}">Messages</a>
+                    <a href="{{ url_for('main.beat_the_founder') }}">Bury The Beast</a>
+                    <a href="{{ url_for('auth.logout') }}">Logout</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        // Add some interactive effects
+        document.addEventListener('mousemove', (e) => {
+            const cards = document.querySelectorAll('.glass-card');
+            cards.forEach(card => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = (y - centerY) / 10;
+                    const rotateY = (centerX - x) / 10;
+                    
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px)`;
+                } else {
+                    card.style.transform = '';
+                }
+            });
+        });
+
+        
+    </script>
+</body>
+</html>

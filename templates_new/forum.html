@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Forums - TrustMyRecord{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Forums</h1>
+    <p class="centered-text">Discuss strategies, share insights, and connect with other members on a variety of topics.</p>
+    <div class="forum-sections">
+        <a href="{{ url_for('main.forum_category', category_name='general_discussion') }}" class="glass-card forum-card">
+            <h2>General Discussion</h2>
+            <p>Talk about anything and everything.</p>
+        </a>
+        <a href="{{ url_for('main.forum_category', category_name='sports_betting') }}" class="glass-card forum-card">
+            <h2>Sports Betting</h2>
+            <p>Discussions on strategies, picks, and general sports betting.</p>
+        </a>
+        <a href="{{ url_for('main.forum_category', category_name='online_sportsbooks') }}" class="glass-card forum-card">
+            <h2>Online Sportsbooks</h2>
+            <p>Reviews, discussions, and tips for various online sportsbooks.</p>
+        </a>
+        <a href="{{ url_for('main.forum_category', category_name='crypto_investing') }}" class="glass-card forum-card">
+            <h2>Crypto Investing</h2>
+            <p>Share insights and discuss strategies for cryptocurrency investments.</p>
+        </a>
+        <a href="{{ url_for('main.forum_category', category_name='online_gaming') }}" class="glass-card forum-card">
+            <h2>Online Gaming</h2>
+            <p>Connect with fellow gamers, discuss strategies, and find new games.</p>
+        </a>
+        <a href="{{ url_for('main.forum_category', category_name='travel') }}" class="glass-card forum-card">
+            <h2>Travel</h2>
+            <p>Share your travel experiences, tips, and dream destinations.</p>
+        </a>
+        <a href="{{ url_for('main.forum_category', category_name='nfl') }}" class="glass-card forum-card">
+            <h2>NFL</h2>
+            <p>Discussions specific to NFL picks and games.</p>
+        </a>
+        <a href="{{ url_for('main.forum_category', category_name='nba') }}" class="glass-card forum-card">
+            <h2>NBA</h2>
+            <p>Discussions specific to NBA picks and games.</p>
+        </a>
+        <a href="{{ url_for('main.forum_category', category_name='mlb') }}" class="glass-card forum-card">
+            <h2>MLB</h2>
+            <p>Discussions specific to MLB picks and games.</p>
+        </a>
+        <a href="{{ url_for('main.forum_category', category_name='other_sports') }}" class="glass-card forum-card">
+            <h2>Other Sports</h2>
+            <p>Discussions for all other sports.</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - TrustMyRecord{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ title }}</h1>
+    <p class="centered-text">Discuss and share your thoughts on {{ title }}.</p>
+
+    <div class="post-form-section">
+        <h2>Create a New Post</h2>
+        <form method="POST" action="" class="post-form">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.body.label }}
+                {{ form.body(class="form-control", rows="5", placeholder="What's on your mind?") }}
+            </div>
+            <div class="form-group">
+                {{ form.submit(class="submit-btn") }}
+            </div>
+        </form>
+    </div>
+
+    <h2 class="section-heading">Recent Posts</h2>
+    <div class="posts-list">
+        {% if posts %}
+            {% for post in posts %}
+            <div class="post-card">
+                <div class="post-meta">
+                    <a href="{{ url_for('main.profile', user_id=post.author.id) }}" class="post-author-link">
+                        <img src="{{ url_for('static', filename='img/' + post.author.avatar_url) }}" alt="Avatar" class="avatar">
+                        <span class="username">{{ post.author.username }}</span>
+                    </a>
+                    <span class="post-info">
+                        Joined: {{ post.author.date_joined.strftime('%Y-%m-%d') }}<br>
+                        Posts: {{ post.author.posts|length }}<br>
+                        Favorite Team: {{ post.author.favorite_team if post.author.favorite_team else 'N/A' }}<br>
+                        Career Record: [Coming Soon]
+                    </span>
+                </div>
+                <div class="post-body">
+                    <p>{{ post.body }}</p>
+                    <span class="post-timestamp">{{ post.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="centered-text">No posts in this category yet. Be the first to post!</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
