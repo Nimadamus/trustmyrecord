@@ -5,7 +5,7 @@ from extensions import db, migrate, login_manager
 from models import User
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, template_folder='templates_new')
 
     app.config['SECRET_KEY'] = 'a_very_secret_key'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
@@ -14,8 +14,9 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
-
     login_manager.login_view = 'auth.login'
+
+    
     login_manager.login_message_category = 'info'
     @login_manager.user_loader
     def load_user(user_id):
@@ -26,6 +27,9 @@ def create_app():
 
     from auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint)
+
+    from commands import grade
+    app.cli.add_command(grade)
 
     return app
 

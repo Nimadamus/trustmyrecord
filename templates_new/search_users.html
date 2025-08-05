@@ -15,7 +15,7 @@
         <div class="user-list">
             {% for user in users %}
                 <div class="glass-card user-card">
-                    <span>{{ user.username }}</span>
+                    <a href="{{ url_for('main.profile', user_id=user.id) }}" class="username-link">{{ user.username }}</a>
                     <form method="POST" action="{{ url_for('main.send_friend_request', receiver_id=user.id) }}">
                         <button type="submit" class="cta-button small-btn">Send Request</button>
                     </form>

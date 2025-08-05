@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="my-4">Live Betting</h1>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="list-group">
+                {% for sport in active_sports %}
+                    <a href="#" class="list-group-item list-group-item-action" data-sport-key="{{ sport.key }}">{{ sport.title }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div id="games-container">
+                <!-- Games will be loaded here dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Bet Slip Modal -->
+    <div class="modal fade" id="bet-slip-modal" tabindex="-1" role="dialog" aria-labelledby="bet-slip-modal-label" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bet-slip-modal-label">Place Bet</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="bet-slip-form" action="{{ url_for('main.submit_pick') }}" method="POST">
+                        <input type="hidden" id="bet-sport" name="sport">
+                        <input type="hidden" id="bet-event" name="event_details">
+                        <input type="hidden" id="bet-selection" name="pick_selection">
+                        <input type="hidden" id="bet-odds" name="odds">
+                        <input type="hidden" name="bet_type" value="live">
+                        <input type="hidden" id="potential-win-hidden" name="potential_win">
+                        <input type="hidden" id="bet-api-event-id" name="api_event_id">
+
+                        <div class="form-group">
+                            <label for="stake-units">Stake (Units)</label>
+                            <input type="number" class="form-control" id="stake-units" name="stake_units" min="0.01" max="105" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label>To Win (Units)</label>
+                            <p id="potential-win" class="font-weight-bold">0.00</p>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Pick</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    let selectedSport = null;
+    let oddsInterval = null;
+
+    function calculatePotentialWin(stake, odds) {
+        if (odds > 0) {
+            return stake * (odds / 100);
+        } else {
+            return stake * (100 / Math.abs(odds));
+        }
+    }
+
+    function updatePotentialWin() {
+        const stake = parseFloat($('#stake-units').val());
+        const odds = parseInt($('#bet-odds').val());
+        if (!isNaN(stake) && !isNaN(odds)) {
+            let potentialWin = calculatePotentialWin(stake, odds);
+            if (potentialWin > 5) {
+                potentialWin = 5;
+                // Adjust stake to meet the max win
+                if (odds > 0) {
+                    stake = 5 / (odds / 100);
+                } else {
+                    stake = 5 / (100 / Math.abs(odds));
+                }
+                $('#stake-units').val(stake.toFixed(2));
+            }
+            $('#potential-win').text(potentialWin.toFixed(2));
+            $('#potential-win-hidden').val(potentialWin.toFixed(2));
+        }
+    }
+
+    function fetchOdds(sportKey) {
+        $.ajax({
+            url: `/api/live_odds/${sportKey}`,
+            success: function(data) {
+                let gamesHtml = '';
+                if (data && data.length > 0) {
+                    data.forEach(function(game) {
+                        gamesHtml += `
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">${game.home_team} vs ${game.away_team}</h5>
+                                    <p class="card-text">${game.sport_title}</p>
+                                    <p class="card-text"><small class="text-muted">Start Time: ${new Date(game.commence_time).toLocaleString()}</small></p>
+                                    <div class="d-flex justify-content-around">
+                        `;
+                        game.bookmakers.forEach(function(bookmaker) {
+                            bookmaker.markets.forEach(function(market) {
+                                if (market.key === 'h2h') {
+                                    market.outcomes.forEach(function(outcome) {
+                                        gamesHtml += `<button class="btn btn-outline-primary place-bet-btn" data-sport="${game.sport_key}" data-event="${game.home_team} vs ${game.away_team}" data-selection="${outcome.name}" data-odds="${outcome.price}" data-api-event-id="${game.id}">${outcome.name} <br> ${outcome.price}</button>`;
+                                    });
+                                }
+                            });
+                        });
+                        gamesHtml += `
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    gamesHtml = '<p>No live games available for this sport.</p>';
+                }
+                $('#games-container').html(gamesHtml);
+            }
+        });
+    }
+
+    $('.list-group-item').on('click', function(e) {
+        e.preventDefault();
+        selectedSport = $(this).data('sport-key');
+        $('.list-group-item').removeClass('active');
+        $(this).addClass('active');
+        fetchOdds(selectedSport);
+
+        if (oddsInterval) {
+            clearInterval(oddsInterval);
+        }
+        oddsInterval = setInterval(function() {
+            if (selectedSport) {
+                fetchOdds(selectedSport);
+            }
+        }, 30000); // Refresh every 30 seconds
+    });
+
+    $(document).on('click', '.place-bet-btn', function() {
+        const sport = $(this).data('sport');
+        const event = $(this).data('event');
+        const selection = $(this).data('selection');
+        const odds = $(this).data('odds');
+        const apiEventId = $(this).data('api-event-id');
+
+        $('#bet-sport').val(sport);
+        $('#bet-event').val(event);
+        $('#bet-selection').val(selection);
+        $('#bet-odds').val(odds);
+        $('#bet-api-event-id').val(apiEventId);
+
+        updatePotentialWin();
+
+        $('#bet-slip-modal').modal('show');
+    });
+
+    $('#stake-units').on('input', updatePotentialWin);
+});
+</script>
+{% endblock %}

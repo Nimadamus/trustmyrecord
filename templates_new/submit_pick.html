@@ -4,118 +4,231 @@
 
 {% block content %}
 <div class="container">
-    <h1>Submit a New Pick</h1>
-    <p class="centered-text">Select a sport, then choose your game and pick.</p>
+    <h1 class="my-4">Submit a New Pick</h1>
+    <p class="centered-text">Select a sport, then choose your game and pick. Max 5 units to win.</p>
 
-    <div class="pick-selection-section glass-card">
-        <p class="warning-message centered-text">⚠️ Warning: Once entered, your pick cannot be undone or changed.</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
-        <div class="form-group">
-            <label for="sport-select">Select Sport:</label>
-            <select id="sport-select" class="form-control">
-                <option value="">-- Select a Sport --</option>
-                <option value="nfl">NFL</option>
-                <option value="nba">NBA</option>
-                <option value="mlb">MLB</option>
-                <option value="nhl">NHL</option>
-                <option value="ncaaf">NCAAF</option>
-                <option value="ncaab">NCAAB</option>
-                <option value="soccer">Soccer</option>
-                <option value="mma">MMA</option>
-                <option value="golf">Golf</option>
-            </select>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="list-group">
+                {% for sport in active_sports %}
+                    <a href="#" class="list-group-item list-group-item-action" data-sport-key="{{ sport.key }}">{{ sport.title }}</a>
+                {% endfor %}
+            </div>
         </div>
-
-        <div id="games-display" class="games-display">
-            <!-- Games will be loaded here dynamically -->
-            <p class="centered-text">Please select a sport to view games.</p>
+        <div class="col-md-9">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="betTypeTab" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="h2h-tab" data-toggle="tab" href="#h2h" role="tab" aria-controls="h2h" aria-selected="true" data-market-key="h2h">Moneyline</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="spreads-tab" data-toggle="tab" href="#spreads" role="tab" aria-controls="spreads" aria-selected="false" data-market-key="spreads">Spreads</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="totals-tab" data-toggle="tab" href="#totals" role="tab" aria-controls="totals" aria-selected="false" data-market-key="totals">Totals</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div id="games-container">
+                        <p class="centered-text">Please select a sport to view games and odds.</p>
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
 
-        <form id="submit-pick-form" method="POST" action="{{ url_for('main.submit_pick') }}" style="display: none;">
-            {{ form.hidden_tag() }}
-            <input type="hidden" name="sport" id="hidden-sport">
-            <input type="hidden" name="event_details" id="hidden-event-details">
-            <input type="hidden" name="pick_selection" id="hidden-pick-selection">
-            <input type="hidden" name="stake_units" id="hidden-stake-units">
-            <input type="hidden" name="odds" id="hidden-odds">
-            <button type="submit" class="cta-button submit-pick-button">Confirm & Submit Pick</button>
-        </form>
+    <!-- Bet Slip Modal -->
+    <div class="modal fade" id="bet-slip-modal" tabindex="-1" role="dialog" aria-labelledby="bet-slip-modal-label" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bet-slip-modal-label">Place Bet</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="bet-slip-form" action="{{ url_for('main.submit_pick') }}" method="POST">
+                        {{ form.hidden_tag() }}
+                        {{ form.sport(id="bet-sport", class="d-none") }}
+                        {{ form.event_details(id="bet-event", class="d-none") }}
+                        {{ form.pick_selection(id="bet-selection", class="d-none") }}
+                        {{ form.odds(id="bet-odds", class="d-none") }}
+                        <input type="hidden" id="bet-api-event-id" name="api_event_id">
+                        <input type="hidden" id="bet-market-key" name="market_key">
+                        <input type="hidden" id="bet-type" name="bet_type" value="pre-game"> {# Default to pre-game #}
+                        <input type="hidden" id="potential-win-hidden" name="potential_win">
+
+                        <p><strong>Game:</strong> <span id="modal-game-details"></span></p>
+                        <p><strong>Your Pick:</strong> <span id="modal-pick-selection"></span></p>
+                        <p><strong>Odds:</strong> <span id="modal-odds"></span></p>
+
+                        <div class="form-group">
+                            {{ form.stake_units.label(class="font-weight-bold") }}
+                            {{ form.stake_units(class="form-control", id="stake-units", min="1", max="5", step="1") }}
+                            {% if form.stake_units.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.stake_units.errors[0] }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label>To Win (Units)</label>
+                            <p id="potential-win" class="font-weight-bold">0.00</p>
+                        </div>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const sportSelect = document.getElementById('sport-select');
-        const gamesDisplay = document.getElementById('games-display');
-        const submitPickForm = document.getElementById('submit-pick-form');
-        const hiddenSport = document.getElementById('hidden-sport');
-        const hiddenEventDetails = document.getElementById('hidden-event-details');
-        const hiddenPickSelection = document.getElementById('hidden-pick-selection');
-        const hiddenStakeUnits = document.getElementById('hidden-stake-units');
-        const hiddenOdds = document.getElementById('hidden-odds');
+{% endblock %}
 
-        sportSelect.addEventListener('change', function() {
-            const selectedSport = this.value;
-            if (selectedSport) {
-                fetch(`/picks/${selectedSport}`)
-                    .then(response => response.text())
-                    .then(html => {
-                        // Extract only the content block from the fetched HTML
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, 'text/html');
-                        const gamesContent = doc.querySelector('.games-display'); // Assuming sport_odds.html has a .games-display
-                        if (gamesContent) {
-                            gamesDisplay.innerHTML = gamesContent.innerHTML;
-                            attachOddsButtonListeners();
-                        } else {
-                            gamesDisplay.innerHTML = '<p class="centered-text">Could not load games for this sport.</p>';
-                        }
-                        submitPickForm.style.display = 'none'; // Hide form until pick is selected
-                    })
-                    .catch(error => {
-                        console.error('Error fetching games:', error);
-                        gamesDisplay.innerHTML = '<p class="centered-text">Failed to load games. Please try again.</p>';
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    let selectedSport = null;
+    let selectedMarket = 'h2h'; // Default to Moneyline
+    let oddsInterval = null;
+
+    function calculatePotentialWin(stake, odds) {
+        if (odds > 0) {
+            return stake * (odds / 100);
+        } else {
+            return stake * (100 / Math.abs(odds));
+        }
+    }
+
+    function updatePotentialWin() {
+        const stake = parseFloat($('#stake-units').val());
+        const odds = parseInt($('#bet-odds').val());
+        if (!isNaN(stake) && !isNaN(odds)) {
+            let potentialWin = calculatePotentialWin(stake, odds);
+            $('#potential-win').text(potentialWin.toFixed(2));
+            $('#potential-win-hidden').val(potentialWin.toFixed(2));
+        }
+    }
+
+    function fetchOdds(sportKey, marketKey) {
+        $.ajax({
+            url: `/api/live_odds/${sportKey}?market=${marketKey}`, // Use the API endpoint for live odds
+            success: function(data) {
+                let gamesHtml = '';
+                if (data && data.length > 0) {
+                    data.forEach(function(game) {
+                        gamesHtml += `
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">${game.home_team} vs ${game.away_team}</h5>
+                                    <p class="card-text">${game.sport_title}</p>
+                                    <p class="card-text"><small class="text-muted">Start Time: ${new Date(game.commence_time).toLocaleString()}</small></p>
+                                    <div class="d-flex justify-content-around">
+                        `;
+                        game.bookmakers.forEach(function(bookmaker) {
+                            bookmaker.markets.forEach(function(market) {
+                                if (market.key === marketKey) {
+                                    market.outcomes.forEach(function(outcome) {
+                                        gamesHtml += `<button class="btn btn-outline-primary place-bet-btn" 
+                                            data-sport="${game.sport_key}" 
+                                            data-event="${game.home_team} vs ${game.away_team}" 
+                                            data-selection="${outcome.name}" 
+                                            data-odds="${outcome.price}" 
+                                            data-api-event-id="${game.id}"
+                                            data-market-key="${market.key}">
+                                            ${outcome.name} <br> ${outcome.price}
+                                        </button>`;
+                                    });
+                                }
+                            });
+                        });
+                        gamesHtml += `
+                                    </div>
+                                </div>
+                            </div>
+                        `;
                     });
-            } else {
-                gamesDisplay.innerHTML = '<p class="centered-text">Please select a sport to view games.</p>';
-                submitPickForm.style.display = 'none';
+                } else {
+                    gamesHtml = '<p>No games available for this sport and market.</p>';
+                }
+                $('#games-container').html(gamesHtml);
+            },
+            error: function(xhr, status, error) {
+                console.error("Error fetching odds:", error);
+                $('#games-container').html('<p>Failed to load games. Please try again later.</p>');
             }
         });
+    }
 
-        function attachOddsButtonListeners() {
-            document.querySelectorAll('.odds-button').forEach(button => {
-                button.addEventListener('click', function() {
-                    const confirmation = confirm('Are you sure you want to submit this pick? Once entered, it cannot be undone or changed.');
-                    if (!confirmation) {
-                        return; // Stop if user cancels
-                    }
+    // Sport selection
+    $('.list-group-item').on('click', function(e) {
+        e.preventDefault();
+        selectedSport = $(this).data('sport-key');
+        $('.list-group-item').removeClass('active');
+        $(this).addClass('active');
+        fetchOdds(selectedSport, selectedMarket);
 
-                    // Extract data from the button and its parent elements
-                    const gameCard = this.closest('.game-card');
-                    const sport = sportSelect.value;
-                    const homeTeam = gameCard.querySelector('.game-header .team:first-child').textContent;
-                    const awayTeam = gameCard.querySelector('.game-header .team:last-child').textContent;
-                    const eventDetails = `${homeTeam} vs ${awayTeam}`;
-                    const pickSelection = this.textContent.trim();
-                    const odds = parseInt(this.dataset.odds || '-110'); // Use data-odds attribute
-                    const stakeUnits = 1; // Default stake, can be made dynamic later
+        if (oddsInterval) {
+            clearInterval(oddsInterval);
+        }
+        oddsInterval = setInterval(function() {
+            if (selectedSport) {
+                fetchOdds(selectedSport, selectedMarket);
+            }
+        }, 30000); // Refresh every 30 seconds
+    });
 
-                    // Populate hidden form fields
-                    hiddenSport.value = sport;
-                    hiddenEventDetails.value = eventDetails;
-                    hiddenPickSelection.value = pickSelection;
-                    hiddenStakeUnits.value = stakeUnits;
-                    hiddenOdds.value = odds;
-
-                    // Submit the form directly
-                    submitPickForm.submit();
-
-                    // Optional: Highlight selected pick (this might be removed if direct submit is preferred)
-                    document.querySelectorAll('.odds-button').forEach(btn => btn.classList.remove('selected'));
-                    this.classList.add('selected');
-                });
-            });
+    // Bet type selection (Moneyline, Spreads, Totals)
+    $('#betTypeTab .nav-link').on('click', function(e) {
+        e.preventDefault();
+        selectedMarket = $(this).data('market-key');
+        if (selectedSport) {
+            fetchOdds(selectedSport, selectedMarket);
+        } else {
+            $('#games-container').html('<p>Please select a sport first.</p>');
         }
     });
+
+    // Place bet button click
+    $(document).on('click', '.place-bet-btn', function() {
+        const sport = $(this).data('sport');
+        const event = $(this).data('event');
+        const selection = $(this).data('selection');
+        const odds = $(this).data('odds');
+        const apiEventId = $(this).data('api-event-id');
+        const marketKey = $(this).data('market-key');
+
+        $('#bet-sport').val(sport);
+        $('#bet-event').val(event);
+        $('#bet-selection').val(selection);
+        $('#bet-odds').val(odds);
+        $('#bet-api-event-id').val(apiEventId);
+        $('#bet-market-key').val(marketKey); 
+
+        $('#modal-game-details').text(event);
+        $('#modal-pick-selection').text(selection);
+        $('#modal-odds').text(odds);
+
+        // Reset stake and update potential win
+        $('#stake-units').val(1); // Default to 1 unit
+        updatePotentialWin();
+
+        $('#bet-slip-modal').modal('show');
+    });
+
+    // Stake units input change
+    $('#stake-units').on('input', updatePotentialWin);
+});
 </script>
 {% endblock %}

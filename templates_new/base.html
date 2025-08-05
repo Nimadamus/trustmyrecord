@@ -15,12 +15,18 @@
                 <nav>
                     <a href="{{ url_for('main.home') }}">Home</a>
                     <a href="{{ url_for('main.picks') }}">Make Picks</a>
-                    <a href="{{ url_for('main.profile') }}">Profile</a>
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('main.profile', user_id=current_user.id) }}">Profile</a>
+                    {% endif %}
                     <a href="{{ url_for('main.forum') }}">Forum</a>
                     <a href="{{ url_for('main.challenges') }}">Challenges</a>
                     <a href="{{ url_for('main.live_odds') }}">Live Odds</a>
                     <a href="{{ url_for('main.user_messages') }}">Messages</a>
+                    <a href="{{ url_for('main.chatroom') }}">Chatroom</a>
                     <a href="{{ url_for('main.beat_the_founder') }}">Bury The Beast</a>
+                    {% if current_user.is_admin %}
+                    <a href="{{ url_for('main.admin_grade_pick') }}">Grade Picks</a>
+                    {% endif %}
                     <a href="{{ url_for('auth.logout') }}">Logout</a>
                 </nav>
             </div>
@@ -30,6 +36,12 @@
     <main>
         {% block content %}{% endblock %}
     </main>
+
+    <footer>
+        <div class="container">
+            <p class="footer-slogan">Restoring faith and integrity to a shady industry.</p>
+        </div>
+    </footer>
 
     <script>
         // Add some interactive effects

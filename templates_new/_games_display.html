@@ -1,37 +1,40 @@
 <div class="games-display">
     {% if games %}
         {% for game in games %}
-        <div class="game-card">
+        <div class="game-card glass-card mb-3">
             <div class="game-header">
-                <span class="team">{{ game.home_team }}</span> vs <span class="team">{{ game.away_team }}</span>
-                <span class="game-time">{{ game.time }}</span>
+                <h5 class="card-title">{{ game.home_team }} vs {{ game.away_team }}</h5>
+                <p class="card-text"><small class="text-muted">Start Time: {{ game.commence_time }}</small></p>
             </div>
             <div class="odds-section">
-                <div class="odds-type">
-                    <h3>Moneyline</h3>
-                    <div class="odds-options">
-                        <button class="odds-button" data-odds="{{ game.home_moneyline }}">{{ game.home_moneyline }}</button>
-                        <button class="odds-button" data-odds="{{ game.away_moneyline }}">{{ game.away_moneyline }}</button>
-                    </div>
-                </div>
-                <div class="odds-type">
-                    <h3>Spread</h3>
-                    <div class="odds-options">
-                        <button class="odds-button" data-odds="{{ game.home_spread_odds }}">{{ game.home_spread }} ({{ game.home_spread_odds }})</button>
-                        <button class="odds-button" data-odds="{{ game.away_spread_odds }}">{{ game.away_spread }} ({{ game.away_spread_odds }})</button>
-                    </div>
-                </div>
-                <div class="odds-type">
-                    <h3>Total</h3>
-                    <div class="odds-options">
-                        <button class="odds-button" data-odds="{{ game.total_over_odds }}">Over {{ game.total_over }} ({{ game.total_over_odds }})</button>
-                        <button class="odds-button" data-odds="{{ game.total_under_odds }}">Under {{ game.total_under }} ({{ game.total_under_odds }})</button>
-                    </div>
-                </div>
+                {% for bookmaker in game.bookmakers %}
+                    {% if bookmaker.key == 'draftkings' %}
+                        <h6>{{ bookmaker.title }}</h6>
+                        {% for market in bookmaker.markets %}
+                            <div class="odds-type mb-2">
+                                <h3>{{ market.key | title }}</h3>
+                                <div class="odds-options d-flex flex-wrap">
+                                    {% for outcome in market.outcomes %}
+                                        <button class="btn btn-outline-primary m-1 place-bet-btn"
+                                            data-sport="{{ game.sport_key }}"
+                                            data-event="{{ game.home_team }} vs {{ game.away_team }}"
+                                            data-selection="{{ outcome.name }}"
+                                            data-odds="{{ outcome.price }}"
+                                            data-api-event-id="{{ game.id }}"
+                                            data-market-key="{{ market.key }}">
+                                            {{ outcome.name }} {% if outcome.point %}({{ outcome.point }}){% endif %} <br> {{ outcome.price }}
+                                        </button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
             </div>
         </div>
         {% endfor %}
-    {% else %}
-        <p class="centered-text">No mock games available for {{ sport_name | upper }} at this time.</p>
+        {% else %}
+        <p class="centered-text">No games available for this sport at this time from DraftKings. Odds appear closer to game time.</p>
+        <p class="centered-text">Please check back later or try another sport.</p>
     {% endif %}
 </div>

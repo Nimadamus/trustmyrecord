@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Grade Picks - TrustMyRecord{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Grade Picks</h1>
+
+    <div class="glass-card">
+        <h2>Grade a Pick</h2>
+        <form method="POST" action="{{ url_for('main.admin_grade_pick') }}">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.pick_id.label }}
+                {{ form.pick_id(class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form.result.label }}
+                {{ form.result(class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form.graded_odds.label }}
+                {{ form.graded_odds(class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form.final_score.label }}
+                {{ form.final_score(class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ form.submit(class="cta-button submit-btn") }}
+            </div>
+        </form>
+    </div>
+
+    <h2 class="section-heading">Pending Picks</h2>
+    {% if pending_picks %}
+        <div class="picks-list">
+            {% for pick in pending_picks %}
+                <div class="glass-card pick-item">
+                    <p><strong>Pick ID:</strong> {{ pick.id }}</p>
+                    <p><strong>User:</strong> {{ pick.author.username }}</p>
+                    <p><strong>Sport:</strong> {{ pick.sport }}</p>
+                    <p><strong>Event:</strong> {{ pick.event_details }}</p>
+                    <p><strong>Pick:</strong> {{ pick.pick_selection }}</p>
+                    <p><strong>Stake:</strong> {{ pick.stake_units }} units</p>
+                    <p><strong>Odds:</strong> {{ pick.odds }}</p>
+                    <p><strong>Submitted:</strong> {{ pick.date_posted.strftime('%Y-%m-%d %H:%M') }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="centered-text">No picks currently pending grading.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -4,8 +4,17 @@
 
 from flask_wtf import FlaskForm
 # We need to import the fields for the new forms
-from wtforms import StringField, IntegerField, SelectField, SubmitField, PasswordField
+from wtforms import StringField, IntegerField, SelectField, SubmitField, PasswordField, BooleanField, TextAreaField, RadioField
 from wtforms.validators import DataRequired, NumberRange, Length, Email, EqualTo
+
+class GradePickForm(FlaskForm):
+    result = RadioField('Result', choices=[
+        ('win', 'Win'),
+        ('loss', 'Loss'),
+        ('push', 'Push')
+    ], validators=[DataRequired()])
+    submit = SubmitField('Grade Pick')
+
 
 
 # YOUR EXISTING FORM - We are keeping this!
@@ -49,4 +58,28 @@ class LoginForm(FlaskForm):
     email = StringField('Email',
                         validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
+    remember = BooleanField('Remember Me')
     submit = SubmitField('Login')
+
+
+class ProfileEditForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
+    favorite_team = StringField('Favorite Team', validators=[Length(max=50)])
+    avatar_url = StringField('Avatar URL', validators=[Length(max=200)])
+    email_private = BooleanField('Keep email private')
+    submit = SubmitField('Update Profile')
+
+
+class MessageForm(FlaskForm):
+    body = TextAreaField('Message', validators=[DataRequired(), Length(min=1, max=140)])
+    submit = SubmitField('Send')
+
+
+class ForumPostForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired(), Length(min=1, max=100)])
+    body = TextAreaField('Post Content', validators=[DataRequired(), Length(min=1, max=500)])
+    submit = SubmitField('Post to Forum')
+
+class ReplyForm(FlaskForm):
+    body = TextAreaField('Reply', validators=[DataRequired(), Length(min=1, max=500)])
+    submit = SubmitField('Submit Reply')

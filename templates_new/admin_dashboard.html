@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - TrustMyRecord{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="my-4">Admin Dashboard</h1>
+    <h2 class="section-heading">Pending Picks</h2>
+    <div class="picks-list">
+        {% for pick in pending_picks %}
+            <div class="glass-card pick-item pending-pick">
+                <p><strong>User:</strong> {{ pick.author.username }}</p>
+                <p><strong>Sport:</strong> {{ pick.sport }}</p>
+                <p><strong>Event:</strong> {{ pick.event_details }}</p>
+                <p><strong>Pick:</strong> {{ pick.pick_selection }}</p>
+                <p><strong>Stake:</strong> {{ pick.stake_units }} units</p>
+                <p><strong>Odds:</strong> {{ pick.odds }}</p>
+                <p class="pick-timestamp">{{ pick.date_posted.strftime('%Y-%m-%d %H:%M') }}</p>
+                <a href="{{ url_for('main.grade_pick', pick_id=pick.id) }}" class="btn btn-primary">Grade Pick</a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
