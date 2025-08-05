@@ -11,7 +11,7 @@ auth = Blueprint('auth', __name__)
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('main.profile'))
+        return redirect(url_for('main.profile', user_id=current_user.id))
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User(username=form.username.data, email=form.email.data)
@@ -19,7 +19,8 @@ def register():
         db.session.add(user)
         db.session.commit()
         flash('Your account has been created! You can now log in.', 'success')
-        return redirect(url_for('auth.login'))
+        login_user(user)
+        return redirect(url_for('main.profile', user_id=user.id))
     return render_template('register.html', title='Register', form=form)
 
 @auth.route('/login', methods=['GET', 'POST'])
