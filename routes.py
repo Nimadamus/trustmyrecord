@@ -206,13 +206,10 @@ def picks():
     return render_template('picks.html', title='Picks')
 
 @main.route('/picks/<sport_name>')
+@login_required
 def sport_odds(sport_name):
-    mock_data_enabled = request.args.get('mock') == 'true'
-    if mock_data_enabled:
-        games = generate_mock_odds(sport_name)
-    else:
-        # Fetch real odds from The Odds API, filtered by DraftKings
-        games = get_odds(sport_name, bookmakers='draftkings')
+    # Fetch real odds from The Odds API, filtered by DraftKings
+    games = get_odds(sport_name, bookmakers='draftkings')
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return render_template('_games_display.html', sport_name=sport_name, games=games)

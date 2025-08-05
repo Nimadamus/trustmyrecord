@@ -1,39 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}My Messages - TrustMyRecord{% endblock %}
+{% block title %}Messages - TrustMyRecord{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1>My Messages</h1>
-
-    <h2 class="section-heading">Received Messages</h2>
-    {% if received_messages %}
-        <div class="messages-list">
-            {% for message in received_messages %}
-                <div class="glass-card message-card {% if not message.is_read %}unread{% endif %}">
-                    <p><strong>From:</strong> {{ message.sender.username }}</p>
-                    <p>{{ message.body }}</p>
-                    <span class="message-timestamp">{{ message.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <p class="centered-text">You have no received messages.</p>
-    {% endif %}
-
-    <h2 class="section-heading">Sent Messages</h2>
-    {% if sent_messages %}
-        <div class="messages-list">
-            {% for message in sent_messages %}
-                <div class="glass-card message-card">
-                    <p><strong>To:</strong> {{ message.receiver.username }}</p>
-                    <p>{{ message.body }}</p>
-                    <span class="message-timestamp">{{ message.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <p class="centered-text">You have no sent messages.</p>
-    {% endif %}
+    <h1 class="my-4">Coming Soon</h1>
+    <p>This feature is under construction.</p>
 </div>
 {% endblock %}
