@@ -107,6 +107,7 @@
             -webkit-text-fill-color: transparent;
             animation: pulse-gold 3s ease-in-out infinite alternate;
             letter-spacing: 1px;
+            cursor: pointer;
         }
 
         @keyframes pulse-gold {
@@ -135,6 +136,7 @@
             font-size: 0.75rem;
             white-space: nowrap;
             flex-shrink: 0;
+            cursor: pointer;
         }
 
         nav a::before {
@@ -173,9 +175,9 @@
             font-weight: 700 !important;
             text-transform: uppercase;
             letter-spacing: 1px;
-            padding: 6px 12px !important;
-            margin-left: 6px;
-            font-size: 0.75rem !important;
+            padding: 8px 16px !important;
+            margin-left: 8px;
+            font-size: 0.9rem !important;
         }
 
         .signup-btn::before {
@@ -188,6 +190,16 @@
             transform: scale(1.05);
             box-shadow: 0 0 20px rgba(255, 215, 0, 0.6) !important;
             color: var(--dark-bg) !important;
+        }
+
+        /* Page Sections */
+        .page-section {
+            display: none;
+            min-height: 80vh;
+        }
+
+        .page-section.active {
+            display: block;
         }
 
         /* Hero Section */
@@ -397,6 +409,166 @@
             background: var(--gradient-neon);
         }
 
+        /* Make Your Picks Section */
+        .picks-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .pick-form {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--neon-gold);
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .submit-pick {
+            background: var(--gradient-gold);
+            color: var(--dark-bg);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .submit-pick:hover {
+            background: var(--gradient-neon);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .picks-history {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .pick-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border-left: 4px solid var(--neon-cyan);
+        }
+
+        .pick-item.win {
+            border-left-color: var(--neon-green);
+        }
+
+        .pick-item.loss {
+            border-left-color: var(--neon-red);
+        }
+
+        .pick-details {
+            flex: 1;
+        }
+
+        .pick-game {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .pick-bet {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .pick-result {
+            font-weight: 700;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .pick-result.pending {
+            background: rgba(255, 215, 0, 0.2);
+            color: var(--neon-gold);
+        }
+
+        .pick-result.win {
+            background: rgba(57, 255, 20, 0.2);
+            color: var(--neon-green);
+        }
+
+        .pick-result.loss {
+            background: rgba(255, 7, 58, 0.2);
+            color: var(--neon-red);
+        }
+
+        /* Coming Soon Overlay */
+        .coming-soon {
+            text-align: center;
+            padding: 100px 20px;
+        }
+
+        .coming-soon h2 {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(2rem, 4vw, 3rem);
+            color: var(--neon-cyan);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .coming-soon p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
         /* Footer */
         footer {
             text-align: center;
@@ -448,6 +620,10 @@
             .section-header {
                 margin-bottom: 30px;
             }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 480px) {
@@ -468,122 +644,372 @@
     <div class="container">
         <header>
             <div class="header-content">
-                <div class="logo">TRUST<span style="color: var(--neon-cyan);">MY</span>RECORD</div>
+                <div class="logo" onclick="showSection('home')">TRUST<span style="color: var(--neon-cyan);">MY</span>RECORD</div>
                 <nav>
-                    <a href="#">The Record</a>
-                    <a href="#">The Arena</a>
-                    <a href="#">Data Core</a>
-                    <a href="#">Blog</a>
-                    <a href="#">Forums</a>
-                    <a href="#">Make Your Picks</a>
-                    <a href="#">App</a>
-                    <a href="#">Live Odds</a>
-                    <a href="#">Leaderboards</a>
-                    <a href="#" class="signup-btn">Sign Up</a>
+                    <a onclick="showSection('record')">The Record</a>
+                    <a onclick="showSection('arena')">The Arena</a>
+                    <a onclick="showSection('data')">Data Core</a>
+                    <a onclick="showSection('blog')">Blog</a>
+                    <a onclick="showSection('forums')">Forums</a>
+                    <a onclick="showSection('picks')" class="make-picks-link">Make Your Picks</a>
+                    <a onclick="showSection('app')">App</a>
+                    <a onclick="showSection('odds')">Live Odds</a>
+                    <a onclick="showSection('leaderboards')">Leaderboards</a>
+                    <a onclick="showSection('signup')" class="signup-btn">Sign Up</a>
                 </nav>
             </div>
         </header>
 
         <main>
-            <section class="hero">
-                <h1 class="reveal">THE END OF THE BULLSHIT</h1>
-                <p class="reveal">A new standard for sports betting has arrived. Built on absolute proof, radical transparency, and zero excuses.</p>
-            </section>
+            <!-- Home Section -->
+            <div id="home" class="page-section active">
+                <section class="hero">
+                    <h1 class="reveal">THE END OF THE BULLSHIT</h1>
+                    <p class="reveal">A new standard for sports betting has arrived. Built on absolute proof, radical transparency, and zero excuses.</p>
+                </section>
 
-            <section class="section">
-                <div class="section-header reveal">
-                    <h2>The Platform is the <span class="highlight">Future</span></h2>
-                    <p>This is more than just a page for picks. We are building the definitive ecosystem for bettors who value real data over loud hype.</p>
-                </div>
-                <div class="feature-grid">
-                    <div class="glass-card feature-card reveal">
-                        <div class="feature-icon">📊</div>
-                        <h3>Track Every Pick</h3>
-                        <p>Your complete betting history stored permanently and publicly. Every user's picks, wins, losses, and stats are tracked with surgical precision. No hiding, no editing, no excuses.</p>
+                <section class="section">
+                    <div class="section-header reveal">
+                        <h2>The Platform is the <span class="highlight">Future</span></h2>
+                        <p>This is more than just a page for picks. We are building the definitive ecosystem for bettors who value real data over loud hype.</p>
                     </div>
-                    <div class="glass-card feature-card reveal">
-                        <div class="feature-icon">📈</div>
-                        <h3>Advanced Analytics</h3>
-                        <p>Deep statistical breakdowns by sport, bet type, odds range, team, and more. Identify your strengths, expose your weaknesses, and track your improvement over time. The ultimate handicapping tool.</p>
+                    <div class="feature-grid">
+                        <div class="glass-card feature-card reveal">
+                            <div class="feature-icon">📊</div>
+                            <h3>Track Every Pick</h3>
+                            <p>Your complete betting history stored permanently and publicly. Every user's picks, wins, losses, and stats are tracked with surgical precision. No hiding, no editing, no excuses.</p>
+                        </div>
+                        <div class="glass-card feature-card reveal">
+                            <div class="feature-icon">📈</div>
+                            <h3>Advanced Analytics</h3>
+                            <p>Deep statistical breakdowns by sport, bet type, odds range, team, and more. Identify your strengths, expose your weaknesses, and track your improvement over time. The ultimate handicapping tool.</p>
+                        </div>
+                        <div class="glass-card feature-card reveal">
+                            <div class="feature-icon">💰</div>
+                            <h3>Sell Your Picks</h3>
+                            <p>Prove you're a knowledgeable handicapper and monetize your skills. Set your own prices, build a subscriber base, and earn from your expertise. Your verified track record is your resume.</p>
+                        </div>
+                        <div class="glass-card feature-card reveal">
+                            <div class="feature-icon">🧠</div>
+                            <h3>Sports Trivia & Polls</h3>
+                            <p>Think you know sports? Prove it. Compete in daily trivia, predict outcomes, and vote in polls against other users. Earn points, climb rankings, and show off your sports IQ.</p>
+                        </div>
+                        <div class="glass-card feature-card reveal">
+                            <div class="feature-icon">🔒</div>
+                            <h3>Immutable Records</h3>
+                            <p>Every pick is permanently locked in our system. Filter by user, sport, bet type, or date. Compare anyone's track record instantly. The proof is always one click away.</p>
+                        </div>
+                        <div class="glass-card feature-card reveal">
+                            <div class="feature-icon">⚔️</div>
+                            <h3>Compete & Prove It</h3>
+                            <p>Challenge other handicappers head-to-head. Join tournaments. Climb the leaderboards. Talk your game in the forums, but your record does the real talking.</p>
+                        </div>
                     </div>
-                    <div class="glass-card feature-card reveal">
-                        <div class="feature-icon">💰</div>
-                        <h3>Sell Your Picks</h3>
-                        <p>Prove you're a knowledgeable handicapper and monetize your skills. Set your own prices, build a subscriber base, and earn from your expertise. Your verified track record is your resume.</p>
-                    </div>
-                    <div class="glass-card feature-card reveal">
-                        <div class="feature-icon">🧠</div>
-                        <h3>Sports Trivia & Polls</h3>
-                        <p>Think you know sports? Prove it. Compete in daily trivia, predict outcomes, and vote in polls against other users. Earn points, climb rankings, and show off your sports IQ.</p>
-                    </div>
-                    <div class="glass-card feature-card reveal">
-                        <div class="feature-icon">🔒</div>
-                        <h3>Immutable Records</h3>
-                        <p>Every pick is permanently locked in our system. Filter by user, sport, bet type, or date. Compare anyone's track record instantly. The proof is always one click away.</p>
-                    </div>
-                    <div class="glass-card feature-card reveal">
-                        <div class="feature-icon">⚔️</div>
-                        <h3>Compete & Prove It</h3>
-                        <p>Challenge other handicappers head-to-head. Join tournaments. Climb the leaderboards. Talk your game in the forums, but your record does the real talking.</p>
-                    </div>
-                </div>
-            </section>
+                </section>
 
-            <section class="section">
-                <div class="section-header reveal">
-                    <h2>Enter <span class="highlight">The Arena</span></h2>
-                    <p>Where legends are made and egos are destroyed. Face off against the best handicappers in the world in our competitive battleground.</p>
-                </div>
-                <div class="feature-grid">
-                    <div class="glass-card feature-card reveal">
-                        <div class="feature-icon">⚔️</div>
-                        <h3>Head-to-Head Battles</h3>
-                        <p>Challenge anyone, anytime. Set your stakes, pick your sport, and let your records do the talking. Winner takes glory, loser takes the walk of shame.</p>
+                <section class="section">
+                    <div class="section-header reveal">
+                        <h2>Enter <span class="highlight">The Arena</span></h2>
+                        <p>Where legends are made and egos are destroyed. Face off against the best handicappers in the world in our competitive battleground.</p>
                     </div>
-                    <div class="glass-card feature-card reveal">
-                        <div class="feature-icon">🏆</div>
-                        <h3>Tournament Mode</h3>
-                        <p>Monthly tournaments with bracketed elimination. Survive multiple rounds against increasingly skilled opponents. Only the elite make it to the finals.</p>
+                    <div class="feature-grid">
+                        <div class="glass-card feature-card reveal">
+                            <div class="feature-icon">⚔️</div>
+                            <h3>Head-to-Head Battles</h3>
+                            <p>Challenge anyone, anytime. Set your stakes, pick your sport, and let your records do the talking. Winner takes glory, loser takes the walk of shame.</p>
+                        </div>
+                        <div class="glass-card feature-card reveal">
+                            <div class="feature-icon">🏆</div>
+                            <h3>Tournament Mode</h3>
+                            <p>Monthly tournaments with bracketed elimination. Survive multiple rounds against increasingly skilled opponents. Only the elite make it to the finals.</p>
+                        </div>
+                        <div class="glass-card feature-card reveal">
+                            <div class="feature-icon">👑</div>
+                            <h3>Beat The Founder</h3>
+                            <p>Think you're better than the house? Prove it. Take on our founder's record in a public showdown. Beat the creator of the platform and earn eternal bragging rights.</p>
+                        </div>
                     </div>
-                    <div class="glass-card feature-card reveal">
-                        <div class="feature-icon">👑</div>
-                        <h3>Beat The Founder</h3>
-                        <p>Think you're better than the house? Prove it. Take on our founder's record in a public showdown. Beat the creator of the platform and earn eternal bragging rights.</p>
-                    </div>
-                </div>
-            </section>
+                </section>
 
-            <section class="section">
-                <div class="section-header reveal">
-                    <h2>Community <span class="highlight">Forums</span></h2>
-                    <p>No echo chambers. No fake positivity. Just raw, unfiltered discussion where your record speaks louder than your mouth.</p>
-                </div>
-                <div class="feature-grid">
-                    <div class="glass-card feature-card reveal">
-                        <div class="feature-icon">🎯</div>
-                        <h3>Sport-Specific Channels</h3>
-                        <p>NFL, NBA, MLB, NHL, Soccer, Tennis - dedicated spaces for serious discussion about every major sport and league.</p>
+                <section class="section">
+                    <div class="section-header reveal">
+                        <h2>Community <span class="highlight">Forums</span></h2>
+                        <p>No echo chambers. No fake positivity. Just raw, unfiltered discussion where your record speaks louder than your mouth.</p>
                     </div>
-                    <div class="glass-card feature-card reveal">
-                        <div class="feature-icon">📊</div>
-                        <h3>Data-Driven Debates</h3>
-                        <p>Back up your opinions with stats. Your posting privilege is tied to your track record. Performance determines credibility.</p>
+                    <div class="feature-grid">
+                        <div class="glass-card feature-card reveal">
+                            <div class="feature-icon">🎯</div>
+                            <h3>Sport-Specific Channels</h3>
+                            <p>NFL, NBA, MLB, NHL, Soccer, Tennis - dedicated spaces for serious discussion about every major sport and league.</p>
+                        </div>
+                        <div class="glass-card feature-card reveal">
+                            <div class="feature-icon">📊</div>
+                            <h3>Data-Driven Debates</h3>
+                            <p>Back up your opinions with stats. Your posting privilege is tied to your track record. Performance determines credibility.</p>
+                        </div>
+                        <div class="glass-card feature-card reveal">
+                            <div class="feature-icon">🔥</div>
+                            <h3>No Bullshit Zone</h3>
+                            <p>Verified records only. If you talk the talk, you better walk the walk. Your history is your reputation.</p>
+                        </div>
                     </div>
-                    <div class="glass-card feature-card reveal">
-                        <div class="feature-icon">🔥</div>
-                        <h3>No Bullshit Zone</h3>
-                        <p>Verified records only. If you talk the talk, you better walk the walk. Your history is your reputation.</p>
+                </section>
+                
+                <section class="cta">
+                    <div class="section-header reveal">
+                        <h2>The Record Starts Now.</h2>
+                        <p>The era of the guru is over. The era of the record has begun. Witness the transparency from day one.</p>
+                    </div>
+                    <a onclick="showSection('picks')" class="cta-button reveal">JOIN THE REVOLUTION</a>
+                </section>
+            </div>
+
+            <!-- Make Your Picks Section -->
+            <div id="picks" class="page-section">
+                <div class="picks-container">
+                    <div class="section-header">
+                        <h2>Make Your <span class="highlight">Picks</span></h2>
+                        <p>Every pick is recorded permanently. No edits, no deletes, no excuses. Your record starts here.</p>
+                    </div>
+
+                    <div class="pick-form">
+                        <form id="pickForm">
+                            <div class="form-group">
+                                <label for="sport">Sport</label>
+                                <select id="sport" name="sport" required>
+                                    <option value="">Select Sport</option>
+                                    <option value="nfl">NFL</option>
+                                    <option value="nba">NBA</option>
+                                    <option value="mlb">MLB</option>
+                                    <option value="nhl">NHL</option>
+                                    <option value="soccer">Soccer</option>
+                                    <option value="tennis">Tennis</option>
+                                    <option value="college-football">College Football</option>
+                                    <option value="college-basketball">College Basketball</option>
+                                </select>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="team1">Team 1</label>
+                                    <input type="text" id="team1" name="team1" placeholder="Enter team name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="team2">Team 2</label>
+                                    <input type="text" id="team2" name="team2" placeholder="Enter team name" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="betType">Bet Type</label>
+                                <select id="betType" name="betType" required>
+                                    <option value="">Select Bet Type</option>
+                                    <option value="moneyline">Moneyline</option>
+                                    <option value="spread">Point Spread</option>
+                                    <option value="total">Over/Under Total</option>
+                                    <option value="prop">Player Prop</option>
+                                    <option value="parlay">Parlay</option>
+                                </select>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="pick">Your Pick</label>
+                                    <input type="text" id="pick" name="pick" placeholder="e.g. Lakers -5.5, Over 220.5" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="odds">Odds</label>
+                                    <input type="text" id="odds" name="odds" placeholder="e.g. -110, +150" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="confidence">Confidence Level</label>
+                                    <select id="confidence" name="confidence" required>
+                                        <option value="">Select Confidence</option>
+                                        <option value="1">1 - Low Confidence</option>
+                                        <option value="2">2 - Below Average</option>
+                                        <option value="3">3 - Average</option>
+                                        <option value="4">4 - High Confidence</option>
+                                        <option value="5">5 - Lock of the Day</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="units">Units</label>
+                                    <select id="units" name="units" required>
+                                        <option value="">Select Units</option>
+                                        <option value="0.5">0.5 Units</option>
+                                        <option value="1">1 Unit</option>
+                                        <option value="1.5">1.5 Units</option>
+                                        <option value="2">2 Units</option>
+                                        <option value="3">3 Units</option>
+                                        <option value="5">5 Units (Max Bet)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="reasoning">Reasoning (Optional)</label>
+                                <input type="text" id="reasoning" name="reasoning" placeholder="Brief explanation for your pick">
+                            </div>
+
+                            <button type="submit" class="submit-pick">SUBMIT PICK</button>
+                        </form>
+                    </div>
+
+                    <div class="picks-history">
+                        <h3 style="color: var(--neon-gold); font-family: 'Orbitron', monospace; margin-bottom: 20px; text-align: center;">Your Pick History</h3>
+                        <div id="picksContainer">
+                            <!-- Sample picks for demonstration -->
+                            <div class="pick-item win">
+                                <div class="pick-details">
+                                    <div class="pick-game">Lakers vs Warriors</div>
+                                    <div class="pick-bet">Lakers -5.5 (-110) | 2 Units</div>
+                                </div>
+                                <div class="pick-result win">WIN</div>
+                            </div>
+                            <div class="pick-item loss">
+                                <div class="pick-details">
+                                    <div class="pick-game">Cowboys vs Giants</div>
+                                    <div class="pick-bet">Over 45.5 (-105) | 1 Unit</div>
+                                </div>
+                                <div class="pick-result loss">LOSS</div>
+                            </div>
+                            <div class="pick-item pending">
+                                <div class="pick-details">
+                                    <div class="pick-game">Celtics vs Heat</div>
+                                    <div class="pick-bet">Celtics ML (+120) | 1.5 Units</div>
+                                </div>
+                                <div class="pick-result pending">PENDING</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </section>
-            
-            <section class="cta">
-                <div class="section-header reveal">
-                    <h2>The Record Starts Now.</h2>
-                    <p>The era of the guru is over. The era of the record has begun. Witness the transparency from day one.</p>
+            </div>
+
+            <!-- Other Sections (Coming Soon) -->
+            <div id="record" class="page-section">
+                <div class="coming-soon">
+                    <h2>The Record</h2>
+                    <p>Comprehensive tracking and verification system coming soon...</p>
+                    <div class="glass-card" style="max-width: 600px; margin: 0 auto;">
+                        <h3 style="color: var(--neon-gold); margin-bottom: 15px;">Features in Development:</h3>
+                        <ul style="text-align: left; color: var(--text-secondary); line-height: 2;">
+                            <li>Real-time pick verification</li>
+                            <li>Historical performance analytics</li>
+                            <li>Win/loss streak tracking</li>
+                            <li>ROI calculations</li>
+                            <li>Public leaderboards</li>
+                        </ul>
+                    </div>
                 </div>
-                <a href="#" class="cta-button reveal">JOIN THE REVOLUTION</a>
-            </section>
+            </div>
+
+            <div id="arena" class="page-section">
+                <div class="coming-soon">
+                    <h2>The Arena</h2>
+                    <p>Head-to-head competitions and tournaments launching soon...</p>
+                    <div class="glass-card" style="max-width: 600px; margin: 0 auto;">
+                        <h3 style="color: var(--neon-gold); margin-bottom: 15px;">Arena Features:</h3>
+                        <ul style="text-align: left; color: var(--text-secondary); line-height: 2;">
+                            <li>1v1 Handicapper Battles</li>
+                            <li>Monthly Tournaments</li>
+                            <li>Challenger Rankings</li>
+                            <li>Prize Pools</li>
+                            <li>Live Battle Streams</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="data" class="page-section">
+                <div class="coming-soon">
+                    <h2>Data Core</h2>
+                    <p>Advanced analytics and insights hub in development...</p>
+                </div>
+            </div>
+
+            <div id="blog" class="page-section">
+                <div class="coming-soon">
+                    <h2>Blog</h2>
+                    <p>Expert analysis and betting insights coming soon...</p>
+                </div>
+            </div>
+
+            <div id="forums" class="page-section">
+                <div class="coming-soon">
+                    <h2>Community Forums</h2>
+                    <p>Join the discussion with fellow handicappers...</p>
+                    <div class="glass-card" style="max-width: 600px; margin: 0 auto;">
+                        <h3 style="color: var(--neon-gold); margin-bottom: 15px;">Forum Categories:</h3>
+                        <ul style="text-align: left; color: var(--text-secondary); line-height: 2;">
+                            <li>NFL Discussion</li>
+                            <li>NBA Talk</li>
+                            <li>MLB Analysis</li>
+                            <li>College Sports</li>
+                            <li>Betting Strategies</li>
+                            <li>Newcomer Help</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="app" class="page-section">
+                <div class="coming-soon">
+                    <h2>Mobile App</h2>
+                    <p>iOS and Android apps launching Q2 2025...</p>
+                </div>
+            </div>
+
+            <div id="odds" class="page-section">
+                <div class="coming-soon">
+                    <h2>Live Odds</h2>
+                    <p>Real-time odds comparison from top sportsbooks...</p>
+                </div>
+            </div>
+
+            <div id="leaderboards" class="page-section">
+                <div class="coming-soon">
+                    <h2>Leaderboards</h2>
+                    <p>Rankings and performance metrics for all users...</p>
+                </div>
+            </div>
+
+            <div id="signup" class="page-section">
+                <div class="picks-container">
+                    <div class="section-header">
+                        <h2>Join the <span class="highlight">Revolution</span></h2>
+                        <p>Create your account and start building your verified track record today.</p>
+                    </div>
+
+                    <div class="pick-form">
+                        <form id="signupForm">
+                            <div class="form-group">
+                                <label for="username">Username</label>
+                                <input type="text" id="username" name="username" placeholder="Choose your username" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="password">Password</label>
+                                <input type="password" id="password" name="password" placeholder="Create a password" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm Password</label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+                            </div>
+
+                            <button type="submit" class="submit-pick">CREATE ACCOUNT</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </main>
 
         <footer>
@@ -592,6 +1018,90 @@
     </div>
 
     <script>
+        // Navigation functionality
+        function showSection(sectionId) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.page-section');
+            sections.forEach(section => section.classList.remove('active'));
+
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+
+            // Update nav active states
+            const navLinks = document.querySelectorAll('nav a');
+            navLinks.forEach(link => link.classList.remove('active'));
+
+            // Add active class to clicked nav item (if it exists)
+            event.target?.classList.add('active');
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Pick form submission
+        document.getElementById('pickForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const pick = {
+                sport: formData.get('sport'),
+                team1: formData.get('team1'),
+                team2: formData.get('team2'),
+                betType: formData.get('betType'),
+                pick: formData.get('pick'),
+                odds: formData.get('odds'),
+                confidence: formData.get('confidence'),
+                units: formData.get('units'),
+                reasoning: formData.get('reasoning'),
+                timestamp: new Date().toISOString(),
+                status: 'pending'
+            };
+
+            // Add pick to history (in a real app, this would go to a database)
+            addPickToHistory(pick);
+            
+            // Reset form
+            this.reset();
+            
+            // Show success message
+            alert('Pick submitted successfully! It has been added to your permanent record.');
+        });
+
+        // Function to add pick to history display
+        function addPickToHistory(pick) {
+            const container = document.getElementById('picksContainer');
+            const pickElement = document.createElement('div');
+            pickElement.className = 'pick-item pending';
+            
+            pickElement.innerHTML = `
+                <div class="pick-details">
+                    <div class="pick-game">${pick.team1} vs ${pick.team2}</div>
+                    <div class="pick-bet">${pick.pick} (${pick.odds}) | ${pick.units} Units</div>
+                </div>
+                <div class="pick-result pending">PENDING</div>
+            `;
+            
+            // Add to top of list
+            container.insertBefore(pickElement, container.firstChild);
+        }
+
+        // Signup form submission
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            // In a real app, this would create an account
+            alert('Account created successfully! Welcome to Trust My Record.');
+            showSection('picks');
+        });
+
         // Interactive card effects
         document.addEventListener('mousemove', (e) => {
             const cards = document.querySelectorAll('.glass-card');
@@ -626,6 +1136,15 @@
                 `;
             } catch (error) {
                 // Silently handle any errors
+            }
+        });
+
+        // Initialize active nav state for home
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set home as active by default
+            const homeSection = document.getElementById('home');
+            if (homeSection) {
+                homeSection.classList.add('active');
             }
         });
     </script>
