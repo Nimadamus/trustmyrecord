@@ -1,90 +1,48 @@
 {% extends "base.html" %}
 
 {% block content %}
-        <section class="hero">
-            <div class="container">
-                <h1>THE FUTURE OF SPORTS HANDICAPPING</h1>
-                <p>Immutable records. Transparent competition. Eternal bragging rights. Your picks are locked in forever - no edits, no excuses, just pure skill on display.</p>
-                <p class="slogan">Are you one of the people who claim you're an expert handicapper? Cool, you're one of the reasons this site exists. It should be easy to prove it.</p>
-                <button class="cta-button">ENTER THE ARENA</button>
-            </div>
-        </section>
+<section class="hero">
+    <div class="container">
+        <h1>THE PLATFORM IS THE FUTURE</h1>
+        <p>The world's first immutable sports handicapping platform.</p>
+        <a href="{{ url_for('auth.register') }}" class="cta-button">SIGN UP</a>
+    </div>
+</section>
 
-        <section class="features">
-            <div class="container">
-                <div class="glass-card feature-card">
-                    <div class="feature-icon">🔒</div>
-                    <h3>IMMUTABLE RECORDS</h3>
-                    <p>Every pick is permanently locked in our blockchain-inspired system. Once the line moves, your prediction becomes part of your eternal record. No takebacks, no excuses.</p>
-                </div>
-                
-                <div class="glass-card feature-card">
-                    <div class="feature-icon">👁️</div>
-                    <h3>HIDDEN UNTIL SETTLED</h3>
-                    <p>All picks remain invisible until games conclude. No copying, no influence - just pure handicapping skill. The ultimate test of prediction prowess.</p>
-                </div>
-                
-                <div class="glass-card feature-card">
-                    <div class="feature-icon">🏆</div>
-                    <h3>ETERNAL COMPETITION</h3>
-                    <p>Climb the leaderboards with detailed statistics that span your entire career. ROI, win percentage, streaks - everything tracked with surgical precision.</p>
-                </div>
-                
-                <div class="glass-card feature-card">
-                    <div class="feature-icon">💬</div>
-                    <h3>ELITE COMMUNITY</h3>
-                    <p>Connect with serious handicappers in our sport-focused forums. Challenge others, share insights, and prove your dominance in head-to-head competitions.</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="dashboard-preview">
-            <div class="container">
-                <h2>YOUR COMMAND CENTER</h2>
-                <div class="dashboard-mockup glass-card glow">
-                    <div class="stats-grid">
-                        <div class="stat-box">
-                            <div class="stat-number">78.4%</div>
-                            <div class="stat-label">Win Rate</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-number">+24.7%</div>
-                            <div class="stat-label">ROI</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-number">247</div>
-                            <div class="stat-label">Total Picks</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-number">12</div>
-                            <div class="stat-label">Win Streak</div>
-                        </div>
-                    </div>
-
-                    <div class="leaderboard">
-                        <h3>GLOBAL LEADERBOARD</h3>
-                        <div class="leaderboard-item">
-                            <span><span class="rank">#1</span> QuantumBetter</span>
-                            <span>+127.3% ROI</span>
-                        </div>
-                        <div class="leaderboard-item">
-                            <span><span class="rank">#2</span> AlgoMaster</span>
-                            <span>+98.7% ROI</span>
-                        </div>
-                        <div class="leaderboard-item">
-                            <span><span class="rank">#3</span> DataDriven</span>
-                            <span>+89.2% ROI</span>
-                        </div>
-                        <div class="leaderboard-item">
-                            <span><span class="rank">#4</span> SportsSeer</span>
-                            <span>+76.1% ROI</span>
-                        </div>
-                        <div class="leaderboard-item">
-                            <span><span class="rank">#5</span> YourUsername</span>
-                            <span>+24.7% ROI</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+<section class="features">
+    <div class="container">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <article class="card">
+              <div class="card-icon"><img src="/static/img/icons/track.svg" alt=""></div>
+              <h3>Track Every Pick</h3>
+              <p>Your complete betting history stored permanently and publicly.</p>
+            </article>
+            <article class="card">
+              <div class="card-icon"><img src="/static/img/icons/analytics.svg" alt=""></div>
+              <h3>Advanced Analytics</h3>
+              <p>Gain insights into your performance with detailed stats and analytics.</p>
+            </article>
+            <article class="card">
+              <div class="card-icon"><img src="/static/img/icons/sell.svg" alt=""></div>
+              <h3>Sell Your Picks</h3>
+              <p>Monetize your expertise by selling your picks to other users.</p>
+            </article>
+            <article class="card">
+              <div class="card-icon"><img src="/static/img/icons/trivia.svg" alt=""></div>
+              <h3>Sports Trivia & Polls</h3>
+              <p>Test your sports knowledge and participate in community polls.</p>
+            </article>
+            <article class="card">
+              <div class="card-icon"><img src="/static/img/icons/immutable.svg" alt=""></div>
+              <h3>Immutable Records</h3>
+              <p>All records are stored on a decentralized ledger for ultimate transparency.</p>
+            </article>
+            <article class="card">
+              <div class="card-icon"><img src="/static/img/icons/compete.svg" alt=""></div>
+              <h3>Compete & Prove It</h3>
+              <p>Climb the leaderboards and prove your skills against the best.</p>
+            </article>
+        </div>
+    </div>
+</section>
 {% endblock %}

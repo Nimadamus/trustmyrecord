@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>BetLegend Picks – Expert picks. Winning records. All tracked daily.</title>
+    <link href="https://www.betlegendpicks.com/newlogo.png" rel="icon" type="image/png"/>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght @500;700;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght @400;700&display=swap" rel="stylesheet"/>
+    <style>
+        :root { --glow-color: #00e0ff; --win-color: #39FF14; --loss-color: #FF3131; }
+        body { margin: 0; padding-bottom: 95px; background-color: #000; background-image: url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?q=80&w=2071&auto=format&fit=crop'); background-size: cover; background-position: center; background-attachment: fixed; font-family: 'Orbitron', sans-serif; color: white; overflow-x: hidden; }
+        .ticker-wrap { position: fixed; top: 0; left: 0; width: 100%; background-color: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); padding: 12px 0; z-index: 1001; overflow: hidden; border-bottom: 1px solid rgba(0, 224, 255, 0.4); }
+        .ticker { display: inline-block; white-space: nowrap; padding-left: 100%; animation: ticker-scroll 85s linear infinite; }
+        .ticker__item { display: inline-flex; align-items: center; gap: 10px; padding: 0 2.5rem; font-family: 'Roboto', sans-serif; font-size: 15px; color: #ccc; }
+        .ticker__item .pick-text { font-family: 'Orbitron', sans-serif; font-weight: 700; color: #fff; }
+        .ticker__item .grade { font-weight: 700; font-family: 'Orbitron', sans-serif; padding: 4px 9px; border-radius: 5px; font-size: 13px; border: 1px solid; }
+        .ticker__item .grade.win { color: var(--win-color); border-color: var(--win-color); background-color: rgba(57, 255, 20, 0.15); }
+        .ticker__item .grade.loss { color: var(--loss-color); border-color: var(--loss-color); background-color: rgba(255, 49, 49, 0.15); }
+        .ticker__separator { color: var(--glow-color); font-weight: 700; font-size: 20px; }
+        @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+        .fixed-sidebar { position: fixed; top: 80px; left: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 20px; width: 300px; }
+        .special-offer-box { width: 100%; text-align: center; padding: 20px; border: 2px solid gold; border-radius: 12px; background: rgba(255, 215, 0, 0.15); box-shadow: 0 0 20px gold; font-family: Arial, sans-serif; box-sizing: border-box; animation: pulseGlow 2s infinite; }
+        .special-offer-box h2 { color: gold; font-size: 24px; font-weight: bold; margin: 0 0 10px 0; text-shadow: 0 0 8px orange; text-transform: uppercase; }
+        .special-offer-box p { color: #eee; font-size: 18px; font-weight: bold; line-height: 1.4; margin: 0; }
+        @keyframes pulseGlow { 0% { box-shadow:0 0 15px gold; } 50% { box-shadow:0 0 35px orange; } 100% { box-shadow:0 0 15px gold; } }
+        .plans-container { display: flex; flex-direction: column; gap: 15px; }
+        .plan-card { text-align: center; padding: 15px; background: rgba(17, 17, 17, 0.8); border: 1px solid var(--glow-color); border-radius: 8px; text-decoration: none; color: #fff; transition: all 0.3s ease; }
+        .plan-card:hover { background-color: rgba(0, 224, 255, 0.15); transform: translateY(-3px); }
+        .plan-card .plan-title { font-size: 18px; color: var(--glow-color); font-weight: 700; margin-bottom: 5px; }
+        .plan-card .plan-price { font-size: 15px; font-family: 'Roboto', sans-serif; }
+        .content-wrapper { position: relative; z-index: 10; width: 100%; max-width: 900px; margin: 0 auto; padding: 70px 20px 40px 20px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; }
+        .header-branding { text-align: center; margin-bottom: 40px; }
+        .title { font-size: 64px; font-weight: 900; color: #fff; margin: 0; text-shadow: 0 0 10px rgba(255,255,255,0.5), 0 0 25px var(--glow-color); }
+        .title .highlight { color: var(--glow-color); }
+        .subtitle { font-size: 20px; color: #ccc; margin-top: 15px; text-transform: uppercase; letter-spacing: 2px; font-family: 'Roboto', sans-serif; }
+        .nav-links { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 15px 35px; width: 100%; padding: 20px 0; margin-bottom: 40px; border-top: 1px solid rgba(0, 224, 255, 0.2); border-bottom: 1px solid rgba(0, 224, 255, 0.2); background: rgba(0,0,0,0.3); }
+        .nav-links a, .dropdown .dropbtn { color: var(--glow-color); text-decoration: none; font-size: 18px; font-weight: bold; transition: all 0.3s ease; background: none; border: none; font-family: 'Orbitron', sans-serif; cursor: pointer; padding: 5px 0; }
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content { display: none; position: absolute; background-color: rgba(0,0,0,0.95); backdrop-filter: blur(5px); min-width: 180px; box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2); z-index: 1000; border: 1px solid rgba(0, 224, 255, 0.2); border-radius: 4px; padding: 10px 0; margin-top: 10px; }
+        .dropdown-content a { color: var(--glow-color); padding: 12px 16px; text-decoration: none; display: block; font-size: 16px; text-align: left; }
+        .dropdown-content a:hover { background-color: rgba(0, 224, 255, 0.1); color: #fff; }
+        .dropdown.show .dropdown-content { display: block; }
+        .dropbtn::after { content: ' ▼'; font-size: 0.6em; vertical-align: middle; }
+        .gif-showcase { width: 100%; max-width: 600px; border: 2px solid var(--glow-color); border-radius: 14px; box-shadow: 0 0 35px rgba(0, 224, 255, 0.5); overflow: hidden; margin-bottom: 15px; }
+        .gif-showcase img { width: 100%; display: block; }
+        .caption { text-align: center; font-size: 14px; color: #888; width: 100%; max-width: 600px; box-sizing: border-box; margin-bottom: 40px; }
+        .interactive-dashboard { position: fixed; bottom: 0; left: 0; width: 100%; height: 95px; background: rgba(10, 15, 25, 0.8); backdrop-filter: blur(12px); border-top: 1px solid rgba(0, 224, 255, 0.4); display: grid; grid-template-columns: repeat(4, 1fr); z-index: 1000; }
+        .dash-item { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 5px; gap: 8px; border-right: 1px solid rgba(0, 224, 255, 0.2); text-decoration: none; color: #fff; }
+        .dash-item:last-child { border-right: none; }
+        .dash-item.clickable:hover { background-color: rgba(0, 224, 255, 0.1); cursor: pointer; }
+        .dash-item svg { width: 24px; height: 24px; fill: var(--glow-color); filter: drop-shadow(0 0 3px var(--glow-color)); }
+        .dash-item h3 { margin: 0; font-size: 12px; font-weight: 700; color: #ccc; text-transform: uppercase; letter-spacing: 0.5px; }
+        .dash-item p { margin: 0; font-size: 16px; font-weight: 700; font-family: 'Roboto', sans-serif; line-height: 1.3; }
+        .dash-item .record { font-family: 'Orbitron', sans-serif; font-size: 18px; }
+        .dash-item .units.win { color: var(--win-color); }
+        .dash-item .units.loss { color: var(--loss-color); }
+
+        /* Summary Stats Styling */
+        .summary-stats { 
+            background: rgba(0, 0, 0, 0.7); 
+            border: 1px solid var(--glow-color); 
+            border-radius: 10px; 
+            padding: 20px; 
+            margin-bottom: 30px; 
+            text-align: center; 
+        }
+        .summary-stats h2 { 
+            color: var(--glow-color); 
+            margin-bottom: 15px; 
+        }
+        .stat-item { 
+            display: inline-block; 
+            margin: 0 20px; 
+            text-align: center; 
+        }
+        .stat-label { 
+            display: block; 
+            font-size: 14px; 
+            color: #ccc; 
+            text-transform: uppercase; 
+        }
+        .stat-value { 
+            display: block; 
+            font-size: 24px; 
+            font-weight: bold; 
+            color: #fff; 
+            font-family: 'Orbitron', sans-serif; 
+        }
+        .units-win { color: var(--win-color); }
+        .units-loss { color: var(--loss-color); }
+        .roi-win { color: var(--win-color); }
+        .roi-loss { color: var(--loss-color); }
+
+        @media (max-width: 1024px) { .fixed-sidebar { display: none; } }
+        @media (max-width: 768px) { body { padding-bottom: 190px; } .interactive-dashboard { height: 190px; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); } .dash-item { border-bottom: 1px solid rgba(0, 224, 255, 0.2); } }
+    </style>
+</head>
+<body>
+
+    <div class="ticker-wrap"><div class="ticker" id="ticker-content"><div class="ticker__item">Loading...</div></div></div>
+
+    <div class="fixed-sidebar">
+        <div class="special-offer-box"><h2>SPECIAL OFFER</h2><p>Pay for half a season upfront and the other half mid-season with the money you win from us!</p></div>
+        <div class="plans-container">
+            <a href="https://buy.stripe.com/28E7sLdVkdye8f86m5grS04" class="plan-card" target="_blank"><div class="plan-title">Daily Pass</div><div class="plan-price">$25 / day</div></a>
+            <a href="https://buy.stripe.com/6oUeVd6sSbq6gLE4dXgrS08" class="plan-card" target="_blank"><div class="plan-title">Weekly Pass</div><div class="plan-price">$79 / week</div></a>
+            <a href="https://buy.stripe.com/fZu6oH4kK1Pwbrk39TgrS07" class="plan-card" target="_blank"><div class="plan-title">Monthly Pass</div><div class="plan-price">$149 / month</div></a>
+            <a href="https://buy.stripe.com/bJe5kD9F43XE2UOh0JgrS03" class="plan-card" target="_blank"><div class="plan-title">Yearly Pass</div><div class="plan-price">$750 / year</div></a>
+        </div>
+    </div>
+
+    <div class="content-wrapper">
+        <div class="header-branding">
+            <h1 class="title">BET<span class="highlight">LEGEND</span></h1>
+            <h2 class="subtitle">THE UNIVERSE OF PROBABILITIES HAS JUST BEEN HACKED.</h2>
+        </div>
+        <div class="nav-links">
+            <a href="blog-page5.html">Picks & Analysis</a>
+            <div class="dropdown">
+                <button class="dropbtn" onclick="toggleDropdown(this)">Records</button>
+                <div class="dropdown-content">
+                    <a href="betlegend-verified-records.html">MLB Records</a>
+                    <a href="nfl-records.html">NFL Records</a>
+                    <a href="ncaaf-records.html">NCAAF Records</a>
+                </div>
+            </div>
+            <div class="dropdown">
+                <button class="dropbtn" onclick="toggleDropdown(this)">Sports</button>
+                <div class="dropdown-content">
+                    <a href="nfl.html">NFL</a>
+                    <a href="mlb-page2.html">MLB</a>
+                    <a href="ncaaf.html">NCAAF</a>
+                </div>
+            </div>
+            <div class="dropdown">
+                <button class="dropbtn" onclick="toggleDropdown(this)">Resources</button>
+                <div class="dropdown-content">
+                    <a href="howitworks.html">How It Works</a>
+                    <a href="bankroll.html">Bankroll</a>
+                </div>
+            </div>
+            <a href="news.html">News</a>
+            <a href="featured-game-of-the-day.html">Game of the Day</a>
+            <div class="dropdown">
+                <button class="dropbtn" onclick="toggleDropdown(this)">Community</button>
+                <div class="dropdown-content">
+                    <a href="https://twitter.com/BetLegend2025" target="_blank">Twitter</a>
+                    <a href="https://discord.gg/NbMc3wCV" target="_blank">Discord</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-stats">
+            <h2>Summary Stats</h2>
+            <div class="stat-item">
+                <span class="stat-label">Record</span>
+                <span class="stat-value" id="summary-record">0-0-0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Units</span>
+                <span class="stat-value" id="summary-units">+0.00</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Win %</span>
+                <span class="stat-value" id="summary-win-pct">0.0%</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">ROI</span>
+                <span class="stat-value" id="summary-roi">+0.00%</span>
+            </div>
+        </div>
+
+        <div class="gif-showcase"><img alt="Stephen Curry GIF" src="https://nimadamus.github.io/curry.gif"/></div>
+        <p class="caption">Real-time dashboard powered by our official records.</p>
+    </div>
+
+    <!-- NEW DASHBOARD LAYOUT -->
+    <div class="interactive-dashboard">
+        <div class="dash-item" id="dash-mlb">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.75 2.25C12.75 1.83579 12.4142 1.5 12 1.5C11.5858 1.5 11.25 1.83579 11.25 2.25V3.91901C8.23238 4.41328 6 7.03447 6 10.125V18.75C6 19.1642 6.33579 19.5 6.75 19.5H17.25C17.6642 19.5 18 19.1642 18 18.75V10.125C18 7.03447 15.7676 4.41328 12.75 3.91901V2.25ZM9.75 21C9.75 22.2426 10.7574 23.25 12 23.25C13.2426 23.25 14.25 22.2426 14.25 21H9.75Z"></path></svg>
+            <h3>MLB</h3>
+            <p id="mlb-stats">Loading...</p>
+        </div>
+        <div class="dash-item" id="dash-nfl">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2ZM12 16.5C14.4853 16.5 16.5 14.4853 16.5 12C16.5 9.51472 14.4853 7.5 12 7.5C9.51472 7.5 7.5 9.51472 7.5 12C7.5 14.4853 9.51472 16.5 12 16.5Z"></path></svg>
+            <h3>NFL</h3>
+            <p id="nfl-stats">Loading...</p>
+        </div>
+        <div class="dash-item" id="dash-ncaaf">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.25C3 4.83579 3.33579 4.5 3.75 4.5H20.25C20.6642 4.5 21 4.83579 21 5.25V18.75C21 19.1642 20.6642 19.5 20.25 19.5H3.75C3.33579 19.5 3 19.1642 3 18.75V5.25ZM5.25 6.75V11.25H18.75V6.75H5.25ZM5.25 12.75V17.25H18.75V12.75H5.25Z"></path></svg>
+            <h3>NCAAF</h3>
+            <p id="ncaaf-stats">Loading...</p>
+        </div>
+        <a class="dash-item clickable" href="https://www.youwager.lv/join-now?affid=BABS123" target="_blank">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.41 11.58L12.41 2.58C12.05 2.22 11.55 2 11 2H4C2.9 2 2 2.9 2 4V11C2 11.55 2.22 12.05 2.59 12.41L11.59 21.41C11.95 21.78 12.45 22 13 22C13.55 22 14.05 21.78 14.41 21.41L21.41 14.41C21.78 14.05 22 13.55 22 13C22 12.45 21.78 11.95 21.41 11.58M13 20L4 11V4H11L20 13L13 20M6.5 7.5C7.33 7.5 8 6.83 8 6C8 5.17 7.33 4.5 6.5 4.5C5.67 4.5 5 5.17 5 6C5 6.83 5.67 7.5 6.5 7.5M19 12L17 14L15 12L17 10L19 12Z"></path></svg>
+            <h3>Sportsbook</h3>
+            <p>350% <span class="units win">BONUS</span></p>
+        </a>
+    </div>
+
+<script>
+// Fixed dropdown functionality
+function toggleDropdown(button) {
+    const dropdown = button.parentElement;
+    const isOpen = dropdown.classList.contains('show');
+    
+    // Close all dropdowns first
+    document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('show'));
+    
+    // Toggle current dropdown if it wasn't open
+    if (!isOpen) {
+        dropdown.classList.add('show');
+    }
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.matches('.dropbtn') && !event.target.closest('.dropdown-content')) {
+        document.querySelectorAll('.dropdown').forEach(dropdown => {
+            dropdown.classList.remove('show');
+        });
+    }
+});
+
+// Ensure dropdown links work properly
+document.addEventListener('click', function(event) {
+    if (event.target.matches('.dropdown-content a')) {
+        event.stopPropagation();
+        // Let the link navigate normally
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    try {
+        // This is the static data for the entire site, taken from your CSVs.
+        const allPicksData = [
+    {"Date":"8-25-2025","Sport":"MLB","Pick":"Tigers F5 -0.5","Line":"-154","Result":"L","Units":"-1.54"},
+    {"Date":"8-25-2025","Sport":"MLB","Pick":"Angels Team Total under 3.5","Line":"-145","Result":"L","Units":"-2.9"},
+    {"Date":"8-25-2025","Sport":"MLB","Pick":"Phillies F5 ML ","Line":"-140","Result":"L","Units":"-1.4"},
+    {"Date":"8-25-2025","Sport":"MLB","Pick":"Brewers F5 -0.5","Line":"-120","Result":"W","Units":"1"},
+    {"Date":"8-25-2025","Sport":"MLB","Pick":"Brewers Team Total over 3.5","Line":"-175","Result":"W","Units":"1"},
+    {"Date":"8-24-2025","Sport":"MLB","Pick":"Guardians/Rangers under 8","Line":"-114","Result":"W","Units":"2"},
+    {"Date":"8-24-2025","Sport":"MLB","Pick":"Phillies -1.5","Line":"-142","Result":"L","Units":"-1.42"},
+    {"Date":"8-24-2025","Sport":"MLB","Pick":"Tigers F5 ML","Line":"-160","Result":"W","Units":"1"},
+    {"Date":"8-24-2025","Sport":"MLB","Pick":"Rockies Team Total under 2.5","Line":"-125","Result":"W","Units":"1"},
+    {"Date":"8-24-2025","Sport":"MLB","Pick":"Pirates -1.5","Line":"-158","Result":"W","Units":"1"},
+    {"Date":"8-23-2025","Sport":"MLB","Pick":"Reds ML","Line":"-132","Result":"L","Units":"-1.32"},
+    {"Date":"8-23-2025","Sport":"MLB","Pick":"Dodgers ML","Line":"-144","Result":"L","Units":"-1.44"},
+    {"Date":"8-23-2025","Sport":"MLB","Pick":"Pirates ML","Line":"-172","Result":"W","Units":"1"},
+    {"Date":"8-23-2025","Sport":"MLB","Pick":"Nationals/Phillies over 10","Line":"-110","Result":"P","Units":"0"},
+    {"Date":"8-23-2025","Sport":"MLB","Pick":"Giants/Brewers F5 under 4.5","Line":"-160","Result":"W","Units":"2"},
+    {"Date":"8-23-2025","Sport":"MLB","Pick":"Royals F5 ML","Line":"-105","Result":"L","Units":"-1.05"},
+    {"Date":"8-23-2025","Sport":"MLB","Pick":"Red Sox/Yankees under 8","Line":"-106","Result":"L","Units":"-1.06"},
+    {"Date":"8-23-2025","Sport":"MLB","Pick":"Red Sox F5 ML ","Line":"-154","Result":"W","Units":"1"},
+    {"Date":"8-22-2025","Sport":"MLB","Pick":"Guardians/Rangers under 8","Line":"-129","Result":"W","Units":"1"},
+    {"Date":"8-22-2025","Sport":"MLB","Pick":"Yankees Team Total over 4.5","Line":"-115","Result":"L","Units":"-1.15"},
+    {"Date":"8-22-2025","Sport":"MLB","Pick":"Tigers/Royals under 8","Line":"-102","Result":"L","Units":"-1.02"},
+    {"Date":"8-22-2025","Sport":"MLB","Pick":"Phillies F5 ML","Line":"-145","Result":"L","Units":"-1.45"},
+    {"Date":"8-22-2025","Sport":"MLB","Pick":"Pirates -1.5","Line":"109","Result":"W","Units":"1.09"},
+    {"Date":"8-21-2025","Sport":"MLB","Pick":"Yankees/Red Sox over 8","Line":"-117","Result":"W","Units":"2"},
+    {"Date":"8-21-2025","Sport":"MLB","Pick":"Cardinals F5 ML","Line":"-125","Result":"W","Units":"1"},
+    {"Date":"8-21-2025","Sport":"MLB","Pick":"Astros Team Total over 4.5 ","Line":"100","Result":"W","Units":"1"},
+    {"Date":"8-21-2025","Sport":"MLB","Pick":"Giants/Padres F5 over 4.5","Line":"-110","Result":"W","Units":"1"},
+    {"Date":"8-21-2025","Sport":"MLB","Pick":"Cubs/Brewers under 7","Line":"-115","Result":"W","Units":"1"},
+    {"Date":"8-21-2025","Sport":"MLB","Pick":"Royals ML","Line":"-121","Result":"W","Units":"2"},
+    {"Date":"8-21-2025","Sport":"MLB","Pick":"Royals F5 ML","Line":"-125","Result":"W","Units":"1"},
+    {"Date":"8-20-2025","Sport":"MLB","Pick":"Reds ML","Line":"113","Result":"L","Units":"-1"},
+    {"Date":"8-20-2025","Sport":"MLB","Pick":"Cubs/Brewers under 7","Line":"-108","Result":"P","Units":"0"},
+    {"Date":"8-20-2025","Sport":"MLB","Pick":"Mets -1.5","Line":"-110","Result":"L","Units":"-1.1"},
+    {"Date":"8-20-2025","Sport":"MLB","Pick":"Tigers +1.5","Line":"-156","Result":"W","Units":"1"},
+    {"Date":"8-20-2025","Sport":"MLB","Pick":"Blue Jays ML","Line":"-1.57","Result":"L","Units":"-1.57"},
+    {"Date":"8-19-2025","Sport":"MLB","Pick":"Guardians ML","Line":"-105","Result":"L","Units":"-1.05"},
+    {"Date":"8-19-2025","Sport":"MLB","Pick":"Yankees/Rays under 8.5","Line":"-115","Result":"L","Units":"-1.15"},
+    {"Date":"8-19-2025","Sport":"MLB","Pick":"Dodgers/Rockies over 12","Line":"-110","Result":"W","Units":"1"},
+    {"Date":"8-19-2025","Sport":"MLB","Pick":"Tigers F5 -0.5","Line":"-105","Result":"L","Units":"-1.05"},
+    {"Date":"8-19-2025","Sport":"MLB","Pick":"Phillies ML","Line":"-187","Result":"W","Units":"1"},
+    {"Date":"8-19-2025","Sport":"MLB","Pick":"Twins F5 ML","Line":"-140","Result":"L","Units":"-1.4"},
+    {"Date":"8-19-2025","Sport":"MLB","Pick":"Nationals +1.5","Line":"-101","Result":"L","Units":"-1.01"},
+    {"Date":"8-19-2025","Sport":"MLB","Pick":"Cardinals +1.5","Line":"-187","Result":"W","Units":"1"},
+    {"Date":"8-19-2025","Sport":"MLB","Pick":"Astros/Tigers under 7","Line":"-120","Result":"W","Units":"2"},
+    {"Date":"8-18-2025","Sport":"MLB","Pick":"Tigers/Astros under 8.5","Line":"-116","Result":"L","Units":"-1.16"},
+    {"Date":"8-18-2025","Sport":"MLB","Pick":"Royals/Rangers under 9","Line":"-109","Result":"W","Units":"1"},
+    {"Date":"8-18-2025","Sport":"MLB","Pick":"Pirates/Blue Jays under 7","Line":"-106","Result":"P","Units":"0"},
+    {"Date":"8-18-2025","Sport":"MLB","Pick":"Pirates F5 ML","Line":"-154","Result":"P","Units":"0"},
+    {"Date":"8-18-2025","Sport":"MLB","Pick":"Cubs/Brewers under 8.5","Line":"-132","Result":"W","Units":"1"},
+    {"Date":"8-17-2025","Sport":"MLB","Pick":"Mariners ML","Line":"-126","Result":"L","Units":"-1.26"},
+    {"Date":"8-17-2025","Sport":"MLB","Pick":"Dodgers/Padres under 8.5","Line":"-127","Result":"L","Units":"-1.27"},
+    {"Date":"8-17-2025","Sport":"MLB","Pick":"Rays/Giants under 8","Line":"-128","Result":"P","Units":"0"},
+    {"Date":"8-17-2025","Sport":"MLB","Pick":"Rays Team Total under 3.5","Line":"-130","Result":"W","Units":"2"},
+    {"Date":"8-17-2025","Sport":"MLB","Pick":"Yankees/Cardinals over 9","Line":"-130","Result":"W","Units":"1"},
+    {"Date":"8-17-2025","Sport":"MLB","Pick":"White Sox Team Total under 4.5","Line":"-140","Result":"W","Units":"2"},
+    {"Date":"8-17-2025","Sport":"MLB","Pick":"Rangers F5 ML ","Line":"-120","Result":"W","Units":"1"},
+    {"Date":"8-17-2025","Sport":"MLB","Pick":"Phillies ML","Line":"-175","Result":"W","Units":"2"},
+    {"Date":"8-17-2025","Sport":"MLB","Pick":"Red Sox F5 ML -0.5","Line":"-154","Result":"W","Units":"1"},
+    {"Date":"8-16-2025","Sport":"MLB","Pick":"Diamondbacks -1.5","Line":"-127","Result":"L","Units":"-1.27"},
+    {"Date":"8-16-2025","Sport":"MLB","Pick":"Cubs F5 -0.5","Line":"-166","Result":"L","Units":"-1.66"},
+    {"Date":"8-16-2025","Sport":"MLB","Pick":"Mariners/Mets F5 over 4.5","Line":"-125","Result":"L","Units":"-1.25"},
+    {"Date":"8-16-2025","Sport":"MLB","Pick":"Diamondbacks F5 -0.5","Line":"-125","Result":"W","Units":"1"},
+    {"Date":"8-16-2025","Sport":"MLB","Pick":"Brewers ML","Line":"-136","Result":"W","Units":"1"},
+    {"Date":"8-16-2025","Sport":"MLB","Pick":"Pirates Team Total under 3.5","Line":"-120","Result":"W","Units":"1"},
+    {"Date":"8-16-2025","Sport":"MLB","Pick":"Red Sox ML","Line":"-170","Result":"W","Units":"1"},
+    {"Date":"8-16-2025","Sport":"MLB","Pick":"Phillies ML","Line":"-146","Result":"L","Units":"-1.46"},
+    {"Date":"8-16-2025","Sport":"MLB","Pick":"Blue Jays ML","Line":"-148","Result":"W","Units":"2"},
+    {"Date":"8-15-2025","Sport":"MLB","Pick":"Diamondbacks -1.5","Line":"-126","Result":"L","Units":"-1.26"},
+    {"Date":"8-15-2025","Sport":"MLB","Pick":"Diamondbacks/Rockies over 12","Line":"-108","Result":"L","Units":"-2.16"},
+    {"Date":"8-15-2025","Sport":"MLB","Pick":"Royals ML","Line":"-171","Result":"W","Units":"1"},
+    {"Date":"8-15-2025","Sport":"MLB","Pick":"Mariners ML","Line":"106","Result":"W","Units":"1.06"},
+    {"Date":"8-15-2025","Sport":"MLB","Pick":"Phillies ML","Line":"-170","Result":"W","Units":"1"},
+    {"Date":"8-15-2025","Sport":"MLB","Pick":"Phillies/Nationals F5 under 4.5","Line":"-175","Result":"W","Units":"1"},
+    {"Date":"8-15-2025","Sport":"MLB","Pick":"Cubs/Pirates under 9","Line":"-108","Result":"W","Units":"1"},
+    {"Date":"8-14-2025","Sport":"MLB","Pick":"Mets ML","Line":"-194","Result":"L","Units":"-1.94"},
+    {"Date":"8-14-2025","Sport":"MLB","Pick":"Guardians ML","Line":"-144","Result":"W","Units":"1"},
+    {"Date":"8-14-2025","Sport":"MLB","Pick":"Tigers -1.5","Line":"-123","Result":"L","Units":"-1.23"},
+    {"Date":"8-14-2025","Sport":"MLB","Pick":"Rockies/Diamondbacks over 12","Line":"-115","Result":"L","Units":"-1.15"},
+    {"Date":"8-14-2025","Sport":"MLB","Pick":"Cubs/Blue Jays under 8.5","Line":"-119","Result":"W","Units":"1"},
+    {"Date":"8-13-2025","Sport":"MLB","Pick":"Mariners/Orioles under 9","Line":"-142","Result":"W","Units":"2"},
+    {"Date":"8-13-2025","Sport":"MLB","Pick":"Reds/Phillies F5 under 4","Line":"-160","Result":"W","Units":"1"},
+    {"Date":"8-13-2025","Sport":"MLB","Pick":"Astros ML","Line":"-175","Result":"W","Units":"1"},
+    {"Date":"8-13-2025","Sport":"MLB","Pick":"Brewers ML","Line":"-219","Result":"W","Units":"2"},
+    {"Date":"8-13-2025","Sport":"MLB","Pick":"Tigers ML ","Line":"-132","Result":"W","Units":"1"},
+    {"Date":"8-12-2025","Sport":"MLB","Pick":"Giants F5 ML ","Line":"-140","Result":"L","Units":"-1.4"},
+    {"Date":"8-12-2025","Sport":"MLB","Pick":"Astros Team Total over 3.5","Line":"-140","Result":"L","Units":"-2.8"},
+    {"Date":"8-12-2025","Sport":"MLB","Pick":"Cardinals -1.5","Line":"-106","Result":"L","Units":"-1.06"},
+    {"Date":"8-12-2025","Sport":"MLB","Pick":"Brewers/Pirates under 7","Line":"-121","Result":"L","Units":"-1.21"},
+    {"Date":"8-12-2025","Sport":"MLB","Pick":"Cardinals F5 -0.5","Line":"-140","Result":"L","Units":"-1.4"},
+    {"Date":"8-12-2025","Sport":"MLB","Pick":"Phillies F5 ML","Line":"-160","Result":"L","Units":"-1.6"},
+    {"Date":"8-12-2025","Sport":"MLB","Pick":"Reds/Phillies over 9","Line":"-117","Result":"L","Units":"-1.17"},
+    {"Date":"8-12-2025","Sport":"MLB","Pick":"Guardians ML","Line":"-149","Result":"W","Units":"1"},
+    {"Date":"8-12-2025","Sport":"MLB","Pick":"Mariners ML","Line":"-169","Result":"W","Units":"1"},
+    {"Date":"8-11-2025","Sport":"MLB","Pick":"Tigers/White Sox over 8.5","Line":"-115","Result":"L","Units":"-1.15"},
+    {"Date":"8-11-2025","Sport":"MLB","Pick":"Dodgers ML","Line":"-182","Result":"L","Units":"-1.82"},
+    {"Date":"8-11-2025","Sport":"MLB","Pick":"Giants/Padres under 7.5","Line":"-115","Result":"W","Units":"2"},
+    {"Date":"8-11-2025","Sport":"MLB","Pick":"Diamondbacks/Rangers under 8","Line":"-130","Result":"L","Units":"-2.6"},
+    {"Date":"8-11-2025","Sport":"MLB","Pick":"Cardinals -1.5","Line":"-110","Result":"L","Units":"-1.1"},
+    {"Date":"8-11-2025","Sport":"MLB","Pick":"Brewers ML","Line":"-208","Result":"W","Units":"2"},
+    {"Date":"8-11-2025","Sport":"MLB","Pick":"Yankees -1.5","Line":"114","Result":"W","Units":"1.14"},
+    {"Date":"8-11-2025","Sport":"MLB","Pick":"Nationals/Royals under 9","Line":"-121","Result":"L","Units":"-1.21"},
+    {"Date":"8-11-2025","Sport":"MLB","Pick":"Reds F5 ML","Line":"-145","Result":"W","Units":"1"},
+    {"Date":"8-10-2025","Sport":"MLB","Pick":"Giants/Nationals under 8","Line":"-108","Result":"P","Units":"0"},
+    {"Date":"8-10-2025","Sport":"MLB","Pick":"Rays/Mariners F5 under 4.5","Line":"-140","Result":"L","Units":"-2.8"},
+    {"Date":"8-10-2025","Sport":"MLB","Pick":"Brewers ML","Line":"-112","Result":"W","Units":"1"},
+    {"Date":"8-10-2025","Sport":"MLB","Pick":"Phillies ML","Line":"-157","Result":"W","Units":"1"},
+    {"Date":"8-10-2025","Sport":"MLB","Pick":"Rangers Team Total under 3.5","Line":"-135","Result":"W","Units":"1"},
+    {"Date":"8-10-2025","Sport":"MLB","Pick":"Diamondbacks/Rockies over 9","Line":"-119","Result":"W","Units":"2"},
+    {"Date":"8-10-2025","Sport":"MLB","Pick":"Marlins/Braves over 8","Line":"-147","Result":"P","Units":"0"},
+    {"Date":"8-10-2025","Sport":"MLB","Pick":"Twins/Royals under 10","Line":"-127","Result":"W","Units":"1"},
+    {"Date":"8-10-2025","Sport":"MLB","Pick":"Mets/Brewers under 9","Line":"-155","Result":"L","Units":"-1.55"},
+    {"Date":"8-9-2025","Sport":"MLB","Pick":"Rockies/Diamondbacks over 10","Line":"112","Result":"W","Units":"1.12"},
+    {"Date":"8-9-2025","Sport":"MLB","Pick":"Diamondbacks -1.5","Line":"-112","Result":"L","Units":"-1.12"},
+    {"Date":"8-9-2025","Sport":"MLB","Pick":"Guardians ML","Line":"-144","Result":"W","Units":"1"},
+    {"Date":"8-9-2025","Sport":"MLB","Pick":"Royals F5 ML","Line":"-125","Result":"W","Units":"1"},
+    {"Date":"8-9-2025","Sport":"MLB","Pick":"Astros F5 ML","Line":"-125","Result":"L","Units":"-1.25"},
+    {"Date":"8-9-2025","Sport":"MLB","Pick":"Phillies/Rangers under 8","Line":"-157","Result":"W","Units":"2"},
+    {"Date":"8-9-2025","Sport":"MLB","Pick":"Giants ML","Line":"-164","Result":"L","Units":"-3.28"},
+    {"Date":"8-8-2025","Sport":"MLB","Pick":"Red Sox/Padres over 8","Line":"-108","Result":"W","Units":"1"},
+    {"Date":"8-8-2025","Sport":"MLB","Pick":"Tigers Team Total over 4.5","Line":"-120","Result":"W","Units":"1"},
+    {"Date":"8-8-2025","Sport":"MLB","Pick":"Tigers -1.5","Line":"-137","Result":"L","Units":"-1.37"},
+    {"Date":"8-8-2025","Sport":"MLB","Pick":"Reds/Pirates under 8","Line":"-148","Result":"W","Units":"1"},
+    {"Date":"8-8-2025","Sport":"MLB","Pick":"Astros F5 ML","Line":"-130","Result":"W","Units":"1"},
+    {"Date":"8-8-2025","Sport":"MLB","Pick":"Phillies/Rangers F5 under 4.5","Line":"-175","Result":"L","Units":"-1.75"},
+    {"Date":"8-8-2025","Sport":"MLB","Pick":"Cubs ML","Line":"-156","Result":"L","Units":"-1.56"},
+    {"Date":"8-7-2025","Sport":"MLB","Pick":"Marlins ML","Line":"-119","Result":"L","Units":"-1.19"},
+    {"Date":"8-7-2025","Sport":"MLB","Pick":"Reds +1.5","Line":"-157","Result":"L","Units":"-1.57"},
+    {"Date":"8-7-2025","Sport":"MLB","Pick":"Pirates/Reds F5 under 4.5","Line":"-175","Result":"W","Units":"2"},
+    {"Date":"8-7-2025","Sport":"MLB","Pick":"White Sox/Mariners F5 under 4.5","Line":"-135","Result":"W","Units":"1"},
+    {"Date":"8-6-2025","Sport":"MLB","Pick":"Blue Jays/Rockies over 11.5","Line":"-108","Result":"W","Units":"1"},
+    {"Date":"8-6-2025","Sport":"MLB","Pick":"Red Sox ML","Line":"-150","Result":"L","Units":"-1.5"},
+    {"Date":"8-6-2025","Sport":"MLB","Pick":"Royals/Red Sox under 9 ","Line":"-114","Result":"L","Units":"-1.14"},
+    {"Date":"8-6-2025","Sport":"MLB","Pick":"White Sox Team Total under 2.5","Line":"100","Result":"L","Units":"-1"},
+    {"Date":"8-6-2025","Sport":"MLB","Pick":"Brewers ML","Line":"118","Result":"W","Units":"1.18"},
+    {"Date":"8-6-2025","Sport":"MLB","Pick":"Dodgers -1.5","Line":"-107","Result":"L","units":"-1.07"},
+    {"Date":"8-6-2025","Sport":"MLB","Pick":"Blue Jays -1.5","Line":"-149","Result":"W","Units":"1"},
+    {"Date":"8-6-2025","Sport":"MLB","Pick":"Giants ML","Line":"-157","Result":"W","Units":"2"},
+    {"Date":"8-6-2025","Sport":"MLB","Pick":"Orioles ML","Line":"128","Result":"W","Units":"1.28"},
+    {"Date":"8-5-2025","Sport":"MLB","Pick":"Rangers ML","Line":"-137","Result":"W","Units":"2"},
+    {"Date":"8-5-2025","Sport":"MLB","Pick":"White Sox/Mariners under 8","Line":"-146","Result":"L","Units":"-1.46"},
+    {"Date":"8-5-2025","Sport":"MLB","Pick":"Rockies/Blue Jays over 11.5","Line":"-115","Result":"W","Units":"1"},
+    {"Date":"8-5-2025","Sport":"MLB","Pick":"Brewers ML","Line":"-150","Result":"W","Units":"1"},
+    {"Date":"8-5-2025","Sport":"MLB","Pick":"Red Sox -1.5","Line":"-113","Result":"W","Units":"1"},
+    {"Date":"8-5-2025","Sport":"MLB","Pick":"Rangers F5 ML","Line":"-140","Result":"P","Units":"0"},
+    {"Date":"8-5-2025","Sport":"MLB","Pick":"Pirates Team Total under 3.5","Line":"-154","Result":"W","Units":"2"},
+    {"Date":"8-5-2025","Sport":"MLB","Pick":"Giants ML","Line":"-163","Result":"W","Units":"2"},
+    {"Date":"8-5-2025","Sport":"MLB","Pick":"Giants F5 ML ","Line":"-154","Result":"W","Units":"1"},
+    {"Date":"8-4-2025","Sport":"MLB","Pick":"Padres ML","Line":"-132","Result":"L","Units":"-1.32"},
+    {"Date":"8-4-2025","Sport":"MLB","Pick":"Mets/Guardians under 9","Line":"-147","Result":"L","Units":"-2.94"},
+    {"Date":"8-4-2025","Sport":"MLB","Pick":"Brewers ML","Line":"-143","Result":"W","Units":"2"},
+    {"Date":"8-4-2025","Sport":"MLB","Pick":"Marlins ML","Line":"-112","Result":"L","Units":"-1.12"},
+    {"Date":"8-4-2025","Sport":"MLB","Pick":"Brewers F5 ML","Line":"-130","Result":"W","Units":"1"},
+    {"Date":"8-4-2025","Sport":"MLB","Pick":"Tigers ML","Line":"-180","Result":"W","Units":"2"},
+    {"Date":"8-3-2025","Sport":"MLB","Pick":"Cubs/Orioles over 8","Line":"-110","Result":"P","Units":"0"},
+    {"Date":"8-3-2025","Sport":"MLB","Pick":"White Sox/Angels over 9","Line":"-123","Result":"W","Units":"1"},
+    {"Date":"8-3-2025","Sport":"MLB","Pick":"Brewers F5 ML","Line":"-175","Result":"W","Units":"1"},
+    {"Date":"8-3-2025","Sport":"MLB","Pick":"Pirates/Rockies over 11.5","Line":"-101","Result":"W","Units":"1"},
+    {"Date":"8-3-2025","Sport":"MLB","Pick":"Brewers ML","Line":"-187","Result":"W","Units":"2"},
+    {"Date":"8-3-2025","Sport":"MLB","Pick":"Astros ML ","Line":"-125","Result":"L","Units":"-2.5"},
+    {"Date":"8-2-2025","Sport":"MLB","Pick":"Astros/Red Sox over 9.5","Line":"-101","Result":"W","Units":"1"},
+    {"Date":"8-2-2025","Sport":"MLB","Pick":"Pirates Team Total over 5.5","Line":"-135","Result":"L","Units":"-1.35"},
+    {"Date":"8-2-2025","Sport":"MLB","Pick":"Dodgers/Rays F5 under 5.5","Line":"-166","Result":"W","Units":"1"},
+    {"Date":"8-2-2025","Sport":"MLB","Pick":"Tigers/Phillies F5 under 3.5","Line":"-135","Result":"W","Units":"1"},
+    {"Date":"8-2-2025","Sport":"MLB","Pick":"Cubs Team Total over 4.5","Line":"-115","Result":"L","Units":"-1.15"},
+    {"Date":"8-2-2025","Sport":"MLB","Pick":"Brewers ML","Line":"-189","Result":"W","Units":"1"},
+    {"Date":"8-2-2025","Sport":"MLB","Pick":"Pirates -1.5","Line":"-135","Result":"L","Units":"-2.7"},
+    {"Date":"8-1-2025","Sport":"MLB","Pick":"Twins/Guardians under 8","Line":"-153","Result":"W","Units":"2"},
+    {"Date":"8-1-2025","Sport":"MLB","Pick":"Pirates/Rockies over 11.5","Line":"-110","Result":"W","Units":"1"},
+    {"Date":"8-1-2025","Sport":"MLB","Pick":"Giants/Mets F5 under under 4.5","Line":"-145","Result":"W","Units":"1"},
+    {"Date":"8-1-2025","Sport":"MLB","Pick":"Dodgers F5 ML","Line":"-135","Result":"W","Units":"1"},
+    {"Date":"8-1-2025","Sport":"MLB","Pick":"Astros ML","Line":"-134","Result":"L","Units":"-1.34"},
+    {"Date":"7-31-2025","Sport":"MLB","Pick":"Rangers/Mariners under 8","Line":"-136","Result":"W","Units":"1"},
+    {"Date":"7-31-2025","Sport":"MLB","Pick":"Braves.Reds over 9","Line":"-140","Result":"W","Units":"1"},
+    {"Date":"7-31-2025","Sport":"MLB","Pick":"Rays F5 ML ","Line":"-110","Result":"L","Units":"-1.1"},
+    {"Date":"7-30-2025","Sport":"MLB","Pick":"Angels/Rangers F5 under 4.5","Line":"-140","Result":"W","Units":"1"},
+    {"Date":"7-30-2025","Sport":"MLB","Pick":"Blue Jays/Orioles over 10","Line":"-108","Result":"W","Units":"1"},
+    {"Date":"7-30-2025","Sport":"MLB","Pick":"Blue Jays ML","Line":"-109","Result":"W","Units":"2"},
+    {"Date":"7-29-2025","Sport":"MLB","Pick":"Dodgers/Red F5 under 4.5","Line":"-110","Result":"L","Units":"-2.2"},
+    {"Date":"7-29-2025","Sport":"MLB","Pick":"Tigers ML","Line":"-140","Result":"W","Units":"1"},
+    {"Date":"7-29-2025","Sport":"MLB","Pick":"Blue Jays/Orioles over 8 (Game 1)","Line":"-110","Result":"W","Units":"1"},
+    {"Date":"7-29-2025","Sport":"MLB","Pick":"Royals ML","Line":"-120","Result":"W","Units":"1"},
+    {"Date":"7-29-2025","Sport":"MLB","Pick":"Yankees ML","Line":"-187","Result":"W","Units":"1"},
+    {"Date":"7-29-2025","Sport":"MLB","Pick":"Mariners ML","Line":"-108","Result":"L","Units":"-1.08"},
+    {"Date":"7-28-2025","Sport":"MLB","Pick":"Dodgers ML","Line":"-165","Result":"W","Units":"2"},
+    {"Date":"7-28-2025","Sport":"MLB","Pick":"Phillies -1.5","Line":"-132","Result":"W","Units":"1"},
+    {"Date":"7-28-2025","Sport":"MLB","Pick":"Mariners ML","Line":"-132","Result":"W","Units":"1"},
+    {"Date":"7-28-2025","Sport":"MLB","Pick":"Astros F5 -0.5 ","Line":"-140","Result":"W","Units":"1"},
+    {'Date':'7-28-2025','Sport':'MLB','Pick':'Cubs/Brewers under 8','Line':'-105','Result':'L','Units':'-1.05'},
+    {'Date':'7-28-2025','Sport':'MLB','Pick':'Royals ML','Line':'148','Result':'L','Units':'-1'},
+    {'Date':'7-27-2025','Sport':'MLB','Pick':'Pirates F5 ML','Line':'-175','Result':'W','Units':'2'},
+    {'Date':'7-27-2025','Sport':'MLB','Pick':'Orioles -1.5','Line':'-108','Result':'W','Units':'1'},
+    {'Date':'7-27-2025','Sport':'MLB','Pick':'Brewers','Line':'-166','Result':'W','Units':'1'},
+    {'Date':'7-27-2025','Sport':'MLB','Pick':'Orioles/Rockies over 9.5','Line':'-127','Result':'L','Units':'-1.27'},
+    {'Date':'7-27-2025','Sport':'MLB','Pick':'Royals/Guardians under 9','Line':'-138','Result':'W','Units':'1'},
+    {'Date':'7-26-2025','Sport':'MLB','Pick':'Cubs -1.5','Line':'-115','Result':'W','Units':'1'},
+    {'Date':'7-26-2025','Sport':'MLB','Pick':'Tigers F5 -0.5','Line':'-140','Result':'L','Units':'-1.4'},
+    {'Date':'7-26-2025','Sport':'MLB','Pick':'Giants F5 ML ','Line':'-135','Result':'W','Units':'1.5'},
+    {'Date':'7-25-2025','Sport':'MLB','Pick':'Giants/Mets F5 under under 4.5','Line':'-145','Result':'','Units':'-2.9'},
+    {'Date':'7-25-2025','Sport':'MLB','Pick':'Giants ML','Line':'-137','Result':'L','Units':'-1.37'},
+    {'Date':'7-25-2025','Sport':'MLB','Pick':'Cubs/White Sox F5 under 4.5 ','Line':'-140','Result':'L','Units':'-1.4'},
+    {'Date':'7-25-2025','Sport':'MLB','Pick':'Mariners/Angels F5 under 4.5','Line':'-135','Result':'W','Units':'1'},
+    {'Date':'7-25-2025','Sport':'MLB','Pick':'Brewers F5 -0.5','Line':'-154','Result':'L','Units':'-1.54'},
+    {'Date':'7-24-2025','Sport':'MLB','Pick':'Padres ML ','Line':'134','Result':'L','Units':'-1'},
+    {'Date':'7-24-2025','Sport':'MLB','Pick':'Astros ML','Line':'-127','Result':'L','Units':'-1.27'},
+    {'Date':'7-24-2025','Sport':'MLB','Pick':'Guardians','Line':'-114','Result':'L','Units':'-1.14'},
+    {'Date':'7-23-2025','Sport':'MLB','Pick':'Rangers ML','Line':'-144','Result':'W','Units':'2'},
+    {'Date':'7-23-2025','Sport':'MLB','Pick':'Brewers/Mariners F5 under 4.5','Line':'-140','Result':'L','Units':'-1.4'},
+    {'Date':'7-23-2025','Sport':'MLB','Pick':'Guardians F5 ML','Line':'-140','Result':'W','Units':'1'},
+    {'Date':'7-23-2025','Sport':'MLB','Pick':'Padres ML ','Line':'-148','Result':'L','Units':'-1.48'},
+    {'Date':'7-23-2025','Sport':'MLB','Pick':'Mets/Angels F5 over 4.5 ','Line':'-135','Result':'W','Units':'1'},
+    {'Date':'7-22-2025','Sport':'MLB','Pick':'Red Sox Team Total under 3.5','Line':'-125','Result':'W','Units':'1'},
+    {'Date':'7-22-2025','Sport':'MLB','Pick':'Astros F5 ML','Line':'-145','Result':'L','Units':'-1.45'},
+    {'Date':'7-22-2025','Sport':'MLB','Pick':'Cardinals F5 ML','Line':'-160','Result':'L','Units':'-1.6'},
+    {'Date':'7-22-2025','Sport':'MLB','Pick':'Braves Team Total under 4.5','Line':'-115','Result':'W','Units':'1'},
+    {'Date':'7-22-2025','Sport':'MLB','Pick':'Phillies F5 -0.5','Line':'-140','Result':'W','Units':'1'},
+    {'Date':'7-21-2025','Sport':'MLB','Pick':'Pirates F5 ML ','Line':'-135','Result':'W','Units':'1'},
+    {'Date':'7-21-2025','Sport':'MLB','Pick':'Tigers Team Total under 3.5','Line':'-125','Result':'W','Units':'1'},
+    {'Date':'7-21-2025','Sport':'MLB','Pick':'Phillies F5 -0.5','Line':'-170','Result':'W','Units':'1'},
+    {'Date':'7-21-2025','Sport':'MLB','Pick':'Yankees F5 ML','Line':'-125','Result':'L','Units':'-1.25'},
+    {'Date':'7-20-2025','Sport':'MLB','Pick':'Blue Jays Team Total under 3.5','Line':'105','Result':'L','Units':'-1'},
+    {'Date':'7-20-2025','Sport':'MLB','Pick':'Giants F5 ML ','Line':'-125','Result':'L','Units':'-1.25'},
+    {'Date':'7-20-2025','Sport':'MLB','Pick':'Giants ML','Line':'-105','Result':'L','Units':'-1.05'},
+    {'Date':'7-20-2025','Sport':'MLB','Pick':'Phillies F5 ML','Line':'-180','Result':'L','Units':'-1.8'},
+    {'Date':'7-20-2025','Sport':'MLB','Pick':'Padres/Nationals F5 under 4.5 ','Line':'-160','Result':'L','Units':'-1.6'},
+    {'Date':'7-20-2025','Sport':'MLB','Pick':'Red Sox F5 ML','Line':'-154','Result':'L','Units':'-1.54'},
+    {'Date':'7-20-2025','Sport':'MLB','Pick':'Astros/Mariners F5 under 3.5','Line':'-135','Result':'L','Units':'-1.35'},
+    {'Date':'7-19-2025','Sport':'MLB','Pick':'Giants/Blue Jays under 9','Line':'-166','Result':'P','Units':'0'},
+    {'Date':'7-19-2025','Sport':'MLB','Pick':'Giants/Blue Jays F5 under 4.5','Line':'-154','Result':'W','Units':'1'},
+    {'Date':'7-19-2025','Sport':'MLB','Pick':'White Sox F5 ML ','Line':'-105','Result':'L','Units':'-1.06'},
+    {'Date':'7-19-2025','Sport':'MLB','Pick':'Tigers F5 ML ','Line':'-110','Result':'L','Units':'-1.1'},
+    {'Date':'7-19-2025','Sport':'MLB','Pick':'Mariners F5 ML','Line':'-135','Result':'W','Units':'1'},
+    {'Date':'7-18-2025','Sport':'MLB','Pick':'Twins Team Total over 5.5','Line':'-140','Result':'L','Units':'-1.4'},
+    {'Date':'7-18-2025','Sport':'MLB','Pick':'Tigers F5 MlL','Line':'-135','Result':'L','Units':'-1.35'},
+    {'Date':'7-13-2025','Sport':'MLB','Pick':'Astrros/Rangers F5 under 3.5','Line':'-125','Result':'L','Units':'-1.25'},
+    {'Date':'7-12-2025','Sport':'MLB','Pick':'','Line':'-127','Result':'L','Units':'-1.27'},
+    {'Date':'7-12-2025','Sport':'MLB','Pick':'Blue Jays ML','Line':'-157','Result':'Loss','Units':'-1.57'},
+    {'Date':'7-12-2025','Sport':'MLB','Pick':'Angels First 5 Innings ML','Line':'-125','Result':'Win','Units':'1'},
+    {'Date':'7-12-2025','Sport':'MLB','Pick':'Rangers/Astros First 5 Innings Under 3.5','Line':'-125','Result':'Win','Units':'1'},
+    {'Date':'7-12-2025','Sport':'MLB','Pick':'Tigers ML','Line':'-127','Result':'Loss','Units':'-1.27'},
+    {'Date':'7-11-2025','Sport':'MLB','Pick':'Giants/Dodgers First 5 Innings Under 4.5','Line':'-166','Result':'Loss','Units':'-1.66'},
+    {'Date':'7-11-2025','Sport':'MLB','Pick':'Pirates/Twins First 5 Innings Under 3.5','Line':'-140','Result':'Win','Units':'1'},
+    {'Date':'7-11-2025','Sport':'MLB','Pick':'Tigers/Mariners First 5 Innings Under 3.5','Line':'-130','Result':'Loss','Units':'-1.3'},
+    {'Date':'7-10-2025','Sport':'MLB','Pick':'Braves ML','Line':'-182','Result':'Loss','Units':'-1.82'},
+    {'Date':'7-10-2025','Sport':'MLB','Pick':'Rays First 5 Innings ML','Line':'-115','Result':'Win','Units':'1'},
+    {'Date':'7-10-2025','Sport':'MLB','Pick':'Seattle Mariners First 5 Innings ML','Line':'-160','Result':'Win','Units':'1'},
+    {'Date':'7-9-2025','Sport':'MLB','Pick':'White Sox / Blue Jays F5 Under 4.5','Line':'-125','Result':'Win','Units':'1'},
+    {'Date':'7-9-2025','Sport':'MLB','Pick':'Reds F5 ML','Line':'-135','Result':'Win','Units':'1'},
+    {'Date':'7-8-2025','Sport':'MLB','Pick':'Giants Moneyline','Line':'-150','Result':'Win','Units':'1'},
+    {'Date':'7-7-2025','Sport':'MLB','Pick':'Rangers/Angels First 5 Innings Under 4.5','Line':'-188','Result':'Loss','Units':'-1.88'},
+    {'Date':'7-6-2025','Sport':'MLB','Pick':'Rockies vs White Sox Over 11','Line':'-110','Result':'Loss','Units':'-1.1'},
+    {'Date':'7-6-2025','Sport':'MLB','Pick':'Brewers vs Marlins First 5 Innings Under 4.5','Line':'-130','Result':'Win','Units':'1'},
+    {'Date':'7-5-2025','Sport':'MLB','Pick':'Athletics Team Total Under 4.5','Line':'-190','Result':'Win','Units':'1'},
+    {'Date':'7-5-2025','Sport':'MLB','Pick':'Giants First 5 Innings','Line':'-200','Result':'Win','Units':'1'},
+    {'Date':'7-5-2025','Sport':'MLB','Pick':'Dodgers/Astros First 5 Innings Under 4.5','Line':'-125','Result':'Loss','Units':'-1.25'},
+    {'Date':'7-4-2025','Sport':'MLB','Pick':'Cubs Team Total Over 4.5','Line':'-140','Result':'Win','Units':'1'},
+    {'Date':'7-4-2025','Sport':'MLB','Pick':'Braves/Orioles F5 Under 5.5','Line':'-180','Result':'Win','Units':'1'},
+    {'Date':'7-3-2025','Sport':'MLB','Pick':'Giants Moneyline','Line':'-114','Result':'Win','Units':'1'},
+    {'Date':'7-2-2025','Sport':'MLB','Pick':'Texas Rangers Moneyline','Line':'-135','Result':'Win','Units':'1'},
+    {'Date':'7-2-2025','Sport':'MLB','Pick':'Brewers First 5 Innings','Line':'-175','Result':'Loss','Units':'-1.75'},
+    {'Date':'7-2-2025','Sport':'MLB','Pick':'Angels First 5 Innings','Line':'-110','Result':'Win','Units':'1'},
+    {'Date':'7-1-2025','Sport':'MLB','Pick':'Orioles Team Total Under 3.5','Line':'-145','Result':'Win','Units':'1'},
+    {'Date':'7-1-2025','Sport':'MLB','Pick':'Cardinals F5 Team Total Under 1.5','Line':'-166','Result':'Win','Units':'1'},
+    {'Date':'7-1-2025','Sport':'MLB','Pick':'Phillies/Padres Under 9','Line':'-158','Result':'Push','Units':'0'},
+    {'Date':'6-30-2025','Sport':'MLB','Pick':'A's/Rays F5 Under 4.5','Line':'-145','Result':'Loss','Units':'-1.45'},
+    {'Date':'6-30-2025','Sport':'MLB','Pick':'Diamondbacks TT Under 4.5','Line':'-195','Result':'Win','Units':'1'},
+    {'Date':'6-30-2025','Sport':'MLB','Pick':'Red Sox F5 ML','Line':'-215','Result':'Win','Units':'1'},
+    {'Date':'6-29-2025','Sport':'MLB','Pick':'Phillies/Braves F5 Under 4.5','Line':'-160','Result':'Win','Units':'1'},
+    {'Date':'6-29-2025','Sport':'MLB','Pick':'Blue Jays F5 +0.5','Line':'-154','Result':'Win','Units':'1'},
+    {'Date':'6-29-2025','Sport':'MLB','Pick':'Brewers F5 -0.5','Line':'-154','Result':'Loss','Units':'-1.54'},
+    {'Date':'6-28-2025','Sport':'MLB','Pick':'Astros 1st 5 Innings ML','Line':'-115','Result':'Loss','Units':'-1.15'},
+    {'Date':'6-28-2025','Sport':'MLB','Pick':'Brewers 1st 5 Innings -0.5','Line':'-145','Result':'Win','Units':'1'},
+    {'Date':'6-28-2025','Sport':'MLB','Pick':'White Sox Team Total Under 3.5','Line':'-135','Result':'Win','Units':'1'},
+    {'Date':'6-28-2025','Sport':'MLB','Pick':'A's Team Total Under 4.5','Line':'-210','Result':'Loss','Units':'-2.1'},
+    {'Date':'6-27-2025','Sport':'MLB','Pick':'Yankees Moneyline','Line':'-201','Result':'Win','Units':'1'},
+    {'Date':'6-27-2025','Sport':'MLB','Pick':'Angels First 5 Innings','Line':'-175','Result':'Win','Units':'1'},
+    {'Date':'6-27-2025','Sport':'MLB','Pick':'Rays First 5 Innings','Line':'-130','Result':'Loss','Units':'-1.3'},
+    {'Date':'6-26-2025','Sport':'MLB','Pick':'Tigers/A’s Over 8.5','Line':'-120','Result':'Loss','Units':'-1.2'},
+    {'Date':'6-26-2025','Sport':'MLB','Pick':'Mariners First 5 Innings','Line':'+110','Result':'Loss','Units':'-1'},
+    {'Date':'6-25-2025','Sport':'MLB','Pick':'Twins First 5 Innings','Line':'-130','Result':'Push','Units':'0'},
+    {'Date':'6-25-2025','Sport':'MLB','Pick':'Angels First 5 Innings','Line':'-140','Result':'Win','Units':'1'},
+    {'Date':'6-24-2025','Sport':'MLB','Pick':'Phillies/Astros F5 Under 3.5','Line':'+105','Result':'Win','Units':'1'},
+    {'Date':'6-24-2025','Sport':'MLB','Pick':'Giants Moneyline','Line':'-170','Result':'Loss','Units':'-1.7'},
+    {'Date':'6-24-2025','Sport':'MLB','Pick':'Yankees Moneyline','Line':'-153','Result':'Loss','Units':'-1.53'},
+    {'Date':'6-23-2025','Sport':'MLB','Pick':'Angels Full Game','Line':'+100','Result':'Win','Units':'1'},
+    {'Date':'6-23-2025','Sport':'MLB','Pick':'Braves First 5 Innings','Line':'-150','Result':'Win','Units':'1'},
+    {'Date':'6-22-2025','Sport':'MLB','Pick':'Dodgers Moneyline','Line':'-220','Result':'Win','Units':'1'},
+    {'Date':'6-22-2025','Sport':'MLB','Pick':'Giants Moneyline','Line':'-150','Result':'Win','Units':'1'},
+    {'Date':'6-21-2025','Sport':'MLB','Pick':'Rockies/Dbacks Over 12','Line':'-110','Result':'Loss','Units':'-1.1'},
+    {'Date':'6-21-2025','Sport':'MLB','Pick':'F5 Angels/Astros Under 4','Line':'+100','Result':'Loss','Units':'-1'},
+    {'Date':'6-20-2025','Sport':'MLB','Pick':'Giants Moneyline','Line':'-120','Result':'Loss','Units':'-1.2'},
+    {'Date':'6-20-2025','Sport':'MLB','Pick':'F5 Rays/Tigers Under 4.5','Line':'-125','Result':'Loss','Units':'-1.25'},
+    {'Date':'6-19-2025','Sport':'MLB','Pick':'Braves/Mets First 5 Innings Under 4.5','Line':'-115','Result':'Win','Units':'1'},
+    {'Date':'6-19-2025','Sport':'MLB','Pick':'F5 Rays/Tigers Under 4.5','Line':'-125','Result':'Win','Units':'1'},
+    {'Date':'6-19-2025','Sport':'MLB','Pick':'Giants Moneyline','Line':'-168','Result':'Win','Units':'1'},
+    {'Date':'6-18-2025','Sport':'MLB','Pick':'Blue Jays Moneyline','Line':'-110','Result':'Win','Units':'1'},
+    {'Date':'6-17-2025','Sport':'MLB','Pick':'Giants Moneyline','Line':'-153','Result':'Win','Units':'1'},
+    {'Date':'6-16-2025','Sport':'MLB','Pick':'Nationals Moneyline','Line':'-165','Result':'Loss','Units':'-1.65'},
+    {'Date':'6-16-2025','Sport':'MLB','Pick':'Mariners Moneyline','Line':'-166','Result':'Loss','Units':'-1.66'},
+    {'Date':'6-16-2025','Sport':'MLB','Pick':'Rays Moneyline','Line':'-120','Result':'Win','Units':'1'},
+    {'Date':'6-15-2025','Sport':'MLB','Pick':'Dodgers Team Total Under 5','Line':'-148','Result':'Push','Units':'0'},
+    {'Date':'6-15-2025','Sport':'MLB','Pick':'Giants +1.5 Runs Line','Line':'-190','Result':'Win','Units':'1'},
+    {'Date':'6-15-2025','Sport':'MLB','Pick':'Royals Moneyline','Line':'-148','Result':'Loss','Units':'-1.48'},
+    {'Date':'6-13-2025','Sport':'MLB','Pick':'Mets Moneyline','Line':'-159','Result':'Loss','Units':'-1.59'},
+    {'Date':'6-13-2025','Sport':'MLB','Pick':'Royals Moneyline','Line':'-152','Result':'Win','Units':'1'},
+    {'Date':'6-11-2025','Sport':'MLB','Pick':'Angels Moneyline','Line':'-130','Result':'Win','Units':'1'},
+    {'Date':'6-10-2025','Sport':'MLB','Pick':'Angels Moneyline','Line':'-155','Result':'Win','Units':'1'},
+    {'Date':'6-10-2025','Sport':'MLB','Pick':'Giants Moneyline','Line':'-225','Result':'Win','Units':'1'},
+    {'Date':'6-9-2025','Sport':'MLB','Pick':'Reds vs Guardians Under 8.5','Line':'+100','Result':'Loss','Units':'-1'},
+    {'Date':'6-8-2025','Sport':'MLB','Pick':'Twins Moneyline','Line':'-170','Result':'Win','Units':'1'},
+    {'Date':'6-8-2025','Sport':'MLB','Pick':'Phillies vs Pirates Under 7','Line':'-115','Result':'Win','Units':'1'},
+    {'Date':'6-7-2025','Sport':'MLB','Pick':'Astros vs Guardians Under 7.5','Line':'-120','Result':'Win','Units':'2'},
+    {'Date':'6-6-2025','Sport':'MLB','Pick':'Giants Moneyline','Line':'+122','Result':'Win','Units':'1.22'},
+    {'Date':'6-5-2025','Sport':'MLB','Pick':'Mets vs Dodgers Under 9.5','Line':'-109','Result':'Loss','Units':'-1.09'},
+    {'Date':'6-5-2025','Sport':'MLB','Pick':'Giants Moneyline','Line':'-114','Result':'Loss','Units':'-1.14'},
+    {'Date':'6-5-2025','Sport':'MLB','Pick':'Twins Moneyline','Line':'-186','Result':'Loss','Units':'-1.86'},
+    {'Date':'6-5-2025','Sport':'MLB','Pick':'Pirates vs Astros Under 7.5','Line':'+100','Result':'Win','Units':'1'},
+    {'Date':'6-4-2025','Sport':'MLB','Pick':'Giants/Padres Under 7.5','Line':'-125','Result':'Loss','Units':'-1.25'},
+    {'Date':'6-4-2025','Sport':'MLB','Pick':'Tigers Moneyline','Line':'-200','Result':'Win','Units':'1'},
+    {'Date':'6-3-2025','Sport':'MLB','Pick':'Astros/Pirates Under 7.5','Line':'-110','Result':'Win','Units':'1'},
+    {'Date':'6-3-2025','Sport':'MLB','Pick':'Mets +1.5','Line':'-165','Result':'Win','Units':'1'},
+    {'Date':'6-3-2025','Sport':'MLB','Pick':'Pirates/Astros Under 7.5','Line':'-115','Result':'Win','Units':'1'},
+    {'Date':'6-2-2025','Sport':'MLB','Pick':'Twins Moneyline','Line':'-160','Result':'Win','Units':'1'},
+    {'Date':'6-2-2025','Sport':'MLB','Pick':'Red Sox/Angels Under 9.5','Line':'-104','Result':'Loss','Units':'-1.04'},
+    {'Date':'6-2-2025','Sport':'MLB','Pick':'Padres Team Total Under 3.5','Line':'-145','Result':'Win','Units':'1'},
+    {'Date':'6-1-2025','Sport':'MLB','Pick':'Orioles Moneyline','Line':'-165','Result':'Win','Units':'1'},
+    {'Date':'6-1-2025','Sport':'MLB','Pick':'Twins/Mariners Under 7.5','Line':'-125','Result':'Win','Units':'1'},
+    {'Date':'5-31-2025','Sport':'MLB','Pick':'Pirates/Padres Under 8','Line':'-113','Result':'Win','Units':'1'},
+    {'Date':'5-31-2025','Sport':'MLB','Pick':'Blue Jays Moneyline','Line':'-145','Result':'Win','Units':'1'},
+    {'Date':'5-30-2025','Sport':'MLB','Pick':'Twins/Mariners Under 7','Line':'-114','Result':'Loss','Units':'-1.14'},
+    {'Date':'5-30-2025','Sport':'MLB','Pick':'Giants Moneyline','Line':'-160','Result':'Win','Units':'1'}
+];
+
+        console.log("--- DEBUGGING START ---");
+        console.log("Number of records in allPicksData:", allPicksData.length);
+
+        function processPicks(picks) {
+            return picks.map(p => {
+                try {
+                    if (!p.Pick || !p.Result || !p.Units || !p.Line || !p.Date) return null;
+                    const pickText = String(p.Pick).trim();
+                    const resultText = String(p.Result).trim().toUpperCase();
+                    const units = parseFloat(p.Units);
+                    const line = parseFloat(p.Line);
+                    if (pickText === '' || resultText === '' || isNaN(units) || isNaN(line)) return null;
+
+                    let risk = 0;
+                    if (units < 0) { 
+                        risk = Math.abs(units); 
+                    } else if (units > 0) {
+                        if (line > 0) { 
+                            risk = (units / (line / 100)); 
+                        } else { 
+                            risk = (units * (Math.abs(line) / 100)); 
+                        }
+                    }
+
+                    return { ...p, units, risk, parsedDate: new Date(p.Date) };
+                } catch {
+                    return null;
+                }
+            }).filter(p => p !== null).sort((a, b) => b.parsedDate - a.parsedDate);
+        }
+
+        const processedPicks = processPicks(allPicksData);
+        console.log("Number of records after processing:", processedPicks.length);
+        if (processedPicks.length > 0) {
+            console.log("First processed pick:", processedPicks[0]);
+        }
+
+        function aggregateStats(picks) {
+            let wins = 0, losses = 0, pushes = 0, totalUnits = 0, totalRisk = 0;
+            picks.forEach(p => {
+                const result = p.Result.trim().toUpperCase();
+                if (result.startsWith('W')) wins++;
+                else if (result.startsWith('L')) losses++;
+                else if (result.startsWith('P')) pushes++;
+                totalUnits += p.units;
+                if (!result.startsWith('P')) totalRisk += p.risk;
+            });
+            const roi = totalRisk > 0 ? (totalUnits / totalRisk) * 100 : 0;
+            return { wins, losses, pushes, totalUnits, roi, totalRisk };
+        }
+
+        const summaryStats = aggregateStats(processedPicks);
+        console.log("Calculated summary stats:", summaryStats);
+        console.log("--- DEBUGGING END ---");
+        
+        // Update summary display
+        document.getElementById('summary-record').textContent = `${summaryStats.wins}-${summaryStats.losses}-${summaryStats.pushes}`;
+        
+        const unitsEl = document.getElementById('summary-units');
+        unitsEl.textContent = `${summaryStats.totalUnits >= 0 ? '+' : ''}${summaryStats.totalUnits.toFixed(2)}`;
+        unitsEl.className = `stat-value ${summaryStats.totalUnits >= 0 ? 'units-win' : 'units-loss'}`;
+        
+        const winPct = summaryStats.wins + summaryStats.losses > 0 ? ((summaryStats.wins / (summaryStats.wins + summaryStats.losses)) * 100) : 0;
+        document.getElementById('summary-win-pct').textContent = `${winPct.toFixed(1)}%`;
+        
+        const roiEl = document.getElementById('summary-roi');
+        roiEl.textContent = `${summaryStats.roi >= 0 ? '+' : ''}${summaryStats.roi.toFixed(2)}%`;
+        roiEl.className = `stat-value ${summaryStats.roi >= 0 ? 'roi-win' : 'roi-loss'}`;
+
+        console.log('SUMMARY STATISTICS:');
+        console.log('Record:', `${summaryStats.wins}-${summaryStats.losses}-${summaryStats.pushes}`);
+        console.log('Total Units:', `${summaryStats.totalUnits >= 0 ? '+' : ''}${summaryStats.totalUnits.toFixed(2)}`);
+        console.log('Win %:', `${winPct.toFixed(1)}%`);
+        console.log('ROI:', `${summaryStats.roi >= 0 ? '+' : ''}${summaryStats.roi.toFixed(2)}%`);
+    } catch (e) {
+        console.error("Error in DOMContentLoaded handler:", e);
+    }
+});
+</script>
+</body>
+</html>

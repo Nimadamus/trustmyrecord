@@ -121,6 +121,12 @@ def edit_profile():
 @login_required
 def submit_pick():
     form = PickForm()
+    if request.method == 'GET':
+        form.sport.data = request.args.get('sport')
+        form.event_details.data = request.args.get('event_details')
+        form.pick_selection.data = request.args.get('pick_selection')
+        form.odds.data = request.args.get('odds')
+
     if form.validate_on_submit():
         pick = models.PendingPick(
             sport=form.sport.data,
@@ -140,11 +146,88 @@ def submit_pick():
         return redirect(url_for('main.profile', user_id=current_user.id))
 
     active_sports = get_active_sports()
-    return render_template('submit_pick.html', title='Submit Pick', active_sports=active_sports, form=form)
+    return render_template('submit_pick.html', title='Submit Pick', 
+                           active_sports=active_sports, 
+                           form=form,
+                           bet_type=request.args.get('bet_type'),
+                           api_event_id=request.args.get('api_event_id'),
+                           market_key=request.args.get('market_key'))
+
+from collections import defaultdict
+from datetime import datetime # Import datetime for placeholder timestamps
 
 @main.route('/forum')
 def forum():
-    return render_template('forum.html', title='Forums')
+    sections = []
+
+    # General Forums Section
+    general_forums = [
+        {"icon": "💬", "name": "General Discussion",
+         "desc": "Talk about anything and everything.",
+         "threads": 26278, "posts": 2639524,
+         "last": {"title": "Site roadmap update",
+                  "url": "/thread/123",
+                  "user": "BetLegend",
+                  "time": "Today 5:28 PM"}},
+        {"icon": "🏈", "name": "Sports Betting",
+         "desc": "Strategies, picks, bankroll talk.",
+         "threads": 23010, "posts": 1002081,
+         "last": {"title": "Live MLB card",
+                  "url": "/thread/456",
+                  "user": "Nima",
+                  "time": "Today 6:59 PM"}},
+        {"icon": "🏦", "name": "Online Sportsbooks",
+         "desc": "Reviews, limits, payouts, promos.",
+         "threads": 54292, "posts": 1780697,
+         "last": {"title": "Limits discussion",
+                  "url": "/thread/789",
+                  "user": "Ape",
+                  "time": "Today 1:43 PM"}},
+        {"icon": "🪙", "name": "Crypto Investing",
+         "desc": "Strategies for crypto allocations.",
+         "threads": 695, "posts": 36867,
+         "last": {"title": "BTC seasonality",
+                  "url": "/thread/321",
+                  "user": "Atlas",
+                  "time": "Yesterday 9:44 PM"}},
+        {"icon": "🎮", "name": "Online Gaming",
+         "desc": "Casinos, tournaments, advantage play.",
+         "threads": 8038, "posts": 240148,
+         "last": {"title": "Craps dice sets",
+                  "url": "/thread/654",
+                  "user": "Chip",
+                  "time": "Yesterday 11:57 AM"}},
+        {"icon": "✈️", "name": "Travel",
+         "desc": "Visa tips, destinations, digital nomad.",
+         "threads": 31695, "posts": 1717191,
+         "last": {"title": "Thailand notes",
+                  "url": "/thread/987",
+                  "user": "Nima",
+                  "time": "Today 6:52 PM"}},
+    ]
+    sections.append({"id": "general-forums", "title": "General Forums", "forums": general_forums})
+
+    # Sports Forums Section (dynamic)
+    sports_forums_list = []
+    active_sports = get_active_sports()
+    if active_sports:
+        for sport in active_sports:
+            # Placeholder data for threads, posts, last post
+            sports_forums_list.append({
+                "icon": "⚽" if sport['group'] == 'Soccer' else "🏈", # Generic icon, can be improved
+                "name": sport['title'],
+                "key": sport['key'], # Use key for URL
+                "desc": f"Discussions for {sport['title']} games and picks.",
+                "threads": 1000, # Placeholder
+                "posts": 50000,  # Placeholder
+                "last": {"title": f"Latest {sport['title']} thread",
+                         "url": f"/thread/{sport['key']}",
+                         "user": "User",
+                         "time": datetime.now().strftime("%m-%d %I:%M %p")} # Placeholder
+            })
+    sections.append({"id": "sports-forums", "title": "Sports Forums", "forums": sports_forums_list})
+
+    return render_template("forum.html", sections=sections)
 
 @main.route('/forum/<category_name>', methods=['GET', 'POST'])
 @login_required
@@ -198,18 +281,42 @@ def live_betting():
 def api_live_odds(sport_key):
     market = request.args.get('market', 'h2h') # Default to h2h if not specified
     # Request odds specifically from DraftKings
-    live_games = get_odds(sport_key, market=market, bookmakers='draftkings')
+    live_games = get_odds(sport_key, markets=market, bookmakers='draftkings')
     return jsonify(live_games)
 
-@main.route('/picks')
-def picks():
-    return render_template('picks.html', title='Picks')
+@main.route('/soccer-leagues')
+def soccer_leagues():
+    active_sports = get_active_sports()
+    soccer_leagues = []
+    if active_sports:
+        for sport in active_sports:
+            if sport['group'] == 'Soccer':
+                soccer_leagues.append(sport)
+    return render_template('soccer_leagues.html', title='Soccer Leagues', soccer_leagues=soccer_leagues)
+
+from collections import defaultdict
+
+@main.route('/sports-grid')
+def sports_grid():
+    active_sports = get_active_sports()
+    games_by_sport = {}
+    if active_sports:
+        for sport in active_sports:
+            games = get_odds(sport['key'], bookmakers='draftkings', markets='h2h,spreads,totals')
+            games_by_sport[sport['key']] = games
+    
+    grouped_sports = defaultdict(list)
+    if active_sports:
+        for sport in active_sports:
+            grouped_sports[sport['group']].append(sport)
+
+    return render_template('picks.html', title='Picks', grouped_sports=grouped_sports, games_by_sport=games_by_sport)
 
 @main.route('/picks/<sport_name>')
 @login_required
 def sport_odds(sport_name):
     # Fetch real odds from The Odds API, filtered by DraftKings
-    games = get_odds(sport_name, bookmakers='draftkings')
+    games = get_odds(sport_name, bookmakers='draftkings', markets='h2h,spreads,totals')
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return render_template('_games_display.html', sport_name=sport_name, games=games)

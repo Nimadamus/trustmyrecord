@@ -122,3 +122,42 @@ class ChatMessage(db.Model):
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     user = db.relationship('User', backref='chat_messages', lazy=True)
+
+class Event(db.Model):
+    __tablename__ = 'events'
+    id = db.Column(db.String(100), primary_key=True) # Using string ID from API
+    sport = db.Column(db.String(50), nullable=False)
+    league = db.Column(db.String(100), nullable=False)
+    start_time = db.Column(db.DateTime, nullable=False)
+    home_team = db.Column(db.String(100), nullable=False)
+    away_team = db.Column(db.String(100), nullable=False)
+
+    odds = db.relationship('Odds', backref='event', lazy=True, cascade="all, delete-orphan")
+    picks = db.relationship('Pick', backref='event', lazy=True)
+
+class Odds(db.Model):
+    __tablename__ = 'odds'
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.String(100), db.ForeignKey('events.id'), nullable=False)
+    bookmaker = db.Column(db.String(100), nullable=False)
+    market = db.Column(db.String(50), nullable=False) # ML/SP/TOT
+    side = db.Column(db.String(50), nullable=False) # HOME/AWAY/OVER/UNDER
+    odds_american = db.Column(db.Integer, nullable=False)
+    line = db.Column(db.Float, nullable=True) # For spread/total
+
+class Pick(db.Model):
+    __tablename__ = 'picks'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    event_id = db.Column(db.String(100), db.ForeignKey('events.id'), nullable=False)
+    sport = db.Column(db.String(50), nullable=False)
+    market = db.Column(db.String(50), nullable=False) # ML/SP/TOT
+    selection = db.Column(db.String(100), nullable=False) # e.g., "Home Team", "Over 200.5"
+    odds_american = db.Column(db.Integer, nullable=False)
+    units_win = db.Column(db.Numeric(6,2), nullable=False)
+    units_risk = db.Column(db.Numeric(6,2), nullable=False)
+    status = db.Column(db.String(20), default='pending') # pending/win/loss/push
+    placed_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    graded_at = db.Column(db.DateTime, nullable=True)
+
+    user = db.relationship('User', backref='user_picks', lazy=True)

@@ -15,8 +15,8 @@ def get_active_sports():
     else:
         return None
 
-def get_odds(sport_key, region='us', market='h2h', bookmakers=None):
-    url = f'{BASE_URL}/sports/{sport_key}/odds/?apiKey={API_KEY}&regions={region}&markets={market}'
+def get_odds(sport_key, region='us', markets='h2h', bookmakers=None):
+    url = f'{BASE_URL}/sports/{sport_key}/odds/?apiKey={API_KEY}&regions={region}&markets={markets}'
     if bookmakers:
         url += f'&bookmakers={bookmakers}'
     response = requests.get(url)
