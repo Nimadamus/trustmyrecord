@@ -8,28 +8,41 @@
         <h1 class="page-title">Submit a New Pick</h1>
         <p class="page-subtitle">Your pick will be permanently added to the Immutable Record.</p>
 
-        <form method="POST" action="{{ url_for('make_pick') }}">
-            
-            <div class="form-group">
-                <label for="sport">Sport / League</label>
-                <input type="text" id="sport" name="sport" class="form-control" placeholder="e.g., NFL, NBA, MLB, NCAAF" required>
-            </div>
+        <!-- Sport Selection Tabs -->
+        <div class="sport-tabs">
+            <button class="sport-tab active" onclick="switchSport('americanfootball_nfl')">NFL</button>
+            <button class="sport-tab" onclick="switchSport('basketball_nba')">NBA</button>
+            <button class="sport-tab" onclick="switchSport('icehockey_nhl')">NHL</button>
+            <button class="sport-tab" onclick="switchSport('baseball_mlb')">MLB</button>
+            <button class="sport-tab" onclick="switchSport('americanfootball_ncaaf')">NCAAF</button>
+        </div>
 
-            <div class="form-group">
-                <label for="event_details">Event / Matchup</label>
-                <input type="text" id="event_details" name="event_details" class="form-control" placeholder="e.g., Kansas City Chiefs vs. Baltimore Ravens" required>
-            </div>
+        <div id="loading-games" class="loading-message" style="display: none;">
+            <p>⏳ Loading live games...</p>
+        </div>
 
-            <div class="form-group">
-                <label for="event_timestamp">Event Date & Time</label>
-                <input type="datetime-local" id="event_timestamp" name="event_timestamp" class="form-control" required>
-            </div>
+        <!-- Games List -->
+        <div id="games-list" class="games-grid">
+            <p class="text-muted">Select a sport above to view live games</p>
+        </div>
 
-            <hr class="form-divider">
+        <!-- Pick Form (Hidden until game selected) -->
+        <form method="POST" action="{{ url_for('make_pick') }}" id="pick-form" style="display: none;">
+
+            <input type="hidden" id="sport" name="sport">
+            <input type="hidden" id="event_details" name="event_details">
+            <input type="hidden" id="event_timestamp" name="event_timestamp">
+
+            <div class="selected-game-info" id="selected-game-info">
+                <h3>Selected Game</h3>
+                <p id="game-display"></p>
+            </div>
 
             <div class="form-group">
                 <label for="pick_selection">Your Pick</label>
-                <input type="text" id="pick_selection" name="pick_selection" class="form-control" placeholder="e.g., Kansas City Chiefs -3.5" required>
+                <select id="pick_selection" name="pick_selection" class="form-control" required>
+                    <option value="">Select your pick...</option>
+                </select>
             </div>
 
             <div class="form-row">
@@ -39,11 +52,12 @@
                 </div>
                 <div class="form-group half-width">
                     <label for="odds">Odds (American)</label>
-                    <input type="number" step="1" id="odds" name="odds" class="form-control" placeholder="e.g., -110 or 250" required>
+                    <input type="number" step="1" id="odds" name="odds" class="form-control" placeholder="Auto-filled from selection" required readonly>
                 </div>
             </div>
 
             <div class="form-actions">
+                <button type="button" onclick="cancelSelection()" class="btn btn-secondary">Back to Games</button>
                 <button type="submit" class="btn btn-primary btn-lg">Lock In Pick</button>
             </div>
 
@@ -54,4 +68,321 @@
         </form>
     </div>
 </div>
+
+<style>
+.sport-tabs {
+    display: flex;
+    gap: 10px;
+    margin: 30px 0;
+    flex-wrap: wrap;
+}
+
+.sport-tab {
+    background: rgba(0, 255, 255, 0.1);
+    border: 2px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-family: 'Orbitron', sans-serif;
+    text-transform: uppercase;
+}
+
+.sport-tab:hover {
+    background: var(--neon-cyan);
+    color: #000;
+    box-shadow: 0 0 20px var(--neon-cyan);
+}
+
+.sport-tab.active {
+    background: var(--neon-gold);
+    border-color: var(--neon-gold);
+    color: #000;
+    box-shadow: 0 0 20px var(--neon-gold);
+}
+
+.loading-message {
+    text-align: center;
+    padding: 40px;
+    color: var(--neon-cyan);
+    font-size: 18px;
+}
+
+.games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+    margin: 30px 0;
+}
+
+.game-card {
+    background: var(--card-bg);
+    border: 2px solid var(--glass-border);
+    border-radius: 15px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.game-card:hover {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.game-header {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.team-name {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 5px 0;
+}
+
+.game-time {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 10px;
+}
+
+.odds-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.odds-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    padding: 6px;
+    background: rgba(0, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.selected-game-info {
+    background: rgba(0, 255, 255, 0.1);
+    border-left: 4px solid var(--neon-cyan);
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+}
+
+.selected-game-info h3 {
+    color: var(--neon-cyan);
+    margin-bottom: 10px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.half-width {
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .games-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+const API_KEY = 'c405ed8a7e1f4ec945d39aeeaf647e4b';
+const API_BASE_URL = 'https://api.the-odds-api.com/v4';
+let currentSport = 'americanfootball_nfl';
+let selectedGame = null;
+
+async function switchSport(sport) {
+    currentSport = sport;
+
+    // Update active tab
+    document.querySelectorAll('.sport-tab').forEach(tab => tab.classList.remove('active'));
+    event.target.classList.add('active');
+
+    // Load games for this sport
+    await loadGames();
+}
+
+async function loadGames() {
+    document.getElementById('loading-games').style.display = 'block';
+    document.getElementById('games-list').innerHTML = '';
+
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/sports/${currentSport}/odds/?apiKey=${API_KEY}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&bookmakers=draftkings,fanduel`
+        );
+
+        if (!response.ok) {
+            throw new Error('Failed to load games');
+        }
+
+        const games = await response.json();
+        displayGames(games);
+    } catch (error) {
+        console.error('Error loading games:', error);
+        document.getElementById('games-list').innerHTML = '<p class="text-muted">Error loading games. Please try again.</p>';
+    } finally {
+        document.getElementById('loading-games').style.display = 'none';
+    }
+}
+
+function displayGames(games) {
+    const container = document.getElementById('games-list');
+
+    if (!games || games.length === 0) {
+        container.innerHTML = '<p class="text-muted">No upcoming games available for this sport.</p>';
+        return;
+    }
+
+    container.innerHTML = '';
+
+    games.forEach(game => {
+        const card = document.createElement('div');
+        card.className = 'game-card';
+        card.onclick = () => selectGame(game);
+
+        const gameTime = new Date(game.commence_time).toLocaleString();
+
+        // Get a sample of odds for preview
+        let oddsPreview = '';
+        if (game.bookmakers && game.bookmakers.length > 0) {
+            const book = game.bookmakers[0];
+            const spreadMarket = book.markets.find(m => m.key === 'spreads');
+            const h2hMarket = book.markets.find(m => m.key === 'h2h');
+
+            if (spreadMarket && spreadMarket.outcomes.length >= 2) {
+                const outcome = spreadMarket.outcomes[0];
+                oddsPreview += `
+                    <div class="odds-item">
+                        <span>Spread</span>
+                        <span>${outcome.point > 0 ? '+' : ''}${outcome.point} (${outcome.price > 0 ? '+' : ''}${outcome.price})</span>
+                    </div>
+                `;
+            }
+
+            if (h2hMarket && h2hMarket.outcomes.length >= 2) {
+                const outcome = h2hMarket.outcomes[0];
+                oddsPreview += `
+                    <div class="odds-item">
+                        <span>Moneyline</span>
+                        <span>${outcome.price > 0 ? '+' : ''}${outcome.price}</span>
+                    </div>
+                `;
+            }
+        }
+
+        card.innerHTML = `
+            <div class="game-header">
+                <div class="team-name">🏈 ${game.away_team}</div>
+                <div class="team-name" style="color: var(--neon-gold);">vs</div>
+                <div class="team-name">🏈 ${game.home_team}</div>
+                <div class="game-time">${gameTime}</div>
+            </div>
+            <div class="odds-preview">
+                ${oddsPreview}
+            </div>
+        `;
+
+        container.appendChild(card);
+    });
+}
+
+function selectGame(game) {
+    selectedGame = game;
+
+    // Fill in hidden form fields
+    const sportName = currentSport.replace('americanfootball_', '').replace('basketball_', '').replace('icehockey_', '').replace('baseball_', '').toUpperCase();
+    document.getElementById('sport').value = sportName;
+    document.getElementById('event_details').value = `${game.away_team} vs ${game.home_team}`;
+    document.getElementById('event_timestamp').value = new Date(game.commence_time).toISOString().slice(0, 16);
+    document.getElementById('game-display').textContent = `${game.away_team} vs ${game.home_team} - ${new Date(game.commence_time).toLocaleString()}`;
+
+    // Populate pick selection dropdown
+    const pickSelect = document.getElementById('pick_selection');
+    pickSelect.innerHTML = '<option value="">Select your pick...</option>';
+
+    if (game.bookmakers && game.bookmakers.length > 0) {
+        const book = game.bookmakers[0]; // Using first bookmaker
+
+        // Add spreads
+        const spreadMarket = book.markets.find(m => m.key === 'spreads');
+        if (spreadMarket) {
+            spreadMarket.outcomes.forEach(outcome => {
+                const option = document.createElement('option');
+                option.value = `${outcome.name} ${outcome.point > 0 ? '+' : ''}${outcome.point}`;
+                option.dataset.odds = outcome.price;
+                option.textContent = `${outcome.name} ${outcome.point > 0 ? '+' : ''}${outcome.point} (${outcome.price > 0 ? '+' : ''}${outcome.price})`;
+                pickSelect.appendChild(option);
+            });
+        }
+
+        // Add moneylines
+        const h2hMarket = book.markets.find(m => m.key === 'h2h');
+        if (h2hMarket) {
+            h2hMarket.outcomes.forEach(outcome => {
+                const option = document.createElement('option');
+                option.value = `${outcome.name} ML`;
+                option.dataset.odds = outcome.price;
+                option.textContent = `${outcome.name} ML (${outcome.price > 0 ? '+' : ''}${outcome.price})`;
+                pickSelect.appendChild(option);
+            });
+        }
+
+        // Add totals
+        const totalsMarket = book.markets.find(m => m.key === 'totals');
+        if (totalsMarket) {
+            totalsMarket.outcomes.forEach(outcome => {
+                const option = document.createElement('option');
+                option.value = `${outcome.name} ${outcome.point}`;
+                option.dataset.odds = outcome.price;
+                option.textContent = `${outcome.name} ${outcome.point} (${outcome.price > 0 ? '+' : ''}${outcome.price})`;
+                pickSelect.appendChild(option);
+            });
+        }
+    }
+
+    // Show form, hide games
+    document.getElementById('games-list').style.display = 'none';
+    document.getElementById('pick-form').style.display = 'block';
+    document.querySelector('.sport-tabs').style.display = 'none';
+}
+
+function cancelSelection() {
+    selectedGame = null;
+    document.getElementById('pick-form').style.display = 'none';
+    document.getElementById('games-list').style.display = 'grid';
+    document.querySelector('.sport-tabs').style.display = 'flex';
+}
+
+// Auto-fill odds when pick is selected
+document.addEventListener('DOMContentLoaded', function() {
+    const pickSelect = document.getElementById('pick_selection');
+    const oddsInput = document.getElementById('odds');
+
+    pickSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption && selectedOption.dataset.odds) {
+            oddsInput.value = selectedOption.dataset.odds;
+        }
+    });
+
+    // Load NFL games by default
+    loadGames();
+});
+</script>
 {% endblock %}
