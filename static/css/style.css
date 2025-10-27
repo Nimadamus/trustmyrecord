@@ -24,25 +24,51 @@ body {
 /* --- HEADER / NAV --- */
 header {
     background: var(--surface-dark);
-    padding: 1.2rem 0;
+    padding: 1.5rem 0;
     border-bottom: 2px solid var(--primary-blue);
 }
 header nav { display: flex; justify-content: space-between; align-items: center; }
-header .logo a { color: var(--primary-blue); text-decoration: none; font-size: 1.8rem; font-weight: bold; }
-header ul { list-style: none; margin: 0; padding: 0; display: flex; }
-header ul li { margin-left: 30px; }
+header .logo a { color: var(--primary-blue); text-decoration: none; font-size: 2.2rem; font-weight: bold; }
+header ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+header ul li { margin-left: 15px; }
 header ul a {
     color: var(--text-light);
     text-decoration: none;
-    font-weight: 600;
-    font-size: 1.1rem;
-    padding: 8px 16px;
-    border-radius: 6px;
+    font-weight: 700;
+    font-size: 1.3rem;
+    padding: 12px 20px;
+    border-radius: 8px;
     transition: all 0.3s ease;
+    display: inline-block;
 }
 header ul a:hover {
     color: var(--primary-blue);
     background: rgba(0, 174, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Button styles in nav */
+.nav-btn {
+    font-size: 1.2rem;
+    padding: 12px 24px;
+}
+
+.btn-primary.nav-btn {
+    background: linear-gradient(90deg, #00aeff, #0077ff);
+    color: white;
+}
+
+.btn-secondary.nav-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+}
+
+.btn-primary.nav-btn:hover {
+    box-shadow: 0 4px 12px rgba(0, 174, 255, 0.4);
+}
+
+.btn-secondary.nav-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 
