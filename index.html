@@ -38,16 +38,23 @@
             box-sizing: border-box;
         }
 
+        html {
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
         body {
             font-family: 'Exo 2', sans-serif;
             background: var(--dark-bg);
-            background-image: 
+            background-image:
                 radial-gradient(circle at 25% 75%, rgba(0, 255, 255, 0.06) 0%, transparent 50%),
                 radial-gradient(circle at 75% 25%, rgba(255, 215, 0, 0.06) 0%, transparent 50%),
                 linear-gradient(180deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
             color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
         }
 
         /* Animated background grid */
@@ -120,7 +127,6 @@
             gap: 12px;
             flex-wrap: wrap;
             align-items: center;
-            overflow-x: auto;
         }
 
         nav a {
