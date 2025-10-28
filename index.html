@@ -13,6 +13,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link href="static/css/social.css" rel="stylesheet">
 
     <style>
         :root {
@@ -1001,9 +1002,75 @@
                                 <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
                             </div>
 
+                            <div class="form-group">
+                                <label for="displayName">Display Name (Optional)</label>
+                                <input type="text" id="displayName" name="displayName" placeholder="Your display name">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="favoriteTeam">Favorite Team (Optional)</label>
+                                <input type="text" id="favoriteTeam" name="favoriteTeam" placeholder="e.g., Chiefs, Lakers, Yankees">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="favoriteSport">Favorite Sport (Optional)</label>
+                                <select id="favoriteSport" name="favoriteSport">
+                                    <option value="">Select a sport...</option>
+                                    <option value="NFL">NFL</option>
+                                    <option value="NBA">NBA</option>
+                                    <option value="MLB">MLB</option>
+                                    <option value="NHL">NHL</option>
+                                    <option value="Soccer">Soccer</option>
+                                    <option value="NCAA Football">NCAA Football</option>
+                                    <option value="NCAA Basketball">NCAA Basketball</option>
+                                    <option value="MMA/UFC">MMA/UFC</option>
+                                    <option value="Boxing">Boxing</option>
+                                    <option value="Tennis">Tennis</option>
+                                    <option value="Golf">Golf</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="location">Location (Optional)</label>
+                                <input type="text" id="location" name="location" placeholder="e.g., Los Angeles, CA">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="bio">Bio (Optional)</label>
+                                <textarea id="bio" name="bio" placeholder="Tell us about yourself..." rows="3"></textarea>
+                            </div>
+
                             <button type="submit" class="submit-pick">CREATE ACCOUNT</button>
                         </form>
                     </div>
+                </div>
+            </div>
+
+            <!-- Search Section -->
+            <div id="search" class="page-section">
+                <div class="search-container">
+                    <div class="section-header">
+                        <h2>Find <span class="highlight">Bettors</span></h2>
+                        <p>Search for users by name, username, location, or favorite team</p>
+                    </div>
+                    <input type="text" id="userSearch" class="search-box" placeholder="Search users...">
+                    <div id="searchResults"></div>
+                </div>
+            </div>
+
+            <!-- Feed Section -->
+            <div id="feed" class="page-section">
+                <div class="feed-container">
+                    <div class="feed-header">
+                        <h2>Your <span class="highlight">Feed</span></h2>
+                        <div class="feed-tabs">
+                            <button class="feed-tab active" onclick="switchFeedTab('following')">Following</button>
+                            <button class="feed-tab" onclick="switchFeedTab('global')">Global</button>
+                            <button class="feed-tab" onclick="switchFeedTab('trending')">Trending</button>
+                        </div>
+                    </div>
+                    <div id="feedContent"></div>
                 </div>
             </div>
         </main>
@@ -1154,12 +1221,187 @@
                     }, 100);
                 });
             }
+
+            // Initialize user search with debouncing
+            const searchInput = document.getElementById('userSearch');
+            if (searchInput) {
+                let searchTimeout;
+                searchInput.addEventListener('input', function(e) {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        if (typeof renderUserSearch === 'function') {
+                            renderUserSearch(e.target.value);
+                        }
+                    }, 300);
+                });
+            }
+
+            // Initialize signup form
+            const signupForm = document.getElementById('signupForm');
+            if (signupForm) {
+                signupForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    handleSignup(e);
+                });
+            }
+
+            // Load feed when switching to feed page
+            const feedSection = document.getElementById('feed');
+            if (feedSection) {
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.target.classList.contains('active')) {
+                            loadFeed('following');
+                        }
+                    });
+                });
+                observer.observe(feedSection, { attributes: true, attributeFilter: ['class'] });
+            }
         });
+
+        // Handle user signup
+        function handleSignup(e) {
+            const formData = new FormData(e.target);
+            const username = formData.get('username');
+            const email = formData.get('email');
+            const password = formData.get('password');
+            const confirmPassword = formData.get('confirmPassword');
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+
+            try {
+                const user = auth.register(username, email, password);
+
+                // Update optional fields
+                const updates = {};
+                if (formData.get('displayName')) updates.displayName = formData.get('displayName');
+                if (formData.get('favoriteTeam')) updates.favoriteTeam = formData.get('favoriteTeam');
+                if (formData.get('favoriteSport')) updates.favoriteSport = formData.get('favoriteSport');
+                if (formData.get('location')) updates.location = formData.get('location');
+                if (formData.get('bio')) updates.bio = formData.get('bio');
+
+                if (Object.keys(updates).length > 0) {
+                    auth.updateProfile(updates);
+                }
+
+                // Auto-login
+                auth.login(username, password);
+
+                alert('Account created successfully! Welcome to Trust My Record!');
+                showSection('home');
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Switch feed tabs
+        function switchFeedTab(tabName) {
+            // Update active tab
+            document.querySelectorAll('.feed-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Load appropriate feed
+            loadFeed(tabName);
+        }
+
+        // Load feed content
+        function loadFeed(feedType) {
+            if (typeof social === 'undefined') return;
+
+            const container = document.getElementById('feedContent');
+            if (!container) return;
+
+            let picks = [];
+
+            switch(feedType) {
+                case 'following':
+                    picks = social.getFeed(50);
+                    break;
+                case 'global':
+                    picks = social.getGlobalFeed(50);
+                    break;
+                case 'trending':
+                    picks = social.getTrendingPicks(20);
+                    break;
+            }
+
+            if (picks.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);margin-top:50px;">No picks to show yet. Follow some users or make your first pick!</p>';
+                return;
+            }
+
+            container.innerHTML = picks.map(pick => renderPickCard(pick)).join('');
+        }
+
+        // Toggle follow user
+        function toggleFollow(userId) {
+            if (!auth.isLoggedIn()) {
+                alert('Please sign up or login to follow users');
+                showSection('signup');
+                return;
+            }
+
+            try {
+                const isNowFollowing = auth.toggleFollow(userId);
+
+                // Update button state
+                const btn = event.target;
+                if (isNowFollowing) {
+                    btn.classList.add('following');
+                    btn.textContent = 'Unfollow';
+                } else {
+                    btn.classList.remove('following');
+                    btn.textContent = 'Follow';
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Toggle pick like
+        function togglePickLike(pickId) {
+            if (!auth.isLoggedIn()) {
+                alert('Please sign up or login to like picks');
+                showSection('signup');
+                return;
+            }
+
+            try {
+                const isLiked = social.toggleLike(pickId);
+
+                // Update UI
+                const btn = event.target;
+                const likeCount = social.getLikeCount(pickId);
+
+                if (isLiked) {
+                    btn.classList.add('liked');
+                } else {
+                    btn.classList.remove('liked');
+                }
+
+                btn.innerHTML = `❤️ ${likeCount}`;
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Show comments for a pick
+        function showComments(pickId) {
+            alert('Comments feature coming soon!');
+            // TODO: Implement comment modal/section
+        }
     </script>
 
     <!-- External Scripts -->
     <script src="static/js/config.js"></script>
     <script src="static/js/api.js"></script>
+    <script src="static/js/auth.js"></script>
+    <script src="static/js/social.js"></script>
     <script src="static/js/picks.js"></script>
     <script src="static/js/forms.js"></script>
     <script src="static/js/navigation.js"></script>
