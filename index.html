@@ -935,19 +935,75 @@
             </div>
 
             <div id="forums" class="page-section">
-                <div class="coming-soon">
-                    <h2>Community Forums</h2>
-                    <p>Join the discussion with fellow handicappers...</p>
-                    <div class="glass-card" style="max-width: 600px; margin: 0 auto;">
-                        <h3 style="color: var(--neon-gold); margin-bottom: 15px;">Forum Categories:</h3>
-                        <ul style="text-align: left; color: var(--text-secondary); line-height: 2;">
-                            <li>NFL Discussion</li>
-                            <li>NBA Talk</li>
-                            <li>MLB Analysis</li>
-                            <li>College Sports</li>
-                            <li>Betting Strategies</li>
-                            <li>Newcomer Help</li>
-                        </ul>
+                <div class="forum-container">
+                    <div class="section-header">
+                        <h2>Community <span class="highlight">Forums</span></h2>
+                        <p>Join the discussion with fellow bettors and handicappers</p>
+                    </div>
+
+                    <!-- Forum Categories Grid -->
+                    <div id="forumCategoriesView" class="forum-categories">
+                        <!-- Categories will be rendered here -->
+                    </div>
+
+                    <!-- Category Threads View -->
+                    <div id="categoryThreadsView" class="forum-threads" style="display:none;">
+                        <div class="forum-header">
+                            <button class="back-btn" onclick="showForumCategories()">← Back to Categories</button>
+                            <h3 id="categoryTitle"></h3>
+                            <button class="create-thread-btn" onclick="showCreateThreadForm()">+ New Thread</button>
+                        </div>
+
+                        <!-- Thread Sorting -->
+                        <div class="forum-sort">
+                            <label>Sort by:</label>
+                            <select id="threadSort" onchange="sortThreads()">
+                                <option value="activity">Latest Activity</option>
+                                <option value="newest">Newest First</option>
+                                <option value="popular">Most Popular</option>
+                                <option value="replies">Most Replies</option>
+                            </select>
+                        </div>
+
+                        <div id="threadsContainer"></div>
+                    </div>
+
+                    <!-- Thread Detail View -->
+                    <div id="threadDetailView" class="thread-detail" style="display:none;">
+                        <button class="back-btn" onclick="backToThreads()">← Back to Threads</button>
+                        <div id="threadContent"></div>
+
+                        <!-- Reply Form -->
+                        <div class="reply-form-container">
+                            <h3>Post Reply</h3>
+                            <textarea id="replyContent" placeholder="Write your reply..." rows="4"></textarea>
+                            <button onclick="submitReply()">Post Reply</button>
+                        </div>
+
+                        <div id="repliesContainer"></div>
+                    </div>
+
+                    <!-- Create Thread Form (Modal) -->
+                    <div id="createThreadModal" class="modal" style="display:none;">
+                        <div class="modal-content">
+                            <span class="close-modal" onclick="closeCreateThreadForm()">&times;</span>
+                            <h2>Create New Thread</h2>
+                            <form id="createThreadForm">
+                                <div class="form-group">
+                                    <label for="threadTitle">Thread Title</label>
+                                    <input type="text" id="threadTitle" placeholder="Enter thread title..." required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="threadContent">Content</label>
+                                    <textarea id="threadContent" placeholder="Write your post..." rows="6" required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="threadTags">Tags (comma-separated, optional)</label>
+                                    <input type="text" id="threadTags" placeholder="e.g., nfl, picks, strategy">
+                                </div>
+                                <button type="submit">Create Thread</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1395,6 +1451,294 @@
             alert('Comments feature coming soon!');
             // TODO: Implement comment modal/section
         }
+
+        // ========== FORUM FUNCTIONS ==========
+
+        let currentCategoryId = null;
+        let currentThreadId = null;
+
+        // Render forum categories
+        function renderForumCategories() {
+            if (typeof forums === 'undefined') return;
+
+            const container = document.getElementById('forumCategoriesView');
+            if (!container) return;
+
+            const categories = forums.categories;
+
+            container.innerHTML = categories.map(cat => {
+                const stats = forums.getCategoryStats(cat.id);
+                return `
+                    <div class="forum-category-card" onclick="showCategoryThreads('${cat.id}')" style="border-color: ${cat.color}">
+                        <div class="category-icon" style="color: ${cat.color}">${cat.icon}</div>
+                        <div class="category-info">
+                            <h3>${cat.name}</h3>
+                            <p>${cat.description}</p>
+                            <div class="category-stats">
+                                <span>${stats.threadCount} threads</span>
+                                <span>${stats.replyCount} posts</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Show category threads
+        function showCategoryThreads(categoryId) {
+            currentCategoryId = categoryId;
+
+            const category = forums.categories.find(c => c.id === categoryId);
+            document.getElementById('categoryTitle').textContent = category.name;
+
+            document.getElementById('forumCategoriesView').style.display = 'none';
+            document.getElementById('categoryThreadsView').style.display = 'block';
+            document.getElementById('threadDetailView').style.display = 'none';
+
+            renderThreads();
+        }
+
+        // Render threads
+        function renderThreads() {
+            const sortBy = document.getElementById('threadSort')?.value || 'activity';
+            const threads = forums.getThreadsByCategory(currentCategoryId, sortBy);
+
+            const container = document.getElementById('threadsContainer');
+            if (!container) return;
+
+            if (threads.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:40px;">No threads yet. Be the first to start a discussion!</p>';
+                return;
+            }
+
+            container.innerHTML = threads.map(thread => {
+                const author = auth.getUser(thread.authorId);
+                const score = thread.upvotes - thread.downvotes;
+
+                return `
+                    <div class="thread-item ${thread.isPinned ? 'pinned' : ''}" onclick="showThreadDetail('${thread.id}')">
+                        <div class="thread-vote">
+                            <div class="vote-score">${score}</div>
+                            <div class="vote-label">score</div>
+                        </div>
+                        <div class="thread-main">
+                            <h4>${thread.isPinned ? '📌 ' : ''}${thread.title}</h4>
+                            <div class="thread-meta">
+                                <span>by <strong>${thread.authorUsername}</strong></span>
+                                <span>•</span>
+                                <span>${timeAgo(thread.timestamp)}</span>
+                                <span>•</span>
+                                <span>${thread.replyCount} replies</span>
+                                <span>•</span>
+                                <span>${thread.views} views</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Sort threads
+        function sortThreads() {
+            renderThreads();
+        }
+
+        // Show thread detail
+        function showThreadDetail(threadId) {
+            currentThreadId = threadId;
+            forums.incrementViews(threadId);
+
+            const thread = forums.getThread(threadId);
+            const author = auth.getUser(thread.authorId);
+            const userVote = forums.getUserVote('thread', threadId);
+
+            document.getElementById('categoryThreadsView').style.display = 'none';
+            document.getElementById('threadDetailView').style.display = 'block';
+
+            const threadContent = document.getElementById('threadContent');
+            threadContent.innerHTML = `
+                <div class="thread-post main-post">
+                    <div class="post-vote">
+                        <button class="vote-btn ${userVote === 'up' ? 'active' : ''}" onclick="voteThread('${threadId}', 'up')">▲</button>
+                        <div class="vote-score">${thread.upvotes - thread.downvotes}</div>
+                        <button class="vote-btn ${userVote === 'down' ? 'active' : ''}" onclick="voteThread('${threadId}', 'down')">▼</button>
+                    </div>
+                    <div class="post-content">
+                        <div class="post-header">
+                            <img src="${author?.avatar}" class="post-avatar" onclick="showProfile('${author?.username}')">
+                            <div>
+                                <div class="post-author">${thread.authorUsername}</div>
+                                <div class="post-time">${timeAgo(thread.timestamp)}</div>
+                            </div>
+                        </div>
+                        <h2 class="thread-title">${thread.title}</h2>
+                        <div class="post-body">${thread.content}</div>
+                    </div>
+                </div>
+            `;
+
+            renderReplies();
+        }
+
+        // Render replies
+        function renderReplies() {
+            const replies = forums.getReplies(currentThreadId, 'oldest');
+            const container = document.getElementById('repliesContainer');
+
+            if (replies.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:20px;">No replies yet. Be the first to reply!</p>';
+                return;
+            }
+
+            container.innerHTML = replies.map(reply => {
+                const author = auth.getUser(reply.authorId);
+                const userVote = forums.getUserVote('reply', reply.id);
+
+                return `
+                    <div class="thread-post reply-post">
+                        <div class="post-vote">
+                            <button class="vote-btn ${userVote === 'up' ? 'active' : ''}" onclick="voteReply('${reply.id}', 'up')">▲</button>
+                            <div class="vote-score">${reply.upvotes - reply.downvotes}</div>
+                            <button class="vote-btn ${userVote === 'down' ? 'active' : ''}" onclick="voteReply('${reply.id}', 'down')">▼</button>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header">
+                                <img src="${author?.avatar}" class="post-avatar" onclick="showProfile('${author?.username}')">
+                                <div>
+                                    <div class="post-author">${reply.authorUsername}</div>
+                                    <div class="post-time">${timeAgo(reply.timestamp)}</div>
+                                </div>
+                            </div>
+                            <div class="post-body">${reply.content}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Vote on thread
+        function voteThread(threadId, voteType) {
+            if (!auth.isLoggedIn()) {
+                alert('Please login to vote');
+                showSection('signup');
+                return;
+            }
+
+            try {
+                forums.vote('thread', threadId, voteType);
+                showThreadDetail(threadId); // Refresh
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Vote on reply
+        function voteReply(replyId, voteType) {
+            if (!auth.isLoggedIn()) {
+                alert('Please login to vote');
+                showSection('signup');
+                return;
+            }
+
+            try {
+                forums.vote('reply', replyId, voteType);
+                renderReplies(); // Refresh replies
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Submit reply
+        function submitReply() {
+            if (!auth.isLoggedIn()) {
+                alert('Please login to reply');
+                showSection('signup');
+                return;
+            }
+
+            const content = document.getElementById('replyContent').value;
+
+            if (!content || content.trim().length < 5) {
+                alert('Reply must be at least 5 characters');
+                return;
+            }
+
+            try {
+                forums.addReply(currentThreadId, content.trim());
+                document.getElementById('replyContent').value = '';
+                renderReplies();
+                alert('Reply posted!');
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Show create thread form
+        function showCreateThreadForm() {
+            if (!auth.isLoggedIn()) {
+                alert('Please login to create threads');
+                showSection('signup');
+                return;
+            }
+
+            document.getElementById('createThreadModal').style.display = 'flex';
+        }
+
+        // Close create thread form
+        function closeCreateThreadForm() {
+            document.getElementById('createThreadModal').style.display = 'none';
+            document.getElementById('createThreadForm').reset();
+        }
+
+        // Back to categories
+        function showForumCategories() {
+            document.getElementById('forumCategoriesView').style.display = 'grid';
+            document.getElementById('categoryThreadsView').style.display = 'none';
+            document.getElementById('threadDetailView').style.display = 'none';
+        }
+
+        // Back to threads
+        function backToThreads() {
+            showCategoryThreads(currentCategoryId);
+        }
+
+        // Initialize forums when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Render forums when switching to forums page
+            const forumsSection = document.getElementById('forums');
+            if (forumsSection) {
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.target.classList.contains('active')) {
+                            renderForumCategories();
+                        }
+                    });
+                });
+                observer.observe(forumsSection, { attributes: true, attributeFilter: ['class'] });
+            }
+
+            // Handle create thread form submission
+            const createThreadForm = document.getElementById('createThreadForm');
+            if (createThreadForm) {
+                createThreadForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const title = document.getElementById('threadTitle').value;
+                    const content = document.getElementById('threadContent').value;
+                    const tagsInput = document.getElementById('threadTags').value;
+                    const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()) : [];
+
+                    try {
+                        forums.createThread(currentCategoryId, title, content, tags);
+                        closeCreateThreadForm();
+                        renderThreads();
+                        alert('Thread created successfully!');
+                    } catch (error) {
+                        alert('Error: ' + error.message);
+                    }
+                });
+            }
+        });
     </script>
 
     <!-- External Scripts -->
@@ -1402,6 +1746,7 @@
     <script src="static/js/api.js"></script>
     <script src="static/js/auth.js"></script>
     <script src="static/js/social.js"></script>
+    <script src="static/js/forums.js"></script>
     <script src="static/js/picks.js"></script>
     <script src="static/js/forms.js"></script>
     <script src="static/js/navigation.js"></script>

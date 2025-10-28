@@ -259,6 +259,62 @@ function renderUserSearch(query) {
 }
 
 /**
+ * Calculate FanIQ score
+ */
+function calculateFanIQ(user) {
+    // FanIQ is based on multiple factors
+    let score = 1000; // Base score
+
+    // Betting performance (up to +500 points)
+    const winBonus = user.stats.wins * 10;
+    const winRateBonus = user.stats.winRate * 2;
+    const roiBonus = (user.stats.roi || 0) * 5;
+    score += winBonus + winRateBonus + roiBonus;
+
+    // Social engagement (up to +300 points)
+    const followerBonus = user.social.followers.length * 2;
+    const reputationBonus = (user.social.reputation || 0) * 5;
+    score += followerBonus + reputationBonus;
+
+    // Forum activity (up to +200 points)
+    if (typeof forums !== 'undefined') {
+        const userThreads = forums.threads.filter(t => t.authorId === user.id);
+        const userReplies = forums.replies.filter(r => r.authorId === user.id);
+        const threadBonus = userThreads.length * 5;
+        const replyBonus = userReplies.length * 2;
+        const threadUpvotes = userThreads.reduce((sum, t) => sum + t.upvotes, 0);
+        score += threadBonus + replyBonus + threadUpvotes;
+    }
+
+    // Activity bonus
+    const daysSinceJoined = (Date.now() - new Date(user.joinedDate)) / (1000 * 60 * 60 * 24);
+    const activityBonus = Math.min(daysSinceJoined * 0.5, 100);
+    score += activityBonus;
+
+    return Math.round(Math.max(0, Math.min(9999, score))); // Cap between 0-9999
+}
+
+/**
+ * Get user forum stats
+ */
+function getUserForumStats(userId) {
+    if (typeof forums === 'undefined') {
+        return { threads: 0, posts: 0, upvotes: 0 };
+    }
+
+    const userThreads = forums.threads.filter(t => t.authorId === userId);
+    const userReplies = forums.replies.filter(r => r.authorId === userId);
+    const totalUpvotes = userThreads.reduce((sum, t) => sum + t.upvotes, 0) +
+                         userReplies.reduce((sum, r) => sum + r.upvotes, 0);
+
+    return {
+        threads: userThreads.length,
+        posts: userReplies.length,
+        upvotes: totalUpvotes
+    };
+}
+
+/**
  * Show user profile
  */
 function showProfile(username) {
@@ -267,6 +323,10 @@ function showProfile(username) {
         alert('User not found');
         return;
     }
+
+    // Calculate FanIQ and get forum stats
+    const fanIQ = calculateFanIQ(user);
+    const forumStats = getUserForumStats(user.id);
 
     // Build profile page dynamically
     const isOwnProfile = auth.currentUser?.id === user.id;
@@ -287,22 +347,71 @@ function showProfile(username) {
                     ` : ''}
                     ${user.location ? `<p class="profile-location">📍 ${user.location}</p>` : ''}
                     ${user.bio ? `<p class="profile-bio">${user.bio}</p>` : ''}
-                    <div class="profile-stats">
-                        <div class="stat-item">
-                            <span class="stat-value">${user.stats.totalPicks}</span>
-                            <span class="stat-label">Picks</span>
+
+                    <!-- FanIQ Score -->
+                    <div class="faniq-score">
+                        <span class="faniq-label">FanIQ Score</span>
+                        <span class="faniq-value">${fanIQ}</span>
+                    </div>
+
+                    <!-- Profile Stats Grid -->
+                    <div class="profile-stats-grid">
+                        <div class="profile-stats">
+                            <h3>Betting Stats</h3>
+                            <div class="stat-row">
+                                <div class="stat-item">
+                                    <span class="stat-value">${user.stats.totalPicks}</span>
+                                    <span class="stat-label">Total Picks</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">${user.stats.wins}-${user.stats.losses}</span>
+                                    <span class="stat-label">Record</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">${user.stats.winRate.toFixed(1)}%</span>
+                                    <span class="stat-label">Win Rate</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">${user.stats.roi?.toFixed(1) || 0}%</span>
+                                    <span class="stat-label">ROI</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="stat-item">
-                            <span class="stat-value">${user.stats.winRate.toFixed(1)}%</span>
-                            <span class="stat-label">Win Rate</span>
+
+                        <div class="profile-stats">
+                            <h3>Social Stats</h3>
+                            <div class="stat-row">
+                                <div class="stat-item">
+                                    <span class="stat-value">${user.social.followers.length}</span>
+                                    <span class="stat-label">Followers</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">${user.social.following.length}</span>
+                                    <span class="stat-label">Following</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">${user.social.reputation || 0}</span>
+                                    <span class="stat-label">Reputation</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="stat-item">
-                            <span class="stat-value">${user.social.followers.length}</span>
-                            <span class="stat-label">Followers</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">${user.social.following.length}</span>
-                            <span class="stat-label">Following</span>
+
+                        <div class="profile-stats">
+                            <h3>Forum Activity</h3>
+                            <div class="stat-row">
+                                <div class="stat-item">
+                                    <span class="stat-value">${forumStats.threads}</span>
+                                    <span class="stat-label">Threads</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">${forumStats.posts}</span>
+                                    <span class="stat-label">Posts</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">${forumStats.upvotes}</span>
+                                    <span class="stat-label">Upvotes</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     ${!isOwnProfile && auth.isLoggedIn() ? `
@@ -408,4 +517,6 @@ if (typeof window !== 'undefined') {
     window.showProfile = showProfile;
     window.renderPickCard = renderPickCard;
     window.timeAgo = timeAgo;
+    window.calculateFanIQ = calculateFanIQ;
+    window.getUserForumStats = getUserForumStats;
 }
