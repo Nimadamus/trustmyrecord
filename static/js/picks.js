@@ -60,27 +60,55 @@ async function loadSportsDropdown(api) {
     try {
         const sports = await api.getSports();
 
-        // Clear existing options except the first
+        // Clear existing options
         sportSelect.innerHTML = '<option value="">Select Sport</option>';
 
-        // Add sports
+        // Add "All Sports" option
+        const allOption = document.createElement('option');
+        allOption.value = 'ALL';
+        allOption.textContent = '🔥 All Sports (Show Everything)';
+        sportSelect.appendChild(allOption);
+
+        // Add separator
+        const separator = document.createElement('option');
+        separator.disabled = true;
+        separator.textContent = '──────────';
+        sportSelect.appendChild(separator);
+
+        // Group sports by category
+        const grouped = {};
         sports.forEach(sport => {
             if (sport.active) {
-                const option = document.createElement('option');
-                option.value = sport.key;
-                option.textContent = sport.title;
-                sportSelect.appendChild(option);
+                const group = sport.group || 'Other';
+                if (!grouped[group]) grouped[group] = [];
+                grouped[group].push(sport);
             }
         });
 
-        console.log(`Loaded ${sports.length} sports`);
+        // Add sports by group
+        Object.keys(grouped).sort().forEach(group => {
+            const groupHeader = document.createElement('option');
+            groupHeader.disabled = true;
+            groupHeader.textContent = `📊 ${group}`;
+            groupHeader.style.fontWeight = 'bold';
+            sportSelect.appendChild(groupHeader);
+
+            grouped[group].forEach(sport => {
+                const option = document.createElement('option');
+                option.value = sport.key;
+                option.textContent = `  ${sport.title}`;
+                sportSelect.appendChild(option);
+            });
+        });
+
+        console.log(`Loaded ${sports.length} sports in ${Object.keys(grouped).length} categories`);
     } catch (error) {
         console.error('Error loading sports:', error);
     }
 }
 
 /**
- * Load games for selected sport
+ * Load games for selected sport (or ALL sports)
  */
 async function loadGamesForSport(api, sportKey) {
     console.log(`Loading games for ${sportKey}...`);
@@ -95,7 +123,17 @@ async function loadGamesForSport(api, sportKey) {
     }
 
     try {
-        const games = await api.getUpcomingGames(sportKey);
+        let games;
+
+        if (sportKey === 'ALL') {
+            // Fetch ALL sports at once
+            console.log('Fetching all sports - this may take a moment...');
+            games = await api.getAllUpcomingGames();
+        } else {
+            // Fetch single sport
+            games = await api.getUpcomingGames(sportKey);
+        }
+
         availableGames = games;
 
         if (matchupSelect) {
@@ -107,33 +145,103 @@ async function loadGamesForSport(api, sportKey) {
                 option.textContent = 'No upcoming games available';
                 matchupSelect.appendChild(option);
             } else {
-                games.forEach((game, index) => {
-                    const option = document.createElement('option');
-                    option.value = index;
-
-                    const date = new Date(game.commence_time);
-                    const dateStr = date.toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit'
+                // Group games by sport if showing all
+                if (sportKey === 'ALL') {
+                    const bySport = {};
+                    games.forEach(game => {
+                        const sport = game.sport_title || game.sport;
+                        if (!bySport[sport]) bySport[sport] = [];
+                        bySport[sport].push(game);
                     });
 
-                    option.textContent = `${game.away_team} @ ${game.home_team} - ${dateStr}`;
-                    matchupSelect.appendChild(option);
-                });
+                    // Sort by commence time within each sport
+                    Object.keys(bySport).forEach(sport => {
+                        bySport[sport].sort((a, b) =>
+                            new Date(a.commence_time) - new Date(b.commence_time)
+                        );
+                    });
+
+                    // Add grouped options
+                    Object.keys(bySport).sort().forEach(sport => {
+                        const groupHeader = document.createElement('option');
+                        groupHeader.disabled = true;
+                        groupHeader.textContent = `━━━ ${sport} ━━━`;
+                        groupHeader.style.fontWeight = 'bold';
+                        matchupSelect.appendChild(groupHeader);
+
+                        bySport[sport].forEach((game, globalIndex) => {
+                            const gameIndex = games.indexOf(game);
+                            addGameOption(matchupSelect, game, gameIndex);
+                        });
+                    });
+                } else {
+                    // Single sport - sort by time
+                    games.sort((a, b) =>
+                        new Date(a.commence_time) - new Date(b.commence_time)
+                    );
+
+                    games.forEach((game, index) => {
+                        addGameOption(matchupSelect, game, index);
+                    });
+                }
             }
 
             matchupSelect.disabled = false;
         }
 
-        console.log(`Loaded ${games.length} games`);
+        console.log(`Loaded ${games.length} total games`);
     } catch (error) {
         console.error('Error loading games:', error);
         if (matchupSelect) {
             matchupSelect.innerHTML = '<option value="">Error loading games</option>';
         }
     }
+}
+
+/**
+ * Helper to add a game option to dropdown
+ */
+function addGameOption(selectElement, game, index) {
+    const option = document.createElement('option');
+    option.value = index;
+
+    const date = new Date(game.commence_time);
+    const now = new Date();
+    const hoursUntil = (date - now) / (1000 * 60 * 60);
+
+    let dateStr;
+    if (hoursUntil < 24) {
+        dateStr = date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit'
+        });
+        dateStr = `Today ${dateStr}`;
+    } else if (hoursUntil < 48) {
+        dateStr = date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit'
+        });
+        dateStr = `Tomorrow ${dateStr}`;
+    } else {
+        dateStr = date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+        });
+    }
+
+    // Show odds preview if available
+    let oddsPreview = '';
+    if (game.odds?.spread?.home?.point) {
+        oddsPreview = ` [${game.odds.spread.home.point > 0 ? '+' : ''}${game.odds.spread.home.point}]`;
+    } else if (game.odds?.moneyline?.home) {
+        const ml = game.odds.moneyline.home;
+        oddsPreview = ` [${ml > 0 ? '+' : ''}${ml}]`;
+    }
+
+    option.textContent = `${game.away_team} @ ${game.home_team}${oddsPreview} - ${dateStr}`;
+    selectElement.appendChild(option);
 }
 
 /**
