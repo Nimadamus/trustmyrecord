@@ -15,7 +15,7 @@ const CONFIG = {
     // The Odds API Configuration
     oddsApi: {
         // Check localStorage first, then fall back to hardcoded value
-        key: (typeof localStorage !== 'undefined' && localStorage.getItem('oddsAPIKey')) || "YOUR_ODDS_API_KEY",
+        key: (typeof localStorage !== 'undefined' && localStorage.getItem('oddsAPIKey')) || "c405ed8a7e1f4ec945d39aeeaf647e4b",
         baseUrl: "https://api.the-odds-api.com/v4",
         endpoints: {
             sports: "/sports",
