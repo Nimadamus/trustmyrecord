@@ -936,72 +936,100 @@
 
             <div id="forums" class="page-section">
                 <div class="forum-container">
-                    <div class="section-header">
-                        <h2>Community <span class="highlight">Forums</span></h2>
-                        <p>Join the discussion with fellow bettors and handicappers</p>
+                    <div class="forum-breadcrumb">
+                        <a onclick="showForumCategories()">Trust My Record Forums</a>
+                        <span id="breadcrumbCategory"></span>
+                        <span id="breadcrumbThread"></span>
                     </div>
 
-                    <!-- Forum Categories Grid -->
-                    <div id="forumCategoriesView" class="forum-categories">
-                        <!-- Categories will be rendered here -->
+                    <!-- Forum Categories Table -->
+                    <div id="forumCategoriesView">
+                        <div class="forum-table-header">
+                            <h2>Trust My Record Community Forums</h2>
+                            <p>Discussion, strategy, and picks from the community</p>
+                        </div>
+                        <table class="forum-table">
+                            <thead>
+                                <tr>
+                                    <th class="forum-name">Forum</th>
+                                    <th class="forum-threads">Threads</th>
+                                    <th class="forum-posts">Posts</th>
+                                    <th class="forum-lastpost">Last Post</th>
+                                </tr>
+                            </thead>
+                            <tbody id="forumCategoriesTable">
+                                <!-- Categories will be rendered here -->
+                            </tbody>
+                        </table>
                     </div>
 
                     <!-- Category Threads View -->
-                    <div id="categoryThreadsView" class="forum-threads" style="display:none;">
-                        <div class="forum-header">
-                            <button class="back-btn" onclick="showForumCategories()">← Back to Categories</button>
-                            <h3 id="categoryTitle"></h3>
-                            <button class="create-thread-btn" onclick="showCreateThreadForm()">+ New Thread</button>
+                    <div id="categoryThreadsView" style="display:none;">
+                        <div class="forum-toolbar">
+                            <button class="forum-btn" onclick="showCreateThreadForm()">New Thread</button>
+                            <div class="forum-sort">
+                                <label>Display:</label>
+                                <select id="threadSort" onchange="sortThreads()">
+                                    <option value="activity">Last Post Time</option>
+                                    <option value="newest">Thread Start Time</option>
+                                    <option value="popular">Most Popular</option>
+                                    <option value="replies">Number of Replies</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <!-- Thread Sorting -->
-                        <div class="forum-sort">
-                            <label>Sort by:</label>
-                            <select id="threadSort" onchange="sortThreads()">
-                                <option value="activity">Latest Activity</option>
-                                <option value="newest">Newest First</option>
-                                <option value="popular">Most Popular</option>
-                                <option value="replies">Most Replies</option>
-                            </select>
-                        </div>
-
-                        <div id="threadsContainer"></div>
+                        <table class="forum-table thread-table">
+                            <thead>
+                                <tr>
+                                    <th class="thread-title">Thread / Thread Starter</th>
+                                    <th class="thread-replies">Replies</th>
+                                    <th class="thread-views">Views</th>
+                                    <th class="thread-lastpost">Last Post</th>
+                                </tr>
+                            </thead>
+                            <tbody id="threadsTableBody">
+                                <!-- Threads will be rendered here -->
+                            </tbody>
+                        </table>
                     </div>
 
                     <!-- Thread Detail View -->
-                    <div id="threadDetailView" class="thread-detail" style="display:none;">
-                        <button class="back-btn" onclick="backToThreads()">← Back to Threads</button>
-                        <div id="threadContent"></div>
-
-                        <!-- Reply Form -->
-                        <div class="reply-form-container">
-                            <h3>Post Reply</h3>
-                            <textarea id="replyContent" placeholder="Write your reply..." rows="4"></textarea>
-                            <button onclick="submitReply()">Post Reply</button>
+                    <div id="threadDetailView" style="display:none;">
+                        <div class="forum-toolbar">
+                            <button class="forum-btn" onclick="document.getElementById('replyTextarea').scrollIntoView({behavior: 'smooth'})">Reply</button>
                         </div>
 
-                        <div id="repliesContainer"></div>
+                        <div id="threadPostsContainer">
+                            <!-- Thread and replies will be rendered here -->
+                        </div>
+
+                        <!-- Quick Reply -->
+                        <div class="quick-reply-box">
+                            <h3>Quick Reply</h3>
+                            <textarea id="replyTextarea" placeholder="Type your reply here..." rows="6"></textarea>
+                            <button class="forum-btn" onclick="submitReply()">Post Quick Reply</button>
+                        </div>
                     </div>
 
-                    <!-- Create Thread Form (Modal) -->
+                    <!-- Create Thread Modal -->
                     <div id="createThreadModal" class="modal" style="display:none;">
-                        <div class="modal-content">
+                        <div class="modal-content classic-modal">
                             <span class="close-modal" onclick="closeCreateThreadForm()">&times;</span>
-                            <h2>Create New Thread</h2>
+                            <h2>Post New Thread</h2>
                             <form id="createThreadForm">
                                 <div class="form-group">
-                                    <label for="threadTitle">Thread Title</label>
+                                    <label for="threadTitle">Title:</label>
                                     <input type="text" id="threadTitle" placeholder="Enter thread title..." required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="threadContent">Content</label>
-                                    <textarea id="threadContent" placeholder="Write your post..." rows="6" required></textarea>
+                                    <label for="threadContent">Message:</label>
+                                    <textarea id="threadContent" placeholder="Enter your message..." rows="10" required></textarea>
                                 </div>
                                 <div class="form-group">
-                                    <label for="threadTags">Tags (comma-separated, optional)</label>
+                                    <label for="threadTags">Tags (optional):</label>
                                     <input type="text" id="threadTags" placeholder="e.g., nfl, picks, strategy">
                                 </div>
-                                <button type="submit">Create Thread</button>
+                                <button type="submit" class="forum-btn">Submit New Thread</button>
                             </form>
                         </div>
                     </div>
@@ -1461,27 +1489,49 @@
         function renderForumCategories() {
             if (typeof forums === 'undefined') return;
 
-            const container = document.getElementById('forumCategoriesView');
+            const container = document.getElementById('forumCategoriesTable');
             if (!container) return;
 
             const categories = forums.categories;
 
             container.innerHTML = categories.map(cat => {
                 const stats = forums.getCategoryStats(cat.id);
-                return `
-                    <div class="forum-category-card" onclick="showCategoryThreads('${cat.id}')" style="border-color: ${cat.color}">
-                        <div class="category-icon" style="color: ${cat.color}">${cat.icon}</div>
-                        <div class="category-info">
-                            <h3>${cat.name}</h3>
-                            <p>${cat.description}</p>
-                            <div class="category-stats">
-                                <span>${stats.threadCount} threads</span>
-                                <span>${stats.replyCount} posts</span>
+                const threads = forums.getThreadsByCategory(cat.id, 'activity', 1);
+                const lastThread = threads[0];
+
+                let lastPostHTML = '<div class="no-posts">No posts yet</div>';
+                if (lastThread) {
+                    const lastPostTime = timeAgo(lastThread.lastActivityTime);
+                    lastPostHTML = `
+                        <div class="lastpost-info">
+                            <div class="lastpost-title">${lastThread.title.substring(0, 30)}${lastThread.title.length > 30 ? '...' : ''}</div>
+                            <div class="lastpost-meta">
+                                by <strong>${lastThread.authorUsername}</strong><br>
+                                ${lastPostTime}
                             </div>
                         </div>
-                    </div>
+                    `;
+                }
+
+                return `
+                    <tr class="forum-row" onclick="showCategoryThreads('${cat.id}')">
+                        <td class="forum-name">
+                            <div class="forum-icon" style="color: ${cat.color}">${cat.icon}</div>
+                            <div class="forum-info">
+                                <h3 class="forum-title">${cat.name}</h3>
+                                <p class="forum-desc">${cat.description}</p>
+                            </div>
+                        </td>
+                        <td class="forum-threads">${stats.threadCount}</td>
+                        <td class="forum-posts">${stats.replyCount}</td>
+                        <td class="forum-lastpost">${lastPostHTML}</td>
+                    </tr>
                 `;
             }).join('');
+
+            // Update breadcrumb
+            document.getElementById('breadcrumbCategory').innerHTML = '';
+            document.getElementById('breadcrumbThread').innerHTML = '';
         }
 
         // Show category threads
@@ -1489,11 +1539,14 @@
             currentCategoryId = categoryId;
 
             const category = forums.categories.find(c => c.id === categoryId);
-            document.getElementById('categoryTitle').textContent = category.name;
 
             document.getElementById('forumCategoriesView').style.display = 'none';
             document.getElementById('categoryThreadsView').style.display = 'block';
             document.getElementById('threadDetailView').style.display = 'none';
+
+            // Update breadcrumb
+            document.getElementById('breadcrumbCategory').innerHTML = ' &raquo; <a onclick="showCategoryThreads(\'' + categoryId + '\')">' + category.name + '</a>';
+            document.getElementById('breadcrumbThread').innerHTML = '';
 
             renderThreads();
         }
@@ -1503,37 +1556,38 @@
             const sortBy = document.getElementById('threadSort')?.value || 'activity';
             const threads = forums.getThreadsByCategory(currentCategoryId, sortBy);
 
-            const container = document.getElementById('threadsContainer');
+            const container = document.getElementById('threadsTableBody');
             if (!container) return;
 
             if (threads.length === 0) {
-                container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:40px;">No threads yet. Be the first to start a discussion!</p>';
+                container.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-secondary);">No threads yet. Be the first to start a discussion!</td></tr>';
                 return;
             }
 
             container.innerHTML = threads.map(thread => {
-                const author = auth.getUser(thread.authorId);
-                const score = thread.upvotes - thread.downvotes;
+                const replies = forums.getReplies(thread.id);
+                const lastReply = replies.length > 0 ? replies[replies.length - 1] : null;
+                const lastPostUser = lastReply ? auth.getUser(lastReply.authorId) : auth.getUser(thread.authorId);
+                const lastPostTime = lastReply ? lastReply.timestamp : thread.timestamp;
 
                 return `
-                    <div class="thread-item ${thread.isPinned ? 'pinned' : ''}" onclick="showThreadDetail('${thread.id}')">
-                        <div class="thread-vote">
-                            <div class="vote-score">${score}</div>
-                            <div class="vote-label">score</div>
-                        </div>
-                        <div class="thread-main">
-                            <h4>${thread.isPinned ? '📌 ' : ''}${thread.title}</h4>
-                            <div class="thread-meta">
-                                <span>by <strong>${thread.authorUsername}</strong></span>
-                                <span>•</span>
-                                <span>${timeAgo(thread.timestamp)}</span>
-                                <span>•</span>
-                                <span>${thread.replyCount} replies</span>
-                                <span>•</span>
-                                <span>${thread.views} views</span>
+                    <tr class="thread-row ${thread.isPinned ? 'pinned-thread' : ''}" onclick="showThreadDetail('${thread.id}')">
+                        <td class="thread-title">
+                            ${thread.isPinned ? '<span class="pin-icon">📌</span>' : ''}
+                            <div class="thread-title-text">${thread.title}</div>
+                            <div class="thread-starter">Started by <strong>${thread.authorUsername}</strong>, ${timeAgo(thread.timestamp)}</div>
+                        </td>
+                        <td class="thread-replies">${thread.replyCount}</td>
+                        <td class="thread-views">${thread.views}</td>
+                        <td class="thread-lastpost">
+                            <div class="lastpost-info">
+                                <div class="lastpost-meta">
+                                    by <strong>${lastPostUser?.username || 'Unknown'}</strong><br>
+                                    ${timeAgo(lastPostTime)}
+                                </div>
                             </div>
-                        </div>
-                    </div>
+                        </td>
+                    </tr>
                 `;
             }).join('');
         }
@@ -1550,68 +1604,55 @@
 
             const thread = forums.getThread(threadId);
             const author = auth.getUser(thread.authorId);
-            const userVote = forums.getUserVote('thread', threadId);
+            const category = forums.categories.find(c => c.id === thread.categoryId);
 
             document.getElementById('categoryThreadsView').style.display = 'none';
             document.getElementById('threadDetailView').style.display = 'block';
 
-            const threadContent = document.getElementById('threadContent');
-            threadContent.innerHTML = `
-                <div class="thread-post main-post">
-                    <div class="post-vote">
-                        <button class="vote-btn ${userVote === 'up' ? 'active' : ''}" onclick="voteThread('${threadId}', 'up')">▲</button>
-                        <div class="vote-score">${thread.upvotes - thread.downvotes}</div>
-                        <button class="vote-btn ${userVote === 'down' ? 'active' : ''}" onclick="voteThread('${threadId}', 'down')">▼</button>
-                    </div>
-                    <div class="post-content">
-                        <div class="post-header">
-                            <img src="${author?.avatar}" class="post-avatar" onclick="showProfile('${author?.username}')">
-                            <div>
-                                <div class="post-author">${thread.authorUsername}</div>
-                                <div class="post-time">${timeAgo(thread.timestamp)}</div>
-                            </div>
-                        </div>
-                        <h2 class="thread-title">${thread.title}</h2>
-                        <div class="post-body">${thread.content}</div>
-                    </div>
-                </div>
-            `;
+            // Update breadcrumb
+            document.getElementById('breadcrumbThread').innerHTML = ' &raquo; ' + thread.title;
 
-            renderReplies();
-        }
+            const container = document.getElementById('threadPostsContainer');
 
-        // Render replies
-        function renderReplies() {
+            // Render original post + all replies
             const replies = forums.getReplies(currentThreadId, 'oldest');
-            const container = document.getElementById('repliesContainer');
+            const allPosts = [{ ...thread, isOP: true }, ...replies];
 
-            if (replies.length === 0) {
-                container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:20px;">No replies yet. Be the first to reply!</p>';
-                return;
-            }
-
-            container.innerHTML = replies.map(reply => {
-                const author = auth.getUser(reply.authorId);
-                const userVote = forums.getUserVote('reply', reply.id);
+            container.innerHTML = allPosts.map((post, index) => {
+                const postAuthor = auth.getUser(post.authorId || post.userId);
+                const postDate = new Date(post.timestamp);
+                const userVote = forums.getUserVote(post.isOP ? 'thread' : 'reply', post.id);
+                const score = (post.upvotes || 0) - (post.downvotes || 0);
 
                 return `
-                    <div class="thread-post reply-post">
-                        <div class="post-vote">
-                            <button class="vote-btn ${userVote === 'up' ? 'active' : ''}" onclick="voteReply('${reply.id}', 'up')">▲</button>
-                            <div class="vote-score">${reply.upvotes - reply.downvotes}</div>
-                            <button class="vote-btn ${userVote === 'down' ? 'active' : ''}" onclick="voteReply('${reply.id}', 'down')">▼</button>
-                        </div>
-                        <div class="post-content">
-                            <div class="post-header">
-                                <img src="${author?.avatar}" class="post-avatar" onclick="showProfile('${author?.username}')">
-                                <div>
-                                    <div class="post-author">${reply.authorUsername}</div>
-                                    <div class="post-time">${timeAgo(reply.timestamp)}</div>
+                    <table class="post-table">
+                        <tr>
+                            <td class="post-user-cell">
+                                <div class="post-userinfo">
+                                    <img src="${postAuthor?.avatar}" class="post-user-avatar" onclick="showProfile('${postAuthor?.username}')">
+                                    <div class="post-username">${post.authorUsername || postAuthor?.username}</div>
+                                    <div class="post-user-stats">
+                                        <div>Posts: ${postAuthor?.stats?.totalPicks || 0}</div>
+                                        <div>Joined: ${new Date(postAuthor?.joinedDate).toLocaleDateString()}</div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="post-body">${reply.content}</div>
-                        </div>
-                    </div>
+                            </td>
+                            <td class="post-content-cell">
+                                <div class="post-header-bar">
+                                    <div class="post-number">#${index + 1}</div>
+                                    <div class="post-date">${postDate.toLocaleString()}</div>
+                                </div>
+                                ${post.isOP ? `<h2 class="thread-title-post">${post.title}</h2>` : ''}
+                                <div class="post-message">${post.content}</div>
+                                <div class="post-footer">
+                                    <div class="post-voting">
+                                        <button class="vote-btn-classic ${userVote === 'up' ? 'voted' : ''}" onclick="event.stopPropagation(); ${post.isOP ? 'voteThread' : 'voteReply'}('${post.id}', 'up')">👍 ${post.upvotes || 0}</button>
+                                        <button class="vote-btn-classic ${userVote === 'down' ? 'voted' : ''}" onclick="event.stopPropagation(); ${post.isOP ? 'voteThread' : 'voteReply'}('${post.id}', 'down')">👎 ${post.downvotes || 0}</button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
                 `;
             }).join('');
         }
@@ -1642,7 +1683,7 @@
 
             try {
                 forums.vote('reply', replyId, voteType);
-                renderReplies(); // Refresh replies
+                showThreadDetail(currentThreadId); // Refresh entire thread
             } catch (error) {
                 alert('Error: ' + error.message);
             }
@@ -1656,7 +1697,7 @@
                 return;
             }
 
-            const content = document.getElementById('replyContent').value;
+            const content = document.getElementById('replyTextarea').value;
 
             if (!content || content.trim().length < 5) {
                 alert('Reply must be at least 5 characters');
@@ -1665,8 +1706,8 @@
 
             try {
                 forums.addReply(currentThreadId, content.trim());
-                document.getElementById('replyContent').value = '';
-                renderReplies();
+                document.getElementById('replyTextarea').value = '';
+                showThreadDetail(currentThreadId); // Refresh thread
                 alert('Reply posted!');
             } catch (error) {
                 alert('Error: ' + error.message);
@@ -1692,9 +1733,10 @@
 
         // Back to categories
         function showForumCategories() {
-            document.getElementById('forumCategoriesView').style.display = 'grid';
+            document.getElementById('forumCategoriesView').style.display = 'block';
             document.getElementById('categoryThreadsView').style.display = 'none';
             document.getElementById('threadDetailView').style.display = 'none';
+            renderForumCategories();
         }
 
         // Back to threads
