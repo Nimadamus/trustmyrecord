@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - TrustMyRecord</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/css/new_design.css">
+    <style>
+        .auth-container {
+            max-width: 500px;
+            margin: 80px auto;
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+        }
+
+        .auth-container h1 {
+            text-align: center;
+            color: #00ff88;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #fff;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #00ff88;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: #00ff88;
+            border: none;
+            border-radius: 5px;
+            color: #000;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .submit-btn:hover {
+            background: #00cc6f;
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid #ff0000;
+            color: #ff6666;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message {
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .auth-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #aaa;
+        }
+
+        .auth-link a {
+            color: #00ff88;
+            text-decoration: none;
+        }
+
+        .auth-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header class="sticky-nav">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">TRUSTMYRECORD</div>
+                <div class="header-right">
+                    <nav>
+                        <a href="index.html">Home</a>
+                        <a href="picks.html">The Record</a>
+                        <a href="submit_pick.html">Make Your Picks</a>
+                        <a href="leaderboard.html">Leaderboards</a>
+                    </nav>
+                    <a href="login.html" class="cta-button nav-cta">Login</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="auth-container">
+            <h1>Create Your Account</h1>
+
+            <div id="error-message" class="error-message"></div>
+            <div id="success-message" class="success-message"></div>
+
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required minlength="3" maxlength="50" pattern="[a-zA-Z0-9_]+" placeholder="Choose a unique username">
+                    <small style="color: #aaa;">Letters, numbers, and underscores only</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required placeholder="your@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="displayName">Display Name</label>
+                    <input type="text" id="displayName" name="displayName" required maxlength="100" placeholder="How you want to be shown">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required minlength="8" placeholder="At least 8 characters">
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Re-enter password">
+                </div>
+
+                <button type="submit" class="submit-btn" id="submit-btn">Create Account</button>
+
+                <div class="auth-link">
+                    Already have an account? <a href="login.html">Login here</a>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p class="footer-slogan">Restoring faith and integrity to a shady industry.</p>
+        </div>
+    </footer>
+
+    <script src="static/js/api.js"></script>
+    <script>
+        const form = document.getElementById('register-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const errorMsg = document.getElementById('error-message');
+        const successMsg = document.getElementById('success-message');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Clear messages
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+
+            // Get form values
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const displayName = document.getElementById('displayName').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Validate passwords match
+            if (password !== confirmPassword) {
+                errorMsg.textContent = 'Passwords do not match';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            // Disable button during submission
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating Account...';
+
+            try {
+                const user = await signup(username, email, password, displayName);
+
+                successMsg.textContent = 'Account created successfully! Redirecting...';
+                successMsg.style.display = 'block';
+
+                // Redirect to dashboard after 1.5 seconds
+                setTimeout(() => {
+                    window.location.href = '/dashboard.html';
+                }, 1500);
+
+            } catch (error) {
+                errorMsg.textContent = error.message || 'Registration failed. Please try again.';
+                errorMsg.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Account';
+            }
+        });
+    </script>
+</body>
+</html>

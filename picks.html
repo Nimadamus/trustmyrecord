@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Record - TrustMyRecord</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/css/new_design.css">
+    <style>
+        .picks-container {
+            max-width: 1600px;
+            margin: 80px auto;
+            padding: 20px;
+        }
+
+        .picks-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .picks-header h1 {
+            color: #00ff88;
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .picks-header p {
+            color: #aaa;
+            font-size: 16px;
+        }
+
+        .sport-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .sport-tab {
+            padding: 12px 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 5px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .sport-tab:hover {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .sport-tab.active {
+            background: #00ff88;
+            color: #000;
+            border-color: #00ff88;
+        }
+
+        .picks-table-container {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            overflow-x: auto;
+        }
+
+        .picks-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .picks-table thead {
+            background: rgba(0, 255, 136, 0.2);
+        }
+
+        .picks-table th {
+            padding: 15px;
+            text-align: left;
+            color: #00ff88;
+            font-weight: 700;
+            border-bottom: 2px solid #00ff88;
+            white-space: nowrap;
+        }
+
+        .picks-table tbody tr {
+            border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+            transition: background 0.3s;
+        }
+
+        .picks-table tbody tr:hover {
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .picks-table td {
+            padding: 15px;
+            color: #fff;
+            vertical-align: middle;
+        }
+
+        .user-column {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: rgba(0, 255, 136, 0.2);
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            color: #00ff88;
+            font-weight: 600;
+        }
+
+        .user-username {
+            color: #aaa;
+            font-size: 12px;
+        }
+
+        .matchup-cell {
+            font-weight: 600;
+        }
+
+        .bet-details-cell {
+            color: #00ff88;
+            font-weight: 600;
+        }
+
+        .odds-cell {
+            font-family: monospace;
+            color: #ffa500;
+        }
+
+        .units-cell {
+            font-weight: 700;
+            color: #00ff88;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-badge.pending {
+            background: rgba(255, 165, 0, 0.2);
+            color: #ffa500;
+            border: 1px solid #ffa500;
+        }
+
+        .status-badge.won {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+            border: 1px solid #00ff88;
+        }
+
+        .status-badge.lost {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff6666;
+            border: 1px solid #ff0000;
+        }
+
+        .status-badge.push {
+            background: rgba(128, 128, 128, 0.2);
+            color: #aaa;
+            border: 1px solid #aaa;
+        }
+
+        .result-cell {
+            font-weight: 700;
+        }
+
+        .result-cell.positive {
+            color: #00ff88;
+        }
+
+        .result-cell.negative {
+            color: #ff6666;
+        }
+
+        .timestamp-cell {
+            color: #aaa;
+            font-size: 12px;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 5px 10px;
+            transition: color 0.3s;
+        }
+
+        .action-btn:hover {
+            color: #00ff88;
+        }
+
+        .action-btn.liked {
+            color: #00ff88;
+        }
+
+        .reasoning-row {
+            display: none;
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .reasoning-row.show {
+            display: table-row;
+        }
+
+        .reasoning-content {
+            padding: 15px;
+            color: #ccc;
+            font-style: italic;
+        }
+
+        .loading {
+            text-align: center;
+            color: #00ff88;
+            padding: 40px;
+            font-size: 18px;
+        }
+
+        .no-picks {
+            text-align: center;
+            color: #aaa;
+            padding: 60px;
+            font-size: 16px;
+        }
+
+        .filter-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filter-group label {
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .filter-group select {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 5px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .picks-count {
+            color: #00ff88;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <header class="sticky-nav">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">TRUSTMYRECORD</div>
+                <div class="header-right">
+                    <nav>
+                        <a href="dashboard.html">Dashboard</a>
+                        <a href="picks.html">The Record</a>
+                        <a href="submit_pick.html">Make Your Picks</a>
+                        <a href="leaderboard.html">Leaderboards</a>
+                    </nav>
+                    <a href="register.html" class="cta-button nav-cta">Sign Up</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="picks-container">
+            <div class="picks-header">
+                <h1>THE RECORD</h1>
+                <p>All picks are timestamped and immutable</p>
+            </div>
+
+            <div class="sport-tabs">
+                <div class="sport-tab active" data-sport="">ALL SPORTS</div>
+                <div class="sport-tab" data-sport="NFL">NFL</div>
+                <div class="sport-tab" data-sport="NBA">NBA</div>
+                <div class="sport-tab" data-sport="MLB">MLB</div>
+                <div class="sport-tab" data-sport="NHL">NHL</div>
+                <div class="sport-tab" data-sport="NCAAF">NCAAF</div>
+                <div class="sport-tab" data-sport="NCAAB">NCAAB</div>
+                <div class="sport-tab" data-sport="UFC">UFC/MMA</div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>Status:</label>
+                    <select id="status-filter">
+                        <option value="">All</option>
+                        <option value="pending">Pending</option>
+                        <option value="won">Won</option>
+                        <option value="lost">Lost</option>
+                        <option value="push">Push</option>
+                    </select>
+                </div>
+
+                <div class="picks-count">
+                    Showing <span id="picks-count">0</span> picks
+                </div>
+            </div>
+
+            <div class="picks-table-container">
+                <table class="picks-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Sport</th>
+                            <th>Matchup</th>
+                            <th>Bet Type</th>
+                            <th>Bet</th>
+                            <th>Odds</th>
+                            <th>Units</th>
+                            <th>Status</th>
+                            <th>Result</th>
+                            <th>Locked</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="picks-tbody">
+                        <tr>
+                            <td colspan="11" class="loading">Loading picks...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p class="footer-slogan">Restoring faith and integrity to a shady industry.</p>
+        </div>
+    </footer>
+
+    <script src="static/js/api.js"></script>
+    <script>
+        let currentSport = '';
+        let currentStatus = '';
+
+        const sportTabs = document.querySelectorAll('.sport-tab');
+        const statusFilter = document.getElementById('status-filter');
+        const picksTbody = document.getElementById('picks-tbody');
+        const picksCount = document.getElementById('picks-count');
+
+        // Sport tab click handlers
+        sportTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                sportTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentSport = tab.dataset.sport;
+                loadPicks();
+            });
+        });
+
+        // Status filter change
+        statusFilter.addEventListener('change', () => {
+            currentStatus = statusFilter.value;
+            loadPicks();
+        });
+
+        async function loadPicks() {
+            try {
+                picksTbody.innerHTML = '<tr><td colspan="11" class="loading">Loading picks...</td></tr>';
+
+                const filters = {};
+                if (currentSport) filters.sport = currentSport;
+                if (currentStatus) filters.status = currentStatus;
+
+                const picks = await getPicksFeed(filters);
+
+                picksCount.textContent = picks.length;
+
+                if (picks.length === 0) {
+                    picksTbody.innerHTML = '<tr><td colspan="11" class="no-picks">No picks found for this sport. Be the first to submit!</td></tr>';
+                    return;
+                }
+
+                picksTbody.innerHTML = picks.map(pick => createPickRow(pick)).join('');
+
+            } catch (error) {
+                console.error('Error loading picks:', error);
+                picksTbody.innerHTML = '<tr><td colspan="11" class="no-picks">Error loading picks. Please try again.</td></tr>';
+            }
+        }
+
+        function createPickRow(pick) {
+            const lockedDate = new Date(pick.locked_at);
+            const gameDate = new Date(pick.game_date);
+            const resultUnits = pick.result_units ? parseFloat(pick.result_units) : null;
+
+            return `
+                <tr data-pick-id="${pick.id}">
+                    <td>
+                        <div class="user-column">
+                            <img src="${pick.avatar_url || '/static/images/default-avatar.png'}" alt="${pick.username}" class="user-avatar">
+                            <div class="user-info">
+                                <span class="user-name">${pick.display_name}</span>
+                                <span class="user-username">@${pick.username}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td><strong>${pick.sport}</strong></td>
+                    <td class="matchup-cell">${pick.team}${pick.opponent ? ' vs ' + pick.opponent : ''}</td>
+                    <td>${pick.bet_type.toUpperCase()}</td>
+                    <td class="bet-details-cell">${pick.bet_details}</td>
+                    <td class="odds-cell">${pick.odds > 0 ? '+' : ''}${pick.odds}</td>
+                    <td class="units-cell">${pick.units}u</td>
+                    <td><span class="status-badge ${pick.status}">${pick.status}</span></td>
+                    <td class="result-cell ${resultUnits !== null ? (resultUnits >= 0 ? 'positive' : 'negative') : ''}">
+                        ${resultUnits !== null ? (resultUnits >= 0 ? '+' : '') + resultUnits.toFixed(2) + 'u' : '-'}
+                    </td>
+                    <td class="timestamp-cell" title="Locked: ${lockedDate.toLocaleString()}">
+                        ${lockedDate.toLocaleDateString()}<br>
+                        ${lockedDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </td>
+                    <td>
+                        <div class="actions-cell">
+                            <button class="action-btn ${pick.liked_by_user ? 'liked' : ''}" onclick="toggleLike(${pick.id}, event)" title="Like">
+                                ❤️ ${pick.like_count}
+                            </button>
+                            ${pick.reasoning ? `<button class="action-btn" onclick="toggleReasoning(${pick.id}, event)" title="Show reasoning">💬</button>` : ''}
+                        </div>
+                    </td>
+                </tr>
+                ${pick.reasoning ? `
+                <tr class="reasoning-row" id="reasoning-${pick.id}">
+                    <td colspan="11">
+                        <div class="reasoning-content">
+                            <strong>Reasoning:</strong> ${pick.reasoning}
+                        </div>
+                    </td>
+                </tr>
+                ` : ''}
+            `;
+        }
+
+        function toggleReasoning(pickId, event) {
+            event.stopPropagation();
+            const reasoningRow = document.getElementById(`reasoning-${pickId}`);
+            if (reasoningRow) {
+                reasoningRow.classList.toggle('show');
+            }
+        }
+
+        async function toggleLike(pickId, event) {
+            event.stopPropagation();
+
+            if (!isLoggedIn()) {
+                window.location.href = '/login.html?redirect=/picks.html';
+                return;
+            }
+
+            try {
+                const pickRow = document.querySelector(`[data-pick-id="${pickId}"]`);
+                const likeBtn = pickRow.querySelector('.action-btn');
+
+                if (likeBtn.classList.contains('liked')) {
+                    await unlikePick(pickId);
+                } else {
+                    await likePick(pickId);
+                }
+
+                // Reload picks to update counts
+                await loadPicks();
+
+            } catch (error) {
+                console.error('Error toggling like:', error);
+            }
+        }
+
+        // Load picks on page load
+        loadPicks();
+    </script>
+</body>
+</html>

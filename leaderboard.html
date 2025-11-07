@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboards - TrustMyRecord</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/css/new_design.css">
+    <style>
+        .leaderboard-container {
+            max-width: 1000px;
+            margin: 80px auto;
+            padding: 20px;
+        }
+
+        .leaderboard-container h1 {
+            text-align: center;
+            color: #00ff88;
+            margin-bottom: 40px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .filters select {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #00ff88;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .leaderboard-table {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: rgba(0, 255, 136, 0.2);
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            color: #00ff88;
+            font-weight: 700;
+            border-bottom: 2px solid #00ff88;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+            transition: background 0.3s;
+        }
+
+        tbody tr:hover {
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        td {
+            padding: 15px;
+            color: #fff;
+        }
+
+        .rank {
+            font-weight: 700;
+            color: #00ff88;
+            font-size: 18px;
+            width: 60px;
+            text-align: center;
+        }
+
+        .rank.top3 {
+            color: #ffd700;
+        }
+
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-cell img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0, 255, 136, 0.2);
+        }
+
+        .user-info strong {
+            display: block;
+            color: #00ff88;
+        }
+
+        .user-info small {
+            color: #aaa;
+        }
+
+        .verified-badge {
+            color: #00ff88;
+        }
+
+        .stat-positive {
+            color: #00ff88;
+            font-weight: 600;
+        }
+
+        .stat-negative {
+            color: #ff6666;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            color: #00ff88;
+            padding: 40px;
+            font-size: 18px;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #aaa;
+            padding: 60px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <header class="sticky-nav">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">TRUSTMYRECORD</div>
+                <div class="header-right">
+                    <nav>
+                        <a href="index.html">Home</a>
+                        <a href="picks.html">The Record</a>
+                        <a href="submit_pick.html">Make Your Picks</a>
+                        <a href="leaderboard.html">Leaderboards</a>
+                    </nav>
+                    <a href="register.html" class="cta-button nav-cta">Sign Up</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="leaderboard-container">
+            <h1>LEADERBOARDS</h1>
+
+            <div class="filters">
+                <select id="sport-filter">
+                    <option value="">All Sports</option>
+                    <option value="NFL">NFL</option>
+                    <option value="NBA">NBA</option>
+                    <option value="MLB">MLB</option>
+                    <option value="NHL">NHL</option>
+                    <option value="NCAAF">NCAAF</option>
+                    <option value="NCAAB">NCAAB</option>
+                </select>
+
+                <select id="sort-filter">
+                    <option value="roi">Sort by ROI</option>
+                    <option value="units">Sort by Units</option>
+                </select>
+            </div>
+
+            <div class="leaderboard-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>User</th>
+                            <th>Picks</th>
+                            <th>Record</th>
+                            <th>Win Rate</th>
+                            <th>Units</th>
+                            <th>ROI</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
+                        <tr>
+                            <td colspan="7" class="loading">Loading leaderboard...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p class="footer-slogan">Restoring faith and integrity to a shady industry.</p>
+        </div>
+    </footer>
+
+    <script src="static/js/api.js"></script>
+    <script>
+        const leaderboardBody = document.getElementById('leaderboard-body');
+        const sportFilter = document.getElementById('sport-filter');
+        const sortFilter = document.getElementById('sort-filter');
+
+        async function loadLeaderboard() {
+            try {
+                leaderboardBody.innerHTML = '<tr><td colspan="7" class="loading">Loading leaderboard...</td></tr>';
+
+                const sport = sportFilter.value || null;
+                const sortBy = sortFilter.value;
+
+                const leaderboard = await getLeaderboard(sport, sortBy, 50);
+
+                if (leaderboard.length === 0) {
+                    leaderboardBody.innerHTML = '<tr><td colspan="7" class="no-data">No data yet. Submit picks to appear on the leaderboard!</td></tr>';
+                    return;
+                }
+
+                leaderboardBody.innerHTML = leaderboard.map((user, index) => createLeaderboardRow(user, index + 1)).join('');
+
+            } catch (error) {
+                console.error('Error loading leaderboard:', error);
+                leaderboardBody.innerHTML = '<tr><td colspan="7" class="no-data">Error loading leaderboard. Please try again.</td></tr>';
+            }
+        }
+
+        function createLeaderboardRow(user, rank) {
+            const winRate = user.win_rate || ((user.wins / user.total_picks) * 100) || 0;
+            const roi = parseFloat(user.roi || 0);
+            const units = parseFloat(user.net_units || 0);
+
+            return `
+                <tr>
+                    <td class="rank ${rank <= 3 ? 'top3' : ''}">#${rank}</td>
+                    <td>
+                        <div class="user-cell">
+                            <img src="${user.avatar_url || '/static/images/default-avatar.png'}" alt="${user.username}">
+                            <div class="user-info">
+                                <strong>${user.display_name}</strong>
+                                <small>@${user.username} ${user.verification_status === 'verified' ? '<span class="verified-badge">✓</span>' : ''}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${user.total_picks || 0}</td>
+                    <td>${user.wins || 0}-${user.losses || 0}</td>
+                    <td>${winRate.toFixed(1)}%</td>
+                    <td class="${units >= 0 ? 'stat-positive' : 'stat-negative'}">
+                        ${units >= 0 ? '+' : ''}${units.toFixed(2)}
+                    </td>
+                    <td class="${roi >= 0 ? 'stat-positive' : 'stat-negative'}">
+                        ${roi >= 0 ? '+' : ''}${roi.toFixed(2)}%
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Load leaderboard on page load
+        loadLeaderboard();
+
+        // Reload when filters change
+        sportFilter.addEventListener('change', loadLeaderboard);
+        sortFilter.addEventListener('change', loadLeaderboard);
+    </script>
+</body>
+</html>

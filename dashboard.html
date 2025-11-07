@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - TrustMyRecord</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/css/new_design.css">
+    <style>
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 80px auto;
+            padding: 20px;
+        }
+
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .welcome-section h1 {
+            color: #00ff88;
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .welcome-section p {
+            color: #aaa;
+            font-size: 18px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .dashboard-card {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.4);
+            border-color: #00ff88;
+        }
+
+        .dashboard-card-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .dashboard-card h2 {
+            color: #00ff88;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+
+        .dashboard-card p {
+            color: #ccc;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .dashboard-card-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #00ff88;
+            color: #000;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+
+        .dashboard-card-btn:hover {
+            background: #00cc6f;
+            transform: scale(1.05);
+        }
+
+        .stats-overview {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 50px;
+        }
+
+        .stats-overview h2 {
+            color: #00ff88;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 5px;
+        }
+
+        .stat-box .stat-value {
+            font-size: 32px;
+            color: #00ff88;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .stat-box .stat-label {
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .recent-activity {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            padding: 30px;
+        }
+
+        .recent-activity h2 {
+            color: #00ff88;
+            margin-bottom: 20px;
+        }
+
+        .activity-item {
+            padding: 15px;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+            color: #ccc;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .loading {
+            text-align: center;
+            color: #00ff88;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header class="sticky-nav">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">TRUSTMYRECORD</div>
+                <div class="header-right">
+                    <nav>
+                        <a href="dashboard.html">Dashboard</a>
+                        <a href="picks.html">The Record</a>
+                        <a href="submit_pick.html">Make Your Picks</a>
+                        <a href="leaderboard.html">Leaderboards</a>
+                    </nav>
+                    <a href="register.html" class="cta-button nav-cta">Sign Up</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="dashboard-container">
+            <div class="welcome-section">
+                <h1>Welcome, <span id="user-name">User</span></h1>
+                <p>Your central hub for all things sports betting</p>
+            </div>
+
+            <div class="stats-overview">
+                <h2>Your Stats Overview</h2>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <span class="stat-value" id="stat-picks">0</span>
+                        <span class="stat-label">Total Picks</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value" id="stat-record">0-0</span>
+                        <span class="stat-label">Record</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value" id="stat-winrate">0%</span>
+                        <span class="stat-label">Win Rate</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value" id="stat-units">+0.0</span>
+                        <span class="stat-label">Net Units</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value" id="stat-roi">0%</span>
+                        <span class="stat-label">ROI</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="dashboard-card" onclick="window.location.href='/submit_pick.html'">
+                    <div class="dashboard-card-icon">📝</div>
+                    <h2>Submit a Pick</h2>
+                    <p>Lock in your plays with an immutable timestamp</p>
+                    <a href="/submit_pick.html" class="dashboard-card-btn">Submit Pick</a>
+                </div>
+
+                <div class="dashboard-card" onclick="window.location.href='/picks.html'">
+                    <div class="dashboard-card-icon">📊</div>
+                    <h2>The Record</h2>
+                    <p>View all public picks from the community</p>
+                    <a href="/picks.html" class="dashboard-card-btn">View Picks</a>
+                </div>
+
+                <div class="dashboard-card" onclick="window.location.href='/leaderboard.html'">
+                    <div class="dashboard-card-icon">🏆</div>
+                    <h2>Leaderboards</h2>
+                    <p>See who's dominating the competition</p>
+                    <a href="/leaderboard.html" class="dashboard-card-btn">View Rankings</a>
+                </div>
+
+                <div class="dashboard-card" onclick="window.location.href='/profile.html'">
+                    <div class="dashboard-card-icon">👤</div>
+                    <h2>My Profile</h2>
+                    <p>View and manage your account</p>
+                    <a href="/profile.html" class="dashboard-card-btn">View Profile</a>
+                </div>
+
+                <div class="dashboard-card" onclick="window.location.href='/live_odds.html'">
+                    <div class="dashboard-card-icon">💰</div>
+                    <h2>Live Odds</h2>
+                    <p>Real-time betting lines and odds</p>
+                    <a href="/live_odds.html" class="dashboard-card-btn">View Odds</a>
+                </div>
+
+                <div class="dashboard-card" onclick="window.location.href='/forum.html'">
+                    <div class="dashboard-card-icon">💬</div>
+                    <h2>Community</h2>
+                    <p>Discuss picks and strategies</p>
+                    <a href="/forum.html" class="dashboard-card-btn">Visit Forum</a>
+                </div>
+            </div>
+
+            <div class="recent-activity">
+                <h2>Recent Activity</h2>
+                <div id="activity-feed">
+                    <div class="loading">Loading your recent activity...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p class="footer-slogan">Restoring faith and integrity to a shady industry.</p>
+        </div>
+    </footer>
+
+    <script src="static/js/api.js"></script>
+    <script>
+        // Require authentication
+        if (!requireAuth()) {
+            // Will redirect to login if not authenticated
+        }
+
+        // Load user data
+        const user = getCurrentUser();
+        if (user) {
+            document.getElementById('user-name').textContent = user.displayName || user.username;
+        }
+
+        // Load user stats
+        async function loadUserStats() {
+            try {
+                if (!user) return;
+
+                const profile = await getUserProfile(user.username);
+
+                document.getElementById('stat-picks').textContent = profile.total_picks || 0;
+                document.getElementById('stat-record').textContent = `${profile.wins || 0}-${profile.losses || 0}`;
+
+                const winRate = profile.win_rate || 0;
+                document.getElementById('stat-winrate').textContent = `${parseFloat(winRate).toFixed(1)}%`;
+
+                const units = parseFloat(profile.net_units || 0);
+                document.getElementById('stat-units').textContent = `${units >= 0 ? '+' : ''}${units.toFixed(2)}`;
+
+                const roi = parseFloat(profile.roi || 0);
+                document.getElementById('stat-roi').textContent = `${roi >= 0 ? '+' : ''}${roi.toFixed(2)}%`;
+
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load recent activity
+        async function loadRecentActivity() {
+            try {
+                if (!user) return;
+
+                const picks = await getPicksFeed({ userId: user.id, limit: 5 });
+
+                const activityFeed = document.getElementById('activity-feed');
+
+                if (picks.length === 0) {
+                    activityFeed.innerHTML = '<div class="activity-item">No recent activity. Submit your first pick!</div>';
+                    return;
+                }
+
+                activityFeed.innerHTML = picks.map(pick => {
+                    const date = new Date(pick.locked_at).toLocaleDateString();
+                    const statusClass = pick.status === 'won' ? 'stat-positive' : pick.status === 'lost' ? 'stat-negative' : '';
+
+                    return `
+                        <div class="activity-item">
+                            <strong>${pick.team} ${pick.bet_details}</strong> -
+                            <span class="${statusClass}">${pick.status.toUpperCase()}</span>
+                            <small style="color: #666; margin-left: 10px;">${date}</small>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading activity:', error);
+                document.getElementById('activity-feed').innerHTML = '<div class="activity-item">Error loading activity</div>';
+            }
+        }
+
+        // Load data on page load
+        loadUserStats();
+        loadRecentActivity();
+    </script>
+</body>
+</html>
