@@ -268,6 +268,98 @@
             min-height: 200px;
         }
 
+        /* Stats Dashboard */
+        .stats-dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .stats-title {
+            color: var(--neon-cyan);
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 40px;
+            text-shadow: 0 0 20px var(--neon-cyan);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 2px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 30px 20px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--neon-gold);
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px var(--neon-gold);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background: var(--gradient-gold);
+            color: var(--dark-bg);
+            border: none;
+            border-radius: 12px;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
+        }
+
+        .action-btn.secondary {
+            background: transparent;
+            color: var(--neon-cyan);
+            border: 2px solid var(--neon-cyan);
+        }
+
+        .action-btn.secondary:hover {
+            background: rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
+        }
+
         .glass-card::before {
             content: '';
             position: absolute;
@@ -674,6 +766,50 @@
                 <section class="hero">
                     <h1 class="reveal">THE END OF THE BULLSHIT</h1>
                     <p class="reveal">A new standard for sports betting has arrived. Built on absolute proof, radical transparency, and zero excuses.</p>
+                </section>
+
+                <!-- Live User Stats Dashboard -->
+                <section id="userStatsDashboard" class="section" style="display: none;">
+                    <div class="stats-dashboard">
+                        <h2 class="stats-title">Your Performance</h2>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon">📊</div>
+                                <div class="stat-value" id="totalPicks">0</div>
+                                <div class="stat-label">Total Picks</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">✅</div>
+                                <div class="stat-value" id="winRate">0%</div>
+                                <div class="stat-label">Win Rate</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">💰</div>
+                                <div class="stat-value" id="totalUnits">+0.00u</div>
+                                <div class="stat-label">Total Units</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">🔥</div>
+                                <div class="stat-value" id="currentStreak">0</div>
+                                <div class="stat-label">Current Streak</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">🎯</div>
+                                <div class="stat-value" id="triviaScore">0</div>
+                                <div class="stat-label">Trivia Points</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">🗳️</div>
+                                <div class="stat-value" id="pollVotes">0</div>
+                                <div class="stat-label">Poll Votes</div>
+                            </div>
+                        </div>
+                        <div class="quick-actions">
+                            <button onclick="showSection('picks')" class="action-btn">Make a Pick</button>
+                            <button onclick="showSection('polls-trivia')" class="action-btn">Take Quiz</button>
+                            <button onclick="exportUserData()" class="action-btn secondary">Export Data</button>
+                        </div>
+                    </div>
                 </section>
 
                 <section class="section">
@@ -3349,6 +3485,144 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 
     <script>
+        // USER STATS CALCULATION
+        function calculateUserStats() {
+            const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+            const pollVotes = JSON.parse(localStorage.getItem('trustMyRecordPollVotes') || '{}');
+            const triviaScores = JSON.parse(localStorage.getItem('trustMyRecordTriviaScores') || '[]');
+
+            // Calculate picks stats
+            const totalPicks = picks.length;
+            const wins = picks.filter(p => p.status === 'win').length;
+            const losses = picks.filter(p => p.status === 'loss').length;
+            const pending = picks.filter(p => p.status === 'pending').length;
+            const winRate = totalPicks > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : 0;
+
+            // Calculate units (assuming -1.1u for loss, +1u for win)
+            let totalUnits = 0;
+            picks.forEach(pick => {
+                if (pick.status === 'win') totalUnits += pick.units;
+                if (pick.status === 'loss') totalUnits -= pick.units * 1.1;
+            });
+
+            // Calculate streak
+            let currentStreak = 0;
+            let streakType = '';
+            for (let i = 0; i < picks.length; i++) {
+                if (picks[i].status === 'pending') continue;
+                if (i === 0) {
+                    currentStreak = 1;
+                    streakType = picks[i].status;
+                } else if (picks[i].status === streakType) {
+                    currentStreak++;
+                } else {
+                    break;
+                }
+            }
+
+            // Calculate trivia points
+            const triviaPoints = triviaScores.reduce((sum, score) => sum + (score.points || 0), 0);
+
+            // Poll votes count
+            const pollVoteCount = Object.keys(pollVotes).length;
+
+            return {
+                totalPicks,
+                winRate: isNaN(winRate) ? 0 : winRate,
+                totalUnits: totalUnits.toFixed(2),
+                currentStreak: streakType === 'win' ? `${currentStreak}W` : streakType === 'loss' ? `${currentStreak}L` : '0',
+                triviaPoints,
+                pollVoteCount
+            };
+        }
+
+        function updateStatsDashboard() {
+            const stats = calculateUserStats();
+
+            // Update dashboard if it exists
+            const dashboard = document.getElementById('userStatsDashboard');
+            if (!dashboard) return;
+
+            // Show dashboard if user has any activity
+            if (stats.totalPicks > 0 || stats.triviaPoints > 0 || stats.pollVoteCount > 0) {
+                dashboard.style.display = 'block';
+            }
+
+            // Update values
+            document.getElementById('totalPicks').textContent = stats.totalPicks;
+            document.getElementById('winRate').textContent = stats.winRate + '%';
+            document.getElementById('totalUnits').textContent = (stats.totalUnits >= 0 ? '+' : '') + stats.totalUnits + 'u';
+            document.getElementById('currentStreak').textContent = stats.currentStreak;
+            document.getElementById('triviaScore').textContent = stats.triviaPoints;
+            document.getElementById('pollVotes').textContent = stats.pollVoteCount;
+
+            // Color code units
+            const unitsEl = document.getElementById('totalUnits');
+            if (stats.totalUnits > 0) {
+                unitsEl.style.color = 'var(--neon-green)';
+            } else if (stats.totalUnits < 0) {
+                unitsEl.style.color = 'var(--neon-red)';
+            } else {
+                unitsEl.style.color = 'var(--neon-gold)';
+            }
+        }
+
+        function exportUserData() {
+            const data = {
+                picks: JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]'),
+                pollVotes: JSON.parse(localStorage.getItem('trustMyRecordPollVotes') || '{}'),
+                userPolls: JSON.parse(localStorage.getItem('trustMyRecordPolls') || '[]'),
+                triviaScores: JSON.parse(localStorage.getItem('trustMyRecordTriviaScores') || '[]'),
+                exportedAt: new Date().toISOString(),
+                stats: calculateUserStats()
+            };
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `trustmyrecord-data-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+
+            URL.revokeObjectURL(url);
+            alert('✅ Your data has been exported successfully!');
+        }
+
+        function importUserData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+
+                reader.onload = (event) => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+
+                        if (confirm('This will overwrite your current data. Continue?')) {
+                            localStorage.setItem('trustMyRecordPicks', JSON.stringify(data.picks || []));
+                            localStorage.setItem('trustMyRecordPollVotes', JSON.stringify(data.pollVotes || {}));
+                            localStorage.setItem('trustMyRecordPolls', JSON.stringify(data.userPolls || []));
+                            localStorage.setItem('trustMyRecordTriviaScores', JSON.stringify(data.triviaScores || []));
+
+                            alert('✅ Data imported successfully! Refreshing page...');
+                            location.reload();
+                        }
+                    } catch (error) {
+                        alert('❌ Error importing data. Please check the file format.');
+                    }
+                };
+
+                reader.readAsText(file);
+            };
+
+            input.click();
+        }
+
         // Navigation functionality
         function showSection(sectionId) {
             // Hide all sections
@@ -3367,6 +3641,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Update stats when showing home
+            if (sectionId === 'home') {
+                updateStatsDashboard();
+            }
         }
 
         // Pick form submission
@@ -3477,6 +3756,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (homeSection) {
                 homeSection.classList.add('active');
             }
+
+            // Load and display user stats
+            updateStatsDashboard();
 
             // Initialize picks page when switching to it
             const picksNavLink = document.querySelector('a[onclick*="picks"]');
