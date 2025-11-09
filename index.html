@@ -3859,164 +3859,256 @@
         }
 
         /* Leaderboards Styles */
+        /* ========================================
+           MODERNIZED LEADERBOARDS - PROFESSIONAL LAYOUT
+           ======================================== */
+
         .leaderboards-container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 20px;
+            max-width: 1400px;
+            margin: 60px auto;
+            padding: 40px;
+        }
+
+        .leaderboards-container .section-title {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--neon-gold), var(--neon-cyan), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 900;
+            letter-spacing: 2px;
         }
 
         .leaderboard-tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
+            justify-content: center;
+            gap: 15px;
+            margin: 40px 0;
             overflow-x: auto;
+            padding: 10px 0;
         }
 
         .lb-tab {
-            background: rgba(0, 255, 255, 0.1);
-            border: 1px solid rgba(0, 255, 255, 0.2);
-            color: var(--text-secondary);
-            padding: 12px 24px;
-            border-radius: 25px;
+            background: rgba(0, 255, 255, 0.08);
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            color: var(--text-primary);
+            padding: 16px 32px;
+            border-radius: 30px;
             cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
+            font-weight: 700;
+            font-size: 16px;
             transition: all 0.3s;
             white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .lb-tab.active {
             background: var(--gradient-neon);
             color: white;
             border-color: var(--neon-cyan);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
+            transform: scale(1.05);
         }
 
         .lb-tab:hover {
-            transform: translateY(-2px);
+            transform: translateY(-3px);
             border-color: var(--neon-cyan);
+            background: rgba(0, 255, 255, 0.15);
         }
 
         .leaderboard-panel {
             display: none;
+            animation: fadeIn 0.4s ease-in;
         }
 
         .leaderboard-panel.active {
             display: block;
         }
 
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .leaderboard-header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 50px;
+            padding: 30px;
+            background: rgba(0, 255, 255, 0.05);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
         }
 
         .leaderboard-header h3 {
-            font-size: 32px;
+            font-size: 42px;
             color: var(--neon-gold);
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            font-weight: 900;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            letter-spacing: 1px;
         }
 
         .leaderboard-header p {
             color: var(--text-secondary);
-            font-size: 16px;
+            font-size: 18px;
+            font-weight: 500;
         }
 
         .leaderboard-table {
             background: var(--card-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 15px;
+            border: 2px solid var(--glass-border);
+            border-radius: 20px;
             overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         }
 
         .lb-table-header {
             display: grid;
-            grid-template-columns: 80px 1fr 120px 120px 150px;
-            background: rgba(0, 255, 255, 0.1);
-            padding: 15px 20px;
-            font-weight: 700;
+            grid-template-columns: 100px 1fr 140px 140px 180px;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(255, 0, 255, 0.15));
+            padding: 24px 30px;
+            font-weight: 800;
             color: var(--neon-cyan);
-            font-size: 14px;
+            font-size: 16px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
+            border-bottom: 2px solid var(--neon-cyan);
         }
 
         .lb-table-body {
-            max-height: 600px;
+            max-height: 700px;
             overflow-y: auto;
         }
 
         .lb-row {
             display: grid;
-            grid-template-columns: 80px 1fr 120px 120px 150px;
-            padding: 15px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            grid-template-columns: 100px 1fr 140px 140px 180px;
+            padding: 24px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             transition: all 0.3s;
+            align-items: center;
         }
 
         .lb-row:hover {
-            background: rgba(0, 255, 255, 0.05);
+            background: rgba(0, 255, 255, 0.08);
+            transform: scale(1.01);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.2);
+        }
+
+        .lb-row:last-child {
+            border-bottom: none;
+        }
+
+        /* Highlight top 3 rows */
+        .lb-row:nth-child(1) {
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.1), transparent);
+        }
+
+        .lb-row:nth-child(2) {
+            background: linear-gradient(90deg, rgba(192, 192, 192, 0.08), transparent);
+        }
+
+        .lb-row:nth-child(3) {
+            background: linear-gradient(90deg, rgba(205, 127, 50, 0.08), transparent);
         }
 
         .lb-col-rank {
             display: flex;
             align-items: center;
+            justify-content: center;
         }
 
         .rank-badge {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
-            font-weight: 700;
-            font-size: 16px;
+            font-weight: 900;
+            font-size: 20px;
+            border: 3px solid transparent;
         }
 
         .rank-badge.gold {
             background: var(--gradient-gold);
             color: var(--dark-bg);
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
+            border-color: #ffd700;
+            animation: goldPulse 2s infinite;
+        }
+
+        @keyframes goldPulse {
+            0%, 100% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.7); }
+            50% { box-shadow: 0 0 35px rgba(255, 215, 0, 1); }
         }
 
         .rank-badge.silver {
             background: linear-gradient(45deg, #c0c0c0, #e8e8e8);
             color: var(--dark-bg);
+            box-shadow: 0 0 15px rgba(192, 192, 192, 0.5);
+            border-color: #c0c0c0;
         }
 
         .rank-badge.bronze {
             background: linear-gradient(45deg, #cd7f32, #d4a574);
             color: var(--dark-bg);
+            box-shadow: 0 0 15px rgba(205, 127, 50, 0.5);
+            border-color: #cd7f32;
+        }
+
+        /* Default rank badge for 4+ */
+        .rank-badge {
+            background: rgba(0, 255, 255, 0.15);
+            color: var(--neon-cyan);
+            border-color: rgba(0, 255, 255, 0.3);
         }
 
         .lb-col-user {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
         }
 
         .user-avatar-tiny {
-            font-size: 24px;
+            font-size: 32px;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 50%;
+            border: 2px solid var(--glass-border);
         }
 
         .user-name-lb {
             color: var(--text-primary);
-            font-weight: 600;
-            font-size: 15px;
+            font-weight: 700;
+            font-size: 18px;
+            letter-spacing: 0.5px;
         }
 
-        .lb-col-stat,
+        .lb-col-stat {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
         .lb-col-total {
             display: flex;
             align-items: center;
-            font-size: 15px;
-            color: var(--text-primary);
-        }
-
-        .lb-col-total {
-            font-weight: 700;
+            justify-content: center;
+            font-weight: 900;
             color: var(--neon-gold);
-            font-size: 18px;
+            font-size: 22px;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
         }
 
         /* Pagination for Profile Posts */
@@ -4076,8 +4168,13 @@
 
             .lb-table-header,
             .lb-row {
-                grid-template-columns: 60px 1fr 100px 100px 120px;
-                font-size: 13px;
+                grid-template-columns: 80px 1fr 120px 120px 150px;
+                font-size: 15px;
+                padding: 20px 25px;
+            }
+
+            .leaderboard-header h3 {
+                font-size: 38px;
             }
         }
 
@@ -4108,11 +4205,51 @@
                 overflow-x: auto;
             }
 
+            .leaderboards-container {
+                padding: 30px 20px;
+            }
+
+            .leaderboards-container .section-title {
+                font-size: 36px;
+            }
+
+            .lb-tab {
+                font-size: 14px;
+                padding: 14px 24px;
+            }
+
             .lb-table-header,
             .lb-row {
-                grid-template-columns: 50px 1fr 80px 80px 100px;
-                padding: 10px;
-                font-size: 12px;
+                grid-template-columns: 70px 1fr 100px 100px 120px;
+                padding: 18px 20px;
+                font-size: 14px;
+            }
+
+            .leaderboard-header {
+                padding: 25px;
+                margin-bottom: 35px;
+            }
+
+            .leaderboard-header h3 {
+                font-size: 32px;
+            }
+
+            .leaderboard-header p {
+                font-size: 16px;
+            }
+
+            .rank-badge {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+
+            .user-name-lb {
+                font-size: 16px;
+            }
+
+            .lb-col-total {
+                font-size: 20px;
             }
 
             .profile-main-info {
@@ -4131,15 +4268,68 @@
                 flex-wrap: wrap;
             }
 
+            .leaderboards-container {
+                padding: 20px 15px;
+                margin: 40px auto;
+            }
+
+            .leaderboards-container .section-title {
+                font-size: 28px;
+            }
+
+            .leaderboard-tabs {
+                gap: 8px;
+            }
+
+            .lb-tab {
+                font-size: 12px;
+                padding: 12px 18px;
+            }
+
+            .leaderboard-header {
+                padding: 20px 15px;
+                margin-bottom: 25px;
+            }
+
+            .leaderboard-header h3 {
+                font-size: 24px;
+            }
+
+            .leaderboard-header p {
+                font-size: 14px;
+            }
+
             .lb-table-header,
             .lb-row {
-                grid-template-columns: 40px 1fr 70px;
-                gap: 5px;
+                grid-template-columns: 50px 1fr 90px;
+                gap: 10px;
+                padding: 15px 12px;
+                font-size: 12px;
             }
 
             .lb-col-stat:nth-child(3),
             .lb-col-stat:nth-child(4) {
                 display: none;
+            }
+
+            .rank-badge {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
+
+            .user-avatar-tiny {
+                width: 35px;
+                height: 35px;
+                font-size: 24px;
+            }
+
+            .user-name-lb {
+                font-size: 14px;
+            }
+
+            .lb-col-total {
+                font-size: 16px;
             }
 
             .quick-stats {
@@ -7232,7 +7422,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="lb-col-total">Total Points</div>
                             </div>
                             <div id="pointsLeaderboardBody" class="lb-table-body">
-                                <!-- Will be populated by JavaScript -->
                                 <div class="lb-row">
                                     <div class="lb-col-rank"><span class="rank-badge gold">1</span></div>
                                     <div class="lb-col-user">
@@ -7262,6 +7451,76 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <div class="lb-col-stat">2,100</div>
                                     <div class="lb-col-stat">1,200</div>
                                     <div class="lb-col-total">3,300</div>
+                                </div>
+                                <div class="lb-row">
+                                    <div class="lb-col-rank"><span class="rank-badge">4</span></div>
+                                    <div class="lb-col-user">
+                                        <span class="user-avatar-tiny">⚡</span>
+                                        <span class="user-name-lb">@QuickPick</span>
+                                    </div>
+                                    <div class="lb-col-stat">1,680</div>
+                                    <div class="lb-col-stat">1,550</div>
+                                    <div class="lb-col-total">3,230</div>
+                                </div>
+                                <div class="lb-row">
+                                    <div class="lb-col-rank"><span class="rank-badge">5</span></div>
+                                    <div class="lb-col-user">
+                                        <span class="user-avatar-tiny">🎲</span>
+                                        <span class="user-name-lb">@OddsGenius</span>
+                                    </div>
+                                    <div class="lb-col-stat">1,890</div>
+                                    <div class="lb-col-stat">1,310</div>
+                                    <div class="lb-col-total">3,200</div>
+                                </div>
+                                <div class="lb-row">
+                                    <div class="lb-col-rank"><span class="rank-badge">6</span></div>
+                                    <div class="lb-col-user">
+                                        <span class="user-avatar-tiny">💎</span>
+                                        <span class="user-name-lb">@DiamondPicks</span>
+                                    </div>
+                                    <div class="lb-col-stat">1,620</div>
+                                    <div class="lb-col-stat">1,450</div>
+                                    <div class="lb-col-total">3,070</div>
+                                </div>
+                                <div class="lb-row">
+                                    <div class="lb-col-rank"><span class="rank-badge">7</span></div>
+                                    <div class="lb-col-user">
+                                        <span class="user-avatar-tiny">🔥</span>
+                                        <span class="user-name-lb">@HotStreak</span>
+                                    </div>
+                                    <div class="lb-col-stat">1,520</div>
+                                    <div class="lb-col-stat">1,480</div>
+                                    <div class="lb-col-total">3,000</div>
+                                </div>
+                                <div class="lb-row">
+                                    <div class="lb-col-rank"><span class="rank-badge">8</span></div>
+                                    <div class="lb-col-user">
+                                        <span class="user-avatar-tiny">🏀</span>
+                                        <span class="user-name-lb">@HoopsMaster</span>
+                                    </div>
+                                    <div class="lb-col-stat">1,440</div>
+                                    <div class="lb-col-stat">1,520</div>
+                                    <div class="lb-col-total">2,960</div>
+                                </div>
+                                <div class="lb-row">
+                                    <div class="lb-col-rank"><span class="rank-badge">9</span></div>
+                                    <div class="lb-col-user">
+                                        <span class="user-avatar-tiny">🏈</span>
+                                        <span class="user-name-lb">@GridironGuru</span>
+                                    </div>
+                                    <div class="lb-col-stat">1,590</div>
+                                    <div class="lb-col-stat">1,340</div>
+                                    <div class="lb-col-total">2,930</div>
+                                </div>
+                                <div class="lb-row">
+                                    <div class="lb-col-rank"><span class="rank-badge">10</span></div>
+                                    <div class="lb-col-user">
+                                        <span class="user-avatar-tiny">⭐</span>
+                                        <span class="user-name-lb">@AllStar</span>
+                                    </div>
+                                    <div class="lb-col-stat">1,470</div>
+                                    <div class="lb-col-stat">1,420</div>
+                                    <div class="lb-col-total">2,890</div>
                                 </div>
                             </div>
                         </div>
