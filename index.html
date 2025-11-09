@@ -745,16 +745,13 @@
             <div class="header-content">
                 <div class="logo" onclick="showSection('home')">TRUST<span style="color: var(--neon-cyan);">MY</span>RECORD</div>
                 <nav>
-                    <a onclick="showSection('record')">The Record</a>
-                    <a onclick="showSection('arena')">The Arena</a>
-                    <a onclick="showSection('data')">Data Core</a>
-                    <a onclick="showSection('blog')">Blog</a>
+                    <a onclick="showSection('feed')">Feed</a>
+                    <a onclick="showSection('picks')" class="make-picks-link">Make Picks</a>
                     <a onclick="showSection('forums')">Forums</a>
-                    <a onclick="showSection('picks')" class="make-picks-link">Make Your Picks</a>
-                    <a onclick="showSection('app')">App</a>
-                    <a onclick="showSection('odds')">Live Odds</a>
-                    <a onclick="showSection('polls-trivia')">Polls & Trivia</a>
                     <a onclick="showSection('leaderboards')">Leaderboards</a>
+                    <a onclick="showSection('polls-trivia')">Polls & Trivia</a>
+                    <a onclick="showSection('profile')">Profile</a>
+                    <a onclick="showSection('messages')">Messages</a>
                     <a onclick="showSection('signup')" class="signup-btn">Sign Up</a>
                 </nav>
             </div>
@@ -907,6 +904,128 @@
                     <a onclick="showSection('picks')" class="cta-button reveal">JOIN THE REVOLUTION</a>
                 </section>
             </div>
+
+<!-- SOCIAL FEED SECTION -->
+<div id="feed" class="page-section">
+    <div class="feed-container-social">
+        <h2 class="section-title">Community Feed</h2>
+
+        <div class="feed-grid">
+            <!-- Main Feed Column -->
+            <div class="feed-main-column">
+                <!-- Create Post Box -->
+                <div class="create-post-box">
+                    <textarea id="newPostContent" placeholder="Share your picks, analysis, or join the discussion..." rows="3"></textarea>
+                    <div class="post-toolbar">
+                        <button class="toolbar-btn" title="Add pick reference">🎯 Pick</button>
+                        <button class="toolbar-btn" title="Add hashtag">#️⃣ Tag</button>
+                        <button class="post-submit-btn" onclick="createFeedPost()">Post</button>
+                    </div>
+                </div>
+
+                <!-- Feed Filter Tabs -->
+                <div class="feed-tabs">
+                    <button class="feed-tab active" onclick="filterFeed('all')">All Posts</button>
+                    <button class="feed-tab" onclick="filterFeed('picks')">Picks Only</button>
+                    <button class="feed-tab" onclick="filterFeed('following')">Following</button>
+                    <button class="feed-tab" onclick="filterFeed('trending')">Trending</button>
+                </div>
+
+                <!-- Feed Posts Container -->
+                <div id="socialFeedContainer">
+                    <p style="text-align: center; color: var(--text-muted); padding: 40px;">No posts yet. Be the first to share!</p>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="feed-sidebar-column">
+                <!-- User Quick Stats -->
+                <div class="sidebar-card">
+                    <h4>Your Stats</h4>
+                    <div class="quick-stats">
+                        <div class="quick-stat">
+                            <span class="stat-value" id="sidebarPicks">0</span>
+                            <span class="stat-label">Picks</span>
+                        </div>
+                        <div class="quick-stat">
+                            <span class="stat-value" id="sidebarWinRate">0%</span>
+                            <span class="stat-label">Win Rate</span>
+                        </div>
+                        <div class="quick-stat">
+                            <span class="stat-value" id="sidebarFollowers">0</span>
+                            <span class="stat-label">Followers</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Suggested Users -->
+                <div class="sidebar-card">
+                    <h4>Who to Follow</h4>
+                    <div class="suggested-users">
+                        <div class="suggested-user-item">
+                            <div class="user-avatar-sm">🎯</div>
+                            <div class="user-details">
+                                <div class="user-name">@SharpBettor</div>
+                                <div class="user-stat">68% Win Rate</div>
+                            </div>
+                            <button class="follow-btn-sm" onclick="followUser('SharpBettor')">Follow</button>
+                        </div>
+                        <div class="suggested-user-item">
+                            <div class="user-avatar-sm">🏈</div>
+                            <div class="user-details">
+                                <div class="user-name">@NFLPro</div>
+                                <div class="user-stat">+32.5u</div>
+                            </div>
+                            <button class="follow-btn-sm" onclick="followUser('NFLPro')">Follow</button>
+                        </div>
+                        <div class="suggested-user-item">
+                            <div class="user-avatar-sm">🏀</div>
+                            <div class="user-details">
+                                <div class="user-name">@HoopsKing</div>
+                                <div class="user-stat">71% NBA</div>
+                            </div>
+                            <button class="follow-btn-sm" onclick="followUser('HoopsKing')">Follow</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trending Tags -->
+                <div class="sidebar-card">
+                    <h4>Trending Topics</h4>
+                    <div class="trending-tags">
+                        <div class="tag-item" onclick="filterByTag('NFL')">#NFL</div>
+                        <div class="tag-item" onclick="filterByTag('NBAPlayoffs')">#NBAPlayoffs</div>
+                        <div class="tag-item" onclick="filterByTag('Parlays')">#Parlays</div>
+                        <div class="tag-item" onclick="filterByTag('LiveBetting')">#LiveBetting</div>
+                        <div class="tag-item" onclick="filterByTag('UnderDog')">#UnderDog</div>
+                    </div>
+                </div>
+
+                <!-- Top Handicappers -->
+                <div class="sidebar-card">
+                    <h4>Top This Week</h4>
+                    <div class="top-users-list">
+                        <div class="top-user-item">
+                            <span class="rank-badge">1</span>
+                            <span class="top-username">@VegasSharp</span>
+                            <span class="top-stat">+18.2u</span>
+                        </div>
+                        <div class="top-user-item">
+                            <span class="rank-badge">2</span>
+                            <span class="top-username">@LinesMaster</span>
+                            <span class="top-stat">+15.7u</span>
+                        </div>
+                        <div class="top-user-item">
+                            <span class="rank-badge">3</span>
+                            <span class="top-username">@BankrollBoss</span>
+                            <span class="top-stat">+12.3u</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- MODERNIZED PICKS SECTION - Replace the old picks section with this -->
 <div id="picks" class="page-section">
