@@ -2630,6 +2630,329 @@
             box-shadow: 0 8px 20px rgba(0, 255, 255, 0.4);
         }
 
+        /* Live Games CSS */
+        .live-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .live-games-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 25px;
+        }
+
+        .live-games-main {
+            min-width: 0;
+        }
+
+        .live-filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .live-filter-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .live-filter-btn.active {
+            background: var(--gradient-neon);
+            color: white;
+            border-color: transparent;
+        }
+
+        .live-filter-btn:hover:not(.active) {
+            border-color: var(--neon-cyan);
+            color: var(--text-primary);
+        }
+
+        .live-games-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .live-game-card {
+            background: var(--card-bg);
+            border: 2px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .live-game-card:hover {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 8px 25px rgba(0, 255, 255, 0.2);
+        }
+
+        .live-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ff0000, #ff4444);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .live-badge.pulsing {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .game-score-container {
+            margin-bottom: 20px;
+        }
+
+        .team-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .team-row:last-child {
+            border-bottom: none;
+        }
+
+        .team-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .team-emoji {
+            font-size: 24px;
+        }
+
+        .team-name {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .team-score {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .team-score.winning {
+            color: var(--neon-cyan);
+        }
+
+        .live-odds-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .odds-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .odds-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .odds-label {
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            min-width: 80px;
+        }
+
+        .odds-btn {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .odds-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+            border-color: var(--neon-cyan);
+            transform: translateY(-2px);
+        }
+
+        .odds-btn.hot {
+            background: rgba(255, 68, 68, 0.2);
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
+        .live-stats-quick {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .hot-pick {
+            color: #ff4444;
+            font-weight: 600;
+        }
+
+        /* Live Chat Sidebar */
+        .live-chat-sidebar {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            height: fit-content;
+            max-height: 800px;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 100px;
+        }
+
+        .live-chat-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .live-chat-header h3 {
+            color: var(--text-primary);
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .online-count {
+            color: #00ff00;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .live-chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 600px;
+        }
+
+        .chat-message {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-message.highlight {
+            background: rgba(147, 51, 234, 0.1);
+            border-left: 3px solid var(--neon-purple);
+            padding: 10px;
+            margin-left: -10px;
+            border-radius: 8px;
+        }
+
+        .chat-avatar {
+            font-size: 20px;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .chat-content {
+            flex: 1;
+        }
+
+        .chat-user {
+            color: var(--neon-cyan);
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .chat-time {
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: normal;
+            margin-left: 6px;
+        }
+
+        .verified-check {
+            background: var(--neon-cyan);
+            color: #000;
+            padding: 2px 5px;
+            border-radius: 50%;
+            font-size: 10px;
+            margin-left: 4px;
+        }
+
+        .chat-text {
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .live-chat-input {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .live-chat-input input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .chat-send-btn {
+            background: var(--gradient-neon);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chat-send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
+        }
+
         .profile-card h3 {
             color: var(--neon-cyan);
             font-size: 18px;
@@ -5258,6 +5581,273 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
 
+            <!-- LIVE GAMES SECTION -->
+            <div id="live" class="page-section">
+                <div class="live-container">
+                    <h2 class="section-title">🔴 Live Games & Betting</h2>
+
+                    <!-- Live Games Grid -->
+                    <div class="live-games-layout">
+                        <!-- Main Live Games Feed -->
+                        <div class="live-games-main">
+                            <div class="live-filters">
+                                <button class="live-filter-btn active" onclick="filterLiveGames('all')">All Live</button>
+                                <button class="live-filter-btn" onclick="filterLiveGames('nfl')">🏈 NFL</button>
+                                <button class="live-filter-btn" onclick="filterLiveGames('nba')">🏀 NBA</button>
+                                <button class="live-filter-btn" onclick="filterLiveGames('mlb')">⚾ MLB</button>
+                                <button class="live-filter-btn" onclick="filterLiveGames('nhl')">🏒 NHL</button>
+                                <button class="live-filter-btn" onclick="filterLiveGames('soccer')">⚽ Soccer</button>
+                            </div>
+
+                            <!-- Live Game Cards -->
+                            <div class="live-games-grid">
+                                <!-- Game 1 - NFL -->
+                                <div class="live-game-card nfl" data-sport="nfl">
+                                    <div class="live-badge pulsing">🔴 LIVE Q3 8:42</div>
+                                    <div class="game-score-container">
+                                        <div class="team-row">
+                                            <div class="team-info">
+                                                <span class="team-emoji">🏈</span>
+                                                <span class="team-name">Kansas City Chiefs</span>
+                                            </div>
+                                            <div class="team-score winning">27</div>
+                                        </div>
+                                        <div class="team-row">
+                                            <div class="team-info">
+                                                <span class="team-emoji">🦬</span>
+                                                <span class="team-name">Buffalo Bills</span>
+                                            </div>
+                                            <div class="team-score">24</div>
+                                        </div>
+                                    </div>
+                                    <div class="live-odds-section">
+                                        <div class="odds-row">
+                                            <span class="odds-label">Spread:</span>
+                                            <button class="odds-btn">KC -2.5 (-110)</button>
+                                            <button class="odds-btn">BUF +2.5 (-110)</button>
+                                        </div>
+                                        <div class="odds-row">
+                                            <span class="odds-label">Total:</span>
+                                            <button class="odds-btn">O 51.5 (-115)</button>
+                                            <button class="odds-btn">U 51.5 (-105)</button>
+                                        </div>
+                                    </div>
+                                    <div class="live-stats-quick">
+                                        <span>🏃 Chiefs driving, red zone</span>
+                                        <span class="hot-pick">🔥 3,421 live bets</span>
+                                    </div>
+                                </div>
+
+                                <!-- Game 2 - NBA -->
+                                <div class="live-game-card nba" data-sport="nba">
+                                    <div class="live-badge pulsing">🔴 LIVE Q2 4:15</div>
+                                    <div class="game-score-container">
+                                        <div class="team-row">
+                                            <div class="team-info">
+                                                <span class="team-emoji">🏀</span>
+                                                <span class="team-name">LA Lakers</span>
+                                            </div>
+                                            <div class="team-score">48</div>
+                                        </div>
+                                        <div class="team-row">
+                                            <div class="team-info">
+                                                <span class="team-emoji">☘️</span>
+                                                <span class="team-name">Boston Celtics</span>
+                                            </div>
+                                            <div class="team-score winning">52</div>
+                                        </div>
+                                    </div>
+                                    <div class="live-odds-section">
+                                        <div class="odds-row">
+                                            <span class="odds-label">Spread:</span>
+                                            <button class="odds-btn">LAL +4.5 (-105)</button>
+                                            <button class="odds-btn hot">BOS -4.5 (-115)</button>
+                                        </div>
+                                        <div class="odds-row">
+                                            <span class="odds-label">Total:</span>
+                                            <button class="odds-btn">O 218.5 (-110)</button>
+                                            <button class="odds-btn">U 218.5 (-110)</button>
+                                        </div>
+                                    </div>
+                                    <div class="live-stats-quick">
+                                        <span>⭐ LeBron: 18pts, 5reb, 7ast</span>
+                                        <span class="hot-pick">🔥 2,847 live bets</span>
+                                    </div>
+                                </div>
+
+                                <!-- Game 3 - Soccer -->
+                                <div class="live-game-card soccer" data-sport="soccer">
+                                    <div class="live-badge pulsing">🔴 LIVE 67'</div>
+                                    <div class="game-score-container">
+                                        <div class="team-row">
+                                            <div class="team-info">
+                                                <span class="team-emoji">⚽</span>
+                                                <span class="team-name">Manchester United</span>
+                                            </div>
+                                            <div class="team-score winning">2</div>
+                                        </div>
+                                        <div class="team-row">
+                                            <div class="team-info">
+                                                <span class="team-emoji">🔴</span>
+                                                <span class="team-name">Liverpool</span>
+                                            </div>
+                                            <div class="team-score">1</div>
+                                        </div>
+                                    </div>
+                                    <div class="live-odds-section">
+                                        <div class="odds-row">
+                                            <span class="odds-label">Match:</span>
+                                            <button class="odds-btn">MU Win (1.85)</button>
+                                            <button class="odds-btn">Draw (3.50)</button>
+                                            <button class="odds-btn">LIV Win (3.20)</button>
+                                        </div>
+                                        <div class="odds-row">
+                                            <span class="odds-label">Goals:</span>
+                                            <button class="odds-btn hot">O 2.5 (1.95)</button>
+                                            <button class="odds-btn">U 2.5 (1.90)</button>
+                                        </div>
+                                    </div>
+                                    <div class="live-stats-quick">
+                                        <span>⚡ 67% possession for MU</span>
+                                        <span class="hot-pick">🔥 5,234 live bets</span>
+                                    </div>
+                                </div>
+
+                                <!-- Game 4 - MLB -->
+                                <div class="live-game-card mlb" data-sport="mlb">
+                                    <div class="live-badge pulsing">🔴 LIVE Bottom 7th</div>
+                                    <div class="game-score-container">
+                                        <div class="team-row">
+                                            <div class="team-info">
+                                                <span class="team-emoji">⚾</span>
+                                                <span class="team-name">NY Yankees</span>
+                                            </div>
+                                            <div class="team-score winning">5</div>
+                                        </div>
+                                        <div class="team-row">
+                                            <div class="team-info">
+                                                <span class="team-emoji">🧦</span>
+                                                <span class="team-name">Boston Red Sox</span>
+                                            </div>
+                                            <div class="team-score">3</div>
+                                        </div>
+                                    </div>
+                                    <div class="live-odds-section">
+                                        <div class="odds-row">
+                                            <span class="odds-label">Moneyline:</span>
+                                            <button class="odds-btn">NYY (-250)</button>
+                                            <button class="odds-btn">BOS (+200)</button>
+                                        </div>
+                                        <div class="odds-row">
+                                            <span class="odds-label">Total:</span>
+                                            <button class="odds-btn">O 8.5 (-105)</button>
+                                            <button class="odds-btn">U 8.5 (-115)</button>
+                                        </div>
+                                    </div>
+                                    <div class="live-stats-quick">
+                                        <span>⚾ Runner on 2nd, 1 out</span>
+                                        <span class="hot-pick">🔥 1,892 live bets</span>
+                                    </div>
+                                </div>
+
+                                <!-- Game 5 - NHL -->
+                                <div class="live-game-card nhl" data-sport="nhl">
+                                    <div class="live-badge pulsing">🔴 LIVE 2nd 12:34</div>
+                                    <div class="game-score-container">
+                                        <div class="team-row">
+                                            <div class="team-info">
+                                                <span class="team-emoji">🏒</span>
+                                                <span class="team-name">Toronto Maple Leafs</span>
+                                            </div>
+                                            <div class="team-score">2</div>
+                                        </div>
+                                        <div class="team-row">
+                                            <div class="team-info">
+                                                <span class="team-emoji">🐻</span>
+                                                <span class="team-name">Boston Bruins</span>
+                                            </div>
+                                            <div class="team-score winning">3</div>
+                                        </div>
+                                    </div>
+                                    <div class="live-odds-section">
+                                        <div class="odds-row">
+                                            <span class="odds-label">Puck Line:</span>
+                                            <button class="odds-btn">TOR +1.5 (-180)</button>
+                                            <button class="odds-btn">BOS -1.5 (+150)</button>
+                                        </div>
+                                        <div class="odds-row">
+                                            <span class="odds-label">Total:</span>
+                                            <button class="odds-btn">O 6.5 (-110)</button>
+                                            <button class="odds-btn">U 6.5 (-110)</button>
+                                        </div>
+                                    </div>
+                                    <div class="live-stats-quick">
+                                        <span>🏒 Power play: Bruins</span>
+                                        <span class="hot-pick">🔥 1,234 live bets</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Live Chat Sidebar -->
+                        <div class="live-chat-sidebar">
+                            <div class="live-chat-header">
+                                <h3>💬 Live Chat</h3>
+                                <span class="online-count">🟢 3,847 online</span>
+                            </div>
+                            <div class="live-chat-messages">
+                                <div class="chat-message">
+                                    <div class="chat-avatar">🔥</div>
+                                    <div class="chat-content">
+                                        <div class="chat-user">@BetKing <span class="chat-time">now</span></div>
+                                        <div class="chat-text">Chiefs gonna cover easy 💰</div>
+                                    </div>
+                                </div>
+
+                                <div class="chat-message">
+                                    <div class="chat-avatar">💎</div>
+                                    <div class="chat-content">
+                                        <div class="chat-user">@SharpBettor <span class="chat-time">1m</span></div>
+                                        <div class="chat-text">Took Celtics live at -4.5. Tatum going off!</div>
+                                    </div>
+                                </div>
+
+                                <div class="chat-message highlight">
+                                    <div class="chat-avatar">⭐</div>
+                                    <div class="chat-content">
+                                        <div class="chat-user">@ProAnalyst <span class="verified-check">✓</span> <span class="chat-time">2m</span></div>
+                                        <div class="chat-text">
+                                            <strong>LIVE PLAY:</strong> Lakers +4.5 right now
+                                            <br>Odds shifted too much, value here
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="chat-message">
+                                    <div class="chat-avatar">🎯</div>
+                                    <div class="chat-content">
+                                        <div class="chat-user">@LiveBetMaster <span class="chat-time">3m</span></div>
+                                        <div class="chat-text">ManU looking solid, holding 2-1 lead 👀</div>
+                                    </div>
+                                </div>
+
+                                <div class="chat-message">
+                                    <div class="chat-avatar">🏆</div>
+                                    <div class="chat-content">
+                                        <div class="chat-user">@ChampPicks <span class="chat-time">5m</span></div>
+                                        <div class="chat-text">Yankees cruising. Took O8.5 in 5th inning 🚀</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="live-chat-input">
+                                <input type="text" placeholder="Join the conversation..." />
+                                <button class="chat-send-btn">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- LEADERBOARDS SECTION -->
             <div id="leaderboards" class="page-section">
                 <div class="leaderboards-container">
@@ -7125,6 +7715,29 @@ function openCreateGroupModal() {
 
 function openCreateSyndicateModal() {
     alert('Create Syndicate modal would open here. Premium feature!');
+}
+
+// Live games filtering
+function filterLiveGames(sport) {
+    const cards = document.querySelectorAll('.live-game-card');
+    const buttons = document.querySelectorAll('.live-filter-btn');
+
+    // Update active button
+    buttons.forEach(btn => btn.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+
+    // Filter cards
+    cards.forEach(card => {
+        if (sport === 'all') {
+            card.style.display = 'block';
+        } else {
+            if (card.dataset.sport === sport) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        }
+    });
 }
 
 // Enhanced poll voting with points
