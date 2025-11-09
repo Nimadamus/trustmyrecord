@@ -3865,11 +3865,294 @@ function finishQuiz() {
     closeQuizModal();
 }
 
+// PROFILE MANAGEMENT SYSTEM
+function loadUserProfile() {
+    const profile = JSON.parse(localStorage.getItem('trustMyRecordProfile') || '{"displayName": "Your Name", "username": "username", "bio": "", "avatar": "👤", "favoriteTeams": []}');
+
+    // Update profile display
+    if (document.getElementById('profileDisplayName')) {
+        document.getElementById('profileDisplayName').textContent = profile.displayName || 'Your Name';
+        document.getElementById('profileUsername').textContent = profile.username || 'username';
+        document.getElementById('profileBio').textContent = profile.bio || 'No bio yet. Click "Edit Profile" to add one.';
+
+        // Update avatar
+        const avatarDisplays = document.querySelectorAll('.avatar-display');
+        avatarDisplays.forEach(el => el.textContent = profile.avatar || '👤');
+    }
+
+    // Calculate and display points
+    const stats = calculateUserStats();
+    const triviaPoints = stats.triviaPoints || 0;
+    const pollPoints = JSON.parse(localStorage.getItem('trustMyRecordPollPoints') || '0');
+    const totalPoints = triviaPoints + pollPoints;
+
+    if (document.getElementById('profileTriviaPoints')) {
+        document.getElementById('profileTriviaPoints').textContent = triviaPoints;
+        document.getElementById('profilePollPoints').textContent = pollPoints;
+        document.getElementById('profileTotalPoints').textContent = totalPoints;
+    }
+
+    // Update profile stats
+    if (document.getElementById('profileTotalPicks')) {
+        document.getElementById('profileTotalPicks').textContent = stats.totalPicks;
+        document.getElementById('profileWinRate').textContent = stats.winRate + '%';
+        document.getElementById('profileUnits').textContent = (stats.totalUnits >= 0 ? '+' : '') + stats.totalUnits + 'u';
+        document.getElementById('profileStreak').textContent = stats.currentStreak;
+
+        // Followers/Following from localStorage
+        const following = JSON.parse(localStorage.getItem('trustMyRecordFollowing') || '[]');
+        const followers = JSON.parse(localStorage.getItem('trustMyRecordFollowers') || '[]');
+        document.getElementById('profileFollowers').textContent = followers.length;
+        document.getElementById('profileFollowing').textContent = following.length;
+    }
+
+    return profile;
+}
+
+function openProfileEditor() {
+    const profile = loadUserProfile();
+    document.getElementById('editDisplayName').value = profile.displayName || '';
+    document.getElementById('editUsername').value = profile.username || '';
+    document.getElementById('editBio').value = profile.bio || '';
+    document.getElementById('editAvatar').value = profile.avatar || '👤';
+    document.getElementById('profileEditModal').style.display = 'flex';
+}
+
+function closeProfileEditor() {
+    document.getElementById('profileEditModal').style.display = 'none';
+}
+
+function changeAvatar() {
+    openProfileEditor();
+}
+
+function editFavoriteTeams() {
+    alert('Team editing feature - coming soon! You can manually add teams by editing your profile.');
+}
+
+// Profile edit form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const profileForm = document.getElementById('profileEditForm');
+    if (profileForm) {
+        profileForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const profile = {
+                displayName: document.getElementById('editDisplayName').value,
+                username: document.getElementById('editUsername').value,
+                bio: document.getElementById('editBio').value,
+                avatar: document.getElementById('editAvatar').value,
+                favoriteTeams: JSON.parse(localStorage.getItem('trustMyRecordProfile') || '{}').favoriteTeams || []
+            };
+
+            localStorage.setItem('trustMyRecordProfile', JSON.stringify(profile));
+            loadUserProfile();
+            closeProfileEditor();
+            alert('✅ Profile updated successfully!');
+        });
+    }
+});
+
+// SOCIAL FEED SYSTEM
+let feedPosts = JSON.parse(localStorage.getItem('trustMyRecordFeed') || '[]');
+
+function createFeedPost() {
+    const content = document.getElementById('newPostContent').value.trim();
+    if (!content) {
+        alert('Please enter some content!');
+        return;
+    }
+
+    const profile = loadUserProfile();
+    const post = {
+        id: Date.now(),
+        author: profile.username || 'username',
+        avatar: profile.avatar || '👤',
+        content: content,
+        timestamp: new Date().toISOString(),
+        likes: 0,
+        comments: []
+    };
+
+    feedPosts.unshift(post);
+    localStorage.setItem('trustMyRecordFeed', JSON.stringify(feedPosts));
+
+    document.getElementById('newPostContent').value = '';
+    loadSocialFeed();
+    alert('✅ Post created!');
+}
+
+function loadSocialFeed() {
+    const container = document.getElementById('socialFeedContainer');
+    if (!container) return;
+
+    feedPosts = JSON.parse(localStorage.getItem('trustMyRecordFeed') || '[]');
+
+    if (feedPosts.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">No posts yet. Be the first to share!</p>';
+        return;
+    }
+
+    container.innerHTML = feedPosts.map(post => `
+        <div class="feed-post">
+            <div class="post-header">
+                <div class="post-author-info">
+                    <span class="post-avatar">${post.avatar}</span>
+                    <div class="post-meta">
+                        <span class="post-author">@${post.author}</span>
+                        <span class="post-time">${formatTimeAgo(post.timestamp)}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="post-content">${post.content}</div>
+            <div class="post-actions">
+                <button class="post-action-btn" onclick="likePost(${post.id})">
+                    ❤️ ${post.likes || 0}
+                </button>
+                <button class="post-action-btn">
+                    💬 ${post.comments ? post.comments.length : 0}
+                </button>
+                <button class="post-action-btn">
+                    🔄 Share
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function likePost(postId) {
+    const postIndex = feedPosts.findIndex(p => p.id === postId);
+    if (postIndex !== -1) {
+        feedPosts[postIndex].likes = (feedPosts[postIndex].likes || 0) + 1;
+        localStorage.setItem('trustMyRecordFeed', JSON.stringify(feedPosts));
+        loadSocialFeed();
+    }
+}
+
+function filterFeed(type) {
+    // Update active tab
+    document.querySelectorAll('.feed-tab').forEach(tab => tab.classList.remove('active'));
+    event.target.classList.add('active');
+
+    // Filter logic would go here
+    loadSocialFeed();
+}
+
+function filterByTag(tag) {
+    alert(`Filtering by #${tag} - feature coming soon!`);
+}
+
+function formatTimeAgo(timestamp) {
+    const now = new Date();
+    const then = new Date(timestamp);
+    const diffMs = now - then;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
+}
+
+// FOLLOWING SYSTEM
+function followUser(username) {
+    let following = JSON.parse(localStorage.getItem('trustMyRecordFollowing') || '[]');
+
+    if (following.includes(username)) {
+        following = following.filter(u => u !== username);
+        localStorage.setItem('trustMyRecordFollowing', JSON.stringify(following));
+        event.target.textContent = 'Follow';
+        event.target.classList.remove('following');
+        alert(`Unfollowed @${username}`);
+    } else {
+        following.push(username);
+        localStorage.setItem('trustMyRecordFollowing', JSON.stringify(following));
+        event.target.textContent = 'Following';
+        event.target.classList.add('following');
+        alert(`✅ Now following @${username}`);
+    }
+
+    loadUserProfile();
+}
+
+// LEADERBOARD SYSTEM
+function switchLeaderboard(type) {
+    // Hide all panels
+    document.querySelectorAll('.leaderboard-panel').forEach(panel => panel.classList.remove('active'));
+
+    // Remove active from all tabs
+    document.querySelectorAll('.lb-tab').forEach(tab => tab.classList.remove('active'));
+
+    // Show selected panel
+    document.getElementById(`${type}Leaderboard`).classList.add('active');
+    event.target.classList.add('active');
+}
+
+// Update sidebar stats when viewing feed
+function updateFeedSidebarStats() {
+    const stats = calculateUserStats();
+
+    if (document.getElementById('sidebarPicks')) {
+        document.getElementById('sidebarPicks').textContent = stats.totalPicks;
+        document.getElementById('sidebarWinRate').textContent = stats.winRate + '%';
+
+        const followers = JSON.parse(localStorage.getItem('trustMyRecordFollowers') || '[]');
+        document.getElementById('sidebarFollowers').textContent = followers.length;
+    }
+}
+
+// Enhanced poll voting with points
+const originalVotePoll = votePoll;
+votePoll = function(pollId, option) {
+    // Check if already voted
+    if (pollVotes[pollId]) {
+        alert('You already voted on this poll! Your vote: ' + pollVotes[pollId]);
+        return;
+    }
+
+    // Save vote
+    pollVotes[pollId] = option;
+    localStorage.setItem('trustMyRecordPollVotes', JSON.stringify(pollVotes));
+
+    // Award 50 points for voting (actual correctness would be checked later when poll closes)
+    const currentPollPoints = parseInt(localStorage.getItem('trustMyRecordPollPoints') || '0');
+    localStorage.setItem('trustMyRecordPollPoints', (currentPollPoints + 50).toString());
+
+    console.log(`Voted ${option} on poll ${pollId}`);
+    alert('✅ Vote recorded! +50 points! Check back after the game to see if you were right.');
+
+    // Update UI to show voted state
+    const pollElement = document.querySelector(`[onclick*="votePoll(${pollId}"]`)?.closest('.poll-card');
+    if (pollElement) {
+        pollElement.querySelectorAll('.poll-option').forEach(opt => {
+            if (opt.getAttribute('onclick')?.includes(`'${option}'`)) {
+                opt.classList.add('voted');
+                if (!opt.querySelector('.vote-check')) {
+                    opt.innerHTML += '<div class="vote-check">✓ Your Vote</div>';
+                }
+            }
+        });
+    }
+
+    loadUserProfile();
+};
+
 // Initialize on load
 document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('predictions-section')) {
         showSubSection('predictions');
     }
+
+    // Load profile data
+    loadUserProfile();
+
+    // Load social feed
+    loadSocialFeed();
+
+    // Update feed sidebar stats
+    updateFeedSidebarStats();
 });
 </script>
         </main>
