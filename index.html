@@ -1929,6 +1929,707 @@
             box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
         }
 
+        /* Groups & Communities CSS */
+        .groups-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .groups-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .create-group-btn {
+            background: var(--gradient-neon);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .create-group-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.4);
+        }
+
+        .groups-tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--glass-border);
+            padding-bottom: 2px;
+        }
+
+        .groups-tab {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 12px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .groups-tab.active {
+            color: var(--neon-cyan);
+            border-bottom-color: var(--neon-cyan);
+        }
+
+        .groups-tab:hover:not(.active) {
+            color: var(--text-primary);
+        }
+
+        .groups-panel {
+            display: none;
+        }
+
+        .groups-panel.active {
+            display: block;
+        }
+
+        .groups-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .filter-dropdown {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            min-width: 150px;
+        }
+
+        .search-groups {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            min-width: 250px;
+        }
+
+        .groups-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .group-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .group-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+            border-color: var(--neon-cyan);
+        }
+
+        .group-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .group-avatar {
+            font-size: 40px;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 12px;
+            border: 2px solid var(--neon-cyan);
+        }
+
+        .group-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .group-badge.verified {
+            background: rgba(0, 255, 255, 0.2);
+            color: var(--neon-cyan);
+            border: 1px solid var(--neon-cyan);
+        }
+
+        .group-badge.premium {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #000;
+        }
+
+        .group-name {
+            color: var(--text-primary);
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .group-description {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .group-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .group-stat {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .group-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .tag {
+            background: rgba(147, 51, 234, 0.2);
+            color: var(--neon-purple);
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            border: 1px solid rgba(147, 51, 234, 0.3);
+        }
+
+        .join-group-btn {
+            width: 100%;
+            background: var(--gradient-neon);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .join-group-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
+        }
+
+        .join-group-btn.premium {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #000;
+        }
+
+        /* My Groups */
+        .my-groups-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .my-group-item {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .my-group-item:hover {
+            border-color: var(--neon-cyan);
+            background: rgba(0, 255, 255, 0.05);
+        }
+
+        .my-group-item.active-group {
+            border-color: var(--neon-cyan);
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .my-group-icon {
+            font-size: 32px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .my-group-info {
+            flex: 1;
+        }
+
+        .my-group-info h4 {
+            color: var(--text-primary);
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .my-group-info p {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .premium-text {
+            color: #ffd700;
+        }
+
+        .my-group-badge {
+            background: var(--neon-cyan);
+            color: #000;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .my-group-badge.premium-badge {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+        }
+
+        /* Group Chat View */
+        .group-chat-view {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            overflow: hidden;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .group-chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .group-chat-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .group-icon-large {
+            font-size: 40px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .group-chat-title h3 {
+            color: var(--text-primary);
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .group-chat-title p {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .group-settings-btn {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .group-settings-btn:hover {
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        .group-chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .group-message {
+            display: flex;
+            gap: 12px;
+        }
+
+        .msg-avatar {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .msg-content {
+            flex: 1;
+        }
+
+        .msg-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .msg-author {
+            color: var(--neon-cyan);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .badge-verified {
+            background: var(--neon-cyan);
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 50%;
+            font-size: 10px;
+        }
+
+        .msg-time {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .msg-text {
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .msg-reactions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .reaction {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .reaction:hover {
+            border-color: var(--neon-cyan);
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .group-message.highlight {
+            background: rgba(147, 51, 234, 0.1);
+            border-left: 3px solid var(--neon-purple);
+            padding-left: 15px;
+            margin-left: -15px;
+            border-radius: 8px;
+        }
+
+        .group-chat-input {
+            display: flex;
+            gap: 12px;
+            padding: 20px;
+            border-top: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .attach-btn {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 10px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .attach-btn:hover {
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        .group-chat-input input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .send-msg-btn {
+            background: var(--gradient-neon);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .send-msg-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
+        }
+
+        /* Betting Syndicates */
+        .syndicates-intro {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .syndicates-intro h3 {
+            color: var(--text-primary);
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .syndicates-intro p {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .syndicates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .syndicate-card {
+            background: var(--card-bg);
+            border: 2px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 30px;
+            transition: all 0.3s;
+        }
+
+        .syndicate-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(147, 51, 234, 0.3);
+            border-color: var(--neon-purple);
+        }
+
+        .syndicate-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .syndicate-icon {
+            font-size: 48px;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(147, 51, 234, 0.1);
+            border-radius: 15px;
+            border: 2px solid var(--neon-purple);
+        }
+
+        .syndicate-badge {
+            padding: 6px 14px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .syndicate-badge.elite {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #000;
+        }
+
+        .syndicate-badge.pro {
+            background: linear-gradient(135deg, #9333ea, #a855f7);
+            color: white;
+        }
+
+        .syndicate-badge.starter {
+            background: linear-gradient(135deg, #00ffff, #00cccc);
+            color: #000;
+        }
+
+        .syndicate-card h3 {
+            color: var(--text-primary);
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .syndicate-description {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .syndicate-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .syn-stat {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .syn-stat-label {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .syn-stat-value {
+            color: var(--neon-cyan);
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .syndicate-members {
+            display: flex;
+            align-items: center;
+            gap: -8px;
+            margin-bottom: 20px;
+        }
+
+        .member-avatar {
+            font-size: 20px;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 255, 255, 0.2);
+            border-radius: 50%;
+            border: 2px solid var(--card-bg);
+            margin-left: -8px;
+        }
+
+        .member-avatar:first-child {
+            margin-left: 0;
+        }
+
+        .member-count {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-left: 12px;
+        }
+
+        .apply-syndicate-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #9333ea, #a855f7);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .apply-syndicate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(147, 51, 234, 0.5);
+        }
+
+        .create-syndicate-section {
+            background: var(--card-bg);
+            border: 2px dashed var(--glass-border);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .create-syndicate-section h4 {
+            color: var(--text-primary);
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .create-syndicate-section p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-bottom: 25px;
+        }
+
+        .create-syndicate-btn {
+            background: var(--gradient-neon);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .create-syndicate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 255, 255, 0.4);
+        }
+
         .profile-card h3 {
             color: var(--neon-cyan);
             font-size: 18px;
@@ -4187,6 +4888,376 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
 
+            <!-- GROUPS & COMMUNITIES SECTION -->
+            <div id="groups" class="page-section">
+                <div class="groups-container">
+                    <div class="groups-header">
+                        <h2 class="section-title">Groups & Communities</h2>
+                        <button class="create-group-btn" onclick="openCreateGroupModal()">
+                            <span>+ Create Group</span>
+                        </button>
+                    </div>
+
+                    <!-- Groups Tabs -->
+                    <div class="groups-tabs">
+                        <button class="groups-tab active" onclick="switchGroupsTab('discover')">🔍 Discover</button>
+                        <button class="groups-tab" onclick="switchGroupsTab('mygroups')">👥 My Groups</button>
+                        <button class="groups-tab" onclick="switchGroupsTab('syndicates')">💎 Syndicates</button>
+                    </div>
+
+                    <!-- Discover Groups -->
+                    <div id="discoverGroups" class="groups-panel active">
+                        <div class="groups-filters">
+                            <select class="filter-dropdown">
+                                <option>All Sports</option>
+                                <option>NFL</option>
+                                <option>NBA</option>
+                                <option>MLB</option>
+                                <option>NHL</option>
+                                <option>Soccer</option>
+                            </select>
+                            <select class="filter-dropdown">
+                                <option>All Categories</option>
+                                <option>Strategy Discussion</option>
+                                <option>Live Betting</option>
+                                <option>Props</option>
+                                <option>Futures</option>
+                            </select>
+                            <input type="text" class="search-groups" placeholder="Search groups...">
+                        </div>
+
+                        <div class="groups-grid">
+                            <div class="group-card">
+                                <div class="group-card-header">
+                                    <div class="group-avatar">🏈</div>
+                                    <div class="group-badge verified">✓</div>
+                                </div>
+                                <h3 class="group-name">NFL Sharp Bettors</h3>
+                                <p class="group-description">Elite NFL handicappers sharing analysis and picks</p>
+                                <div class="group-stats">
+                                    <span class="group-stat">👥 2,847 members</span>
+                                    <span class="group-stat">📊 89% win rate</span>
+                                </div>
+                                <div class="group-tags">
+                                    <span class="tag">NFL</span>
+                                    <span class="tag">Advanced Stats</span>
+                                </div>
+                                <button class="join-group-btn">Join Group</button>
+                            </div>
+
+                            <div class="group-card">
+                                <div class="group-card-header">
+                                    <div class="group-avatar">🏀</div>
+                                    <div class="group-badge premium">⭐</div>
+                                </div>
+                                <h3 class="group-name">NBA Props Masters</h3>
+                                <p class="group-description">Player props specialists and live betting experts</p>
+                                <div class="group-stats">
+                                    <span class="group-stat">👥 1,523 members</span>
+                                    <span class="group-stat">🔥 Hot streak</span>
+                                </div>
+                                <div class="group-tags">
+                                    <span class="tag">NBA</span>
+                                    <span class="tag">Props</span>
+                                    <span class="tag">Live</span>
+                                </div>
+                                <button class="join-group-btn premium">Join Premium</button>
+                            </div>
+
+                            <div class="group-card">
+                                <div class="group-card-header">
+                                    <div class="group-avatar">⚾</div>
+                                </div>
+                                <h3 class="group-name">MLB Totals Community</h3>
+                                <p class="group-description">Over/under specialists tracking weather and pitching</p>
+                                <div class="group-stats">
+                                    <span class="group-stat">👥 892 members</span>
+                                    <span class="group-stat">📈 +42u YTD</span>
+                                </div>
+                                <div class="group-tags">
+                                    <span class="tag">MLB</span>
+                                    <span class="tag">Totals</span>
+                                </div>
+                                <button class="join-group-btn">Join Group</button>
+                            </div>
+
+                            <div class="group-card">
+                                <div class="group-card-header">
+                                    <div class="group-avatar">⚽</div>
+                                </div>
+                                <h3 class="group-name">Soccer Betting International</h3>
+                                <p class="group-description">Global soccer markets and European leagues</p>
+                                <div class="group-stats">
+                                    <span class="group-stat">👥 3,421 members</span>
+                                    <span class="group-stat">🌍 24/7 active</span>
+                                </div>
+                                <div class="group-tags">
+                                    <span class="tag">Soccer</span>
+                                    <span class="tag">International</span>
+                                </div>
+                                <button class="join-group-btn">Join Group</button>
+                            </div>
+
+                            <div class="group-card">
+                                <div class="group-card-header">
+                                    <div class="group-avatar">🎲</div>
+                                    <div class="group-badge verified">✓</div>
+                                </div>
+                                <h3 class="group-name">Parlay Squad</h3>
+                                <p class="group-description">Smart parlay building and bankroll management</p>
+                                <div class="group-stats">
+                                    <span class="group-stat">👥 5,632 members</span>
+                                    <span class="group-stat">💰 Huge wins</span>
+                                </div>
+                                <div class="group-tags">
+                                    <span class="tag">Parlays</span>
+                                    <span class="tag">Multi-Sport</span>
+                                </div>
+                                <button class="join-group-btn">Join Group</button>
+                            </div>
+
+                            <div class="group-card">
+                                <div class="group-card-header">
+                                    <div class="group-avatar">🏒</div>
+                                </div>
+                                <h3 class="group-name">NHL Puck Line Pros</h3>
+                                <p class="group-description">Hockey spread betting and goalie analytics</p>
+                                <div class="group-stats">
+                                    <span class="group-stat">👥 674 members</span>
+                                    <span class="group-stat">📊 87% accuracy</span>
+                                </div>
+                                <div class="group-tags">
+                                    <span class="tag">NHL</span>
+                                    <span class="tag">Puck Line</span>
+                                </div>
+                                <button class="join-group-btn">Join Group</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- My Groups -->
+                    <div id="myGroups" class="groups-panel">
+                        <div class="my-groups-list">
+                            <div class="my-group-item active-group">
+                                <div class="my-group-icon">🏈</div>
+                                <div class="my-group-info">
+                                    <h4>NFL Sharp Bettors</h4>
+                                    <p>12 new messages</p>
+                                </div>
+                                <div class="my-group-badge">12</div>
+                            </div>
+
+                            <div class="my-group-item">
+                                <div class="my-group-icon">🎲</div>
+                                <div class="my-group-info">
+                                    <h4>Parlay Squad</h4>
+                                    <p>Last active: 2h ago</p>
+                                </div>
+                            </div>
+
+                            <div class="my-group-item">
+                                <div class="my-group-icon">🏀</div>
+                                <div class="my-group-info">
+                                    <h4>NBA Props Masters</h4>
+                                    <p class="premium-text">⭐ Premium</p>
+                                </div>
+                                <div class="my-group-badge premium-badge">5</div>
+                            </div>
+                        </div>
+
+                        <!-- Group Chat View -->
+                        <div class="group-chat-view">
+                            <div class="group-chat-header">
+                                <div class="group-chat-title">
+                                    <div class="group-icon-large">🏈</div>
+                                    <div>
+                                        <h3>NFL Sharp Bettors</h3>
+                                        <p>2,847 members · 234 online</p>
+                                    </div>
+                                </div>
+                                <button class="group-settings-btn">⚙️</button>
+                            </div>
+
+                            <div class="group-chat-messages">
+                                <div class="group-message">
+                                    <div class="msg-avatar">👤</div>
+                                    <div class="msg-content">
+                                        <div class="msg-header">
+                                            <span class="msg-author">@SharpMike</span>
+                                            <span class="msg-time">10:34 AM</span>
+                                        </div>
+                                        <div class="msg-text">Chiefs -3.5 looking good. Mahomes at home against weak secondary</div>
+                                        <div class="msg-reactions">
+                                            <span class="reaction">🔥 12</span>
+                                            <span class="reaction">👍 8</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="group-message">
+                                    <div class="msg-avatar">👤</div>
+                                    <div class="msg-content">
+                                        <div class="msg-header">
+                                            <span class="msg-author">@BetKing</span>
+                                            <span class="msg-time">10:37 AM</span>
+                                        </div>
+                                        <div class="msg-text">Agreed. Weather looks perfect too. I'm on Chiefs -3.5 and over 47.5</div>
+                                        <div class="msg-reactions">
+                                            <span class="reaction">💪 6</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="group-message highlight">
+                                    <div class="msg-avatar">👤</div>
+                                    <div class="msg-content">
+                                        <div class="msg-header">
+                                            <span class="msg-author">@ProAnalyst</span>
+                                            <span class="badge-verified">✓</span>
+                                            <span class="msg-time">10:42 AM</span>
+                                        </div>
+                                        <div class="msg-text">
+                                            <strong>LOCK OF THE DAY:</strong> Bills -7.5 vs Dolphins
+                                            <br>Weather advantage + Josh Allen revenge game
+                                            <br>5U play
+                                        </div>
+                                        <div class="msg-reactions">
+                                            <span class="reaction">🔥 45</span>
+                                            <span class="reaction">💎 23</span>
+                                            <span class="reaction">🚀 18</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="group-chat-input">
+                                <button class="attach-btn">📎</button>
+                                <input type="text" placeholder="Message NFL Sharp Bettors...">
+                                <button class="send-msg-btn">Send</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Betting Syndicates -->
+                    <div id="syndicates" class="groups-panel">
+                        <div class="syndicates-intro">
+                            <h3>💎 Betting Syndicates</h3>
+                            <p>Pool funds with trusted members for higher stakes and shared profits</p>
+                        </div>
+
+                        <div class="syndicates-grid">
+                            <div class="syndicate-card">
+                                <div class="syndicate-header">
+                                    <div class="syndicate-icon">👑</div>
+                                    <div class="syndicate-badge elite">ELITE</div>
+                                </div>
+                                <h3>Sharp Syndicate Alpha</h3>
+                                <p class="syndicate-description">Minimum buy-in: $5,000 | 10 members max</p>
+                                <div class="syndicate-stats-grid">
+                                    <div class="syn-stat">
+                                        <div class="syn-stat-label">ROI</div>
+                                        <div class="syn-stat-value">+47%</div>
+                                    </div>
+                                    <div class="syn-stat">
+                                        <div class="syn-stat-label">Bankroll</div>
+                                        <div class="syn-stat-value">$42K</div>
+                                    </div>
+                                    <div class="syn-stat">
+                                        <div class="syn-stat-label">Win Rate</div>
+                                        <div class="syn-stat-value">62%</div>
+                                    </div>
+                                    <div class="syn-stat">
+                                        <div class="syn-stat-label">Members</div>
+                                        <div class="syn-stat-value">8/10</div>
+                                    </div>
+                                </div>
+                                <div class="syndicate-members">
+                                    <span class="member-avatar">👤</span>
+                                    <span class="member-avatar">👤</span>
+                                    <span class="member-avatar">👤</span>
+                                    <span class="member-count">+5 more</span>
+                                </div>
+                                <button class="apply-syndicate-btn">Apply to Join</button>
+                            </div>
+
+                            <div class="syndicate-card">
+                                <div class="syndicate-header">
+                                    <div class="syndicate-icon">⚡</div>
+                                    <div class="syndicate-badge pro">PRO</div>
+                                </div>
+                                <h3>Props Profit Pool</h3>
+                                <p class="syndicate-description">Minimum buy-in: $1,000 | 20 members max</p>
+                                <div class="syndicate-stats-grid">
+                                    <div class="syn-stat">
+                                        <div class="syn-stat-label">ROI</div>
+                                        <div class="syn-stat-value">+32%</div>
+                                    </div>
+                                    <div class="syn-stat">
+                                        <div class="syn-stat-label">Bankroll</div>
+                                        <div class="syn-stat-value">$18K</div>
+                                    </div>
+                                    <div class="syn-stat">
+                                        <div class="syn-stat-label">Win Rate</div>
+                                        <div class="syn-stat-value">58%</div>
+                                    </div>
+                                    <div class="syn-stat">
+                                        <div class="syn-stat-label">Members</div>
+                                        <div class="syn-stat-value">15/20</div>
+                                    </div>
+                                </div>
+                                <div class="syndicate-members">
+                                    <span class="member-avatar">👤</span>
+                                    <span class="member-avatar">👤</span>
+                                    <span class="member-avatar">👤</span>
+                                    <span class="member-count">+12 more</span>
+                                </div>
+                                <button class="apply-syndicate-btn">Apply to Join</button>
+                            </div>
+
+                            <div class="syndicate-card">
+                                <div class="syndicate-header">
+                                    <div class="syndicate-icon">🌟</div>
+                                    <div class="syndicate-badge starter">STARTER</div>
+                                </div>
+                                <h3>Beginner's Betting Circle</h3>
+                                <p class="syndicate-description">Minimum buy-in: $250 | 50 members max</p>
+                                <div class="syndicate-stats-grid">
+                                    <div class="syn-stat">
+                                        <div class="syn-stat-label">ROI</div>
+                                        <div class="syn-stat-value">+18%</div>
+                                    </div>
+                                    <div class="syn-stat">
+                                        <div class="syn-stat-label">Bankroll</div>
+                                        <div class="syn-stat-value">$9.5K</div>
+                                    </div>
+                                    <div class="syn-stat">
+                                        <div class="syn-stat-label">Win Rate</div>
+                                        <div class="syn-stat-value">54%</div>
+                                    </div>
+                                    <div class="syn-stat">
+                                        <div class="syn-stat-label">Members</div>
+                                        <div class="syn-stat-value">38/50</div>
+                                    </div>
+                                </div>
+                                <div class="syndicate-members">
+                                    <span class="member-avatar">👤</span>
+                                    <span class="member-avatar">👤</span>
+                                    <span class="member-avatar">👤</span>
+                                    <span class="member-count">+35 more</span>
+                                </div>
+                                <button class="apply-syndicate-btn">Apply to Join</button>
+                            </div>
+                        </div>
+
+                        <div class="create-syndicate-section">
+                            <h4>Want to create your own syndicate?</h4>
+                            <p>Gather your most trusted bettors and pool resources for bigger opportunities</p>
+                            <button class="create-syndicate-btn">Create Syndicate</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- LEADERBOARDS SECTION -->
             <div id="leaderboards" class="page-section">
                 <div class="leaderboards-container">
@@ -6027,6 +7098,33 @@ function updateFeedSidebarStats() {
         const followers = JSON.parse(localStorage.getItem('trustMyRecordFollowers') || '[]');
         document.getElementById('sidebarFollowers').textContent = followers.length;
     }
+}
+
+// Groups tab switching
+function switchGroupsTab(tab) {
+    // Hide all panels
+    document.querySelectorAll('.groups-panel').forEach(panel => panel.classList.remove('active'));
+
+    // Remove active from all tabs
+    document.querySelectorAll('.groups-tab').forEach(tabBtn => tabBtn.classList.remove('active'));
+
+    // Show selected panel
+    const panels = {
+        'discover': 'discoverGroups',
+        'mygroups': 'myGroups',
+        'syndicates': 'syndicates'
+    };
+
+    document.getElementById(panels[tab]).classList.add('active');
+    event.currentTarget.classList.add('active');
+}
+
+function openCreateGroupModal() {
+    alert('Create Group modal would open here. Feature coming soon!');
+}
+
+function openCreateSyndicateModal() {
+    alert('Create Syndicate modal would open here. Premium feature!');
 }
 
 // Enhanced poll voting with points
