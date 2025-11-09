@@ -2953,6 +2953,345 @@
             box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
         }
 
+        /* Marketplace CSS */
+        .marketplace-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .marketplace-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .marketplace-subtitle {
+            color: var(--text-secondary);
+            font-size: 16px;
+            margin-top: 8px;
+        }
+
+        .sell-btn {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #000;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 25px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .sell-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.5);
+        }
+
+        .marketplace-tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--glass-border);
+            padding-bottom: 2px;
+        }
+
+        .market-tab {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 12px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .market-tab.active {
+            color: var(--neon-cyan);
+            border-bottom-color: var(--neon-cyan);
+        }
+
+        .market-tab:hover:not(.active) {
+            color: var(--text-primary);
+        }
+
+        .market-panel {
+            display: none;
+        }
+
+        .market-panel.active {
+            display: block;
+        }
+
+        .market-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .market-filter-dropdown {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            min-width: 180px;
+        }
+
+        .marketplace-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        .market-product-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .market-product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+            border-color: var(--neon-cyan);
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .product-badge.bestseller {
+            background: linear-gradient(135deg, #ff4444, #ff6666);
+            color: white;
+        }
+
+        .product-badge.trending {
+            background: linear-gradient(135deg, #9333ea, #a855f7);
+            color: white;
+        }
+
+        .product-badge.new {
+            background: linear-gradient(135deg, #00ffff, #00cccc);
+            color: #000;
+        }
+
+        .seller-info {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .seller-avatar {
+            font-size: 28px;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 50%;
+            border: 2px solid var(--neon-cyan);
+        }
+
+        .seller-details {
+            flex: 1;
+        }
+
+        .seller-name {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+
+        .verified-badge {
+            background: var(--neon-cyan);
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 50%;
+            font-size: 10px;
+            margin-left: 4px;
+        }
+
+        .seller-rating {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .product-title {
+            color: var(--text-primary);
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .product-description {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .product-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 11px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            display: block;
+            color: var(--text-primary);
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .stat-value.success {
+            color: #00ff00;
+        }
+
+        .product-pricing {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .price-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .price {
+            color: var(--text-primary);
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .price-note {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .buy-btn {
+            background: var(--gradient-neon);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .buy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
+        }
+
+        /* Seller Benefits Section */
+        .seller-stats-section {
+            margin-top: 60px;
+            background: var(--card-bg);
+            border: 2px dashed var(--glass-border);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .seller-stats-section h3 {
+            color: var(--text-primary);
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+
+        .seller-stats-section > p {
+            color: var(--text-secondary);
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .seller-benefits {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .benefit-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 25px;
+        }
+
+        .benefit-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .benefit-card h4 {
+            color: var(--text-primary);
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .benefit-card p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .become-seller-btn {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #000;
+            border: none;
+            padding: 16px 40px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .become-seller-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.5);
+        }
+
         .profile-card h3 {
             color: var(--neon-cyan);
             font-size: 18px;
@@ -5848,6 +6187,307 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
 
+            <!-- MARKETPLACE SECTION -->
+            <div id="marketplace" class="page-section">
+                <div class="marketplace-container">
+                    <div class="marketplace-header">
+                        <div>
+                            <h2 class="section-title">💰 Marketplace</h2>
+                            <p class="marketplace-subtitle">Buy and sell picks, strategies, and betting insights</p>
+                        </div>
+                        <button class="sell-btn" onclick="openSellModal()">
+                            <span>💎 Start Selling</span>
+                        </button>
+                    </div>
+
+                    <!-- Marketplace Tabs -->
+                    <div class="marketplace-tabs">
+                        <button class="market-tab active" onclick="switchMarketTab('picks')">🎯 Premium Picks</button>
+                        <button class="market-tab" onclick="switchMarketTab('strategies')">📊 Strategies</button>
+                        <button class="market-tab" onclick="switchMarketTab('tools')">🛠️ Tools & Bots</button>
+                        <button class="market-tab" onclick="switchMarketTab('data')">📈 Data & Models</button>
+                    </div>
+
+                    <!-- Premium Picks Tab -->
+                    <div id="pickMarket" class="market-panel active">
+                        <div class="market-filters">
+                            <select class="market-filter-dropdown">
+                                <option>All Sports</option>
+                                <option>NFL</option>
+                                <option>NBA</option>
+                                <option>MLB</option>
+                                <option>NHL</option>
+                            </select>
+                            <select class="market-filter-dropdown">
+                                <option>Sort: Best Selling</option>
+                                <option>Sort: Highest Rated</option>
+                                <option>Sort: Lowest Price</option>
+                                <option>Sort: Highest Price</option>
+                            </select>
+                        </div>
+
+                        <div class="marketplace-grid">
+                            <!-- Product 1 -->
+                            <div class="market-product-card">
+                                <div class="product-badge bestseller">🔥 BEST SELLER</div>
+                                <div class="seller-info">
+                                    <div class="seller-avatar">👤</div>
+                                    <div class="seller-details">
+                                        <div class="seller-name">@SharpBettor <span class="verified-badge">✓</span></div>
+                                        <div class="seller-rating">⭐⭐⭐⭐⭐ (4.9) · 2,847 sales</div>
+                                    </div>
+                                </div>
+                                <h3 class="product-title">NFL Sharp Plays Package</h3>
+                                <p class="product-description">Daily NFL picks with detailed analysis. 68% win rate over 500+ picks. Includes spread, total, and prop bets.</p>
+                                <div class="product-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-label">Win Rate</span>
+                                        <span class="stat-value success">68%</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">ROI</span>
+                                        <span class="stat-value success">+42%</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Picks/Week</span>
+                                        <span class="stat-value">5-7</span>
+                                    </div>
+                                </div>
+                                <div class="product-pricing">
+                                    <div class="price-info">
+                                        <span class="price">$49.99/month</span>
+                                        <span class="price-note">or $399/year (save 33%)</span>
+                                    </div>
+                                    <button class="buy-btn">Buy Now</button>
+                                </div>
+                            </div>
+
+                            <!-- Product 2 -->
+                            <div class="market-product-card">
+                                <div class="product-badge trending">📈 TRENDING</div>
+                                <div class="seller-info">
+                                    <div class="seller-avatar">👤</div>
+                                    <div class="seller-details">
+                                        <div class="seller-name">@PropsKing <span class="verified-badge">✓</span></div>
+                                        <div class="seller-rating">⭐⭐⭐⭐⭐ (4.8) · 1,523 sales</div>
+                                    </div>
+                                </div>
+                                <h3 class="product-title">NBA Player Props Mastery</h3>
+                                <p class="product-description">Daily NBA player prop picks. Focus on points, rebounds, assists. Advanced stat analysis and matchup breakdowns.</p>
+                                <div class="product-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-label">Win Rate</span>
+                                        <span class="stat-value success">65%</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">ROI</span>
+                                        <span class="stat-value success">+38%</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Picks/Week</span>
+                                        <span class="stat-value">10-15</span>
+                                    </div>
+                                </div>
+                                <div class="product-pricing">
+                                    <div class="price-info">
+                                        <span class="price">$39.99/month</span>
+                                        <span class="price-note">or $299/year (save 37%)</span>
+                                    </div>
+                                    <button class="buy-btn">Buy Now</button>
+                                </div>
+                            </div>
+
+                            <!-- Product 3 -->
+                            <div class="market-product-card">
+                                <div class="product-badge new">✨ NEW</div>
+                                <div class="seller-info">
+                                    <div class="seller-avatar">👤</div>
+                                    <div class="seller-details">
+                                        <div class="seller-name">@LiveBetMaster</div>
+                                        <div class="seller-rating">⭐⭐⭐⭐⭐ (5.0) · 234 sales</div>
+                                    </div>
+                                </div>
+                                <h3 class="product-title">Live Betting Alerts</h3>
+                                <p class="product-description">Real-time alerts for live betting opportunities. Instant notifications when value appears. Discord & Telegram integration.</p>
+                                <div class="product-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-label">Win Rate</span>
+                                        <span class="stat-value success">71%</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">ROI</span>
+                                        <span class="stat-value success">+52%</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Alerts/Day</span>
+                                        <span class="stat-value">3-8</span>
+                                    </div>
+                                </div>
+                                <div class="product-pricing">
+                                    <div class="price-info">
+                                        <span class="price">$79.99/month</span>
+                                        <span class="price-note">Premium live service</span>
+                                    </div>
+                                    <button class="buy-btn">Buy Now</button>
+                                </div>
+                            </div>
+
+                            <!-- Product 4 -->
+                            <div class="market-product-card">
+                                <div class="seller-info">
+                                    <div class="seller-avatar">👤</div>
+                                    <div class="seller-details">
+                                        <div class="seller-name">@MLBTotalsGuru <span class="verified-badge">✓</span></div>
+                                        <div class="seller-rating">⭐⭐⭐⭐ (4.6) · 892 sales</div>
+                                    </div>
+                                </div>
+                                <h3 class="product-title">MLB Totals System</h3>
+                                <p class="product-description">Over/under picks based on weather, pitching matchups, and ballpark factors. Data-driven approach with 5+ year track record.</p>
+                                <div class="product-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-label">Win Rate</span>
+                                        <span class="stat-value success">62%</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">ROI</span>
+                                        <span class="stat-value success">+28%</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Picks/Week</span>
+                                        <span class="stat-value">8-12</span>
+                                    </div>
+                                </div>
+                                <div class="product-pricing">
+                                    <div class="price-info">
+                                        <span class="price">$29.99/month</span>
+                                        <span class="price-note">Baseball season only</span>
+                                    </div>
+                                    <button class="buy-btn">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Strategies Tab -->
+                    <div id="strategiesMarket" class="market-panel">
+                        <div class="marketplace-grid">
+                            <div class="market-product-card">
+                                <div class="product-badge bestseller">🔥 BEST SELLER</div>
+                                <div class="seller-info">
+                                    <div class="seller-avatar">👤</div>
+                                    <div class="seller-details">
+                                        <div class="seller-name">@BankrollPro <span class="verified-badge">✓</span></div>
+                                        <div class="seller-rating">⭐⭐⭐⭐⭐ (4.9) · 3,421 sales</div>
+                                    </div>
+                                </div>
+                                <h3 class="product-title">Complete Bankroll Management Course</h3>
+                                <p class="product-description">Master bankroll management with proven Kelly Criterion strategies. Includes spreadsheets, calculators, and video tutorials.</p>
+                                <div class="product-pricing">
+                                    <div class="price-info">
+                                        <span class="price">$99 (one-time)</span>
+                                        <span class="price-note">Lifetime access</span>
+                                    </div>
+                                    <button class="buy-btn">Buy Now</button>
+                                </div>
+                            </div>
+
+                            <div class="market-product-card">
+                                <div class="seller-info">
+                                    <div class="seller-avatar">👤</div>
+                                    <div class="seller-details">
+                                        <div class="seller-name">@ValueBettor</div>
+                                        <div class="seller-rating">⭐⭐⭐⭐⭐ (4.7) · 1,234 sales</div>
+                                    </div>
+                                </div>
+                                <h3 class="product-title">Line Shopping Masterclass</h3>
+                                <p class="product-description">Learn how to find the best odds across sportsbooks. Tools and techniques to maximize your edge through line shopping.</p>
+                                <div class="product-pricing">
+                                    <div class="price-info">
+                                        <span class="price">$49 (one-time)</span>
+                                        <span class="price-note">4-week course</span>
+                                    </div>
+                                    <button class="buy-btn">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tools Tab -->
+                    <div id="toolsMarket" class="market-panel">
+                        <div class="marketplace-grid">
+                            <div class="market-product-card">
+                                <div class="product-badge trending">📈 TRENDING</div>
+                                <div class="seller-info">
+                                    <div class="seller-avatar">👤</div>
+                                    <div class="seller-details">
+                                        <div class="seller-name">@OddsBotPro <span class="verified-badge">✓</span></div>
+                                        <div class="seller-rating">⭐⭐⭐⭐⭐ (4.8) · 892 sales</div>
+                                    </div>
+                                </div>
+                                <h3 class="product-title">Odds Comparison Bot</h3>
+                                <p class="product-description">Automated odds comparison across 20+ sportsbooks. Real-time alerts for arbitrage opportunities. Discord integration.</p>
+                                <div class="product-pricing">
+                                    <div class="price-info">
+                                        <span class="price">$24.99/month</span>
+                                        <span class="price-note">or $199/year</span>
+                                    </div>
+                                    <button class="buy-btn">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Tab -->
+                    <div id="dataMarket" class="market-panel">
+                        <div class="marketplace-grid">
+                            <div class="market-product-card">
+                                <div class="product-badge new">✨ NEW</div>
+                                <div class="seller-info">
+                                    <div class="seller-avatar">👤</div>
+                                    <div class="seller-details">
+                                        <div class="seller-name">@DataScientist <span class="verified-badge">✓</span></div>
+                                        <div class="seller-rating">⭐⭐⭐⭐⭐ (5.0) · 156 sales</div>
+                                    </div>
+                                </div>
+                                <h3 class="product-title">NFL Predictive Model</h3>
+                                <p class="product-description">Machine learning model trained on 10 years of NFL data. Predicts spreads and totals with 64% accuracy. Weekly updates.</p>
+                                <div class="product-pricing">
+                                    <div class="price-info">
+                                        <span class="price">$149/season</span>
+                                        <span class="price-note">Includes CSV exports</span>
+                                    </div>
+                                    <button class="buy-btn">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seller Stats Section -->
+                    <div class="seller-stats-section">
+                        <h3>💎 Want to become a seller?</h3>
+                        <p>Share your expertise and earn money by selling picks, strategies, or tools</p>
+                        <div class="seller-benefits">
+                            <div class="benefit-card">
+                                <div class="benefit-icon">💰</div>
+                                <h4>Earn 70% Revenue</h4>
+                                <p>Keep 70% of every sale</p>
+                            </div>
+                            <div class="benefit-card">
+                                <div class="benefit-icon">📊</div>
+                                <h4>Track Performance</h4>
+                                <p>Transparent verified stats</p>
+                            </div>
+                            <div class="benefit-card">
+                                <div class="benefit-icon">🚀</div>
+                                <h4>Grow Your Brand</h4>
+                                <p>Build loyal following</p>
+                            </div>
+                        </div>
+                        <button class="become-seller-btn" onclick="openSellerApplication()">Apply to Become a Seller</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- LEADERBOARDS SECTION -->
             <div id="leaderboards" class="page-section">
                 <div class="leaderboards-container">
@@ -7715,6 +8355,34 @@ function openCreateGroupModal() {
 
 function openCreateSyndicateModal() {
     alert('Create Syndicate modal would open here. Premium feature!');
+}
+
+// Marketplace tab switching
+function switchMarketTab(tab) {
+    // Hide all panels
+    document.querySelectorAll('.market-panel').forEach(panel => panel.classList.remove('active'));
+
+    // Remove active from all tabs
+    document.querySelectorAll('.market-tab').forEach(tabBtn => tabBtn.classList.remove('active'));
+
+    // Show selected panel
+    const panels = {
+        'picks': 'pickMarket',
+        'strategies': 'strategiesMarket',
+        'tools': 'toolsMarket',
+        'data': 'dataMarket'
+    };
+
+    document.getElementById(panels[tab]).classList.add('active');
+    event.currentTarget.classList.add('active');
+}
+
+function openSellModal() {
+    alert('Seller application modal would open here. Start selling your expertise!');
+}
+
+function openSellerApplication() {
+    alert('Seller application form would open here. Apply to become a verified seller!');
 }
 
 // Live games filtering
