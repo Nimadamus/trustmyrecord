@@ -97,6 +97,199 @@
             z-index: 1000;
         }
 
+        .live-ticker {
+            flex: 1;
+            overflow: hidden;
+            margin: 0 20px;
+            background: rgba(0, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 8px 15px;
+        }
+
+        .ticker-scroll {
+            display: flex;
+            gap: 30px;
+            animation: tickerScroll 30s linear infinite;
+        }
+
+        @keyframes tickerScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .ticker-item {
+            white-space: nowrap;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            margin-right: 20px;
+        }
+
+        .header-icon-btn {
+            position: relative;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .header-icon-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .header-icon-btn .icon {
+            font-size: 20px;
+        }
+
+        .header-icon-btn .badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--neon-red);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .premium-btn {
+            background: var(--gradient-gold) !important;
+            color: var(--dark-bg) !important;
+            font-weight: 700 !important;
+            padding: 10px 20px !important;
+            border-radius: 25px !important;
+        }
+
+        .notifications-panel {
+            position: absolute;
+            top: 70px;
+            right: 20px;
+            width: 380px;
+            max-height: 500px;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .notifications-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .notifications-header h3 {
+            color: var(--neon-cyan);
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .mark-read-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mark-read-btn:hover {
+            color: var(--neon-cyan);
+        }
+
+        .notifications-list {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            display: flex;
+            gap: 12px;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .notification-item:hover {
+            background: rgba(0, 255, 255, 0.05);
+        }
+
+        .notification-item.unread {
+            background: rgba(0, 255, 255, 0.08);
+            border-left: 3px solid var(--neon-cyan);
+        }
+
+        .notif-icon {
+            font-size: 24px;
+            min-width: 24px;
+        }
+
+        .notif-content {
+            flex: 1;
+        }
+
+        .notif-text {
+            color: var(--text-primary);
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .notif-time {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .notifications-footer {
+            padding: 15px;
+            text-align: center;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .notifications-footer a {
+            color: var(--neon-cyan);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .notifications-footer a:hover {
+            text-decoration: underline;
+        }
+
         .header-content {
             display: flex;
             justify-content: space-between;
@@ -2326,16 +2519,85 @@
         <header>
             <div class="header-content">
                 <div class="logo" onclick="showSection('home')">TRUST<span style="color: var(--neon-cyan);">MY</span>RECORD</div>
+
+                <!-- Live Ticker -->
+                <div class="live-ticker">
+                    <div class="ticker-scroll">
+                        <span class="ticker-item">🏈 NFL: Chiefs 27 - Bills 24 LIVE</span>
+                        <span class="ticker-item">🏀 NBA: Lakers 98 - Celtics 102 Q3</span>
+                        <span class="ticker-item">⚾ MLB: Yankees 5 - Red Sox 3 7th</span>
+                        <span class="ticker-item">🏒 NHL: Bruins 2 - Rangers 1 2nd</span>
+                    </div>
+                </div>
+
+                <div class="header-actions">
+                    <button class="header-icon-btn" onclick="toggleNotifications()" id="notificationBtn">
+                        <span class="icon">🔔</span>
+                        <span class="badge" id="notificationBadge">5</span>
+                    </button>
+                    <button class="header-icon-btn" onclick="toggleSearch()">
+                        <span class="icon">🔍</span>
+                    </button>
+                </div>
+
                 <nav>
                     <a onclick="showSection('feed')">Feed</a>
                     <a onclick="showSection('picks')" class="make-picks-link">Make Picks</a>
-                    <a onclick="showSection('forums')">Forums</a>
-                    <a onclick="showSection('leaderboards')">Leaderboards</a>
-                    <a onclick="showSection('polls-trivia')">Polls & Trivia</a>
+                    <a onclick="showSection('groups')">Groups</a>
+                    <a onclick="showSection('live')">Live</a>
+                    <a onclick="showSection('marketplace')">Marketplace</a>
                     <a onclick="showSection('profile')">Profile</a>
                     <a onclick="showSection('messages')">Messages</a>
-                    <a onclick="showSection('signup')" class="signup-btn">Sign Up</a>
+                    <a onclick="showSection('premium')" class="premium-btn">⭐ Premium</a>
                 </nav>
+            </div>
+
+            <!-- Notifications Dropdown -->
+            <div id="notificationsPanel" class="notifications-panel" style="display: none;">
+                <div class="notifications-header">
+                    <h3>Notifications</h3>
+                    <button class="mark-read-btn" onclick="markAllRead()">Mark all as read</button>
+                </div>
+                <div class="notifications-list">
+                    <div class="notification-item unread">
+                        <div class="notif-icon">❤️</div>
+                        <div class="notif-content">
+                            <div class="notif-text"><strong>@SharpBettor</strong> liked your pick</div>
+                            <div class="notif-time">2 minutes ago</div>
+                        </div>
+                    </div>
+                    <div class="notification-item unread">
+                        <div class="notif-icon">💬</div>
+                        <div class="notif-content">
+                            <div class="notif-text"><strong>@NFLPro</strong> commented on your post</div>
+                            <div class="notif-time">15 minutes ago</div>
+                        </div>
+                    </div>
+                    <div class="notification-item unread">
+                        <div class="notif-icon">🏆</div>
+                        <div class="notif-content">
+                            <div class="notif-text">You've earned the <strong>"10 Win Streak"</strong> badge!</div>
+                            <div class="notif-time">1 hour ago</div>
+                        </div>
+                    </div>
+                    <div class="notification-item">
+                        <div class="notif-icon">👥</div>
+                        <div class="notif-content">
+                            <div class="notif-text"><strong>@HoopsKing</strong> started following you</div>
+                            <div class="notif-time">3 hours ago</div>
+                        </div>
+                    </div>
+                    <div class="notification-item">
+                        <div class="notif-icon">📊</div>
+                        <div class="notif-content">
+                            <div class="notif-text">Your pick on <strong>Lakers +5.5</strong> won! +2.5u</div>
+                            <div class="notif-time">5 hours ago</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="notifications-footer">
+                    <a onclick="showSection('notifications')">View all notifications</a>
+                </div>
             </div>
         </header>
 
@@ -6595,6 +6857,38 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="static/js/config.js"></script>
     <script src="static/js/api.js"></script>
     <script src="static/js/auth.js"></script>
+    <script>
+        // Notifications System
+        function toggleNotifications() {
+            const panel = document.getElementById('notificationsPanel');
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
+        function markAllRead() {
+            const unreadItems = document.querySelectorAll('.notification-item.unread');
+            unreadItems.forEach(item => item.classList.remove('unread'));
+            document.getElementById('notificationBadge').textContent = '0';
+            document.getElementById('notificationBadge').style.display = 'none';
+        }
+
+        function toggleSearch() {
+            alert('Search functionality coming soon!');
+        }
+
+        // Close notifications when clicking outside
+        document.addEventListener('click', function(event) {
+            const panel = document.getElementById('notificationsPanel');
+            const btn = document.getElementById('notificationBtn');
+            if (panel && btn && !panel.contains(event.target) && !btn.contains(event.target)) {
+                panel.style.display = 'none';
+            }
+        });
+    </script>
+
     <script src="static/js/social.js"></script>
     <script src="static/js/forums.js"></script>
     <script src="static/js/picks.js"></script>
