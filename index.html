@@ -2070,10 +2070,286 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
 
+            <!-- PROFILE SECTION -->
+            <div id="profile" class="page-section">
+                <div class="profile-page-container">
+                    <div class="profile-header-banner">
+                        <div class="profile-cover-photo" id="profileCoverPhoto">
+                            <!-- Cover photo background -->
+                        </div>
+                        <div class="profile-main-info">
+                            <div class="profile-avatar-large" id="profileAvatarLarge">
+                                <div class="avatar-display">👤</div>
+                                <button class="change-avatar-btn" onclick="changeAvatar()">Change Photo</button>
+                            </div>
+                            <div class="profile-identity">
+                                <h1 id="profileDisplayName">Your Name</h1>
+                                <p class="profile-username">@<span id="profileUsername">username</span></p>
+                                <button class="edit-profile-btn" onclick="openProfileEditor()">Edit Profile</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-content-grid">
+                        <!-- Left Column - About & Stats -->
+                        <div class="profile-left-column">
+                            <!-- About Me Card -->
+                            <div class="profile-card">
+                                <h3>About Me</h3>
+                                <div id="profileBio" class="profile-bio">
+                                    No bio yet. Click "Edit Profile" to add one.
+                                </div>
+                            </div>
+
+                            <!-- Favorite Teams Card -->
+                            <div class="profile-card">
+                                <h3>Favorite Teams</h3>
+                                <div id="profileFavoriteTeams" class="favorite-teams-display">
+                                    <div class="team-badge">🏈 Dallas Cowboys</div>
+                                    <div class="team-badge">🏀 LA Lakers</div>
+                                    <div class="team-badge">⚾ NY Yankees</div>
+                                    <div class="team-badge-add" onclick="editFavoriteTeams()">+ Add Team</div>
+                                </div>
+                            </div>
+
+                            <!-- Points & Achievements -->
+                            <div class="profile-card">
+                                <h3>Points & Achievements</h3>
+                                <div class="points-breakdown">
+                                    <div class="point-item">
+                                        <span class="point-icon">🎯</span>
+                                        <div class="point-details">
+                                            <div class="point-label">Trivia Points</div>
+                                            <div class="point-value" id="profileTriviaPoints">0</div>
+                                        </div>
+                                    </div>
+                                    <div class="point-item">
+                                        <span class="point-icon">📊</span>
+                                        <div class="point-details">
+                                            <div class="point-label">Poll Prediction Points</div>
+                                            <div class="point-value" id="profilePollPoints">0</div>
+                                        </div>
+                                    </div>
+                                    <div class="point-item">
+                                        <span class="point-icon">🏆</span>
+                                        <div class="point-details">
+                                            <div class="point-label">Total Points</div>
+                                            <div class="point-value total" id="profileTotalPoints">0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="achievements-badges">
+                                    <div class="achievement-badge" title="First Pick">🎯</div>
+                                    <div class="achievement-badge" title="10 Wins">🔥</div>
+                                    <div class="achievement-badge locked" title="Locked">🔒</div>
+                                    <div class="achievement-badge locked" title="Locked">🔒</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column - Stats & Activity -->
+                        <div class="profile-right-column">
+                            <!-- Betting Stats Card -->
+                            <div class="profile-card">
+                                <h3>Betting Statistics</h3>
+                                <div class="stats-grid-profile">
+                                    <div class="stat-box-profile">
+                                        <div class="stat-number" id="profileTotalPicks">0</div>
+                                        <div class="stat-label-profile">Total Picks</div>
+                                    </div>
+                                    <div class="stat-box-profile">
+                                        <div class="stat-number" id="profileWinRate">0%</div>
+                                        <div class="stat-label-profile">Win Rate</div>
+                                    </div>
+                                    <div class="stat-box-profile">
+                                        <div class="stat-number" id="profileUnits">+0.0u</div>
+                                        <div class="stat-label-profile">Total Units</div>
+                                    </div>
+                                    <div class="stat-box-profile">
+                                        <div class="stat-number" id="profileStreak">0</div>
+                                        <div class="stat-label-profile">Current Streak</div>
+                                    </div>
+                                    <div class="stat-box-profile">
+                                        <div class="stat-number" id="profileFollowers">0</div>
+                                        <div class="stat-label-profile">Followers</div>
+                                    </div>
+                                    <div class="stat-box-profile">
+                                        <div class="stat-number" id="profileFollowing">0</div>
+                                        <div class="stat-label-profile">Following</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recent Activity -->
+                            <div class="profile-card">
+                                <h3>Recent Activity</h3>
+                                <div id="profileRecentActivity" class="activity-feed">
+                                    <div class="activity-item">
+                                        <span class="activity-icon">🎯</span>
+                                        <span class="activity-text">Made a pick: Lakers +5.5</span>
+                                        <span class="activity-time">2h ago</span>
+                                    </div>
+                                    <div class="activity-item">
+                                        <span class="activity-icon">📊</span>
+                                        <span class="activity-text">Voted in poll: "Who will win?"</span>
+                                        <span class="activity-time">5h ago</span>
+                                    </div>
+                                    <div class="activity-item">
+                                        <span class="activity-icon">🧠</span>
+                                        <span class="activity-text">Completed NFL Trivia (8/10)</span>
+                                        <span class="activity-time">1d ago</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Edit Modal -->
+            <div id="profileEditModal" class="modal" style="display:none;">
+                <div class="modal-content profile-edit-modal">
+                    <span class="close-modal" onclick="closeProfileEditor()">&times;</span>
+                    <h2>Edit Profile</h2>
+                    <form id="profileEditForm">
+                        <div class="form-group">
+                            <label for="editDisplayName">Display Name:</label>
+                            <input type="text" id="editDisplayName" placeholder="Your Name">
+                        </div>
+                        <div class="form-group">
+                            <label for="editUsername">Username:</label>
+                            <input type="text" id="editUsername" placeholder="username">
+                        </div>
+                        <div class="form-group">
+                            <label for="editBio">Bio:</label>
+                            <textarea id="editBio" rows="4" placeholder="Tell us about yourself, your betting style, favorite sports..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="editAvatar">Avatar Emoji:</label>
+                            <select id="editAvatar">
+                                <option value="👤">👤 Default</option>
+                                <option value="🎯">🎯 Target</option>
+                                <option value="🏈">🏈 Football</option>
+                                <option value="🏀">🏀 Basketball</option>
+                                <option value="⚾">⚾ Baseball</option>
+                                <option value="🏒">🏒 Hockey</option>
+                                <option value="⚽">⚽ Soccer</option>
+                                <option value="💰">💰 Money</option>
+                                <option value="🔥">🔥 Fire</option>
+                                <option value="👑">👑 King</option>
+                                <option value="🦅">🦅 Eagle</option>
+                                <option value="🐻">🐻 Bear</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="profile-save-btn">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- LEADERBOARDS SECTION -->
             <div id="leaderboards" class="page-section">
-                <div class="coming-soon">
-                    <h2>Leaderboards</h2>
-                    <p>Rankings and performance metrics for all users...</p>
+                <div class="leaderboards-container">
+                    <h2 class="section-title">Leaderboards</h2>
+
+                    <!-- Leaderboard Tabs -->
+                    <div class="leaderboard-tabs">
+                        <button class="lb-tab active" onclick="switchLeaderboard('points')">Total Points</button>
+                        <button class="lb-tab" onclick="switchLeaderboard('picks')">Best Picks</button>
+                        <button class="lb-tab" onclick="switchLeaderboard('trivia')">Trivia Masters</button>
+                        <button class="lb-tab" onclick="switchLeaderboard('polls')">Poll Predictions</button>
+                        <button class="lb-tab" onclick="switchLeaderboard('units')">Most Units</button>
+                    </div>
+
+                    <!-- Points Leaderboard -->
+                    <div id="pointsLeaderboard" class="leaderboard-panel active">
+                        <div class="leaderboard-header">
+                            <h3>🏆 Total Points Leaders</h3>
+                            <p>Combined trivia and poll prediction points</p>
+                        </div>
+                        <div class="leaderboard-table">
+                            <div class="lb-table-header">
+                                <div class="lb-col-rank">Rank</div>
+                                <div class="lb-col-user">User</div>
+                                <div class="lb-col-stat">Trivia</div>
+                                <div class="lb-col-stat">Polls</div>
+                                <div class="lb-col-total">Total Points</div>
+                            </div>
+                            <div id="pointsLeaderboardBody" class="lb-table-body">
+                                <!-- Will be populated by JavaScript -->
+                                <div class="lb-row">
+                                    <div class="lb-col-rank"><span class="rank-badge gold">1</span></div>
+                                    <div class="lb-col-user">
+                                        <span class="user-avatar-tiny">👑</span>
+                                        <span class="user-name-lb">@TriviaKing</span>
+                                    </div>
+                                    <div class="lb-col-stat">2,850</div>
+                                    <div class="lb-col-stat">1,420</div>
+                                    <div class="lb-col-total">4,270</div>
+                                </div>
+                                <div class="lb-row">
+                                    <div class="lb-col-rank"><span class="rank-badge silver">2</span></div>
+                                    <div class="lb-col-user">
+                                        <span class="user-avatar-tiny">🎯</span>
+                                        <span class="user-name-lb">@SharpMind</span>
+                                    </div>
+                                    <div class="lb-col-stat">1,950</div>
+                                    <div class="lb-col-stat">1,800</div>
+                                    <div class="lb-col-total">3,750</div>
+                                </div>
+                                <div class="lb-row">
+                                    <div class="lb-col-rank"><span class="rank-badge bronze">3</span></div>
+                                    <div class="lb-col-user">
+                                        <span class="user-avatar-tiny">🧠</span>
+                                        <span class="user-name-lb">@BrainBet</span>
+                                    </div>
+                                    <div class="lb-col-stat">2,100</div>
+                                    <div class="lb-col-stat">1,200</div>
+                                    <div class="lb-col-total">3,300</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Other leaderboards will be shown/hidden via JavaScript -->
+                    <div id="picksLeaderboard" class="leaderboard-panel">
+                        <div class="leaderboard-header">
+                            <h3>🎯 Best Handicappers</h3>
+                            <p>Ranked by win rate and total units</p>
+                        </div>
+                        <div id="picksLeaderboardBody">
+                            <!-- Will be populated -->
+                        </div>
+                    </div>
+
+                    <div id="triviaLeaderboard" class="leaderboard-panel">
+                        <div class="leaderboard-header">
+                            <h3>🧠 Trivia Champions</h3>
+                            <p>Top quiz performers</p>
+                        </div>
+                        <div id="triviaLeaderboardBody">
+                            <!-- Will be populated -->
+                        </div>
+                    </div>
+
+                    <div id="pollsLeaderboard" class="leaderboard-panel">
+                        <div class="leaderboard-header">
+                            <h3>📊 Prediction Experts</h3>
+                            <p>Most accurate poll predictions</p>
+                        </div>
+                        <div id="pollsLeaderboardBody">
+                            <!-- Will be populated -->
+                        </div>
+                    </div>
+
+                    <div id="unitsLeaderboard" class="leaderboard-panel">
+                        <div class="leaderboard-header">
+                            <h3>💰 Profit Leaders</h3>
+                            <p>Most units won</p>
+                        </div>
+                        <div id="unitsLeaderboardBody">
+                            <!-- Will be populated -->
+                        </div>
+                    </div>
                 </div>
             </div>
 
