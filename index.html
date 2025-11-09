@@ -291,6 +291,144 @@
             text-decoration: underline;
         }
 
+        /* Enhanced Notifications Styling */
+        .unread-count {
+            display: inline-block;
+            background: var(--neon-red);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+        }
+
+        .notif-filters {
+            display: flex;
+            gap: 8px;
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--glass-border);
+            overflow-x: auto;
+        }
+
+        .notif-filter-btn {
+            background: transparent;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            color: var(--text-secondary);
+            padding: 6px 14px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .notif-filter-btn.active {
+            background: rgba(0, 255, 255, 0.15);
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        .notif-filter-btn:hover {
+            border-color: var(--neon-cyan);
+            transform: translateY(-1px);
+        }
+
+        .notification-item {
+            position: relative;
+        }
+
+        .notif-action-btn {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .notif-action-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .notif-action-btn.premium-btn {
+            background: var(--gradient-gold);
+            border-color: var(--neon-gold);
+            color: var(--dark-bg);
+        }
+
+        /* Notification Icon States */
+        .notif-icon.win {
+            color: var(--neon-green);
+            filter: drop-shadow(0 0 8px var(--neon-green));
+        }
+
+        .notif-icon.loss {
+            color: var(--neon-red);
+            filter: drop-shadow(0 0 8px var(--neon-red));
+        }
+
+        .notif-icon.pending {
+            color: var(--neon-gold);
+            filter: drop-shadow(0 0 8px var(--neon-gold));
+            animation: pulse 2s infinite;
+        }
+
+        .notif-icon.achievement {
+            color: var(--neon-gold);
+            filter: drop-shadow(0 0 10px var(--neon-gold));
+            animation: goldPulse 2s infinite;
+        }
+
+        .notif-icon.rank-up {
+            color: var(--neon-cyan);
+            filter: drop-shadow(0 0 8px var(--neon-cyan));
+        }
+
+        .notif-icon.premium {
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Profit/Loss Indicators */
+        .profit {
+            color: var(--neon-green);
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .loss-amount {
+            color: var(--neon-red);
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        /* Notification List Scrollbar */
+        .notifications-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .notifications-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .notifications-list::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .notifications-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 255, 0.5);
+        }
+
         .header-content {
             display: flex;
             justify-content: space-between;
@@ -4640,48 +4778,131 @@
             <!-- Notifications Dropdown -->
             <div id="notificationsPanel" class="notifications-panel" style="display: none;">
                 <div class="notifications-header">
-                    <h3>Notifications</h3>
-                    <button class="mark-read-btn" onclick="markAllRead()">Mark all as read</button>
+                    <h3>Notifications <span class="unread-count" id="unreadCount">12</span></h3>
+                    <button class="mark-read-btn" onclick="markAllRead()">✓ Mark all read</button>
                 </div>
-                <div class="notifications-list">
-                    <div class="notification-item unread">
-                        <div class="notif-icon">❤️</div>
+
+                <!-- Notification Filters -->
+                <div class="notif-filters">
+                    <button class="notif-filter-btn active" onclick="filterNotifications('all')">All</button>
+                    <button class="notif-filter-btn" onclick="filterNotifications('picks')">Picks</button>
+                    <button class="notif-filter-btn" onclick="filterNotifications('social')">Social</button>
+                    <button class="notif-filter-btn" onclick="filterNotifications('alerts')">Alerts</button>
+                </div>
+
+                <div class="notifications-list" id="notificationsList">
+                    <!-- PICKS NOTIFICATIONS -->
+                    <div class="notification-item unread" data-type="picks">
+                        <div class="notif-icon win">✅</div>
                         <div class="notif-content">
-                            <div class="notif-text"><strong>@SharpBettor</strong> liked your pick</div>
+                            <div class="notif-text">Your pick on <strong>Lakers +5.5</strong> WON! <span class="profit">+2.5u</span></div>
                             <div class="notif-time">2 minutes ago</div>
                         </div>
+                        <button class="notif-action-btn" onclick="viewPick(123)">View</button>
                     </div>
-                    <div class="notification-item unread">
-                        <div class="notif-icon">💬</div>
+
+                    <div class="notification-item unread" data-type="picks">
+                        <div class="notif-icon pending">⏳</div>
                         <div class="notif-content">
-                            <div class="notif-text"><strong>@NFLPro</strong> commented on your post</div>
+                            <div class="notif-text"><strong>Chiefs -3.5</strong> is now LIVE! Current score: 14-7</div>
+                            <div class="notif-time">8 minutes ago</div>
+                        </div>
+                        <button class="notif-action-btn" onclick="showSection('live')">Watch</button>
+                    </div>
+
+                    <div class="notification-item unread" data-type="picks">
+                        <div class="notif-icon loss">❌</div>
+                        <div class="notif-content">
+                            <div class="notif-text">Your pick on <strong>Warriors ML</strong> lost. <span class="loss-amount">-1u</span></div>
                             <div class="notif-time">15 minutes ago</div>
                         </div>
+                        <button class="notif-action-btn" onclick="viewPick(122)">View</button>
                     </div>
-                    <div class="notification-item unread">
-                        <div class="notif-icon">🏆</div>
+
+                    <!-- SOCIAL NOTIFICATIONS -->
+                    <div class="notification-item unread" data-type="social">
+                        <div class="notif-icon">❤️</div>
                         <div class="notif-content">
-                            <div class="notif-text">You've earned the <strong>"10 Win Streak"</strong> badge!</div>
-                            <div class="notif-time">1 hour ago</div>
+                            <div class="notif-text"><strong>@SharpBettor</strong> and <strong>12 others</strong> liked your pick</div>
+                            <div class="notif-time">22 minutes ago</div>
                         </div>
+                        <button class="notif-action-btn" onclick="viewEngagement()">View</button>
                     </div>
-                    <div class="notification-item">
+
+                    <div class="notification-item unread" data-type="social">
+                        <div class="notif-icon">💬</div>
+                        <div class="notif-content">
+                            <div class="notif-text"><strong>@NFLPro</strong> commented: "Great analysis! Tailing this."</div>
+                            <div class="notif-time">35 minutes ago</div>
+                        </div>
+                        <button class="notif-action-btn" onclick="replyComment(456)">Reply</button>
+                    </div>
+
+                    <div class="notification-item unread" data-type="social">
                         <div class="notif-icon">👥</div>
                         <div class="notif-content">
                             <div class="notif-text"><strong>@HoopsKing</strong> started following you</div>
-                            <div class="notif-time">3 hours ago</div>
+                            <div class="notif-time">1 hour ago</div>
+                        </div>
+                        <button class="notif-action-btn" onclick="viewProfile('HoopsKing')">Profile</button>
+                    </div>
+
+                    <div class="notification-item" data-type="social">
+                        <div class="notif-icon">🔁</div>
+                        <div class="notif-content">
+                            <div class="notif-text"><strong>@MLBExpert</strong> reposted your pick</div>
+                            <div class="notif-time">2 hours ago</div>
                         </div>
                     </div>
-                    <div class="notification-item">
-                        <div class="notif-icon">📊</div>
+
+                    <div class="notification-item" data-type="social">
+                        <div class="notif-icon">📢</div>
                         <div class="notif-content">
-                            <div class="notif-text">Your pick on <strong>Lakers +5.5</strong> won! +2.5u</div>
+                            <div class="notif-text"><strong>@DiamondPicks</strong> mentioned you in a post</div>
+                            <div class="notif-time">3 hours ago</div>
+                        </div>
+                        <button class="notif-action-btn" onclick="viewPost(789)">View</button>
+                    </div>
+
+                    <!-- ALERTS & ACHIEVEMENTS -->
+                    <div class="notification-item unread" data-type="alerts">
+                        <div class="notif-icon achievement">🏆</div>
+                        <div class="notif-content">
+                            <div class="notif-text">Achievement Unlocked: <strong>"10 Win Streak"</strong> 🔥</div>
+                            <div class="notif-time">4 hours ago</div>
+                        </div>
+                        <button class="notif-action-btn" onclick="viewAchievements()">View All</button>
+                    </div>
+
+                    <div class="notification-item unread" data-type="alerts">
+                        <div class="notif-icon rank-up">⬆️</div>
+                        <div class="notif-content">
+                            <div class="notif-text">You moved up to <strong>#12</strong> on the leaderboard! 📈</div>
                             <div class="notif-time">5 hours ago</div>
+                        </div>
+                        <button class="notif-action-btn" onclick="showSection('leaderboards')">Leaderboard</button>
+                    </div>
+
+                    <div class="notification-item" data-type="alerts">
+                        <div class="notif-icon premium">💎</div>
+                        <div class="notif-content">
+                            <div class="notif-text"><strong>Upgrade to Premium</strong> and unlock advanced analytics!</div>
+                            <div class="notif-time">1 day ago</div>
+                        </div>
+                        <button class="notif-action-btn premium-btn" onclick="showSection('premium')">Upgrade</button>
+                    </div>
+
+                    <div class="notification-item" data-type="alerts">
+                        <div class="notif-icon">🎁</div>
+                        <div class="notif-content">
+                            <div class="notif-text">You've earned <strong>250 bonus points</strong> for completing 10 quizzes!</div>
+                            <div class="notif-time">1 day ago</div>
                         </div>
                     </div>
                 </div>
+
                 <div class="notifications-footer">
-                    <a onclick="showSection('notifications')">View all notifications</a>
+                    <a onclick="showSection('notifications')">View all notifications →</a>
                 </div>
             </div>
         </header>
@@ -10235,7 +10456,98 @@ document.addEventListener('DOMContentLoaded', function() {
             unreadItems.forEach(item => item.classList.remove('unread'));
             document.getElementById('notificationBadge').textContent = '0';
             document.getElementById('notificationBadge').style.display = 'none';
+            document.getElementById('unreadCount').textContent = '0';
         }
+
+        // Enhanced Notification Functions
+        function filterNotifications(type) {
+            const items = document.querySelectorAll('.notification-item');
+            const buttons = document.querySelectorAll('.notif-filter-btn');
+
+            // Update active button
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            // Filter notifications
+            items.forEach(item => {
+                if (type === 'all') {
+                    item.style.display = 'flex';
+                } else {
+                    if (item.dataset.type === type) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        // Notification Action Functions
+        function viewPick(pickId) {
+            console.log('Viewing pick:', pickId);
+            showSection('picks');
+            // In real implementation, would scroll to/highlight specific pick
+        }
+
+        function viewEngagement() {
+            console.log('Viewing engagement');
+            showSection('profile');
+        }
+
+        function replyComment(commentId) {
+            console.log('Replying to comment:', commentId);
+            // In real implementation, would open comment reply modal
+            alert('Reply feature coming soon!');
+        }
+
+        function viewProfile(username) {
+            console.log('Viewing profile:', username);
+            showSection('profile');
+        }
+
+        function viewPost(postId) {
+            console.log('Viewing post:', postId);
+            showSection('feed');
+        }
+
+        function viewAchievements() {
+            console.log('Viewing achievements');
+            showSection('profile');
+        }
+
+        // Update unread count dynamically
+        function updateUnreadCount() {
+            const unreadItems = document.querySelectorAll('.notification-item.unread');
+            const count = unreadItems.length;
+            const badge = document.getElementById('notificationBadge');
+            const unreadCount = document.getElementById('unreadCount');
+
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'block';
+                unreadCount.textContent = count;
+            } else {
+                badge.style.display = 'none';
+                unreadCount.textContent = '0';
+            }
+        }
+
+        // Mark individual notification as read on click
+        document.addEventListener('DOMContentLoaded', function() {
+            const notificationItems = document.querySelectorAll('.notification-item');
+            notificationItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    // Don't mark as read if clicking action button
+                    if (!e.target.classList.contains('notif-action-btn')) {
+                        this.classList.remove('unread');
+                        updateUnreadCount();
+                    }
+                });
+            });
+
+            // Initial count update
+            updateUnreadCount();
+        });
 
         function toggleSearch() {
             alert('Search functionality coming soon!');
