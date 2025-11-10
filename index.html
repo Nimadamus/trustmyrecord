@@ -207,6 +207,39 @@
             transform: scale(1.05) !important;
         }
 
+        /* Header Auth Buttons (in header-actions) */
+        .header-auth-btn {
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+
+        .header-auth-btn.login-btn {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        .header-auth-btn.login-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+        }
+
+        .header-auth-btn.signup-btn {
+            background: var(--gradient-neon);
+            color: white;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        .header-auth-btn.signup-btn:hover {
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
+            transform: scale(1.05);
+        }
+
         .notifications-panel {
             position: absolute;
             top: 70px;
@@ -4784,6 +4817,8 @@
                 </div>
 
                 <div class="header-actions">
+                    <button onclick="showSection('login')" class="header-auth-btn login-btn" style="margin-right: 10px;">Login</button>
+                    <button onclick="showSection('signup')" class="header-auth-btn signup-btn" style="margin-right: 15px;">Sign Up</button>
                     <button class="header-icon-btn" onclick="toggleNotifications()" id="notificationBtn">
                         <span class="icon">🔔</span>
                         <span class="badge" id="notificationBadge">5</span>
@@ -4802,8 +4837,6 @@
                     <a onclick="showSection('profile')">Profile</a>
                     <a onclick="showSection('messages')">Messages</a>
                     <a onclick="showSection('premium')" class="premium-btn">⭐ Premium</a>
-                    <a onclick="showSection('login')" class="login-btn">Login</a>
-                    <a onclick="showSection('signup')" class="signup-btn">Sign Up</a>
                 </nav>
             </div>
 
