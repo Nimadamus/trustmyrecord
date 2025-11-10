@@ -177,6 +177,36 @@
             border-radius: 25px !important;
         }
 
+        .login-btn {
+            background: rgba(0, 255, 255, 0.1) !important;
+            border: 1px solid var(--neon-cyan) !important;
+            color: var(--neon-cyan) !important;
+            font-weight: 600 !important;
+            padding: 10px 20px !important;
+            border-radius: 25px !important;
+            transition: all 0.3s !important;
+        }
+
+        .login-btn:hover {
+            background: rgba(0, 255, 255, 0.2) !important;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4) !important;
+        }
+
+        .signup-btn {
+            background: var(--gradient-neon) !important;
+            color: white !important;
+            font-weight: 700 !important;
+            padding: 10px 20px !important;
+            border-radius: 25px !important;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3) !important;
+            transition: all 0.3s !important;
+        }
+
+        .signup-btn:hover {
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.6) !important;
+            transform: scale(1.05) !important;
+        }
+
         .notifications-panel {
             position: absolute;
             top: 70px;
@@ -4772,6 +4802,8 @@
                     <a onclick="showSection('profile')">Profile</a>
                     <a onclick="showSection('messages')">Messages</a>
                     <a onclick="showSection('premium')" class="premium-btn">⭐ Premium</a>
+                    <a onclick="showSection('login')" class="login-btn">Login</a>
+                    <a onclick="showSection('signup')" class="signup-btn">Sign Up</a>
                 </nav>
             </div>
 
@@ -7790,6 +7822,61 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
 
+            <!-- LOGIN SECTION -->
+            <div id="login" class="page-section">
+                <div class="picks-container">
+                    <div class="section-header">
+                        <h2>Welcome <span class="highlight">Back</span></h2>
+                        <p>Login to access your verified track record and continue dominating.</p>
+                    </div>
+
+                    <div class="pick-form" style="max-width: 500px; margin: 0 auto;">
+                        <form id="loginForm" onsubmit="handleLogin(event)">
+                            <div class="form-group">
+                                <label for="loginEmail">Email or Username</label>
+                                <input type="text" id="loginEmail" name="loginEmail" placeholder="Enter your email or username" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="loginPassword">Password</label>
+                                <input type="password" id="loginPassword" name="loginPassword" placeholder="Enter your password" required>
+                            </div>
+
+                            <div class="form-group" style="display: flex; justify-content: space-between; align-items: center;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" id="rememberMe" name="rememberMe">
+                                    <span style="color: var(--text-secondary); font-size: 14px;">Remember me</span>
+                                </label>
+                                <a onclick="alert('Password reset feature coming soon!')" style="color: var(--neon-cyan); font-size: 14px; cursor: pointer; text-decoration: none;">Forgot password?</a>
+                            </div>
+
+                            <button type="submit" class="submit-pick" style="width: 100%; margin-top: 10px;">LOGIN</button>
+                        </form>
+
+                        <div style="text-align: center; margin-top: 30px; padding-top: 30px; border-top: 1px solid var(--glass-border);">
+                            <p style="color: var(--text-secondary); margin-bottom: 15px;">Don't have an account?</p>
+                            <button onclick="showSection('signup')" class="submit-pick" style="background: var(--gradient-neon); width: 100%;">CREATE ACCOUNT</button>
+                        </div>
+
+                        <!-- Social Login Options -->
+                        <div style="margin-top: 30px;">
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <span style="color: var(--text-muted); font-size: 14px;">Or continue with</span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <button type="button" onclick="alert('Google login coming soon!')" style="background: rgba(255, 255, 255, 0.1); border: 1px solid var(--glass-border); color: var(--text-primary); padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
+                                    🔍 Google
+                                </button>
+                                <button type="button" onclick="alert('Twitter login coming soon!')" style="background: rgba(255, 255, 255, 0.1); border: 1px solid var(--glass-border); color: var(--text-primary); padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
+                                    🐦 Twitter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SIGNUP SECTION -->
             <div id="signup" class="page-section">
                 <div class="picks-container">
                     <div class="section-header">
@@ -7860,6 +7947,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
                             <button type="submit" class="submit-pick">CREATE ACCOUNT</button>
                         </form>
+
+                        <div style="text-align: center; margin-top: 30px; padding-top: 30px; border-top: 1px solid var(--glass-border);">
+                            <p style="color: var(--text-secondary); margin-bottom: 15px;">Already have an account?</p>
+                            <button onclick="showSection('login')" class="submit-pick" style="background: rgba(0, 255, 255, 0.1); border: 1px solid var(--neon-cyan); width: 100%;">LOGIN</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -10551,6 +10643,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function toggleSearch() {
             alert('Search functionality coming soon!');
+        }
+
+        // Login function
+        function handleLogin(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+
+            // In a real app, this would validate credentials with backend
+            console.log('Login attempt:', { email, password, rememberMe });
+
+            // Simulate successful login
+            alert('Login successful! Welcome back to Trust My Record.');
+
+            // Redirect to feed or dashboard
+            showSection('feed');
+
+            // Clear form
+            document.getElementById('loginForm').reset();
         }
 
         // Close notifications when clicking outside
