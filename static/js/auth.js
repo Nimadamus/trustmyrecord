@@ -231,6 +231,7 @@ class AuthSystem {
             <a onclick="showSection('app')">App</a>
             <a onclick="showSection('odds')">Live Odds</a>
             <a onclick="showSection('leaderboards')">Leaderboards</a>
+            <a onclick="showSection('login')" class="login-btn">Login</a>
             <a onclick="showSection('signup')" class="signup-btn">Sign Up</a>
         `;
 
