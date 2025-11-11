@@ -14,6 +14,9 @@ class AuthSystem {
         if (sessionUser) {
             this.currentUser = JSON.parse(sessionUser);
             this.updateUIForLoggedInUser();
+        } else {
+            // Initialize navigation for logged-out users
+            this.updateUIForLoggedOutUser();
         }
     }
 
@@ -235,9 +238,6 @@ class AuthSystem {
         if (nav) {
             nav.innerHTML = navHTML;
         }
-
-        // Redirect to home if on restricted page
-        showSection('home');
     }
 
     /**
