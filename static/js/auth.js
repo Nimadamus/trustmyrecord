@@ -9,6 +9,17 @@ class AuthSystem {
     }
 
     init() {
+        // Wait for DOM to be ready before updating UI
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.initializeUI();
+            });
+        } else {
+            this.initializeUI();
+        }
+    }
+
+    initializeUI() {
         // Check if user is already logged in
         const sessionUser = localStorage.getItem('currentUser');
         if (sessionUser) {
