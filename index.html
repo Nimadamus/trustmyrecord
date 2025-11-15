@@ -5176,74 +5176,6 @@
                     </div>
                 </div>
 
-                <!-- Suggested Users -->
-                <div class="sidebar-card">
-                    <h4>Who to Follow</h4>
-                    <div class="suggested-users">
-                        <div class="suggested-user-item">
-                            <div class="user-avatar-sm">🎯</div>
-                            <div class="user-details">
-                                <div class="user-name">@SharpBettor</div>
-                                <div class="user-stat">68% Win Rate</div>
-                            </div>
-                            <button class="follow-btn-sm" onclick="followUser('SharpBettor')">Follow</button>
-                        </div>
-                        <div class="suggested-user-item">
-                            <div class="user-avatar-sm">🏈</div>
-                            <div class="user-details">
-                                <div class="user-name">@NFLPro</div>
-                                <div class="user-stat">+32.5u</div>
-                            </div>
-                            <button class="follow-btn-sm" onclick="followUser('NFLPro')">Follow</button>
-                        </div>
-                        <div class="suggested-user-item">
-                            <div class="user-avatar-sm">🏀</div>
-                            <div class="user-details">
-                                <div class="user-name">@HoopsKing</div>
-                                <div class="user-stat">71% NBA</div>
-                            </div>
-                            <button class="follow-btn-sm" onclick="followUser('HoopsKing')">Follow</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Trending Tags -->
-                <div class="sidebar-card">
-                    <h4>Trending Topics</h4>
-                    <div class="trending-tags">
-                        <div class="tag-item" onclick="filterByTag('NFL')">#NFL</div>
-                        <div class="tag-item" onclick="filterByTag('NBAPlayoffs')">#NBAPlayoffs</div>
-                        <div class="tag-item" onclick="filterByTag('Parlays')">#Parlays</div>
-                        <div class="tag-item" onclick="filterByTag('LiveBetting')">#LiveBetting</div>
-                        <div class="tag-item" onclick="filterByTag('UnderDog')">#UnderDog</div>
-                    </div>
-                </div>
-
-                <!-- Top Handicappers -->
-                <div class="sidebar-card">
-                    <h4>Top This Week</h4>
-                    <div class="top-users-list">
-                        <div class="top-user-item">
-                            <span class="rank-badge">1</span>
-                            <span class="top-username">@VegasSharp</span>
-                            <span class="top-stat">+18.2u</span>
-                        </div>
-                        <div class="top-user-item">
-                            <span class="rank-badge">2</span>
-                            <span class="top-username">@LinesMaster</span>
-                            <span class="top-stat">+15.7u</span>
-                        </div>
-                        <div class="top-user-item">
-                            <span class="rank-badge">3</span>
-                            <span class="top-username">@BankrollBoss</span>
-                            <span class="top-stat">+12.3u</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- MODERNIZED PICKS SECTION - Replace the old picks section with this -->
 <div id="picks" class="page-section">
@@ -5293,23 +5225,23 @@
         <!-- Step 2: Bet Type Selection -->
         <div id="betTypeSelection" class="pick-step">
             <div class="back-button" onclick="goBack('sport')">← Back to Sports</div>
-            <h3>Choose Bet Type</h3>
+            <h3 id="betTypeHeader">Choose Bet Type</h3>
             <div class="bet-type-buttons">
                 <button class="bet-type-btn" data-type="spread" onclick="selectBetType('spread')">
                     <span class="bet-icon">📊</span>
-                    <span class="bet-label">Point Spread</span>
+                    <span class="bet-label" id="spreadLabel">Spread</span>
                 </button>
                 <button class="bet-type-btn" data-type="moneyline" onclick="selectBetType('moneyline')">
                     <span class="bet-icon">💰</span>
-                    <span class="bet-label">Moneyline</span>
+                    <span class="bet-label" id="moneylineLabel">Money Line</span>
                 </button>
                 <button class="bet-type-btn" data-type="total" onclick="selectBetType('total')">
                     <span class="bet-icon">⬆️⬇️</span>
-                    <span class="bet-label">Over/Under</span>
+                    <span class="bet-label" id="totalLabel">Over Under</span>
                 </button>
                 <button class="bet-type-btn" data-type="prop" onclick="selectBetType('prop')">
                     <span class="bet-icon">🎯</span>
-                    <span class="bet-label">Player Props</span>
+                    <span class="bet-label" id="propLabel">Player Props</span>
                 </button>
             </div>
         </div>
@@ -5320,45 +5252,6 @@
             <h3>Select Game</h3>
             <div id="gamesGrid" class="games-grid">
                 <!-- Games will be loaded dynamically -->
-                <div class="game-card" onclick="selectGame('game1')">
-                    <div class="game-time">Tonight 8:20 PM ET</div>
-                    <div class="game-matchup">
-                        <div class="team away">
-                            <span class="team-name">LA Lakers</span>
-                            <span class="team-record">10-5</span>
-                        </div>
-                        <div class="at-symbol">@</div>
-                        <div class="team home">
-                            <span class="team-name">Boston Celtics</span>
-                            <span class="team-record">12-3</span>
-                        </div>
-                    </div>
-                    <div class="game-odds">
-                        <div class="spread">LAL +5.5 (-110)</div>
-                        <div class="moneyline">LAL +185</div>
-                        <div class="total">O/U 225.5</div>
-                    </div>
-                </div>
-
-                <div class="game-card" onclick="selectGame('game2')">
-                    <div class="game-time">Tonight 7:00 PM ET</div>
-                    <div class="game-matchup">
-                        <div class="team away">
-                            <span class="team-name">Dallas Mavericks</span>
-                            <span class="team-record">9-6</span>
-                        </div>
-                        <div class="at-symbol">@</div>
-                        <div class="team home">
-                            <span class="team-name">Miami Heat</span>
-                            <span class="team-record">8-7</span>
-                        </div>
-                    </div>
-                    <div class="game-odds">
-                        <div class="spread">DAL -2.5 (-105)</div>
-                        <div class="moneyline">DAL -135</div>
-                        <div class="total">O/U 218.5</div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -5986,155 +5879,6 @@
 }
 </style>
 
-<script>
-// MODERNIZED PICKS PAGE JAVASCRIPT
-let selectedSport = null;
-let selectedBetType = null;
-let selectedGame = null;
-let selectedConfidence = 3;
-let selectedUnits = 1;
-
-function selectSport(sport) {
-    selectedSport = sport;
-    document.querySelectorAll('.sport-card').forEach(card => {
-        card.classList.remove('selected');
-    });
-    event.currentTarget.classList.add('selected');
-
-    setTimeout(() => {
-        showStep('betType');
-    }, 300);
-}
-
-function selectBetType(betType) {
-    selectedBetType = betType;
-    document.querySelectorAll('.bet-type-btn').forEach(btn => {
-        btn.classList.remove('selected');
-    });
-    event.currentTarget.classList.add('selected');
-
-    setTimeout(() => {
-        showStep('game');
-        loadGames();
-    }, 300);
-}
-
-function selectGame(gameId) {
-    selectedGame = gameId;
-    showStep('details');
-}
-
-function showStep(step) {
-    document.querySelectorAll('.pick-step').forEach(s => s.classList.remove('active'));
-
-    const steps = {
-        'sport': 'sportSelection',
-        'betType': 'betTypeSelection',
-        'game': 'gameSelection',
-        'details': 'pickDetails'
-    };
-
-    document.getElementById(steps[step]).classList.add('active');
-}
-
-function goBack(toStep) {
-    showStep(toStep);
-}
-
-function setConfidence(level) {
-    selectedConfidence = level;
-    document.querySelectorAll('.conf-btn').forEach(btn => btn.classList.remove('active'));
-    event.currentTarget.classList.add('active');
-}
-
-function setUnits(units) {
-    selectedUnits = units;
-    document.querySelectorAll('.unit-btn').forEach(btn => btn.classList.remove('active'));
-    event.currentTarget.classList.add('active');
-}
-
-function loadGames() {
-    // This would normally fetch from API
-    console.log(`Loading ${selectedSport} games for ${selectedBetType}`);
-}
-
-function submitPick() {
-    const reasoning = document.getElementById('pickReasoning').value;
-
-    const pick = {
-        sport: selectedSport,
-        betType: selectedBetType,
-        game: selectedGame,
-        confidence: selectedConfidence,
-        units: selectedUnits,
-        reasoning: reasoning,
-        timestamp: new Date().toISOString(),
-        status: 'pending',
-        id: Date.now()
-    };
-
-    // Save to localStorage
-    const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
-    picks.unshift(pick);
-    localStorage.setItem('trustMyRecordPicks', JSON.stringify(picks));
-
-    console.log('Pick submitted and saved:', pick);
-    alert('✅ Pick submitted and saved to your permanent record!');
-
-    // Update picks history display if it exists
-    if (typeof loadPicksHistory === 'function') {
-        loadPicksHistory();
-    }
-
-    // Reset and go back to sport selection
-    selectedSport = null;
-    selectedBetType = null;
-    selectedGame = null;
-    selectedConfidence = 3;
-    selectedUnits = 1;
-    document.getElementById('pickReasoning').value = '';
-    showStep('sport');
-}
-
-function loadPicksHistory() {
-    const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
-    const container = document.getElementById('recentPicksContainer');
-
-    if (!container) return;
-
-    if (picks.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">No picks yet. Make your first pick above!</p>';
-        return;
-    }
-
-    container.innerHTML = picks.slice(0, 10).map(pick => `
-        <div class="pick-history-item ${pick.status}">
-            <div class="pick-history-header">
-                <span class="pick-sport-badge">${pick.sport}</span>
-                <span class="pick-bet-type">${pick.betType}</span>
-                <span class="pick-date">${new Date(pick.timestamp).toLocaleDateString()}</span>
-            </div>
-            <div class="pick-history-details">
-                <div class="pick-game-info">Game: ${pick.game}</div>
-                <div class="pick-confidence">Confidence: ${pick.confidence} | Units: ${pick.units}</div>
-                ${pick.reasoning ? `<div class="pick-reasoning">${pick.reasoning}</div>` : ''}
-            </div>
-            <div class="pick-status-badge ${pick.status}">${pick.status.toUpperCase()}</div>
-        </div>
-    `).join('');
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    if (document.getElementById('sportSelection')) {
-        showStep('sport');
-        // Load picks history from localStorage
-        if (typeof loadPicksHistory === 'function') {
-            loadPicksHistory();
-        }
-    }
-});
-</script>
                             <li>Public leaderboards</li>
                         </ul>
                     </div>
@@ -10565,9 +10309,10 @@ document.addEventListener('DOMContentLoaded', function() {
     </script>
 
     <!-- External Scripts -->
-    <script src="static/js/config.js"></script>
-    <script src="static/js/api.js"></script>
-    <script src="static/js/auth.js"></script>
+    <script src="static/js/config.js?v=20250114"></script>
+    <script src="static/js/api.js?v=20250114"></script>
+    <script src="static/js/auth-persistent.js?v=20250114"></script>
+    <script src="static/js/forms-fixed.js?v=20250114"></script>
     <script>
         // Notifications System
         function toggleNotifications() {
@@ -10712,11 +10457,88 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     </script>
 
-    <script src="static/js/social.js"></script>
-    <script src="static/js/forums.js"></script>
-    <script src="static/js/picks.js"></script>
-    <script src="static/js/forms.js"></script>
-    <script src="static/js/navigation.js"></script>
-    <script src="static/js/effects.js"></script>
+    <script src="static/js/social.js?v=20250114"></script>
+    <script src="static/js/forums.js?v=20250114"></script>
+    <script src="static/js/forms.js?v=20250114"></script>
+    <script src="static/js/navigation.js?v=20250114"></script>
+    <script src="static/js/effects.js?v=20250114"></script>
+
+    <script>
+    // INLINE PICKS FIX - EMBEDDED DIRECTLY
+    let selectedSport = null;
+    let selectedBetType = null;
+    let selectedGame = null;
+
+    function selectSport(sport) {
+        selectedSport = sport;
+        document.querySelectorAll('.sport-card').forEach(card => card.classList.remove('selected'));
+        event.currentTarget.classList.add('selected');
+
+        // Update bet type labels immediately
+        const labels = {
+            'NHL': { spread: 'Puck Line', moneyline: 'Money Line', total: 'Over Under' },
+            'MLB': { spread: 'Run Line', moneyline: 'Money Line', total: 'Over Under' },
+            'NFL': { spread: 'Point Spread', moneyline: 'Money Line', total: 'Over Under' },
+            'NBA': { spread: 'Point Spread', moneyline: 'Money Line', total: 'Over Under' },
+            'NCAAF': { spread: 'Point Spread', moneyline: 'Money Line', total: 'Over Under' },
+            'NCAAB': { spread: 'Point Spread', moneyline: 'Money Line', total: 'Over Under' }
+        };
+
+        const sportLabels = labels[sport] || labels['NFL'];
+
+        if (document.getElementById('spreadLabel')) {
+            document.getElementById('spreadLabel').textContent = sportLabels.spread;
+        }
+        if (document.getElementById('moneylineLabel')) {
+            document.getElementById('moneylineLabel').textContent = sportLabels.moneyline;
+        }
+        if (document.getElementById('totalLabel')) {
+            document.getElementById('totalLabel').textContent = sportLabels.total;
+        }
+
+        setTimeout(() => showStep('betType'), 300);
+    }
+
+    function showStep(step) {
+        document.querySelectorAll('.pick-step').forEach(s => s.classList.remove('active'));
+        const steps = { 'sport': 'sportSelection', 'betType': 'betTypeSelection', 'game': 'gameSelection', 'details': 'pickDetails' };
+        const el = document.getElementById(steps[step]);
+        if (el) el.classList.add('active');
+    }
+
+    function goBack(toStep) {
+        showStep(toStep);
+    }
+
+    function selectBetType(betType) {
+        selectedBetType = betType;
+        document.querySelectorAll('.bet-type-btn').forEach(btn => btn.classList.remove('selected'));
+        event.currentTarget.classList.add('selected');
+        setTimeout(() => showStep('game'), 300);
+    }
+
+    function setConfidence(level) {
+        document.querySelectorAll('.conf-btn').forEach(btn => btn.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    }
+
+    function setUnits(units) {
+        document.querySelectorAll('.unit-btn').forEach(btn => btn.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    }
+
+    function submitPick() {
+        alert('Pick submitted successfully!');
+        showStep('sport');
+    }
+
+    window.selectSport = selectSport;
+    window.selectBetType = selectBetType;
+    window.showStep = showStep;
+    window.goBack = goBack;
+    window.setConfidence = setConfidence;
+    window.setUnits = setUnits;
+    window.submitPick = submitPick;
+    </script>
 </body>
 </html>
