@@ -5261,6 +5261,13 @@
         <!-- Step 4: Pick Details -->
         <div id="pickDetails" class="pick-step">
             <div class="back-button" onclick="goBack('game')">← Back to Games</div>
+            <h3>Select Your Pick</h3>
+
+            <!-- Pick Selection Container (dynamically populated) -->
+            <div id="pickSelectionContainer" style="margin-bottom: 30px;">
+                <!-- Will be populated by createPickSelection() function -->
+            </div>
+
             <h3>Confirm Your Pick</h3>
 
             <div class="pick-summary-card">
@@ -5584,6 +5591,78 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+/* Pick Selection Grid */
+.pick-selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 20px 0 30px 0;
+}
+
+.pick-option-card {
+    background: linear-gradient(135deg, var(--card-bg), rgba(15, 23, 42, 0.95));
+    border: 2px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.pick-option-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.08), transparent);
+    transition: left 0.6s;
+}
+
+.pick-option-card:hover::before {
+    left: 100%;
+}
+
+.pick-option-card:hover {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 8px 32px rgba(0, 255, 255, 0.25), 0 0 40px rgba(0, 255, 255, 0.15);
+    transform: translateY(-3px) scale(1.02);
+}
+
+.pick-option-card.selected {
+    border-color: var(--neon-gold);
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(15, 23, 42, 0.95));
+    box-shadow: 0 8px 32px rgba(255, 215, 0, 0.3), 0 0 40px rgba(255, 215, 0, 0.2);
+}
+
+.pick-option-card .pick-team {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+}
+
+.pick-option-card .pick-line {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--neon-cyan);
+    margin-bottom: 12px;
+}
+
+.pick-option-card.selected .pick-line {
+    color: var(--neon-gold);
+}
+
+.pick-option-card .pick-odds {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    font-weight: 600;
 }
 
 /* Pick Summary Card */
@@ -10360,6 +10439,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="static/js/config.js?v=20250114"></script>
     <script src="static/js/api.js?v=20250114"></script>
     <script src="static/js/auth-persistent.js?v=20250114"></script>
+    <script src="static/js/grading.js?v=20250114"></script>
     <script src="static/js/forms-fixed.js?v=20250114"></script>
     <script>
         // Notifications System

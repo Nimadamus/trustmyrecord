@@ -5,6 +5,8 @@
 let selectedSport = null;
 let selectedBetType = null;
 let selectedGame = null;
+let selectedGameObject = null; // Store the full game object
+let selectedPickSide = null; // Store which side user selected (home/away/over/under)
 let selectedConfidence = 3;
 let selectedUnits = 1;
 let currentFilteredGames = [];
@@ -304,6 +306,8 @@ function selectGameFromGrid(index) {
 
     const game = currentFilteredGames[index];
     selectedGame = `${game.away_team} @ ${game.home_team}`;
+    selectedGameObject = game; // Store full game object
+    selectedPickSide = null; // Reset pick side selection
 
     // Update summary display
     const summaryGame = document.getElementById('summaryGame');
@@ -311,23 +315,138 @@ function selectGameFromGrid(index) {
         summaryGame.textContent = selectedGame;
     }
 
-    // Auto-populate pick options based on bet type
-    const summaryPick = document.getElementById('summaryPick');
-    const summaryOdds = document.getElementById('summaryOdds');
+    // Create pick selection UI
+    createPickSelection(game);
+
+    showStep('details');
+}
+
+/**
+ * Create pick selection interface based on bet type
+ */
+function createPickSelection(game) {
+    const pickSelectionContainer = document.getElementById('pickSelectionContainer');
+    if (!pickSelectionContainer) {
+        console.warn('pickSelectionContainer not found');
+        return;
+    }
+
+    let html = '<div class="pick-selection-grid">';
 
     if (selectedBetType === 'spread' && game.odds.spread) {
         const homeSpread = game.odds.spread.home.point > 0 ? '+' + game.odds.spread.home.point : game.odds.spread.home.point;
-        if (summaryPick) summaryPick.textContent = `${game.home_team} ${homeSpread}`;
-        if (summaryOdds) summaryOdds.textContent = formatOdds(game.odds.spread.home.price);
+        const awaySpread = game.odds.spread.away.point > 0 ? '+' + game.odds.spread.away.point : game.odds.spread.away.point;
+
+        html += `
+            <div class="pick-option-card" onclick="selectPickSide('away')">
+                <div class="pick-team">${game.away_team}</div>
+                <div class="pick-line">${awaySpread}</div>
+                <div class="pick-odds">${formatOdds(game.odds.spread.away.price)}</div>
+            </div>
+            <div class="pick-option-card" onclick="selectPickSide('home')">
+                <div class="pick-team">${game.home_team}</div>
+                <div class="pick-line">${homeSpread}</div>
+                <div class="pick-odds">${formatOdds(game.odds.spread.home.price)}</div>
+            </div>
+        `;
     } else if (selectedBetType === 'moneyline' && game.odds.moneyline) {
-        if (summaryPick) summaryPick.textContent = `${game.home_team} ML`;
-        if (summaryOdds) summaryOdds.textContent = formatOdds(game.odds.moneyline.home);
+        html += `
+            <div class="pick-option-card" onclick="selectPickSide('away')">
+                <div class="pick-team">${game.away_team}</div>
+                <div class="pick-line">ML</div>
+                <div class="pick-odds">${formatOdds(game.odds.moneyline.away)}</div>
+            </div>
+            <div class="pick-option-card" onclick="selectPickSide('home')">
+                <div class="pick-team">${game.home_team}</div>
+                <div class="pick-line">ML</div>
+                <div class="pick-odds">${formatOdds(game.odds.moneyline.home)}</div>
+            </div>
+        `;
     } else if (selectedBetType === 'total' && game.odds.totals) {
-        if (summaryPick) summaryPick.textContent = `Over ${game.odds.totals.over.point}`;
-        if (summaryOdds) summaryOdds.textContent = formatOdds(game.odds.totals.over.price);
+        html += `
+            <div class="pick-option-card" onclick="selectPickSide('over')">
+                <div class="pick-team">OVER</div>
+                <div class="pick-line">${game.odds.totals.over.point}</div>
+                <div class="pick-odds">${formatOdds(game.odds.totals.over.price)}</div>
+            </div>
+            <div class="pick-option-card" onclick="selectPickSide('under')">
+                <div class="pick-team">UNDER</div>
+                <div class="pick-line">${game.odds.totals.under.point}</div>
+                <div class="pick-odds">${formatOdds(game.odds.totals.under.price)}</div>
+            </div>
+        `;
+    } else if (selectedBetType === 'prop') {
+        html += `
+            <div class="pick-option-card" onclick="selectPickSide('prop')">
+                <div class="pick-team">Enter Prop Manually</div>
+                <div class="pick-line">Various Props Available</div>
+            </div>
+        `;
     }
 
-    showStep('details');
+    html += '</div>';
+    pickSelectionContainer.innerHTML = html;
+}
+
+/**
+ * Select which side/pick the user wants
+ */
+function selectPickSide(side) {
+    selectedPickSide = side;
+
+    // Highlight selected option
+    document.querySelectorAll('.pick-option-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    event.currentTarget.classList.add('selected');
+
+    // Update summary display
+    updatePickSummary();
+}
+
+/**
+ * Update pick summary based on selection
+ */
+function updatePickSummary() {
+    if (!selectedGameObject || !selectedPickSide) return;
+
+    const game = selectedGameObject;
+    const summaryPick = document.getElementById('summaryPick');
+    const summaryOdds = document.getElementById('summaryOdds');
+
+    let pickText = '';
+    let oddsValue = '';
+
+    if (selectedBetType === 'spread' && game.odds.spread) {
+        if (selectedPickSide === 'home') {
+            const homeSpread = game.odds.spread.home.point > 0 ? '+' + game.odds.spread.home.point : game.odds.spread.home.point;
+            pickText = `${game.home_team} ${homeSpread}`;
+            oddsValue = formatOdds(game.odds.spread.home.price);
+        } else if (selectedPickSide === 'away') {
+            const awaySpread = game.odds.spread.away.point > 0 ? '+' + game.odds.spread.away.point : game.odds.spread.away.point;
+            pickText = `${game.away_team} ${awaySpread}`;
+            oddsValue = formatOdds(game.odds.spread.away.price);
+        }
+    } else if (selectedBetType === 'moneyline' && game.odds.moneyline) {
+        if (selectedPickSide === 'home') {
+            pickText = `${game.home_team} ML`;
+            oddsValue = formatOdds(game.odds.moneyline.home);
+        } else if (selectedPickSide === 'away') {
+            pickText = `${game.away_team} ML`;
+            oddsValue = formatOdds(game.odds.moneyline.away);
+        }
+    } else if (selectedBetType === 'total' && game.odds.totals) {
+        if (selectedPickSide === 'over') {
+            pickText = `Over ${game.odds.totals.over.point}`;
+            oddsValue = formatOdds(game.odds.totals.over.price);
+        } else if (selectedPickSide === 'under') {
+            pickText = `Under ${game.odds.totals.under.point}`;
+            oddsValue = formatOdds(game.odds.totals.under.price);
+        }
+    }
+
+    if (summaryPick) summaryPick.textContent = pickText;
+    if (summaryOdds) summaryOdds.textContent = oddsValue;
 }
 
 /**
@@ -378,26 +497,113 @@ function setUnits(units) {
  * Submit pick
  */
 function submitPick() {
-    const reasoning = document.getElementById('pickReasoning').value;
+    // Validate user is logged in
+    if (!auth || !auth.isLoggedIn()) {
+        alert('⚠️ You must be logged in to submit picks!');
+        if (typeof showSection === 'function') {
+            showSection('login');
+        }
+        return;
+    }
 
-    const pick = {
-        sport: selectedSport,
-        betType: selectedBetType,
-        game: selectedGame,
-        confidence: selectedConfidence,
-        units: selectedUnits,
-        reasoning: reasoning,
-        timestamp: new Date().toISOString(),
-        status: 'pending',
-        id: Date.now()
+    // Validate pick side is selected
+    if (!selectedPickSide) {
+        alert('⚠️ Please select which side you want to pick!');
+        return;
+    }
+
+    if (!selectedGameObject) {
+        alert('⚠️ Game data missing. Please try selecting the game again.');
+        return;
+    }
+
+    const reasoning = document.getElementById('pickReasoning').value;
+    const game = selectedGameObject;
+
+    // Get the actual pick details based on selection
+    let pickText = '';
+    let oddsValue = null;
+
+    if (selectedBetType === 'spread' && game.odds.spread) {
+        if (selectedPickSide === 'home') {
+            const homeSpread = game.odds.spread.home.point > 0 ? '+' + game.odds.spread.home.point : game.odds.spread.home.point;
+            pickText = `${game.home_team} ${homeSpread}`;
+            oddsValue = game.odds.spread.home.price;
+        } else if (selectedPickSide === 'away') {
+            const awaySpread = game.odds.spread.away.point > 0 ? '+' + game.odds.spread.away.point : game.odds.spread.away.point;
+            pickText = `${game.away_team} ${awaySpread}`;
+            oddsValue = game.odds.spread.away.price;
+        }
+    } else if (selectedBetType === 'moneyline' && game.odds.moneyline) {
+        if (selectedPickSide === 'home') {
+            pickText = `${game.home_team} ML`;
+            oddsValue = game.odds.moneyline.home;
+        } else if (selectedPickSide === 'away') {
+            pickText = `${game.away_team} ML`;
+            oddsValue = game.odds.moneyline.away;
+        }
+    } else if (selectedBetType === 'total' && game.odds.totals) {
+        if (selectedPickSide === 'over') {
+            pickText = `Over ${game.odds.totals.over.point}`;
+            oddsValue = game.odds.totals.over.price;
+        } else if (selectedPickSide === 'under') {
+            pickText = `Under ${game.odds.totals.under.point}`;
+            oddsValue = game.odds.totals.under.price;
+        }
+    } else if (selectedBetType === 'prop') {
+        pickText = reasoning || 'Custom Prop Bet';
+        oddsValue = -110; // Default prop odds
+    }
+
+    // Map sport display name to API key for sport field
+    const sportKeyMap = {
+        'NFL': 'americanfootball_nfl',
+        'NBA': 'basketball_nba',
+        'NHL': 'icehockey_nhl',
+        'MLB': 'baseball_mlb',
+        'NCAAF': 'americanfootball_ncaaf',
+        'NCAAB': 'basketball_ncaab'
     };
 
-    // Save to localStorage
-    const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
-    picks.unshift(pick);
-    localStorage.setItem('trustMyRecordPicks', JSON.stringify(picks));
+    // Create complete pick object matching expected schema
+    const pick = {
+        id: 'pick_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+        userId: auth.currentUser.id,
+        username: auth.currentUser.username,
+        timestamp: new Date().toISOString(),
+        sport: sportKeyMap[selectedSport] || selectedSport.toLowerCase(),
+        league: selectedSport, // Display name (NFL, NBA, etc.)
+        team1: game.away_team,
+        team2: game.home_team,
+        betType: selectedBetType,
+        pick: pickText,
+        pickSide: selectedPickSide, // Store which side they picked
+        odds: oddsValue,
+        units: selectedUnits,
+        confidence: selectedConfidence,
+        reasoning: reasoning || '',
+        status: 'pending',
+        profit: 0, // Will be calculated when graded
+        gameId: game.id, // Store API game ID for grading
+        commenceTime: game.commence_time,
+        // Social engagement fields
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        isPublic: true // Make picks public by default
+    };
 
-    console.log('Pick submitted and saved:', pick);
+    // Save to localStorage with CORRECT key (snake_case)
+    const picks = JSON.parse(localStorage.getItem('trustmyrecord_picks') || '[]');
+    picks.unshift(pick);
+    localStorage.setItem('trustmyrecord_picks', JSON.stringify(picks));
+
+    console.log('✅ Pick submitted and saved:', pick);
+
+    // Update user stats - increment total picks
+    auth.currentUser.stats.totalPicks += 1;
+    auth.updateProfile({ stats: auth.currentUser.stats });
+
     alert('✅ Pick submitted and saved to your permanent record!');
 
     // Update picks history display if it exists
@@ -405,10 +611,17 @@ function submitPick() {
         loadPicksHistory();
     }
 
+    // Refresh feed if social system exists
+    if (typeof renderFeed === 'function') {
+        renderFeed();
+    }
+
     // Reset and go back to sport selection
     selectedSport = null;
     selectedBetType = null;
     selectedGame = null;
+    selectedGameObject = null;
+    selectedPickSide = null;
     selectedConfidence = 3;
     selectedUnits = 1;
     document.getElementById('pickReasoning').value = '';
@@ -419,6 +632,12 @@ function submitPick() {
         gamesGrid.innerHTML = '';
     }
 
+    // Clear pick selection
+    const pickSelectionContainer = document.getElementById('pickSelectionContainer');
+    if (pickSelectionContainer) {
+        pickSelectionContainer.innerHTML = '';
+    }
+
     showStep('sport');
 }
 
@@ -426,31 +645,57 @@ function submitPick() {
  * Load picks history
  */
 function loadPicksHistory() {
-    const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+    const picks = JSON.parse(localStorage.getItem('trustmyrecord_picks') || '[]');
     const container = document.getElementById('recentPicksContainer');
 
     if (!container) return;
 
-    if (picks.length === 0) {
+    // Filter to current user's picks if logged in
+    let userPicks = picks;
+    if (auth && auth.isLoggedIn()) {
+        userPicks = picks.filter(p => p.userId === auth.currentUser.id);
+    }
+
+    if (userPicks.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">No picks yet. Make your first pick above!</p>';
         return;
     }
 
-    container.innerHTML = picks.slice(0, 10).map(pick => `
-        <div class="pick-history-item ${pick.status}">
-            <div class="pick-history-header">
-                <span class="pick-sport-badge">${pick.sport}</span>
-                <span class="pick-bet-type">${pick.betType}</span>
-                <span class="pick-date">${new Date(pick.timestamp).toLocaleDateString()}</span>
+    container.innerHTML = userPicks.slice(0, 10).map(pick => {
+        // Handle both old format (pick.game) and new format (pick.team1/team2)
+        const gameDisplay = pick.game || `${pick.team1} @ ${pick.team2}`;
+        const leagueDisplay = pick.league || pick.sport.toUpperCase();
+
+        // Status color
+        let statusClass = pick.status;
+        if (pick.status === 'win') statusClass = 'win';
+        else if (pick.status === 'loss') statusClass = 'loss';
+        else if (pick.status === 'push') statusClass = 'push';
+
+        return `
+            <div class="pick-history-item ${statusClass}">
+                <div class="pick-history-header">
+                    <span class="pick-sport-badge">${leagueDisplay}</span>
+                    <span class="pick-bet-type">${pick.betType}</span>
+                    <span class="pick-date">${new Date(pick.timestamp).toLocaleDateString()}</span>
+                </div>
+                <div class="pick-history-details">
+                    <div class="pick-game-info">
+                        <strong>${gameDisplay}</strong>
+                    </div>
+                    <div class="pick-selection">
+                        Pick: ${pick.pick} ${pick.odds ? `(${formatOdds(pick.odds)})` : ''}
+                    </div>
+                    <div class="pick-confidence">
+                        Confidence: ${pick.confidence}/5 | Units: ${pick.units}
+                        ${pick.profit ? ` | Profit: ${pick.profit > 0 ? '+' : ''}${pick.profit.toFixed(2)}u` : ''}
+                    </div>
+                    ${pick.reasoning ? `<div class="pick-reasoning">"${pick.reasoning}"</div>` : ''}
+                </div>
+                <div class="pick-status-badge ${statusClass}">${pick.status.toUpperCase()}</div>
             </div>
-            <div class="pick-history-details">
-                <div class="pick-game-info">Game: ${pick.game}</div>
-                <div class="pick-confidence">Confidence: ${pick.confidence} | Units: ${pick.units}</div>
-                ${pick.reasoning ? `<div class="pick-reasoning">${pick.reasoning}</div>` : ''}
-            </div>
-            <div class="pick-status-badge ${pick.status}">${pick.status.toUpperCase()}</div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // Initialize on page load
@@ -487,6 +732,9 @@ if (typeof window !== 'undefined') {
     window.selectSport = selectSport;
     window.selectBetType = selectBetType;
     window.selectGameFromGrid = selectGameFromGrid;
+    window.selectPickSide = selectPickSide;
+    window.updatePickSummary = updatePickSummary;
+    window.createPickSelection = createPickSelection;
     window.loadGames = loadGames;
     window.formatOdds = formatOdds;
     window.showStep = showStep;

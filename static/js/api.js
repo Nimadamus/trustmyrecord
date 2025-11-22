@@ -53,19 +53,41 @@ class SportsAPI {
             const remaining = response.headers.get('x-requests-remaining');
             const used = response.headers.get('x-requests-used');
             if (remaining) {
-                console.log(`API Requests - Used: ${used}, Remaining: ${remaining}`);
+                console.log(`📊 API Requests - Used: ${used}, Remaining: ${remaining}`);
+
+                // Warn if running low
+                if (parseInt(remaining) < 50) {
+                    console.warn(`⚠️ API quota running low! Only ${remaining} requests remaining.`);
+                }
             }
 
-            if (!response.ok) throw new Error('Failed to fetch games');
+            // Handle different error responses
+            if (!response.ok) {
+                if (response.status === 401) {
+                    throw new Error('Invalid API key. Please check your configuration.');
+                } else if (response.status === 429) {
+                    throw new Error('API quota exceeded. Please wait before making more requests.');
+                } else if (response.status === 404) {
+                    throw new Error(`Sport "${sportKey}" not found or not available.`);
+                } else {
+                    throw new Error(`API error: ${response.status} ${response.statusText}`);
+                }
+            }
 
             const data = await response.json();
-            console.log(`Fetched ${data.length} games for ${sportKey}`);
+            console.log(`✅ Fetched ${data.length} games for ${sportKey}`);
 
             const games = this.formatGamesData(data);
             this.setCache(cacheKey, games);
             return games;
         } catch (error) {
-            console.error('Error fetching games:', error);
+            console.error('❌ Error fetching games:', error.message);
+
+            // Show user-friendly error message
+            if (typeof window !== 'undefined' && window.showAPIError) {
+                window.showAPIError(error.message);
+            }
+
             return [];
         }
     }
@@ -112,18 +134,50 @@ class SportsAPI {
      * Fetch scores for grading picks
      */
     async getScores(sportKey, daysFrom = 1) {
+        const cacheKey = `scores_${sportKey}_${daysFrom}`;
+        const cached = this.getFromCache(cacheKey);
+        if (cached) return cached;
+
         try {
             const url = `${this.baseUrl}/sports/${sportKey}/scores?` +
                         `apiKey=${this.apiKey}&` +
                         `daysFrom=${daysFrom}`;
 
             const response = await fetch(url);
-            if (!response.ok) throw new Error('Failed to fetch scores');
+
+            // Log API usage
+            const remaining = response.headers.get('x-requests-remaining');
+            const used = response.headers.get('x-requests-used');
+            if (remaining) {
+                console.log(`📊 API Requests - Used: ${used}, Remaining: ${remaining}`);
+
+                if (parseInt(remaining) < 50) {
+                    console.warn(`⚠️ API quota running low! Only ${remaining} requests remaining.`);
+                }
+            }
+
+            // Handle different error responses
+            if (!response.ok) {
+                if (response.status === 401) {
+                    throw new Error('Invalid API key. Please check your configuration.');
+                } else if (response.status === 429) {
+                    console.warn('⚠️ API quota exceeded for scores. Skipping grading for now.');
+                    return [];
+                } else if (response.status === 404) {
+                    console.warn(`No scores available for ${sportKey} from ${daysFrom} days ago.`);
+                    return [];
+                } else {
+                    throw new Error(`API error: ${response.status} ${response.statusText}`);
+                }
+            }
 
             const data = await response.json();
+            console.log(`✅ Fetched ${data.length} scores for ${sportKey}`);
+
+            this.setCache(cacheKey, data);
             return data;
         } catch (error) {
-            console.error('Error fetching scores:', error);
+            console.error('❌ Error fetching scores:', error.message);
             return [];
         }
     }
