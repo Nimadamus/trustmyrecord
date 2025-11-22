@@ -278,19 +278,24 @@ class PickGradingSystem {
     }
 
     /**
-     * Calculate profit based on American odds
+     * Calculate profit based on American odds using "to win" system
+     * Units represent the amount you want to WIN
      */
     calculateProfit(odds, units, won) {
-        if (!won) {
-            return -units;
+        if (won) {
+            // Always win the specified units
+            return units;
         }
 
+        // Calculate loss amount (risk)
         if (odds > 0) {
-            // Positive odds (underdog)
-            return (odds / 100) * units;
+            // Positive odds (underdog) - risk less to win units
+            // Example: +150 odds, to win 5 units, you risk 3.33 units
+            return -(100 / odds) * units;
         } else {
-            // Negative odds (favorite)
-            return (100 / Math.abs(odds)) * units;
+            // Negative odds (favorite) - risk more to win units
+            // Example: -150 odds, to win 5 units, you risk 7.5 units
+            return -(Math.abs(odds) / 100) * units;
         }
     }
 
@@ -398,13 +403,6 @@ class PickGradingSystem {
         };
     }
 
-    /**
-     * Manually trigger grading (for testing)
-     */
-    async gradeNow() {
-        console.log('🔄 Manual grading triggered');
-        await this.gradeAllPendingPicks();
-    }
 }
 
 // Initialize grading system
