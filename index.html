@@ -5476,40 +5476,67 @@
 }
 
 .game-card {
-    background: var(--card-bg);
+    background: linear-gradient(135deg, var(--card-bg), rgba(15, 23, 42, 0.95));
     border: 2px solid var(--glass-border);
     border-radius: 16px;
-    padding: 20px;
+    padding: 24px;
     cursor: pointer;
     transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.game-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.08), transparent);
+    transition: left 0.6s;
+}
+
+.game-card:hover::before {
+    left: 100%;
 }
 
 .game-card:hover {
     border-color: var(--neon-cyan);
-    box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
-    transform: translateY(-3px);
+    box-shadow: 0 8px 32px rgba(0, 255, 255, 0.25), 0 0 40px rgba(0, 255, 255, 0.15);
+    transform: translateY(-5px) scale(1.02);
 }
 
 .game-time {
     color: var(--neon-gold);
-    font-weight: 600;
-    font-size: 0.9rem;
-    margin-bottom: 15px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(255, 215, 0, 0.1);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
 }
 
 .game-matchup {
-    margin-bottom: 15px;
+    margin-bottom: 18px;
 }
 
 .team {
     display: flex;
     justify-content: space-between;
-    padding: 10px 0;
+    align-items: center;
+    padding: 12px 0;
 }
 
 .team-name {
     font-weight: 700;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
+    color: var(--text-primary);
+    letter-spacing: 0.3px;
 }
 
 .team-record {
@@ -5525,20 +5552,38 @@
 }
 
 .game-odds {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     padding-top: 15px;
     border-top: 1px solid var(--glass-border);
 }
 
 .game-odds > div {
-    background: rgba(0, 255, 255, 0.05);
-    padding: 8px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    text-align: center;
-    color: var(--text-secondary);
+    background: linear-gradient(135deg, rgba(0, 255, 255, 0.08), rgba(255, 215, 0, 0.05));
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    text-align: left;
+    color: var(--text-primary);
+    font-weight: 600;
+    border: 1px solid rgba(0, 255, 255, 0.15);
+    transition: all 0.2s ease;
+}
+
+.game-odds > div:hover {
+    background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(255, 215, 0, 0.1));
+    border-color: var(--neon-cyan);
+    transform: translateX(3px);
+}
+
+.game-odds .spread,
+.game-odds .moneyline,
+.game-odds .total,
+.game-odds .prop {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 /* Pick Summary Card */
@@ -10465,83 +10510,6 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="static/js/forms.js?v=20250114"></script>
     <script src="static/js/navigation.js?v=20250114"></script>
     <script src="static/js/effects.js?v=20250114"></script>
-
-    <script>
-    // INLINE PICKS FIX - EMBEDDED DIRECTLY
-    let selectedSport = null;
-    let selectedBetType = null;
-    let selectedGame = null;
-
-    function selectSport(sport) {
-        selectedSport = sport;
-        document.querySelectorAll('.sport-card').forEach(card => card.classList.remove('selected'));
-        event.currentTarget.classList.add('selected');
-
-        // Update bet type labels immediately
-        const labels = {
-            'NHL': { spread: 'Puck Line', moneyline: 'Money Line', total: 'Over Under' },
-            'MLB': { spread: 'Run Line', moneyline: 'Money Line', total: 'Over Under' },
-            'NFL': { spread: 'Point Spread', moneyline: 'Money Line', total: 'Over Under' },
-            'NBA': { spread: 'Point Spread', moneyline: 'Money Line', total: 'Over Under' },
-            'NCAAF': { spread: 'Point Spread', moneyline: 'Money Line', total: 'Over Under' },
-            'NCAAB': { spread: 'Point Spread', moneyline: 'Money Line', total: 'Over Under' }
-        };
-
-        const sportLabels = labels[sport] || labels['NFL'];
-
-        if (document.getElementById('spreadLabel')) {
-            document.getElementById('spreadLabel').textContent = sportLabels.spread;
-        }
-        if (document.getElementById('moneylineLabel')) {
-            document.getElementById('moneylineLabel').textContent = sportLabels.moneyline;
-        }
-        if (document.getElementById('totalLabel')) {
-            document.getElementById('totalLabel').textContent = sportLabels.total;
-        }
-
-        setTimeout(() => showStep('betType'), 300);
-    }
-
-    function showStep(step) {
-        document.querySelectorAll('.pick-step').forEach(s => s.classList.remove('active'));
-        const steps = { 'sport': 'sportSelection', 'betType': 'betTypeSelection', 'game': 'gameSelection', 'details': 'pickDetails' };
-        const el = document.getElementById(steps[step]);
-        if (el) el.classList.add('active');
-    }
-
-    function goBack(toStep) {
-        showStep(toStep);
-    }
-
-    function selectBetType(betType) {
-        selectedBetType = betType;
-        document.querySelectorAll('.bet-type-btn').forEach(btn => btn.classList.remove('selected'));
-        event.currentTarget.classList.add('selected');
-        setTimeout(() => showStep('game'), 300);
-    }
-
-    function setConfidence(level) {
-        document.querySelectorAll('.conf-btn').forEach(btn => btn.classList.remove('active'));
-        event.currentTarget.classList.add('active');
-    }
-
-    function setUnits(units) {
-        document.querySelectorAll('.unit-btn').forEach(btn => btn.classList.remove('active'));
-        event.currentTarget.classList.add('active');
-    }
-
-    function submitPick() {
-        alert('Pick submitted successfully!');
-        showStep('sport');
-    }
-
-    window.selectSport = selectSport;
-    window.selectBetType = selectBetType;
-    window.showStep = showStep;
-    window.goBack = goBack;
-    window.setConfidence = setConfidence;
-    window.setUnits = setUnits;
-    window.submitPick = submitPick;
-    </script>
+    <script src="static/js/picks-complete-fix.js?v=20250114"></script>
 </body>
 </html>

@@ -1,8 +1,6 @@
 // COMPLETE FIX FOR MAKE YOUR PICK MODULE
 // This file completely replaces the broken inline JavaScript
 
-alert('PICKS-COMPLETE-FIX.JS IS LOADING NOW');
-
 // Global state
 let selectedSport = null;
 let selectedBetType = null;
