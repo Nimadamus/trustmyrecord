@@ -1,8 +1,6 @@
 // COMPLETE FIX FOR MAKE YOUR PICK MODULE
 // This file completely replaces the broken inline JavaScript
 
-alert('PICKS-COMPLETE-FIX.JS IS LOADING NOW');
-
 // Global state
 let selectedSport = null;
 let selectedBetType = null;
@@ -221,49 +219,69 @@ async function loadGames() {
                 dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
             }
 
-            // Generate odds display based on bet type
+            // Generate clickable odds options based on bet type
             let oddsDisplay = '';
             if (selectedBetType === 'spread' && game.odds.spread) {
                 const homeSpread = game.odds.spread.home.point > 0 ? '+' + game.odds.spread.home.point : game.odds.spread.home.point;
                 const awaySpread = game.odds.spread.away.point > 0 ? '+' + game.odds.spread.away.point : game.odds.spread.away.point;
 
-                // Get short team names (last word)
-                const awayShort = game.away_team.split(' ').pop();
-                const homeShort = game.home_team.split(' ').pop();
-
                 oddsDisplay = `
-                    <div class="game-odds">
-                        <div class="spread">${awayShort} ${awaySpread} (${formatOdds(game.odds.spread.away.price)})</div>
-                        <div class="spread">${homeShort} ${homeSpread} (${formatOdds(game.odds.spread.home.price)})</div>
+                    <div class="game-odds clickable">
+                        <div class="bet-option" onclick="selectBetOption(${index}, 'away', '${game.away_team} ${awaySpread}', ${game.odds.spread.away.price})">
+                            <div class="bet-team">${game.away_team}</div>
+                            <div class="bet-line">${awaySpread}</div>
+                            <div class="bet-odds">${formatOdds(game.odds.spread.away.price)}</div>
+                        </div>
+                        <div class="bet-option" onclick="selectBetOption(${index}, 'home', '${game.home_team} ${homeSpread}', ${game.odds.spread.home.price})">
+                            <div class="bet-team">${game.home_team}</div>
+                            <div class="bet-line">${homeSpread}</div>
+                            <div class="bet-odds">${formatOdds(game.odds.spread.home.price)}</div>
+                        </div>
                     </div>
                 `;
             } else if (selectedBetType === 'moneyline' && game.odds.moneyline) {
-                const awayShort = game.away_team.split(' ').pop();
-                const homeShort = game.home_team.split(' ').pop();
-
                 oddsDisplay = `
-                    <div class="game-odds">
-                        <div class="moneyline">${awayShort} ${formatOdds(game.odds.moneyline.away)}</div>
-                        <div class="moneyline">${homeShort} ${formatOdds(game.odds.moneyline.home)}</div>
+                    <div class="game-odds clickable">
+                        <div class="bet-option" onclick="selectBetOption(${index}, 'away', '${game.away_team} ML', ${game.odds.moneyline.away})">
+                            <div class="bet-team">${game.away_team}</div>
+                            <div class="bet-line">ML</div>
+                            <div class="bet-odds">${formatOdds(game.odds.moneyline.away)}</div>
+                        </div>
+                        <div class="bet-option" onclick="selectBetOption(${index}, 'home', '${game.home_team} ML', ${game.odds.moneyline.home})">
+                            <div class="bet-team">${game.home_team}</div>
+                            <div class="bet-line">ML</div>
+                            <div class="bet-odds">${formatOdds(game.odds.moneyline.home)}</div>
+                        </div>
                     </div>
                 `;
             } else if (selectedBetType === 'total' && game.odds.totals) {
                 oddsDisplay = `
-                    <div class="game-odds">
-                        <div class="total">Over ${game.odds.totals.over.point} (${formatOdds(game.odds.totals.over.price)})</div>
-                        <div class="total">Under ${game.odds.totals.under.point} (${formatOdds(game.odds.totals.under.price)})</div>
+                    <div class="game-odds clickable">
+                        <div class="bet-option" onclick="selectBetOption(${index}, 'over', 'Over ${game.odds.totals.over.point}', ${game.odds.totals.over.price})">
+                            <div class="bet-team">OVER</div>
+                            <div class="bet-line">${game.odds.totals.over.point}</div>
+                            <div class="bet-odds">${formatOdds(game.odds.totals.over.price)}</div>
+                        </div>
+                        <div class="bet-option" onclick="selectBetOption(${index}, 'under', 'Under ${game.odds.totals.under.point}', ${game.odds.totals.under.price})">
+                            <div class="bet-team">UNDER</div>
+                            <div class="bet-line">${game.odds.totals.under.point}</div>
+                            <div class="bet-odds">${formatOdds(game.odds.totals.under.price)}</div>
+                        </div>
                     </div>
                 `;
             } else if (selectedBetType === 'prop') {
                 oddsDisplay = `
-                    <div class="game-odds">
-                        <div class="prop">Player props available</div>
+                    <div class="game-odds clickable">
+                        <div class="bet-option prop-option" onclick="selectBetOption(${index}, 'prop', 'Player Prop', -110)">
+                            <div class="bet-team">Player Props</div>
+                            <div class="bet-line">Select to customize</div>
+                        </div>
                     </div>
                 `;
             }
 
             return `
-                <div class="game-card" onclick="selectGameFromGrid(${index})">
+                <div class="game-card">
                     <div class="game-time">${dateStr}</div>
                     <div class="game-matchup">
                         <div class="team away">
@@ -274,6 +292,7 @@ async function loadGames() {
                             <span class="team-name">${game.home_team}</span>
                         </div>
                     </div>
+                    <div class="pick-instruction">Click your pick below:</div>
                     ${oddsDisplay}
                 </div>
             `;
@@ -296,40 +315,54 @@ function formatOdds(odds) {
 }
 
 /**
- * Select game from grid
+ * Select a specific bet option from a game
  */
-function selectGameFromGrid(index) {
-    if (!currentFilteredGames || !currentFilteredGames[index]) {
-        console.error('Game not found at index:', index);
+let selectedPickText = '';
+let selectedOddsValue = 0;
+
+function selectBetOption(gameIndex, side, pickText, odds) {
+    if (!currentFilteredGames || !currentFilteredGames[gameIndex]) {
+        console.error('Game not found at index:', gameIndex);
         return;
     }
 
-    const game = currentFilteredGames[index];
+    const game = currentFilteredGames[gameIndex];
     selectedGame = `${game.away_team} @ ${game.home_team}`;
+    selectedPickText = pickText;
+    selectedOddsValue = odds;
 
     // Update summary display
     const summaryGame = document.getElementById('summaryGame');
-    if (summaryGame) {
-        summaryGame.textContent = selectedGame;
-    }
-
-    // Auto-populate pick options based on bet type
     const summaryPick = document.getElementById('summaryPick');
     const summaryOdds = document.getElementById('summaryOdds');
 
-    if (selectedBetType === 'spread' && game.odds.spread) {
-        const homeSpread = game.odds.spread.home.point > 0 ? '+' + game.odds.spread.home.point : game.odds.spread.home.point;
-        if (summaryPick) summaryPick.textContent = `${game.home_team} ${homeSpread}`;
-        if (summaryOdds) summaryOdds.textContent = formatOdds(game.odds.spread.home.price);
-    } else if (selectedBetType === 'moneyline' && game.odds.moneyline) {
-        if (summaryPick) summaryPick.textContent = `${game.home_team} ML`;
-        if (summaryOdds) summaryOdds.textContent = formatOdds(game.odds.moneyline.home);
-    } else if (selectedBetType === 'total' && game.odds.totals) {
-        if (summaryPick) summaryPick.textContent = `Over ${game.odds.totals.over.point}`;
-        if (summaryOdds) summaryOdds.textContent = formatOdds(game.odds.totals.over.price);
-    }
+    if (summaryGame) summaryGame.textContent = selectedGame;
+    if (summaryPick) summaryPick.textContent = pickText;
+    if (summaryOdds) summaryOdds.textContent = formatOdds(odds);
+
+    console.log(`Selected: ${pickText} (${formatOdds(odds)}) for game: ${selectedGame}`);
 
     showStep('details');
+}
+
+/**
+ * Legacy function for backwards compatibility
+ */
+function selectGameFromGrid(index) {
+    // Default to home team/over for backwards compatibility
+    const game = currentFilteredGames[index];
+    if (!game) return;
+
+    if (selectedBetType === 'spread' && game.odds.spread) {
+        const homeSpread = game.odds.spread.home.point > 0 ? '+' + game.odds.spread.home.point : game.odds.spread.home.point;
+        selectBetOption(index, 'home', `${game.home_team} ${homeSpread}`, game.odds.spread.home.price);
+    } else if (selectedBetType === 'moneyline' && game.odds.moneyline) {
+        selectBetOption(index, 'home', `${game.home_team} ML`, game.odds.moneyline.home);
+    } else if (selectedBetType === 'total' && game.odds.totals) {
+        selectBetOption(index, 'over', `Over ${game.odds.totals.over.point}`, game.odds.totals.over.price);
+    } else {
+        selectBetOption(index, 'prop', 'Player Prop', -110);
+    }
 }
 
 /**
@@ -386,6 +419,8 @@ function submitPick() {
         sport: selectedSport,
         betType: selectedBetType,
         game: selectedGame,
+        pick: selectedPickText,
+        odds: selectedOddsValue,
         confidence: selectedConfidence,
         units: selectedUnits,
         reasoning: reasoning,
@@ -400,20 +435,32 @@ function submitPick() {
     localStorage.setItem('trustMyRecordPicks', JSON.stringify(picks));
 
     console.log('Pick submitted and saved:', pick);
-    alert('✅ Pick submitted and saved to your permanent record!');
+
+    // Show success message without alert
+    const successMsg = document.createElement('div');
+    successMsg.className = 'pick-success-toast';
+    successMsg.innerHTML = '✅ Pick locked in!';
+    document.body.appendChild(successMsg);
+    setTimeout(() => successMsg.remove(), 2000);
 
     // Update picks history display if it exists
-    if (typeof loadPicksHistory === 'function') {
-        loadPicksHistory();
-    }
+    loadPicksHistory();
 
     // Reset and go back to sport selection
     selectedSport = null;
     selectedBetType = null;
     selectedGame = null;
+    selectedPickText = '';
+    selectedOddsValue = 0;
     selectedConfidence = 3;
     selectedUnits = 1;
     document.getElementById('pickReasoning').value = '';
+
+    // Reset confidence and units buttons
+    document.querySelectorAll('.conf-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector('.conf-btn[data-conf="3"]')?.classList.add('active');
+    document.querySelectorAll('.unit-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector('.unit-btn[data-units="1"]')?.classList.add('active');
 
     // Clear game grid
     const gamesGrid = document.getElementById('gamesGrid');
@@ -446,9 +493,13 @@ function loadPicksHistory() {
                 <span class="pick-date">${new Date(pick.timestamp).toLocaleDateString()}</span>
             </div>
             <div class="pick-history-details">
-                <div class="pick-game-info">Game: ${pick.game}</div>
-                <div class="pick-confidence">Confidence: ${pick.confidence} | Units: ${pick.units}</div>
-                ${pick.reasoning ? `<div class="pick-reasoning">${pick.reasoning}</div>` : ''}
+                <div class="pick-game-info">${pick.game}</div>
+                <div class="pick-selection">
+                    <strong>${pick.pick || 'N/A'}</strong>
+                    ${pick.odds ? `<span class="pick-odds">(${formatOdds(pick.odds)})</span>` : ''}
+                </div>
+                <div class="pick-confidence">Confidence: ${'🔥'.repeat(pick.confidence)} | Units: ${pick.units}</div>
+                ${pick.reasoning ? `<div class="pick-reasoning">"${pick.reasoning}"</div>` : ''}
             </div>
             <div class="pick-status-badge ${pick.status}">${pick.status.toUpperCase()}</div>
         </div>
@@ -488,6 +539,7 @@ document.addEventListener('DOMContentLoaded', function() {
 if (typeof window !== 'undefined') {
     window.selectSport = selectSport;
     window.selectBetType = selectBetType;
+    window.selectBetOption = selectBetOption;
     window.selectGameFromGrid = selectGameFromGrid;
     window.loadGames = loadGames;
     window.formatOdds = formatOdds;
