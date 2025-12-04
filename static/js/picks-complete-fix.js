@@ -1,7 +1,6 @@
 // COMPLETE FIX FOR MAKE YOUR PICK MODULE
 // This file completely replaces the broken inline JavaScript
-
-alert('PICKS-COMPLETE-FIX.JS IS LOADING NOW');
+// Debug alert removed - module loads silently now
 
 // Global state
 let selectedSport = null;

@@ -5242,9 +5242,17 @@
                     <span class="bet-icon">⬆️⬇️</span>
                     <span class="bet-label" id="totalLabel">Over Under</span>
                 </button>
+                <button class="bet-type-btn" data-type="teamTotal" onclick="selectBetType('teamTotal')">
+                    <span class="bet-icon">🏀</span>
+                    <span class="bet-label" id="teamTotalLabel">Team Totals</span>
+                </button>
                 <button class="bet-type-btn" data-type="prop" onclick="selectBetType('prop')">
                     <span class="bet-icon">🎯</span>
                     <span class="bet-label" id="propLabel">Player Props</span>
+                </button>
+                <button class="bet-type-btn" data-type="alt" onclick="selectBetType('alt')">
+                    <span class="bet-icon">🔄</span>
+                    <span class="bet-label" id="altLabel">Alternate Lines</span>
                 </button>
             </div>
         </div>
@@ -5539,6 +5547,164 @@
     font-size: 0.85rem;
     text-align: center;
     color: var(--text-secondary);
+}
+
+/* Enhanced Odds Display */
+.odds-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(0, 255, 255, 0.05);
+    border-radius: 8px;
+    margin-bottom: 6px;
+}
+
+.odds-row:last-child {
+    margin-bottom: 0;
+}
+
+.team-short {
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 80px;
+}
+
+.total-label {
+    font-weight: 600;
+    color: var(--neon-cyan);
+    min-width: 60px;
+}
+
+.odds-value {
+    font-weight: 700;
+    color: var(--neon-gold);
+    font-family: 'Orbitron', monospace;
+}
+
+.odds-value.ml {
+    font-size: 1.1rem;
+}
+
+.no-odds, .prop-notice, .alt-notice, .alt-preview {
+    padding: 12px;
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.prop-notice {
+    color: var(--neon-cyan);
+    font-style: normal;
+    font-weight: 600;
+}
+
+.alt-notice {
+    color: var(--neon-gold);
+    font-style: normal;
+    font-weight: 600;
+}
+
+.alt-preview {
+    font-size: 0.85rem;
+    margin-top: 4px;
+}
+
+/* Pick History Styles */
+.pick-history-item {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    position: relative;
+}
+
+.pick-history-item.pending {
+    border-left: 3px solid var(--neon-cyan);
+}
+
+.pick-history-item.won {
+    border-left: 3px solid #00ff00;
+}
+
+.pick-history-item.lost {
+    border-left: 3px solid #ff4444;
+}
+
+.pick-history-header {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.pick-sport-badge {
+    background: var(--neon-gold);
+    color: #000;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.pick-bet-type {
+    color: var(--neon-cyan);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.pick-date {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-left: auto;
+}
+
+.pick-history-details {
+    margin-bottom: 10px;
+}
+
+.pick-game-info {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+
+.pick-selection {
+    color: var(--neon-gold);
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+}
+
+.pick-meta {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.pick-status-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.pick-status-badge.status-pending {
+    background: rgba(0, 255, 255, 0.2);
+    color: var(--neon-cyan);
+}
+
+.pick-status-badge.status-won {
+    background: rgba(0, 255, 0, 0.2);
+    color: #00ff00;
+}
+
+.pick-status-badge.status-lost {
+    background: rgba(255, 68, 68, 0.2);
+    color: #ff4444;
 }
 
 /* Pick Summary Card */
@@ -10467,37 +10633,48 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="static/js/effects.js?v=20250114"></script>
 
     <script>
-    // INLINE PICKS FIX - EMBEDDED DIRECTLY
+    // COMPLETE PICKS MODULE - FIXED VERSION
     let selectedSport = null;
     let selectedBetType = null;
     let selectedGame = null;
+    let selectedConfidence = 3;
+    let selectedUnits = 1;
+    let currentFilteredGames = [];
+    let currentSelectedPick = null;
+
+    // Sport key mapping to API
+    const sportKeyMap = {
+        'NFL': 'americanfootball_nfl',
+        'NBA': 'basketball_nba',
+        'NHL': 'icehockey_nhl',
+        'MLB': 'baseball_mlb',
+        'NCAAF': 'americanfootball_ncaaf',
+        'NCAAB': 'basketball_ncaab'
+    };
+
+    // Bet type labels per sport
+    const betTypeLabels = {
+        'NHL': { spread: 'Puck Line', moneyline: 'Money Line', total: 'Over/Under', teamTotal: 'Team Totals', prop: 'Player Props', alt: 'Alternate Lines' },
+        'MLB': { spread: 'Run Line', moneyline: 'Money Line', total: 'Over/Under', teamTotal: 'Team Totals', prop: 'Player Props', alt: 'Alternate Lines' },
+        'NFL': { spread: 'Point Spread', moneyline: 'Money Line', total: 'Over/Under', teamTotal: 'Team Totals', prop: 'Player Props', alt: 'Alternate Lines' },
+        'NBA': { spread: 'Point Spread', moneyline: 'Money Line', total: 'Over/Under', teamTotal: 'Team Totals', prop: 'Player Props', alt: 'Alternate Lines' },
+        'NCAAF': { spread: 'Point Spread', moneyline: 'Money Line', total: 'Over/Under', teamTotal: 'Team Totals', prop: 'Player Props', alt: 'Alternate Lines' },
+        'NCAAB': { spread: 'Point Spread', moneyline: 'Money Line', total: 'Over/Under', teamTotal: 'Team Totals', prop: 'Player Props', alt: 'Alternate Lines' }
+    };
 
     function selectSport(sport) {
         selectedSport = sport;
         document.querySelectorAll('.sport-card').forEach(card => card.classList.remove('selected'));
-        event.currentTarget.classList.add('selected');
+        if (event && event.currentTarget) event.currentTarget.classList.add('selected');
 
-        // Update bet type labels immediately
-        const labels = {
-            'NHL': { spread: 'Puck Line', moneyline: 'Money Line', total: 'Over Under' },
-            'MLB': { spread: 'Run Line', moneyline: 'Money Line', total: 'Over Under' },
-            'NFL': { spread: 'Point Spread', moneyline: 'Money Line', total: 'Over Under' },
-            'NBA': { spread: 'Point Spread', moneyline: 'Money Line', total: 'Over Under' },
-            'NCAAF': { spread: 'Point Spread', moneyline: 'Money Line', total: 'Over Under' },
-            'NCAAB': { spread: 'Point Spread', moneyline: 'Money Line', total: 'Over Under' }
-        };
-
-        const sportLabels = labels[sport] || labels['NFL'];
-
-        if (document.getElementById('spreadLabel')) {
-            document.getElementById('spreadLabel').textContent = sportLabels.spread;
-        }
-        if (document.getElementById('moneylineLabel')) {
-            document.getElementById('moneylineLabel').textContent = sportLabels.moneyline;
-        }
-        if (document.getElementById('totalLabel')) {
-            document.getElementById('totalLabel').textContent = sportLabels.total;
-        }
+        // Update bet type labels
+        const labels = betTypeLabels[sport] || betTypeLabels['NFL'];
+        if (document.getElementById('spreadLabel')) document.getElementById('spreadLabel').textContent = labels.spread;
+        if (document.getElementById('moneylineLabel')) document.getElementById('moneylineLabel').textContent = labels.moneyline;
+        if (document.getElementById('totalLabel')) document.getElementById('totalLabel').textContent = labels.total;
+        if (document.getElementById('teamTotalLabel')) document.getElementById('teamTotalLabel').textContent = labels.teamTotal;
+        if (document.getElementById('propLabel')) document.getElementById('propLabel').textContent = labels.prop;
+        if (document.getElementById('altLabel')) document.getElementById('altLabel').textContent = labels.alt;
 
         setTimeout(() => showStep('betType'), 300);
     }
@@ -10516,25 +10693,424 @@ document.addEventListener('DOMContentLoaded', function() {
     function selectBetType(betType) {
         selectedBetType = betType;
         document.querySelectorAll('.bet-type-btn').forEach(btn => btn.classList.remove('selected'));
-        event.currentTarget.classList.add('selected');
+        if (event && event.currentTarget) event.currentTarget.classList.add('selected');
+
+        // Load games immediately when bet type is selected
+        loadGames();
         setTimeout(() => showStep('game'), 300);
     }
 
+    // CRITICAL: The loadGames function that was missing!
+    async function loadGames() {
+        console.log('Loading games for:', selectedSport, selectedBetType);
+        const gamesGrid = document.getElementById('gamesGrid');
+        if (!gamesGrid) {
+            console.error('gamesGrid element not found');
+            return;
+        }
+
+        gamesGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">Loading games...</div>';
+
+        try {
+            const apiKey = (typeof CONFIG !== 'undefined' && CONFIG.oddsApi && CONFIG.oddsApi.key) ? CONFIG.oddsApi.key : null;
+
+            if (!apiKey || apiKey === 'YOUR_ODDS_API_KEY') {
+                // Use mock data if no API key
+                console.log('No API key found, using mock data');
+                loadMockGames(gamesGrid);
+                return;
+            }
+
+            const sportKey = sportKeyMap[selectedSport];
+            if (!sportKey) {
+                gamesGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--neon-red);">Invalid sport selected</div>';
+                return;
+            }
+
+            // Initialize API and fetch games
+            if (typeof initSportsAPI === 'function') {
+                const api = initSportsAPI(apiKey);
+                const games = await api.getUpcomingGames(sportKey);
+
+                if (!games || games.length === 0) {
+                    gamesGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">No upcoming games available for ' + selectedSport + '</div>';
+                    return;
+                }
+
+                // Filter games based on bet type
+                let filteredGames = filterGamesByBetType(games);
+
+                if (filteredGames.length === 0) {
+                    gamesGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">No games with ' + selectedBetType + ' lines available. Try a different bet type.</div>';
+                    return;
+                }
+
+                // Sort and render
+                filteredGames.sort((a, b) => new Date(a.commence_time) - new Date(b.commence_time));
+                currentFilteredGames = filteredGames;
+                renderGames(gamesGrid, filteredGames);
+
+            } else {
+                console.warn('SportsAPI not initialized, using mock data');
+                loadMockGames(gamesGrid);
+            }
+
+        } catch (error) {
+            console.error('Error loading games:', error);
+            gamesGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--neon-red);">Error loading games: ' + error.message + '<br><br>Using sample data instead.</div>';
+            setTimeout(() => loadMockGames(gamesGrid), 1500);
+        }
+    }
+
+    function filterGamesByBetType(games) {
+        return games.filter(game => {
+            if (!game.odds) return selectedBetType === 'prop' || selectedBetType === 'alt' || selectedBetType === 'teamTotal';
+
+            switch(selectedBetType) {
+                case 'spread':
+                    return game.odds.spread && game.odds.spread.home;
+                case 'moneyline':
+                    return game.odds.moneyline && game.odds.moneyline.home;
+                case 'total':
+                    return game.odds.totals && game.odds.totals.over;
+                case 'teamTotal':
+                case 'prop':
+                case 'alt':
+                    return true; // Always show for manual entry
+                default:
+                    return true;
+            }
+        });
+    }
+
+    function loadMockGames(gamesGrid) {
+        const mockGames = getMockGames(selectedSport);
+        currentFilteredGames = mockGames;
+        renderGames(gamesGrid, mockGames);
+    }
+
+    function getMockGames(sport) {
+        const now = new Date();
+        const teamsBySport = {
+            'NFL': [
+                { away: 'Kansas City Chiefs', home: 'Las Vegas Raiders', spread: -6.5, ml: { away: -280, home: +230 }, total: 44.5 },
+                { away: 'Buffalo Bills', home: 'Miami Dolphins', spread: -3, ml: { away: -155, home: +135 }, total: 51.5 },
+                { away: 'Philadelphia Eagles', home: 'Dallas Cowboys', spread: -4, ml: { away: -185, home: +155 }, total: 47.5 },
+                { away: 'San Francisco 49ers', home: 'Seattle Seahawks', spread: -3.5, ml: { away: -170, home: +145 }, total: 46 }
+            ],
+            'NBA': [
+                { away: 'Los Angeles Lakers', home: 'Golden State Warriors', spread: -2.5, ml: { away: -130, home: +110 }, total: 228.5 },
+                { away: 'Boston Celtics', home: 'Miami Heat', spread: -5, ml: { away: -200, home: +170 }, total: 215.5 },
+                { away: 'Milwaukee Bucks', home: 'Phoenix Suns', spread: -1.5, ml: { away: -115, home: -105 }, total: 232 },
+                { away: 'Denver Nuggets', home: 'Cleveland Cavaliers', spread: +3.5, ml: { away: +145, home: -165 }, total: 219.5 }
+            ],
+            'NHL': [
+                { away: 'Toronto Maple Leafs', home: 'Montreal Canadiens', spread: -1.5, ml: { away: -145, home: +125 }, total: 6.5 },
+                { away: 'Edmonton Oilers', home: 'Calgary Flames', spread: -1.5, ml: { away: -160, home: +140 }, total: 6 },
+                { away: 'New York Rangers', home: 'New Jersey Devils', spread: -1.5, ml: { away: -135, home: +115 }, total: 5.5 },
+                { away: 'Vegas Golden Knights', home: 'Colorado Avalanche', spread: +1.5, ml: { away: +130, home: -150 }, total: 6.5 }
+            ],
+            'MLB': [
+                { away: 'New York Yankees', home: 'Boston Red Sox', spread: -1.5, ml: { away: -135, home: +115 }, total: 8.5 },
+                { away: 'Los Angeles Dodgers', home: 'San Francisco Giants', spread: -1.5, ml: { away: -175, home: +155 }, total: 7.5 },
+                { away: 'Atlanta Braves', home: 'New York Mets', spread: -1.5, ml: { away: -125, home: +105 }, total: 9 }
+            ],
+            'NCAAF': [
+                { away: 'Ohio State', home: 'Michigan', spread: -3.5, ml: { away: -165, home: +145 }, total: 47.5 },
+                { away: 'Alabama', home: 'LSU', spread: -7, ml: { away: -280, home: +230 }, total: 52 },
+                { away: 'Georgia', home: 'Florida', spread: -14, ml: { away: -550, home: +400 }, total: 49 }
+            ],
+            'NCAAB': [
+                { away: 'Duke', home: 'North Carolina', spread: -2.5, ml: { away: -135, home: +115 }, total: 152.5 },
+                { away: 'Kansas', home: 'Kentucky', spread: -1, ml: { away: -115, home: -105 }, total: 148 },
+                { away: 'UCLA', home: 'Arizona', spread: +3, ml: { away: +125, home: -145 }, total: 155.5 }
+            ]
+        };
+
+        const teams = teamsBySport[sport] || teamsBySport['NFL'];
+
+        return teams.map((matchup, i) => ({
+            id: sport + '_game_' + i,
+            sport: sportKeyMap[sport],
+            sport_title: sport,
+            commence_time: new Date(now.getTime() + (i + 1) * 3 * 60 * 60 * 1000).toISOString(),
+            home_team: matchup.home,
+            away_team: matchup.away,
+            odds: {
+                moneyline: { home: matchup.ml.home, away: matchup.ml.away },
+                spread: {
+                    home: { point: matchup.spread, price: -110 },
+                    away: { point: -matchup.spread, price: -110 }
+                },
+                totals: {
+                    over: { point: matchup.total, price: -110 },
+                    under: { point: matchup.total, price: -110 }
+                }
+            }
+        }));
+    }
+
+    function renderGames(container, games) {
+        const labels = betTypeLabels[selectedSport] || betTypeLabels['NFL'];
+
+        container.innerHTML = games.map((game, index) => {
+            const date = new Date(game.commence_time);
+            const now = new Date();
+            const hoursUntil = (date - now) / (1000 * 60 * 60);
+
+            let dateStr = hoursUntil < 0 ? 'LIVE' :
+                         hoursUntil < 24 ? 'Today ' + date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) :
+                         hoursUntil < 48 ? 'Tomorrow ' + date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) :
+                         date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+            let oddsDisplay = generateOddsDisplay(game, selectedBetType, labels);
+
+            return '<div class="game-card" onclick="selectGameFromGrid(' + index + ')">' +
+                '<div class="game-time">' + dateStr + '</div>' +
+                '<div class="game-matchup">' +
+                    '<div class="team away"><span class="team-name">' + game.away_team + '</span></div>' +
+                    '<div class="at-symbol">@</div>' +
+                    '<div class="team home"><span class="team-name">' + game.home_team + '</span></div>' +
+                '</div>' +
+                oddsDisplay +
+            '</div>';
+        }).join('');
+
+        console.log('Rendered ' + games.length + ' ' + selectedSport + ' games');
+    }
+
+    function generateOddsDisplay(game, betType, labels) {
+        if (!game.odds) return '<div class="game-odds"><div class="no-odds">Odds coming soon</div></div>';
+
+        const awayShort = game.away_team.split(' ').pop();
+        const homeShort = game.home_team.split(' ').pop();
+
+        switch(betType) {
+            case 'spread':
+                if (!game.odds.spread) return '<div class="game-odds"><div class="no-odds">Spread not available</div></div>';
+                const homeSpread = game.odds.spread.home.point > 0 ? '+' + game.odds.spread.home.point : game.odds.spread.home.point;
+                const awaySpread = game.odds.spread.away.point > 0 ? '+' + game.odds.spread.away.point : game.odds.spread.away.point;
+                return '<div class="game-odds">' +
+                    '<div class="odds-row"><span class="team-short">' + awayShort + '</span> <span class="odds-value">' + awaySpread + ' (' + formatOdds(game.odds.spread.away.price) + ')</span></div>' +
+                    '<div class="odds-row"><span class="team-short">' + homeShort + '</span> <span class="odds-value">' + homeSpread + ' (' + formatOdds(game.odds.spread.home.price) + ')</span></div>' +
+                '</div>';
+
+            case 'moneyline':
+                if (!game.odds.moneyline) return '<div class="game-odds"><div class="no-odds">Moneyline not available</div></div>';
+                return '<div class="game-odds">' +
+                    '<div class="odds-row"><span class="team-short">' + awayShort + '</span> <span class="odds-value ml">' + formatOdds(game.odds.moneyline.away) + '</span></div>' +
+                    '<div class="odds-row"><span class="team-short">' + homeShort + '</span> <span class="odds-value ml">' + formatOdds(game.odds.moneyline.home) + '</span></div>' +
+                '</div>';
+
+            case 'total':
+                if (!game.odds.totals) return '<div class="game-odds"><div class="no-odds">Totals not available</div></div>';
+                return '<div class="game-odds">' +
+                    '<div class="odds-row"><span class="total-label">Over</span> <span class="odds-value">' + game.odds.totals.over.point + ' (' + formatOdds(game.odds.totals.over.price) + ')</span></div>' +
+                    '<div class="odds-row"><span class="total-label">Under</span> <span class="odds-value">' + game.odds.totals.under.point + ' (' + formatOdds(game.odds.totals.under.price) + ')</span></div>' +
+                '</div>';
+
+            case 'teamTotal':
+                if (!game.odds.totals) return '<div class="game-odds"><div class="no-odds">Team totals available after game selection</div></div>';
+                const halfTotal = (game.odds.totals.over.point / 2).toFixed(1);
+                return '<div class="game-odds">' +
+                    '<div class="odds-row"><span class="team-short">' + awayShort + '</span> <span class="odds-value">O/U ' + halfTotal + '</span></div>' +
+                    '<div class="odds-row"><span class="team-short">' + homeShort + '</span> <span class="odds-value">O/U ' + halfTotal + '</span></div>' +
+                '</div>';
+
+            case 'prop':
+                return '<div class="game-odds"><div class="prop-notice">Player props available - click to select</div></div>';
+
+            case 'alt':
+                return '<div class="game-odds">' +
+                    '<div class="alt-notice">Alternate spreads & totals</div>' +
+                    '<div class="alt-preview">Multiple lines available</div>' +
+                '</div>';
+
+            default:
+                return '<div class="game-odds"><div class="no-odds">Select a bet type</div></div>';
+        }
+    }
+
+    function formatOdds(odds) {
+        if (!odds && odds !== 0) return 'N/A';
+        return odds > 0 ? '+' + odds : '' + odds;
+    }
+
+    function selectGameFromGrid(index) {
+        if (!currentFilteredGames || !currentFilteredGames[index]) {
+            console.error('Game not found at index:', index);
+            return;
+        }
+
+        const game = currentFilteredGames[index];
+        selectedGame = game.away_team + ' @ ' + game.home_team;
+        currentSelectedPick = { game: game, index: index };
+
+        // Update summary
+        document.getElementById('summaryGame').textContent = selectedGame;
+
+        // Auto-populate pick based on bet type
+        updatePickSummary(game);
+
+        showStep('details');
+    }
+
+    function updatePickSummary(game) {
+        const summaryPick = document.getElementById('summaryPick');
+        const summaryOdds = document.getElementById('summaryOdds');
+
+        if (selectedBetType === 'spread' && game.odds && game.odds.spread) {
+            const homeSpread = game.odds.spread.home.point > 0 ? '+' + game.odds.spread.home.point : game.odds.spread.home.point;
+            summaryPick.textContent = game.home_team + ' ' + homeSpread;
+            summaryOdds.textContent = formatOdds(game.odds.spread.home.price);
+        } else if (selectedBetType === 'moneyline' && game.odds && game.odds.moneyline) {
+            summaryPick.textContent = game.home_team + ' ML';
+            summaryOdds.textContent = formatOdds(game.odds.moneyline.home);
+        } else if (selectedBetType === 'total' && game.odds && game.odds.totals) {
+            summaryPick.textContent = 'Over ' + game.odds.totals.over.point;
+            summaryOdds.textContent = formatOdds(game.odds.totals.over.price);
+        } else if (selectedBetType === 'teamTotal') {
+            const halfTotal = game.odds && game.odds.totals ? (game.odds.totals.over.point / 2).toFixed(1) : '0';
+            summaryPick.textContent = game.home_team + ' Over ' + halfTotal;
+            summaryOdds.textContent = '-110';
+        } else {
+            summaryPick.textContent = 'Select your pick';
+            summaryOdds.textContent = 'TBD';
+        }
+    }
+
     function setConfidence(level) {
+        selectedConfidence = level;
         document.querySelectorAll('.conf-btn').forEach(btn => btn.classList.remove('active'));
-        event.currentTarget.classList.add('active');
+        if (event && event.currentTarget) event.currentTarget.classList.add('active');
     }
 
     function setUnits(units) {
+        selectedUnits = units;
         document.querySelectorAll('.unit-btn').forEach(btn => btn.classList.remove('active'));
-        event.currentTarget.classList.add('active');
+        if (event && event.currentTarget) event.currentTarget.classList.add('active');
     }
 
     function submitPick() {
-        alert('Pick submitted successfully!');
+        if (!selectedSport || !selectedBetType || !selectedGame) {
+            alert('Please complete all selections before submitting.');
+            return;
+        }
+
+        const reasoning = document.getElementById('pickReasoning') ? document.getElementById('pickReasoning').value : '';
+        const summaryPick = document.getElementById('summaryPick').textContent;
+        const summaryOdds = document.getElementById('summaryOdds').textContent;
+
+        const pick = {
+            id: Date.now(),
+            sport: selectedSport,
+            betType: selectedBetType,
+            game: selectedGame,
+            pick: summaryPick,
+            odds: summaryOdds,
+            confidence: selectedConfidence,
+            units: selectedUnits,
+            reasoning: reasoning,
+            timestamp: new Date().toISOString(),
+            status: 'pending'
+        };
+
+        // Save to localStorage
+        const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+        picks.unshift(pick);
+        localStorage.setItem('trustMyRecordPicks', JSON.stringify(picks));
+
+        console.log('Pick saved:', pick);
+        alert('Pick submitted and saved to your permanent record!');
+
+        // Update history display
+        loadPicksHistory();
+
+        // Reset form
+        resetPickForm();
         showStep('sport');
     }
 
+    function resetPickForm() {
+        selectedSport = null;
+        selectedBetType = null;
+        selectedGame = null;
+        selectedConfidence = 3;
+        selectedUnits = 1;
+        currentSelectedPick = null;
+
+        document.querySelectorAll('.sport-card').forEach(c => c.classList.remove('selected'));
+        document.querySelectorAll('.bet-type-btn').forEach(b => b.classList.remove('selected'));
+        document.querySelectorAll('.conf-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
+
+        const defaultConf = document.querySelector('.conf-btn[data-conf="3"]');
+        const defaultUnit = document.querySelector('.unit-btn[data-units="1"]');
+        if (defaultConf) defaultConf.classList.add('active');
+        if (defaultUnit) defaultUnit.classList.add('active');
+
+        const reasoning = document.getElementById('pickReasoning');
+        if (reasoning) reasoning.value = '';
+
+        const gamesGrid = document.getElementById('gamesGrid');
+        if (gamesGrid) gamesGrid.innerHTML = '';
+    }
+
+    function loadPicksHistory() {
+        const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+        const container = document.getElementById('recentPicksContainer');
+        if (!container) return;
+
+        if (picks.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">No picks yet. Make your first pick above!</p>';
+            return;
+        }
+
+        container.innerHTML = picks.slice(0, 10).map(pick => {
+            const statusClass = pick.status === 'won' ? 'status-won' : pick.status === 'lost' ? 'status-lost' : 'status-pending';
+            const statusIcon = pick.status === 'won' ? '' : pick.status === 'lost' ? '' : '';
+
+            return '<div class="pick-history-item ' + pick.status + '">' +
+                '<div class="pick-history-header">' +
+                    '<span class="pick-sport-badge">' + pick.sport + '</span>' +
+                    '<span class="pick-bet-type">' + pick.betType + '</span>' +
+                    '<span class="pick-date">' + new Date(pick.timestamp).toLocaleDateString() + '</span>' +
+                '</div>' +
+                '<div class="pick-history-details">' +
+                    '<div class="pick-game-info">' + pick.game + '</div>' +
+                    '<div class="pick-selection">' + pick.pick + ' @ ' + pick.odds + '</div>' +
+                    '<div class="pick-meta">Confidence: ' + pick.confidence + ' | Units: ' + pick.units + '</div>' +
+                '</div>' +
+                '<div class="pick-status-badge ' + statusClass + '">' + statusIcon + ' ' + pick.status.toUpperCase() + '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Picks module initialized');
+        showStep('sport');
+        loadPicksHistory();
+
+        // Update game counts
+        updateGameCounts();
+    });
+
+    async function updateGameCounts() {
+        // Update the "X games today" text on sport cards
+        const sportCards = document.querySelectorAll('.sport-card');
+        sportCards.forEach(card => {
+            const sport = card.getAttribute('data-sport');
+            const gamesSpan = card.querySelector('.sport-games');
+            if (gamesSpan && sport) {
+                // For now use placeholder - will update with real API data
+                const counts = { 'NFL': 14, 'NBA': 12, 'NHL': 10, 'MLB': 15, 'NCAAF': 25, 'NCAAB': 40 };
+                gamesSpan.textContent = (counts[sport] || 0) + ' games available';
+            }
+        });
+    }
+
+    // Export all functions
     window.selectSport = selectSport;
     window.selectBetType = selectBetType;
     window.showStep = showStep;
@@ -10542,6 +11118,10 @@ document.addEventListener('DOMContentLoaded', function() {
     window.setConfidence = setConfidence;
     window.setUnits = setUnits;
     window.submitPick = submitPick;
+    window.loadGames = loadGames;
+    window.selectGameFromGrid = selectGameFromGrid;
+    window.loadPicksHistory = loadPicksHistory;
+    window.formatOdds = formatOdds;
     </script>
 </body>
 </html>
