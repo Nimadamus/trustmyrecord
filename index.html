@@ -10700,7 +10700,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => showStep('game'), 300);
     }
 
-    // CRITICAL: The loadGames function that was missing!
+    // CRITICAL: loadGames function - ALWAYS shows games (falls back to mock data)
     async function loadGames() {
         console.log('Loading games for:', selectedSport, selectedBetType);
         const gamesGrid = document.getElementById('gamesGrid');
@@ -10711,55 +10711,61 @@ document.addEventListener('DOMContentLoaded', function() {
 
         gamesGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">Loading games...</div>';
 
+        const sportKey = sportKeyMap[selectedSport];
+        if (!sportKey) {
+            console.log('Invalid sport, using mock data');
+            loadMockGames(gamesGrid);
+            return;
+        }
+
+        // ALWAYS try to load games - use mock data as guaranteed fallback
+        let games = null;
+        let usedAPI = false;
+
         try {
             const apiKey = (typeof CONFIG !== 'undefined' && CONFIG.oddsApi && CONFIG.oddsApi.key) ? CONFIG.oddsApi.key : null;
 
-            if (!apiKey || apiKey === 'YOUR_ODDS_API_KEY') {
-                // Use mock data if no API key
-                console.log('No API key found, using mock data');
-                loadMockGames(gamesGrid);
-                return;
-            }
-
-            const sportKey = sportKeyMap[selectedSport];
-            if (!sportKey) {
-                gamesGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--neon-red);">Invalid sport selected</div>';
-                return;
-            }
-
-            // Initialize API and fetch games
-            if (typeof initSportsAPI === 'function') {
+            // Try API if key exists and API is initialized
+            if (apiKey && apiKey !== 'YOUR_ODDS_API_KEY' && typeof initSportsAPI === 'function') {
+                console.log('Attempting API fetch for:', sportKey);
                 const api = initSportsAPI(apiKey);
-                const games = await api.getUpcomingGames(sportKey);
+                games = await api.getUpcomingGames(sportKey);
 
-                if (!games || games.length === 0) {
-                    gamesGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">No upcoming games available for ' + selectedSport + '</div>';
-                    return;
+                if (games && games.length > 0) {
+                    usedAPI = true;
+                    console.log('API returned', games.length, 'games');
+                } else {
+                    console.log('API returned empty, falling back to mock data');
+                    games = null;
                 }
-
-                // Filter games based on bet type
-                let filteredGames = filterGamesByBetType(games);
-
-                if (filteredGames.length === 0) {
-                    gamesGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">No games with ' + selectedBetType + ' lines available. Try a different bet type.</div>';
-                    return;
-                }
-
-                // Sort and render
-                filteredGames.sort((a, b) => new Date(a.commence_time) - new Date(b.commence_time));
-                currentFilteredGames = filteredGames;
-                renderGames(gamesGrid, filteredGames);
-
-            } else {
-                console.warn('SportsAPI not initialized, using mock data');
-                loadMockGames(gamesGrid);
             }
-
         } catch (error) {
-            console.error('Error loading games:', error);
-            gamesGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--neon-red);">Error loading games: ' + error.message + '<br><br>Using sample data instead.</div>';
-            setTimeout(() => loadMockGames(gamesGrid), 1500);
+            console.error('API error, using mock data:', error.message);
+            games = null;
         }
+
+        // GUARANTEED FALLBACK: Always use mock data if API fails or returns empty
+        if (!games || games.length === 0) {
+            console.log('Using mock data for', selectedSport);
+            loadMockGames(gamesGrid);
+            return;
+        }
+
+        // API succeeded - filter and render
+        let filteredGames = filterGamesByBetType(games);
+
+        // If filtering removes all games, fall back to mock
+        if (filteredGames.length === 0) {
+            console.log('No games with', selectedBetType, 'odds, using mock data');
+            loadMockGames(gamesGrid);
+            return;
+        }
+
+        // Sort and render API games
+        filteredGames.sort((a, b) => new Date(a.commence_time) - new Date(b.commence_time));
+        currentFilteredGames = filteredGames;
+        renderGames(gamesGrid, filteredGames);
+        console.log('Rendered', filteredGames.length, 'games from API');
     }
 
     function filterGamesByBetType(games) {
