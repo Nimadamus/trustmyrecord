@@ -10595,28 +10595,7 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Search functionality coming soon!');
         }
 
-        // Login function - uses persistent auth system
-        function handleLogin(event) {
-            event.preventDefault();
-
-            const emailOrUsername = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            const rememberMe = document.getElementById('rememberMe')?.checked ?? true; // Default to true
-
-            try {
-                // Use the persistent auth system
-                auth.login(emailOrUsername, password, rememberMe);
-
-                console.log('✅ Login successful, session persisted');
-
-                // Clear form and redirect
-                document.getElementById('loginForm').reset();
-                showSection('feed');
-
-            } catch (error) {
-                alert('Login failed: ' + error.message);
-            }
-        }
+        // Login is handled by forms-fixed.js
 
         // Close notifications when clicking outside
         document.addEventListener('click', function(event) {

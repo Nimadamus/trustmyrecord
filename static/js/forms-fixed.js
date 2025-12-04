@@ -8,24 +8,21 @@ function handleLogin(event) {
 
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
-    const rememberMe = document.getElementById('rememberMe')?.checked ?? true; // Default to true
+    const rememberMe = document.getElementById('rememberMe')?.checked ?? true;
 
     try {
-        // Actually login using the auth system
         console.log('Attempting login for:', email);
         auth.login(email, password, rememberMe);
+        console.log('✅ Login successful');
 
-        alert('✅ Login successful! Welcome back to Trust My Record.');
-
-        // Redirect to feed or dashboard
-        if (typeof showSection === 'function') {
-            showSection('feed');
-        }
-
-        // Clear form
+        // Clear form first
         document.getElementById('loginForm').reset();
+
+        // Redirect to home/record section (no alert - just redirect)
+        showSection('record');
+
     } catch (error) {
-        alert('❌ Login failed: ' + error.message);
+        alert('Login failed: ' + error.message);
         console.error('Login error:', error);
     }
 }
