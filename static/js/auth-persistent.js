@@ -8,7 +8,33 @@ class PersistentAuthSystem {
         this.sessionKey = 'trustmyrecord_session';
         this.usersKey = 'trustmyrecord_users';
         this.rememberKey = 'trustmyrecord_remember';
+
+        // Ensure default admin account exists
+        this.ensureDefaultUser();
+
         this.init();
+    }
+
+    ensureDefaultUser() {
+        const adminExists = this.users.find(u => u.username === 'admin');
+        if (!adminExists) {
+            this.users.push({
+                id: 'user_admin_default',
+                username: 'admin',
+                email: 'admin@trustmyrecord.com',
+                passwordHash: this.hashPassword('admin123'),
+                displayName: 'Admin',
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+                bio: 'Site Administrator',
+                joinedDate: new Date().toISOString(),
+                verified: true,
+                stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
+                social: { followers: [], following: [], reputation: 100, badges: ['admin'] },
+                isPremium: true
+            });
+            this.saveUsers();
+            console.log('✅ Default admin account created');
+        }
     }
 
     init() {
