@@ -10720,16 +10720,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
-            // Get today's date range (now to end of today + tomorrow for evening games)
+            // Get end of tomorrow in UTC - format: YYYY-MM-DDTHH:MM:SSZ (no milliseconds)
             const now = new Date();
             const tomorrow = new Date(now);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            tomorrow.setHours(23, 59, 59, 999);
+            tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+            tomorrow.setUTCHours(23, 59, 59, 0);
 
-            // DIRECT API CALL - only games within next 36 hours
-            const url = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds?apiKey=${ODDS_API_KEY}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&commenceTimeTo=${tomorrow.toISOString()}`;
+            // Format as YYYY-MM-DDTHH:MM:SSZ (API rejects milliseconds)
+            const commenceTimeTo = tomorrow.toISOString().split('.')[0] + 'Z';
 
-            console.log('Fetching games until:', tomorrow.toISOString());
+            // DIRECT API CALL - only games within next ~48 hours
+            const url = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds?apiKey=${ODDS_API_KEY}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&commenceTimeTo=${commenceTimeTo}`;
+
+            console.log('Fetching games until:', commenceTimeTo);
             const response = await fetch(url);
 
             if (!response.ok) {
