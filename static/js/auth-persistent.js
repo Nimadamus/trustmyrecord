@@ -15,15 +15,17 @@ class PersistentAuthSystem {
         console.log('🔐 PersistentAuthSystem initializing...');
 
         // Check for existing session IMMEDIATELY
-        this.restoreSession();
+        const restored = this.restoreSession();
+        console.log('Session restore result:', restored, '| Current user:', this.currentUser?.username || 'none');
 
-        // Wait for DOM to update UI
+        // Update UI immediately if we can
+        this.initializeUI();
+
+        // Also update when DOM is ready (in case we ran too early)
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 this.initializeUI();
             });
-        } else {
-            this.initializeUI();
         }
 
         // Persist session on page unload
@@ -31,13 +33,19 @@ class PersistentAuthSystem {
             this.persistSession();
         });
 
-        // Check session on page visibility change
+        // Re-check session when tab becomes visible again
         document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) {
-                this.restoreSession();
+            if (!document.hidden && this.currentUser) {
                 this.initializeUI();
             }
         });
+
+        // Persist session every 30 seconds while page is open
+        setInterval(() => {
+            if (this.currentUser) {
+                this.persistSession();
+            }
+        }, 30000);
     }
 
     /**
@@ -81,39 +89,35 @@ class PersistentAuthSystem {
     }
 
     /**
-     * Persist session to storage
+     * Persist session to storage - ALWAYS persists, never expires
      */
     persistSession() {
         if (this.currentUser) {
             const sessionData = {
                 user: this.currentUser,
                 timestamp: Date.now(),
-                rememberMe: this.isRememberMe()
+                rememberMe: true  // ALWAYS true - sessions never expire
             };
 
             localStorage.setItem(this.sessionKey, JSON.stringify(sessionData));
-            console.log('💾 Session persisted');
+            console.log('💾 Session persisted for:', this.currentUser.username);
         }
     }
 
     /**
-     * Check if session is still valid
+     * Check if session is still valid - SESSIONS NEVER EXPIRE
      */
     isSessionValid(sessionData) {
-        if (!sessionData || !sessionData.user) {
+        // Session is valid as long as we have user data
+        if (!sessionData) {
             return false;
         }
 
-        // If remember me is enabled, session never expires
-        if (sessionData.rememberMe) {
-            return true;
-        }
+        // Accept both formats: {user: {...}} or just {...}
+        const user = sessionData.user || sessionData;
 
-        // Otherwise, session expires after 7 days
-        const sessionAge = Date.now() - (sessionData.timestamp || 0);
-        const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
-
-        return sessionAge < maxAge;
+        // Valid if we have a username
+        return user && (user.username || user.email);
     }
 
     /**
