@@ -7793,7 +7793,7 @@
 
                             <div class="form-group" style="display: flex; justify-content: space-between; align-items: center;">
                                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                    <input type="checkbox" id="rememberMe" name="rememberMe">
+                                    <input type="checkbox" id="rememberMe" name="rememberMe" checked>
                                     <span style="color: var(--text-secondary); font-size: 14px;">Remember me</span>
                                 </label>
                                 <a onclick="alert('Password reset feature coming soon!')" style="color: var(--neon-cyan); font-size: 14px; cursor: pointer; text-decoration: none;">Forgot password?</a>
@@ -10595,25 +10595,27 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Search functionality coming soon!');
         }
 
-        // Login function
+        // Login function - uses persistent auth system
         function handleLogin(event) {
             event.preventDefault();
 
-            const email = document.getElementById('loginEmail').value;
+            const emailOrUsername = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
-            const rememberMe = document.getElementById('rememberMe').checked;
+            const rememberMe = document.getElementById('rememberMe')?.checked ?? true; // Default to true
 
-            // In a real app, this would validate credentials with backend
-            console.log('Login attempt:', { email, password, rememberMe });
+            try {
+                // Use the persistent auth system
+                auth.login(emailOrUsername, password, rememberMe);
 
-            // Simulate successful login
-            alert('Login successful! Welcome back to Trust My Record.');
+                console.log('✅ Login successful, session persisted');
 
-            // Redirect to feed or dashboard
-            showSection('feed');
+                // Clear form and redirect
+                document.getElementById('loginForm').reset();
+                showSection('feed');
 
-            // Clear form
-            document.getElementById('loginForm').reset();
+            } catch (error) {
+                alert('Login failed: ' + error.message);
+            }
         }
 
         // Close notifications when clicking outside
