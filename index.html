@@ -10700,160 +10700,100 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => showStep('game'), 300);
     }
 
-    // CRITICAL: loadGames function - ALWAYS shows games (falls back to mock data)
+    // REAL API ONLY - NO FAKE DATA
+    const ODDS_API_KEY = 'deeac7e7af6a8f1a5ac84c625e04973a';
+
     async function loadGames() {
-        console.log('Loading games for:', selectedSport, selectedBetType);
+        console.log('Loading REAL games for:', selectedSport, selectedBetType);
         const gamesGrid = document.getElementById('gamesGrid');
         if (!gamesGrid) {
             console.error('gamesGrid element not found');
             return;
         }
 
-        gamesGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">Loading games...</div>';
+        gamesGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--neon-cyan);">Loading real games from The Odds API...</div>';
 
         const sportKey = sportKeyMap[selectedSport];
         if (!sportKey) {
-            console.log('Invalid sport, using mock data');
-            loadMockGames(gamesGrid);
+            gamesGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--neon-red);">Invalid sport selected</div>';
             return;
         }
-
-        // ALWAYS try to load games - use mock data as guaranteed fallback
-        let games = null;
-        let usedAPI = false;
 
         try {
-            const apiKey = (typeof CONFIG !== 'undefined' && CONFIG.oddsApi && CONFIG.oddsApi.key) ? CONFIG.oddsApi.key : null;
+            // DIRECT API CALL - no wrapper, no fallback
+            const url = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds?apiKey=${ODDS_API_KEY}&regions=us&markets=h2h,spreads,totals&oddsFormat=american`;
 
-            // Try API if key exists and API is initialized
-            if (apiKey && apiKey !== 'YOUR_ODDS_API_KEY' && typeof initSportsAPI === 'function') {
-                console.log('Attempting API fetch for:', sportKey);
-                const api = initSportsAPI(apiKey);
-                games = await api.getUpcomingGames(sportKey);
+            console.log('Fetching:', url);
+            const response = await fetch(url);
 
-                if (games && games.length > 0) {
-                    usedAPI = true;
-                    console.log('API returned', games.length, 'games');
-                } else {
-                    console.log('API returned empty, falling back to mock data');
-                    games = null;
-                }
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'API request failed');
             }
+
+            const rawGames = await response.json();
+            console.log('API returned', rawGames.length, 'raw games');
+
+            if (!rawGames || rawGames.length === 0) {
+                gamesGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">No games scheduled for ' + selectedSport + ' right now.<br><br>Check back closer to game time.</div>';
+                return;
+            }
+
+            // Format the games
+            const games = rawGames.map(game => {
+                const bookmaker = game.bookmakers && game.bookmakers[0];
+                const markets = bookmaker ? bookmaker.markets : [];
+
+                const h2h = markets.find(m => m.key === 'h2h');
+                const spreads = markets.find(m => m.key === 'spreads');
+                const totals = markets.find(m => m.key === 'totals');
+
+                return {
+                    id: game.id,
+                    sport: game.sport_key,
+                    sport_title: game.sport_title,
+                    commence_time: game.commence_time,
+                    home_team: game.home_team,
+                    away_team: game.away_team,
+                    odds: {
+                        moneyline: h2h ? {
+                            home: h2h.outcomes.find(o => o.name === game.home_team)?.price,
+                            away: h2h.outcomes.find(o => o.name === game.away_team)?.price
+                        } : null,
+                        spread: spreads ? {
+                            home: {
+                                point: spreads.outcomes.find(o => o.name === game.home_team)?.point,
+                                price: spreads.outcomes.find(o => o.name === game.home_team)?.price
+                            },
+                            away: {
+                                point: spreads.outcomes.find(o => o.name === game.away_team)?.point,
+                                price: spreads.outcomes.find(o => o.name === game.away_team)?.price
+                            }
+                        } : null,
+                        totals: totals ? {
+                            over: {
+                                point: totals.outcomes.find(o => o.name === 'Over')?.point,
+                                price: totals.outcomes.find(o => o.name === 'Over')?.price
+                            },
+                            under: {
+                                point: totals.outcomes.find(o => o.name === 'Under')?.point,
+                                price: totals.outcomes.find(o => o.name === 'Under')?.price
+                            }
+                        } : null
+                    }
+                };
+            });
+
+            // Sort by game time
+            games.sort((a, b) => new Date(a.commence_time) - new Date(b.commence_time));
+            currentFilteredGames = games;
+            renderGames(gamesGrid, games);
+            console.log('Rendered', games.length, 'REAL games');
+
         } catch (error) {
-            console.error('API error, using mock data:', error.message);
-            games = null;
+            console.error('API Error:', error);
+            gamesGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--neon-red);">Error loading games: ' + error.message + '<br><br>Please refresh and try again.</div>';
         }
-
-        // GUARANTEED FALLBACK: Always use mock data if API fails or returns empty
-        if (!games || games.length === 0) {
-            console.log('Using mock data for', selectedSport);
-            loadMockGames(gamesGrid);
-            return;
-        }
-
-        // API succeeded - filter and render
-        let filteredGames = filterGamesByBetType(games);
-
-        // If filtering removes all games, fall back to mock
-        if (filteredGames.length === 0) {
-            console.log('No games with', selectedBetType, 'odds, using mock data');
-            loadMockGames(gamesGrid);
-            return;
-        }
-
-        // Sort and render API games
-        filteredGames.sort((a, b) => new Date(a.commence_time) - new Date(b.commence_time));
-        currentFilteredGames = filteredGames;
-        renderGames(gamesGrid, filteredGames);
-        console.log('Rendered', filteredGames.length, 'games from API');
-    }
-
-    function filterGamesByBetType(games) {
-        return games.filter(game => {
-            if (!game.odds) return selectedBetType === 'prop' || selectedBetType === 'alt' || selectedBetType === 'teamTotal';
-
-            switch(selectedBetType) {
-                case 'spread':
-                    return game.odds.spread && game.odds.spread.home;
-                case 'moneyline':
-                    return game.odds.moneyline && game.odds.moneyline.home;
-                case 'total':
-                    return game.odds.totals && game.odds.totals.over;
-                case 'teamTotal':
-                case 'prop':
-                case 'alt':
-                    return true; // Always show for manual entry
-                default:
-                    return true;
-            }
-        });
-    }
-
-    function loadMockGames(gamesGrid) {
-        const mockGames = getMockGames(selectedSport);
-        currentFilteredGames = mockGames;
-        renderGames(gamesGrid, mockGames);
-    }
-
-    function getMockGames(sport) {
-        const now = new Date();
-        const teamsBySport = {
-            'NFL': [
-                { away: 'Kansas City Chiefs', home: 'Las Vegas Raiders', spread: -6.5, ml: { away: -280, home: +230 }, total: 44.5 },
-                { away: 'Buffalo Bills', home: 'Miami Dolphins', spread: -3, ml: { away: -155, home: +135 }, total: 51.5 },
-                { away: 'Philadelphia Eagles', home: 'Dallas Cowboys', spread: -4, ml: { away: -185, home: +155 }, total: 47.5 },
-                { away: 'San Francisco 49ers', home: 'Seattle Seahawks', spread: -3.5, ml: { away: -170, home: +145 }, total: 46 }
-            ],
-            'NBA': [
-                { away: 'Los Angeles Lakers', home: 'Golden State Warriors', spread: -2.5, ml: { away: -130, home: +110 }, total: 228.5 },
-                { away: 'Boston Celtics', home: 'Miami Heat', spread: -5, ml: { away: -200, home: +170 }, total: 215.5 },
-                { away: 'Milwaukee Bucks', home: 'Phoenix Suns', spread: -1.5, ml: { away: -115, home: -105 }, total: 232 },
-                { away: 'Denver Nuggets', home: 'Cleveland Cavaliers', spread: +3.5, ml: { away: +145, home: -165 }, total: 219.5 }
-            ],
-            'NHL': [
-                { away: 'Toronto Maple Leafs', home: 'Montreal Canadiens', spread: -1.5, ml: { away: -145, home: +125 }, total: 6.5 },
-                { away: 'Edmonton Oilers', home: 'Calgary Flames', spread: -1.5, ml: { away: -160, home: +140 }, total: 6 },
-                { away: 'New York Rangers', home: 'New Jersey Devils', spread: -1.5, ml: { away: -135, home: +115 }, total: 5.5 },
-                { away: 'Vegas Golden Knights', home: 'Colorado Avalanche', spread: +1.5, ml: { away: +130, home: -150 }, total: 6.5 }
-            ],
-            'MLB': [
-                { away: 'New York Yankees', home: 'Boston Red Sox', spread: -1.5, ml: { away: -135, home: +115 }, total: 8.5 },
-                { away: 'Los Angeles Dodgers', home: 'San Francisco Giants', spread: -1.5, ml: { away: -175, home: +155 }, total: 7.5 },
-                { away: 'Atlanta Braves', home: 'New York Mets', spread: -1.5, ml: { away: -125, home: +105 }, total: 9 }
-            ],
-            'NCAAF': [
-                { away: 'Ohio State', home: 'Michigan', spread: -3.5, ml: { away: -165, home: +145 }, total: 47.5 },
-                { away: 'Alabama', home: 'LSU', spread: -7, ml: { away: -280, home: +230 }, total: 52 },
-                { away: 'Georgia', home: 'Florida', spread: -14, ml: { away: -550, home: +400 }, total: 49 }
-            ],
-            'NCAAB': [
-                { away: 'Duke', home: 'North Carolina', spread: -2.5, ml: { away: -135, home: +115 }, total: 152.5 },
-                { away: 'Kansas', home: 'Kentucky', spread: -1, ml: { away: -115, home: -105 }, total: 148 },
-                { away: 'UCLA', home: 'Arizona', spread: +3, ml: { away: +125, home: -145 }, total: 155.5 }
-            ]
-        };
-
-        const teams = teamsBySport[sport] || teamsBySport['NFL'];
-
-        return teams.map((matchup, i) => ({
-            id: sport + '_game_' + i,
-            sport: sportKeyMap[sport],
-            sport_title: sport,
-            commence_time: new Date(now.getTime() + (i + 1) * 3 * 60 * 60 * 1000).toISOString(),
-            home_team: matchup.home,
-            away_team: matchup.away,
-            odds: {
-                moneyline: { home: matchup.ml.home, away: matchup.ml.away },
-                spread: {
-                    home: { point: matchup.spread, price: -110 },
-                    away: { point: -matchup.spread, price: -110 }
-                },
-                totals: {
-                    over: { point: matchup.total, price: -110 },
-                    under: { point: matchup.total, price: -110 }
-                }
-            }
-        }));
     }
 
     function renderGames(container, games) {
