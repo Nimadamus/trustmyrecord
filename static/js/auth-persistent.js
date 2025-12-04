@@ -372,13 +372,9 @@ class PersistentAuthSystem {
         const navHTML = `
             <a onclick="showSection('record')">The Record</a>
             <a onclick="showSection('arena')">The Arena</a>
-            <a onclick="showSection('data')">Data Core</a>
-            <a onclick="showSection('blog')">Blog</a>
-            <a onclick="showSection('forums')">Forums</a>
             <a onclick="showSection('picks')" class="make-picks-link">Make Your Picks</a>
-            <a onclick="showSection('app')">App</a>
-            <a onclick="showSection('odds')">Live Odds</a>
             <a onclick="showSection('leaderboards')">Leaderboards</a>
+            <a onclick="showSection('forums')">Forums</a>
             <a onclick="showSection('login')" class="login-btn">Login</a>
             <a onclick="showSection('signup')" class="signup-btn">Sign Up</a>
         `;
