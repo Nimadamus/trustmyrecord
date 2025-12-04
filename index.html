@@ -10720,10 +10720,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
-            // DIRECT API CALL - no wrapper, no fallback
-            const url = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds?apiKey=${ODDS_API_KEY}&regions=us&markets=h2h,spreads,totals&oddsFormat=american`;
+            // Get today's date range (now to end of today + tomorrow for evening games)
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(23, 59, 59, 999);
 
-            console.log('Fetching:', url);
+            // DIRECT API CALL - only games within next 36 hours
+            const url = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds?apiKey=${ODDS_API_KEY}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&commenceTimeTo=${tomorrow.toISOString()}`;
+
+            console.log('Fetching games until:', tomorrow.toISOString());
             const response = await fetch(url);
 
             if (!response.ok) {
