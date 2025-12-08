@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Trust My Record</title>
+    <script>
+        // GitHub Pages SPA redirect - preserves the path as a query parameter
+        // so index.html can read it and show the correct section
+        var path = window.location.pathname;
+        var query = window.location.search;
+        var hash = window.location.hash;
+
+        // Redirect to index.html with the original path as a query param
+        window.location.replace(
+            window.location.origin + '/?p=' + encodeURIComponent(path.replace(/^\//, '')) +
+            (query ? '&q=' + encodeURIComponent(query.slice(1)) : '') +
+            hash
+        );
+    </script>
+</head>
+<body>
+    <p>Redirecting...</p>
+</body>
+</html>
