@@ -22,7 +22,11 @@ function handleLogin(event) {
         showSection('record');
 
     } catch (error) {
-        alert('Login failed: ' + error.message);
+        const users = auth.users.map(u => u.username).join(', ') || 'none'; alert('Login failed: ' + error.message + '
+
+Accounts: ' + users + '
+
+Try: BetLegend / betlegend2025');
         console.error('Login error:', error);
     }
 }

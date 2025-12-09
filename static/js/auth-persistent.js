@@ -1,5 +1,6 @@
-// Enhanced Authentication System with Persistent Login
-// Fixes the "keep logging out" issue
+// Enhanced Authentication System with PERMANENT Login
+// Users stay logged in FOREVER unless they click Logout
+// v3.0 - Dec 8, 2025
 
 class PersistentAuthSystem {
     constructor() {
