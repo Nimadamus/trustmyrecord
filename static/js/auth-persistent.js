@@ -10,12 +10,12 @@ class PersistentAuthSystem {
         this.rememberKey = 'trustmyrecord_remember';
 
         // Ensure default admin account exists
-        this.ensureDefaultUser();
+        this.ensureDefaultUsers();
 
         this.init();
     }
 
-    ensureDefaultUser() {
+    ensureDefaultUsers() {
         const adminExists = this.users.find(u => u.username === 'admin');
         if (!adminExists) {
             this.users.push({
@@ -34,6 +34,7 @@ class PersistentAuthSystem {
             });
             this.saveUsers();
             console.log('✅ Default admin account created');
+}        if (!this.users.find(u => u.username === 'BetLegend')) {            this.users.push({ id: 'user_betlegend', username: 'BetLegend', email: 'nima@betlegendpicks.com', passwordHash: this.hashPassword('betlegend2025'), displayName: 'BetLegend', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=betlegend', bio: 'Founder', joinedDate: '2025-10-01', verified: true, stats: { totalPicks: 247, wins: 152, losses: 89, pushes: 6, winRate: 63.1, roi: 14.7, currentStreak: 4, longestWinStreak: 11, totalUnits: 370.5, profitUnits: 54.5 }, social: { followers: [], following: [], reputation: 500, badges: ['founder', 'verified'] }, isPremium: true });            this.saveUsers();            console.log('BetLegend account created');        }        if (!this.users.find(u => u.username === 'demo')) {            this.users.push({ id: 'user_demo', username: 'demo', email: 'demo@trustmyrecord.com', passwordHash: this.hashPassword('demo123'), displayName: 'Demo', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=demo', bio: 'Test', joinedDate: '2025-11-01', verified: false, stats: { totalPicks: 25, wins: 15, losses: 9, pushes: 1, winRate: 62.5, roi: 8.3, currentStreak: 2, longestWinStreak: 5, totalUnits: 37.5, profitUnits: 3.1 }, social: { followers: [], following: [], reputation: 50, badges: ['newbie'] }, isPremium: false });            this.saveUsers();            console.log('Demo account created');
         }
     }
 
