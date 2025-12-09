@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TMR Debug</title>
+    <style>
+        body { background: #111; color: #0ff; font-family: monospace; padding: 20px; }
+        button { background: #0ff; color: #000; border: none; padding: 10px 20px; margin: 5px; cursor: pointer; font-size: 16px; }
+        pre { background: #222; padding: 15px; overflow: auto; }
+        h2 { color: #fff; }
+    </style>
+</head>
+<body>
+    <h1>Trust My Record - Debug Panel</h1>
+    
+    <h2>1. Check localStorage</h2>
+    <button onclick="checkStorage()">Check Storage</button>
+    <pre id="storage"></pre>
+    
+    <h2>2. Clear ALL Data & Reload</h2>
+    <button onclick="clearAll()">CLEAR EVERYTHING</button>
+    
+    <h2>3. Test Password Hash</h2>
+    <button onclick="testHash()">Test Hash</button>
+    <pre id="hash"></pre>
+    
+    <h2>4. Force Create Users</h2>
+    <button onclick="forceCreate()">Force Create Users</button>
+    <pre id="create"></pre>
+    
+    <h2>5. Test Login</h2>
+    <button onclick="testLogin()">Test BetLegend Login</button>
+    <pre id="login"></pre>
+
+    <script>
+    function hashPassword(password) {
+        let hash = 0;
+        for (let i = 0; i < password.length; i++) {
+            const char = password.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return hash.toString();
+    }
+    
+    function checkStorage() {
+        const users = localStorage.getItem('trustmyrecord_users');
+        const session = localStorage.getItem('trustmyrecord_session');
+        document.getElementById('storage').textContent = 
+            'USERS:\n' + (users ? JSON.stringify(JSON.parse(users), null, 2) : 'NONE') +
+            '\n\nSESSION:\n' + (session || 'NONE');
+    }
+    
+    function clearAll() {
+        localStorage.clear();
+        alert('Cleared! Reloading...');
+        location.reload();
+    }
+    
+    function testHash() {
+        const h1 = hashPassword('betlegend2025');
+        const h2 = hashPassword('admin123');
+        const h3 = hashPassword('demo123');
+        document.getElementById('hash').textContent = 
+            'betlegend2025 -> ' + h1 + '\n' +
+            'admin123 -> ' + h2 + '\n' +
+            'demo123 -> ' + h3;
+    }
+    
+    function forceCreate() {
+        const users = [
+            { id: 'user_betlegend', username: 'BetLegend', email: 'nima@betlegendpicks.com', passwordHash: hashPassword('betlegend2025'), displayName: 'BetLegend', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=betlegend', bio: 'Founder', joinedDate: '2025-10-01', verified: true, stats: { totalPicks: 247, wins: 152, losses: 89, pushes: 6, winRate: 63.1, roi: 14.7, currentStreak: 4, longestWinStreak: 11, totalUnits: 370.5, profitUnits: 54.5 }, social: { followers: [], following: [], reputation: 500, badges: ['founder', 'verified'] }, isPremium: true },
+            { id: 'user_admin', username: 'admin', email: 'admin@trustmyrecord.com', passwordHash: hashPassword('admin123'), displayName: 'Admin', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin', bio: 'Admin', joinedDate: '2025-10-01', verified: true, stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0, currentStreak: 0, longestWinStreak: 0, totalUnits: 0, profitUnits: 0 }, social: { followers: [], following: [], reputation: 100, badges: ['admin'] }, isPremium: true },
+            { id: 'user_demo', username: 'demo', email: 'demo@trustmyrecord.com', passwordHash: hashPassword('demo123'), displayName: 'Demo', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=demo', bio: 'Test', joinedDate: '2025-11-01', verified: false, stats: { totalPicks: 25, wins: 15, losses: 9, pushes: 1, winRate: 62.5, roi: 8.3, currentStreak: 2, longestWinStreak: 5, totalUnits: 37.5, profitUnits: 3.1 }, social: { followers: [], following: [], reputation: 50, badges: ['newbie'] }, isPremium: false }
+        ];
+        localStorage.setItem('trustmyrecord_users', JSON.stringify(users));
+        document.getElementById('create').textContent = 'Created ' + users.length + ' users!\n\nUsernames: ' + users.map(u => u.username).join(', ');
+    }
+    
+    function testLogin() {
+        const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
+        const user = users.find(u => u.username.toLowerCase() === 'betlegend');
+        
+        if (!user) {
+            document.getElementById('login').textContent = 'ERROR: BetLegend user not found!\n\nUsers in storage: ' + users.map(u => u.username).join(', ');
+            return;
+        }
+        
+        const inputHash = hashPassword('betlegend2025');
+        const match = user.passwordHash === inputHash;
+        
+        document.getElementById('login').textContent = 
+            'User found: ' + user.username + '\n' +
+            'Stored hash: ' + user.passwordHash + '\n' +
+            'Input hash:  ' + inputHash + '\n' +
+            'MATCH: ' + (match ? 'YES ✓' : 'NO ✗');
+    }
+    </script>
+</body>
+</html>
