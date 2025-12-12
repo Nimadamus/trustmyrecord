@@ -1192,7 +1192,19 @@
             gap: 25px;
         }
 
-        .profile-card {
+        
+/* Pending Picks Card Styles */
+.pending-picks-card {
+    border: 2px solid var(--neon-gold) !important;
+}
+
+.pending-pick-item:hover {
+    background: rgba(255, 215, 0, 0.15) !important;
+    transform: translateX(5px);
+    transition: all 0.2s;
+}
+
+.profile-card {
             background: var(--card-bg);
             border: 1px solid var(--glass-border);
             border-radius: 16px;
@@ -6025,18 +6037,8 @@
 
             <div class="pick-options">
                 <div class="option-group">
-                    <label>Confidence Level</label>
-                    <div class="confidence-buttons">
-                        <button class="conf-btn" data-conf="1" onclick="setConfidence(1)">1</button>
-                        <button class="conf-btn" data-conf="2" onclick="setConfidence(2)">2</button>
-                        <button class="conf-btn active" data-conf="3" onclick="setConfidence(3)">3</button>
-                        <button class="conf-btn" data-conf="4" onclick="setConfidence(4)">4</button>
-                        <button class="conf-btn" data-conf="5" onclick="setConfidence(5)">5 🔥</button>
-                    </div>
-                </div>
-
-                <div class="option-group">
-                    <label>Units to Bet</label>
+                    <label>Units to Win</label>
+                    <p class="units-explanation" id="unitsExplanation" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Select how many units you want to WIN. Risk calculated based on odds.</p>
                     <div class="units-buttons">
                         <button class="unit-btn" data-units="0.5" onclick="setUnits(0.5)">0.5</button>
                         <button class="unit-btn active" data-units="1" onclick="setUnits(1)">1</button>
@@ -7376,6 +7378,14 @@
                                         <div class="stat-number" id="profileFollowing">0</div>
                                         <div class="stat-label-profile">Following</div>
                                     </div>
+                                </div>
+                            </div>
+
+                            <!-- Pending Picks -->
+                            <div class="profile-card pending-picks-card">
+                                <h3>🎯 Pending Picks</h3>
+                                <div id="profilePendingPicks" class="pending-picks-list">
+                                    <p class="no-data-message" id="noPendingMessage">No pending picks. Make a pick to see it here!</p>
                                 </div>
                             </div>
 
@@ -12316,20 +12326,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div id="expandedMarkets${index}" class="expanded-markets">
                     <div class="market-section">
                         <div class="market-title">Team Totals</div>
-                        <div class="market-options">
-                            <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'teamtotal', '${game.away_team} Over', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')">
-                                <span class="line">${game.away_team.split(' ').pop()} O${Math.round(total/2)}</span>
-                                <span class="odds">-110</span>
-                            </button>
-                            <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'teamtotal', '${game.home_team} Over', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')">
-                                <span class="line">${game.home_team.split(' ').pop()} O${Math.round(total/2)}</span>
-                                <span class="odds">-110</span>
-                            </button>
+                        <div class="team-totals-grid" style="display: grid; gap: 10px;">
+                            <div class="team-total-row" style="display: flex; align-items: center; gap: 10px;">
+                                <span class="team-name" style="min-width: 100px; font-weight: 600;">${game.away_team.split(' ').pop()}</span>
+                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'teamtotal', '${game.away_team} Over', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')">
+                                    <span class="line">O ${Math.round(total/2)}</span>
+                                    <span class="odds">-110</span>
+                                </button>
+                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'teamtotal', '${game.away_team} Under', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')">
+                                    <span class="line">U ${Math.round(total/2)}</span>
+                                    <span class="odds">-110</span>
+                                </button>
+                            </div>
+                            <div class="team-total-row" style="display: flex; align-items: center; gap: 10px;">
+                                <span class="team-name" style="min-width: 100px; font-weight: 600;">${game.home_team.split(' ').pop()}</span>
+                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'teamtotal', '${game.home_team} Over', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')">
+                                    <span class="line">O ${Math.round(total/2)}</span>
+                                    <span class="odds">-110</span>
+                                </button>
+                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'teamtotal', '${game.home_team} Under', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')">
+                                    <span class="line">U ${Math.round(total/2)}</span>
+                                    <span class="odds">-110</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="market-section">
                         <div class="market-title">Player Props & Alt Lines</div>
-                        <p style="color: var(--text-muted); font-size: 0.9rem;">Contact support for player props and alternate lines.</p>
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">Coming soon</p>
                     </div>
                 </div>
             </div>
