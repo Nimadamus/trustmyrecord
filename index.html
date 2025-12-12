@@ -11397,8 +11397,10 @@ document.addEventListener('DOMContentLoaded', function() {
         'NCAAB': 'basketball_ncaab'
     };
 
+    // API Key for The Odds API (needed for loadGamesWithAllBets)
+    const ODDS_API_KEY_NEW = 'deeac7e7af6a8f1a5ac84c625e04973a';
+
     // NEW GAMES-FIRST FLOW FUNCTIONS
-    let currentSelectedPick = null;
 
     async function selectSportAndShowGames(sport) {
         selectedSport = sport;
@@ -11452,10 +11454,19 @@ document.addEventListener('DOMContentLoaded', function() {
             tomorrow.setUTCHours(23, 59, 59, 0);
             const commenceTimeTo = tomorrow.toISOString().split('.')[0] + 'Z';
 
-            const url = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds?apiKey=${ODDS_API_KEY}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&commenceTimeTo=${commenceTimeTo}`;
+            const url = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds?apiKey=${ODDS_API_KEY_NEW}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&commenceTimeTo=${commenceTimeTo}`;
 
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('API request failed');
+            // Add timeout to prevent infinite loading (10 seconds)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+            const response = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || 'API returned status ' + response.status);
+            }
 
             const games = await response.json();
             console.log('Loaded', games.length, 'games for', selectedSport);
@@ -11463,7 +11474,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (countBadge) countBadge.textContent = games.length + ' games';
 
             if (!games || games.length === 0) {
-                container.innerHTML = '<div class="no-games-message"><h4>No Games Scheduled</h4><p>Check back closer to game time for ' + selectedSport + ' games.</p></div>';
+                container.innerHTML = `<div class="no-games-message">
+                    <h4>No Games Scheduled</h4>
+                    <p>No ${selectedSport} games are scheduled in the next 48 hours.</p>
+                    <p style="margin-top: 15px; font-size: 0.9rem; color: var(--text-muted);">Check back closer to game time.</p>
+                    <button onclick="goBackToSports()" style="margin-top: 20px; padding: 12px 24px; background: var(--gradient-neon); border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer;">Choose Another Sport</button>
+                </div>`;
                 return;
             }
 
@@ -11471,7 +11487,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
         } catch (error) {
             console.error('Error loading games:', error);
-            container.innerHTML = '<div class="no-games-message"><h4>Error Loading Games</h4><p>' + error.message + '</p></div>';
+            let errorMessage = error.message;
+            if (error.name === 'AbortError') {
+                errorMessage = 'Request timed out. The API may be slow or unavailable.';
+            }
+            container.innerHTML = `<div class="no-games-message">
+                <h4>Unable to Load Games</h4>
+                <p style="color: var(--neon-red);">${errorMessage}</p>
+                <p style="margin-top: 15px; font-size: 0.9rem; color: var(--text-muted);">Please try again or select a different sport.</p>
+                <div style="margin-top: 20px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                    <button onclick="loadGamesWithAllBets()" style="padding: 12px 24px; background: var(--gradient-neon); border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer;">Try Again</button>
+                    <button onclick="goBackToSports()" style="padding: 12px 24px; background: transparent; border: 2px solid var(--neon-cyan); border-radius: 8px; color: var(--neon-cyan); font-weight: 700; cursor: pointer;">Choose Sport</button>
+                </div>
+            </div>`;
         }
     }
 
