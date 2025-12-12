@@ -2499,39 +2499,209 @@
             padding: 25px;
         }
 
+        
+        /* Stats Card Futuristic Enhancements */
+        .stats-card-futuristic {
+            background: linear-gradient(135deg, rgba(10, 15, 25, 0.98), rgba(5, 10, 20, 0.99)) !important;
+            border: 1px solid rgba(0, 255, 255, 0.2) !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stats-card-futuristic::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.03), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .stats-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+        }
+
+        .stats-card-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            letter-spacing: 1px;
+        }
+
+        .header-icon {
+            font-size: 20px;
+        }
+
+        .stats-live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--neon-green);
+            letter-spacing: 1px;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--neon-green);
+            border-radius: 50%;
+            animation: pulse-live 1.5s infinite;
+        }
+
+        @keyframes pulse-live {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(57, 255, 20, 0.7); }
+            50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(57, 255, 20, 0); }
+        }
+
+        .stats-disclaimer {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.3);
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
+        /* Orbitron font for numbers */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap');
+
+
+        /* FUTURISTIC STATS GRID */
         .stats-grid-profile {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid-profile {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         .stat-box-profile {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 20px;
+            position: relative;
+            background: linear-gradient(145deg, rgba(15, 20, 30, 0.95), rgba(5, 10, 20, 0.98));
+            border: 1px solid rgba(0, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 24px 16px;
             text-align: center;
-            transition: all 0.3s;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .stat-box-profile::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+            opacity: 0.6;
+        }
+
+        .stat-box-profile::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at center top, rgba(0, 255, 255, 0.05), transparent 70%);
+            pointer-events: none;
         }
 
         .stat-box-profile:hover {
             border-color: var(--neon-cyan);
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.2);
+            transform: translateY(-5px) scale(1.02);
+            box-shadow:
+                0 10px 40px rgba(0, 255, 255, 0.25),
+                0 0 30px rgba(0, 255, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-box-profile:hover::before {
+            animation: scanline 1.5s ease-in-out infinite;
+        }
+
+        @keyframes scanline {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .stat-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+            opacity: 0.8;
         }
 
         .stat-number {
-            font-size: 32px;
-            font-weight: 700;
-            color: var(--neon-cyan);
-            margin-bottom: 8px;
+            font-family: 'Orbitron', 'Courier New', monospace;
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(180deg, #00ffff, #00cccc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .stat-box-profile.positive .stat-number {
+            background: linear-gradient(180deg, #39ff14, #00cc00);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        .stat-box-profile.negative .stat-number {
+            background: linear-gradient(180deg, #ff073a, #cc0000);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        .stat-box-profile.highlight .stat-number {
+            background: linear-gradient(180deg, #ffd700, #ffaa00);
+            -webkit-background-clip: text;
+            background-clip: text;
         }
 
         .stat-label-profile {
-            font-size: 13px;
-            color: var(--text-muted);
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        /* Empty State Styling */
+        .stat-box-profile.no-data .stat-number {
+            color: rgba(255, 255, 255, 0.2);
+            background: none;
+            -webkit-text-fill-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-box-profile.no-data {
+            opacity: 0.6;
         }
 
         .activity-feed {
@@ -7350,34 +7520,49 @@
 
                         <!-- Right Column - Stats & Activity -->
                         <div class="profile-right-column">
-                            <!-- Betting Stats Card -->
-                            <div class="profile-card">
-                                <h3>Betting Statistics</h3>
+                            <!-- Betting Stats Card - Futuristic Design -->
+                            <div class="profile-card stats-card-futuristic">
+                                <div class="stats-card-header">
+                                    <h3><span class="header-icon">📊</span> Performance Analytics</h3>
+                                    <div class="stats-live-indicator">
+                                        <span class="live-dot"></span>
+                                        <span>LIVE</span>
+                                    </div>
+                                </div>
                                 <div class="stats-grid-profile">
-                                    <div class="stat-box-profile">
-                                        <div class="stat-number" id="profileTotalPicks">0</div>
+                                    <div class="stat-box-profile" id="statBoxPicks">
+                                        <div class="stat-icon">🎯</div>
+                                        <div class="stat-number" id="profileTotalPicks">—</div>
                                         <div class="stat-label-profile">Total Picks</div>
                                     </div>
-                                    <div class="stat-box-profile">
-                                        <div class="stat-number" id="profileWinRate">0%</div>
+                                    <div class="stat-box-profile" id="statBoxWinRate">
+                                        <div class="stat-icon">📈</div>
+                                        <div class="stat-number" id="profileWinRate">—</div>
                                         <div class="stat-label-profile">Win Rate</div>
                                     </div>
-                                    <div class="stat-box-profile">
-                                        <div class="stat-number" id="profileUnits">+0.0u</div>
-                                        <div class="stat-label-profile">Total Units</div>
+                                    <div class="stat-box-profile" id="statBoxUnits">
+                                        <div class="stat-icon">💰</div>
+                                        <div class="stat-number" id="profileUnits">—</div>
+                                        <div class="stat-label-profile">Net Units</div>
                                     </div>
-                                    <div class="stat-box-profile">
-                                        <div class="stat-number" id="profileStreak">0</div>
-                                        <div class="stat-label-profile">Current Streak</div>
+                                    <div class="stat-box-profile" id="statBoxROI">
+                                        <div class="stat-icon">⚡</div>
+                                        <div class="stat-number" id="profileROI">—</div>
+                                        <div class="stat-label-profile">ROI</div>
                                     </div>
-                                    <div class="stat-box-profile">
-                                        <div class="stat-number" id="profileFollowers">0</div>
-                                        <div class="stat-label-profile">Followers</div>
+                                    <div class="stat-box-profile" id="statBoxStreak">
+                                        <div class="stat-icon">🔥</div>
+                                        <div class="stat-number" id="profileStreak">—</div>
+                                        <div class="stat-label-profile">Streak</div>
                                     </div>
-                                    <div class="stat-box-profile">
-                                        <div class="stat-number" id="profileFollowing">0</div>
-                                        <div class="stat-label-profile">Following</div>
+                                    <div class="stat-box-profile" id="statBoxRecord">
+                                        <div class="stat-icon">📋</div>
+                                        <div class="stat-number" id="profileRecord">—</div>
+                                        <div class="stat-label-profile">W-L Record</div>
                                     </div>
+                                </div>
+                                <div class="stats-disclaimer">
+                                    Stats update automatically based on graded picks
                                 </div>
                             </div>
 
@@ -10413,6 +10598,119 @@ function finishQuiz() {
 }
 
 // PROFILE MANAGEMENT SYSTEM
+
+// Futuristic stats display with proper empty state handling
+function updateProfileStatsDisplay(stats) {
+    const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+    const userPicks = JSON.parse(localStorage.getItem('userPicks') || '[]');
+    const allPicks = [...picks, ...userPicks];
+
+    const totalPicks = allPicks.length;
+    const wins = allPicks.filter(p => p.status === 'win' || p.result === 'win').length;
+    const losses = allPicks.filter(p => p.status === 'loss' || p.result === 'loss').length;
+    const graded = wins + losses;
+
+    // Calculate units
+    let totalUnits = 0;
+    allPicks.forEach(p => {
+        const units = parseFloat(p.units || 1);
+        if (p.status === 'win' || p.result === 'win') totalUnits += units;
+        if (p.status === 'loss' || p.result === 'loss') totalUnits -= units;
+    });
+
+    // Calculate win rate
+    const winRate = graded > 0 ? ((wins / graded) * 100).toFixed(1) : null;
+
+    // Calculate ROI
+    const totalRisked = graded;
+    const roi = totalRisked > 0 ? ((totalUnits / totalRisked) * 100).toFixed(1) : null;
+
+    // Calculate streak
+    let streak = 0;
+    let streakType = '';
+    const sortedPicks = [...allPicks].reverse();
+    for (const p of sortedPicks) {
+        const result = p.status || p.result;
+        if (!result || result === 'pending') continue;
+        if (streakType === '') {
+            streakType = result;
+            streak = 1;
+        } else if (result === streakType) {
+            streak++;
+        } else {
+            break;
+        }
+    }
+
+    // Helper to update stat box
+    function updateStatBox(id, boxId, value, format = 'default') {
+        const el = document.getElementById(id);
+        const box = document.getElementById(boxId);
+        if (!el) return;
+
+        if (value === null || value === undefined || (typeof value === 'number' && isNaN(value))) {
+            el.textContent = '—';
+            if (box) {
+                box.classList.add('no-data');
+                box.classList.remove('positive', 'negative');
+            }
+            return;
+        }
+
+        let displayValue = value;
+        let isPositive = false;
+        let isNegative = false;
+
+        switch (format) {
+            case 'percent':
+                displayValue = value + '%';
+                isPositive = parseFloat(value) >= 55;
+                isNegative = parseFloat(value) < 50;
+                break;
+            case 'units':
+                const prefix = value >= 0 ? '+' : '';
+                displayValue = prefix + parseFloat(value).toFixed(1) + 'u';
+                isPositive = value > 0;
+                isNegative = value < 0;
+                break;
+            case 'roi':
+                const roiPrefix = value >= 0 ? '+' : '';
+                displayValue = roiPrefix + value + '%';
+                isPositive = parseFloat(value) > 0;
+                isNegative = parseFloat(value) < 0;
+                break;
+            case 'streak':
+                if (streak > 0) {
+                    displayValue = (streakType === 'win' ? 'W' : 'L') + streak;
+                    isPositive = streakType === 'win';
+                    isNegative = streakType === 'loss';
+                } else {
+                    displayValue = '—';
+                }
+                break;
+            case 'record':
+                displayValue = wins + '-' + losses;
+                break;
+        }
+
+        el.textContent = displayValue;
+
+        if (box) {
+            box.classList.remove('no-data', 'positive', 'negative');
+            if (isPositive) box.classList.add('positive');
+            if (isNegative) box.classList.add('negative');
+        }
+    }
+
+    // Update all stat boxes
+    updateStatBox('profileTotalPicks', 'statBoxPicks', totalPicks > 0 ? totalPicks : null);
+    updateStatBox('profileWinRate', 'statBoxWinRate', graded > 0 ? winRate : null, 'percent');
+    updateStatBox('profileUnits', 'statBoxUnits', graded > 0 ? totalUnits : null, 'units');
+    updateStatBox('profileROI', 'statBoxROI', graded > 0 ? roi : null, 'roi');
+    updateStatBox('profileStreak', 'statBoxStreak', streak > 0 ? streak : null, 'streak');
+    updateStatBox('profileRecord', 'statBoxRecord', graded > 0 ? true : null, 'record');
+}
+
 function loadUserProfile() {
     const profile = JSON.parse(localStorage.getItem('trustMyRecordProfile') || '{"displayName": "Your Name", "username": "username", "bio": "", "avatar": "👤", "favoriteTeams": []}');
 
@@ -10439,19 +10737,8 @@ function loadUserProfile() {
         document.getElementById('profileTotalPoints').textContent = totalPoints;
     }
 
-    // Update profile stats
-    if (document.getElementById('profileTotalPicks')) {
-        document.getElementById('profileTotalPicks').textContent = stats.totalPicks;
-        document.getElementById('profileWinRate').textContent = stats.winRate + '%';
-        document.getElementById('profileUnits').textContent = (stats.totalUnits >= 0 ? '+' : '') + stats.totalUnits + 'u';
-        document.getElementById('profileStreak').textContent = stats.currentStreak;
-
-        // Followers/Following from localStorage
-        const following = JSON.parse(localStorage.getItem('trustMyRecordFollowing') || '[]');
-        const followers = JSON.parse(localStorage.getItem('trustMyRecordFollowers') || '[]');
-        document.getElementById('profileFollowers').textContent = followers.length;
-        document.getElementById('profileFollowing').textContent = following.length;
-    }
+    // Update profile stats with proper formatting
+    updateProfileStatsDisplay(stats);
 
     return profile;
 }
