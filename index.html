@@ -774,6 +774,300 @@
             box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
         }
 
+        /* NEW COMMAND CENTER DASHBOARD STYLES */
+        .dashboard-command-center {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .dashboard-profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            border: 2px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .profile-avatar-section {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .dashboard-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .dashboard-username {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--neon-gold);
+            text-shadow: 0 0 15px var(--neon-gold);
+            margin: 0;
+        }
+
+        .dashboard-member-since {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        .dashboard-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge-item {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-item.newbie {
+            background: rgba(57, 255, 20, 0.1);
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+        }
+
+        .badge-item.winner {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: var(--neon-gold);
+            color: var(--neon-gold);
+        }
+
+        .profile-rank-section {
+            text-align: center;
+        }
+
+        .rank-display {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .rank-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .rank-value {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--neon-gold);
+            text-shadow: 0 0 20px var(--neon-gold);
+        }
+
+        .dashboard-stats-section,
+        .dashboard-activity-section,
+        .dashboard-actions,
+        .dashboard-recent {
+            margin-bottom: 30px;
+        }
+
+        .section-label {
+            color: var(--neon-cyan);
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stats-grid.enhanced {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .stat-card.primary { border-color: var(--neon-cyan); }
+        .stat-card.success { border-color: var(--neon-green); }
+        .stat-card.profit { border-color: var(--neon-gold); }
+        .stat-card.streak { border-color: var(--neon-purple); }
+
+        .stat-subtitle {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-top: 8px;
+        }
+
+        .activity-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .activity-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .activity-card:hover {
+            border-color: var(--neon-cyan);
+            transform: translateY(-3px);
+        }
+
+        .activity-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .activity-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            margin-bottom: 5px;
+        }
+
+        .activity-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .quick-actions-grid .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 18px 25px;
+        }
+
+        .action-btn.primary-action {
+            grid-column: span 1;
+            background: var(--gradient-neon);
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
+        }
+
+        .action-icon {
+            font-size: 1.3rem;
+        }
+
+        .action-text {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .recent-picks-mini {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+            min-height: 100px;
+        }
+
+        .no-picks-message {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 30px;
+            font-size: 1rem;
+        }
+
+        .recent-pick-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .recent-pick-item:last-child {
+            border-bottom: none;
+        }
+
+        .pick-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .pick-game {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .pick-details-text {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .pick-status {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .pick-status.pending {
+            background: rgba(255, 215, 0, 0.2);
+            color: var(--neon-gold);
+        }
+
+        .pick-status.won {
+            background: rgba(57, 255, 20, 0.2);
+            color: var(--neon-green);
+        }
+
+        .pick-status.lost {
+            background: rgba(255, 7, 58, 0.2);
+            color: var(--neon-red);
+        }
+
+        @media (max-width: 1024px) {
+            .stats-grid.enhanced,
+            .activity-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .quick-actions-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-profile-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+            .profile-avatar-section {
+                flex-direction: column;
+            }
+            .stats-grid.enhanced,
+            .activity-grid,
+            .quick-actions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .glass-card::before {
             content: '';
             position: absolute;
@@ -4983,46 +5277,124 @@
                     <p class="reveal">A new standard for sports betting has arrived. Built on absolute proof, radical transparency, and zero excuses.</p>
                 </section>
 
-                <!-- Live User Stats Dashboard -->
+                <!-- LOGGED-IN USER DASHBOARD - Command Center -->
                 <section id="userStatsDashboard" class="section" style="display: none;">
-                    <div class="stats-dashboard">
-                        <h2 class="stats-title">Your Performance</h2>
-                        <div class="stats-grid">
-                            <div class="stat-card">
-                                <div class="stat-icon">📊</div>
-                                <div class="stat-value" id="totalPicks">0</div>
-                                <div class="stat-label">Total Picks</div>
+                    <div class="dashboard-command-center">
+                        <!-- Profile Overview Header -->
+                        <div class="dashboard-profile-header">
+                            <div class="profile-avatar-section">
+                                <img id="dashboardAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=1" alt="Avatar" class="dashboard-avatar">
+                                <div class="profile-info">
+                                    <h2 id="dashboardUsername" class="dashboard-username">Welcome Back!</h2>
+                                    <p class="dashboard-member-since">Member since <span id="dashboardJoinDate">Today</span></p>
+                                    <div class="dashboard-badges" id="dashboardBadges">
+                                        <span class="badge-item newbie">Newcomer</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="stat-card">
-                                <div class="stat-icon">✅</div>
-                                <div class="stat-value" id="winRate">0%</div>
-                                <div class="stat-label">Win Rate</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-icon">💰</div>
-                                <div class="stat-value" id="totalUnits">+0.00u</div>
-                                <div class="stat-label">Total Units</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-icon">🔥</div>
-                                <div class="stat-value" id="currentStreak">0</div>
-                                <div class="stat-label">Current Streak</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-icon">🎯</div>
-                                <div class="stat-value" id="triviaScore">0</div>
-                                <div class="stat-label">Trivia Points</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-icon">🗳️</div>
-                                <div class="stat-value" id="pollVotes">0</div>
-                                <div class="stat-label">Poll Votes</div>
+                            <div class="profile-rank-section">
+                                <div class="rank-display">
+                                    <span class="rank-label">Leaderboard Rank</span>
+                                    <span class="rank-value" id="dashboardRank">#--</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="quick-actions">
-                            <button onclick="showSection('picks')" class="action-btn">Make a Pick</button>
-                            <button onclick="showSection('polls-trivia')" class="action-btn">Take Quiz</button>
-                            <button onclick="exportUserData()" class="action-btn secondary">Export Data</button>
+
+                        <!-- Main Stats Grid -->
+                        <div class="dashboard-stats-section">
+                            <h3 class="section-label">Your Performance</h3>
+                            <div class="stats-grid enhanced">
+                                <div class="stat-card primary">
+                                    <div class="stat-icon">📊</div>
+                                    <div class="stat-value" id="totalPicks">0</div>
+                                    <div class="stat-label">Total Picks</div>
+                                    <div class="stat-subtitle" id="picksBreakdown">0W - 0L - 0P</div>
+                                </div>
+                                <div class="stat-card success">
+                                    <div class="stat-icon">✅</div>
+                                    <div class="stat-value" id="winRate">0%</div>
+                                    <div class="stat-label">Win Rate</div>
+                                    <div class="stat-subtitle">Overall Record</div>
+                                </div>
+                                <div class="stat-card profit">
+                                    <div class="stat-icon">💰</div>
+                                    <div class="stat-value" id="totalUnits">+0.00u</div>
+                                    <div class="stat-label">Net Units</div>
+                                    <div class="stat-subtitle" id="roiDisplay">0% ROI</div>
+                                </div>
+                                <div class="stat-card streak">
+                                    <div class="stat-icon">🔥</div>
+                                    <div class="stat-value" id="currentStreak">0</div>
+                                    <div class="stat-label">Current Streak</div>
+                                    <div class="stat-subtitle" id="bestStreak">Best: 0</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Activity Section -->
+                        <div class="dashboard-activity-section">
+                            <h3 class="section-label">Community Activity</h3>
+                            <div class="activity-grid">
+                                <div class="activity-card">
+                                    <div class="activity-icon">💬</div>
+                                    <div class="activity-value" id="forumPosts">0</div>
+                                    <div class="activity-label">Forum Posts</div>
+                                </div>
+                                <div class="activity-card">
+                                    <div class="activity-icon">🎯</div>
+                                    <div class="activity-value" id="triviaScore">0</div>
+                                    <div class="activity-label">Trivia Points</div>
+                                </div>
+                                <div class="activity-card">
+                                    <div class="activity-icon">🗳️</div>
+                                    <div class="activity-value" id="pollVotes">0</div>
+                                    <div class="activity-label">Poll Votes</div>
+                                </div>
+                                <div class="activity-card">
+                                    <div class="activity-icon">❓</div>
+                                    <div class="activity-value" id="triviaCreated">0</div>
+                                    <div class="activity-label">Trivia Created</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="dashboard-actions">
+                            <h3 class="section-label">Quick Actions</h3>
+                            <div class="quick-actions-grid">
+                                <button onclick="showSection('picks')" class="action-btn primary-action">
+                                    <span class="action-icon">🎯</span>
+                                    <span class="action-text">Make a Pick</span>
+                                </button>
+                                <button onclick="showSection('polls-trivia')" class="action-btn">
+                                    <span class="action-icon">🧠</span>
+                                    <span class="action-text">Take Quiz</span>
+                                </button>
+                                <button onclick="showSection('forums')" class="action-btn">
+                                    <span class="action-icon">💬</span>
+                                    <span class="action-text">Forums</span>
+                                </button>
+                                <button onclick="showSection('leaderboards')" class="action-btn">
+                                    <span class="action-icon">🏆</span>
+                                    <span class="action-text">Leaderboards</span>
+                                </button>
+                                <button onclick="exportUserData()" class="action-btn secondary">
+                                    <span class="action-icon">📥</span>
+                                    <span class="action-text">Export Data</span>
+                                </button>
+                                <button onclick="showSection('profile')" class="action-btn secondary">
+                                    <span class="action-icon">⚙️</span>
+                                    <span class="action-text">Settings</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity Feed -->
+                        <div class="dashboard-recent">
+                            <h3 class="section-label">Recent Picks</h3>
+                            <div id="dashboardRecentPicks" class="recent-picks-mini">
+                                <p class="no-picks-message">No picks yet. Make your first pick to start building your record!</p>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -5180,95 +5552,67 @@
     </div>
 </div>
 
-<!-- MODERNIZED PICKS SECTION - Replace the old picks section with this -->
+<!-- REDESIGNED PICKS SECTION - Games First Flow -->
 <div id="picks" class="page-section">
     <div class="picks-container-modern">
         <div class="section-header">
             <h2>Make Your <span class="highlight">Picks</span></h2>
-            <p>Select games, choose your bets, and build your permanent record</p>
+            <p>Select a sport, see all games, choose your bet</p>
         </div>
 
         <!-- Step 1: Sport Selection -->
         <div id="sportSelection" class="pick-step active">
             <h3>Select Sport</h3>
             <div class="sport-cards-grid">
-                <div class="sport-card" data-sport="NFL" onclick="selectSport('NFL')">
-                    <div class="sport-icon">🏈</div>
-                    <div class="sport-name">NFL</div>
-                    <div class="sport-games">8 games today</div>
-                </div>
-                <div class="sport-card" data-sport="NBA" onclick="selectSport('NBA')">
+                <div class="sport-card" data-sport="NBA" onclick="selectSportAndShowGames('NBA')">
                     <div class="sport-icon">🏀</div>
                     <div class="sport-name">NBA</div>
-                    <div class="sport-games">12 games today</div>
+                    <div class="sport-games" id="nba-game-count">Loading...</div>
                 </div>
-                <div class="sport-card" data-sport="NHL" onclick="selectSport('NHL')">
+                <div class="sport-card" data-sport="NFL" onclick="selectSportAndShowGames('NFL')">
+                    <div class="sport-icon">🏈</div>
+                    <div class="sport-name">NFL</div>
+                    <div class="sport-games" id="nfl-game-count">Loading...</div>
+                </div>
+                <div class="sport-card" data-sport="NHL" onclick="selectSportAndShowGames('NHL')">
                     <div class="sport-icon">🏒</div>
                     <div class="sport-name">NHL</div>
-                    <div class="sport-games">10 games today</div>
+                    <div class="sport-games" id="nhl-game-count">Loading...</div>
                 </div>
-                <div class="sport-card" data-sport="MLB" onclick="selectSport('MLB')">
-                    <div class="sport-icon">⚾</div>
-                    <div class="sport-name">MLB</div>
-                    <div class="sport-games">15 games today</div>
-                </div>
-                <div class="sport-card" data-sport="NCAAF" onclick="selectSport('NCAAF')">
-                    <div class="sport-icon">🎓</div>
-                    <div class="sport-name">NCAAF</div>
-                    <div class="sport-games">25 games today</div>
-                </div>
-                <div class="sport-card" data-sport="NCAAB" onclick="selectSport('NCAAB')">
+                <div class="sport-card" data-sport="NCAAB" onclick="selectSportAndShowGames('NCAAB')">
                     <div class="sport-icon">🏫</div>
                     <div class="sport-name">NCAAB</div>
-                    <div class="sport-games">40 games today</div>
+                    <div class="sport-games" id="ncaab-game-count">Loading...</div>
+                </div>
+                <div class="sport-card" data-sport="NCAAF" onclick="selectSportAndShowGames('NCAAF')">
+                    <div class="sport-icon">🎓</div>
+                    <div class="sport-name">NCAAF</div>
+                    <div class="sport-games" id="ncaaf-game-count">Loading...</div>
+                </div>
+                <div class="sport-card" data-sport="MLB" onclick="selectSportAndShowGames('MLB')">
+                    <div class="sport-icon">⚾</div>
+                    <div class="sport-name">MLB</div>
+                    <div class="sport-games" id="mlb-game-count">Loading...</div>
                 </div>
             </div>
         </div>
 
-        <!-- Step 2: Bet Type Selection -->
-        <div id="betTypeSelection" class="pick-step">
-            <div class="back-button" onclick="goBack('sport')">← Back to Sports</div>
-            <h3 id="betTypeHeader">Choose Bet Type</h3>
-            <div class="bet-type-buttons">
-                <button class="bet-type-btn" data-type="spread" onclick="selectBetType('spread')">
-                    <span class="bet-icon">📊</span>
-                    <span class="bet-label" id="spreadLabel">Spread</span>
-                </button>
-                <button class="bet-type-btn" data-type="moneyline" onclick="selectBetType('moneyline')">
-                    <span class="bet-icon">💰</span>
-                    <span class="bet-label" id="moneylineLabel">Money Line</span>
-                </button>
-                <button class="bet-type-btn" data-type="total" onclick="selectBetType('total')">
-                    <span class="bet-icon">⬆️⬇️</span>
-                    <span class="bet-label" id="totalLabel">Over Under</span>
-                </button>
-                <button class="bet-type-btn" data-type="teamTotal" onclick="selectBetType('teamTotal')">
-                    <span class="bet-icon">🏀</span>
-                    <span class="bet-label" id="teamTotalLabel">Team Totals</span>
-                </button>
-                <button class="bet-type-btn" data-type="prop" onclick="selectBetType('prop')">
-                    <span class="bet-icon">🎯</span>
-                    <span class="bet-label" id="propLabel">Player Props</span>
-                </button>
-                <button class="bet-type-btn" data-type="alt" onclick="selectBetType('alt')">
-                    <span class="bet-icon">🔄</span>
-                    <span class="bet-label" id="altLabel">Alternate Lines</span>
-                </button>
+        <!-- Step 2: Games List with All Bet Options -->
+        <div id="gamesListSection" class="pick-step">
+            <div class="back-button" onclick="goBackToSports()">← Back to Sports</div>
+            <div class="games-header">
+                <h3 id="selectedSportTitle">NBA Games</h3>
+                <span class="games-count" id="gamesCountBadge">0 games</span>
             </div>
-        </div>
-
-        <!-- Step 3: Game Selection -->
-        <div id="gameSelection" class="pick-step">
-            <div class="back-button" onclick="goBack('betType')">← Back to Bet Types</div>
-            <h3>Select Game</h3>
-            <div id="gamesGrid" class="games-grid">
+            <div id="gamesListContainer" class="games-list-new">
                 <!-- Games will be loaded dynamically -->
+                <div class="loading-games">Loading games...</div>
             </div>
         </div>
 
-        <!-- Step 4: Pick Details -->
+        <!-- Step 3: Pick Details (Confirmation) -->
         <div id="pickDetails" class="pick-step">
-            <div class="back-button" onclick="goBack('game')">← Back to Games</div>
+            <div class="back-button" onclick="goBackToGames()">← Back to Games</div>
             <h3>Confirm Your Pick</h3>
 
             <div class="pick-summary-card">
@@ -5316,7 +5660,7 @@
                 </div>
             </div>
 
-            <button class="submit-pick-btn" onclick="submitPick()">
+            <button class="submit-pick-btn" onclick="submitPickNew()">
                 <span class="btn-icon">🔒</span>
                 <span class="btn-text">LOCK IN PICK</span>
             </button>
@@ -5481,6 +5825,328 @@
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 20px;
     margin-top: 30px;
+}
+
+/* NEW GAMES LIST STYLES - Games First Flow */
+.games-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.games-header h3 {
+    margin: 0;
+    color: var(--neon-gold);
+}
+
+.games-count {
+    background: rgba(0, 255, 255, 0.1);
+    color: var(--neon-cyan);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.loading-games {
+    text-align: center;
+    padding: 60px;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+.games-list-new {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Individual Game Card - New Design */
+.game-card-new {
+    background: var(--card-bg);
+    border: 2px solid var(--glass-border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.game-card-new:hover {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.2);
+}
+
+.game-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: rgba(0, 255, 255, 0.05);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.game-time-new {
+    color: var(--neon-gold);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.game-status {
+    background: rgba(57, 255, 20, 0.2);
+    color: var(--neon-green);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+/* Teams Section */
+.game-teams-section {
+    padding: 20px;
+}
+
+.team-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+}
+
+.team-row:first-child {
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 15px;
+    margin-bottom: 5px;
+}
+
+.team-info-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.team-name-large {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.team-record-small {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* Bet Buttons Row */
+.bet-buttons-row {
+    display: flex;
+    gap: 8px;
+}
+
+.bet-pick-btn {
+    background: rgba(0, 255, 255, 0.1);
+    border: 2px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    min-width: 90px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.bet-pick-btn:hover {
+    background: rgba(0, 255, 255, 0.2);
+    border-color: var(--neon-cyan);
+    transform: scale(1.02);
+}
+
+.bet-pick-btn.selected {
+    background: var(--gradient-neon);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+}
+
+.bet-pick-btn .line {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    display: block;
+}
+
+.bet-pick-btn .odds {
+    font-size: 0.85rem;
+    color: var(--neon-gold);
+    font-weight: 600;
+}
+
+/* Bet Type Tabs */
+.bet-types-tabs {
+    display: flex;
+    gap: 5px;
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-top: 1px solid var(--glass-border);
+    flex-wrap: wrap;
+}
+
+.bet-type-tab {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.bet-type-tab:hover {
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+}
+
+.bet-type-tab.active {
+    background: rgba(0, 255, 255, 0.15);
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+}
+
+/* Totals Row */
+.totals-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 15px 20px;
+    border-top: 1px solid var(--glass-border);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.total-btn {
+    background: rgba(255, 215, 0, 0.1);
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    border-radius: 10px;
+    padding: 12px 25px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    min-width: 120px;
+}
+
+.total-btn:hover {
+    background: rgba(255, 215, 0, 0.2);
+    border-color: var(--neon-gold);
+}
+
+.total-btn.selected {
+    background: var(--gradient-gold);
+    border-color: var(--neon-gold);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+}
+
+.total-btn .label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: block;
+    margin-bottom: 3px;
+}
+
+.total-btn .value {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--neon-gold);
+}
+
+.total-btn .odds {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* More Markets Button */
+.more-markets-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--glass-border);
+    color: var(--neon-cyan);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.more-markets-btn:hover {
+    background: rgba(0, 255, 255, 0.05);
+}
+
+/* Expanded Markets Section */
+.expanded-markets {
+    display: none;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-top: 1px solid var(--glass-border);
+}
+
+.expanded-markets.show {
+    display: block;
+}
+
+.market-section {
+    margin-bottom: 20px;
+}
+
+.market-section:last-child {
+    margin-bottom: 0;
+}
+
+.market-title {
+    color: var(--neon-cyan);
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.market-options {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* No Games Message */
+.no-games-message {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.no-games-message h4 {
+    color: var(--neon-cyan);
+    margin-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+    .bet-buttons-row {
+        flex-wrap: wrap;
+    }
+    .bet-pick-btn {
+        min-width: 70px;
+        padding: 8px 12px;
+    }
+    .team-name-large {
+        font-size: 1rem;
+    }
+    .totals-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .total-btn {
+        width: 100%;
+    }
 }
 
 .game-card {
@@ -9767,33 +10433,145 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function updateStatsDashboard() {
             const stats = calculateUserStats();
-
-            // Update dashboard if it exists
             const dashboard = document.getElementById('userStatsDashboard');
             if (!dashboard) return;
 
-            // Show dashboard if user has any activity
-            if (stats.totalPicks > 0 || stats.triviaPoints > 0 || stats.pollVoteCount > 0) {
+            // Check if user is logged in - ALWAYS show dashboard for logged-in users
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
                 dashboard.style.display = 'block';
+
+                // Populate user profile info
+                const user = JSON.parse(currentUser);
+                const avatarEl = document.getElementById('dashboardAvatar');
+                const usernameEl = document.getElementById('dashboardUsername');
+                const joinDateEl = document.getElementById('dashboardJoinDate');
+                const badgesEl = document.getElementById('dashboardBadges');
+
+                if (avatarEl && user.avatar) avatarEl.src = user.avatar;
+                if (usernameEl) usernameEl.textContent = user.displayName || user.username || 'Welcome Back!';
+                if (joinDateEl && user.joinedDate) {
+                    const joinDate = new Date(user.joinedDate);
+                    joinDateEl.textContent = joinDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                }
+
+                // Update badges based on user stats
+                if (badgesEl) {
+                    let badgesHTML = '';
+                    if (stats.totalPicks === 0) {
+                        badgesHTML = '<span class="badge-item newbie">Newcomer</span>';
+                    } else {
+                        if (stats.totalPicks >= 10) badgesHTML += '<span class="badge-item">10+ Picks</span>';
+                        if (stats.totalPicks >= 50) badgesHTML += '<span class="badge-item winner">50+ Picks</span>';
+                        if (stats.totalPicks >= 100) badgesHTML += '<span class="badge-item winner">Centurion</span>';
+                        if (parseFloat(stats.winRate) >= 55) badgesHTML += '<span class="badge-item winner">Sharp</span>';
+                        if (parseFloat(stats.totalUnits) > 10) badgesHTML += '<span class="badge-item winner">Profitable</span>';
+                        if (badgesHTML === '') badgesHTML = '<span class="badge-item newbie">Getting Started</span>';
+                    }
+                    badgesEl.innerHTML = badgesHTML;
+                }
+            } else {
+                // Not logged in - hide dashboard
+                dashboard.style.display = 'none';
+                return;
             }
 
-            // Update values
-            document.getElementById('totalPicks').textContent = stats.totalPicks;
-            document.getElementById('winRate').textContent = stats.winRate + '%';
-            document.getElementById('totalUnits').textContent = (stats.totalUnits >= 0 ? '+' : '') + stats.totalUnits + 'u';
-            document.getElementById('currentStreak').textContent = stats.currentStreak;
-            document.getElementById('triviaScore').textContent = stats.triviaPoints;
-            document.getElementById('pollVotes').textContent = stats.pollVoteCount;
+            // Update main stat values
+            const totalPicksEl = document.getElementById('totalPicks');
+            const winRateEl = document.getElementById('winRate');
+            const totalUnitsEl = document.getElementById('totalUnits');
+            const currentStreakEl = document.getElementById('currentStreak');
+
+            if (totalPicksEl) totalPicksEl.textContent = stats.totalPicks;
+            if (winRateEl) winRateEl.textContent = stats.winRate + '%';
+            if (totalUnitsEl) totalUnitsEl.textContent = (stats.totalUnits >= 0 ? '+' : '') + stats.totalUnits + 'u';
+            if (currentStreakEl) currentStreakEl.textContent = stats.currentStreak;
+
+            // Update extended stats
+            const picksBreakdownEl = document.getElementById('picksBreakdown');
+            const roiDisplayEl = document.getElementById('roiDisplay');
+            const bestStreakEl = document.getElementById('bestStreak');
+
+            if (picksBreakdownEl) {
+                const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+                const wins = picks.filter(p => p.status === 'win').length;
+                const losses = picks.filter(p => p.status === 'loss').length;
+                const pending = picks.filter(p => p.status === 'pending').length;
+                picksBreakdownEl.textContent = `${wins}W - ${losses}L - ${pending}P`;
+            }
+
+            if (roiDisplayEl) {
+                const roi = stats.totalPicks > 0 ? ((parseFloat(stats.totalUnits) / stats.totalPicks) * 100).toFixed(1) : 0;
+                roiDisplayEl.textContent = `${roi}% ROI`;
+            }
+
+            if (bestStreakEl) {
+                // For now just show current streak as best
+                bestStreakEl.textContent = 'Best: ' + stats.currentStreak;
+            }
+
+            // Update activity stats
+            const triviaScoreEl = document.getElementById('triviaScore');
+            const pollVotesEl = document.getElementById('pollVotes');
+            const forumPostsEl = document.getElementById('forumPosts');
+            const triviaCreatedEl = document.getElementById('triviaCreated');
+
+            if (triviaScoreEl) triviaScoreEl.textContent = stats.triviaPoints;
+            if (pollVotesEl) pollVotesEl.textContent = stats.pollVoteCount;
+            if (forumPostsEl) {
+                const forumPosts = JSON.parse(localStorage.getItem('trustMyRecordForumPosts') || '[]').length;
+                forumPostsEl.textContent = forumPosts;
+            }
+            if (triviaCreatedEl) {
+                const triviaCreated = JSON.parse(localStorage.getItem('trustMyRecordUserTrivia') || '[]').length;
+                triviaCreatedEl.textContent = triviaCreated;
+            }
 
             // Color code units
-            const unitsEl = document.getElementById('totalUnits');
-            if (stats.totalUnits > 0) {
-                unitsEl.style.color = 'var(--neon-green)';
-            } else if (stats.totalUnits < 0) {
-                unitsEl.style.color = 'var(--neon-red)';
-            } else {
-                unitsEl.style.color = 'var(--neon-gold)';
+            if (totalUnitsEl) {
+                if (parseFloat(stats.totalUnits) > 0) {
+                    totalUnitsEl.style.color = 'var(--neon-green)';
+                } else if (parseFloat(stats.totalUnits) < 0) {
+                    totalUnitsEl.style.color = 'var(--neon-red)';
+                } else {
+                    totalUnitsEl.style.color = 'var(--neon-gold)';
+                }
             }
+
+            // Update recent picks section
+            updateRecentPicksDisplay();
+        }
+
+        function updateRecentPicksDisplay() {
+            const container = document.getElementById('dashboardRecentPicks');
+            if (!container) return;
+
+            const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+
+            if (picks.length === 0) {
+                container.innerHTML = '<p class="no-picks-message">No picks yet. Make your first pick to start building your record!</p>';
+                return;
+            }
+
+            // Show last 5 picks
+            const recentPicks = picks.slice(0, 5);
+            let html = '';
+
+            recentPicks.forEach(pick => {
+                const statusClass = pick.status === 'win' ? 'won' : pick.status === 'loss' ? 'lost' : 'pending';
+                const statusText = pick.status === 'win' ? 'WON' : pick.status === 'loss' ? 'LOST' : 'PENDING';
+                html += `
+                    <div class="recent-pick-item">
+                        <div class="pick-info">
+                            <div class="pick-game">${pick.team1 || ''} vs ${pick.team2 || ''}</div>
+                            <div class="pick-details-text">${pick.pick || ''} (${pick.odds || ''}) - ${pick.units || 1}u</div>
+                        </div>
+                        <span class="pick-status ${statusClass}">${statusText}</span>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
         }
 
         function exportUserData() {
@@ -10618,6 +11396,329 @@ document.addEventListener('DOMContentLoaded', function() {
         'NCAAF': 'americanfootball_ncaaf',
         'NCAAB': 'basketball_ncaab'
     };
+
+    // NEW GAMES-FIRST FLOW FUNCTIONS
+    let currentSelectedPick = null;
+
+    async function selectSportAndShowGames(sport) {
+        selectedSport = sport;
+        document.querySelectorAll('.sport-card').forEach(card => card.classList.remove('selected'));
+        if (event && event.currentTarget) event.currentTarget.classList.add('selected');
+
+        // Update title
+        const sportIcons = { 'NBA': '🏀', 'NFL': '🏈', 'NHL': '🏒', 'MLB': '⚾', 'NCAAF': '🎓', 'NCAAB': '🏫' };
+        const titleEl = document.getElementById('selectedSportTitle');
+        if (titleEl) titleEl.textContent = (sportIcons[sport] || '') + ' ' + sport + ' Games';
+
+        // Show games section immediately
+        showPickStep('gamesListSection');
+
+        // Load games
+        await loadGamesWithAllBets();
+    }
+
+    function showPickStep(stepId) {
+        document.querySelectorAll('.pick-step').forEach(s => s.classList.remove('active'));
+        const el = document.getElementById(stepId);
+        if (el) el.classList.add('active');
+    }
+
+    function goBackToSports() {
+        showPickStep('sportSelection');
+    }
+
+    function goBackToGames() {
+        showPickStep('gamesListSection');
+    }
+
+    async function loadGamesWithAllBets() {
+        const container = document.getElementById('gamesListContainer');
+        const countBadge = document.getElementById('gamesCountBadge');
+
+        if (!container) return;
+
+        container.innerHTML = '<div class="loading-games">Loading games from The Odds API...</div>';
+
+        const sportKey = sportKeyMap[selectedSport];
+        if (!sportKey) {
+            container.innerHTML = '<div class="no-games-message"><h4>Invalid sport</h4><p>Please select a valid sport.</p></div>';
+            return;
+        }
+
+        try {
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setUTCDate(tomorrow.getUTCDate() + 2);
+            tomorrow.setUTCHours(23, 59, 59, 0);
+            const commenceTimeTo = tomorrow.toISOString().split('.')[0] + 'Z';
+
+            const url = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds?apiKey=${ODDS_API_KEY}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&commenceTimeTo=${commenceTimeTo}`;
+
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('API request failed');
+
+            const games = await response.json();
+            console.log('Loaded', games.length, 'games for', selectedSport);
+
+            if (countBadge) countBadge.textContent = games.length + ' games';
+
+            if (!games || games.length === 0) {
+                container.innerHTML = '<div class="no-games-message"><h4>No Games Scheduled</h4><p>Check back closer to game time for ' + selectedSport + ' games.</p></div>';
+                return;
+            }
+
+            renderGamesWithAllBets(games);
+
+        } catch (error) {
+            console.error('Error loading games:', error);
+            container.innerHTML = '<div class="no-games-message"><h4>Error Loading Games</h4><p>' + error.message + '</p></div>';
+        }
+    }
+
+    function renderGamesWithAllBets(games) {
+        const container = document.getElementById('gamesListContainer');
+        if (!container) return;
+
+        let html = '';
+
+        games.forEach((game, index) => {
+            const bookmaker = game.bookmakers && game.bookmakers[0];
+            const markets = bookmaker ? bookmaker.markets : [];
+
+            // Extract odds
+            let homeSpread = '--', awaySpread = '--', homeSpreadOdds = '', awaySpreadOdds = '';
+            let homeML = '--', awayML = '--';
+            let total = '--', overOdds = '', underOdds = '';
+
+            markets.forEach(market => {
+                if (market.key === 'spreads') {
+                    market.outcomes.forEach(outcome => {
+                        if (outcome.name === game.home_team) {
+                            homeSpread = outcome.point > 0 ? '+' + outcome.point : outcome.point;
+                            homeSpreadOdds = outcome.price > 0 ? '+' + outcome.price : outcome.price;
+                        } else {
+                            awaySpread = outcome.point > 0 ? '+' + outcome.point : outcome.point;
+                            awaySpreadOdds = outcome.price > 0 ? '+' + outcome.price : outcome.price;
+                        }
+                    });
+                }
+                if (market.key === 'h2h') {
+                    market.outcomes.forEach(outcome => {
+                        if (outcome.name === game.home_team) {
+                            homeML = outcome.price > 0 ? '+' + outcome.price : outcome.price;
+                        } else {
+                            awayML = outcome.price > 0 ? '+' + outcome.price : outcome.price;
+                        }
+                    });
+                }
+                if (market.key === 'totals') {
+                    market.outcomes.forEach(outcome => {
+                        if (outcome.name === 'Over') {
+                            total = outcome.point;
+                            overOdds = outcome.price > 0 ? '+' + outcome.price : outcome.price;
+                        } else {
+                            underOdds = outcome.price > 0 ? '+' + outcome.price : outcome.price;
+                        }
+                    });
+                }
+            });
+
+            const gameTime = new Date(game.commence_time);
+            const timeStr = gameTime.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+            html += `
+            <div class="game-card-new" data-game-index="${index}">
+                <div class="game-card-header">
+                    <span class="game-time-new">${timeStr}</span>
+                    <span class="game-status">Upcoming</span>
+                </div>
+
+                <div class="game-teams-section">
+                    <!-- Away Team Row -->
+                    <div class="team-row">
+                        <div class="team-info-left">
+                            <span class="team-name-large">${game.away_team}</span>
+                        </div>
+                        <div class="bet-buttons-row">
+                            <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'spread', '${game.away_team}', '${awaySpread}', '${awaySpreadOdds}', '${game.away_team}', '${game.home_team}')">
+                                <span class="line">${awaySpread}</span>
+                                <span class="odds">${awaySpreadOdds}</span>
+                            </button>
+                            <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'ml', '${game.away_team}', 'ML', '${awayML}', '${game.away_team}', '${game.home_team}')">
+                                <span class="line">ML</span>
+                                <span class="odds">${awayML}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Home Team Row -->
+                    <div class="team-row">
+                        <div class="team-info-left">
+                            <span class="team-name-large">${game.home_team}</span>
+                        </div>
+                        <div class="bet-buttons-row">
+                            <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'spread', '${game.home_team}', '${homeSpread}', '${homeSpreadOdds}', '${game.away_team}', '${game.home_team}')">
+                                <span class="line">${homeSpread}</span>
+                                <span class="odds">${homeSpreadOdds}</span>
+                            </button>
+                            <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'ml', '${game.home_team}', 'ML', '${homeML}', '${game.away_team}', '${game.home_team}')">
+                                <span class="line">ML</span>
+                                <span class="odds">${homeML}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Totals Row -->
+                <div class="totals-row">
+                    <button class="total-btn" onclick="selectGameBet(${index}, 'over', 'Over', '${total}', '${overOdds}', '${game.away_team}', '${game.home_team}')">
+                        <span class="label">OVER</span>
+                        <span class="value">${total}</span>
+                        <span class="odds">${overOdds}</span>
+                    </button>
+                    <button class="total-btn" onclick="selectGameBet(${index}, 'under', 'Under', '${total}', '${underOdds}', '${game.away_team}', '${game.home_team}')">
+                        <span class="label">UNDER</span>
+                        <span class="value">${total}</span>
+                        <span class="odds">${underOdds}</span>
+                    </button>
+                </div>
+
+                <!-- More Markets Toggle -->
+                <button class="more-markets-btn" onclick="toggleMoreMarkets(${index})">
+                    <span>More Markets</span>
+                    <span>▼</span>
+                </button>
+
+                <div id="expandedMarkets${index}" class="expanded-markets">
+                    <div class="market-section">
+                        <div class="market-title">Team Totals</div>
+                        <div class="market-options">
+                            <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'teamtotal', '${game.away_team} Over', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')">
+                                <span class="line">${game.away_team.split(' ').pop()} O${Math.round(total/2)}</span>
+                                <span class="odds">-110</span>
+                            </button>
+                            <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'teamtotal', '${game.home_team} Over', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')">
+                                <span class="line">${game.home_team.split(' ').pop()} O${Math.round(total/2)}</span>
+                                <span class="odds">-110</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="market-section">
+                        <div class="market-title">Player Props & Alt Lines</div>
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">Contact support for player props and alternate lines.</p>
+                    </div>
+                </div>
+            </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    function toggleMoreMarkets(gameIndex) {
+        const el = document.getElementById('expandedMarkets' + gameIndex);
+        if (el) el.classList.toggle('show');
+    }
+
+    function selectGameBet(gameIndex, betType, team, line, odds, awayTeam, homeTeam) {
+        // Store the selection
+        currentSelectedPick = {
+            gameIndex,
+            betType,
+            team,
+            line,
+            odds,
+            awayTeam,
+            homeTeam,
+            sport: selectedSport
+        };
+
+        // Update UI to show selection
+        document.querySelectorAll('.bet-pick-btn, .total-btn').forEach(btn => btn.classList.remove('selected'));
+        if (event && event.currentTarget) event.currentTarget.classList.add('selected');
+
+        // Update summary
+        const summaryGame = document.getElementById('summaryGame');
+        const summaryPick = document.getElementById('summaryPick');
+        const summaryOdds = document.getElementById('summaryOdds');
+
+        if (summaryGame) summaryGame.textContent = awayTeam + ' @ ' + homeTeam;
+        if (summaryPick) summaryPick.textContent = team + ' ' + line;
+        if (summaryOdds) summaryOdds.textContent = odds;
+
+        // Go to confirmation
+        showPickStep('pickDetails');
+    }
+
+    function submitPickNew() {
+        if (!currentSelectedPick) {
+            alert('No pick selected!');
+            return;
+        }
+
+        const reasoning = document.getElementById('pickReasoning')?.value || '';
+
+        // Get confidence and units from selected buttons
+        let confidence = 3;
+        let units = 1;
+        document.querySelectorAll('.conf-btn.active').forEach(btn => {
+            confidence = parseInt(btn.dataset.conf) || 3;
+        });
+        document.querySelectorAll('.unit-btn.active').forEach(btn => {
+            units = parseFloat(btn.dataset.units) || 1;
+        });
+
+        const pick = {
+            sport: currentSelectedPick.sport,
+            team1: currentSelectedPick.awayTeam,
+            team2: currentSelectedPick.homeTeam,
+            betType: currentSelectedPick.betType,
+            pick: currentSelectedPick.team + ' ' + currentSelectedPick.line,
+            odds: currentSelectedPick.odds,
+            confidence,
+            units,
+            reasoning,
+            timestamp: new Date().toISOString(),
+            status: 'pending'
+        };
+
+        // Save to localStorage
+        const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+        picks.unshift(pick);
+        localStorage.setItem('trustMyRecordPicks', JSON.stringify(picks));
+
+        alert('Pick locked in! ' + pick.pick + ' (' + pick.odds + ')');
+
+        // Reset and go back to sports
+        currentSelectedPick = null;
+        document.getElementById('pickReasoning').value = '';
+        showPickStep('sportSelection');
+
+        // Update stats dashboard
+        if (typeof updateStatsDashboard === 'function') updateStatsDashboard();
+    }
+
+    // Initialize game counts on page load
+    async function initGameCounts() {
+        const sports = ['NBA', 'NFL', 'NHL', 'NCAAB', 'NCAAF', 'MLB'];
+        for (const sport of sports) {
+            const el = document.getElementById(sport.toLowerCase() + '-game-count');
+            if (el) el.textContent = 'Loading...';
+        }
+        // For now just show placeholder - could fetch actual counts
+        setTimeout(() => {
+            document.querySelectorAll('.sport-games').forEach(el => {
+                if (el.textContent === 'Loading...') el.textContent = 'Click to view';
+            });
+        }, 1000);
+    }
+
+    // Call init on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initGameCounts);
+    } else {
+        initGameCounts();
+    }
 
     // Bet type labels per sport
     const betTypeLabels = {
