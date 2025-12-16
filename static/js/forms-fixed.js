@@ -10,7 +10,7 @@ function handleLogin(event) {
         auth.login(email, password, rememberMe);
         console.log('Login successful');
         document.getElementById('loginForm').reset();
-        showSection('record');
+        showSection('profile'); if (typeof updateProfilePage === 'function') updateProfilePage();
     } catch (error) {
         const users = auth.users.map(u => u.username).join(', ') || 'none';
         alert('Login failed: ' + error.message + '\n\nAccounts: ' + users + '\n\nTry: BetLegend / betlegend2025');
@@ -37,7 +37,7 @@ function handleSignup(event) {
     try {
         auth.register(username, email, password, true);
         alert('Account created successfully!');
-        if (typeof showSection === 'function') showSection('feed');
+        if (typeof showSection === 'function') showSection('profile'); if (typeof updateProfilePage === 'function') updateProfilePage();
         const form = document.getElementById('signupForm');
         if (form) form.reset();
     } catch (error) {
