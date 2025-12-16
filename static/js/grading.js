@@ -335,8 +335,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update leaderboards with real data
     setTimeout(updateLeaderboardsWithRealData, 1500);
 
-    // Auto-grade every 5 minutes
-    setInterval(autoGradePicks, 5 * 60 * 1000);
+    // Auto-grade every 2 minutes
+    setInterval(autoGradePicks, 2 * 60 * 1000);
 });
 
 // Export functions globally
