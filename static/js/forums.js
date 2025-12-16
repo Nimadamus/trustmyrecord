@@ -419,7 +419,63 @@ class ForumsSystem {
      */
     loadThreads() {
         const stored = localStorage.getItem('trustmyrecord_threads');
-        return stored ? JSON.parse(stored) : [];
+        if (stored) return JSON.parse(stored);
+
+        // Initialize with sample threads
+        const sampleThreads = [
+            {
+                id: 'thread_sample_1', categoryId: 'general', authorId: 'user_sample_1', authorUsername: 'SharpBettor',
+                authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sharp',
+                title: 'Welcome to Trust My Record Forums!',
+                content: 'This is the official community forum. Share picks, discuss strategies, and connect with other bettors. Every pick is tracked and verified. Let's build a community of honest handicappers!',
+                tags: ['welcome', 'community'],
+                timestamp: new Date(Date.now() - 7*24*60*60*1000).toISOString(),
+                lastActivityTime: new Date(Date.now() - 1*24*60*60*1000).toISOString(),
+                views: 342, replyCount: 15, isPinned: true, isLocked: false, upvotes: 47, downvotes: 2
+            },
+            {
+                id: 'thread_sample_2', categoryId: 'nfl', authorId: 'user_sample_2', authorUsername: 'GridironGuru',
+                authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=gridiron',
+                title: 'NFL Week 15 Discussion Thread',
+                content: 'What are everyone's thoughts on the Week 15 slate? I'm liking the Chiefs at home, Bills on the road.',
+                tags: ['nfl', 'week15', 'picks'],
+                timestamp: new Date(Date.now() - 2*24*60*60*1000).toISOString(),
+                lastActivityTime: new Date(Date.now() - 3*60*60*1000).toISOString(),
+                views: 156, replyCount: 23, isPinned: false, isLocked: false, upvotes: 28, downvotes: 3
+            },
+            {
+                id: 'thread_sample_3', categoryId: 'nba', authorId: 'user_sample_3', authorUsername: 'HoopsMaster',
+                authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=hoops',
+                title: 'Best NBA betting strategies for 2024-25 season',
+                content: 'Most profitable NBA angles: 1) Fade back-to-backs 2) Home dogs after 3+ losses 3) Unders in divisional games.',
+                tags: ['nba', 'strategy'],
+                timestamp: new Date(Date.now() - 5*24*60*60*1000).toISOString(),
+                lastActivityTime: new Date(Date.now() - 12*60*60*1000).toISOString(),
+                views: 289, replyCount: 31, isPinned: false, isLocked: false, upvotes: 52, downvotes: 4
+            },
+            {
+                id: 'thread_sample_4', categoryId: 'strategies', authorId: 'user_sample_4', authorUsername: 'BankrollKing',
+                authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=bank',
+                title: 'Bankroll Management 101 - The Key to Long-Term Success',
+                content: 'Never bet more than 2-3% per play. Use flat betting until 6+ months tracked. The goal is sustainable profits.',
+                tags: ['bankroll', 'strategy'],
+                timestamp: new Date(Date.now() - 10*24*60*60*1000).toISOString(),
+                lastActivityTime: new Date(Date.now() - 2*24*60*60*1000).toISOString(),
+                views: 412, replyCount: 18, isPinned: false, isLocked: false, upvotes: 89, downvotes: 1
+            },
+            {
+                id: 'thread_sample_5', categoryId: 'picks', authorId: 'user_sample_5', authorUsername: 'ValueFinder',
+                authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=value',
+                title: 'How I'm up 45 units this month - Process breakdown',
+                content: 'Line shopping, waiting for my number, heavy on player props, fading public on primetime. Verified record: 67-41 (+45.2u)',
+                tags: ['process', 'winning'],
+                timestamp: new Date(Date.now() - 3*24*60*60*1000).toISOString(),
+                lastActivityTime: new Date(Date.now() - 6*60*60*1000).toISOString(),
+                views: 567, replyCount: 42, isPinned: false, isLocked: false, upvotes: 112, downvotes: 8
+            }
+        ];
+        localStorage.setItem('trustmyrecord_threads', JSON.stringify(sampleThreads));
+        return sampleThreads;
     }
 
     saveThreads() {
@@ -428,7 +484,48 @@ class ForumsSystem {
 
     loadReplies() {
         const stored = localStorage.getItem('trustmyrecord_replies');
-        return stored ? JSON.parse(stored) : [];
+        if (stored) return JSON.parse(stored);
+
+        // Initialize with sample replies
+        const sampleReplies = [
+            {
+                id: 'reply_1', threadId: 'thread_sample_1', authorId: 'user_sample_2', authorUsername: 'GridironGuru',
+                authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=gridiron',
+                content: 'Love this platform! Finally a place where everyone's record is transparent. No more fake gurus.',
+                timestamp: new Date(Date.now() - 6*24*60*60*1000).toISOString(),
+                upvotes: 12, downvotes: 0, replyToId: null
+            },
+            {
+                id: 'reply_2', threadId: 'thread_sample_2', authorId: 'user_sample_3', authorUsername: 'HoopsMaster',
+                authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=hoops',
+                content: 'Chiefs at home is solid. I'm also looking at the Eagles this week - their defense has been elite lately.',
+                timestamp: new Date(Date.now() - 1*24*60*60*1000).toISOString(),
+                upvotes: 8, downvotes: 1, replyToId: null
+            },
+            {
+                id: 'reply_3', threadId: 'thread_sample_3', authorId: 'user_sample_4', authorUsername: 'BankrollKing',
+                authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=bank',
+                content: 'The back-to-back fade is my bread and butter. Especially in the second half of the season when fatigue sets in.',
+                timestamp: new Date(Date.now() - 4*24*60*60*1000).toISOString(),
+                upvotes: 18, downvotes: 0, replyToId: null
+            },
+            {
+                id: 'reply_4', threadId: 'thread_sample_5', authorId: 'user_sample_1', authorUsername: 'SharpBettor',
+                authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sharp',
+                content: 'Congrats on the month! What books are you using for line shopping? I mainly stick to DraftKings and FanDuel.',
+                timestamp: new Date(Date.now() - 2*24*60*60*1000).toISOString(),
+                upvotes: 5, downvotes: 0, replyToId: null
+            },
+            {
+                id: 'reply_5', threadId: 'thread_sample_5', authorId: 'user_sample_5', authorUsername: 'ValueFinder',
+                authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=value',
+                content: 'DK, FD, Caesars, and BetMGM. Sometimes Pinnacle for the sharpest lines. Line shopping alone adds 2-3 units/month.',
+                timestamp: new Date(Date.now() - 1*24*60*60*1000).toISOString(),
+                upvotes: 22, downvotes: 0, replyToId: 'reply_4'
+            }
+        ];
+        localStorage.setItem('trustmyrecord_replies', JSON.stringify(sampleReplies));
+        return sampleReplies;
     }
 
     saveReplies() {
