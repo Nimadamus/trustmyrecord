@@ -9635,209 +9635,350 @@
     </div>
 </div>
 
-<!-- MY RECORD PAGE SECTION -->
+<!-- MY RECORD PAGE SECTION - Advanced Stats Dashboard -->
 <div id="my-record" class="page-section">
-    <div class="my-record-container">
-        <div class="section-header">
+    <div class="advanced-stats-container">
+        <!-- Header -->
+        <div class="stats-header">
             <h2>My <span class="highlight">Record</span></h2>
-            <p>Your complete betting history and verified performance stats</p>
+            <p>Advanced analytics and verified performance metrics</p>
         </div>
 
-        <!-- Main Stats Dashboard -->
-        <div class="record-stats-grid">
-            <div class="record-stat-card main-record">
-                <div class="stat-icon">📊</div>
-                <div class="stat-content">
-                    <div class="record-display" id="myRecordDisplay">0-0-0</div>
-                    <div class="stat-label">Overall Record (W-L-P)</div>
-                </div>
+        <!-- Primary Stats Row - Big Numbers -->
+        <div class="primary-stats-row">
+            <div class="big-stat-card record-card">
+                <div class="big-stat-value" id="advRecordDisplay">0-0-0</div>
+                <div class="big-stat-label">RECORD (W-L-P)</div>
             </div>
-            <div class="record-stat-card">
-                <div class="stat-icon">🎯</div>
-                <div class="stat-content">
-                    <div class="stat-value" id="myWinPct">0%</div>
-                    <div class="stat-label">Win Rate</div>
-                </div>
+            <div class="big-stat-card win-rate-card">
+                <div class="big-stat-value" id="advWinRate">0.0%</div>
+                <div class="big-stat-label">WIN RATE</div>
             </div>
-            <div class="record-stat-card">
-                <div class="stat-icon">💰</div>
-                <div class="stat-content">
-                    <div class="stat-value" id="myUnitsProfit">+0.00</div>
-                    <div class="stat-label">Units Profit</div>
-                </div>
+            <div class="big-stat-card units-card">
+                <div class="big-stat-value" id="advUnitsProfit">+0.00</div>
+                <div class="big-stat-label">UNITS +/-</div>
             </div>
-            <div class="record-stat-card">
-                <div class="stat-icon">🔥</div>
-                <div class="stat-content">
-                    <div class="stat-value" id="myStreak">-</div>
-                    <div class="stat-label">Current Streak</div>
-                </div>
+            <div class="big-stat-card roi-card">
+                <div class="big-stat-value" id="advROI">0.0%</div>
+                <div class="big-stat-label">ROI</div>
             </div>
         </div>
 
-        <!-- Sport Breakdown -->
-        <div class="sport-breakdown">
-            <h3>📈 Performance by Sport</h3>
-            <div class="sport-breakdown-grid" id="sportBreakdownGrid">
-                <!-- Populated by JavaScript -->
+        <!-- Secondary Stats - Advanced Metrics -->
+        <div class="secondary-stats-grid">
+            <div class="adv-stat-box">
+                <div class="adv-stat-icon">📊</div>
+                <div class="adv-stat-data">
+                    <span class="adv-stat-value" id="advZScore">0.00</span>
+                    <span class="adv-stat-label">Z-Score</span>
+                </div>
+                <div class="adv-stat-info" title="Statistical significance. >1.96 = 95% confidence your edge is real">ℹ️</div>
+            </div>
+            <div class="adv-stat-box">
+                <div class="adv-stat-icon">🎯</div>
+                <div class="adv-stat-data">
+                    <span class="adv-stat-value" id="advAvgOdds">-110</span>
+                    <span class="adv-stat-label">Avg Odds</span>
+                </div>
+                <div class="adv-stat-info" title="Average odds of all your picks">ℹ️</div>
+            </div>
+            <div class="adv-stat-box">
+                <div class="adv-stat-icon">🔥</div>
+                <div class="adv-stat-data">
+                    <span class="adv-stat-value" id="advCurrentStreak">-</span>
+                    <span class="adv-stat-label">Current Streak</span>
+                </div>
+            </div>
+            <div class="adv-stat-box">
+                <div class="adv-stat-icon">🏆</div>
+                <div class="adv-stat-data">
+                    <span class="adv-stat-value" id="advBestStreak">0W</span>
+                    <span class="adv-stat-label">Best Win Streak</span>
+                </div>
+            </div>
+            <div class="adv-stat-box">
+                <div class="adv-stat-icon">💵</div>
+                <div class="adv-stat-data">
+                    <span class="adv-stat-value" id="advAvgUnits">1.0</span>
+                    <span class="adv-stat-label">Avg Units/Pick</span>
+                </div>
+            </div>
+            <div class="adv-stat-box">
+                <div class="adv-stat-icon">📅</div>
+                <div class="adv-stat-data">
+                    <span class="adv-stat-value" id="advTotalPicks">0</span>
+                    <span class="adv-stat-label">Total Picks</span>
+                </div>
             </div>
         </div>
 
-        <!-- Actions -->
-        <div class="record-actions">
-            <button class="grade-btn" onclick="showGradingModal()">
-                <span>✅</span> Grade Pending Picks
+        <!-- Sport Breakdown Table -->
+        <div class="breakdown-section">
+            <h3>Performance by Sport</h3>
+            <div class="breakdown-table-wrapper">
+                <table class="breakdown-table" id="sportBreakdownTable">
+                    <thead>
+                        <tr>
+                            <th>Sport</th>
+                            <th>Record</th>
+                            <th>Win %</th>
+                            <th>Units</th>
+                            <th>ROI</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sportBreakdownBody">
+                        <tr><td colspan="5" style="text-align:center; color: var(--text-muted);">No data yet</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Bet Type Breakdown -->
+        <div class="breakdown-section">
+            <h3>Performance by Bet Type</h3>
+            <div class="breakdown-table-wrapper">
+                <table class="breakdown-table" id="betTypeBreakdownTable">
+                    <thead>
+                        <tr>
+                            <th>Bet Type</th>
+                            <th>Record</th>
+                            <th>Win %</th>
+                            <th>Units</th>
+                            <th>ROI</th>
+                        </tr>
+                    </thead>
+                    <tbody id="betTypeBreakdownBody">
+                        <tr><td colspan="5" style="text-align:center; color: var(--text-muted);">No data yet</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Actions Bar -->
+        <div class="stats-actions-bar">
+            <button class="stats-action-btn primary" onclick="tryAutoGradeAll()">
+                <span>⚡</span> Auto-Grade Pending
             </button>
-            <button class="refresh-btn" onclick="refreshMyRecord()">
-                <span>🔄</span> Refresh Stats
+            <button class="stats-action-btn" onclick="refreshAdvancedStats()">
+                <span>🔄</span> Refresh
+            </button>
+            <button class="stats-action-btn" onclick="toggleFullHistory()">
+                <span>📜</span> <span id="historyToggleText">Show Full History</span>
             </button>
         </div>
 
-        <!-- Pick History -->
-        <div class="picks-history-section">
-            <h3>📝 Complete Pick History</h3>
-            <div class="history-filters">
-                <button class="filter-btn active" data-filter="all" onclick="filterPickHistory('all')">All</button>
-                <button class="filter-btn" data-filter="win" onclick="filterPickHistory('win')">Wins</button>
-                <button class="filter-btn" data-filter="loss" onclick="filterPickHistory('loss')">Losses</button>
-                <button class="filter-btn" data-filter="pending" onclick="filterPickHistory('pending')">Pending</button>
+        <!-- Pick History - Collapsible -->
+        <div class="full-history-section" id="fullHistorySection" style="display: none;">
+            <h3>Complete Pick History</h3>
+            <div class="history-filter-bar">
+                <button class="hist-filter active" data-filter="all" onclick="filterAdvHistory('all')">All</button>
+                <button class="hist-filter win-filter" data-filter="win" onclick="filterAdvHistory('win')">Wins</button>
+                <button class="hist-filter loss-filter" data-filter="loss" onclick="filterAdvHistory('loss')">Losses</button>
+                <button class="hist-filter pending-filter" data-filter="pending" onclick="filterAdvHistory('pending')">Pending</button>
             </div>
-            <div class="picks-history-list" id="myRecordPicksList">
-                <p class="no-picks-msg">No picks yet. Make your first pick to start building your record!</p>
+            <div class="history-list" id="advHistoryList">
+                <!-- Populated by JS -->
             </div>
         </div>
     </div>
 </div>
 
 <style>
-/* MY RECORD PAGE STYLES */
-.my-record-container {
+/* =====================================================
+   ADVANCED STATS DASHBOARD - PICKMONITOR STYLE
+   ===================================================== */
+
+.advanced-stats-container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 40px 20px;
 }
 
-.record-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
+.stats-header {
+    text-align: center;
     margin-bottom: 40px;
 }
 
-.record-stat-card {
+.stats-header h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.stats-header p {
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+/* Primary Stats Row - Big Numbers */
+.primary-stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.big-stat-card {
     background: var(--card-bg);
     border: 2px solid var(--glass-border);
     border-radius: 16px;
-    padding: 25px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
+    padding: 30px 20px;
+    text-align: center;
     transition: all 0.3s ease;
 }
 
-.record-stat-card:hover {
-    border-color: var(--neon-cyan);
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
-    transform: translateY(-3px);
+.big-stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
 }
 
-.record-stat-card.main-record {
-    grid-column: span 1;
-    background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 215, 0, 0.05));
-    border-color: var(--neon-cyan);
-}
-
-.record-stat-card .stat-icon {
-    font-size: 2.5rem;
-}
-
-.record-stat-card .stat-content {
-    flex: 1;
-}
-
-.record-stat-card .record-display {
+.big-stat-value {
     font-family: 'Orbitron', sans-serif;
-    font-size: 2rem;
+    font-size: 2.2rem;
     font-weight: 900;
-    background: var(--gradient-gold);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    margin-bottom: 8px;
 }
 
-.record-stat-card .stat-value {
+.big-stat-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+/* Card Color Variants */
+.record-card {
+    border-color: var(--neon-cyan);
+    background: linear-gradient(135deg, rgba(0,255,255,0.1) 0%, var(--card-bg) 100%);
+}
+.record-card .big-stat-value { color: var(--neon-cyan); }
+
+.win-rate-card .big-stat-value { color: #00ff88; }
+.units-card .big-stat-value.positive { color: #00ff88; }
+.units-card .big-stat-value.negative { color: #ff4444; }
+.roi-card .big-stat-value.positive { color: #00ff88; }
+.roi-card .big-stat-value.negative { color: #ff4444; }
+
+/* Secondary Stats Grid */
+.secondary-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 15px;
+    margin-bottom: 40px;
+}
+
+.adv-stat-box {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 20px 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+
+.adv-stat-icon {
+    font-size: 1.5rem;
+}
+
+.adv-stat-data {
+    text-align: center;
+}
+
+.adv-stat-value {
+    display: block;
     font-family: 'Orbitron', sans-serif;
-    font-size: 1.8rem;
+    font-size: 1.3rem;
     font-weight: 700;
     color: var(--neon-cyan);
 }
 
-.record-stat-card .stat-label {
+.adv-stat-label {
+    display: block;
+    font-size: 0.7rem;
     color: var(--text-muted);
-    font-size: 0.9rem;
-    margin-top: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
 }
 
-/* Sport Breakdown */
-.sport-breakdown {
+.adv-stat-info {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 0.8rem;
+    cursor: help;
+    opacity: 0.5;
+}
+
+/* Breakdown Tables */
+.breakdown-section {
     background: var(--card-bg);
     border: 1px solid var(--glass-border);
     border-radius: 16px;
     padding: 25px;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
 }
 
-.sport-breakdown h3 {
-    font-family: 'Orbitron', sans-serif;
-    color: var(--neon-cyan);
-    margin-bottom: 20px;
-    font-size: 1.2rem;
-}
-
-.sport-breakdown-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
-}
-
-.sport-breakdown-item {
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 12px;
-    padding: 15px;
-    text-align: center;
-}
-
-.sport-breakdown-item .sport-name {
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 8px;
-}
-
-.sport-breakdown-item .sport-record {
+.breakdown-section h3 {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.1rem;
-    color: var(--neon-gold);
+    color: var(--neon-cyan);
+    margin-bottom: 20px;
 }
 
-.sport-breakdown-item .sport-pct {
-    color: var(--text-muted);
-    font-size: 0.85rem;
+.breakdown-table-wrapper {
+    overflow-x: auto;
 }
 
-/* Record Actions */
-.record-actions {
+.breakdown-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.breakdown-table th {
+    background: rgba(0, 255, 255, 0.1);
+    color: var(--neon-cyan);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 2px solid var(--glass-border);
+}
+
+.breakdown-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.95rem;
+}
+
+.breakdown-table tr:hover td {
+    background: rgba(0, 255, 255, 0.03);
+}
+
+.breakdown-table .positive { color: #00ff88; }
+.breakdown-table .negative { color: #ff4444; }
+.breakdown-table .sport-icon { margin-right: 8px; }
+
+/* Actions Bar */
+.stats-actions-bar {
     display: flex;
     gap: 15px;
     margin-bottom: 30px;
     flex-wrap: wrap;
 }
 
-.grade-btn, .refresh-btn {
+.stats-action-btn {
     background: var(--card-bg);
-    border: 2px solid var(--neon-green);
-    border-radius: 12px;
-    padding: 12px 25px;
-    color: var(--neon-green);
+    border: 2px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 12px 24px;
+    color: var(--text-primary);
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -9846,44 +9987,45 @@
     gap: 8px;
 }
 
-.grade-btn:hover {
-    background: rgba(57, 255, 20, 0.1);
-    box-shadow: 0 0 15px rgba(57, 255, 20, 0.3);
-}
-
-.refresh-btn {
+.stats-action-btn:hover {
     border-color: var(--neon-cyan);
-    color: var(--neon-cyan);
+    background: rgba(0, 255, 255, 0.05);
 }
 
-.refresh-btn:hover {
-    background: rgba(0, 255, 255, 0.1);
-    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+.stats-action-btn.primary {
+    background: linear-gradient(135deg, var(--neon-cyan), #00cccc);
+    border: none;
+    color: #000;
 }
 
-/* Pick History */
-.picks-history-section {
+.stats-action-btn.primary:hover {
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+}
+
+/* Full History Section */
+.full-history-section {
     background: var(--card-bg);
     border: 1px solid var(--glass-border);
     border-radius: 16px;
     padding: 25px;
+    margin-top: 20px;
 }
 
-.picks-history-section h3 {
+.full-history-section h3 {
     font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
     color: var(--neon-cyan);
     margin-bottom: 20px;
-    font-size: 1.2rem;
 }
 
-.history-filters {
+.history-filter-bar {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
     flex-wrap: wrap;
 }
 
-.filter-btn {
+.hist-filter {
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid var(--glass-border);
     border-radius: 20px;
@@ -9891,119 +10033,212 @@
     color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.3s ease;
+    font-size: 0.9rem;
 }
 
-.filter-btn:hover, .filter-btn.active {
-    background: rgba(0, 255, 255, 0.1);
+.hist-filter:hover, .hist-filter.active {
     border-color: var(--neon-cyan);
     color: var(--neon-cyan);
+    background: rgba(0, 255, 255, 0.1);
 }
 
-.picks-history-list {
-    max-height: 500px;
+.hist-filter.win-filter.active {
+    border-color: #00ff88;
+    color: #00ff88;
+    background: rgba(0, 255, 136, 0.1);
+}
+
+.hist-filter.loss-filter.active {
+    border-color: #ff4444;
+    color: #ff4444;
+    background: rgba(255, 68, 68, 0.1);
+}
+
+.hist-filter.pending-filter.active {
+    border-color: var(--neon-gold);
+    color: var(--neon-gold);
+    background: rgba(255, 215, 0, 0.1);
+}
+
+.history-list {
+    max-height: 600px;
     overflow-y: auto;
 }
 
-.pick-history-item {
-    background: rgba(0, 0, 0, 0.2);
+/* Pick Cards in History */
+.history-pick-card {
     border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-left: 4px solid var(--glass-border);
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
-.pick-history-item:hover {
-    background: rgba(0, 0, 0, 0.3);
+.history-pick-card:hover {
+    transform: translateX(5px);
 }
 
-.pick-history-item.win {
-    border-left-color: var(--neon-green);
+/* WIN Card */
+.history-pick-card.win {
+    background: linear-gradient(90deg, rgba(0, 255, 136, 0.15) 0%, rgba(0, 255, 136, 0.02) 100%);
+    border-left: 4px solid #00ff88;
 }
 
-.pick-history-item.loss {
-    border-left-color: var(--neon-red);
+/* LOSS Card */
+.history-pick-card.loss {
+    background: linear-gradient(90deg, rgba(255, 68, 68, 0.15) 0%, rgba(255, 68, 68, 0.02) 100%);
+    border-left: 4px solid #ff4444;
 }
 
-.pick-history-item.pending {
-    border-left-color: var(--neon-gold);
+/* PENDING Card */
+.history-pick-card.pending {
+    background: linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.02) 100%);
+    border-left: 4px solid var(--neon-gold);
 }
 
-.pick-history-item.push {
-    border-left-color: var(--neon-purple);
+/* PUSH Card */
+.history-pick-card.push {
+    background: linear-gradient(90deg, rgba(128, 128, 128, 0.15) 0%, rgba(128, 128, 128, 0.02) 100%);
+    border-left: 4px solid #888;
 }
 
-.pick-info {
+.pick-card-main {
     flex: 1;
 }
 
-.pick-info .pick-game {
+.pick-card-game {
     font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 5px;
+    color: #fff;
+    font-size: 1rem;
+    margin-bottom: 4px;
 }
 
-.pick-info .pick-bet {
+.pick-card-details {
     color: var(--neon-cyan);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
 }
 
-.pick-info .pick-date {
+.pick-card-meta {
     color: var(--text-muted);
-    font-size: 0.85rem;
-    margin-top: 5px;
+    font-size: 0.8rem;
 }
 
-.pick-result-badge {
-    padding: 8px 16px;
-    border-radius: 20px;
+.pick-card-result {
+    padding: 10px 20px;
+    border-radius: 25px;
     font-weight: 700;
+    font-size: 0.9rem;
     text-transform: uppercase;
-    font-size: 0.85rem;
+    letter-spacing: 1px;
 }
 
-.pick-result-badge.win {
-    background: rgba(57, 255, 20, 0.2);
-    color: var(--neon-green);
+.pick-card-result.win {
+    background: rgba(0, 255, 136, 0.2);
+    color: #00ff88;
 }
 
-.pick-result-badge.loss {
-    background: rgba(255, 7, 58, 0.2);
-    color: var(--neon-red);
+.pick-card-result.loss {
+    background: rgba(255, 68, 68, 0.2);
+    color: #ff4444;
 }
 
-.pick-result-badge.pending {
+.pick-card-result.pending {
     background: rgba(255, 215, 0, 0.2);
     color: var(--neon-gold);
 }
 
-.pick-result-badge.push {
-    background: rgba(255, 0, 255, 0.2);
-    color: var(--neon-purple);
+.pick-card-result.push {
+    background: rgba(128, 128, 128, 0.2);
+    color: #888;
 }
 
-.no-picks-msg {
-    text-align: center;
-    color: var(--text-muted);
-    padding: 40px 20px;
+/* Pending Pick Grade Buttons */
+.pick-grade-btns {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.grade-btn-inline {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+}
+
+.grade-btn-inline.win-btn {
+    background: rgba(0, 255, 136, 0.15);
+    border: 2px solid #00ff88;
+    color: #00ff88;
+}
+.grade-btn-inline.win-btn:hover {
+    background: rgba(0, 255, 136, 0.3);
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+}
+
+.grade-btn-inline.loss-btn {
+    background: rgba(255, 68, 68, 0.15);
+    border: 2px solid #ff4444;
+    color: #ff4444;
+}
+.grade-btn-inline.loss-btn:hover {
+    background: rgba(255, 68, 68, 0.3);
+    box-shadow: 0 0 15px rgba(255, 68, 68, 0.3);
+}
+
+.grade-btn-inline.push-btn {
+    background: rgba(128, 128, 128, 0.15);
+    border: 2px solid #888;
+    color: #888;
+}
+.grade-btn-inline.push-btn:hover {
+    background: rgba(128, 128, 128, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .primary-stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .secondary-stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
 @media (max-width: 768px) {
-    .record-stats-grid {
+    .primary-stats-row {
         grid-template-columns: 1fr 1fr;
     }
-    .record-stat-card.main-record {
-        grid-column: span 2;
+    .secondary-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
-    .record-actions {
+    .big-stat-value {
+        font-size: 1.6rem;
+    }
+    .stats-actions-bar {
         flex-direction: column;
     }
-    .grade-btn, .refresh-btn {
+    .stats-action-btn {
         width: 100%;
         justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .primary-stats-row {
+        grid-template-columns: 1fr;
+    }
+    .secondary-stats-grid {
+        grid-template-columns: 1fr 1fr;
     }
 }
 </style>
@@ -13647,285 +13882,295 @@ document.addEventListener('DOMContentLoaded', function() {
     window.loadPicksHistory = loadPicksHistory;
     window.formatOdds = formatOdds;
 
-    // ========== MY RECORD PAGE FUNCTIONS ==========
+    // ========== ADVANCED STATS ENGINE ==========
+    // Comprehensive analytics for TrustMyRecord.com
 
-    // Load and display My Record page data
+    const SPORT_ICONS = {
+        'NBA': '🏀', 'NFL': '🏈', 'NHL': '🏒', 'MLB': '⚾',
+        'NCAAB': '🏫', 'NCAAF': '🎓', 'SOCCER': '⚽', 'OTHER': '🎯'
+    };
+
+    // Calculate units won/lost for a pick
+    function calculatePickUnits(pick) {
+        const units = parseFloat(pick.units) || 1;
+        const odds = parseFloat(pick.odds) || -110;
+
+        if (pick.status === 'win') {
+            return odds > 0 ? units * (odds / 100) : units * (100 / Math.abs(odds));
+        } else if (pick.status === 'loss') {
+            return -units;
+        }
+        return 0;
+    }
+
+    // Calculate implied probability from odds
+    function impliedProbability(odds) {
+        odds = parseFloat(odds) || -110;
+        if (odds > 0) return 100 / (odds + 100);
+        return Math.abs(odds) / (Math.abs(odds) + 100);
+    }
+
+    // Calculate Z-Score for statistical significance
+    function calculateZScore(wins, total, avgImpliedProb) {
+        if (total < 2) return 0;
+        const expectedWinRate = avgImpliedProb || 0.5;
+        const actualWinRate = wins / total;
+        const stdDev = Math.sqrt(expectedWinRate * (1 - expectedWinRate) / total);
+        if (stdDev === 0) return 0;
+        return (actualWinRate - expectedWinRate) / stdDev;
+    }
+
+    // Calculate streaks (current and best)
+    function calculateStreaks(picks) {
+        const graded = picks.filter(p => p.status === 'win' || p.status === 'loss')
+            .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+
+        let currentStreak = 0, currentType = '', bestWin = 0, bestLoss = 0;
+        let tempStreak = 0, tempType = '';
+
+        for (let i = 0; i < graded.length; i++) {
+            const status = graded[i].status;
+            if (i === 0 || status === tempType) {
+                tempStreak++;
+                tempType = status;
+            } else {
+                if (tempType === 'win' && tempStreak > bestWin) bestWin = tempStreak;
+                if (tempType === 'loss' && tempStreak > bestLoss) bestLoss = tempStreak;
+                tempStreak = 1;
+                tempType = status;
+            }
+            if (i === 0) { currentStreak = tempStreak; currentType = tempType; }
+        }
+        // Check last streak
+        if (tempType === 'win' && tempStreak > bestWin) bestWin = tempStreak;
+        if (tempType === 'loss' && tempStreak > bestLoss) bestLoss = tempStreak;
+
+        // Update current streak count
+        for (let i = 0; i < graded.length; i++) {
+            if (graded[i].status === graded[0]?.status) currentStreak = i + 1;
+            else break;
+        }
+
+        return { current: currentStreak, currentType: graded[0]?.status || '', bestWin, bestLoss };
+    }
+
+    // Main function to load advanced stats page
     function loadMyRecordPage() {
         const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
 
-        // Calculate stats
+        // Basic counts
         const wins = picks.filter(p => p.status === 'win').length;
         const losses = picks.filter(p => p.status === 'loss').length;
         const pushes = picks.filter(p => p.status === 'push').length;
-        const pending = picks.filter(p => p.status === 'pending' || !p.status).length;
-        const total = wins + losses + pushes;
+        const graded = wins + losses + pushes;
+        const total = picks.length;
 
-        // Update main record display
-        const recordDisplay = document.getElementById('myRecordDisplay');
-        if (recordDisplay) {
-            recordDisplay.textContent = `${wins}-${losses}-${pushes}`;
-        }
+        // Calculate units
+        let unitsProfit = 0, totalRisked = 0;
+        let oddsSum = 0, oddsCount = 0;
 
-        // Win percentage
-        const winPct = document.getElementById('myWinPct');
-        if (winPct) {
-            const pct = total > 0 ? ((wins / total) * 100).toFixed(1) : 0;
-            winPct.textContent = `${pct}%`;
-        }
-
-        // Units profit
-        let totalUnits = 0;
         picks.forEach(pick => {
-            if (pick.status === 'win') {
-                const odds = parseFloat(pick.odds) || -110;
-                const units = parseFloat(pick.units) || 1;
-                if (odds > 0) {
-                    totalUnits += units * (odds / 100);
-                } else {
-                    totalUnits += units * (100 / Math.abs(odds));
-                }
-            } else if (pick.status === 'loss') {
-                totalUnits -= parseFloat(pick.units) || 1;
+            unitsProfit += calculatePickUnits(pick);
+            if (pick.status !== 'pending' && pick.status) {
+                totalRisked += parseFloat(pick.units) || 1;
             }
+            const odds = parseFloat(pick.odds);
+            if (!isNaN(odds)) { oddsSum += odds; oddsCount++; }
         });
 
-        const unitsProfit = document.getElementById('myUnitsProfit');
-        if (unitsProfit) {
-            const sign = totalUnits >= 0 ? '+' : '';
-            unitsProfit.textContent = `${sign}${totalUnits.toFixed(2)}`;
-            unitsProfit.style.color = totalUnits >= 0 ? 'var(--neon-green)' : 'var(--neon-red)';
+        const avgOdds = oddsCount > 0 ? Math.round(oddsSum / oddsCount) : -110;
+        const winRate = graded > 0 ? (wins / graded * 100).toFixed(1) : '0.0';
+        const roi = totalRisked > 0 ? (unitsProfit / totalRisked * 100).toFixed(1) : '0.0';
+
+        // Average implied probability
+        let avgImplied = 0;
+        picks.forEach(p => { avgImplied += impliedProbability(p.odds); });
+        avgImplied = picks.length > 0 ? avgImplied / picks.length : 0.5;
+
+        const zScore = calculateZScore(wins, graded, avgImplied);
+        const streaks = calculateStreaks(picks);
+        const avgUnits = picks.length > 0 ? (picks.reduce((s,p) => s + (parseFloat(p.units)||1), 0) / picks.length).toFixed(1) : '1.0';
+
+        // Update Primary Stats
+        updateEl('advRecordDisplay', `${wins}-${losses}-${pushes}`);
+        updateEl('advWinRate', `${winRate}%`);
+
+        const unitsEl = document.getElementById('advUnitsProfit');
+        if (unitsEl) {
+            unitsEl.textContent = (unitsProfit >= 0 ? '+' : '') + unitsProfit.toFixed(2);
+            unitsEl.className = 'big-stat-value ' + (unitsProfit >= 0 ? 'positive' : 'negative');
         }
 
-        // Calculate streak
-        const gradedPicks = picks.filter(p => p.status === 'win' || p.status === 'loss')
-            .sort((a, b) => new Date(b.timestamp || b.gradedAt) - new Date(a.timestamp || a.gradedAt));
-
-        let streak = 0;
-        let streakType = '';
-        if (gradedPicks.length > 0) {
-            streakType = gradedPicks[0].status;
-            for (const pick of gradedPicks) {
-                if (pick.status === streakType) {
-                    streak++;
-                } else {
-                    break;
-                }
-            }
+        const roiEl = document.getElementById('advROI');
+        if (roiEl) {
+            roiEl.textContent = (parseFloat(roi) >= 0 ? '+' : '') + roi + '%';
+            roiEl.className = 'big-stat-value ' + (parseFloat(roi) >= 0 ? 'positive' : 'negative');
         }
 
-        const streakEl = document.getElementById('myStreak');
-        if (streakEl) {
-            if (streak > 0) {
-                streakEl.textContent = `${streak}${streakType === 'win' ? 'W' : 'L'}`;
-                streakEl.style.color = streakType === 'win' ? 'var(--neon-green)' : 'var(--neon-red)';
-            } else {
-                streakEl.textContent = '-';
-                streakEl.style.color = 'var(--neon-cyan)';
-            }
-        }
+        // Secondary Stats
+        updateEl('advZScore', zScore.toFixed(2));
+        updateEl('advAvgOdds', avgOdds > 0 ? '+' + avgOdds : avgOdds.toString());
+        updateEl('advCurrentStreak', streaks.current > 0 ? streaks.current + (streaks.currentType === 'win' ? 'W' : 'L') : '-');
+        updateEl('advBestStreak', streaks.bestWin + 'W');
+        updateEl('advAvgUnits', avgUnits);
+        updateEl('advTotalPicks', total.toString());
 
-        // Sport breakdown
-        const sportStats = {};
-        picks.forEach(pick => {
-            const sport = (pick.sport || 'Other').toUpperCase();
-            if (!sportStats[sport]) {
-                sportStats[sport] = { wins: 0, losses: 0, pushes: 0, pending: 0 };
-            }
-            if (pick.status === 'win') sportStats[sport].wins++;
-            else if (pick.status === 'loss') sportStats[sport].losses++;
-            else if (pick.status === 'push') sportStats[sport].pushes++;
-            else sportStats[sport].pending++;
-        });
+        // Sport Breakdown Table
+        renderSportBreakdown(picks);
 
-        const breakdownGrid = document.getElementById('sportBreakdownGrid');
-        if (breakdownGrid) {
-            if (Object.keys(sportStats).length === 0) {
-                breakdownGrid.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No picks recorded yet</p>';
-            } else {
-                breakdownGrid.innerHTML = Object.entries(sportStats).map(([sport, stats]) => {
-                    const sportTotal = stats.wins + stats.losses + stats.pushes;
-                    const sportPct = sportTotal > 0 ? ((stats.wins / sportTotal) * 100).toFixed(1) : 0;
-                    const sportIcon = {
-                        'NBA': '🏀', 'NFL': '🏈', 'NHL': '🏒', 'MLB': '⚾',
-                        'NCAAB': '🏫', 'NCAAF': '🎓', 'SOCCER': '⚽'
-                    }[sport] || '🎯';
-                    return `
-                        <div class="sport-breakdown-item">
-                            <div class="sport-name">${sportIcon} ${sport}</div>
-                            <div class="sport-record">${stats.wins}-${stats.losses}-${stats.pushes}</div>
-                            <div class="sport-pct">${sportPct}% win rate</div>
-                        </div>
-                    `;
-                }).join('');
-            }
-        }
+        // Bet Type Breakdown Table
+        renderBetTypeBreakdown(picks);
 
-        // Load pick history with current filter
-        filterPickHistory('all');
+        // Load history (hidden by default)
+        filterAdvHistory('all');
     }
 
-    // Filter pick history by status
-    function filterPickHistory(filter) {
-        // Update filter button states
-        document.querySelectorAll('.history-filters .filter-btn').forEach(btn => {
+    function updateEl(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+    }
+
+    // Render sport breakdown table
+    function renderSportBreakdown(picks) {
+        const tbody = document.getElementById('sportBreakdownBody');
+        if (!tbody) return;
+
+        const stats = {};
+        picks.forEach(p => {
+            const sport = (p.sport || 'OTHER').toUpperCase();
+            if (!stats[sport]) stats[sport] = { w: 0, l: 0, p: 0, units: 0, risked: 0 };
+            if (p.status === 'win') { stats[sport].w++; stats[sport].units += calculatePickUnits(p); stats[sport].risked += parseFloat(p.units)||1; }
+            else if (p.status === 'loss') { stats[sport].l++; stats[sport].units += calculatePickUnits(p); stats[sport].risked += parseFloat(p.units)||1; }
+            else if (p.status === 'push') stats[sport].p++;
+        });
+
+        if (Object.keys(stats).length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">No graded picks yet</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = Object.entries(stats)
+            .sort((a, b) => (b[1].w + b[1].l) - (a[1].w + a[1].l))
+            .map(([sport, s]) => {
+                const total = s.w + s.l + s.p;
+                const winPct = (s.w + s.l) > 0 ? (s.w / (s.w + s.l) * 100).toFixed(1) : '0.0';
+                const roi = s.risked > 0 ? (s.units / s.risked * 100).toFixed(1) : '0.0';
+                const icon = SPORT_ICONS[sport] || '🎯';
+                return `<tr>
+                    <td><span class="sport-icon">${icon}</span>${sport}</td>
+                    <td>${s.w}-${s.l}-${s.p}</td>
+                    <td>${winPct}%</td>
+                    <td class="${s.units >= 0 ? 'positive' : 'negative'}">${s.units >= 0 ? '+' : ''}${s.units.toFixed(2)}</td>
+                    <td class="${parseFloat(roi) >= 0 ? 'positive' : 'negative'}">${parseFloat(roi) >= 0 ? '+' : ''}${roi}%</td>
+                </tr>`;
+            }).join('');
+    }
+
+    // Render bet type breakdown
+    function renderBetTypeBreakdown(picks) {
+        const tbody = document.getElementById('betTypeBreakdownBody');
+        if (!tbody) return;
+
+        const stats = {};
+        picks.forEach(p => {
+            let type = (p.betType || 'OTHER').toUpperCase();
+            if (type === 'MONEYLINE') type = 'ML';
+            if (!stats[type]) stats[type] = { w: 0, l: 0, p: 0, units: 0, risked: 0 };
+            if (p.status === 'win') { stats[type].w++; stats[type].units += calculatePickUnits(p); stats[type].risked += parseFloat(p.units)||1; }
+            else if (p.status === 'loss') { stats[type].l++; stats[type].units += calculatePickUnits(p); stats[type].risked += parseFloat(p.units)||1; }
+            else if (p.status === 'push') stats[type].p++;
+        });
+
+        if (Object.keys(stats).length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">No graded picks yet</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = Object.entries(stats)
+            .sort((a, b) => (b[1].w + b[1].l) - (a[1].w + a[1].l))
+            .map(([type, s]) => {
+                const winPct = (s.w + s.l) > 0 ? (s.w / (s.w + s.l) * 100).toFixed(1) : '0.0';
+                const roi = s.risked > 0 ? (s.units / s.risked * 100).toFixed(1) : '0.0';
+                return `<tr>
+                    <td>${type}</td>
+                    <td>${s.w}-${s.l}-${s.p}</td>
+                    <td>${winPct}%</td>
+                    <td class="${s.units >= 0 ? 'positive' : 'negative'}">${s.units >= 0 ? '+' : ''}${s.units.toFixed(2)}</td>
+                    <td class="${parseFloat(roi) >= 0 ? 'positive' : 'negative'}">${parseFloat(roi) >= 0 ? '+' : ''}${roi}%</td>
+                </tr>`;
+            }).join('');
+    }
+
+    // Toggle full history visibility
+    function toggleFullHistory() {
+        const section = document.getElementById('fullHistorySection');
+        const text = document.getElementById('historyToggleText');
+        if (section) {
+            const isHidden = section.style.display === 'none';
+            section.style.display = isHidden ? 'block' : 'none';
+            if (text) text.textContent = isHidden ? 'Hide History' : 'Show Full History';
+            if (isHidden) filterAdvHistory('all');
+        }
+    }
+
+    // Filter and render history
+    function filterAdvHistory(filter) {
+        document.querySelectorAll('.hist-filter').forEach(btn => {
             btn.classList.toggle('active', btn.getAttribute('data-filter') === filter);
         });
 
         const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
-        const container = document.getElementById('myRecordPicksList');
+        const container = document.getElementById('advHistoryList');
         if (!container) return;
 
-        // Filter picks
-        let filteredPicks = picks;
+        let filtered = picks;
         if (filter !== 'all') {
-            filteredPicks = picks.filter(p => {
-                if (filter === 'pending') return p.status === 'pending' || !p.status;
+            filtered = picks.filter(p => {
+                if (filter === 'pending') return !p.status || p.status === 'pending';
                 return p.status === filter;
             });
         }
 
-        // Sort by most recent
-        filteredPicks.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+        filtered.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
 
-        if (filteredPicks.length === 0) {
-            container.innerHTML = '<p class="no-picks-msg">No picks found for this filter.</p>';
+        if (filtered.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding: 40px;">No picks found.</p>';
             return;
         }
 
-        container.innerHTML = filteredPicks.map((pick, idx) => {
+        container.innerHTML = filtered.map((pick, idx) => {
             const status = pick.status || 'pending';
             const game = pick.game || `${pick.team1 || ''} vs ${pick.team2 || ''}`;
             const bet = pick.pick || pick.betType || 'Bet';
             const units = pick.units || 1;
             const odds = pick.odds || '-110';
-            const date = pick.timestamp ? new Date(pick.timestamp).toLocaleDateString() : 'Unknown date';
+            const date = pick.timestamp ? new Date(pick.timestamp).toLocaleDateString() : '';
+            const originalIdx = picks.indexOf(pick);
+
+            const isPending = status === 'pending' || !pick.status;
 
             return `
-                <div class="pick-history-item ${status}">
-                    <div class="pick-info">
-                        <div class="pick-game">${game}</div>
-                        <div class="pick-bet">${bet} (${odds}) | ${units}u</div>
-                        <div class="pick-date">${date}${pick.finalScore ? ' | Final: ' + pick.finalScore : ''}</div>
+                <div class="history-pick-card ${status}">
+                    <div class="pick-card-main">
+                        <div class="pick-card-game">${game}</div>
+                        <div class="pick-card-details">${bet} (${odds}) • ${units}u</div>
+                        <div class="pick-card-meta">${date}${pick.finalScore ? ' • ' + pick.finalScore : ''}</div>
+                        ${isPending ? `
+                        <div class="pick-grade-btns">
+                            <button class="grade-btn-inline win-btn" onclick="quickGradeAdv(${originalIdx}, 'win')">WIN</button>
+                            <button class="grade-btn-inline loss-btn" onclick="quickGradeAdv(${originalIdx}, 'loss')">LOSS</button>
+                            <button class="grade-btn-inline push-btn" onclick="quickGradeAdv(${originalIdx}, 'push')">PUSH</button>
+                        </div>
+                        ` : ''}
                     </div>
-                    <div class="pick-result-badge ${status}">${status.toUpperCase()}</div>
+                    <div class="pick-card-result ${status}">${status.toUpperCase()}</div>
                 </div>
             `;
         }).join('');
     }
 
-    // Refresh My Record data
-    function refreshMyRecord() {
-        // First try to auto-grade pending picks
-        if (typeof autoGradePicks === 'function') {
-            autoGradePicks().then(() => {
-                loadMyRecordPage();
-                alert('Stats refreshed! Auto-grading checked for completed games.');
-            }).catch(err => {
-                console.error('Auto-grade error:', err);
-                loadMyRecordPage();
-                alert('Stats refreshed.');
-            });
-        } else {
-            loadMyRecordPage();
-            alert('Stats refreshed.');
-        }
-    }
-
-    // Show grading modal for manual grading
-    function showGradingModal() {
-        const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
-        const pendingPicks = picks.filter((p, idx) => (p.status === 'pending' || !p.status));
-
-        if (pendingPicks.length === 0) {
-            alert('No pending picks to grade!');
-            return;
-        }
-
-        // Create modal
-        const modal = document.createElement('div');
-        modal.id = 'gradingModal';
-        modal.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 10000;
-            display: flex; align-items: center; justify-content: center;
-            padding: 20px;
-        `;
-
-        const content = document.createElement('div');
-        content.style.cssText = `
-            background: var(--card-bg); border: 2px solid var(--neon-cyan);
-            border-radius: 16px; padding: 30px; max-width: 600px; width: 100%;
-            max-height: 80vh; overflow-y: auto;
-        `;
-
-        content.innerHTML = `
-            <h2 style="font-family: 'Orbitron', sans-serif; color: var(--neon-cyan); margin-bottom: 20px;">
-                Grade Pending Picks
-            </h2>
-            <p style="color: var(--text-muted); margin-bottom: 20px;">
-                ${pendingPicks.length} pending pick(s) to grade
-            </p>
-            <div id="gradingPicksList"></div>
-            <div style="margin-top: 20px; display: flex; gap: 10px;">
-                <button onclick="tryAutoGrade()" style="
-                    flex: 1; padding: 12px; background: linear-gradient(135deg, var(--neon-green), #00aa00);
-                    border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer;
-                ">Auto-Grade All</button>
-                <button onclick="closeGradingModal()" style="
-                    flex: 1; padding: 12px; background: rgba(255,255,255,0.1);
-                    border: 1px solid var(--glass-border); border-radius: 8px;
-                    color: var(--text-primary); cursor: pointer;
-                ">Close</button>
-            </div>
-        `;
-
-        modal.appendChild(content);
-        document.body.appendChild(modal);
-
-        // Populate picks list
-        const list = document.getElementById('gradingPicksList');
-        picks.forEach((pick, idx) => {
-            if (pick.status === 'pending' || !pick.status) {
-                const game = pick.game || `${pick.team1 || ''} vs ${pick.team2 || ''}`;
-                const bet = pick.pick || pick.betType || 'Bet';
-
-                const item = document.createElement('div');
-                item.style.cssText = `
-                    background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px;
-                    margin-bottom: 10px; border-left: 4px solid var(--neon-gold);
-                `;
-                item.innerHTML = `
-                    <div style="margin-bottom: 10px;">
-                        <strong style="color: var(--text-primary);">${game}</strong><br>
-                        <span style="color: var(--neon-cyan);">${bet}</span>
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button onclick="manualGrade(${idx}, 'win')" style="
-                            flex: 1; padding: 8px; background: rgba(57, 255, 20, 0.2);
-                            border: 1px solid var(--neon-green); border-radius: 6px;
-                            color: var(--neon-green); cursor: pointer; font-weight: 600;
-                        ">WIN</button>
-                        <button onclick="manualGrade(${idx}, 'loss')" style="
-                            flex: 1; padding: 8px; background: rgba(255, 7, 58, 0.2);
-                            border: 1px solid var(--neon-red); border-radius: 6px;
-                            color: var(--neon-red); cursor: pointer; font-weight: 600;
-                        ">LOSS</button>
-                        <button onclick="manualGrade(${idx}, 'push')" style="
-                            flex: 1; padding: 8px; background: rgba(255, 0, 255, 0.2);
-                            border: 1px solid var(--neon-purple); border-radius: 6px;
-                            color: var(--neon-purple); cursor: pointer; font-weight: 600;
-                        ">PUSH</button>
-                    </div>
-                `;
-                list.appendChild(item);
-            }
-        });
-
-        modal.onclick = (e) => { if (e.target === modal) closeGradingModal(); };
-    }
-
-    // Manual grade a pick
-    function manualGrade(idx, result) {
+    // Quick grade from history
+    function quickGradeAdv(idx, result) {
         const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
         if (picks[idx]) {
             picks[idx].status = result;
@@ -13933,38 +14178,30 @@ document.addEventListener('DOMContentLoaded', function() {
             picks[idx].gradedAt = new Date().toISOString();
             picks[idx].manualGrade = true;
             localStorage.setItem('trustMyRecordPicks', JSON.stringify(picks));
-
-            closeGradingModal();
             loadMyRecordPage();
+            loadPicksHistory();
             if (typeof updateStatsDashboard === 'function') updateStatsDashboard();
-            alert(`Pick marked as ${result.toUpperCase()}`);
         }
     }
 
-    // Try auto-grading
-    function tryAutoGrade() {
+    // Refresh stats
+    function refreshAdvancedStats() {
         if (typeof autoGradePicks === 'function') {
-            autoGradePicks().then(result => {
-                closeGradingModal();
+            autoGradePicks().then(r => {
                 loadMyRecordPage();
+                loadPicksHistory();
                 if (typeof updateStatsDashboard === 'function') updateStatsDashboard();
-                alert(`Auto-graded ${result.graded} pick(s): ${result.wins}W-${result.losses}L-${result.pushes}P`);
-            }).catch(err => {
-                alert('Auto-grading failed. You may need to grade picks manually.');
-                console.error(err);
+                alert(`Refreshed! ${r.graded > 0 ? 'Graded ' + r.graded + ' picks.' : 'No new grades.'}`);
+            }).catch(() => {
+                loadMyRecordPage();
+                alert('Stats refreshed.');
             });
         } else {
-            alert('Auto-grading not available. Please grade picks manually.');
+            loadMyRecordPage();
         }
     }
 
-    // Close grading modal
-    function closeGradingModal() {
-        const modal = document.getElementById('gradingModal');
-        if (modal) modal.remove();
-    }
-
-    // Override showSection to load My Record data when navigating to it
+    // Override showSection to load My Record data
     const originalShowSection = showSection;
     window.showSection = function(sectionId) {
         originalShowSection(sectionId);
@@ -13973,14 +14210,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // Export My Record functions
+    // Export functions
     window.loadMyRecordPage = loadMyRecordPage;
-    window.filterPickHistory = filterPickHistory;
-    window.refreshMyRecord = refreshMyRecord;
-    window.showGradingModal = showGradingModal;
-    window.manualGrade = manualGrade;
-    window.tryAutoGrade = tryAutoGrade;
-    window.closeGradingModal = closeGradingModal;
+    window.toggleFullHistory = toggleFullHistory;
+    window.filterAdvHistory = filterAdvHistory;
+    window.quickGradeAdv = quickGradeAdv;
+    window.refreshAdvancedStats = refreshAdvancedStats;
 
     </script>
 </body>
