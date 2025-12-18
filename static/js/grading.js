@@ -107,7 +107,7 @@ async function autoGradePicks() {
         const sportKey = gradingSportKeyMap[sport];
         if (!sportKey) continue;
 
-        const completedGames = await fetchCompletedScores(sportKey, 3);
+        const completedGames = await fetchCompletedScores(sportKey, 10);
         console.log(`Fetched ${completedGames.length} completed ${sport} games`);
 
         for (const pick of sportPicks) {

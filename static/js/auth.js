@@ -210,6 +210,7 @@ class AuthSystem {
         // Update nav
         const navHTML = `
             <a onclick="showSection('record')">The Record</a>
+            <a onclick="showSection('my-record')" class="my-record-link" style="color: var(--neon-gold);">My Record</a>
             <a onclick="showSection('arena')">The Arena</a>
             <a onclick="showSection('search')">Search</a>
             <a onclick="showSection('feed')">Feed</a>
@@ -234,6 +235,7 @@ class AuthSystem {
     updateUIForLoggedOutUser() {
         const navHTML = `
             <a onclick="showSection('record')">The Record</a>
+            <a onclick="showSection('my-record')" class="my-record-link" style="color: var(--neon-gold);">My Record</a>
             <a onclick="showSection('arena')">The Arena</a>
             <a onclick="showSection('data')">Data Core</a>
             <a onclick="showSection('blog')">Blog</a>
