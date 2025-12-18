@@ -14248,9 +14248,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Override showSection to load My Record data
-    const originalShowSection = showSection;
+    const originalShowSection = window.showSection;
     window.showSection = function(sectionId) {
-        originalShowSection(sectionId);
+        if (originalShowSection) originalShowSection(sectionId);
         if (sectionId === 'my-record') {
             loadMyRecordPage();
         }
@@ -14727,7 +14727,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const enhancedShowSection = window.showSection;
     window.showSection = function(sectionId) {
-        enhancedShowSection(sectionId);
+        if (enhancedShowSection) enhancedShowSection(sectionId);
 
         if (sectionId === 'leaderboards') {
             loadDynamicLeaderboards();
