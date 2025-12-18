@@ -4970,6 +4970,35 @@
             letter-spacing: 2px;
         }
 
+        .leaderboard-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .compare-users-btn {
+            background: linear-gradient(135deg, var(--neon-gold), #ff8c00);
+            border: none;
+            color: var(--dark-bg);
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .compare-users-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
+        }
+
         .leaderboard-tabs {
             display: flex;
             justify-content: center;
@@ -8879,7 +8908,12 @@
             <!-- LEADERBOARDS SECTION -->
             <div id="leaderboards" class="page-section">
                 <div class="leaderboards-container">
-                    <h2 class="section-title">Leaderboards</h2>
+                    <div class="leaderboard-header-row">
+                        <h2 class="section-title">Leaderboards</h2>
+                        <button class="compare-users-btn" onclick="openCompareModal()">
+                            <span>⚔️</span> Compare Users
+                        </button>
+                    </div>
 
                     <!-- Leaderboard Tabs -->
                     <div class="leaderboard-tabs">
@@ -13696,12 +13730,24 @@ document.addEventListener('DOMContentLoaded', function() {
             status: 'pending'
         };
 
+        // Add user ID if logged in
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        if (currentUser) {
+            pick.userId = currentUser.id;
+            pick.username = currentUser.username;
+        }
+
         // Save to localStorage
         const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
         picks.unshift(pick);
         localStorage.setItem('trustMyRecordPicks', JSON.stringify(picks));
 
-        console.log('Pick saved:', pick);
+        // Archive the pick (immutable record)
+        if (typeof archivePick === 'function') {
+            archivePick(pick);
+        }
+
+        console.log('Pick saved and archived:', pick);
         alert('Pick submitted and saved to your permanent record!');
 
         // Update history display
@@ -14217,6 +14263,720 @@ document.addEventListener('DOMContentLoaded', function() {
     window.quickGradeAdv = quickGradeAdv;
     window.refreshAdvancedStats = refreshAdvancedStats;
 
+    // =====================================================
+    // USER PROFILES SYSTEM - Public profile pages with full stats
+    // =====================================================
+
+    let viewingUserId = null; // Track which profile we're viewing
+
+    /**
+     * Show any user's profile - accessible via URL or click
+     * @param {string} usernameOrId - Username or user ID to display
+     */
+    function showProfile(usernameOrId) {
+        if (!usernameOrId) return;
+
+        // Get all users
+        const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
+        const user = users.find(u =>
+            u.id === usernameOrId ||
+            u.username?.toLowerCase() === usernameOrId?.toLowerCase()
+        );
+
+        if (!user) {
+            alert('User not found');
+            return;
+        }
+
+        viewingUserId = user.id;
+
+        // Load profile data
+        loadUserProfileData(user);
+
+        // Show profile section
+        showSection('profile');
+    }
+
+    /**
+     * Load all profile data for a user
+     */
+    function loadUserProfileData(user) {
+        if (!user) return;
+
+        // Basic info
+        updateEl('profileDisplayName', user.displayName || user.username);
+        updateEl('profileUsername', user.username);
+
+        // Avatar
+        const avatarImg = document.getElementById('profileAvatarImage');
+        if (avatarImg && user.avatar) {
+            avatarImg.src = user.avatar;
+        }
+
+        // Bio
+        const bio = document.getElementById('profileBio');
+        if (bio) {
+            bio.textContent = user.bio || 'No bio yet.';
+        }
+
+        // Stats
+        const stats = calculateUserStatsById(user.id);
+
+        updateEl('profileTotalPicks', stats.totalPicks || '0');
+        updateEl('profileWinRate', stats.winRate ? stats.winRate + '%' : '-');
+        updateEl('profileUnits', stats.units !== undefined ? (stats.units >= 0 ? '+' : '') + stats.units.toFixed(2) : '-');
+        updateEl('profileROI', stats.roi ? (stats.roi >= 0 ? '+' : '') + stats.roi + '%' : '-');
+        updateEl('profileStreak', stats.currentStreak || '-');
+        updateEl('profileRecord', stats.record || '-');
+
+        // Points
+        updateEl('profileTriviaPoints', user.triviaPoints || 0);
+        updateEl('profilePollPoints', user.pollPoints || 0);
+        updateEl('profileTotalPoints', (user.triviaPoints || 0) + (user.pollPoints || 0));
+
+        // Show/hide edit button based on if viewing own profile
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        const editBtn = document.querySelector('.edit-profile-btn');
+        if (editBtn) {
+            editBtn.style.display = currentUser?.id === user.id ? 'inline-block' : 'none';
+        }
+
+        // Load user's picks for display
+        loadUserPendingPicks(user.id);
+        loadUserRecentActivity(user.id);
+    }
+
+    /**
+     * Calculate stats for a specific user by ID
+     */
+    function calculateUserStatsById(userId) {
+        // For now, get picks from localStorage - in production would be per-user
+        const allPicks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+        const picks = allPicks.filter(p => p.userId === userId || !p.userId); // Include unassigned picks
+
+        const wins = picks.filter(p => p.status === 'win').length;
+        const losses = picks.filter(p => p.status === 'loss').length;
+        const pushes = picks.filter(p => p.status === 'push').length;
+        const graded = wins + losses + pushes;
+
+        let units = 0, risked = 0;
+        picks.forEach(p => {
+            units += calculatePickUnits(p);
+            if (p.status !== 'pending') risked += parseFloat(p.units) || 1;
+        });
+
+        const winRate = graded > 0 ? (wins / graded * 100).toFixed(1) : 0;
+        const roi = risked > 0 ? (units / risked * 100).toFixed(1) : 0;
+        const streaks = calculateStreaks(picks);
+
+        return {
+            totalPicks: picks.length,
+            wins, losses, pushes,
+            record: `${wins}-${losses}${pushes > 0 ? '-' + pushes : ''}`,
+            winRate,
+            units,
+            roi,
+            currentStreak: streaks.current > 0 ? streaks.current + (streaks.currentType === 'win' ? 'W' : 'L') : '-',
+            bestWinStreak: streaks.bestWin
+        };
+    }
+
+    /**
+     * Load pending picks for profile view
+     */
+    function loadUserPendingPicks(userId) {
+        const container = document.getElementById('profilePendingPicks');
+        if (!container) return;
+
+        const allPicks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+        const pending = allPicks.filter(p =>
+            (p.userId === userId || !p.userId) &&
+            (!p.status || p.status === 'pending')
+        ).slice(0, 5);
+
+        if (pending.length === 0) {
+            container.innerHTML = '<p class="no-data-message">No pending picks.</p>';
+            return;
+        }
+
+        container.innerHTML = pending.map(pick => `
+            <div class="pending-pick-item">
+                <div class="pick-game">${pick.game || pick.team1 + ' vs ' + pick.team2}</div>
+                <div class="pick-info">${pick.pick || pick.betType} (${pick.odds || '-110'}) - ${pick.units || 1}u</div>
+            </div>
+        `).join('');
+    }
+
+    /**
+     * Load recent activity for profile
+     */
+    function loadUserRecentActivity(userId) {
+        const container = document.getElementById('profileRecentActivity');
+        if (!container) return;
+
+        const allPicks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+        const graded = allPicks
+            .filter(p => (p.userId === userId || !p.userId) && p.status && p.status !== 'pending')
+            .sort((a, b) => new Date(b.gradedAt || b.timestamp || 0) - new Date(a.gradedAt || a.timestamp || 0))
+            .slice(0, 5);
+
+        if (graded.length === 0) {
+            container.innerHTML = '<p class="no-data-message">No recent activity.</p>';
+            return;
+        }
+
+        container.innerHTML = graded.map(pick => {
+            const icon = pick.status === 'win' ? '✅' : pick.status === 'loss' ? '❌' : '➖';
+            const date = pick.gradedAt ? new Date(pick.gradedAt).toLocaleDateString() : '';
+            return `
+                <div class="activity-item ${pick.status}">
+                    <span class="activity-icon">${icon}</span>
+                    <div class="activity-details">
+                        <div class="activity-text">${pick.status.toUpperCase()}: ${pick.game || pick.pick}</div>
+                        <div class="activity-meta">${date} • ${pick.units || 1}u @ ${pick.odds || '-110'}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    window.showProfile = showProfile;
+    window.loadUserProfileData = loadUserProfileData;
+
+    // =====================================================
+    // DYNAMIC LEADERBOARDS - Real user data
+    // =====================================================
+
+    /**
+     * Load leaderboards with real user data
+     */
+    function loadDynamicLeaderboards() {
+        const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
+
+        // Calculate stats for all users
+        const userStats = users.map(user => {
+            const stats = calculateUserStatsById(user.id);
+            return {
+                ...user,
+                ...stats,
+                totalPoints: (user.triviaPoints || 0) + (user.pollPoints || 0),
+                triviaPoints: user.triviaPoints || 0,
+                pollPoints: user.pollPoints || 0
+            };
+        });
+
+        // Sort and render different leaderboards
+        renderLeaderboard('pointsLeaderboardBody', userStats, 'totalPoints');
+        renderLeaderboard('picksLeaderboardBody', userStats, 'winRate');
+        renderLeaderboard('triviaLeaderboardBody', userStats, 'triviaPoints');
+        renderLeaderboard('pollsLeaderboardBody', userStats, 'pollPoints');
+        renderLeaderboard('unitsLeaderboardBody', userStats, 'units');
+    }
+
+    function renderLeaderboard(containerId, users, sortKey) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        const sorted = [...users].sort((a, b) => {
+            const aVal = parseFloat(a[sortKey]) || 0;
+            const bVal = parseFloat(b[sortKey]) || 0;
+            return bVal - aVal;
+        }).slice(0, 10);
+
+        if (sorted.length === 0) {
+            container.innerHTML = `
+                <div class="lb-row empty">
+                    <div style="text-align:center; padding: 20px; color: var(--text-muted);">
+                        No users yet. Be the first!
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = sorted.map((user, idx) => {
+            const rankClass = idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '';
+            const displayValue = getLeaderboardDisplayValue(user, sortKey);
+
+            return `
+                <div class="lb-row" onclick="showProfile('${user.username}')">
+                    <div class="lb-col-rank"><span class="rank-badge ${rankClass}">${idx + 1}</span></div>
+                    <div class="lb-col-user">
+                        <img src="${user.avatar || 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ccircle cx=%2750%27 cy=%2735%27 r=%2725%27 fill=%27%2366717d%27/%3E%3Cellipse cx=%2750%27 cy=%2785%27 rx=%2735%27 ry=%2725%27 fill=%27%2766717d%27/%3E%3C/svg%3E'}" class="user-avatar-tiny" style="width:24px;height:24px;border-radius:50%;margin-right:8px;">
+                        <span class="user-name-lb">@${user.username}</span>
+                    </div>
+                    <div class="lb-col-stat">${user.record || '0-0'}</div>
+                    <div class="lb-col-stat">${user.winRate || 0}%</div>
+                    <div class="lb-col-total">${displayValue}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function getLeaderboardDisplayValue(user, sortKey) {
+        switch(sortKey) {
+            case 'totalPoints': return (user.totalPoints || 0).toLocaleString();
+            case 'winRate': return user.winRate + '%';
+            case 'triviaPoints': return (user.triviaPoints || 0).toLocaleString();
+            case 'pollPoints': return (user.pollPoints || 0).toLocaleString();
+            case 'units': return (user.units >= 0 ? '+' : '') + (user.units || 0).toFixed(2) + 'u';
+            default: return user[sortKey] || '-';
+        }
+    }
+
+    window.loadDynamicLeaderboards = loadDynamicLeaderboards;
+
+    // =====================================================
+    // COMPARISON ENGINE - Compare two handicappers
+    // =====================================================
+
+    let compareUser1 = null;
+    let compareUser2 = null;
+
+    function openCompareModal() {
+        document.getElementById('compareModal').style.display = 'flex';
+        loadCompareUserOptions();
+    }
+
+    function closeCompareModal() {
+        document.getElementById('compareModal').style.display = 'none';
+    }
+
+    function loadCompareUserOptions() {
+        const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
+        const select1 = document.getElementById('compareSelect1');
+        const select2 = document.getElementById('compareSelect2');
+
+        if (!select1 || !select2) return;
+
+        const options = users.map(u => `<option value="${u.id}">${u.username}</option>`).join('');
+        select1.innerHTML = '<option value="">Select User 1</option>' + options;
+        select2.innerHTML = '<option value="">Select User 2</option>' + options;
+    }
+
+    function runComparison() {
+        const userId1 = document.getElementById('compareSelect1')?.value;
+        const userId2 = document.getElementById('compareSelect2')?.value;
+
+        if (!userId1 || !userId2) {
+            alert('Please select two users to compare');
+            return;
+        }
+
+        if (userId1 === userId2) {
+            alert('Please select two different users');
+            return;
+        }
+
+        const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
+        const user1 = users.find(u => u.id === userId1);
+        const user2 = users.find(u => u.id === userId2);
+
+        if (!user1 || !user2) return;
+
+        const stats1 = calculateUserStatsById(userId1);
+        const stats2 = calculateUserStatsById(userId2);
+
+        // Render comparison results
+        const resultsDiv = document.getElementById('compareResults');
+        if (!resultsDiv) return;
+
+        resultsDiv.innerHTML = `
+            <div class="compare-header-row">
+                <div class="compare-user-header" onclick="showProfile('${user1.username}')">
+                    <img src="${user1.avatar || ''}" class="compare-avatar">
+                    <div class="compare-name">@${user1.username}</div>
+                </div>
+                <div class="compare-vs">VS</div>
+                <div class="compare-user-header" onclick="showProfile('${user2.username}')">
+                    <img src="${user2.avatar || ''}" class="compare-avatar">
+                    <div class="compare-name">@${user2.username}</div>
+                </div>
+            </div>
+
+            <div class="compare-stats-table">
+                ${renderCompareRow('Record', stats1.record, stats2.record)}
+                ${renderCompareRow('Win Rate', stats1.winRate + '%', stats2.winRate + '%', parseFloat(stats1.winRate), parseFloat(stats2.winRate))}
+                ${renderCompareRow('Total Picks', stats1.totalPicks, stats2.totalPicks, stats1.totalPicks, stats2.totalPicks)}
+                ${renderCompareRow('Units +/-', (stats1.units >= 0 ? '+' : '') + stats1.units.toFixed(2), (stats2.units >= 0 ? '+' : '') + stats2.units.toFixed(2), stats1.units, stats2.units)}
+                ${renderCompareRow('ROI', stats1.roi + '%', stats2.roi + '%', parseFloat(stats1.roi), parseFloat(stats2.roi))}
+                ${renderCompareRow('Best Streak', stats1.bestWinStreak + 'W', stats2.bestWinStreak + 'W', stats1.bestWinStreak, stats2.bestWinStreak)}
+            </div>
+        `;
+
+        resultsDiv.style.display = 'block';
+    }
+
+    function renderCompareRow(label, val1, val2, num1 = 0, num2 = 0) {
+        const winner = num1 > num2 ? 'user1' : num2 > num1 ? 'user2' : 'tie';
+        return `
+            <div class="compare-row">
+                <div class="compare-val ${winner === 'user1' ? 'winner' : ''}">${val1}</div>
+                <div class="compare-label">${label}</div>
+                <div class="compare-val ${winner === 'user2' ? 'winner' : ''}">${val2}</div>
+            </div>
+        `;
+    }
+
+    window.openCompareModal = openCompareModal;
+    window.closeCompareModal = closeCompareModal;
+    window.runComparison = runComparison;
+
+    // =====================================================
+    // PICK ARCHIVING SYSTEM - Immutable timestamped records
+    // =====================================================
+
+    /**
+     * Archive a pick - creates immutable record
+     * Called automatically when pick is made
+     */
+    function archivePick(pick) {
+        if (!pick) return null;
+
+        const archivedPick = {
+            ...pick,
+            archiveId: generateArchiveId(),
+            archivedAt: new Date().toISOString(),
+            archived: true,
+            // Hash for verification (simple implementation)
+            hash: simpleHash(JSON.stringify({
+                game: pick.game,
+                pick: pick.pick,
+                odds: pick.odds,
+                units: pick.units,
+                timestamp: pick.timestamp
+            }))
+        };
+
+        // Store in archive
+        const archive = JSON.parse(localStorage.getItem('trustMyRecordArchive') || '[]');
+        archive.push(archivedPick);
+        localStorage.setItem('trustMyRecordArchive', JSON.stringify(archive));
+
+        return archivedPick;
+    }
+
+    function generateArchiveId() {
+        return 'arch_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function simpleHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return hash.toString(16);
+    }
+
+    /**
+     * Verify pick integrity
+     */
+    function verifyPick(archiveId) {
+        const archive = JSON.parse(localStorage.getItem('trustMyRecordArchive') || '[]');
+        const pick = archive.find(p => p.archiveId === archiveId);
+
+        if (!pick) return { valid: false, error: 'Pick not found' };
+
+        const expectedHash = simpleHash(JSON.stringify({
+            game: pick.game,
+            pick: pick.pick,
+            odds: pick.odds,
+            units: pick.units,
+            timestamp: pick.timestamp
+        }));
+
+        return {
+            valid: pick.hash === expectedHash,
+            pick,
+            verifiedAt: new Date().toISOString()
+        };
+    }
+
+    /**
+     * Get archived picks for user
+     */
+    function getArchivedPicks(userId, filters = {}) {
+        const archive = JSON.parse(localStorage.getItem('trustMyRecordArchive') || '[]');
+        let picks = archive.filter(p => !userId || p.userId === userId);
+
+        if (filters.sport) {
+            picks = picks.filter(p => p.sport?.toLowerCase() === filters.sport.toLowerCase());
+        }
+        if (filters.status) {
+            picks = picks.filter(p => p.status === filters.status);
+        }
+        if (filters.startDate) {
+            picks = picks.filter(p => new Date(p.timestamp) >= new Date(filters.startDate));
+        }
+        if (filters.endDate) {
+            picks = picks.filter(p => new Date(p.timestamp) <= new Date(filters.endDate));
+        }
+
+        return picks.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    }
+
+    window.archivePick = archivePick;
+    window.verifyPick = verifyPick;
+    window.getArchivedPicks = getArchivedPicks;
+
+    // =====================================================
+    // Enhanced showSection for all pages
+    // =====================================================
+
+    const enhancedShowSection = window.showSection;
+    window.showSection = function(sectionId) {
+        enhancedShowSection(sectionId);
+
+        if (sectionId === 'leaderboards') {
+            loadDynamicLeaderboards();
+        }
+        if (sectionId === 'profile') {
+            // If no specific user, load current user
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+            if (currentUser && !viewingUserId) {
+                loadUserProfileData(currentUser);
+            }
+        }
+    };
+
     </script>
+
+<!-- Comparison Modal -->
+<div id="compareModal" class="modal" style="display: none;">
+    <div class="modal-content compare-modal">
+        <span class="close-modal" onclick="closeCompareModal()">&times;</span>
+        <h2>Compare Handicappers</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">
+            Select two users to compare their performance head-to-head.
+        </p>
+
+        <div class="compare-selectors">
+            <select id="compareSelect1" class="compare-select">
+                <option value="">Select User 1</option>
+            </select>
+            <span class="compare-vs-text">VS</span>
+            <select id="compareSelect2" class="compare-select">
+                <option value="">Select User 2</option>
+            </select>
+        </div>
+
+        <button class="compare-btn" onclick="runComparison()">Compare</button>
+
+        <div id="compareResults" style="display: none;">
+            <!-- Results populated by JS -->
+        </div>
+    </div>
+</div>
+
+<style>
+/* Comparison Modal Styles */
+.compare-modal {
+    max-width: 700px;
+    background: var(--card-bg);
+    border: 2px solid var(--neon-cyan);
+    border-radius: 20px;
+    padding: 40px;
+}
+
+.compare-selectors {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.compare-select {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 15px 20px;
+    color: var(--text-primary);
+    font-size: 16px;
+    min-width: 180px;
+    cursor: pointer;
+}
+
+.compare-select:focus {
+    outline: none;
+    border-color: var(--neon-cyan);
+}
+
+.compare-vs-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    color: var(--neon-gold);
+}
+
+.compare-btn {
+    display: block;
+    width: 100%;
+    background: var(--gradient-neon);
+    border: none;
+    border-radius: 12px;
+    padding: 15px 30px;
+    color: var(--dark-bg);
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-bottom: 30px;
+    transition: all 0.3s;
+}
+
+.compare-btn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+}
+
+/* Comparison Results */
+.compare-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.compare-user-header {
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.compare-user-header:hover {
+    transform: scale(1.05);
+}
+
+.compare-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid var(--neon-cyan);
+    margin-bottom: 10px;
+}
+
+.compare-name {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    color: var(--neon-cyan);
+}
+
+.compare-vs {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2rem;
+    color: var(--neon-gold);
+    text-shadow: 0 0 20px var(--neon-gold);
+}
+
+.compare-stats-table {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.compare-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 20px;
+    align-items: center;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+}
+
+.compare-val {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 10px 20px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.compare-val.winner {
+    background: rgba(0, 255, 136, 0.2);
+    border: 1px solid #00ff88;
+    color: #00ff88;
+}
+
+.compare-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+    min-width: 100px;
+}
+
+/* Activity items */
+.activity-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border-left: 3px solid var(--glass-border);
+}
+
+.activity-item.win { border-left-color: #00ff88; }
+.activity-item.loss { border-left-color: #ff4444; }
+.activity-item.push { border-left-color: var(--neon-gold); }
+
+.activity-icon { font-size: 1.2rem; }
+.activity-details { flex: 1; }
+.activity-text { font-weight: 600; color: var(--text-primary); }
+.activity-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+
+/* Pending pick items */
+.pending-pick-item {
+    padding: 12px;
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.pick-game { font-weight: 600; color: var(--text-primary); }
+.pick-info { font-size: 0.85rem; color: var(--neon-gold); margin-top: 4px; }
+
+/* Leaderboard row hover */
+.lb-row {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.lb-row:hover {
+    background: rgba(0, 255, 255, 0.1);
+    transform: translateX(5px);
+}
+
+@media (max-width: 768px) {
+    .compare-selectors {
+        flex-direction: column;
+    }
+
+    .compare-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .compare-val {
+        font-size: 1rem;
+    }
+
+    .compare-header-row {
+        flex-direction: column;
+        gap: 20px;
+    }
+}
+</style>
+
 </body>
 </html>
