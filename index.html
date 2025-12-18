@@ -6240,8 +6240,13 @@
         </div>
 
         <!-- Picks History -->
-        <div class="picks-history-modern">
-            <h3>Your Permanent Record</h3>
+        <div class="picks-history-modern" style="margin-top: 40px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0;">Your Picks</h3>
+                <button onclick="tryAutoGradeAll()" style="background: linear-gradient(135deg, var(--neon-cyan), #00cccc); border: none; padding: 10px 20px; border-radius: 8px; color: #000; font-weight: 600; cursor: pointer; font-size: 0.9rem;">
+                    Auto-Grade Pending
+                </button>
+            </div>
             <div id="recentPicksContainer" class="picks-timeline">
                 <p style="text-align: center; color: var(--text-muted); padding: 40px;">No picks yet. Make your first pick above!</p>
             </div>
@@ -13507,25 +13512,103 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        container.innerHTML = picks.slice(0, 10).map(pick => {
-            const statusClass = pick.status === 'won' ? 'status-won' : pick.status === 'lost' ? 'status-lost' : 'status-pending';
-            const statusIcon = pick.status === 'won' ? '' : pick.status === 'lost' ? '' : '';
+        // Sort by most recent first
+        const sortedPicks = [...picks].sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
 
-            return '<div class="pick-history-item ' + pick.status + '">' +
-                '<div class="pick-history-header">' +
-                    '<span class="pick-sport-badge">' + pick.sport + '</span>' +
-                    '<span class="pick-bet-type">' + pick.betType + '</span>' +
-                    '<span class="pick-date">' + new Date(pick.timestamp).toLocaleDateString() + '</span>' +
-                '</div>' +
-                '<div class="pick-history-details">' +
-                    '<div class="pick-game-info">' + pick.game + '</div>' +
-                    '<div class="pick-selection">' + pick.pick + ' @ ' + pick.odds + '</div>' +
-                    '<div class="pick-meta">Confidence: ' + pick.confidence + ' | Units: ' + pick.units + '</div>' +
-                '</div>' +
-                '<div class="pick-status-badge ' + statusClass + '">' + statusIcon + ' ' + pick.status.toUpperCase() + '</div>' +
-            '</div>';
+        container.innerHTML = sortedPicks.slice(0, 10).map((pick, idx) => {
+            const status = pick.status || 'pending';
+            const isWin = status === 'win';
+            const isLoss = status === 'loss';
+            const isPending = status === 'pending' || !status;
+            const isPush = status === 'push';
+
+            // Color coding
+            let borderColor = 'var(--neon-gold)'; // pending = gold
+            let statusBg = 'rgba(255, 215, 0, 0.2)';
+            let statusColor = 'var(--neon-gold)';
+
+            if (isWin) {
+                borderColor = 'var(--neon-green)';
+                statusBg = 'rgba(57, 255, 20, 0.2)';
+                statusColor = 'var(--neon-green)';
+            } else if (isLoss) {
+                borderColor = 'var(--neon-red)';
+                statusBg = 'rgba(255, 7, 58, 0.2)';
+                statusColor = 'var(--neon-red)';
+            } else if (isPush) {
+                borderColor = 'var(--neon-purple)';
+                statusBg = 'rgba(255, 0, 255, 0.2)';
+                statusColor = 'var(--neon-purple)';
+            }
+
+            const game = pick.game || (pick.team1 && pick.team2 ? pick.team1 + ' vs ' + pick.team2 : 'Game');
+            const pickDisplay = pick.pick || 'Pick';
+            const odds = pick.odds || '-110';
+            const units = pick.units || '1';
+            const date = pick.timestamp ? new Date(pick.timestamp).toLocaleDateString() : '';
+            const originalIdx = picks.indexOf(pick);
+
+            return `
+                <div style="background: rgba(0,0,0,0.3); border-left: 4px solid ${borderColor}; border-radius: 8px; padding: 15px; margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; color: #fff; font-size: 1rem; margin-bottom: 4px;">${game}</div>
+                            <div style="color: var(--neon-cyan); font-size: 0.95rem;">${pickDisplay} (${odds}) - ${units}u</div>
+                            <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px;">${date}</div>
+                        </div>
+                        <div style="background: ${statusBg}; color: ${statusColor}; padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; text-transform: uppercase;">
+                            ${status}
+                        </div>
+                    </div>
+                    ${isPending ? `
+                    <div style="display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <button onclick="quickGrade(${originalIdx}, 'win')" style="flex:1; padding: 8px; background: rgba(57,255,20,0.15); border: 1px solid var(--neon-green); border-radius: 6px; color: var(--neon-green); cursor: pointer; font-weight: 600; font-size: 0.85rem;">WIN</button>
+                        <button onclick="quickGrade(${originalIdx}, 'loss')" style="flex:1; padding: 8px; background: rgba(255,7,58,0.15); border: 1px solid var(--neon-red); border-radius: 6px; color: var(--neon-red); cursor: pointer; font-weight: 600; font-size: 0.85rem;">LOSS</button>
+                        <button onclick="quickGrade(${originalIdx}, 'push')" style="flex:1; padding: 8px; background: rgba(255,0,255,0.15); border: 1px solid var(--neon-purple); border-radius: 6px; color: var(--neon-purple); cursor: pointer; font-weight: 600; font-size: 0.85rem;">PUSH</button>
+                    </div>
+                    ` : (pick.finalScore ? `<div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px;">Final: ${pick.finalScore}</div>` : '')}
+                </div>
+            `;
         }).join('');
     }
+
+    // Quick grade function for inline grading
+    function quickGrade(idx, result) {
+        const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+        if (picks[idx]) {
+            picks[idx].status = result;
+            picks[idx].result = result;
+            picks[idx].gradedAt = new Date().toISOString();
+            picks[idx].manualGrade = true;
+            localStorage.setItem('trustMyRecordPicks', JSON.stringify(picks));
+            loadPicksHistory();
+            if (typeof updateStatsDashboard === 'function') updateStatsDashboard();
+            if (typeof loadMyRecordPage === 'function') loadMyRecordPage();
+        }
+    }
+    window.quickGrade = quickGrade;
+
+    // Try auto-grading all pending picks
+    function tryAutoGradeAll() {
+        if (typeof autoGradePicks === 'function') {
+            autoGradePicks().then(result => {
+                loadPicksHistory();
+                if (typeof updateStatsDashboard === 'function') updateStatsDashboard();
+                if (typeof loadMyRecordPage === 'function') loadMyRecordPage();
+                if (result.graded > 0) {
+                    alert('Auto-graded ' + result.graded + ' pick(s): ' + result.wins + 'W-' + result.losses + 'L-' + result.pushes + 'P');
+                } else {
+                    alert('No picks could be auto-graded. Games may not be completed yet, or use the manual WIN/LOSS buttons below each pick.');
+                }
+            }).catch(err => {
+                console.error('Auto-grade error:', err);
+                alert('Auto-grading failed. Please grade picks manually using the buttons below each pick.');
+            });
+        } else {
+            alert('Auto-grading not available. Please grade picks manually.');
+        }
+    }
+    window.tryAutoGradeAll = tryAutoGradeAll;
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
