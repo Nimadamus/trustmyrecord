@@ -6107,6 +6107,62 @@
             </div>
         </div>
 
+        <!-- Inline script to handle sport card clicks immediately -->
+        <script>
+        (function() {
+            console.log('Inline sport card script running...');
+
+            // Define the function here as a backup
+            window.handleSportClick = function(sport) {
+                console.log('handleSportClick called with:', sport);
+                alert('Loading ' + sport + ' games...');
+
+                // Try to call the main function
+                if (typeof window.selectSportAndShowGames === 'function') {
+                    window.selectSportAndShowGames(sport);
+                } else {
+                    // Fallback: do it manually
+                    console.log('Fallback: manually loading games');
+                    var sportSelection = document.getElementById('sportSelection');
+                    var gamesSection = document.getElementById('gamesListSection');
+                    var titleEl = document.getElementById('selectedSportTitle');
+
+                    if (sportSelection) sportSelection.classList.remove('active');
+                    if (gamesSection) gamesSection.classList.add('active');
+                    if (titleEl) titleEl.textContent = sport + ' Games';
+
+                    // Store selected sport
+                    window.currentSelectedSport = sport;
+                }
+            };
+
+            // Attach handlers when DOM is ready
+            function attachHandlers() {
+                var cards = document.querySelectorAll('.sport-card[data-sport]');
+                console.log('Found ' + cards.length + ' sport cards');
+
+                cards.forEach(function(card) {
+                    var sport = card.getAttribute('data-sport');
+                    console.log('Attaching handler for:', sport);
+
+                    card.style.cursor = 'pointer'; // Ensure cursor shows it's clickable
+
+                    card.onclick = function(e) {
+                        console.log('Card clicked!', sport);
+                        window.handleSportClick(sport);
+                    };
+                });
+            }
+
+            // Try to attach now, and also on DOMContentLoaded
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', attachHandlers);
+            } else {
+                attachHandlers();
+            }
+        })();
+        </script>
+
         <!-- Step 2: Games List with All Bet Options -->
         <div id="gamesListSection" class="pick-step">
             <div class="back-button" onclick="goBackToSports()">← Back to Sports</div>
