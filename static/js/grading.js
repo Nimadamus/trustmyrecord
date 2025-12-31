@@ -1,5 +1,6 @@
 // AUTO-GRADING SYSTEM FOR TRUST MY RECORD
 // Grades pending picks based on completed game scores from The Odds API
+console.log('Grading.js loading...');
 
 const ODDS_API_KEY_GRADING = 'deeac7e7af6a8f1a5ac84c625e04973a';
 
@@ -11,6 +12,42 @@ const gradingSportKeyMap = {
     'NCAAF': 'americanfootball_ncaaf',
     'NCAAB': 'basketball_ncaab'
 };
+
+/**
+ * Helper function to normalize team names for matching
+ */
+function normalizeTeamName(name) {
+    if (!name) return '';
+    return name.toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+/**
+ * Check if two team names match
+ */
+function teamsMatch(team1, team2) {
+    const n1 = normalizeTeamName(team1);
+    const n2 = normalizeTeamName(team2);
+
+    // Exact match
+    if (n1 === n2) return true;
+
+    // One contains the other
+    if (n1.includes(n2) || n2.includes(n1)) return true;
+
+    // Match last word (team nickname)
+    const last1 = n1.split(' ').pop();
+    const last2 = n2.split(' ').pop();
+    if (last1 === last2 && last1.length > 2) return true;
+
+    // Match city/first words
+    const first1 = n1.split(' ')[0];
+    const first2 = n2.split(' ')[0];
+    if (first1 === first2 && first1.length > 2) return true;
+
+    return false;
+}
 
 /**
  * Fetch completed game scores from The Odds API
@@ -105,42 +142,6 @@ function gradePick(pick, gameResult) {
     }
 
     return result;
-}
-
-/**
- * Helper function to normalize team names for matching
- */
-function normalizeTeamName(name) {
-    if (!name) return '';
-    return name.toLowerCase()
-        .replace(/\s+/g, ' ')
-        .trim();
-}
-
-/**
- * Check if two team names match
- */
-function teamsMatch(team1, team2) {
-    const n1 = normalizeTeamName(team1);
-    const n2 = normalizeTeamName(team2);
-
-    // Exact match
-    if (n1 === n2) return true;
-
-    // One contains the other
-    if (n1.includes(n2) || n2.includes(n1)) return true;
-
-    // Match last word (team nickname)
-    const last1 = n1.split(' ').pop();
-    const last2 = n2.split(' ').pop();
-    if (last1 === last2 && last1.length > 2) return true;
-
-    // Match city/first words
-    const first1 = n1.split(' ')[0];
-    const first2 = n2.split(' ')[0];
-    if (first1 === first2 && first1.length > 2) return true;
-
-    return false;
 }
 
 /**

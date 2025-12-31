@@ -6074,32 +6074,32 @@
         <div id="sportSelection" class="pick-step active">
             <h3>Select Sport</h3>
             <div class="sport-cards-grid">
-                <div class="sport-card" data-sport="NBA" onclick="selectSportAndShowGames('NBA')">
+                <div class="sport-card" data-sport="NBA" onclick="if(typeof selectSportAndShowGames==='function'){selectSportAndShowGames('NBA')}else{alert('Function not loaded yet')}">
                     <div class="sport-icon">🏀</div>
                     <div class="sport-name">NBA</div>
                     <div class="sport-games" id="nba-game-count">Loading...</div>
                 </div>
-                <div class="sport-card" data-sport="NFL" onclick="selectSportAndShowGames('NFL')">
+                <div class="sport-card" data-sport="NFL" onclick="if(typeof selectSportAndShowGames==='function'){selectSportAndShowGames('NFL')}else{alert('Function not loaded yet')}">
                     <div class="sport-icon">🏈</div>
                     <div class="sport-name">NFL</div>
                     <div class="sport-games" id="nfl-game-count">Loading...</div>
                 </div>
-                <div class="sport-card" data-sport="NHL" onclick="selectSportAndShowGames('NHL')">
+                <div class="sport-card" data-sport="NHL" onclick="if(typeof selectSportAndShowGames==='function'){selectSportAndShowGames('NHL')}else{alert('Function not loaded yet')}">
                     <div class="sport-icon">🏒</div>
                     <div class="sport-name">NHL</div>
                     <div class="sport-games" id="nhl-game-count">Loading...</div>
                 </div>
-                <div class="sport-card" data-sport="NCAAB" onclick="selectSportAndShowGames('NCAAB')">
+                <div class="sport-card" data-sport="NCAAB" onclick="if(typeof selectSportAndShowGames==='function'){selectSportAndShowGames('NCAAB')}else{alert('Function not loaded yet')}">
                     <div class="sport-icon">🏫</div>
                     <div class="sport-name">NCAAB</div>
                     <div class="sport-games" id="ncaab-game-count">Loading...</div>
                 </div>
-                <div class="sport-card" data-sport="NCAAF" onclick="selectSportAndShowGames('NCAAF')">
+                <div class="sport-card" data-sport="NCAAF" onclick="if(typeof selectSportAndShowGames==='function'){selectSportAndShowGames('NCAAF')}else{alert('Function not loaded yet')}">
                     <div class="sport-icon">🎓</div>
                     <div class="sport-name">NCAAF</div>
                     <div class="sport-games" id="ncaaf-game-count">Loading...</div>
                 </div>
-                <div class="sport-card" data-sport="MLB" onclick="selectSportAndShowGames('MLB')">
+                <div class="sport-card" data-sport="MLB" onclick="if(typeof selectSportAndShowGames==='function'){selectSportAndShowGames('MLB')}else{alert('Function not loaded yet')}">
                     <div class="sport-icon">⚾</div>
                     <div class="sport-name">MLB</div>
                     <div class="sport-games" id="mlb-game-count">Loading...</div>
@@ -12927,6 +12927,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <script>
     // COMPLETE PICKS MODULE - FIXED VERSION
+    console.log('TMR Picks Module: Script starting...');
+
     let selectedSport = null;
     let selectedBetType = null;
     let selectedGame = null;
