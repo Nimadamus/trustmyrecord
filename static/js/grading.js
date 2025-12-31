@@ -40,29 +40,40 @@ function gradePick(pick, gameResult) {
     const homePts = parseInt(homeScore);
     const awayPts = parseInt(awayScore);
     const totalPoints = homePts + awayPts;
-    const pickStr = pick.pick.toLowerCase();
-    const betType = pick.betType?.toLowerCase() || '';
+    const pickStr = (pick.pick || '').toLowerCase();
+    const betType = (pick.betType || '').toLowerCase();
 
     let result = null;
 
+    // Determine if user picked home or away team
+    const homeTeamNorm = normalizeTeamName(gameResult.home_team);
+    const awayTeamNorm = normalizeTeamName(gameResult.away_team);
+    const pickTeamPart = pickStr.replace(/[+-]?\d+\.?\d*/g, '').replace(/\s*(ml|over|under)\s*/gi, '').trim();
+
+    const pickedHomeTeam = teamsMatch(pickTeamPart, gameResult.home_team);
+    const pickedAwayTeam = teamsMatch(pickTeamPart, gameResult.away_team);
+
     // Moneyline bets
-    if (betType === 'ml' || betType === 'moneyline' || pickStr.includes(' ml')) {
-        const pickedTeam = pick.pick.replace(/ ml$/i, '').trim().toLowerCase();
-        const homeShort = gameResult.home_team.toLowerCase().split(' ').pop();
-        const awayShort = gameResult.away_team.toLowerCase().split(' ').pop();
-        const pickedHome = pickedTeam.includes(homeShort) || homeShort.includes(pickedTeam.split(' ').pop());
-        result = pickedHome ? (homePts > awayPts ? 'win' : 'loss') : (awayPts > homePts ? 'win' : 'loss');
+    if (betType === 'ml' || betType === 'moneyline' || pickStr.includes(' ml') || pickStr.includes('ml')) {
+        if (pickedHomeTeam) {
+            result = homePts > awayPts ? 'win' : (homePts < awayPts ? 'loss' : 'push');
+        } else if (pickedAwayTeam) {
+            result = awayPts > homePts ? 'win' : (awayPts < homePts ? 'loss' : 'push');
+        }
     }
     // Spread bets
     else if (betType === 'spread' || /[+-]\d/.test(pickStr)) {
         const spreadMatch = pick.pick.match(/([+-]?\d+\.?\d*)/);
         if (spreadMatch) {
             const pickedSpread = parseFloat(spreadMatch[1]);
-            const pickedTeam = pick.pick.replace(/[+-]?\d+\.?\d*/g, '').trim().toLowerCase();
-            const homeShort = gameResult.home_team.toLowerCase().split(' ').pop();
-            const pickedHome = pickedTeam.includes(homeShort);
-            const coverMargin = pickedHome ? (homePts - awayPts + pickedSpread) : (awayPts - homePts + pickedSpread);
-            result = coverMargin > 0 ? 'win' : coverMargin < 0 ? 'loss' : 'push';
+
+            if (pickedHomeTeam) {
+                const coverMargin = homePts - awayPts + pickedSpread;
+                result = coverMargin > 0 ? 'win' : coverMargin < 0 ? 'loss' : 'push';
+            } else if (pickedAwayTeam) {
+                const coverMargin = awayPts - homePts + pickedSpread;
+                result = coverMargin > 0 ? 'win' : coverMargin < 0 ? 'loss' : 'push';
+            }
         }
     }
     // Over/Under bets
@@ -70,13 +81,66 @@ function gradePick(pick, gameResult) {
         const totalMatch = pick.pick.match(/(\d+\.?\d*)/);
         if (totalMatch) {
             const line = parseFloat(totalMatch[1]);
-            const isOver = pickStr.includes('over');
+            const isOver = betType === 'over' || pickStr.includes('over');
             if (isOver) result = totalPoints > line ? 'win' : totalPoints < line ? 'loss' : 'push';
             else result = totalPoints < line ? 'win' : totalPoints > line ? 'loss' : 'push';
         }
     }
+    // Team totals (check for team name + over/under)
+    else if (betType === 'teamtotal') {
+        const totalMatch = pick.pick.match(/(\d+\.?\d*)/);
+        if (totalMatch) {
+            const line = parseFloat(totalMatch[1]);
+            const isOver = pickStr.includes('over');
+
+            // Determine which team's total to check
+            if (pickedHomeTeam) {
+                if (isOver) result = homePts > line ? 'win' : homePts < line ? 'loss' : 'push';
+                else result = homePts < line ? 'win' : homePts > line ? 'loss' : 'push';
+            } else if (pickedAwayTeam) {
+                if (isOver) result = awayPts > line ? 'win' : awayPts < line ? 'loss' : 'push';
+                else result = awayPts < line ? 'win' : awayPts > line ? 'loss' : 'push';
+            }
+        }
+    }
 
     return result;
+}
+
+/**
+ * Helper function to normalize team names for matching
+ */
+function normalizeTeamName(name) {
+    if (!name) return '';
+    return name.toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+/**
+ * Check if two team names match
+ */
+function teamsMatch(team1, team2) {
+    const n1 = normalizeTeamName(team1);
+    const n2 = normalizeTeamName(team2);
+
+    // Exact match
+    if (n1 === n2) return true;
+
+    // One contains the other
+    if (n1.includes(n2) || n2.includes(n1)) return true;
+
+    // Match last word (team nickname)
+    const last1 = n1.split(' ').pop();
+    const last2 = n2.split(' ').pop();
+    if (last1 === last2 && last1.length > 2) return true;
+
+    // Match city/first words
+    const first1 = n1.split(' ')[0];
+    const first2 = n2.split(' ')[0];
+    if (first1 === first2 && first1.length > 2) return true;
+
+    return false;
 }
 
 /**
@@ -111,23 +175,26 @@ async function autoGradePicks() {
         console.log(`Fetched ${completedGames.length} completed ${sport} games`);
 
         for (const pick of sportPicks) {
-            // Extract team names from pick
-            const gameTeams = [pick.team1?.toLowerCase(), pick.team2?.toLowerCase()].filter(Boolean);
-            if (gameTeams.length === 0) {
-                const gameStr = pick.game || pick.pick || '';
-                gameTeams.push(...gameStr.toLowerCase().split(/[@vs]/i).map(t => t.trim()));
+            // Extract team names from pick - use team1/team2 if available
+            let pickTeam1 = pick.team1 || '';
+            let pickTeam2 = pick.team2 || '';
+
+            // If team1/team2 not set, try to parse from game string
+            if (!pickTeam1 && !pickTeam2) {
+                const gameStr = pick.game || '';
+                const parts = gameStr.split(/\s*[@vs]+\s*/i);
+                if (parts.length >= 2) {
+                    pickTeam1 = parts[0].trim();
+                    pickTeam2 = parts[1].trim();
+                }
             }
 
             // Find matching completed game
             const matchingGame = completedGames.find(game => {
-                const home = game.home_team.toLowerCase();
-                const away = game.away_team.toLowerCase();
-                return gameTeams.some(team =>
-                    home.includes(team.split(' ').pop()) ||
-                    away.includes(team.split(' ').pop()) ||
-                    team.includes(home.split(' ').pop()) ||
-                    team.includes(away.split(' ').pop())
-                );
+                // Check if both teams match
+                const homeMatches = teamsMatch(game.home_team, pickTeam1) || teamsMatch(game.home_team, pickTeam2);
+                const awayMatches = teamsMatch(game.away_team, pickTeam1) || teamsMatch(game.away_team, pickTeam2);
+                return homeMatches && awayMatches;
             });
 
             if (matchingGame) {
@@ -136,12 +203,14 @@ async function autoGradePicks() {
                     pick.status = result;
                     pick.result = result;
                     pick.gradedAt = new Date().toISOString();
-                    pick.finalScore = `${matchingGame.home_team}: ${matchingGame.scores?.find(s=>s.name===matchingGame.home_team)?.score || '?'} - ${matchingGame.away_team}: ${matchingGame.scores?.find(s=>s.name===matchingGame.away_team)?.score || '?'}`;
+                    const homeScore = matchingGame.scores?.find(s => s.name === matchingGame.home_team)?.score || '?';
+                    const awayScore = matchingGame.scores?.find(s => s.name === matchingGame.away_team)?.score || '?';
+                    pick.finalScore = `${matchingGame.away_team} ${awayScore} - ${matchingGame.home_team} ${homeScore}`;
                     gradedCount++;
                     if (result === 'win') wins++;
                     else if (result === 'loss') losses++;
                     else pushes++;
-                    console.log(`Graded: ${pick.pick} -> ${result}`);
+                    console.log(`Graded: ${pick.pick} -> ${result} (${pick.finalScore})`);
                 }
             }
         }

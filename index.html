@@ -6145,12 +6145,12 @@
                     <label>Units to Win</label>
                     <p class="units-explanation" id="unitsExplanation" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Select how many units you want to WIN. Risk calculated based on odds.</p>
                     <div class="units-buttons">
-                        <button class="unit-btn" data-units="0.5" onclick="setUnits(0.5)">0.5</button>
-                        <button class="unit-btn active" data-units="1" onclick="setUnits(1)">1</button>
-                        <button class="unit-btn" data-units="1.5" onclick="setUnits(1.5)">1.5</button>
-                        <button class="unit-btn" data-units="2" onclick="setUnits(2)">2</button>
-                        <button class="unit-btn" data-units="3" onclick="setUnits(3)">3</button>
-                        <button class="unit-btn" data-units="5" onclick="setUnits(5)">5 MAX</button>
+                        <button class="unit-btn" data-units="0.5" onclick="setUnits(0.5, this)">0.5</button>
+                        <button class="unit-btn active" data-units="1" onclick="setUnits(1, this)">1</button>
+                        <button class="unit-btn" data-units="1.5" onclick="setUnits(1.5, this)">1.5</button>
+                        <button class="unit-btn" data-units="2" onclick="setUnits(2, this)">2</button>
+                        <button class="unit-btn" data-units="3" onclick="setUnits(3, this)">3</button>
+                        <button class="unit-btn" data-units="5" onclick="setUnits(5, this)">5 MAX</button>
                     </div>
                 </div>
 
@@ -12952,7 +12952,6 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('TMR Picks Module Initializing...');
 
     async function selectSportAndShowGames(sport) {
-        alert('DEBUG: selectSportAndShowGames called with ' + sport);
         console.log('selectSportAndShowGames called with:', sport);
         try {
             selectedSport = sport;
@@ -13286,24 +13285,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const reasoning = document.getElementById('pickReasoning')?.value || '';
 
-        // Get confidence and units from selected buttons
-        let confidence = 3;
-        let units = 1;
-        document.querySelectorAll('.conf-btn.active').forEach(btn => {
-            confidence = parseInt(btn.dataset.conf) || 3;
-        });
+        // Get units from selected buttons (using selectedUnits variable as fallback)
+        let units = selectedUnits || 1;
         document.querySelectorAll('.unit-btn.active').forEach(btn => {
-            units = parseFloat(btn.dataset.units) || 1;
+            units = parseFloat(btn.dataset.units) || units;
         });
 
+        // Parse odds to numeric value for calculations
+        let oddsValue = currentSelectedPick.odds;
+        if (typeof oddsValue === 'string') {
+            oddsValue = parseInt(oddsValue.replace('+', '')) || -110;
+        }
+
         const pick = {
+            id: Date.now(),
             sport: currentSelectedPick.sport,
             team1: currentSelectedPick.awayTeam,
             team2: currentSelectedPick.homeTeam,
+            game: currentSelectedPick.awayTeam + ' @ ' + currentSelectedPick.homeTeam,
             betType: currentSelectedPick.betType,
             pick: currentSelectedPick.team + ' ' + currentSelectedPick.line,
-            odds: currentSelectedPick.odds,
-            confidence,
+            odds: oddsValue,
             units,
             reasoning,
             timestamp: new Date().toISOString(),
@@ -13315,14 +13317,16 @@ document.addEventListener('DOMContentLoaded', function() {
         picks.unshift(pick);
         localStorage.setItem('trustMyRecordPicks', JSON.stringify(picks));
 
-        alert('Pick locked in! ' + pick.pick + ' (' + pick.odds + ')');
+        alert('Pick locked in! ' + pick.pick + ' (' + (oddsValue > 0 ? '+' : '') + oddsValue + ')');
 
         // Reset and go back to sports
         currentSelectedPick = null;
-        document.getElementById('pickReasoning').value = '';
+        const reasoningEl = document.getElementById('pickReasoning');
+        if (reasoningEl) reasoningEl.value = '';
         showPickStep('sportSelection');
 
-        // Update stats dashboard
+        // Update displays
+        loadPicksHistory();
         if (typeof updateStatsDashboard === 'function') updateStatsDashboard();
     }
     window.submitPickNew = submitPickNew;
@@ -13632,16 +13636,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function setConfidence(level) {
+    function setConfidence(level, element) {
         selectedConfidence = level;
         document.querySelectorAll('.conf-btn').forEach(btn => btn.classList.remove('active'));
-        if (event && event.currentTarget) event.currentTarget.classList.add('active');
+        if (element) {
+            element.classList.add('active');
+        } else {
+            // Fallback: find button with matching data-conf
+            const btn = document.querySelector(`.conf-btn[data-conf="${level}"]`);
+            if (btn) btn.classList.add('active');
+        }
     }
 
-    function setUnits(units) {
+    function setUnits(units, element) {
         selectedUnits = units;
         document.querySelectorAll('.unit-btn').forEach(btn => btn.classList.remove('active'));
-        if (event && event.currentTarget) event.currentTarget.classList.add('active');
+        if (element) {
+            element.classList.add('active');
+        } else {
+            // Fallback: find button with matching data-units
+            const btn = document.querySelector(`.unit-btn[data-units="${units}"]`);
+            if (btn) btn.classList.add('active');
+        }
     }
 
     function submitPick() {
@@ -13832,7 +13848,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
         console.log('Picks module initialized');
-        showStep('sport');
+        // Use new flow: show sport selection step
+        showPickStep('sportSelection');
         loadPicksHistory();
 
         // Update game counts
@@ -13871,7 +13888,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.goBackToGames = goBackToGames;
     window.loadGamesWithAllBets = loadGamesWithAllBets;
     window.selectGameBet = selectGameBet;
-    window.selectTotal = selectTotal;
+    window.toggleMoreMarkets = toggleMoreMarkets;
     window.submitPickNew = submitPickNew;
 
     // ========== ADVANCED STATS ENGINE ==========
