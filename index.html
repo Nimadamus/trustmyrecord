@@ -13857,6 +13857,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Update game counts
         updateGameCounts();
+
+        // Attach click handlers to sport cards directly (more reliable than onclick attributes)
+        document.querySelectorAll('.sport-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const sport = this.getAttribute('data-sport');
+                console.log('Sport card clicked:', sport);
+                if (sport && typeof selectSportAndShowGames === 'function') {
+                    selectSportAndShowGames(sport);
+                } else {
+                    console.error('selectSportAndShowGames not available or no sport attribute');
+                    alert('Error: Could not load games. Please refresh the page.');
+                }
+            });
+        });
+        console.log('Sport card click handlers attached');
     });
 
     async function updateGameCounts() {
