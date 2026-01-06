@@ -12922,11 +12922,18 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- forms.js REMOVED - forms-fixed.js handles login/signup -->
     <script src="static/js/navigation.js?v=20251208c"></script>
     <script src="static/js/effects.js?v=20251208c"></script>
-    <script src="static/js/grading.js?v=20251216"></script>
+    <script src="static/js/grading.js?v=20260105"></script>
     <script src="static/js/social-hub.js?v=20251216"></script>
 
     <script>
     // COMPLETE PICKS MODULE - FIXED VERSION
+    // Global error handler for debugging
+    window.onerror = function(message, source, lineno, colno, error) {
+        console.error('[TMR ERROR]', message, 'at', source, 'line', lineno);
+        return false;
+    };
+    console.log('[TMR] Picks module script starting...');
+
     let selectedSport = null;
     let selectedBetType = null;
     let selectedGame = null;
@@ -12952,9 +12959,12 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('TMR Picks Module Initializing...');
 
     async function selectSportAndShowGames(sport) {
-        alert('DEBUG: selectSportAndShowGames called with ' + sport);
-        console.log('selectSportAndShowGames called with:', sport);
+        console.log('[TMR] selectSportAndShowGames called with:', sport);
         try {
+            if (!sport) {
+                console.error('[TMR] No sport provided to selectSportAndShowGames');
+                return;
+            }
             selectedSport = sport;
 
             // Remove selected class from all sport cards

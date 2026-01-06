@@ -1,7 +1,25 @@
 // AUTO-GRADING SYSTEM FOR TRUST MY RECORD
 // Grades pending picks based on completed game scores from The Odds API
+// Last Updated: January 5, 2026 - Added comprehensive logging
 
 const ODDS_API_KEY_GRADING = 'deeac7e7af6a8f1a5ac84c625e04973a';
+
+// Logging utility
+function gradingLog(level, message, data = null) {
+    const timestamp = new Date().toISOString();
+    const prefix = `[TMR Grading ${timestamp}]`;
+    if (data) {
+        console[level](`${prefix} ${message}`, data);
+    } else {
+        console[level](`${prefix} ${message}`);
+    }
+    // Store in localStorage for debugging
+    const logs = JSON.parse(localStorage.getItem('tmr_grading_logs') || '[]');
+    logs.push({ timestamp, level, message, data: data ? JSON.stringify(data).substring(0, 500) : null });
+    // Keep last 100 logs
+    if (logs.length > 100) logs.shift();
+    localStorage.setItem('tmr_grading_logs', JSON.stringify(logs));
+}
 
 const gradingSportKeyMap = {
     'NBA': 'basketball_nba',
@@ -18,12 +36,31 @@ const gradingSportKeyMap = {
 async function fetchCompletedScores(sportKey, daysFrom = 3) {
     try {
         const url = `https://api.the-odds-api.com/v4/sports/${sportKey}/scores?apiKey=${ODDS_API_KEY_GRADING}&daysFrom=${daysFrom}`;
+        gradingLog('info', `Fetching scores from: ${url.replace(ODDS_API_KEY_GRADING, 'API_KEY_HIDDEN')}`);
+
         const response = await fetch(url);
-        if (!response.ok) return [];
+
+        // Log API quota remaining
+        const remaining = response.headers.get('x-requests-remaining');
+        const used = response.headers.get('x-requests-used');
+        if (remaining) {
+            gradingLog('info', `API Quota - Used: ${used}, Remaining: ${remaining}`);
+        }
+
+        if (!response.ok) {
+            gradingLog('error', `API returned ${response.status}: ${response.statusText}`);
+            return [];
+        }
+
         const scores = await response.json();
-        return scores.filter(game => game.completed === true);
+        gradingLog('info', `API returned ${scores.length} total games`);
+
+        const completedGames = scores.filter(game => game.completed === true);
+        gradingLog('info', `${completedGames.length} games are completed`);
+
+        return completedGames;
     } catch (error) {
-        console.error('Error fetching scores:', error);
+        gradingLog('error', 'Error fetching scores: ' + error.message);
         return [];
     }
 }
@@ -83,14 +120,29 @@ function gradePick(pick, gameResult) {
  * Auto-grade all pending picks
  */
 async function autoGradePicks() {
-    console.log('Starting auto-grading...');
+    gradingLog('info', '=== AUTO-GRADING STARTED ===');
+
     const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+    gradingLog('info', `Total picks in storage: ${picks.length}`);
+
     const pendingPicks = picks.filter(p => p.status === 'pending' || !p.status);
+    gradingLog('info', `Pending picks to grade: ${pendingPicks.length}`);
 
     if (pendingPicks.length === 0) {
-        console.log('No pending picks to grade');
+        gradingLog('info', 'No pending picks to grade - exiting');
         return { graded: 0, wins: 0, losses: 0, pushes: 0 };
     }
+
+    // Log details of each pending pick
+    pendingPicks.forEach((pick, idx) => {
+        gradingLog('info', `Pending pick #${idx + 1}:`, {
+            sport: pick.sport,
+            pick: pick.pick,
+            team1: pick.team1,
+            team2: pick.team2,
+            timestamp: pick.timestamp
+        });
+    });
 
     // Group pending picks by sport
     const picksBySport = {};
@@ -104,33 +156,61 @@ async function autoGradePicks() {
 
     // Fetch scores for each sport and grade picks
     for (const [sport, sportPicks] of Object.entries(picksBySport)) {
-        const sportKey = gradingSportKeyMap[sport];
-        if (!sportKey) continue;
+        gradingLog('info', `Processing ${sport} - ${sportPicks.length} picks`);
 
+        const sportKey = gradingSportKeyMap[sport];
+        if (!sportKey) {
+            gradingLog('warn', `No sport key mapping for: ${sport}`);
+            continue;
+        }
+
+        gradingLog('info', `Fetching completed games for ${sportKey}...`);
         const completedGames = await fetchCompletedScores(sportKey, 10);
-        console.log(`Fetched ${completedGames.length} completed ${sport} games`);
+        gradingLog('info', `Fetched ${completedGames.length} completed ${sport} games`);
+
+        if (completedGames.length > 0) {
+            gradingLog('info', 'Sample completed games:', completedGames.slice(0, 3).map(g => ({
+                home: g.home_team,
+                away: g.away_team,
+                completed: g.completed,
+                scores: g.scores
+            })));
+        }
 
         for (const pick of sportPicks) {
+            gradingLog('info', `Attempting to grade pick: ${pick.pick}`);
+
             // Extract team names from pick
             const gameTeams = [pick.team1?.toLowerCase(), pick.team2?.toLowerCase()].filter(Boolean);
             if (gameTeams.length === 0) {
                 const gameStr = pick.game || pick.pick || '';
                 gameTeams.push(...gameStr.toLowerCase().split(/[@vs]/i).map(t => t.trim()));
             }
+            gradingLog('info', `Searching for teams: [${gameTeams.join(', ')}]`);
 
             // Find matching completed game
             const matchingGame = completedGames.find(game => {
                 const home = game.home_team.toLowerCase();
                 const away = game.away_team.toLowerCase();
-                return gameTeams.some(team =>
-                    home.includes(team.split(' ').pop()) ||
-                    away.includes(team.split(' ').pop()) ||
-                    team.includes(home.split(' ').pop()) ||
-                    team.includes(away.split(' ').pop())
-                );
+                const homeShort = home.split(' ').pop();
+                const awayShort = away.split(' ').pop();
+
+                const matches = gameTeams.some(team => {
+                    const teamShort = team.split(' ').pop();
+                    return home.includes(teamShort) ||
+                        away.includes(teamShort) ||
+                        team.includes(homeShort) ||
+                        team.includes(awayShort);
+                });
+
+                if (matches) {
+                    gradingLog('info', `Found potential match: ${away} @ ${home}`);
+                }
+                return matches;
             });
 
             if (matchingGame) {
+                gradingLog('info', `Matched game: ${matchingGame.away_team} @ ${matchingGame.home_team}`, matchingGame.scores);
                 const result = gradePick(pick, matchingGame);
                 if (result) {
                     pick.status = result;
@@ -141,15 +221,20 @@ async function autoGradePicks() {
                     if (result === 'win') wins++;
                     else if (result === 'loss') losses++;
                     else pushes++;
-                    console.log(`Graded: ${pick.pick} -> ${result}`);
+                    gradingLog('info', `✓ GRADED: ${pick.pick} -> ${result.toUpperCase()}`);
+                } else {
+                    gradingLog('warn', `Could not determine result for pick: ${pick.pick}`);
                 }
+            } else {
+                gradingLog('warn', `No matching completed game found for: ${pick.pick} (teams: ${gameTeams.join(', ')})`);
             }
         }
     }
 
     // Save updated picks
     localStorage.setItem('trustMyRecordPicks', JSON.stringify(picks));
-    console.log(`Auto-grading complete: ${gradedCount} picks graded (${wins}W-${losses}L-${pushes}P)`);
+    gradingLog('info', `=== AUTO-GRADING COMPLETE ===`);
+    gradingLog('info', `Results: ${gradedCount} graded (${wins}W-${losses}L-${pushes}P)`);
 
     // Update UI
     if (typeof updateStatsDashboard === 'function') updateStatsDashboard();
@@ -327,16 +412,72 @@ function updateLeaderboardsWithRealData() {
     }
 }
 
+/**
+ * View grading logs for debugging
+ */
+function viewGradingLogs() {
+    const logs = JSON.parse(localStorage.getItem('tmr_grading_logs') || '[]');
+    console.log('=== TMR GRADING LOGS ===');
+    logs.forEach(log => {
+        console.log(`[${log.timestamp}] ${log.level.toUpperCase()}: ${log.message}`, log.data || '');
+    });
+    return logs;
+}
+
+/**
+ * Force grade a specific pick by index (for debugging)
+ */
+function forceGradePick(pickIndex, result) {
+    const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+    if (pickIndex >= 0 && pickIndex < picks.length) {
+        picks[pickIndex].status = result;
+        picks[pickIndex].result = result;
+        picks[pickIndex].gradedAt = new Date().toISOString();
+        picks[pickIndex].manualGrade = true;
+        localStorage.setItem('trustMyRecordPicks', JSON.stringify(picks));
+        gradingLog('info', `Force graded pick #${pickIndex} as ${result}`);
+        if (typeof updateStatsDashboard === 'function') updateStatsDashboard();
+        if (typeof loadPicksHistory === 'function') loadPicksHistory();
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Get list of all pending picks (for debugging)
+ */
+function getPendingPicks() {
+    const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+    return picks.map((p, idx) => ({
+        index: idx,
+        sport: p.sport,
+        pick: p.pick,
+        team1: p.team1,
+        team2: p.team2,
+        status: p.status || 'pending',
+        timestamp: p.timestamp
+    })).filter(p => p.status === 'pending' || !p.status);
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
+    gradingLog('info', '=== GRADING MODULE LOADED ===');
+    gradingLog('info', 'Page loaded, scheduling auto-grade in 3 seconds...');
+
     // Auto-grade after 3 seconds (let page load first)
-    setTimeout(autoGradePicks, 3000);
+    setTimeout(() => {
+        gradingLog('info', 'Initial auto-grade triggered');
+        autoGradePicks();
+    }, 3000);
 
     // Update leaderboards with real data
     setTimeout(updateLeaderboardsWithRealData, 1500);
 
     // Auto-grade every 2 minutes
-    setInterval(autoGradePicks, 2 * 60 * 1000);
+    setInterval(() => {
+        gradingLog('info', '2-minute interval auto-grade triggered');
+        autoGradePicks();
+    }, 2 * 60 * 1000);
 });
 
 // Export functions globally
@@ -345,3 +486,7 @@ window.manualGradePick = manualGradePick;
 window.showGradingModal = showGradingModal;
 window.closeGradingModal = closeGradingModal;
 window.updateLeaderboardsWithRealData = updateLeaderboardsWithRealData;
+window.viewGradingLogs = viewGradingLogs;
+window.forceGradePick = forceGradePick;
+window.getPendingPicks = getPendingPicks;
+window.gradingLog = gradingLog;
