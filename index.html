@@ -6068,38 +6068,45 @@
         <div class="section-header">
             <h2>Make Your <span class="highlight">Picks</span></h2>
             <p>Select a sport, see all games, choose your bet</p>
+            <!-- DEBUG TEST - REMOVE AFTER FIXING -->
+            <div style="margin-top:15px; padding:10px; background:rgba(255,0,0,0.2); border:2px solid red; border-radius:8px;">
+                <button onclick="alert('Button clicked! JS is working.')" style="padding:10px 20px; background:#00ff00; color:#000; font-weight:bold; cursor:pointer; border:none; border-radius:5px;">
+                    TEST BUTTON - Click to verify JS works
+                </button>
+                <span style="margin-left:10px; color:#fff;">If this button shows an alert, JS is working.</span>
+            </div>
         </div>
 
         <!-- Step 1: Sport Selection -->
         <div id="sportSelection" class="pick-step active">
             <h3>Select Sport</h3>
             <div class="sport-cards-grid">
-                <div class="sport-card" data-sport="NBA" onclick="selectSportAndShowGames('NBA')">
+                <div class="sport-card" data-sport="NBA" onclick="console.log('NBA clicked'); if(typeof selectSportAndShowGames==='function'){selectSportAndShowGames('NBA')}else{alert('Function not defined! Check console.')}" style="cursor:pointer;">
                     <div class="sport-icon">🏀</div>
                     <div class="sport-name">NBA</div>
                     <div class="sport-games" id="nba-game-count">Loading...</div>
                 </div>
-                <div class="sport-card" data-sport="NFL" onclick="selectSportAndShowGames('NFL')">
+                <div class="sport-card" data-sport="NFL" onclick="console.log('NFL clicked'); if(typeof selectSportAndShowGames==='function'){selectSportAndShowGames('NFL')}else{alert('Function not defined!')}" style="cursor:pointer;">
                     <div class="sport-icon">🏈</div>
                     <div class="sport-name">NFL</div>
                     <div class="sport-games" id="nfl-game-count">Loading...</div>
                 </div>
-                <div class="sport-card" data-sport="NHL" onclick="selectSportAndShowGames('NHL')">
+                <div class="sport-card" data-sport="NHL" onclick="console.log('NHL clicked'); if(typeof selectSportAndShowGames==='function'){selectSportAndShowGames('NHL')}else{alert('Function not defined!')}" style="cursor:pointer;">
                     <div class="sport-icon">🏒</div>
                     <div class="sport-name">NHL</div>
                     <div class="sport-games" id="nhl-game-count">Loading...</div>
                 </div>
-                <div class="sport-card" data-sport="NCAAB" onclick="selectSportAndShowGames('NCAAB')">
+                <div class="sport-card" data-sport="NCAAB" onclick="console.log('NCAAB clicked'); if(typeof selectSportAndShowGames==='function'){selectSportAndShowGames('NCAAB')}else{alert('Function not defined!')}" style="cursor:pointer;">
                     <div class="sport-icon">🏫</div>
                     <div class="sport-name">NCAAB</div>
                     <div class="sport-games" id="ncaab-game-count">Loading...</div>
                 </div>
-                <div class="sport-card" data-sport="NCAAF" onclick="selectSportAndShowGames('NCAAF')">
+                <div class="sport-card" data-sport="NCAAF" onclick="console.log('NCAAF clicked'); if(typeof selectSportAndShowGames==='function'){selectSportAndShowGames('NCAAF')}else{alert('Function not defined!')}" style="cursor:pointer;">
                     <div class="sport-icon">🎓</div>
                     <div class="sport-name">NCAAF</div>
                     <div class="sport-games" id="ncaaf-game-count">Loading...</div>
                 </div>
-                <div class="sport-card" data-sport="MLB" onclick="selectSportAndShowGames('MLB')">
+                <div class="sport-card" data-sport="MLB" onclick="console.log('MLB clicked'); if(typeof selectSportAndShowGames==='function'){selectSportAndShowGames('MLB')}else{alert('Function not defined!')}" style="cursor:pointer;">
                     <div class="sport-icon">⚾</div>
                     <div class="sport-name">MLB</div>
                     <div class="sport-games" id="mlb-game-count">Loading...</div>
