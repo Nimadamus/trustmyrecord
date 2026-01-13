@@ -12926,14 +12926,11 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="static/js/social-hub.js?v=20251216"></script>
 
     <script>
-    // COMPLETE PICKS MODULE - FIXED VERSION
-    // Global error handler for debugging
-    window.onerror = function(message, source, lineno, colno, error) {
-        console.error('[TMR ERROR]', message, 'at', source, 'line', lineno);
-        return false;
-    };
-    console.log('[TMR] Picks module script starting...');
+    // COMPLETE PICKS MODULE - FIXED VERSION v2 - January 13, 2026
+    // CRITICAL: Export core functions IMMEDIATELY before any other code runs
+    console.log('[TMR] Script starting - v2 build');
 
+    // ===== CORE VARIABLES (defined FIRST) =====
     let selectedSport = null;
     let selectedBetType = null;
     let selectedGame = null;
@@ -12942,7 +12939,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentFilteredGames = [];
     let currentSelectedPick = null;
 
-    // Sport key mapping to API
     const sportKeyMap = {
         'NFL': 'americanfootball_nfl',
         'NBA': 'basketball_nba',
@@ -12952,80 +12948,70 @@ document.addEventListener('DOMContentLoaded', function() {
         'NCAAB': 'basketball_ncaab'
     };
 
-    // API Key for The Odds API (needed for loadGamesWithAllBets)
     const ODDS_API_KEY_NEW = 'deeac7e7af6a8f1a5ac84c625e04973a';
 
-    // NEW GAMES-FIRST FLOW FUNCTIONS
-    console.log('TMR Picks Module Initializing...');
-
-    async function selectSportAndShowGames(sport) {
-        console.log('[TMR] selectSportAndShowGames called with:', sport);
-        try {
-            if (!sport) {
-                console.error('[TMR] No sport provided to selectSportAndShowGames');
-                return;
-            }
-            selectedSport = sport;
-
-            // Remove selected class from all sport cards
-            document.querySelectorAll('.sport-card').forEach(card => card.classList.remove('selected'));
-
-            // Try to add selected class to clicked card (handles both event passing methods)
-            try {
-                const clickedCard = document.querySelector(`.sport-card[data-sport="${sport}"]`);
-                if (clickedCard) clickedCard.classList.add('selected');
-            } catch (e) {
-                console.log('Could not highlight card:', e);
-            }
-
-            // Update title
-            const sportIcons = { 'NBA': '🏀', 'NFL': '🏈', 'NHL': '🏒', 'MLB': '⚾', 'NCAAF': '🎓', 'NCAAB': '🏫' };
-            const titleEl = document.getElementById('selectedSportTitle');
-            if (titleEl) titleEl.textContent = (sportIcons[sport] || '') + ' ' + sport + ' Games';
-
-            // Show games section immediately
-            console.log('Calling showPickStep for gamesListSection...');
-            showPickStep('gamesListSection');
-
-            // Load games
-            console.log('Calling loadGamesWithAllBets...');
-            await loadGamesWithAllBets();
-            console.log('loadGamesWithAllBets completed');
-        } catch (error) {
-            console.error('Error in selectSportAndShowGames:', error);
-            alert('Error loading games: ' + error.message);
-        }
-    }
+    // ===== CORE FUNCTIONS DEFINED AND EXPORTED IMMEDIATELY =====
+    // These MUST be available before onclick handlers fire
 
     function showPickStep(stepId) {
-        console.log('showPickStep called with:', stepId);
+        console.log('[TMR] showPickStep:', stepId);
         const allSteps = document.querySelectorAll('.pick-step');
-        console.log('Found', allSteps.length, 'pick-step elements');
         allSteps.forEach(s => s.classList.remove('active'));
         const el = document.getElementById(stepId);
-        if (el) {
-            el.classList.add('active');
-            console.log('Added active class to', stepId);
-        } else {
-            console.error('Element not found:', stepId);
-        }
+        if (el) el.classList.add('active');
     }
+    window.showPickStep = showPickStep;
 
     function goBackToSports() {
         showPickStep('sportSelection');
     }
-
-    // EARLY EXPORT - ensure these are available immediately
-    window.selectSportAndShowGames = selectSportAndShowGames;
-    window.showPickStep = showPickStep;
     window.goBackToSports = goBackToSports;
-    console.log('TMR Picks: Core functions exported to window');
 
     function goBackToGames() {
         showPickStep('gamesListSection');
     }
     window.goBackToGames = goBackToGames;
 
+    async function selectSportAndShowGames(sport) {
+        console.log('[TMR] selectSportAndShowGames called:', sport);
+        try {
+            if (!sport) {
+                console.error('[TMR] No sport provided');
+                return;
+            }
+            selectedSport = sport;
+
+            // Update sport card styling
+            document.querySelectorAll('.sport-card').forEach(card => card.classList.remove('selected'));
+            const clickedCard = document.querySelector(`.sport-card[data-sport="${sport}"]`);
+            if (clickedCard) clickedCard.classList.add('selected');
+
+            // Update title
+            const sportIcons = { 'NBA': '🏀', 'NFL': '🏈', 'NHL': '🏒', 'MLB': '⚾', 'NCAAF': '🎓', 'NCAAB': '🏫' };
+            const titleEl = document.getElementById('selectedSportTitle');
+            if (titleEl) titleEl.textContent = (sportIcons[sport] || '') + ' ' + sport + ' Games';
+
+            // Show games section
+            showPickStep('gamesListSection');
+
+            // Load games
+            await loadGamesWithAllBets();
+        } catch (error) {
+            console.error('[TMR] Error in selectSportAndShowGames:', error);
+            alert('Error loading games: ' + error.message);
+        }
+    }
+    window.selectSportAndShowGames = selectSportAndShowGames;
+
+    console.log('[TMR] Core functions exported. selectSportAndShowGames:', typeof window.selectSportAndShowGames);
+
+    // Global error handler for debugging
+    window.onerror = function(message, source, lineno, colno, error) {
+        console.error('[TMR ERROR]', message, 'at', source, 'line', lineno);
+        return false;
+    };
+
+    // ===== GAMES LOADING AND DISPLAY =====
     async function loadGamesWithAllBets() {
         const container = document.getElementById('gamesListContainer');
         const countBadge = document.getElementById('gamesCountBadge');
