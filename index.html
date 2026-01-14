@@ -1,6 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- CRITICAL: Early script to define core functions BEFORE anything else loads -->
+    <script>
+    // This runs FIRST, before any other scripts
+    console.log('[TMR EARLY] Defining core functions...');
+
+    // Core variables
+    window.TMR = window.TMR || {};
+    window.TMR.selectedSport = null;
+    window.TMR.sportKeyMap = {
+        'NFL': 'americanfootball_nfl',
+        'NBA': 'basketball_nba',
+        'NHL': 'icehockey_nhl',
+        'MLB': 'baseball_mlb',
+        'NCAAF': 'americanfootball_ncaaf',
+        'NCAAB': 'basketball_ncaab'
+    };
+    window.TMR.apiKey = 'deeac7e7af6a8f1a5ac84c625e04973a';
+
+    // Core function - Show Pick Step
+    window.showPickStep = function(stepId) {
+        console.log('[TMR] showPickStep:', stepId);
+        var allSteps = document.querySelectorAll('.pick-step');
+        allSteps.forEach(function(s) { s.classList.remove('active'); });
+        var el = document.getElementById(stepId);
+        if (el) el.classList.add('active');
+    };
+
+    // Core function - Go Back to Sports
+    window.goBackToSports = function() {
+        window.showPickStep('sportSelection');
+    };
+
+    // Core function - Go Back to Games
+    window.goBackToGames = function() {
+        window.showPickStep('gamesListSection');
+    };
+
+    // Core function - Select Sport and Show Games
+    window.selectSportAndShowGames = function(sport) {
+        console.log('[TMR] selectSportAndShowGames:', sport);
+        window.TMR.selectedSport = sport;
+
+        // Update UI
+        document.querySelectorAll('.sport-card').forEach(function(c) { c.classList.remove('selected'); });
+        var card = document.querySelector('.sport-card[data-sport="' + sport + '"]');
+        if (card) card.classList.add('selected');
+
+        var icons = { 'NBA': '🏀', 'NFL': '🏈', 'NHL': '🏒', 'MLB': '⚾', 'NCAAF': '🎓', 'NCAAB': '🏫' };
+        var titleEl = document.getElementById('selectedSportTitle');
+        if (titleEl) titleEl.textContent = (icons[sport] || '') + ' ' + sport + ' Games';
+
+        window.showPickStep('gamesListSection');
+
+        // Load games
+        if (typeof window.loadGamesWithAllBets === 'function') {
+            window.loadGamesWithAllBets();
+        } else {
+            // Fallback: Load games directly
+            var container = document.getElementById('gamesListContainer');
+            if (container) {
+                container.innerHTML = '<div class="loading-games">Loading games...</div>';
+                var sportKey = window.TMR.sportKeyMap[sport];
+                if (sportKey) {
+                    var now = new Date();
+                    var tomorrow = new Date(now);
+                    tomorrow.setUTCDate(tomorrow.getUTCDate() + 2);
+                    var commenceTimeTo = tomorrow.toISOString().split('.')[0] + 'Z';
+                    var url = 'https://api.the-odds-api.com/v4/sports/' + sportKey + '/odds?apiKey=' + window.TMR.apiKey + '&regions=us&markets=h2h,spreads,totals&oddsFormat=american&commenceTimeTo=' + commenceTimeTo;
+
+                    fetch(url)
+                        .then(function(r) { return r.json(); })
+                        .then(function(games) {
+                            console.log('[TMR] Loaded', games.length, 'games');
+                            if (games.length === 0) {
+                                container.innerHTML = '<div class="no-games-message"><h4>No games scheduled</h4><p>Check back later.</p></div>';
+                            } else if (typeof window.renderGamesWithAllBets === 'function') {
+                                window.renderGamesWithAllBets(games);
+                            } else {
+                                container.innerHTML = '<div class="no-games-message"><h4>' + games.length + ' games found</h4><p>Rendering function not loaded yet. Please refresh.</p></div>';
+                            }
+                        })
+                        .catch(function(err) {
+                            console.error('[TMR] Error loading games:', err);
+                            container.innerHTML = '<div class="no-games-message"><h4>Error loading games</h4><p>' + err.message + '</p></div>';
+                        });
+                }
+            }
+        }
+    };
+
+    console.log('[TMR EARLY] Core functions defined. selectSportAndShowGames:', typeof window.selectSportAndShowGames);
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
