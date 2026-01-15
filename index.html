@@ -12293,8 +12293,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Pick form submission
-        document.getElementById('pickForm').addEventListener('submit', function(e) {
+        // Pick form submission (legacy - only if pickForm exists)
+        const pickFormElement = document.getElementById('pickForm');
+        if (pickFormElement) {
+        pickFormElement.addEventListener('submit', function(e) {
             e.preventDefault();
             
             const formData = new FormData(this);
@@ -12321,6 +12323,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Show success message
             alert('Pick submitted successfully! It has been added to your permanent record.');
         });
+        } // End pickForm null check
 
         // Function to add pick to history display
         function addPickToHistory(pick) {
