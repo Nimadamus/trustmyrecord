@@ -180,27 +180,45 @@ async function autoGradePicks() {
         for (const pick of sportPicks) {
             gradingLog('info', `Attempting to grade pick: ${pick.pick}`);
 
-            // Extract team names from pick
-            const gameTeams = [pick.team1?.toLowerCase(), pick.team2?.toLowerCase()].filter(Boolean);
+            // Extract team names from pick - improved extraction
+            let gameTeams = [pick.team1?.toLowerCase(), pick.team2?.toLowerCase()].filter(Boolean);
+
+            // Also extract from the pick string itself (e.g., "Lakers +5.5" -> "lakers")
+            const pickTeam = pick.pick?.replace(/[+-]?\d+\.?\d*/g, '').replace(/ml|over|under/gi, '').trim().toLowerCase();
+            if (pickTeam && pickTeam.length > 2) {
+                gameTeams.push(pickTeam);
+            }
+
             if (gameTeams.length === 0) {
                 const gameStr = pick.game || pick.pick || '';
-                gameTeams.push(...gameStr.toLowerCase().split(/[@vs]/i).map(t => t.trim()));
+                gameTeams.push(...gameStr.toLowerCase().split(/[@vs]/i).map(t => t.trim()).filter(t => t.length > 2));
             }
+
+            // Remove duplicates
+            gameTeams = [...new Set(gameTeams)];
             gradingLog('info', `Searching for teams: [${gameTeams.join(', ')}]`);
 
-            // Find matching completed game
+            // Find matching completed game - improved matching
             const matchingGame = completedGames.find(game => {
                 const home = game.home_team.toLowerCase();
                 const away = game.away_team.toLowerCase();
                 const homeShort = home.split(' ').pop();
                 const awayShort = away.split(' ').pop();
+                const homeFirst = home.split(' ')[0];
+                const awayFirst = away.split(' ')[0];
 
                 const matches = gameTeams.some(team => {
                     const teamShort = team.split(' ').pop();
+                    const teamFirst = team.split(' ')[0];
                     return home.includes(teamShort) ||
                         away.includes(teamShort) ||
                         team.includes(homeShort) ||
-                        team.includes(awayShort);
+                        team.includes(awayShort) ||
+                        homeShort.includes(teamShort) ||
+                        awayShort.includes(teamShort) ||
+                        teamShort.includes(homeShort) ||
+                        teamShort.includes(awayShort) ||
+                        (teamFirst.length > 3 && (homeFirst.includes(teamFirst) || awayFirst.includes(teamFirst)));
                 });
 
                 if (matches) {
