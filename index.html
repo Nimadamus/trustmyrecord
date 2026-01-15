@@ -79,17 +79,20 @@
                             } else if (typeof window.renderGamesWithAllBets === 'function') {
                                 window.renderGamesWithAllBets(games);
                             } else {
-                                // Store games and retry rendering after page loads
+                                // Store games and poll until render function is available
                                 window.TMR.pendingGames = games;
                                 container.innerHTML = '<div class="loading-games">Loading ' + games.length + ' games...</div>';
-                                // Retry after a short delay to let render function load
-                                setTimeout(function() {
+                                var attempts = 0;
+                                var pollInterval = setInterval(function() {
+                                    attempts++;
                                     if (typeof window.renderGamesWithAllBets === 'function') {
+                                        clearInterval(pollInterval);
                                         window.renderGamesWithAllBets(window.TMR.pendingGames);
-                                    } else {
+                                    } else if (attempts > 20) {
+                                        clearInterval(pollInterval);
                                         container.innerHTML = '<div class="no-games-message"><h4>' + games.length + ' games found</h4><p>Please refresh the page to view games.</p></div>';
                                     }
-                                }, 500);
+                                }, 200);
                             }
                         })
                         .catch(function(err) {
