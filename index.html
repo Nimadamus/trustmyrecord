@@ -54,11 +54,7 @@
 
         window.showPickStep('gamesListSection');
 
-        // Load games
-        if (typeof window.loadGamesWithAllBets === 'function') {
-            window.loadGamesWithAllBets();
-        } else {
-            // Fallback: Load games directly
+        // Load games directly (using inline renderer for reliability)
             var container = document.getElementById('gamesListContainer');
             if (container) {
                 container.innerHTML = '<div class="loading-games">Loading games...</div>';
@@ -76,10 +72,8 @@
                             console.log('[TMR] Loaded', games.length, 'games');
                             if (games.length === 0) {
                                 container.innerHTML = '<div class="no-games-message"><h4>No games scheduled</h4><p>Check back later.</p></div>';
-                            } else if (typeof window.renderGamesWithAllBets === 'function') {
-                                window.renderGamesWithAllBets(games);
                             } else {
-                                // Render games inline since main render function not available
+                                // Render games inline
                                 var html = '';
                                 games.forEach(function(game, index) {
                                     var bookmaker = game.bookmakers && game.bookmakers[0];
@@ -122,7 +116,6 @@
                         });
                 }
             }
-        }
     };
 
     console.log('[TMR EARLY] Core functions defined. selectSportAndShowGames:', typeof window.selectSportAndShowGames);
