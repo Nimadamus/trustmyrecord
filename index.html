@@ -79,20 +79,41 @@
                             } else if (typeof window.renderGamesWithAllBets === 'function') {
                                 window.renderGamesWithAllBets(games);
                             } else {
-                                // Store games and poll until render function is available
-                                window.TMR.pendingGames = games;
-                                container.innerHTML = '<div class="loading-games">Loading ' + games.length + ' games...</div>';
-                                var attempts = 0;
-                                var pollInterval = setInterval(function() {
-                                    attempts++;
-                                    if (typeof window.renderGamesWithAllBets === 'function') {
-                                        clearInterval(pollInterval);
-                                        window.renderGamesWithAllBets(window.TMR.pendingGames);
-                                    } else if (attempts > 20) {
-                                        clearInterval(pollInterval);
-                                        container.innerHTML = '<div class="no-games-message"><h4>' + games.length + ' games found</h4><p>Please refresh the page to view games.</p></div>';
-                                    }
-                                }, 200);
+                                // Render games inline since main render function not available
+                                var html = '';
+                                games.forEach(function(game, index) {
+                                    var bookmaker = game.bookmakers && game.bookmakers[0];
+                                    var markets = bookmaker ? bookmaker.markets : [];
+                                    var homeSpread = '--', awaySpread = '--', homeML = '--', awayML = '--', total = '--';
+                                    markets.forEach(function(m) {
+                                        if (m.key === 'spreads') m.outcomes.forEach(function(o) {
+                                            if (o.name === game.home_team) homeSpread = (o.point > 0 ? '+' : '') + o.point;
+                                            else awaySpread = (o.point > 0 ? '+' : '') + o.point;
+                                        });
+                                        if (m.key === 'h2h') m.outcomes.forEach(function(o) {
+                                            if (o.name === game.home_team) homeML = (o.price > 0 ? '+' : '') + o.price;
+                                            else awayML = (o.price > 0 ? '+' : '') + o.price;
+                                        });
+                                        if (m.key === 'totals') m.outcomes.forEach(function(o) {
+                                            if (o.name === 'Over') total = o.point;
+                                        });
+                                    });
+                                    var gameTime = new Date(game.commence_time).toLocaleString('en-US', {weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+                                    html += '<div class="game-card-new" style="background:rgba(0,255,255,0.05);border:1px solid rgba(0,255,255,0.2);border-radius:12px;padding:20px;margin-bottom:15px;">' +
+                                        '<div style="color:#888;font-size:0.85rem;margin-bottom:10px;">' + gameTime + '</div>' +
+                                        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+                                        '<span style="font-weight:700;color:#fff;">' + game.away_team + '</span>' +
+                                        '<div><button onclick="window.selectGameBet(' + index + ',\'spread\',\'' + game.away_team + '\',\'' + awaySpread + '\',\'-110\',\'' + game.away_team + '\',\'' + game.home_team + '\')" style="background:#1a1a2e;border:1px solid #0ff;color:#0ff;padding:8px 12px;margin:0 5px;border-radius:6px;cursor:pointer;">' + awaySpread + '</button>' +
+                                        '<button onclick="window.selectGameBet(' + index + ',\'ml\',\'' + game.away_team + '\',\'ML\',\'' + awayML + '\',\'' + game.away_team + '\',\'' + game.home_team + '\')" style="background:#1a1a2e;border:1px solid #0ff;color:#0ff;padding:8px 12px;border-radius:6px;cursor:pointer;">ML ' + awayML + '</button></div></div>' +
+                                        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+                                        '<span style="font-weight:700;color:#fff;">' + game.home_team + '</span>' +
+                                        '<div><button onclick="window.selectGameBet(' + index + ',\'spread\',\'' + game.home_team + '\',\'' + homeSpread + '\',\'-110\',\'' + game.away_team + '\',\'' + game.home_team + '\')" style="background:#1a1a2e;border:1px solid #0ff;color:#0ff;padding:8px 12px;margin:0 5px;border-radius:6px;cursor:pointer;">' + homeSpread + '</button>' +
+                                        '<button onclick="window.selectGameBet(' + index + ',\'ml\',\'' + game.home_team + '\',\'ML\',\'' + homeML + '\',\'' + game.away_team + '\',\'' + game.home_team + '\')" style="background:#1a1a2e;border:1px solid #0ff;color:#0ff;padding:8px 12px;border-radius:6px;cursor:pointer;">ML ' + homeML + '</button></div></div>' +
+                                        '<div style="text-align:center;padding-top:10px;border-top:1px solid rgba(0,255,255,0.1);">' +
+                                        '<button onclick="window.selectGameBet(' + index + ',\'over\',\'Over\',\'' + total + '\',\'-110\',\'' + game.away_team + '\',\'' + game.home_team + '\')" style="background:#1a1a2e;border:1px solid #0ff;color:#0ff;padding:8px 16px;margin:0 5px;border-radius:6px;cursor:pointer;">O ' + total + '</button>' +
+                                        '<button onclick="window.selectGameBet(' + index + ',\'under\',\'Under\',\'' + total + '\',\'-110\',\'' + game.away_team + '\',\'' + game.home_team + '\')" style="background:#1a1a2e;border:1px solid #0ff;color:#0ff;padding:8px 16px;border-radius:6px;cursor:pointer;">U ' + total + '</button></div></div>';
+                                });
+                                container.innerHTML = html;
                             }
                         })
                         .catch(function(err) {
