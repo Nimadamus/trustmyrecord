@@ -18,6 +18,7 @@
         'NCAAB': 'basketball_ncaab'
     };
     window.TMR.apiKey = 'deeac7e7af6a8f1a5ac84c625e04973a';
+    window.TMR.currentSelectedPick = null;
 
     // Core function - Show Pick Step
     window.showPickStep = function(stepId) {
@@ -123,7 +124,52 @@
             }
     };
 
-    console.log('[TMR EARLY] Core functions defined. selectSportAndShowGames:', typeof window.selectSportAndShowGames);
+    // Core function - Select Game Bet (when user clicks an odds button)
+    window.selectGameBet = function(gameIndex, betType, team, line, odds, awayTeam, homeTeam) {
+        console.log('[TMR] selectGameBet called:', { gameIndex, betType, team, line, odds });
+
+        // Get game time from stored games
+        var gameTime = null;
+        var gameId = null;
+        if (window.TMR && window.TMR.currentGames && window.TMR.currentGames[gameIndex]) {
+            var game = window.TMR.currentGames[gameIndex];
+            gameTime = game.commence_time;
+            gameId = game.id;
+        }
+
+        // Store the selection
+        window.TMR.currentSelectedPick = {
+            gameIndex: gameIndex,
+            betType: betType,
+            team: team,
+            line: line,
+            odds: odds,
+            awayTeam: awayTeam,
+            homeTeam: homeTeam,
+            sport: window.TMR.selectedSport,
+            gameTime: gameTime,
+            gameId: gameId
+        };
+
+        // Update UI to show selection
+        document.querySelectorAll('.bet-pick-btn, .total-btn, .odds-btn').forEach(function(btn) {
+            btn.classList.remove('selected');
+        });
+
+        // Update summary
+        var summaryGame = document.getElementById('summaryGame');
+        var summaryPick = document.getElementById('summaryPick');
+        var summaryOdds = document.getElementById('summaryOdds');
+
+        if (summaryGame) summaryGame.textContent = awayTeam + ' @ ' + homeTeam;
+        if (summaryPick) summaryPick.textContent = team + ' ' + line;
+        if (summaryOdds) summaryOdds.textContent = odds;
+
+        // Go to confirmation step
+        window.showPickStep('pickDetails');
+    };
+
+    console.log('[TMR EARLY] Core functions defined. selectSportAndShowGames:', typeof window.selectSportAndShowGames, 'selectGameBet:', typeof window.selectGameBet);
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14325,6 +14371,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.selectGameBet = selectGameBet;
 
     async function submitPickNew() {
+        var currentSelectedPick = window.TMR.currentSelectedPick;
         if (!currentSelectedPick) {
             alert('No pick selected!');
             return;
