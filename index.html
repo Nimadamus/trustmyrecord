@@ -322,10 +322,11 @@
         }
 
         /* Arena Dropdown Styles */
-        .nav-dropdown { position: relative; display: inline-block; }
-        .nav-dropdown-toggle { cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .nav-dropdown { position: relative; display: flex; align-items: center; }
+        .nav-dropdown-toggle { cursor: pointer; display: flex; align-items: center; gap: 5px; color: var(--text-secondary); text-decoration: none; font-weight: 600; font-size: 0.9rem; padding: 8px 16px; border-radius: 8px; transition: all 0.3s; }
         .nav-dropdown-toggle::after { content: '▼'; font-size: 8px; transition: transform 0.3s; }
         .nav-dropdown:hover .nav-dropdown-toggle::after { transform: rotate(180deg); }
+        .nav-dropdown:hover .nav-dropdown-toggle { color: var(--neon-cyan); background: rgba(0, 255, 255, 0.1); }
         .nav-dropdown-menu {
             position: absolute;
             top: 100%;
@@ -14025,38 +14026,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     window.goBackToGames = goBackToGames;
 
-    async function selectSportAndShowGames(sport) {
-        console.log('[TMR] selectSportAndShowGames called:', sport);
-        try {
-            if (!sport) {
-                console.error('[TMR] No sport provided');
-                return;
-            }
-            selectedSport = sport;
-
-            // Update sport card styling
-            document.querySelectorAll('.sport-card').forEach(card => card.classList.remove('selected'));
-            const clickedCard = document.querySelector(`.sport-card[data-sport="${sport}"]`);
-            if (clickedCard) clickedCard.classList.add('selected');
-
-            // Update title
-            const sportIcons = { 'NBA': '🏀', 'NFL': '🏈', 'NHL': '🏒', 'MLB': '⚾', 'NCAAF': '🎓', 'NCAAB': '🏫' };
-            const titleEl = document.getElementById('selectedSportTitle');
-            if (titleEl) titleEl.textContent = (sportIcons[sport] || '') + ' ' + sport + ' Games';
-
-            // Show games section
-            showPickStep('gamesListSection');
-
-            // Load games
-            await loadGamesWithAllBets();
-        } catch (error) {
-            console.error('[TMR] Error in selectSportAndShowGames:', error);
-            alert('Error loading games: ' + error.message);
-        }
-    }
-    window.selectSportAndShowGames = selectSportAndShowGames;
-
-    console.log('[TMR] Core functions exported. selectSportAndShowGames:', typeof window.selectSportAndShowGames);
+    // NOTE: selectSportAndShowGames is defined EARLY in <head> (line 42) with inline renderer
+    // DO NOT redefine it here - that breaks the working version!
+    console.log('[TMR] Using early selectSportAndShowGames definition (line 42)');
 
     // Global error handler for debugging
     window.onerror = function(message, source, lineno, colno, error) {
@@ -15001,10 +14973,10 @@ document.addEventListener('DOMContentLoaded', function() {
     window.selectGameFromGrid = selectGameFromGrid;
     window.loadPicksHistory = loadPicksHistory;
     window.formatOdds = formatOdds;
-    window.selectSportAndShowGames = selectSportAndShowGames;
-    window.showPickStep = showPickStep;
-    window.goBackToSports = goBackToSports;
-    window.goBackToGames = goBackToGames;
+    // window.selectSportAndShowGames - DEFINED EARLY in <head>, do not overwrite!
+    // window.showPickStep - DEFINED EARLY in <head>, do not overwrite!
+    // window.goBackToSports - DEFINED EARLY in <head>, do not overwrite!
+    // window.goBackToGames - DEFINED EARLY in <head>, do not overwrite!
     window.loadGamesWithAllBets = loadGamesWithAllBets;
     window.selectGameBet = selectGameBet;
     window.submitPickNew = submitPickNew;
