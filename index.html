@@ -360,6 +360,46 @@
         .nav-dropdown-item:hover { background: rgba(0, 255, 255, 0.1); color: var(--neon-cyan); padding-left: 22px; }
         .nav-dropdown-item .dropdown-icon { font-size: 18px; width: 24px; text-align: center; }
 
+        /* Profile Tabs Styles */
+        .profile-tabs-container { display: flex; justify-content: center; gap: 5px; margin-bottom: 30px; flex-wrap: wrap; padding: 0 10px; }
+        .profile-tab { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); padding: 12px 24px; border-radius: 10px; color: var(--text-secondary); font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s ease; }
+        .profile-tab:hover { background: rgba(0, 255, 255, 0.1); color: var(--neon-cyan); }
+        .profile-tab.active { background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(255, 0, 255, 0.1)); border-color: var(--neon-cyan); color: var(--neon-cyan); }
+        .profile-tab-content { display: none; }
+        .profile-tab-content.active { display: block; }
+
+        /* Friends Tab Styles */
+        .friends-stats-bar { display: flex; justify-content: center; gap: 40px; margin-bottom: 25px; padding: 20px; background: rgba(255, 255, 255, 0.03); border-radius: 12px; }
+        .friend-stat { text-align: center; }
+        .friend-stat .count { display: block; font-size: 2rem; font-weight: 700; color: var(--neon-cyan); font-family: Orbitron, sans-serif; }
+        .friend-stat .label { color: var(--text-muted); font-size: 14px; }
+        .friends-subtabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .friends-subtab { background: transparent; border: 1px solid var(--glass-border); padding: 8px 20px; border-radius: 20px; color: var(--text-secondary); font-size: 13px; cursor: pointer; transition: all 0.3s; }
+        .friends-subtab:hover, .friends-subtab.active { background: rgba(0, 255, 255, 0.1); border-color: var(--neon-cyan); color: var(--neon-cyan); }
+        .friends-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+        .friend-card { background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 15px; display: flex; align-items: center; gap: 15px; transition: all 0.3s; }
+        .friend-card:hover { border-color: var(--neon-cyan); transform: translateY(-2px); }
+        .friend-avatar { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple)); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .friend-info { flex: 1; }
+        .friend-name { color: var(--text-primary); font-weight: 600; margin-bottom: 3px; }
+        .friend-stats { color: var(--text-muted); font-size: 12px; }
+        .friend-action { background: transparent; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.3s; }
+        .friend-action:hover { background: var(--neon-cyan); color: var(--dark-bg); }
+
+        /* Posts Tab Styles */
+        .posts-filter { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .posts-filter-btn { background: transparent; border: 1px solid var(--glass-border); padding: 8px 16px; border-radius: 20px; color: var(--text-secondary); font-size: 13px; cursor: pointer; transition: all 0.3s; }
+        .posts-filter-btn:hover, .posts-filter-btn.active { background: rgba(255, 215, 0, 0.1); border-color: var(--neon-gold); color: var(--neon-gold); }
+        .user-posts-feed { max-width: 700px; margin: 0 auto; }
+        .user-post-card { background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 20px; margin-bottom: 15px; }
+        .user-post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .user-post-type { background: rgba(0, 255, 255, 0.1); color: var(--neon-cyan); padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .user-post-date { color: var(--text-muted); font-size: 12px; }
+        .user-post-content { color: var(--text-secondary); line-height: 1.6; }
+        .user-post-pick { background: rgba(255, 215, 0, 0.1); border-left: 3px solid var(--neon-gold); padding: 12px 15px; border-radius: 0 8px 8px 0; margin-top: 10px; }
+        .user-post-pick-team { color: var(--neon-gold); font-weight: 700; font-size: 16px; }
+        .user-post-pick-details { color: var(--text-muted); font-size: 13px; margin-top: 5px; }
+
         .header-icon-btn {
             position: relative;
             background: rgba(0, 255, 255, 0.1);
@@ -7885,6 +7925,211 @@
                 </div>
             </div>
 
+
+            <!-- TRIVIA POLLS SECTION -->
+            <div id="trivia" class="page-section">
+                <div class="container">
+                    <div class="section-header" style="text-align: center; margin-bottom: 40px;">
+                        <h1 style="font-family: Orbitron, sans-serif; font-size: 2.5rem; background: linear-gradient(45deg, var(--neon-cyan), var(--neon-gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px;">Trivia Polls</h1>
+                        <p style="color: var(--text-secondary); font-size: 1.1rem;">Test your sports knowledge and earn points!</p>
+                    </div>
+                    
+                    <div class="trivia-container" style="max-width: 800px; margin: 0 auto;">
+                        <div class="trivia-card" style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 30px; margin-bottom: 25px;">
+                            <div class="trivia-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <span style="background: var(--neon-gold); color: var(--dark-bg); padding: 5px 15px; border-radius: 20px; font-weight: 700; font-size: 14px;">Daily Challenge</span>
+                                <span style="color: var(--text-muted); font-size: 14px;">Resets in 14:32:18</span>
+                            </div>
+                            <h3 style="color: var(--text-primary); font-size: 1.3rem; margin-bottom: 25px; line-height: 1.5;">Which NFL team has won the most Super Bowl championships?</h3>
+                            <div class="trivia-options" style="display: grid; gap: 12px;">
+                                <button class="trivia-option" style="background: rgba(0, 255, 255, 0.1); border: 1px solid var(--glass-border); padding: 15px 20px; border-radius: 10px; color: var(--text-primary); font-size: 16px; cursor: pointer; text-align: left; transition: all 0.3s;">A) Dallas Cowboys</button>
+                                <button class="trivia-option" style="background: rgba(0, 255, 255, 0.1); border: 1px solid var(--glass-border); padding: 15px 20px; border-radius: 10px; color: var(--text-primary); font-size: 16px; cursor: pointer; text-align: left; transition: all 0.3s;">B) New England Patriots</button>
+                                <button class="trivia-option" style="background: rgba(0, 255, 255, 0.1); border: 1px solid var(--glass-border); padding: 15px 20px; border-radius: 10px; color: var(--text-primary); font-size: 16px; cursor: pointer; text-align: left; transition: all 0.3s;">C) Pittsburgh Steelers</button>
+                                <button class="trivia-option" style="background: rgba(0, 255, 255, 0.1); border: 1px solid var(--glass-border); padding: 15px 20px; border-radius: 10px; color: var(--text-primary); font-size: 16px; cursor: pointer; text-align: left; transition: all 0.3s;">D) San Francisco 49ers</button>
+                            </div>
+                            <div style="margin-top: 20px; text-align: center; color: var(--text-muted); font-size: 14px;">+50 points for correct answer</div>
+                        </div>
+                        
+                        <div class="trivia-leaderboard" style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 25px;">
+                            <h3 style="color: var(--neon-cyan); margin-bottom: 20px; font-size: 1.2rem;">Trivia Leaderboard</h3>
+                            <div class="leaderboard-list" style="display: flex; flex-direction: column; gap: 12px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(255, 215, 0, 0.1); border-radius: 10px;">
+                                    <span style="color: var(--neon-gold); font-weight: 700;">1. TriviaKing23</span>
+                                    <span style="color: var(--text-primary);">2,450 pts</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(192, 192, 192, 0.1); border-radius: 10px;">
+                                    <span style="color: #c0c0c0; font-weight: 700;">2. SportsGenius</span>
+                                    <span style="color: var(--text-primary);">2,100 pts</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(205, 127, 50, 0.1); border-radius: 10px;">
+                                    <span style="color: #cd7f32; font-weight: 700;">3. QuizMaster</span>
+                                    <span style="color: var(--text-primary);">1,890 pts</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PREDICTION POLLS SECTION -->
+            <div id="predictions" class="page-section">
+                <div class="container">
+                    <div class="section-header" style="text-align: center; margin-bottom: 40px;">
+                        <h1 style="font-family: Orbitron, sans-serif; font-size: 2.5rem; background: linear-gradient(45deg, var(--neon-purple), var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px;">Prediction Polls</h1>
+                        <p style="color: var(--text-secondary); font-size: 1.1rem;">Vote on upcoming matchups and see what the community thinks!</p>
+                    </div>
+                    
+                    <div class="polls-container" style="max-width: 900px; margin: 0 auto; display: grid; gap: 25px;">
+                        <div class="poll-card" style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 25px;">
+                            <div class="poll-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <span style="background: var(--neon-purple); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 13px;">NBA</span>
+                                <span style="color: var(--text-muted); font-size: 14px;">1,234 votes</span>
+                            </div>
+                            <h3 style="color: var(--text-primary); font-size: 1.2rem; margin-bottom: 20px;">Who wins tonight: Lakers vs Celtics?</h3>
+                            <div class="poll-options" style="display: grid; gap: 12px;">
+                                <div class="poll-option" style="position: relative; background: rgba(0, 255, 255, 0.1); border: 1px solid var(--glass-border); border-radius: 10px; overflow: hidden;">
+                                    <div style="position: absolute; left: 0; top: 0; height: 100%; width: 45%; background: rgba(0, 255, 255, 0.2);"></div>
+                                    <div style="position: relative; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: var(--text-primary); font-weight: 600;">Los Angeles Lakers</span>
+                                        <span style="color: var(--neon-cyan); font-weight: 700;">45%</span>
+                                    </div>
+                                </div>
+                                <div class="poll-option" style="position: relative; background: rgba(0, 255, 255, 0.1); border: 1px solid var(--glass-border); border-radius: 10px; overflow: hidden;">
+                                    <div style="position: absolute; left: 0; top: 0; height: 100%; width: 55%; background: rgba(57, 255, 20, 0.2);"></div>
+                                    <div style="position: relative; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: var(--text-primary); font-weight: 600;">Boston Celtics</span>
+                                        <span style="color: var(--neon-green); font-weight: 700;">55%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 15px; text-align: center;"><button style="background: var(--gradient-neon); border: none; padding: 10px 25px; border-radius: 20px; color: white; font-weight: 600; cursor: pointer;">Cast Your Vote</button></div>
+                        </div>
+                        
+                        <div class="poll-card" style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 15px; padding: 25px;">
+                            <div class="poll-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <span style="background: #39ff14; color: var(--dark-bg); padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 13px;">NFL</span>
+                                <span style="color: var(--text-muted); font-size: 14px;">2,567 votes</span>
+                            </div>
+                            <h3 style="color: var(--text-primary); font-size: 1.2rem; margin-bottom: 20px;">Who covers the spread: Chiefs -7 vs Bills?</h3>
+                            <div class="poll-options" style="display: grid; gap: 12px;">
+                                <div class="poll-option" style="position: relative; background: rgba(0, 255, 255, 0.1); border: 1px solid var(--glass-border); border-radius: 10px; overflow: hidden;">
+                                    <div style="position: absolute; left: 0; top: 0; height: 100%; width: 52%; background: rgba(57, 255, 20, 0.2);"></div>
+                                    <div style="position: relative; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: var(--text-primary); font-weight: 600;">Chiefs -7</span>
+                                        <span style="color: var(--neon-green); font-weight: 700;">52%</span>
+                                    </div>
+                                </div>
+                                <div class="poll-option" style="position: relative; background: rgba(0, 255, 255, 0.1); border: 1px solid var(--glass-border); border-radius: 10px; overflow: hidden;">
+                                    <div style="position: absolute; left: 0; top: 0; height: 100%; width: 48%; background: rgba(0, 255, 255, 0.2);"></div>
+                                    <div style="position: relative; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: var(--text-primary); font-weight: 600;">Bills +7</span>
+                                        <span style="color: var(--neon-cyan); font-weight: 700;">48%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 15px; text-align: center;"><button style="background: var(--gradient-neon); border: none; padding: 10px 25px; border-radius: 20px; color: white; font-weight: 600; cursor: pointer;">Cast Your Vote</button></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HANDICAPPING CONTESTS SECTION -->
+            <div id="contests" class="page-section">
+                <div class="container">
+                    <div class="section-header" style="text-align: center; margin-bottom: 40px;">
+                        <h1 style="font-family: Orbitron, sans-serif; font-size: 2.5rem; background: linear-gradient(45deg, var(--neon-gold), var(--neon-red)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px;">Handicapping Contests</h1>
+                        <p style="color: var(--text-secondary); font-size: 1.1rem;">Compete against other handicappers for prizes and glory!</p>
+                    </div>
+
+                    <div class="contests-container" style="max-width: 1000px; margin: 0 auto;">
+                        <div class="contests-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+                            <div class="contest-card" style="background: var(--card-bg); border: 2px solid var(--neon-gold); border-radius: 15px; overflow: hidden;">
+                                <div style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 107, 53, 0.2)); padding: 20px; border-bottom: 1px solid var(--glass-border);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="background: var(--neon-gold); color: var(--dark-bg); padding: 5px 12px; border-radius: 15px; font-weight: 700; font-size: 12px;">FEATURED</span>
+                                        <span style="color: var(--neon-green); font-weight: 600; font-size: 14px;">LIVE</span>
+                                    </div>
+                                    <h3 style="color: var(--text-primary); font-size: 1.3rem; margin-top: 15px; font-family: Orbitron, sans-serif;">Weekly NFL Challenge</h3>
+                                </div>
+                                <div style="padding: 20px;">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                                        <div style="text-align: center; padding: 15px; background: rgba(0, 255, 255, 0.1); border-radius: 10px;">
+                                            <div style="color: var(--neon-gold); font-size: 1.5rem; font-weight: 700; font-family: Orbitron, sans-serif;">$500</div>
+                                            <div style="color: var(--text-muted); font-size: 12px;">Prize Pool</div>
+                                        </div>
+                                        <div style="text-align: center; padding: 15px; background: rgba(0, 255, 255, 0.1); border-radius: 10px;">
+                                            <div style="color: var(--neon-cyan); font-size: 1.5rem; font-weight: 700; font-family: Orbitron, sans-serif;">156</div>
+                                            <div style="color: var(--text-muted); font-size: 12px;">Entrants</div>
+                                        </div>
+                                    </div>
+                                    <div style="color: var(--text-secondary); font-size: 14px; margin-bottom: 15px;">Pick 5 NFL games against the spread. Highest ATS record wins!</div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                        <span style="color: var(--text-muted); font-size: 13px;">Ends: Sunday 8PM ET</span>
+                                        <span style="color: var(--neon-green); font-size: 13px;">FREE Entry</span>
+                                    </div>
+                                    <button style="width: 100%; background: var(--gradient-gold); border: none; padding: 12px; border-radius: 10px; color: var(--dark-bg); font-weight: 700; font-size: 16px; cursor: pointer;">Enter Contest</button>
+                                </div>
+                            </div>
+
+                            <div class="contest-card" style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 15px; overflow: hidden;">
+                                <div style="background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1)); padding: 20px; border-bottom: 1px solid var(--glass-border);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="background: var(--neon-purple); color: white; padding: 5px 12px; border-radius: 15px; font-weight: 700; font-size: 12px;">NBA</span>
+                                        <span style="color: var(--neon-cyan); font-weight: 600; font-size: 14px;">OPEN</span>
+                                    </div>
+                                    <h3 style="color: var(--text-primary); font-size: 1.3rem; margin-top: 15px; font-family: Orbitron, sans-serif;">Daily Hoops Showdown</h3>
+                                </div>
+                                <div style="padding: 20px;">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                                        <div style="text-align: center; padding: 15px; background: rgba(0, 255, 255, 0.1); border-radius: 10px;">
+                                            <div style="color: var(--neon-gold); font-size: 1.5rem; font-weight: 700; font-family: Orbitron, sans-serif;">$100</div>
+                                            <div style="color: var(--text-muted); font-size: 12px;">Prize Pool</div>
+                                        </div>
+                                        <div style="text-align: center; padding: 15px; background: rgba(0, 255, 255, 0.1); border-radius: 10px;">
+                                            <div style="color: var(--neon-cyan); font-size: 1.5rem; font-weight: 700; font-family: Orbitron, sans-serif;">43</div>
+                                            <div style="color: var(--text-muted); font-size: 12px;">Entrants</div>
+                                        </div>
+                                    </div>
+                                    <div style="color: var(--text-secondary); font-size: 14px; margin-bottom: 15px;">Pick all NBA games O/U. Most correct picks wins!</div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                        <span style="color: var(--text-muted); font-size: 13px;">Locks: 7PM ET</span>
+                                        <span style="color: var(--neon-gold); font-size: 13px;">$5 Entry</span>
+                                    </div>
+                                    <button style="width: 100%; background: var(--gradient-neon); border: none; padding: 12px; border-radius: 10px; color: white; font-weight: 700; font-size: 16px; cursor: pointer;">Enter Contest</button>
+                                </div>
+                            </div>
+
+                            <div class="contest-card" style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 15px; overflow: hidden;">
+                                <div style="background: linear-gradient(135deg, rgba(57, 255, 20, 0.1), rgba(0, 255, 255, 0.1)); padding: 20px; border-bottom: 1px solid var(--glass-border);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="background: var(--neon-green); color: var(--dark-bg); padding: 5px 12px; border-radius: 15px; font-weight: 700; font-size: 12px;">MULTI-SPORT</span>
+                                        <span style="color: var(--neon-cyan); font-weight: 600; font-size: 14px;">OPEN</span>
+                                    </div>
+                                    <h3 style="color: var(--text-primary); font-size: 1.3rem; margin-top: 15px; font-family: Orbitron, sans-serif;">Monthly Marathon</h3>
+                                </div>
+                                <div style="padding: 20px;">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                                        <div style="text-align: center; padding: 15px; background: rgba(0, 255, 255, 0.1); border-radius: 10px;">
+                                            <div style="color: var(--neon-gold); font-size: 1.5rem; font-weight: 700; font-family: Orbitron, sans-serif;">$2,500</div>
+                                            <div style="color: var(--text-muted); font-size: 12px;">Prize Pool</div>
+                                        </div>
+                                        <div style="text-align: center; padding: 15px; background: rgba(0, 255, 255, 0.1); border-radius: 10px;">
+                                            <div style="color: var(--neon-cyan); font-size: 1.5rem; font-weight: 700; font-family: Orbitron, sans-serif;">312</div>
+                                            <div style="color: var(--text-muted); font-size: 12px;">Entrants</div>
+                                        </div>
+                                    </div>
+                                    <div style="color: var(--text-secondary); font-size: 14px; margin-bottom: 15px;">100 picks across all sports. Best ROI wins the grand prize!</div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                        <span style="color: var(--text-muted); font-size: 13px;">23 days left</span>
+                                        <span style="color: var(--neon-gold); font-size: 13px;">$25 Entry</span>
+                                    </div>
+                                    <button style="width: 100%; background: var(--gradient-neon); border: none; padding: 12px; border-radius: 10px; color: white; font-weight: 700; font-size: 16px; cursor: pointer;">Enter Contest</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <!-- PROFILE SECTION -->
             <div id="profile" class="page-section">
                 <div class="profile-page-container">
@@ -7917,6 +8162,17 @@
                         </div>
                     </div>
 
+
+                    <!-- Profile Tabs -->
+                    <div class="profile-tabs-container">
+                        <button class="profile-tab active" onclick="showProfileTab('overview')">Overview</button>
+                        <button class="profile-tab" onclick="showProfileTab('picks')">My Picks</button>
+                        <button class="profile-tab" onclick="showProfileTab('posts')">Posts</button>
+                        <button class="profile-tab" onclick="showProfileTab('friends')">Friends</button>
+                    </div>
+
+                    <!-- Overview Tab (existing stats) -->
+                    <div id="profileOverviewTab" class="profile-tab-content active">
                     <div class="profile-content-grid">
                         <!-- Left Column - About & Stats -->
                         <div class="profile-left-column">
@@ -8037,6 +8293,84 @@
                             </div>
                         </div>
                     </div>
+                    </div><!-- end overview tab -->
+
+                    <!-- My Picks Tab -->
+                    <div id="profilePicksTab" class="profile-tab-content">
+                        <div class="profile-card" style="max-width: 900px; margin: 0 auto;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h3 style="margin: 0;">Pick History</h3>
+                                <div class="posts-filter">
+                                    <button class="posts-filter-btn active" onclick="filterPicks('all')">All</button>
+                                    <button class="posts-filter-btn" onclick="filterPicks('won')">Won</button>
+                                    <button class="posts-filter-btn" onclick="filterPicks('lost')">Lost</button>
+                                    <button class="posts-filter-btn" onclick="filterPicks('pending')">Pending</button>
+                                </div>
+                            </div>
+                            <div id="profilePickHistory" class="picks-history-list">
+                                <p class="no-data-message">No picks yet. Make your first pick to see your history here!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Posts Tab -->
+                    <div id="profilePostsTab" class="profile-tab-content">
+                        <div class="posts-filter" style="margin-bottom: 25px;">
+                            <button class="posts-filter-btn active" onclick="filterPosts('all')">All Activity</button>
+                            <button class="posts-filter-btn" onclick="filterPosts('picks')">Picks Only</button>
+                            <button class="posts-filter-btn" onclick="filterPosts('trivia')">Trivia</button>
+                            <button class="posts-filter-btn" onclick="filterPosts('polls')">Polls</button>
+                        </div>
+                        <div class="user-posts-feed" id="userPostsFeed">
+                            <div class="user-post-card">
+                                <div class="user-post-header">
+                                    <span class="user-post-type">PICK</span>
+                                    <span class="user-post-date">Just now</span>
+                                </div>
+                                <div class="user-post-content">
+                                    Your picks and activity will appear here as you use Trust My Record.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Friends Tab -->
+                    <div id="profileFriendsTab" class="profile-tab-content">
+                        <div class="friends-stats-bar">
+                            <div class="friend-stat">
+                                <span class="count" id="followingCount">0</span>
+                                <span class="label">Following</span>
+                            </div>
+                            <div class="friend-stat">
+                                <span class="count" id="followersCount">0</span>
+                                <span class="label">Followers</span>
+                            </div>
+                        </div>
+                        <div class="friends-subtabs">
+                            <button class="friends-subtab active" onclick="showFriendsSubtab('following')">Following</button>
+                            <button class="friends-subtab" onclick="showFriendsSubtab('followers')">Followers</button>
+                        </div>
+                        <div id="friendsFollowingList" class="friends-list">
+                            <div class="friend-card">
+                                <div class="friend-avatar">👤</div>
+                                <div class="friend-info">
+                                    <div class="friend-name">Find handicappers to follow</div>
+                                    <div class="friend-stats">Browse the leaderboard to find top performers</div>
+                                </div>
+                                <button class="friend-action" onclick="showSection('leaderboard')">Browse</button>
+                            </div>
+                        </div>
+                        <div id="friendsFollowersList" class="friends-list" style="display: none;">
+                            <div class="friend-card">
+                                <div class="friend-avatar">👤</div>
+                                <div class="friend-info">
+                                    <div class="friend-name">No followers yet</div>
+                                    <div class="friend-stats">Share your profile to get followers</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -12722,6 +13056,200 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateStatsDashboard();
             }
         }
+
+
+        // Profile Tab Functions
+        function showProfileTab(tabId) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.profile-tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
+
+            // Remove active from all tabs
+            const tabs = document.querySelectorAll('.profile-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Show selected tab content
+            const selectedTab = document.getElementById('profile' + tabId.charAt(0).toUpperCase() + tabId.slice(1) + 'Tab');
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+
+            // Add active to clicked tab
+            event.target.classList.add('active');
+
+            // Load data for specific tabs
+            if (tabId === 'friends') {
+                loadFriendsData();
+            } else if (tabId === 'picks') {
+                loadPickHistory();
+            } else if (tabId === 'posts') {
+                loadUserPosts();
+            }
+        }
+
+        // Friends subtab switching
+        function showFriendsSubtab(subtab) {
+            // Toggle subtab buttons
+            const subtabs = document.querySelectorAll('.friends-subtab');
+            subtabs.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Toggle lists
+            const followingList = document.getElementById('friendsFollowingList');
+            const followersList = document.getElementById('friendsFollowersList');
+
+            if (subtab === 'following') {
+                followingList.style.display = 'grid';
+                followersList.style.display = 'none';
+            } else {
+                followingList.style.display = 'none';
+                followersList.style.display = 'grid';
+            }
+        }
+
+        // Load friends data from localStorage
+        function loadFriendsData() {
+            const following = JSON.parse(localStorage.getItem('following') || '[]');
+            const followers = JSON.parse(localStorage.getItem('followers') || '[]');
+
+            document.getElementById('followingCount').textContent = following.length;
+            document.getElementById('followersCount').textContent = followers.length;
+
+            // Populate following list
+            const followingList = document.getElementById('friendsFollowingList');
+            if (following.length > 0) {
+                followingList.innerHTML = following.map(user => `
+                    <div class="friend-card">
+                        <div class="friend-avatar">${user.avatar || '👤'}</div>
+                        <div class="friend-info">
+                            <div class="friend-name">${user.displayName || user.username}</div>
+                            <div class="friend-stats">${user.record || 'No record yet'}</div>
+                        </div>
+                        <button class="friend-action" onclick="viewUserProfile('${user.username}')">View</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Filter picks in pick history
+        function filterPicks(filter) {
+            const buttons = document.querySelectorAll('#profilePicksTab .posts-filter-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Get picks from localStorage and filter
+            const picks = JSON.parse(localStorage.getItem('pickHistory') || '[]');
+            const filtered = filter === 'all' ? picks : picks.filter(p => p.status === filter);
+
+            displayFilteredPicks(filtered);
+        }
+
+        // Display filtered picks
+        function displayFilteredPicks(picks) {
+            const container = document.getElementById('profilePickHistory');
+            if (picks.length === 0) {
+                container.innerHTML = '<p class="no-data-message">No picks found for this filter.</p>';
+                return;
+            }
+
+            container.innerHTML = picks.map(pick => `
+                <div class="user-post-card" style="margin-bottom: 10px;">
+                    <div class="user-post-header">
+                        <span class="user-post-type" style="background: ${pick.status === 'won' ? 'rgba(0,255,0,0.2); color: #0f0' : pick.status === 'lost' ? 'rgba(255,0,0,0.2); color: #f00' : 'rgba(255,215,0,0.2); color: #FFD700'}">${pick.status.toUpperCase()}</span>
+                        <span class="user-post-date">${new Date(pick.timestamp).toLocaleDateString()}</span>
+                    </div>
+                    <div class="user-post-pick">
+                        <div class="user-post-pick-team">${pick.team1} vs ${pick.team2}</div>
+                        <div class="user-post-pick-details">${pick.pick} (${pick.odds}) - ${pick.units} units</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Load pick history
+        function loadPickHistory() {
+            const picks = JSON.parse(localStorage.getItem('pickHistory') || '[]');
+            displayFilteredPicks(picks);
+        }
+
+        // Filter posts
+        function filterPosts(filter) {
+            const buttons = document.querySelectorAll('#profilePostsTab .posts-filter-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Filter logic would go here
+            loadUserPosts(filter);
+        }
+
+        // Load user posts
+        function loadUserPosts(filter = 'all') {
+            const activity = JSON.parse(localStorage.getItem('userActivity') || '[]');
+            const picks = JSON.parse(localStorage.getItem('pickHistory') || '[]');
+
+            // Combine and sort by timestamp
+            let posts = [];
+
+            if (filter === 'all' || filter === 'picks') {
+                posts = posts.concat(picks.map(p => ({ ...p, type: 'pick' })));
+            }
+
+            if (filter === 'all' || filter === 'trivia') {
+                const triviaActivity = activity.filter(a => a.type === 'trivia');
+                posts = posts.concat(triviaActivity);
+            }
+
+            if (filter === 'all' || filter === 'polls') {
+                const pollActivity = activity.filter(a => a.type === 'poll');
+                posts = posts.concat(pollActivity);
+            }
+
+            posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            const container = document.getElementById('userPostsFeed');
+            if (posts.length === 0) {
+                container.innerHTML = `
+                    <div class="user-post-card">
+                        <div class="user-post-header">
+                            <span class="user-post-type">INFO</span>
+                            <span class="user-post-date">Just now</span>
+                        </div>
+                        <div class="user-post-content">
+                            Your picks and activity will appear here as you use Trust My Record.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = posts.slice(0, 20).map(post => {
+                if (post.type === 'pick') {
+                    return `
+                        <div class="user-post-card">
+                            <div class="user-post-header">
+                                <span class="user-post-type">PICK</span>
+                                <span class="user-post-date">${new Date(post.timestamp).toLocaleDateString()}</span>
+                            </div>
+                            <div class="user-post-pick">
+                                <div class="user-post-pick-team">${post.team1} vs ${post.team2}</div>
+                                <div class="user-post-pick-details">${post.pick} (${post.odds})</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="user-post-card">
+                            <div class="user-post-header">
+                                <span class="user-post-type">${post.type.toUpperCase()}</span>
+                                <span class="user-post-date">${new Date(post.timestamp).toLocaleDateString()}</span>
+                            </div>
+                            <div class="user-post-content">${post.description || 'Activity recorded'}</div>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
 
         // Pick form submission (legacy - only if pickForm exists)
         const pickFormElement = document.getElementById('pickForm');
