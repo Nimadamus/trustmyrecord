@@ -321,6 +321,45 @@
             }
         }
 
+        /* Arena Dropdown Styles */
+        .nav-dropdown { position: relative; display: inline-block; }
+        .nav-dropdown-toggle { cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .nav-dropdown-toggle::after { content: '▼'; font-size: 8px; transition: transform 0.3s; }
+        .nav-dropdown:hover .nav-dropdown-toggle::after { transform: rotate(180deg); }
+        .nav-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            min-width: 220px;
+            background: rgba(15, 15, 25, 0.98);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 255, 255, 0.1);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .nav-dropdown:hover .nav-dropdown-menu { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+        .nav-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .nav-dropdown-item:last-child { border-bottom: none; }
+        .nav-dropdown-item:hover { background: rgba(0, 255, 255, 0.1); color: var(--neon-cyan); padding-left: 22px; }
+        .nav-dropdown-item .dropdown-icon { font-size: 18px; width: 24px; text-align: center; }
+
         .header-icon-btn {
             position: relative;
             background: rgba(0, 255, 255, 0.1);
@@ -4072,9 +4111,9 @@
         /* IMPORTANT: These styles are locked and must not be overridden */
         .market-headers {
             display: grid !important;
-            grid-template-columns: 1fr 100px 100px 120px !important;
-            gap: 8px !important;
-            padding: 12px 16px !important;
+            grid-template-columns: 1fr 110px 110px 130px !important;
+            gap: 10px !important;
+            padding: 14px 18px !important;
             background: #121418 !important;
             border-bottom: 1px solid #2d3340 !important;
             border-radius: 8px 8px 0 0 !important;
@@ -4085,9 +4124,9 @@
         }
 
         .market-headers .market-label {
-            color: #6c7380 !important;
+            color: #8b9ab0 !important;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-            font-size: 11px !important;
+            font-size: 12px !important;
             font-weight: 700 !important;
             text-transform: uppercase !important;
             letter-spacing: 0.5px !important;
@@ -4126,10 +4165,10 @@
 
         .game-row .team-row {
             display: grid !important;
-            grid-template-columns: 1fr 100px 100px 120px !important;
-            gap: 8px !important;
+            grid-template-columns: 1fr 110px 110px 130px !important;
+            gap: 10px !important;
             align-items: center !important;
-            padding: 10px 16px !important;
+            padding: 12px 18px !important;
             border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
         }
 
@@ -4145,12 +4184,12 @@
 
         .game-row .team-name {
             color: #ffffff !important;
-            font-size: 14px !important;
+            font-size: 16px !important;
             font-weight: 600 !important;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         }
 
-        /* DraftKings-style buttons */
+        /* DraftKings-style buttons - LARGER */
         .game-row .odds-btn {
             display: flex !important;
             flex-direction: column !important;
@@ -4159,10 +4198,10 @@
             background: #2a2f38 !important;
             border: 1px solid #3d4250 !important;
             border-radius: 4px !important;
-            padding: 8px 6px !important;
+            padding: 10px 8px !important;
             cursor: pointer !important;
             transition: all 0.15s ease !important;
-            min-height: 50px !important;
+            min-height: 58px !important;
             width: 100% !important;
         }
 
@@ -4176,19 +4215,19 @@
             border-color: #00c853 !important;
         }
 
-        /* DraftKings Style: Spread/Line is BIG, odds are small below */
+        /* DraftKings Style: Spread/Line is BIG, odds are small below - LARGER */
         .game-row .odds-btn .odds-line {
             color: #ffffff !important;
-            font-size: 15px !important;
+            font-size: 17px !important;
             font-weight: 700 !important;
-            margin-bottom: 2px !important;
+            margin-bottom: 3px !important;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
             line-height: 1.2 !important;
         }
 
         .game-row .odds-btn .odds-value {
-            color: #8b9ab0 !important;
-            font-size: 11px !important;
+            color: #a0a8b8 !important;
+            font-size: 13px !important;
             font-weight: 500 !important;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         }
@@ -6145,7 +6184,15 @@
                     <a href="#home" class="nav-link" onclick="showSection('home')">Home</a>
                     <a href="#picks" class="nav-link" onclick="showSection('picks')">Make Picks</a>
                     <a href="#mypicks" class="nav-link" onclick="showSection('mypicks')">My Picks</a>
-                    <a href="challenges.html" class="nav-link">The Arena</a>
+                    <div class="nav-dropdown">
+                        <a href="#" class="nav-link nav-dropdown-toggle">The Arena</a>
+                        <div class="nav-dropdown-menu">
+                            <a href="#trivia" class="nav-dropdown-item" onclick="showSection('trivia'); return false;"><span class="dropdown-icon">🎯</span><span>Trivia Polls</span></a>
+                            <a href="#predictions" class="nav-dropdown-item" onclick="showSection('predictions'); return false;"><span class="dropdown-icon">📊</span><span>Prediction Polls</span></a>
+                            <a href="#contests" class="nav-dropdown-item" onclick="showSection('contests'); return false;"><span class="dropdown-icon">🏆</span><span>Handicapping Contests</span></a>
+                            <a href="challenges.html" class="nav-dropdown-item"><span class="dropdown-icon">⚔️</span><span>Challenges</span></a>
+                        </div>
+                    </div>
                     <a href="#forums" class="nav-link" onclick="showSection('forums')">Forums</a>
                     <a href="#profile" class="nav-link profile-link" onclick="showSection('profile')">My Profile</a>
                     <!-- Additional auth buttons populated by auth.js -->
