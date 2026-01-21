@@ -4066,6 +4066,230 @@
             color: #ff4444;
         }
 
+        /* === PROFESSIONAL SPORTSBOOK LAYOUT === */
+        .market-headers {
+            display: grid;
+            grid-template-columns: 1fr 120px 120px 140px;
+            gap: 10px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(255, 215, 0, 0.1));
+            border: 1px solid var(--neon-cyan);
+            border-radius: 12px 12px 0 0;
+            margin-bottom: 0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .market-headers .market-label {
+            color: var(--neon-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        .market-headers .market-label:first-child {
+            text-align: left;
+        }
+
+        .game-row {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-top: none;
+            padding: 0;
+            margin-bottom: 0;
+        }
+
+        .game-row:last-child {
+            border-radius: 0 0 12px 12px;
+        }
+
+        .game-row .game-time-header {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 8px 20px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .game-row .game-time {
+            color: var(--neon-gold);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .game-row .team-row {
+            display: grid;
+            grid-template-columns: 1fr 120px 120px 140px;
+            gap: 10px;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .game-row .team-row:last-child {
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .game-row .team-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .game-row .team-name {
+            color: var(--text-primary);
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .game-row .odds-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 255, 255, 0.08);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 10px 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 55px;
+            width: 100%;
+        }
+
+        .game-row .odds-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+            border-color: var(--neon-cyan);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
+        }
+
+        .game-row .odds-btn .odds-line {
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .game-row .odds-btn .odds-value {
+            color: var(--text-primary);
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .game-row .odds-btn .odds-value.positive {
+            color: var(--neon-green);
+        }
+
+        /* Loading State */
+        .loading-games {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        /* No Games State */
+        .no-games {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .no-games-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .no-games h3 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .no-games p {
+            color: var(--text-secondary);
+        }
+
+        /* Responsive Sportsbook */
+        @media (max-width: 768px) {
+            .market-headers {
+                grid-template-columns: 1fr 80px 80px 100px;
+                padding: 12px 15px;
+                gap: 8px;
+            }
+
+            .market-headers .market-label {
+                font-size: 10px;
+            }
+
+            .game-row .team-row {
+                grid-template-columns: 1fr 80px 80px 100px;
+                padding: 10px 15px;
+                gap: 8px;
+            }
+
+            .game-row .team-name {
+                font-size: 13px;
+            }
+
+            .game-row .odds-btn {
+                padding: 8px 4px;
+                min-height: 50px;
+            }
+
+            .game-row .odds-btn .odds-line {
+                font-size: 10px;
+            }
+
+            .game-row .odds-btn .odds-value {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .market-headers {
+                grid-template-columns: 1fr 65px 65px 80px;
+                padding: 10px 10px;
+                gap: 5px;
+            }
+
+            .market-headers .market-label {
+                font-size: 9px;
+                letter-spacing: 0;
+            }
+
+            .game-row .team-row {
+                grid-template-columns: 1fr 65px 65px 80px;
+                padding: 8px 10px;
+                gap: 5px;
+            }
+
+            .game-row .team-name {
+                font-size: 12px;
+            }
+
+            .game-row .odds-btn {
+                padding: 6px 3px;
+                min-height: 45px;
+            }
+
+            .game-row .odds-btn .odds-line {
+                font-size: 9px;
+            }
+
+            .game-row .odds-btn .odds-value {
+                font-size: 11px;
+            }
+        }
+        /* === END SPORTSBOOK LAYOUT === */
+
         .live-stats-quick {
             display: flex;
             justify-content: space-between;
