@@ -60,52 +60,55 @@
                 container.innerHTML = '<div class="loading-games">Loading games...</div>';
                 var sportKey = window.TMR.sportKeyMap[sport];
                 if (sportKey) {
-                    var now = new Date();
-                    var tomorrow = new Date(now);
-                    tomorrow.setUTCDate(tomorrow.getUTCDate() + 2);
-                    var commenceTimeTo = tomorrow.toISOString().split('.')[0] + 'Z';
-                    var url = 'https://api.the-odds-api.com/v4/sports/' + sportKey + '/odds?apiKey=' + window.TMR.apiKey + '&regions=us&markets=h2h,spreads,totals&oddsFormat=american&commenceTimeTo=' + commenceTimeTo;
+                    // Get ALL available games (no date filter)
+                    var url = 'https://api.the-odds-api.com/v4/sports/' + sportKey + '/odds?apiKey=' + window.TMR.apiKey + '&regions=us&markets=h2h,spreads,totals&oddsFormat=american';
+                    console.log('[TMR EARLY] Fetching:', url);
 
                     fetch(url)
                         .then(function(r) { return r.json(); })
                         .then(function(games) {
                             console.log('[TMR] Loaded', games.length, 'games');
                             if (games.length === 0) {
-                                container.innerHTML = '<div class="no-games-message"><h4>No games scheduled</h4><p>Check back later.</p></div>';
+                                container.innerHTML = '<div class="no-games"><div class="no-games-icon">📅</div><h3>No Games Available</h3><p>Check back later for upcoming matchups</p></div>';
                             } else {
-                                // Render games inline
-                                var html = '';
+                                // Render games in sportsbook style
+                                var html = '<div class="market-headers"><div class="market-label">Matchup</div><div class="market-label">Spread</div><div class="market-label">Moneyline</div><div class="market-label">Total</div></div>';
                                 games.forEach(function(game, index) {
                                     var bookmaker = game.bookmakers && game.bookmakers[0];
                                     var markets = bookmaker ? bookmaker.markets : [];
-                                    var homeSpread = '--', awaySpread = '--', homeML = '--', awayML = '--', total = '--';
+                                    var homeSpread = {point: '--', price: -110}, awaySpread = {point: '--', price: -110};
+                                    var homeML = '--', awayML = '--', total = '--', overPrice = -110, underPrice = -110;
                                     markets.forEach(function(m) {
                                         if (m.key === 'spreads') m.outcomes.forEach(function(o) {
-                                            if (o.name === game.home_team) homeSpread = (o.point > 0 ? '+' : '') + o.point;
-                                            else awaySpread = (o.point > 0 ? '+' : '') + o.point;
+                                            if (o.name === game.home_team) homeSpread = {point: o.point, price: o.price};
+                                            else awaySpread = {point: o.point, price: o.price};
                                         });
                                         if (m.key === 'h2h') m.outcomes.forEach(function(o) {
-                                            if (o.name === game.home_team) homeML = (o.price > 0 ? '+' : '') + o.price;
-                                            else awayML = (o.price > 0 ? '+' : '') + o.price;
+                                            if (o.name === game.home_team) homeML = o.price;
+                                            else awayML = o.price;
                                         });
                                         if (m.key === 'totals') m.outcomes.forEach(function(o) {
-                                            if (o.name === 'Over') total = o.point;
+                                            if (o.name === 'Over') { total = o.point; overPrice = o.price; }
+                                            else underPrice = o.price;
                                         });
                                     });
-                                    var gameTime = new Date(game.commence_time).toLocaleString('en-US', {weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
-                                    html += '<div class="game-card-new" style="background:rgba(0,255,255,0.05);border:1px solid rgba(0,255,255,0.2);border-radius:12px;padding:20px;margin-bottom:15px;">' +
-                                        '<div style="color:#888;font-size:0.85rem;margin-bottom:10px;">' + gameTime + '</div>' +
-                                        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
-                                        '<span style="font-weight:700;color:#fff;">' + game.away_team + '</span>' +
-                                        '<div><button onclick="window.selectGameBet(' + index + ',\'spread\',\'' + game.away_team + '\',\'' + awaySpread + '\',\'-110\',\'' + game.away_team + '\',\'' + game.home_team + '\')" style="background:#1a1a2e;border:1px solid #0ff;color:#0ff;padding:8px 12px;margin:0 5px;border-radius:6px;cursor:pointer;">' + awaySpread + '</button>' +
-                                        '<button onclick="window.selectGameBet(' + index + ',\'ml\',\'' + game.away_team + '\',\'ML\',\'' + awayML + '\',\'' + game.away_team + '\',\'' + game.home_team + '\')" style="background:#1a1a2e;border:1px solid #0ff;color:#0ff;padding:8px 12px;border-radius:6px;cursor:pointer;">ML ' + awayML + '</button></div></div>' +
-                                        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
-                                        '<span style="font-weight:700;color:#fff;">' + game.home_team + '</span>' +
-                                        '<div><button onclick="window.selectGameBet(' + index + ',\'spread\',\'' + game.home_team + '\',\'' + homeSpread + '\',\'-110\',\'' + game.away_team + '\',\'' + game.home_team + '\')" style="background:#1a1a2e;border:1px solid #0ff;color:#0ff;padding:8px 12px;margin:0 5px;border-radius:6px;cursor:pointer;">' + homeSpread + '</button>' +
-                                        '<button onclick="window.selectGameBet(' + index + ',\'ml\',\'' + game.home_team + '\',\'ML\',\'' + homeML + '\',\'' + game.away_team + '\',\'' + game.home_team + '\')" style="background:#1a1a2e;border:1px solid #0ff;color:#0ff;padding:8px 12px;border-radius:6px;cursor:pointer;">ML ' + homeML + '</button></div></div>' +
-                                        '<div style="text-align:center;padding-top:10px;border-top:1px solid rgba(0,255,255,0.1);">' +
-                                        '<button onclick="window.selectGameBet(' + index + ',\'over\',\'Over\',\'' + total + '\',\'-110\',\'' + game.away_team + '\',\'' + game.home_team + '\')" style="background:#1a1a2e;border:1px solid #0ff;color:#0ff;padding:8px 16px;margin:0 5px;border-radius:6px;cursor:pointer;">O ' + total + '</button>' +
-                                        '<button onclick="window.selectGameBet(' + index + ',\'under\',\'Under\',\'' + total + '\',\'-110\',\'' + game.away_team + '\',\'' + game.home_team + '\')" style="background:#1a1a2e;border:1px solid #0ff;color:#0ff;padding:8px 16px;border-radius:6px;cursor:pointer;">U ' + total + '</button></div></div>';
+                                    var gameTime = new Date(game.commence_time).toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'});
+                                    var fmtSpread = function(p) { return p === '--' ? '--' : (p > 0 ? '+' + p : p); };
+                                    var fmtOdds = function(o) { return o === '--' ? '--' : (o > 0 ? '+' + o : o); };
+                                    html += '<div class="game-row">' +
+                                        '<div class="game-time-header"><span class="game-time">' + gameTime + '</span></div>' +
+                                        '<div class="team-row">' +
+                                        '<div class="team-info"><div class="team-details"><div class="team-name">' + game.away_team + '</div></div></div>' +
+                                        '<button class="odds-btn" onclick="window.selectGameBet(' + index + ',\'spread\',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + fmtSpread(awaySpread.point) + '\',' + (awaySpread.price||'-110') + ',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + game.home_team.replace(/'/g, "\\'") + '\')"><span class="odds-line">' + fmtSpread(awaySpread.point) + '</span><span class="odds-value">' + fmtOdds(awaySpread.price||-110) + '</span></button>' +
+                                        '<button class="odds-btn" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'ML\',' + awayML + ',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + game.home_team.replace(/'/g, "\\'") + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (awayML >= 0 ? 'positive' : '') + '">' + fmtOdds(awayML) + '</span></button>' +
+                                        '<button class="odds-btn" onclick="window.selectGameBet(' + index + ',\'over\',\'Over\',\'' + total + '\',' + overPrice + ',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + game.home_team.replace(/'/g, "\\'") + '\')"><span class="odds-line">Over ' + total + '</span><span class="odds-value">' + fmtOdds(overPrice) + '</span></button>' +
+                                        '</div>' +
+                                        '<div class="team-row">' +
+                                        '<div class="team-info"><div class="team-details"><div class="team-name">' + game.home_team + '</div></div></div>' +
+                                        '<button class="odds-btn" onclick="window.selectGameBet(' + index + ',\'spread\',\'' + game.home_team.replace(/'/g, "\\'") + '\',\'' + fmtSpread(homeSpread.point) + '\',' + (homeSpread.price||'-110') + ',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + game.home_team.replace(/'/g, "\\'") + '\')"><span class="odds-line">' + fmtSpread(homeSpread.point) + '</span><span class="odds-value">' + fmtOdds(homeSpread.price||-110) + '</span></button>' +
+                                        '<button class="odds-btn" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + game.home_team.replace(/'/g, "\\'") + '\',\'ML\',' + homeML + ',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + game.home_team.replace(/'/g, "\\'") + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (homeML >= 0 ? 'positive' : '') + '">' + fmtOdds(homeML) + '</span></button>' +
+                                        '<button class="odds-btn" onclick="window.selectGameBet(' + index + ',\'under\',\'Under\',\'' + total + '\',' + underPrice + ',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + game.home_team.replace(/'/g, "\\'") + '\')"><span class="odds-line">Under ' + total + '</span><span class="odds-value">' + fmtOdds(underPrice) + '</span></button>' +
+                                        '</div></div>';
                                 });
                                 container.innerHTML = html;
                             }
@@ -151,6 +154,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link href="static/css/social.css" rel="stylesheet">
+    <link href="static/css/sportsbook.css" rel="stylesheet">
 
     <style>
         :root {
@@ -266,6 +270,53 @@
             display: flex;
             gap: 10px;
             margin-right: 20px;
+        }
+
+        /* Main Navigation */
+        .main-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .main-nav .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .main-nav .nav-link:hover {
+            color: var(--neon-cyan);
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .main-nav .nav-link.profile-link {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            border-radius: 20px;
+            padding: 8px 18px;
+        }
+
+        .main-nav .nav-link.profile-link:hover {
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+        }
+
+        @media (max-width: 900px) {
+            .main-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 5px;
+            }
+            .main-nav .nav-link {
+                font-size: 0.8rem;
+                padding: 6px 12px;
+            }
         }
 
         .header-icon-btn {
@@ -5855,8 +5906,13 @@
                     </button>
                 </div>
 
-                <nav>
-                    <!-- Navigation will be populated by auth.js -->
+                <nav class="main-nav">
+                    <a href="#home" class="nav-link" onclick="showSection('home')">Home</a>
+                    <a href="#picks" class="nav-link" onclick="showSection('picks')">Make Picks</a>
+                    <a href="challenges.html" class="nav-link">The Arena</a>
+                    <a href="#forums" class="nav-link" onclick="showSection('forums')">Forums</a>
+                    <a href="#profile" class="nav-link profile-link" onclick="showSection('profile')">My Profile</a>
+                    <!-- Additional auth buttons populated by auth.js -->
                 </nav>
             </div>
 
@@ -7345,18 +7401,19 @@
             </div>
 
             <div id="arena" class="page-section">
-                <div class="coming-soon">
-                    <h2>The Arena</h2>
-                    <p>Head-to-head competitions and tournaments launching soon...</p>
-                    <div class="glass-card" style="max-width: 600px; margin: 0 auto;">
-                        <h3 style="color: var(--neon-gold); margin-bottom: 15px;">Arena Features:</h3>
-                        <ul style="text-align: left; color: var(--text-secondary); line-height: 2;">
-                            <li>1v1 Handicapper Battles</li>
-                            <li>Monthly Tournaments</li>
-                            <li>Challenger Rankings</li>
-                            <li>Prize Pools</li>
-                            <li>Live Battle Streams</li>
+                <div class="arena-redirect" style="text-align: center; padding: 60px 20px;">
+                    <h2 style="font-family: 'Orbitron', sans-serif; font-size: 3rem; background: linear-gradient(45deg, #ff6b35, #ff073a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px;">THE ARENA</h2>
+                    <p style="color: var(--text-secondary); font-size: 1.2rem; max-width: 600px; margin: 0 auto 30px;">Challenge other handicappers to head-to-head battles. Prove your skills for money or bragging rights.</p>
+                    <div class="glass-card" style="max-width: 600px; margin: 0 auto; padding: 30px;">
+                        <h3 style="color: var(--neon-gold); margin-bottom: 20px;">Arena Features:</h3>
+                        <ul style="text-align: left; color: var(--text-secondary); line-height: 2.2; list-style: none; padding: 0;">
+                            <li style="margin-bottom: 8px;">&#9876; 1v1 Handicapper Battles</li>
+                            <li style="margin-bottom: 8px;">&#127942; Money or Bragging Rights Challenges</li>
+                            <li style="margin-bottom: 8px;">&#128200; Live Challenge Tracking</li>
+                            <li style="margin-bottom: 8px;">&#127941; Arena Champion Leaderboards</li>
+                            <li style="margin-bottom: 8px;">&#128176; Prize Pools</li>
                         </ul>
+                        <a href="challenges.html" style="display: inline-block; margin-top: 25px; background: linear-gradient(45deg, #ff6b35, #ff073a); color: white; padding: 16px 40px; border-radius: 30px; text-decoration: none; font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 1.1rem; box-shadow: 0 0 30px rgba(255, 107, 53, 0.4); transition: all 0.3s;">ENTER THE ARENA</a>
                     </div>
                 </div>
             </div>
@@ -12039,8 +12096,17 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
         </main>
 
-        <footer>
-            <p>© 2025 TrustMyRecord.com - Bet on Truth. All rights reserved.</p>
+        <footer style="background: rgba(0, 0, 0, 0.4); border-top: 1px solid rgba(0, 255, 255, 0.2); padding: 30px 0; text-align: center;">
+            <div style="max-width: 1400px; margin: 0 auto; padding: 0 20px;">
+                <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <a href="#home" onclick="showSection('home')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Home</a>
+                    <a href="#profile" onclick="showSection('profile')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Profile</a>
+                    <a href="#forums" onclick="showSection('forums')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forums</a>
+                    <a href="challenges.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">The Arena</a>
+                    <a href="#leaderboards" onclick="showSection('leaderboards')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
+                </div>
+                <p style="color: #808090; font-size: 0.85rem;">© 2026 TrustMyRecord.com - The End of the Bullshit. All rights reserved.</p>
+            </div>
         </footer>
     </div>
 
@@ -13135,27 +13201,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ===== GAMES LOADING AND DISPLAY =====
     async function loadGamesWithAllBets() {
+        console.log('[TMR] loadGamesWithAllBets called, selectedSport:', selectedSport);
+
         const container = document.getElementById('gamesListContainer');
         const countBadge = document.getElementById('gamesCountBadge');
 
-        if (!container) return;
+        if (!container) {
+            console.error('[TMR] Container not found!');
+            return;
+        }
 
         container.innerHTML = '<div class="loading-games">Loading games from The Odds API...</div>';
 
         const sportKey = sportKeyMap[selectedSport];
+        console.log('[TMR] Sport key for', selectedSport, ':', sportKey);
+
         if (!sportKey) {
+            console.error('[TMR] Invalid sport key for:', selectedSport);
             container.innerHTML = '<div class="no-games-message"><h4>Invalid sport</h4><p>Please select a valid sport.</p></div>';
             return;
         }
 
         try {
             const now = new Date();
-            const tomorrow = new Date(now);
-            tomorrow.setUTCDate(tomorrow.getUTCDate() + 2);
-            tomorrow.setUTCHours(23, 59, 59, 0);
-            const commenceTimeTo = tomorrow.toISOString().split('.')[0] + 'Z';
+            const futureDate = new Date(now);
+            futureDate.setUTCDate(futureDate.getUTCDate() + 10); // Show games up to 10 days ahead
+            futureDate.setUTCHours(23, 59, 59, 0);
+            const commenceTimeTo = futureDate.toISOString().split('.')[0] + 'Z';
 
-            const url = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds?apiKey=${ODDS_API_KEY_NEW}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&commenceTimeTo=${commenceTimeTo}`;
+            // Remove date filter - get ALL available games
+            const url = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds?apiKey=${ODDS_API_KEY_NEW}&regions=us&markets=h2h,spreads,totals&oddsFormat=american`;
+
+            console.log('[TMR] Fetching (no date filter):', url);
 
             // Add timeout to prevent infinite loading (10 seconds)
             const controller = new AbortController();
@@ -13177,7 +13254,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!games || games.length === 0) {
                 container.innerHTML = `<div class="no-games-message">
                     <h4>No Games Scheduled</h4>
-                    <p>No ${selectedSport} games are scheduled in the next 48 hours.</p>
+                    <p>No ${selectedSport} games are scheduled in the next 10 days.</p>
                     <p style="margin-top: 15px; font-size: 0.9rem; color: var(--text-muted);">Check back closer to game time.</p>
                     <button onclick="goBackToSports()" style="margin-top: 20px; padding: 12px 24px; background: var(--gradient-neon); border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer;">Choose Another Sport</button>
                 </div>`;
@@ -13538,17 +13615,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
-            // Get end of tomorrow in UTC - format: YYYY-MM-DDTHH:MM:SSZ (no milliseconds)
+            // Get future date in UTC - format: YYYY-MM-DDTHH:MM:SSZ (no milliseconds)
             const now = new Date();
-            const tomorrow = new Date(now);
-            tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-            tomorrow.setUTCHours(23, 59, 59, 0);
+            const futureDate = new Date(now);
+            futureDate.setUTCDate(futureDate.getUTCDate() + 10); // 10 days ahead
+            futureDate.setUTCHours(23, 59, 59, 0);
 
             // Format as YYYY-MM-DDTHH:MM:SSZ (API rejects milliseconds)
-            const commenceTimeTo = tomorrow.toISOString().split('.')[0] + 'Z';
+            const commenceTimeTo = futureDate.toISOString().split('.')[0] + 'Z';
 
-            // DIRECT API CALL - only games within next ~48 hours
-            const url = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds?apiKey=${ODDS_API_KEY}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&commenceTimeTo=${commenceTimeTo}`;
+            // DIRECT API CALL - get ALL available games (no date filter)
+            const url = `https://api.the-odds-api.com/v4/sports/${sportKey}/odds?apiKey=${ODDS_API_KEY}&regions=us&markets=h2h,spreads,totals&oddsFormat=american`;
 
             console.log('Fetching games until:', commenceTimeTo);
             const response = await fetch(url);

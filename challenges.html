@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Arena - Handicapper Challenges | Trust My Record</title>
+
+    <meta name="description" content="Challenge other handicappers to head-to-head betting competitions. Prove your skills for money or bragging rights in The Arena.">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://trustmyrecord.com/challenges.html">
+    <meta property="og:title" content="The Arena - Handicapper Challenges | Trust My Record">
+    <meta property="og:description" content="Head-to-head handicapper battles. Challenge anyone. Prove everything.">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>⚔️</text></svg>">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --neon-cyan: #00ffff;
+            --neon-purple: #ff00ff;
+            --neon-green: #39ff14;
+            --neon-gold: #ffd700;
+            --neon-red: #ff073a;
+            --neon-orange: #ff6b35;
+            --dark-bg: #0a0a0f;
+            --darker-bg: #050508;
+            --card-bg: rgba(20, 20, 35, 0.8);
+            --glass-border: rgba(0, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0c0;
+            --text-muted: #808090;
+            --gradient-neon: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
+            --gradient-gold: linear-gradient(45deg, var(--neon-gold), var(--neon-cyan));
+            --gradient-fire: linear-gradient(45deg, var(--neon-orange), var(--neon-red));
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: var(--dark-bg);
+            background-image:
+                radial-gradient(circle at 25% 75%, rgba(0, 255, 255, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 75% 25%, rgba(255, 215, 0, 0.06) 0%, transparent 50%),
+                linear-gradient(180deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(0, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: grid-move 20s linear infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        @keyframes grid-move {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ==================== HEADER ==================== */
+        header {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--neon-gold);
+            text-decoration: none;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logo:hover {
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+            transform: scale(1.02);
+        }
+
+        .logo span {
+            color: var(--neon-cyan);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        .nav-link:hover {
+            color: var(--neon-cyan);
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .nav-link.active {
+            color: var(--neon-cyan);
+            background: rgba(0, 255, 255, 0.15);
+            border: 1px solid var(--glass-border);
+        }
+
+        .nav-btn {
+            padding: 10px 24px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            text-decoration: none;
+        }
+
+        .nav-btn.profile-btn {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        .nav-btn.profile-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+        }
+
+        /* ==================== HERO SECTION ==================== */
+        .hero {
+            text-align: center;
+            padding: 60px 20px 40px;
+        }
+
+        .hero h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 900;
+            background: var(--gradient-fire);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+            text-shadow: 0 0 60px rgba(255, 107, 53, 0.5);
+        }
+
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .hero-stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        /* ==================== CHALLENGE MODE TABS ==================== */
+        .mode-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .mode-tab {
+            padding: 15px 35px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            background: var(--card-bg);
+            color: var(--text-secondary);
+        }
+
+        .mode-tab:hover {
+            border-color: var(--glass-border);
+            transform: translateY(-2px);
+        }
+
+        .mode-tab.active {
+            background: var(--gradient-neon);
+            color: var(--dark-bg);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+        }
+
+        .mode-tab.money-mode.active {
+            background: var(--gradient-gold);
+        }
+
+        .mode-tab .tab-icon {
+            margin-right: 8px;
+        }
+
+        /* ==================== CREATE CHALLENGE ==================== */
+        .create-challenge-section {
+            margin-bottom: 50px;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            color: var(--neon-gold);
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .create-challenge-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 35px;
+            backdrop-filter: blur(20px);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .challenge-form {
+            display: grid;
+            gap: 25px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 14px 18px;
+            color: var(--text-primary);
+            font-family: 'Exo 2', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+        }
+
+        .form-group select {
+            cursor: pointer;
+        }
+
+        .form-group select option {
+            background: var(--dark-bg);
+            color: var(--text-primary);
+        }
+
+        .stake-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .stake-btn {
+            padding: 12px 24px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-secondary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .stake-btn:hover {
+            border-color: var(--neon-gold);
+            color: var(--neon-gold);
+        }
+
+        .stake-btn.selected {
+            background: var(--gradient-gold);
+            color: var(--dark-bg);
+            border-color: transparent;
+        }
+
+        .submit-challenge-btn {
+            background: var(--gradient-fire);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 30px rgba(255, 107, 53, 0.4);
+            margin-top: 10px;
+        }
+
+        .submit-challenge-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 50px rgba(255, 107, 53, 0.6);
+        }
+
+        /* ==================== CHALLENGES GRID ==================== */
+        .challenges-section {
+            margin-bottom: 50px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-tab {
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .filter-tab:hover {
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        .filter-tab.active {
+            background: rgba(0, 255, 255, 0.15);
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        .challenges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        /* ==================== CHALLENGE CARD ==================== */
+        .challenge-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 25px;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .challenge-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-neon);
+        }
+
+        .challenge-card.money::before {
+            background: var(--gradient-gold);
+        }
+
+        .challenge-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0, 255, 255, 0.2);
+            border-color: var(--neon-cyan);
+        }
+
+        .challenge-card.money:hover {
+            box-shadow: 0 10px 40px rgba(255, 215, 0, 0.2);
+            border-color: var(--neon-gold);
+        }
+
+        .challenge-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .challenger-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .challenger-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--neon-cyan);
+            object-fit: cover;
+        }
+
+        .challenger-details h4 {
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .challenger-record {
+            color: var(--neon-green);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .challenge-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .challenge-badge.money {
+            background: var(--gradient-gold);
+            color: var(--dark-bg);
+        }
+
+        .challenge-badge.bragging {
+            background: rgba(0, 255, 255, 0.2);
+            color: var(--neon-cyan);
+            border: 1px solid var(--neon-cyan);
+        }
+
+        .challenge-details {
+            margin: 20px 0;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .detail-value {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .detail-value.stake {
+            color: var(--neon-gold);
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .challenge-description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .challenge-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 14px 20px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+
+        .action-btn.accept {
+            background: var(--gradient-neon);
+            color: var(--dark-bg);
+        }
+
+        .action-btn.accept:hover {
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.5);
+            transform: scale(1.02);
+        }
+
+        .action-btn.view {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        .action-btn.view:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--neon-cyan);
+        }
+
+        /* ==================== ACTIVE CHALLENGES ==================== */
+        .active-challenge-card {
+            background: var(--card-bg);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .active-challenge-card::before {
+            content: 'LIVE';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--neon-red);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            animation: pulse-live 2s infinite;
+        }
+
+        @keyframes pulse-live {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .versus-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 20px 0;
+        }
+
+        .competitor {
+            text-align: center;
+            flex: 1;
+        }
+
+        .competitor-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid var(--neon-cyan);
+            margin-bottom: 10px;
+        }
+
+        .competitor-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .competitor-score {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+        }
+
+        .competitor-score.winning {
+            color: var(--neon-green);
+            text-shadow: 0 0 20px rgba(57, 255, 20, 0.5);
+        }
+
+        .competitor-score.losing {
+            color: var(--neon-red);
+        }
+
+        .vs-badge {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--neon-gold);
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            padding: 0 20px;
+        }
+
+        .challenge-progress {
+            margin-top: 20px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-neon);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* ==================== LEADERBOARD ==================== */
+        .leaderboard-section {
+            margin-bottom: 50px;
+        }
+
+        .leaderboard-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .leaderboard-header {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(0, 255, 255, 0.1));
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .leaderboard-header h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-gold);
+            font-size: 1.3rem;
+        }
+
+        .leaderboard-list {
+            padding: 10px 0;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s;
+        }
+
+        .leaderboard-item:hover {
+            background: rgba(0, 255, 255, 0.05);
+        }
+
+        .leaderboard-item:last-child {
+            border-bottom: none;
+        }
+
+        .rank {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 900;
+            width: 50px;
+            color: var(--text-muted);
+        }
+
+        .rank.gold { color: #ffd700; }
+        .rank.silver { color: #c0c0c0; }
+        .rank.bronze { color: #cd7f32; }
+
+        .leaderboard-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .leaderboard-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 2px solid var(--glass-border);
+        }
+
+        .leaderboard-name {
+            font-weight: 600;
+        }
+
+        .leaderboard-stats {
+            display: flex;
+            gap: 30px;
+            text-align: right;
+        }
+
+        .leaderboard-stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            color: var(--neon-cyan);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* ==================== EMPTY STATE ==================== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        /* ==================== FOOTER ==================== */
+        footer {
+            background: rgba(0, 0, 0, 0.4);
+            border-top: 1px solid var(--glass-border);
+            padding: 30px 0;
+            margin-top: 60px;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .footer-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .footer-link:hover {
+            color: var(--neon-cyan);
+        }
+
+        .footer-copyright {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+
+            .nav-links {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .challenges-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .versus-display {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .vs-badge {
+                padding: 10px 0;
+            }
+
+            .leaderboard-stats {
+                gap: 15px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ==================== ANIMATIONS ==================== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .challenge-card {
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        .challenge-card:nth-child(2) { animation-delay: 0.1s; }
+        .challenge-card:nth-child(3) { animation-delay: 0.2s; }
+        .challenge-card:nth-child(4) { animation-delay: 0.3s; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <a href="index.html" class="logo">TRUST<span>MY</span>RECORD</a>
+
+            <nav class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="index.html#picks" class="nav-link">Make Picks</a>
+                <a href="challenges.html" class="nav-link active">The Arena</a>
+                <a href="index.html#forums" class="nav-link">Forums</a>
+                <a href="index.html#profile" class="nav-btn profile-btn">My Profile</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1>THE ARENA</h1>
+            <p>Challenge other handicappers to head-to-head battles. Put your record on the line. Prove you're the best.</p>
+
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="hero-stat-value" id="totalChallenges">247</div>
+                    <div class="hero-stat-label">Active Challenges</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value" id="totalCompetitors">1,842</div>
+                    <div class="hero-stat-label">Competitors</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value" id="totalPrizePool">$48,500</div>
+                    <div class="hero-stat-label">Prize Pool</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Challenge Mode Tabs -->
+        <div class="mode-tabs">
+            <button class="mode-tab active" onclick="setMode('all')">
+                <span class="tab-icon">&#9876;</span> All Challenges
+            </button>
+            <button class="mode-tab money-mode" onclick="setMode('money')">
+                <span class="tab-icon">&#128176;</span> Money Challenges
+            </button>
+            <button class="mode-tab" onclick="setMode('bragging')">
+                <span class="tab-icon">&#127942;</span> Bragging Rights
+            </button>
+        </div>
+
+        <!-- Create Challenge Section -->
+        <section class="create-challenge-section">
+            <h2 class="section-title">Create a Challenge</h2>
+            <div class="create-challenge-card">
+                <form class="challenge-form" id="challengeForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Challenge Type</label>
+                            <select id="challengeType" onchange="updateStakeVisibility()">
+                                <option value="bragging">Bragging Rights</option>
+                                <option value="money">Money Challenge</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Sport</label>
+                            <select id="challengeSport">
+                                <option value="nfl">NFL</option>
+                                <option value="nba">NBA</option>
+                                <option value="nhl">NHL</option>
+                                <option value="mlb">MLB</option>
+                                <option value="ncaaf">NCAAF</option>
+                                <option value="ncaab">NCAAB</option>
+                                <option value="mixed">Mixed Sports</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Number of Picks</label>
+                            <select id="numPicks">
+                                <option value="5">5 Picks</option>
+                                <option value="10" selected>10 Picks</option>
+                                <option value="20">20 Picks</option>
+                                <option value="50">50 Picks (Marathon)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Challenge Duration</label>
+                            <select id="duration">
+                                <option value="1day">1 Day Sprint</option>
+                                <option value="1week" selected>1 Week</option>
+                                <option value="2weeks">2 Weeks</option>
+                                <option value="1month">1 Month</option>
+                                <option value="season">Full Season</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="stakeSection" style="display: none;">
+                        <label>Stake Amount</label>
+                        <div class="stake-options">
+                            <button type="button" class="stake-btn" data-stake="25" onclick="selectStake(this)">$25</button>
+                            <button type="button" class="stake-btn" data-stake="50" onclick="selectStake(this)">$50</button>
+                            <button type="button" class="stake-btn selected" data-stake="100" onclick="selectStake(this)">$100</button>
+                            <button type="button" class="stake-btn" data-stake="250" onclick="selectStake(this)">$250</button>
+                            <button type="button" class="stake-btn" data-stake="500" onclick="selectStake(this)">$500</button>
+                            <button type="button" class="stake-btn" data-stake="custom" onclick="selectStake(this)">Custom</button>
+                        </div>
+                        <input type="number" id="customStake" placeholder="Enter custom amount" style="display: none; margin-top: 10px;">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Challenge Opponent (optional)</label>
+                        <input type="text" id="opponent" placeholder="@username or leave blank for open challenge">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Challenge Title</label>
+                        <input type="text" id="challengeTitle" placeholder="e.g., 'NFL Week 15 Showdown'" maxlength="60">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description (optional)</label>
+                        <textarea id="challengeDesc" rows="3" placeholder="Describe your challenge rules or talk some trash..."></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-challenge-btn">Create Challenge</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Open Challenges Section -->
+        <section class="challenges-section">
+            <div class="section-header">
+                <h2 class="section-title">Open Challenges</h2>
+                <div class="filter-tabs">
+                    <button class="filter-tab active" onclick="filterChallenges('all')">All Sports</button>
+                    <button class="filter-tab" onclick="filterChallenges('nfl')">NFL</button>
+                    <button class="filter-tab" onclick="filterChallenges('nba')">NBA</button>
+                    <button class="filter-tab" onclick="filterChallenges('nhl')">NHL</button>
+                </div>
+            </div>
+
+            <div class="challenges-grid" id="openChallengesGrid">
+                <!-- Challenge Card 1 - Money -->
+                <div class="challenge-card money">
+                    <div class="challenge-header">
+                        <div class="challenger-info">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=sharp_shooter" alt="Avatar" class="challenger-avatar">
+                            <div class="challenger-details">
+                                <h4>SharpShooter_Mike</h4>
+                                <span class="challenger-record">142-98 (59.2%)</span>
+                            </div>
+                        </div>
+                        <span class="challenge-badge money">$250</span>
+                    </div>
+                    <div class="challenge-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Sport</span>
+                            <span class="detail-value">NFL</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Format</span>
+                            <span class="detail-value">10 Picks / 1 Week</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Stake</span>
+                            <span class="detail-value stake">$250 Each</span>
+                        </div>
+                    </div>
+                    <div class="challenge-description">
+                        "Think you know football? Put your money where your mouth is. Week 3 NFL picks, best record wins. No parlays, straight bets only."
+                    </div>
+                    <div class="challenge-actions">
+                        <button class="action-btn accept">Accept Challenge</button>
+                        <button class="action-btn view">View Profile</button>
+                    </div>
+                </div>
+
+                <!-- Challenge Card 2 - Bragging Rights -->
+                <div class="challenge-card">
+                    <div class="challenge-header">
+                        <div class="challenger-info">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=hoop_guru" alt="Avatar" class="challenger-avatar">
+                            <div class="challenger-details">
+                                <h4>HoopGuru_23</h4>
+                                <span class="challenger-record">89-67 (57.1%)</span>
+                            </div>
+                        </div>
+                        <span class="challenge-badge bragging">Bragging Rights</span>
+                    </div>
+                    <div class="challenge-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Sport</span>
+                            <span class="detail-value">NBA</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Format</span>
+                            <span class="detail-value">20 Picks / 2 Weeks</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Stakes</span>
+                            <span class="detail-value">Pride Only</span>
+                        </div>
+                    </div>
+                    <div class="challenge-description">
+                        "New to the platform but been picking NBA for 5 years. Looking for someone to battle against and prove myself. Any takers?"
+                    </div>
+                    <div class="challenge-actions">
+                        <button class="action-btn accept">Accept Challenge</button>
+                        <button class="action-btn view">View Profile</button>
+                    </div>
+                </div>
+
+                <!-- Challenge Card 3 - Money -->
+                <div class="challenge-card money">
+                    <div class="challenge-header">
+                        <div class="challenger-info">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=puck_master" alt="Avatar" class="challenger-avatar">
+                            <div class="challenger-details">
+                                <h4>PuckMaster_99</h4>
+                                <span class="challenger-record">201-156 (56.3%)</span>
+                            </div>
+                        </div>
+                        <span class="challenge-badge money">$100</span>
+                    </div>
+                    <div class="challenge-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Sport</span>
+                            <span class="detail-value">NHL</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Format</span>
+                            <span class="detail-value">10 Picks / 1 Week</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Stake</span>
+                            <span class="detail-value stake">$100 Each</span>
+                        </div>
+                    </div>
+                    <div class="challenge-description">
+                        "Hockey season is heating up. I've been on fire lately. Let's see who really knows the ice."
+                    </div>
+                    <div class="challenge-actions">
+                        <button class="action-btn accept">Accept Challenge</button>
+                        <button class="action-btn view">View Profile</button>
+                    </div>
+                </div>
+
+                <!-- Challenge Card 4 - Bragging Rights -->
+                <div class="challenge-card">
+                    <div class="challenge-header">
+                        <div class="challenger-info">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=cfb_legend" alt="Avatar" class="challenger-avatar">
+                            <div class="challenger-details">
+                                <h4>CFB_Legend</h4>
+                                <span class="challenger-record">178-134 (57.0%)</span>
+                            </div>
+                        </div>
+                        <span class="challenge-badge bragging">Bragging Rights</span>
+                    </div>
+                    <div class="challenge-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Sport</span>
+                            <span class="detail-value">NCAAF</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Format</span>
+                            <span class="detail-value">50 Picks / Season</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Stakes</span>
+                            <span class="detail-value">Leaderboard Glory</span>
+                        </div>
+                    </div>
+                    <div class="challenge-description">
+                        "Full season marathon challenge. 50 picks, best win percentage takes the crown. Who's got the stamina?"
+                    </div>
+                    <div class="challenge-actions">
+                        <button class="action-btn accept">Accept Challenge</button>
+                        <button class="action-btn view">View Profile</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Active Challenges Section -->
+        <section class="challenges-section">
+            <h2 class="section-title">Your Active Challenges</h2>
+
+            <div class="active-challenge-card">
+                <div class="versus-display">
+                    <div class="competitor">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=you" alt="You" class="competitor-avatar">
+                        <div class="competitor-name">You</div>
+                        <div class="competitor-score winning">7-3</div>
+                    </div>
+                    <div class="vs-badge">VS</div>
+                    <div class="competitor">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=rival_king" alt="Opponent" class="competitor-avatar">
+                        <div class="competitor-name">RivalKing_42</div>
+                        <div class="competitor-score losing">5-5</div>
+                    </div>
+                </div>
+                <div class="challenge-progress">
+                    <div class="progress-label">
+                        <span>Challenge Progress</span>
+                        <span>10/20 picks made</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 50%;"></div>
+                    </div>
+                </div>
+                <div class="detail-row" style="margin-top: 15px;">
+                    <span class="detail-label">Sport: NBA</span>
+                    <span class="detail-value stake">$100 Stake</span>
+                </div>
+            </div>
+
+            <div class="empty-state" id="noActiveChallenges" style="display: none;">
+                <div class="empty-state-icon">&#9876;</div>
+                <h3>No Active Challenges</h3>
+                <p>Accept a challenge above or create your own to get started!</p>
+            </div>
+        </section>
+
+        <!-- Arena Leaderboard -->
+        <section class="leaderboard-section">
+            <h2 class="section-title">Arena Champions</h2>
+            <div class="leaderboard-card">
+                <div class="leaderboard-header">
+                    <h3>Top Challenge Winners - All Time</h3>
+                </div>
+                <div class="leaderboard-list">
+                    <div class="leaderboard-item">
+                        <span class="rank gold">#1</span>
+                        <div class="leaderboard-user">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=champ1" alt="Avatar" class="leaderboard-avatar">
+                            <span class="leaderboard-name">TheLegend_27</span>
+                        </div>
+                        <div class="leaderboard-stats">
+                            <div class="leaderboard-stat">
+                                <span class="stat-value">47-12</span>
+                                <span class="stat-label">Challenge Record</span>
+                            </div>
+                            <div class="leaderboard-stat">
+                                <span class="stat-value">$12,450</span>
+                                <span class="stat-label">Winnings</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="leaderboard-item">
+                        <span class="rank silver">#2</span>
+                        <div class="leaderboard-user">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=champ2" alt="Avatar" class="leaderboard-avatar">
+                            <span class="leaderboard-name">IceCold_Picks</span>
+                        </div>
+                        <div class="leaderboard-stats">
+                            <div class="leaderboard-stat">
+                                <span class="stat-value">38-15</span>
+                                <span class="stat-label">Challenge Record</span>
+                            </div>
+                            <div class="leaderboard-stat">
+                                <span class="stat-value">$8,200</span>
+                                <span class="stat-label">Winnings</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="leaderboard-item">
+                        <span class="rank bronze">#3</span>
+                        <div class="leaderboard-user">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=champ3" alt="Avatar" class="leaderboard-avatar">
+                            <span class="leaderboard-name">BetBoss_Elite</span>
+                        </div>
+                        <div class="leaderboard-stats">
+                            <div class="leaderboard-stat">
+                                <span class="stat-value">41-19</span>
+                                <span class="stat-label">Challenge Record</span>
+                            </div>
+                            <div class="leaderboard-stat">
+                                <span class="stat-value">$6,750</span>
+                                <span class="stat-label">Winnings</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="leaderboard-item">
+                        <span class="rank">#4</span>
+                        <div class="leaderboard-user">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=champ4" alt="Avatar" class="leaderboard-avatar">
+                            <span class="leaderboard-name">SharpMoney_Steve</span>
+                        </div>
+                        <div class="leaderboard-stats">
+                            <div class="leaderboard-stat">
+                                <span class="stat-value">29-14</span>
+                                <span class="stat-label">Challenge Record</span>
+                            </div>
+                            <div class="leaderboard-stat">
+                                <span class="stat-value">$5,100</span>
+                                <span class="stat-label">Winnings</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="leaderboard-item">
+                        <span class="rank">#5</span>
+                        <div class="leaderboard-user">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=champ5" alt="Avatar" class="leaderboard-avatar">
+                            <span class="leaderboard-name">Underdog_Hunter</span>
+                        </div>
+                        <div class="leaderboard-stats">
+                            <div class="leaderboard-stat">
+                                <span class="stat-value">33-18</span>
+                                <span class="stat-label">Challenge Record</span>
+                            </div>
+                            <div class="leaderboard-stat">
+                                <span class="stat-value">$4,300</span>
+                                <span class="stat-label">Winnings</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="index.html" class="footer-link">Home</a>
+                <a href="index.html#profile" class="footer-link">Profile</a>
+                <a href="index.html#forums" class="footer-link">Forums</a>
+                <a href="challenges.html" class="footer-link">The Arena</a>
+                <a href="index.html#leaderboards" class="footer-link">Leaderboards</a>
+            </div>
+            <p class="footer-copyright">2026 Trust My Record. The end of the bullshit.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Mode switching
+        function setMode(mode) {
+            document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const cards = document.querySelectorAll('.challenge-card');
+            cards.forEach(card => {
+                if (mode === 'all') {
+                    card.style.display = 'block';
+                } else if (mode === 'money') {
+                    card.style.display = card.classList.contains('money') ? 'block' : 'none';
+                } else if (mode === 'bragging') {
+                    card.style.display = !card.classList.contains('money') ? 'block' : 'none';
+                }
+            });
+        }
+
+        // Filter challenges by sport
+        function filterChallenges(sport) {
+            document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            // In real implementation, this would filter the challenges
+            console.log('Filtering by:', sport);
+        }
+
+        // Stake selection
+        function selectStake(btn) {
+            document.querySelectorAll('.stake-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+
+            const customInput = document.getElementById('customStake');
+            if (btn.dataset.stake === 'custom') {
+                customInput.style.display = 'block';
+                customInput.focus();
+            } else {
+                customInput.style.display = 'none';
+            }
+        }
+
+        // Show/hide stake section based on challenge type
+        function updateStakeVisibility() {
+            const type = document.getElementById('challengeType').value;
+            const stakeSection = document.getElementById('stakeSection');
+            stakeSection.style.display = type === 'money' ? 'block' : 'none';
+        }
+
+        // Form submission
+        document.getElementById('challengeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const type = document.getElementById('challengeType').value;
+            const sport = document.getElementById('challengeSport').value;
+            const numPicks = document.getElementById('numPicks').value;
+            const duration = document.getElementById('duration').value;
+            const title = document.getElementById('challengeTitle').value;
+
+            // In real implementation, this would send to backend
+            alert(`Challenge Created!\n\nType: ${type}\nSport: ${sport.toUpperCase()}\nPicks: ${numPicks}\nDuration: ${duration}\n\nYour challenge is now live in The Arena!`);
+        });
+
+        // Animate stats on load
+        function animateValue(element, start, end, duration) {
+            const range = end - start;
+            const increment = end > start ? 1 : -1;
+            const stepTime = Math.abs(Math.floor(duration / range));
+            let current = start;
+
+            const timer = setInterval(function() {
+                current += increment * Math.ceil(range / 50);
+                if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+                    current = end;
+                    clearInterval(timer);
+                }
+                element.textContent = current.toLocaleString();
+            }, stepTime);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate hero stats
+            setTimeout(() => {
+                animateValue(document.getElementById('totalChallenges'), 0, 247, 1000);
+            }, 300);
+            setTimeout(() => {
+                animateValue(document.getElementById('totalCompetitors'), 0, 1842, 1000);
+            }, 500);
+        });
+    </script>
+</body>
+</html>
