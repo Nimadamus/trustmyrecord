@@ -68,6 +68,8 @@
                         .then(function(r) { return r.json(); })
                         .then(function(games) {
                             console.log('[TMR] Loaded', games.length, 'games');
+                            // Store games globally so we can access game time when submitting picks
+                            window.TMR.currentGames = games;
                             if (games.length === 0) {
                                 container.innerHTML = '<div class="no-games"><div class="no-games-icon">📅</div><h3>No Games Available</h3><p>Check back later for upcoming matchups</p></div>';
                             } else {
@@ -4066,16 +4068,16 @@
             color: #ff4444;
         }
 
-        /* === PROFESSIONAL SPORTSBOOK LAYOUT === */
+        /* === DRAFTKINGS-STYLE SPORTSBOOK LAYOUT === */
         /* IMPORTANT: These styles are locked and must not be overridden */
         .market-headers {
             display: grid !important;
-            grid-template-columns: 1fr 120px 120px 140px !important;
-            gap: 10px !important;
-            padding: 15px 20px !important;
-            background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(255, 215, 0, 0.1)) !important;
-            border: 1px solid var(--neon-cyan) !important;
-            border-radius: 12px 12px 0 0 !important;
+            grid-template-columns: 1fr 100px 100px 120px !important;
+            gap: 8px !important;
+            padding: 12px 16px !important;
+            background: #121418 !important;
+            border-bottom: 1px solid #2d3340 !important;
+            border-radius: 8px 8px 0 0 !important;
             margin-bottom: 0 !important;
             position: sticky !important;
             top: 0 !important;
@@ -4083,12 +4085,12 @@
         }
 
         .market-headers .market-label {
-            color: var(--neon-cyan) !important;
+            color: #6c7380 !important;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-            font-size: 12px !important;
+            font-size: 11px !important;
             font-weight: 700 !important;
             text-transform: uppercase !important;
-            letter-spacing: 1px !important;
+            letter-spacing: 0.5px !important;
             text-align: center !important;
         }
 
@@ -4097,42 +4099,42 @@
         }
 
         .game-row {
-            background: var(--card-bg) !important;
-            border: 1px solid var(--glass-border) !important;
+            background: #1a1d24 !important;
+            border: 1px solid #2d3340 !important;
             border-top: none !important;
             padding: 0 !important;
-            margin-bottom: 0 !important;
+            margin-bottom: 8px !important;
+            border-radius: 0 0 8px 8px !important;
         }
 
-        .game-row:last-child {
-            border-radius: 0 0 12px 12px !important;
+        .game-row:hover {
+            border-color: #3d4250 !important;
         }
 
         .game-row .game-time-header {
-            background: rgba(0, 0, 0, 0.4) !important;
-            padding: 8px 20px !important;
-            border-bottom: 1px solid var(--glass-border) !important;
+            background: #121418 !important;
+            padding: 8px 16px !important;
+            border-bottom: 1px solid #2d3340 !important;
         }
 
         .game-row .game-time {
-            color: var(--neon-gold) !important;
+            color: #6c7380 !important;
             font-size: 12px !important;
-            font-weight: 600 !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.5px !important;
+            font-weight: 500 !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         }
 
         .game-row .team-row {
             display: grid !important;
-            grid-template-columns: 1fr 120px 120px 140px !important;
-            gap: 10px !important;
+            grid-template-columns: 1fr 100px 100px 120px !important;
+            gap: 8px !important;
             align-items: center !important;
-            padding: 12px 20px !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+            padding: 10px 16px !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
         }
 
         .game-row .team-row:last-child {
-            border-bottom: 1px solid var(--glass-border) !important;
+            border-bottom: none !important;
         }
 
         .game-row .team-info {
@@ -4142,51 +4144,57 @@
         }
 
         .game-row .team-name {
-            color: var(--text-primary) !important;
-            font-size: 15px !important;
+            color: #ffffff !important;
+            font-size: 14px !important;
             font-weight: 600 !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         }
 
+        /* DraftKings-style buttons */
         .game-row .odds-btn {
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
             justify-content: center !important;
-            background: rgba(0, 255, 255, 0.08) !important;
-            border: 1px solid rgba(0, 255, 255, 0.3) !important;
-            border-radius: 8px !important;
-            padding: 10px 8px !important;
+            background: #2a2f38 !important;
+            border: 1px solid #3d4250 !important;
+            border-radius: 4px !important;
+            padding: 8px 6px !important;
             cursor: pointer !important;
-            transition: all 0.2s ease !important;
-            min-height: 55px !important;
+            transition: all 0.15s ease !important;
+            min-height: 50px !important;
             width: 100% !important;
         }
 
         .game-row .odds-btn:hover {
-            background: rgba(0, 255, 255, 0.2) !important;
-            border-color: var(--neon-cyan) !important;
-            transform: translateY(-2px) !important;
-            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3) !important;
+            background: #363c48 !important;
+            border-color: #4a5060 !important;
         }
 
+        .game-row .odds-btn:active {
+            background: #1a4d1a !important;
+            border-color: #00c853 !important;
+        }
+
+        /* DraftKings Style: Spread/Line is BIG, odds are small below */
         .game-row .odds-btn .odds-line {
-            color: var(--text-secondary) !important;
-            font-size: 13px !important;
-            font-weight: 600 !important;
+            color: #ffffff !important;
+            font-size: 15px !important;
+            font-weight: 700 !important;
             margin-bottom: 2px !important;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            line-height: 1.2 !important;
         }
 
         .game-row .odds-btn .odds-value {
-            color: var(--text-primary) !important;
-            font-size: 16px !important;
-            font-weight: 700 !important;
+            color: #8b9ab0 !important;
+            font-size: 11px !important;
+            font-weight: 500 !important;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-            letter-spacing: 0.5px !important;
         }
 
         .game-row .odds-btn .odds-value.positive {
-            color: var(--neon-green) !important;
+            color: #00c853 !important;
         }
 
         /* Loading State */
@@ -4220,12 +4228,12 @@
             color: var(--text-secondary);
         }
 
-        /* Responsive Sportsbook */
+        /* Responsive DraftKings-style Sportsbook */
         @media (max-width: 768px) {
             .market-headers {
-                grid-template-columns: 1fr 80px 80px 100px !important;
-                padding: 12px 15px !important;
-                gap: 8px !important;
+                grid-template-columns: 1fr 80px 80px 95px !important;
+                padding: 10px 12px !important;
+                gap: 6px !important;
             }
 
             .market-headers .market-label {
@@ -4233,9 +4241,9 @@
             }
 
             .game-row .team-row {
-                grid-template-columns: 1fr 80px 80px 100px !important;
-                padding: 10px 15px !important;
-                gap: 8px !important;
+                grid-template-columns: 1fr 80px 80px 95px !important;
+                padding: 8px 12px !important;
+                gap: 6px !important;
             }
 
             .game-row .team-name {
@@ -4243,26 +4251,24 @@
             }
 
             .game-row .odds-btn {
-                padding: 8px 4px !important;
-                min-height: 50px !important;
+                padding: 6px 4px !important;
+                min-height: 46px !important;
             }
 
             .game-row .odds-btn .odds-line {
-                font-size: 11px !important;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+                font-size: 13px !important;
             }
 
             .game-row .odds-btn .odds-value {
-                font-size: 14px !important;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+                font-size: 10px !important;
             }
         }
 
         @media (max-width: 480px) {
             .market-headers {
-                grid-template-columns: 1fr 65px 65px 80px !important;
-                padding: 10px 10px !important;
-                gap: 5px !important;
+                grid-template-columns: 1fr 60px 60px 75px !important;
+                padding: 8px 10px !important;
+                gap: 4px !important;
             }
 
             .market-headers .market-label {
@@ -4271,9 +4277,9 @@
             }
 
             .game-row .team-row {
-                grid-template-columns: 1fr 65px 65px 80px !important;
-                padding: 8px 10px !important;
-                gap: 5px !important;
+                grid-template-columns: 1fr 60px 60px 75px !important;
+                padding: 6px 10px !important;
+                gap: 4px !important;
             }
 
             .game-row .team-name {
@@ -4281,21 +4287,19 @@
             }
 
             .game-row .odds-btn {
-                padding: 6px 3px !important;
-                min-height: 45px !important;
+                padding: 5px 2px !important;
+                min-height: 42px !important;
             }
 
             .game-row .odds-btn .odds-line {
-                font-size: 10px !important;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+                font-size: 12px !important;
             }
 
             .game-row .odds-btn .odds-value {
-                font-size: 12px !important;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+                font-size: 9px !important;
             }
         }
-        /* === END SPORTSBOOK LAYOUT - LOCKED STYLES === */
+        /* === END DRAFTKINGS-STYLE SPORTSBOOK - LOCKED === */
 
         .live-stats-quick {
             display: flex;
@@ -6140,6 +6144,7 @@
                 <nav class="main-nav">
                     <a href="#home" class="nav-link" onclick="showSection('home')">Home</a>
                     <a href="#picks" class="nav-link" onclick="showSection('picks')">Make Picks</a>
+                    <a href="#mypicks" class="nav-link" onclick="showSection('mypicks')">My Picks</a>
                     <a href="challenges.html" class="nav-link">The Arena</a>
                     <a href="#forums" class="nav-link" onclick="showSection('forums')">Forums</a>
                     <a href="#profile" class="nav-link profile-link" onclick="showSection('profile')">My Profile</a>
@@ -7660,6 +7665,60 @@
                 <div class="coming-soon">
                     <h2>Blog</h2>
                     <p>Expert analysis and betting insights coming soon...</p>
+                </div>
+            </div>
+
+            <!-- MY PICKS SECTION -->
+            <div id="mypicks" class="page-section">
+                <div class="mypicks-container" style="max-width: 1000px; margin: 0 auto; padding: 20px;">
+                    <div class="mypicks-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <h1 style="font-family: 'Orbitron', sans-serif; color: #fff; margin: 0;">
+                            <span style="color: #00ffff;">My</span> Picks
+                        </h1>
+                        <button onclick="showSection('picks')" style="background: linear-gradient(135deg, #00c853, #00a648); border: none; padding: 12px 24px; border-radius: 8px; color: #000; font-weight: 700; cursor: pointer; font-size: 14px;">
+                            + Make New Pick
+                        </button>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div class="mypicks-tabs" style="display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid #2d3340;">
+                        <button class="mypicks-tab active" onclick="switchPicksTab('pending')" id="tabPending" style="background: transparent; border: none; padding: 12px 24px; color: #00ffff; font-weight: 600; cursor: pointer; border-bottom: 2px solid #00ffff; margin-bottom: -2px;">
+                            Pending <span id="pendingCount" style="background: #ff9800; color: #000; padding: 2px 8px; border-radius: 10px; font-size: 12px; margin-left: 6px;">0</span>
+                        </button>
+                        <button class="mypicks-tab" onclick="switchPicksTab('graded')" id="tabGraded" style="background: transparent; border: none; padding: 12px 24px; color: #6c7380; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px;">
+                            Graded
+                        </button>
+                        <button class="mypicks-tab" onclick="switchPicksTab('all')" id="tabAll" style="background: transparent; border: none; padding: 12px 24px; color: #6c7380; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px;">
+                            All Picks
+                        </button>
+                    </div>
+
+                    <!-- Picks List -->
+                    <div id="myPicksList" style="background: #1a1d24; border-radius: 12px; padding: 20px;">
+                        <div class="loading-picks" style="text-align: center; padding: 40px; color: #6c7380;">
+                            <div style="font-size: 24px; margin-bottom: 10px;">Loading picks...</div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Summary -->
+                    <div class="mypicks-stats" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 20px;">
+                        <div style="background: #1a1d24; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #2d3340;">
+                            <div style="font-size: 28px; font-weight: 700; color: #00c853;" id="myStatsRecord">0-0</div>
+                            <div style="font-size: 12px; color: #6c7380; text-transform: uppercase;">Record</div>
+                        </div>
+                        <div style="background: #1a1d24; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #2d3340;">
+                            <div style="font-size: 28px; font-weight: 700; color: #00ffff;" id="myStatsWinRate">0%</div>
+                            <div style="font-size: 12px; color: #6c7380; text-transform: uppercase;">Win Rate</div>
+                        </div>
+                        <div style="background: #1a1d24; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #2d3340;">
+                            <div style="font-size: 28px; font-weight: 700;" id="myStatsUnits" style="color: #00c853;">+0.00</div>
+                            <div style="font-size: 12px; color: #6c7380; text-transform: uppercase;">Net Units</div>
+                        </div>
+                        <div style="background: #1a1d24; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #2d3340;">
+                            <div style="font-size: 28px; font-weight: 700; color: #ff9800;" id="myStatsPending">0</div>
+                            <div style="font-size: 12px; color: #6c7380; text-transform: uppercase;">Pending</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -13677,6 +13736,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function selectGameBet(gameIndex, betType, team, line, odds, awayTeam, homeTeam) {
         console.log('selectGameBet called:', { gameIndex, betType, team, line, odds });
+
+        // Get game time from stored games
+        let gameTime = null;
+        let gameId = null;
+        if (window.TMR && window.TMR.currentGames && window.TMR.currentGames[gameIndex]) {
+            const game = window.TMR.currentGames[gameIndex];
+            gameTime = game.commence_time;
+            gameId = game.id;
+        }
+
         // Store the selection
         currentSelectedPick = {
             gameIndex,
@@ -13686,7 +13755,9 @@ document.addEventListener('DOMContentLoaded', function() {
             odds,
             awayTeam,
             homeTeam,
-            sport: selectedSport
+            sport: selectedSport,
+            gameTime: gameTime,
+            gameId: gameId
         };
 
         // Update UI to show selection - remove selected from all, then find matching button
@@ -13706,9 +13777,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     window.selectGameBet = selectGameBet;
 
-    function submitPickNew() {
+    async function submitPickNew() {
         if (!currentSelectedPick) {
             alert('No pick selected!');
+            return;
+        }
+
+        // Check if user is logged in
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        const authToken = localStorage.getItem('authToken');
+
+        if (!currentUser || !authToken) {
+            alert('Please log in to submit picks!');
+            if (typeof openLoginModal === 'function') openLoginModal();
             return;
         }
 
@@ -13724,34 +13805,86 @@ document.addEventListener('DOMContentLoaded', function() {
             units = parseFloat(btn.dataset.units) || 1;
         });
 
-        const pick = {
+        // Prepare pick data for API
+        const pickData = {
             sport: currentSelectedPick.sport,
-            team1: currentSelectedPick.awayTeam,
-            team2: currentSelectedPick.homeTeam,
+            gameId: currentSelectedPick.gameId || null,
+            gameDate: currentSelectedPick.gameTime || new Date(Date.now() + 86400000).toISOString(), // Default to tomorrow if no game time
+            team: currentSelectedPick.team,
+            opponent: currentSelectedPick.team === currentSelectedPick.homeTeam ? currentSelectedPick.awayTeam : currentSelectedPick.homeTeam,
             betType: currentSelectedPick.betType,
-            pick: currentSelectedPick.team + ' ' + currentSelectedPick.line,
-            odds: currentSelectedPick.odds,
-            confidence,
-            units,
-            reasoning,
-            timestamp: new Date().toISOString(),
-            status: 'pending'
+            betDetails: currentSelectedPick.team + ' ' + currentSelectedPick.line,
+            odds: parseFloat(currentSelectedPick.odds) || -110,
+            units: units,
+            confidenceLevel: confidence,
+            reasoning: reasoning,
+            isPublic: true
         };
 
-        // Save to localStorage
-        const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
-        picks.unshift(pick);
-        localStorage.setItem('trustMyRecordPicks', JSON.stringify(picks));
+        // Show loading state
+        const submitBtn = document.querySelector('.submit-pick-btn');
+        const originalText = submitBtn ? submitBtn.textContent : 'Submit Pick';
+        if (submitBtn) {
+            submitBtn.textContent = 'Submitting...';
+            submitBtn.disabled = true;
+        }
 
-        alert('Pick locked in! ' + pick.pick + ' (' + pick.odds + ')');
+        try {
+            // Send to backend API
+            const response = await fetch('http://localhost:3000/api/picks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify(pickData)
+            });
 
-        // Reset and go back to sports
-        currentSelectedPick = null;
-        document.getElementById('pickReasoning').value = '';
-        showPickStep('sportSelection');
+            const result = await response.json();
 
-        // Update stats dashboard
-        if (typeof updateStatsDashboard === 'function') updateStatsDashboard();
+            if (!response.ok) {
+                throw new Error(result.error || result.errors?.[0]?.msg || 'Failed to submit pick');
+            }
+
+            // Success! Also save to localStorage for offline viewing
+            const localPick = {
+                id: result.pick.id,
+                sport: pickData.sport,
+                team1: currentSelectedPick.awayTeam,
+                team2: currentSelectedPick.homeTeam,
+                betType: currentSelectedPick.betType,
+                pick: pickData.betDetails,
+                odds: pickData.odds,
+                confidence,
+                units,
+                reasoning,
+                timestamp: new Date().toISOString(),
+                status: 'pending'
+            };
+            const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+            picks.unshift(localPick);
+            localStorage.setItem('trustMyRecordPicks', JSON.stringify(picks));
+
+            alert('Pick locked in! ' + pickData.betDetails + ' (' + pickData.odds + ')\n\nYou can view it in "My Picks".');
+
+            // Reset and go back to sports
+            currentSelectedPick = null;
+            document.getElementById('pickReasoning').value = '';
+            showPickStep('sportSelection');
+
+            // Update stats dashboard
+            if (typeof updateStatsDashboard === 'function') updateStatsDashboard();
+
+        } catch (error) {
+            console.error('Submit pick error:', error);
+            alert('Error submitting pick: ' + error.message + '\n\nMake sure the backend server is running.');
+        } finally {
+            // Restore button state
+            if (submitBtn) {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        }
     }
     window.submitPickNew = submitPickNew;
     console.log('TMR Picks: All core pick functions exported to window');
@@ -15112,7 +15245,182 @@ document.addEventListener('DOMContentLoaded', function() {
                 loadUserProfileData(currentUser);
             }
         }
+        if (sectionId === 'mypicks') {
+            loadMyPicks('pending');
+        }
     };
+
+    // =====================================================
+    // MY PICKS SECTION - Load picks from backend API
+    // =====================================================
+
+    const API_BASE = 'http://localhost:3000/api';
+    let currentPicksTab = 'pending';
+
+    async function loadMyPicks(tab = 'pending') {
+        currentPicksTab = tab;
+        const container = document.getElementById('myPicksList');
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+
+        if (!currentUser) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #6c7380;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">🔒</div>
+                    <h3 style="color: #fff; margin-bottom: 10px;">Login Required</h3>
+                    <p>Please log in to view your picks.</p>
+                    <button onclick="openLoginModal()" style="margin-top: 20px; background: linear-gradient(135deg, #00ffff, #0088cc); border: none; padding: 12px 24px; border-radius: 8px; color: #000; font-weight: 700; cursor: pointer;">
+                        Log In
+                    </button>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #6c7380;">Loading picks...</div>';
+
+        try {
+            const token = localStorage.getItem('authToken');
+            let url = `${API_BASE}/picks?userId=${currentUser.id}`;
+
+            if (tab === 'pending') {
+                url += '&status=pending';
+            } else if (tab === 'graded') {
+                url += '&status=won&status=lost&status=push';
+            }
+
+            const response = await fetch(url, {
+                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            });
+
+            if (!response.ok) throw new Error('Failed to load picks');
+
+            const data = await response.json();
+            const picks = data.picks || [];
+
+            // Update pending count
+            const pendingPicks = picks.filter(p => p.status === 'pending');
+            document.getElementById('pendingCount').textContent = pendingPicks.length;
+            document.getElementById('myStatsPending').textContent = pendingPicks.length;
+
+            // Calculate stats
+            updateMyPicksStats(picks);
+
+            // Filter based on tab
+            let filteredPicks = picks;
+            if (tab === 'pending') {
+                filteredPicks = picks.filter(p => p.status === 'pending');
+            } else if (tab === 'graded') {
+                filteredPicks = picks.filter(p => p.status !== 'pending');
+            }
+
+            if (filteredPicks.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #6c7380;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">${tab === 'pending' ? '📅' : '📊'}</div>
+                        <h3 style="color: #fff; margin-bottom: 10px;">No ${tab === 'pending' ? 'Pending' : 'Graded'} Picks</h3>
+                        <p>${tab === 'pending' ? 'Make a pick to get started!' : 'Your graded picks will appear here.'}</p>
+                        ${tab === 'pending' ? `<button onclick="showSection('picks')" style="margin-top: 20px; background: linear-gradient(135deg, #00c853, #00a648); border: none; padding: 12px 24px; border-radius: 8px; color: #000; font-weight: 700; cursor: pointer;">Make a Pick</button>` : ''}
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = filteredPicks.map(pick => renderPickCard(pick)).join('');
+
+        } catch (error) {
+            console.error('Error loading picks:', error);
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #ff5252;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                    <h3 style="color: #fff; margin-bottom: 10px;">Error Loading Picks</h3>
+                    <p>${error.message}</p>
+                    <p style="margin-top: 10px; font-size: 12px; color: #6c7380;">Make sure the backend server is running (node server.js)</p>
+                </div>`;
+        }
+    }
+
+    function renderPickCard(pick) {
+        const gameDate = new Date(pick.game_date).toLocaleDateString('en-US', {
+            weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+        });
+
+        const statusColors = {
+            pending: { bg: '#ff9800', text: '#000' },
+            won: { bg: '#00c853', text: '#000' },
+            lost: { bg: '#ff5252', text: '#fff' },
+            push: { bg: '#6c7380', text: '#fff' }
+        };
+
+        const status = pick.status || 'pending';
+        const statusColor = statusColors[status] || statusColors.pending;
+        const resultText = pick.result_units ? (pick.result_units > 0 ? `+${pick.result_units.toFixed(2)}u` : `${pick.result_units.toFixed(2)}u`) : '';
+
+        const sportEmojis = { NBA: '🏀', NFL: '🏈', NHL: '🏒', MLB: '⚾', NCAAF: '🎓', NCAAB: '🏫' };
+
+        return `
+            <div style="background: #22262e; border-radius: 10px; padding: 16px; margin-bottom: 12px; border-left: 4px solid ${statusColor.bg};">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                    <div>
+                        <span style="font-size: 20px;">${sportEmojis[pick.sport] || '🎯'}</span>
+                        <span style="color: #6c7380; font-size: 12px; margin-left: 8px;">${pick.sport}</span>
+                        <span style="color: #6c7380; font-size: 12px; margin-left: 8px;">•</span>
+                        <span style="color: #6c7380; font-size: 12px; margin-left: 8px;">${gameDate}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        ${resultText ? `<span style="font-weight: 700; color: ${pick.result_units > 0 ? '#00c853' : '#ff5252'};">${resultText}</span>` : ''}
+                        <span style="background: ${statusColor.bg}; color: ${statusColor.text}; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase;">
+                            ${status}
+                        </span>
+                    </div>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <div style="font-size: 18px; font-weight: 700; color: #fff;">${pick.team} ${pick.bet_details}</div>
+                    <div style="font-size: 14px; color: #a0a8b8;">${pick.team} vs ${pick.opponent || 'TBD'}</div>
+                </div>
+                <div style="display: flex; gap: 20px; font-size: 13px; color: #6c7380;">
+                    <span>Odds: <span style="color: #fff;">${pick.odds > 0 ? '+' : ''}${pick.odds}</span></span>
+                    <span>Units: <span style="color: #fff;">${pick.units}</span></span>
+                    ${pick.reasoning ? `<span title="${pick.reasoning}">Reasoning: <span style="color: #00ffff;">📝</span></span>` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    function updateMyPicksStats(picks) {
+        const graded = picks.filter(p => p.status && p.status !== 'pending');
+        const wins = graded.filter(p => p.status === 'won').length;
+        const losses = graded.filter(p => p.status === 'lost').length;
+        const totalUnits = graded.reduce((sum, p) => sum + (p.result_units || 0), 0);
+        const winRate = graded.length > 0 ? ((wins / graded.length) * 100).toFixed(1) : 0;
+
+        document.getElementById('myStatsRecord').textContent = `${wins}-${losses}`;
+        document.getElementById('myStatsWinRate').textContent = `${winRate}%`;
+
+        const unitsEl = document.getElementById('myStatsUnits');
+        unitsEl.textContent = `${totalUnits >= 0 ? '+' : ''}${totalUnits.toFixed(2)}`;
+        unitsEl.style.color = totalUnits >= 0 ? '#00c853' : '#ff5252';
+    }
+
+    function switchPicksTab(tab) {
+        currentPicksTab = tab;
+
+        // Update tab styles
+        ['pending', 'graded', 'all'].forEach(t => {
+            const tabEl = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+            if (tabEl) {
+                if (t === tab) {
+                    tabEl.style.color = '#00ffff';
+                    tabEl.style.borderBottomColor = '#00ffff';
+                } else {
+                    tabEl.style.color = '#6c7380';
+                    tabEl.style.borderBottomColor = 'transparent';
+                }
+            }
+        });
+
+        loadMyPicks(tab);
+    }
+
+    window.loadMyPicks = loadMyPicks;
+    window.switchPicksTab = switchPicksTab;
 
     </script>
 
