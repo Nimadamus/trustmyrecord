@@ -6691,12 +6691,12 @@
                     <label>Units to Win</label>
                     <p class="units-explanation" id="unitsExplanation" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Select how many units you want to WIN. Risk calculated based on odds.</p>
                     <div class="units-buttons">
-                        <button class="unit-btn" data-units="0.5" onclick="setUnits(0.5)">0.5</button>
-                        <button class="unit-btn active" data-units="1" onclick="setUnits(1)">1</button>
-                        <button class="unit-btn" data-units="1.5" onclick="setUnits(1.5)">1.5</button>
-                        <button class="unit-btn" data-units="2" onclick="setUnits(2)">2</button>
-                        <button class="unit-btn" data-units="3" onclick="setUnits(3)">3</button>
-                        <button class="unit-btn" data-units="5" onclick="setUnits(5)">5 MAX</button>
+                        <button type="button" class="unit-btn" data-units="0.5" onclick="setUnits(0.5)">0.5</button>
+                        <button type="button" class="unit-btn active" data-units="1" onclick="setUnits(1)">1</button>
+                        <button type="button" class="unit-btn" data-units="1.5" onclick="setUnits(1.5)">1.5</button>
+                        <button type="button" class="unit-btn" data-units="2" onclick="setUnits(2)">2</button>
+                        <button type="button" class="unit-btn" data-units="3" onclick="setUnits(3)">3</button>
+                        <button type="button" class="unit-btn" data-units="5" onclick="setUnits(5)">5 MAX</button>
                     </div>
                 </div>
 
@@ -14191,11 +14191,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function setUnits(units) {
+        console.log('[TMR] setUnits called with:', units, 'type:', typeof units);
         selectedUnits = units;
         document.querySelectorAll('.unit-btn').forEach(btn => btn.classList.remove('active'));
-        // Find button by data-units attribute (more reliable than event.currentTarget)
-        const targetBtn = document.querySelector(`.unit-btn[data-units="${units}"]`);
-        if (targetBtn) targetBtn.classList.add('active');
+        // Find button by data-units attribute - convert to string to match HTML attribute
+        const selector = `.unit-btn[data-units="${String(units)}"]`;
+        console.log('[TMR] Looking for button with selector:', selector);
+        const targetBtn = document.querySelector(selector);
+        console.log('[TMR] Found button:', targetBtn);
+        if (targetBtn) {
+            targetBtn.classList.add('active');
+            console.log('[TMR] Added active class to button');
+        } else {
+            console.error('[TMR] Button not found for units:', units);
+        }
     }
 
     function submitPick() {
