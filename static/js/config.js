@@ -12,16 +12,14 @@ const CONFIG = {
         appId: "YOUR_APP_ID"
     },
 
-    // The Odds API Configuration
+    // ESPN API Configuration (FREE - no API key needed!)
+    // Powered by DraftKings data via ESPN's public API
     oddsApi: {
-        // Check localStorage first, then fall back to hardcoded value
-        key: (typeof localStorage !== 'undefined' && localStorage.getItem('oddsAPIKey')) || "deeac7e7af6a8f1a5ac84c625e04973a",
-        baseUrl: "https://api.the-odds-api.com/v4",
-        endpoints: {
-            sports: "/sports",
-            odds: "/sports/{sport}/odds",
-            scores: "/sports/{sport}/scores"
-        }
+        // No key needed - ESPN is free!
+        key: null,
+        baseUrl: "https://site.api.espn.com/apis/v2/scoreboard/header",
+        provider: "ESPN (DraftKings data)",
+        note: "No API key required - completely free!"
     },
 
     // API Configuration
