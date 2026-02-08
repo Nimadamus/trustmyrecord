@@ -17,7 +17,158 @@
         'NCAAF': 'americanfootball_ncaaf',
         'NCAAB': 'basketball_ncaab'
     };
-    // Games loaded from backend at /api/games/odds/{sportKey}
+
+    // ESPN free API - map sport keys to ESPN URL paths
+    window.TMR.espnPaths = {
+        'americanfootball_nfl': 'football/nfl',
+        'basketball_nba': 'basketball/nba',
+        'icehockey_nhl': 'hockey/nhl',
+        'baseball_mlb': 'baseball/mlb',
+        'americanfootball_ncaaf': 'football/college-football',
+        'basketball_ncaab': 'basketball/mens-college-basketball'
+    };
+
+    // Parse ESPN odds into The Odds API format (bookmakers[].markets[].outcomes[])
+    window.TMR.parseEspnOdds = function(oddsArray, homeTeam, awayTeam) {
+        if (!oddsArray || oddsArray.length === 0) return [];
+        var results = [];
+        for (var i = 0; i < oddsArray.length; i++) {
+            var o = oddsArray[i];
+            var provName = (o.provider && o.provider.name) || 'ESPN';
+            var provKey = provName.toLowerCase().replace(/\s+/g, '');
+            var markets = [];
+
+            // Moneyline
+            var homeML = null, awayML = null;
+            if (o.moneyline) {
+                if (o.moneyline.home && o.moneyline.home.close) homeML = parseFloat(o.moneyline.home.close.odds);
+                if (o.moneyline.away && o.moneyline.away.close) awayML = parseFloat(o.moneyline.away.close.odds);
+            }
+            if (!homeML && o.homeTeamOdds && o.homeTeamOdds.moneyLine) homeML = parseFloat(o.homeTeamOdds.moneyLine);
+            if (!awayML && o.awayTeamOdds && o.awayTeamOdds.moneyLine) awayML = parseFloat(o.awayTeamOdds.moneyLine);
+            if (homeML && awayML && !isNaN(homeML) && !isNaN(awayML)) {
+                markets.push({ key: 'h2h', outcomes: [
+                    { name: homeTeam, price: homeML },
+                    { name: awayTeam, price: awayML }
+                ]});
+            }
+
+            // Spread
+            var homeLine = null, awayLine = null, homeSpreadOdds = -110, awaySpreadOdds = -110;
+            if (o.pointSpread) {
+                if (o.pointSpread.home && o.pointSpread.home.close) {
+                    homeLine = parseFloat(o.pointSpread.home.close.line);
+                    var hso = parseFloat(o.pointSpread.home.close.odds);
+                    if (!isNaN(hso)) homeSpreadOdds = hso;
+                }
+                if (o.pointSpread.away && o.pointSpread.away.close) {
+                    awayLine = parseFloat(o.pointSpread.away.close.line);
+                    var aso = parseFloat(o.pointSpread.away.close.odds);
+                    if (!isNaN(aso)) awaySpreadOdds = aso;
+                }
+            }
+            if (homeLine == null && o.spread != null) {
+                homeLine = parseFloat(o.spread);
+                awayLine = -homeLine;
+            }
+            if (homeLine != null && awayLine != null && !isNaN(homeLine) && !isNaN(awayLine)) {
+                markets.push({ key: 'spreads', outcomes: [
+                    { name: homeTeam, price: homeSpreadOdds, point: homeLine },
+                    { name: awayTeam, price: awaySpreadOdds, point: awayLine }
+                ]});
+            }
+
+            // Totals
+            var totalLine = null, overOdds = -110, underOdds = -110;
+            if (o.total) {
+                if (o.total.over && o.total.over.close) {
+                    var tl = o.total.over.close.line;
+                    if (typeof tl === 'string') tl = tl.replace(/[ou]/gi, '');
+                    totalLine = parseFloat(tl);
+                    var oo = parseFloat(o.total.over.close.odds);
+                    if (!isNaN(oo)) overOdds = oo;
+                }
+                if (o.total.under && o.total.under.close) {
+                    var uo = parseFloat(o.total.under.close.odds);
+                    if (!isNaN(uo)) underOdds = uo;
+                    if (totalLine == null) {
+                        var tl2 = o.total.under.close.line;
+                        if (typeof tl2 === 'string') tl2 = tl2.replace(/[ou]/gi, '');
+                        totalLine = parseFloat(tl2);
+                    }
+                }
+            }
+            if (totalLine == null && o.overUnder != null) totalLine = parseFloat(o.overUnder);
+            if (totalLine != null && !isNaN(totalLine)) {
+                markets.push({ key: 'totals', outcomes: [
+                    { name: 'Over', price: overOdds, point: totalLine },
+                    { name: 'Under', price: underOdds, point: totalLine }
+                ]});
+            }
+
+            if (markets.length > 0) {
+                results.push({ key: provKey, title: provName, markets: markets });
+            }
+        }
+        return results;
+    };
+
+    // Fetch games from ESPN free API and convert to Odds API format
+    window.TMR.fetchGamesFromESPN = function(sportKey, callback) {
+        var espnPath = window.TMR.espnPaths[sportKey];
+        if (!espnPath) { callback([]); return; }
+
+        var url = 'https://site.api.espn.com/apis/site/v2/sports/' + espnPath + '/scoreboard';
+        console.log('[TMR] ESPN FETCH:', url);
+
+        fetch(url)
+            .then(function(r) {
+                console.log('[TMR] ESPN RESPONSE: status=' + r.status);
+                if (!r.ok) throw new Error('ESPN returned ' + r.status);
+                return r.json();
+            })
+            .then(function(data) {
+                var events = data.events || [];
+                console.log('[TMR] ESPN EVENTS: ' + events.length);
+                var games = [];
+                for (var i = 0; i < events.length; i++) {
+                    var evt = events[i];
+                    var comp = evt.competitions && evt.competitions[0];
+                    if (!comp) continue;
+                    var competitors = comp.competitors || [];
+                    var homeComp = null, awayComp = null;
+                    for (var j = 0; j < competitors.length; j++) {
+                        if (competitors[j].homeAway === 'home') homeComp = competitors[j];
+                        if (competitors[j].homeAway === 'away') awayComp = competitors[j];
+                    }
+                    if (!homeComp || !awayComp) continue;
+                    var homeTeam = homeComp.team && homeComp.team.displayName;
+                    var awayTeam = awayComp.team && awayComp.team.displayName;
+                    if (!homeTeam || !awayTeam) continue;
+
+                    // Skip completed games
+                    var status = (comp.status && comp.status.type) || (evt.status && evt.status.type) || {};
+                    if (status.completed === true) continue;
+
+                    var bookmakers = window.TMR.parseEspnOdds(comp.odds || [], homeTeam, awayTeam);
+                    games.push({
+                        id: 'espn_' + evt.id,
+                        sport_key: sportKey,
+                        sport_title: evt.shortName || sportKey,
+                        home_team: homeTeam,
+                        away_team: awayTeam,
+                        commence_time: evt.date || comp.date,
+                        bookmakers: bookmakers
+                    });
+                }
+                console.log('[TMR] PARSED GAMES: ' + games.length);
+                callback(games);
+            })
+            .catch(function(err) {
+                console.error('[TMR] ESPN FETCH ERROR:', err);
+                callback(null, err);
+            });
+    };
     window.TMR.currentSelectedPick = null;
 
     // Core function - Show Pick Step
@@ -39,13 +190,11 @@
         window.showPickStep('gamesListSection');
     };
 
-    // Core function - Select Sport and Show Games
+    // Core function - Select Sport and Show Games (calls ESPN directly, no server needed)
     window.selectSportAndShowGames = function(sport) {
-        console.log('[TMR] === SELECT SPORT START ===');
-        console.log('[TMR] Sport selected:', sport);
+        console.log('[TMR] === SELECT SPORT: ' + sport + ' ===');
         window.TMR.selectedSport = sport;
 
-        // Update UI
         document.querySelectorAll('.sport-card').forEach(function(c) { c.classList.remove('selected'); });
         var card = document.querySelector('.sport-card[data-sport="' + sport + '"]');
         if (card) card.classList.add('selected');
@@ -56,89 +205,70 @@
 
         window.showPickStep('gamesListSection');
 
-        // Load games from backend
         var container = document.getElementById('gamesListContainer');
-        console.log('[TMR] Container found:', !!container);
-        if (container) {
-            container.innerHTML = '<div class="loading-games">Loading ' + sport + ' games...</div>';
-            var sportKey = window.TMR.sportKeyMap[sport];
-            console.log('[TMR] Sport key mapped:', sport, '->', sportKey);
-            if (sportKey) {
-                var url = 'http://localhost:3000/api/games/odds/' + sportKey;
-                console.log('[TMR] FETCH START:', url);
+        if (!container) { console.error('[TMR] gamesListContainer NOT FOUND'); return; }
 
-                fetch(url)
-                    .then(function(r) {
-                        console.log('[TMR] FETCH RESPONSE: status=' + r.status + ', ok=' + r.ok);
-                        if (!r.ok) { throw new Error('Server returned ' + r.status); }
-                        return r.json();
-                    })
-                    .then(function(games) {
-                        console.log('[TMR] GAMES RECEIVED: count=' + games.length);
-                        if (games.length > 0) {
-                            console.log('[TMR] FIRST GAME:', games[0].away_team, '@', games[0].home_team);
-                            console.log('[TMR] BOOKMAKERS:', games[0].bookmakers ? games[0].bookmakers.length : 0);
-                        }
-                        window.TMR.currentGames = games;
-                        if (games.length === 0) {
-                            container.innerHTML = '<div class="no-games"><div class="no-games-icon">📅</div><h3>No Games Available</h3><p>Check back later for upcoming matchups</p></div>';
-                        } else {
-                            // Render ALL games - no filtering
-                            console.log('[TMR] RENDERING ' + games.length + ' games...');
-                            var html = '<div class="market-headers"><div class="market-label">Matchup</div><div class="market-label">Spread</div><div class="market-label">Moneyline</div><div class="market-label">Total</div></div>';
-                            games.forEach(function(game, index) {
-                                console.log('[TMR] Rendering game ' + index + ': ' + game.away_team + ' @ ' + game.home_team);
-                                var bookmaker = game.bookmakers && game.bookmakers[0];
-                                var markets = bookmaker ? bookmaker.markets : [];
-                                var homeSpread = {point: '--', price: -110}, awaySpread = {point: '--', price: -110};
-                                var homeML = '--', awayML = '--', total = '--', overPrice = -110, underPrice = -110;
-                                markets.forEach(function(m) {
-                                    if (m.key === 'spreads') m.outcomes.forEach(function(o) {
-                                        if (o.name === game.home_team) homeSpread = {point: o.point, price: o.price};
-                                        else awaySpread = {point: o.point, price: o.price};
-                                    });
-                                    if (m.key === 'h2h') m.outcomes.forEach(function(o) {
-                                        if (o.name === game.home_team) homeML = o.price;
-                                        else awayML = o.price;
-                                    });
-                                    if (m.key === 'totals') m.outcomes.forEach(function(o) {
-                                        if (o.name === 'Over') { total = o.point; overPrice = o.price; }
-                                        else underPrice = o.price;
-                                    });
-                                });
-                                var gameTime = new Date(game.commence_time).toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'});
-                                var fmtSpread = function(p) { return p === '--' ? '--' : (p > 0 ? '+' + p : p); };
-                                var fmtOdds = function(o) { return o === '--' ? '--' : (o > 0 ? '+' + o : o); };
-                                html += '<div class="game-row">' +
-                                    '<div class="game-time-header"><span class="game-time">' + gameTime + '</span></div>' +
-                                    '<div class="team-row">' +
-                                    '<div class="team-info"><div class="team-details"><div class="team-name">' + game.away_team + '</div></div></div>' +
-                                    '<button class="odds-btn" onclick="window.selectGameBet(' + index + ',\'spread\',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + fmtSpread(awaySpread.point) + '\',' + (awaySpread.price||'-110') + ',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + game.home_team.replace(/'/g, "\\'") + '\')"><span class="odds-line">' + fmtSpread(awaySpread.point) + '</span><span class="odds-value">' + fmtOdds(awaySpread.price||-110) + '</span></button>' +
-                                    '<button class="odds-btn" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'ML\',' + awayML + ',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + game.home_team.replace(/'/g, "\\'") + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (awayML >= 0 ? 'positive' : '') + '">' + fmtOdds(awayML) + '</span></button>' +
-                                    '<button class="odds-btn" onclick="window.selectGameBet(' + index + ',\'over\',\'Over\',\'' + total + '\',' + overPrice + ',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + game.home_team.replace(/'/g, "\\'") + '\')"><span class="odds-line">Over ' + total + '</span><span class="odds-value">' + fmtOdds(overPrice) + '</span></button>' +
-                                    '</div>' +
-                                    '<div class="team-row">' +
-                                    '<div class="team-info"><div class="team-details"><div class="team-name">' + game.home_team + '</div></div></div>' +
-                                    '<button class="odds-btn" onclick="window.selectGameBet(' + index + ',\'spread\',\'' + game.home_team.replace(/'/g, "\\'") + '\',\'' + fmtSpread(homeSpread.point) + '\',' + (homeSpread.price||'-110') + ',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + game.home_team.replace(/'/g, "\\'") + '\')"><span class="odds-line">' + fmtSpread(homeSpread.point) + '</span><span class="odds-value">' + fmtOdds(homeSpread.price||-110) + '</span></button>' +
-                                    '<button class="odds-btn" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + game.home_team.replace(/'/g, "\\'") + '\',\'ML\',' + homeML + ',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + game.home_team.replace(/'/g, "\\'") + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (homeML >= 0 ? 'positive' : '') + '">' + fmtOdds(homeML) + '</span></button>' +
-                                    '<button class="odds-btn" onclick="window.selectGameBet(' + index + ',\'under\',\'Under\',\'' + total + '\',' + underPrice + ',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + game.home_team.replace(/'/g, "\\'") + '\')"><span class="odds-line">Under ' + total + '</span><span class="odds-value">' + fmtOdds(underPrice) + '</span></button>' +
-                                    '</div></div>';
-                            });
-                            console.log('[TMR] RENDER COMPLETE. Setting innerHTML (' + html.length + ' chars)');
-                            container.innerHTML = html;
-                        }
-                    })
-                    .catch(function(err) {
-                        console.error('[TMR] FETCH ERROR:', err.message, err);
-                        container.innerHTML = '<div class="no-games-message"><h4>Error loading games</h4><p>' + err.message + '</p><p style="margin-top:10px;font-size:12px;color:#888;">Check browser console (F12) for details. Make sure backend is running on localhost:3000</p></div>';
-                    });
-            } else {
-                console.error('[TMR] No sport key mapping for:', sport);
-                container.innerHTML = '<div class="no-games-message"><h4>Unknown sport</h4></div>';
+        container.innerHTML = '<div class="loading-games">Loading ' + sport + ' games...</div>';
+        var sportKey = window.TMR.sportKeyMap[sport];
+        if (!sportKey) { container.innerHTML = '<div class="no-games-message"><h4>Unknown sport</h4></div>'; return; }
+
+        console.log('[TMR] Calling ESPN for ' + sportKey);
+        window.TMR.fetchGamesFromESPN(sportKey, function(games, err) {
+            if (err) {
+                console.error('[TMR] ESPN ERROR:', err);
+                container.innerHTML = '<div class="no-games-message"><h4>Error loading games</h4><p>' + err.message + '</p></div>';
+                return;
             }
-        } else {
-            console.error('[TMR] gamesListContainer not found in DOM!');
-        }
+            console.log('[TMR] GOT ' + games.length + ' GAMES');
+            window.TMR.currentGames = games;
+
+            if (games.length === 0) {
+                container.innerHTML = '<div class="no-games"><div class="no-games-icon">📅</div><h3>No Games Available</h3><p>Check back later for upcoming matchups</p></div>';
+                return;
+            }
+
+            var html = '<div class="market-headers"><div class="market-label">Matchup</div><div class="market-label">Spread</div><div class="market-label">Moneyline</div><div class="market-label">Total</div></div>';
+            games.forEach(function(game, index) {
+                console.log('[TMR] RENDER: ' + game.away_team + ' @ ' + game.home_team + ' (bookmakers: ' + game.bookmakers.length + ')');
+                var bookmaker = game.bookmakers && game.bookmakers[0];
+                var markets = bookmaker ? bookmaker.markets : [];
+                var homeSpread = {point: '--', price: -110}, awaySpread = {point: '--', price: -110};
+                var homeML = '--', awayML = '--', total = '--', overPrice = -110, underPrice = -110;
+                markets.forEach(function(m) {
+                    if (m.key === 'spreads') m.outcomes.forEach(function(o) {
+                        if (o.name === game.home_team) homeSpread = {point: o.point, price: o.price};
+                        else awaySpread = {point: o.point, price: o.price};
+                    });
+                    if (m.key === 'h2h') m.outcomes.forEach(function(o) {
+                        if (o.name === game.home_team) homeML = o.price;
+                        else awayML = o.price;
+                    });
+                    if (m.key === 'totals') m.outcomes.forEach(function(o) {
+                        if (o.name === 'Over') { total = o.point; overPrice = o.price; }
+                        else underPrice = o.price;
+                    });
+                });
+                var gameTime = new Date(game.commence_time).toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'});
+                var fmtSpread = function(p) { return p === '--' ? '--' : (p > 0 ? '+' + p : p); };
+                var fmtOdds = function(o) { return o === '--' ? '--' : (o > 0 ? '+' + o : o); };
+                html += '<div class="game-row">' +
+                    '<div class="game-time-header"><span class="game-time">' + gameTime + '</span></div>' +
+                    '<div class="team-row">' +
+                    '<div class="team-info"><div class="team-details"><div class="team-name">' + game.away_team + '</div></div></div>' +
+                    '<button class="odds-btn" onclick="window.selectGameBet(' + index + ',\'spread\',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + fmtSpread(awaySpread.point) + '\',' + (awaySpread.price||'-110') + ',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + game.home_team.replace(/'/g, "\\'") + '\')"><span class="odds-line">' + fmtSpread(awaySpread.point) + '</span><span class="odds-value">' + fmtOdds(awaySpread.price||-110) + '</span></button>' +
+                    '<button class="odds-btn" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'ML\',' + awayML + ',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + game.home_team.replace(/'/g, "\\'") + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (awayML >= 0 ? 'positive' : '') + '">' + fmtOdds(awayML) + '</span></button>' +
+                    '<button class="odds-btn" onclick="window.selectGameBet(' + index + ',\'over\',\'Over\',\'' + total + '\',' + overPrice + ',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + game.home_team.replace(/'/g, "\\'") + '\')"><span class="odds-line">Over ' + total + '</span><span class="odds-value">' + fmtOdds(overPrice) + '</span></button>' +
+                    '</div>' +
+                    '<div class="team-row">' +
+                    '<div class="team-info"><div class="team-details"><div class="team-name">' + game.home_team + '</div></div></div>' +
+                    '<button class="odds-btn" onclick="window.selectGameBet(' + index + ',\'spread\',\'' + game.home_team.replace(/'/g, "\\'") + '\',\'' + fmtSpread(homeSpread.point) + '\',' + (homeSpread.price||'-110') + ',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + game.home_team.replace(/'/g, "\\'") + '\')"><span class="odds-line">' + fmtSpread(homeSpread.point) + '</span><span class="odds-value">' + fmtOdds(homeSpread.price||-110) + '</span></button>' +
+                    '<button class="odds-btn" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + game.home_team.replace(/'/g, "\\'") + '\',\'ML\',' + homeML + ',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + game.home_team.replace(/'/g, "\\'") + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (homeML >= 0 ? 'positive' : '') + '">' + fmtOdds(homeML) + '</span></button>' +
+                    '<button class="odds-btn" onclick="window.selectGameBet(' + index + ',\'under\',\'Under\',\'' + total + '\',' + underPrice + ',\'' + game.away_team.replace(/'/g, "\\'") + '\',\'' + game.home_team.replace(/'/g, "\\'") + '\')"><span class="odds-line">Under ' + total + '</span><span class="odds-value">' + fmtOdds(underPrice) + '</span></button>' +
+                    '</div></div>';
+            });
+            console.log('[TMR] RENDER COMPLETE: ' + games.length + ' games, ' + html.length + ' chars HTML');
+            container.innerHTML = html;
+        });
     };
 
     // Core function - Select Game Bet (when user clicks an odds button)
@@ -13510,51 +13640,36 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        try {
-            const url = `http://localhost:3000/api/games/odds/${sportKey}`;
-            console.log('[TMR] loadGamesWithAllBets FETCH START:', url);
-
-            const response = await fetch(url);
-            console.log('[TMR] loadGamesWithAllBets RESPONSE:', response.status);
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || 'API returned status ' + response.status);
+        console.log('[TMR] loadGamesWithAllBets calling ESPN for:', sportKey);
+        window.TMR.fetchGamesFromESPN(sportKey, function(games, err) {
+            if (err) {
+                console.error('Error loading games:', err);
+                container.innerHTML = '<div class="no-games-message">' +
+                    '<h4>Unable to Load Games</h4>' +
+                    '<p style="color: var(--neon-red);">' + err + '</p>' +
+                    '<p style="margin-top: 15px; font-size: 0.9rem; color: var(--text-muted);">Please try again or select a different sport.</p>' +
+                    '<div style="margin-top: 20px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">' +
+                    '<button onclick="loadGamesWithAllBets()" style="padding: 12px 24px; background: var(--gradient-neon); border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer;">Try Again</button>' +
+                    '<button onclick="goBackToSports()" style="padding: 12px 24px; background: transparent; border: 2px solid var(--neon-cyan); border-radius: 8px; color: var(--neon-cyan); font-weight: 700; cursor: pointer;">Choose Sport</button>' +
+                    '</div></div>';
+                return;
             }
 
-            const games = await response.json();
             console.log('Loaded', games.length, 'games for', selectedSport);
-
             if (countBadge) countBadge.textContent = games.length + ' games';
 
             if (!games || games.length === 0) {
-                container.innerHTML = `<div class="no-games-message">
-                    <h4>No Games Scheduled</h4>
-                    <p>No ${selectedSport} games are scheduled in the next 10 days.</p>
-                    <p style="margin-top: 15px; font-size: 0.9rem; color: var(--text-muted);">Check back closer to game time.</p>
-                    <button onclick="goBackToSports()" style="margin-top: 20px; padding: 12px 24px; background: var(--gradient-neon); border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer;">Choose Another Sport</button>
-                </div>`;
+                container.innerHTML = '<div class="no-games-message">' +
+                    '<h4>No Games Scheduled</h4>' +
+                    '<p>No ' + selectedSport + ' games are scheduled right now.</p>' +
+                    '<p style="margin-top: 15px; font-size: 0.9rem; color: var(--text-muted);">Check back closer to game time.</p>' +
+                    '<button onclick="goBackToSports()" style="margin-top: 20px; padding: 12px 24px; background: var(--gradient-neon); border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer;">Choose Another Sport</button>' +
+                    '</div>';
                 return;
             }
 
             renderGamesWithAllBets(games);
-
-        } catch (error) {
-            console.error('Error loading games:', error);
-            let errorMessage = error.message;
-            if (error.name === 'AbortError') {
-                errorMessage = 'Request timed out. The API may be slow or unavailable.';
-            }
-            container.innerHTML = `<div class="no-games-message">
-                <h4>Unable to Load Games</h4>
-                <p style="color: var(--neon-red);">${errorMessage}</p>
-                <p style="margin-top: 15px; font-size: 0.9rem; color: var(--text-muted);">Please try again or select a different sport.</p>
-                <div style="margin-top: 20px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                    <button onclick="loadGamesWithAllBets()" style="padding: 12px 24px; background: var(--gradient-neon); border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer;">Try Again</button>
-                    <button onclick="goBackToSports()" style="padding: 12px 24px; background: transparent; border: 2px solid var(--neon-cyan); border-radius: 8px; color: var(--neon-cyan); font-weight: 700; cursor: pointer;">Choose Sport</button>
-                </div>
-            </div>`;
-        }
+        });
     }
     window.loadGamesWithAllBets = loadGamesWithAllBets;
     console.log('TMR Picks: loadGamesWithAllBets exported');
@@ -13824,25 +13939,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
-            // Send to backend API
-            const response = await fetch('http://localhost:3000/api/picks', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${authToken}`
-                },
-                body: JSON.stringify(pickData)
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || result.errors?.[0]?.msg || 'Failed to submit pick');
-            }
-
-            // Success! Also save to localStorage for offline viewing
+            // Save pick to localStorage
             const localPick = {
-                id: result.pick.id,
+                id: 'pick_' + Date.now(),
                 sport: pickData.sport,
                 team1: currentSelectedPick.awayTeam,
                 team2: currentSelectedPick.homeTeam,
@@ -13871,7 +13970,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         } catch (error) {
             console.error('Submit pick error:', error);
-            alert('Error submitting pick: ' + error.message + '\n\nMake sure the backend server is running.');
+            alert('Error submitting pick: ' + error.message);
         } finally {
             // Restore button state
             if (submitBtn) {
@@ -13972,18 +14071,14 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        try {
-            const url = `http://localhost:3000/api/games/odds/${sportKey}`;
-            console.log('[TMR] Third path FETCH START:', url);
-            const response = await fetch(url);
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'API request failed');
+        console.log('[TMR] Third path calling ESPN for:', sportKey);
+        window.TMR.fetchGamesFromESPN(sportKey, function(rawGames, err) {
+            if (err) {
+                console.error('Error loading games (third path):', err);
+                gamesGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--neon-red);">Failed to load games: ' + err + '</div>';
+                return;
             }
-
-            const rawGames = await response.json();
-            console.log('API returned', rawGames.length, 'raw games');
+            console.log('ESPN returned', rawGames.length, 'raw games');
 
             if (!rawGames || rawGames.length === 0) {
                 gamesGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">No games scheduled for ' + selectedSport + ' right now.<br><br>Check back closer to game time.</div>';
@@ -14041,10 +14136,7 @@ document.addEventListener('DOMContentLoaded', function() {
             renderGames(gamesGrid, games);
             console.log('Rendered', games.length, 'REAL games');
 
-        } catch (error) {
-            console.error('API Error:', error);
-            gamesGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--neon-red);">Error loading games: ' + error.message + '<br><br>Please refresh and try again.</div>';
-        }
+        });
     }
 
     function renderGames(container, games) {
@@ -15265,7 +15357,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // MY PICKS SECTION - Load picks from backend API
     // =====================================================
 
-    const API_BASE = 'http://localhost:3000/api';
     let currentPicksTab = 'pending';
 
     async function loadMyPicks(tab = 'pending') {
@@ -15289,23 +15380,20 @@ document.addEventListener('DOMContentLoaded', function() {
         container.innerHTML = '<div style="text-align: center; padding: 40px; color: #6c7380;">Loading picks...</div>';
 
         try {
-            const token = localStorage.getItem('authToken');
-            let url = `${API_BASE}/picks?userId=${currentUser.id}`;
-
-            if (tab === 'pending') {
-                url += '&status=pending';
-            } else if (tab === 'graded') {
-                url += '&status=won&status=lost&status=push';
-            }
-
-            const response = await fetch(url, {
-                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-            });
-
-            if (!response.ok) throw new Error('Failed to load picks');
-
-            const data = await response.json();
-            const picks = data.picks || [];
+            // Load picks from localStorage
+            const allPicks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+            const picks = allPicks.map(p => ({
+                sport: p.sport,
+                team: p.pick ? p.pick.split(' ')[0] : (p.team1 || ''),
+                opponent: p.team2 || '',
+                bet_details: p.pick || '',
+                odds: p.odds || -110,
+                units: p.units || 1,
+                status: p.status || 'pending',
+                result_units: p.result_units || null,
+                game_date: p.timestamp || new Date().toISOString(),
+                reasoning: p.reasoning || ''
+            }));
 
             // Update pending count
             const pendingPicks = picks.filter(p => p.status === 'pending');
