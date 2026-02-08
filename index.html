@@ -13917,6 +13917,7 @@ document.addEventListener('DOMContentLoaded', function() {
             gameTime: gameTime,
             gameId: gameId
         };
+        window.TMR.currentSelectedPick = currentSelectedPick;
 
         // Update UI to show selection - remove selected from all, then find matching button
         document.querySelectorAll('.bet-pick-btn, .total-btn').forEach(btn => btn.classList.remove('selected'));
@@ -13936,11 +13937,12 @@ document.addEventListener('DOMContentLoaded', function() {
     window.selectGameBet = selectGameBet;
 
     async function submitPickNew() {
-        var currentSelectedPick = window.TMR.currentSelectedPick;
-        if (!currentSelectedPick) {
+        var pick = window.TMR.currentSelectedPick || currentSelectedPick;
+        if (!pick) {
             alert('No pick selected!');
             return;
         }
+        var currentSelectedPick = pick;
 
         // Get user info if logged in (optional - picks save to localStorage regardless)
         const currentUser = (typeof api !== 'undefined' && api.getCurrentUser) ? api.getCurrentUser() : JSON.parse(localStorage.getItem('currentUser') || 'null');
