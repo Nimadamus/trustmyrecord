@@ -190,6 +190,35 @@
         window.showPickStep('gamesListSection');
     };
 
+    // Core function - Units Mode Toggle (Risk vs To Win)
+    window.TMR.selectedUnitsMode = 'risk';
+    window.setUnitsMode = function(mode) {
+        window.TMR.selectedUnitsMode = mode;
+        var riskBtn = document.getElementById('modeRisk');
+        var toWinBtn = document.getElementById('modeToWin');
+        var explanation = document.getElementById('unitsExplanation');
+        if (mode === 'risk') {
+            if (riskBtn) { riskBtn.style.background = 'var(--gradient-gold)'; riskBtn.style.color = 'var(--dark-bg)'; }
+            if (toWinBtn) { toWinBtn.style.background = 'var(--card-bg)'; toWinBtn.style.color = 'var(--text-primary)'; }
+            if (explanation) explanation.textContent = 'Enter units you want to RISK (0.5 - 5). Winnings calculated from odds.';
+        } else {
+            if (toWinBtn) { toWinBtn.style.background = 'var(--gradient-gold)'; toWinBtn.style.color = 'var(--dark-bg)'; }
+            if (riskBtn) { riskBtn.style.background = 'var(--card-bg)'; riskBtn.style.color = 'var(--text-primary)'; }
+            if (explanation) explanation.textContent = 'Enter units you want to WIN (0.5 - 5). Risk calculated from odds.';
+        }
+        console.log('[TMR] Units mode set to:', mode);
+    };
+
+    // Core function - Get Units Value from input
+    window.TMR.getUnitsValue = function() {
+        var input = document.getElementById('unitsInput');
+        var val = parseFloat(input ? input.value : '1');
+        if (isNaN(val) || val < 0.5) val = 0.5;
+        if (val > 5) val = 5;
+        val = Math.round(val * 2) / 2;
+        return val;
+    };
+
     // Core function - Select Sport and Show Games (calls ESPN directly, no server needed)
     window.selectSportAndShowGames = function(sport) {
         console.log('[TMR] === SELECT SPORT: ' + sport + ' ===');
@@ -6884,6 +6913,8 @@
 .pick-step {
     display: none;
     animation: fadeIn 0.3s ease-in;
+    position: relative;
+    z-index: 5;
 }
 
 .pick-step.active {
@@ -7604,10 +7635,14 @@
 /* Pick Options */
 .pick-options {
     margin: 30px 0;
+    position: relative;
+    z-index: 10;
 }
 
 .option-group {
     margin-bottom: 30px;
+    position: relative;
+    z-index: 10;
 }
 
 .option-group label {
@@ -7615,6 +7650,29 @@
     color: var(--text-secondary);
     font-weight: 600;
     margin-bottom: 12px;
+}
+
+#unitsInput {
+    position: relative;
+    z-index: 20;
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+}
+
+#unitsInput:focus {
+    border-color: var(--neon-gold);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+    outline: none;
+}
+
+.units-mode-btn {
+    position: relative;
+    z-index: 20;
+}
+
+#pickReasoning {
+    position: relative;
+    z-index: 20;
 }
 
 .confidence-buttons,
@@ -13909,7 +13967,7 @@ document.addEventListener('DOMContentLoaded', function() {
             confidence = parseInt(btn.dataset.conf) || 3;
         });
         let units = getUnitsValue();
-        let unitsMode = selectedUnitsMode || 'risk';
+        let unitsMode = window.TMR.selectedUnitsMode || 'risk';
 
         // Prepare pick data for API
         const pickData = {
@@ -14274,38 +14332,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (targetBtn) targetBtn.classList.add('active');
     }
 
-    let selectedUnitsMode = 'risk'; // 'risk' or 'towin'
-
-    function setUnitsMode(mode) {
-        selectedUnitsMode = mode;
-        var riskBtn = document.getElementById('modeRisk');
-        var toWinBtn = document.getElementById('modeToWin');
-        var explanation = document.getElementById('unitsExplanation');
-        if (mode === 'risk') {
-            riskBtn.style.background = 'var(--gradient-gold)';
-            riskBtn.style.color = 'var(--dark-bg)';
-            toWinBtn.style.background = 'var(--card-bg)';
-            toWinBtn.style.color = 'var(--text-primary)';
-            if (explanation) explanation.textContent = 'Enter units you want to RISK (0.5 - 5). Winnings calculated from odds.';
-        } else {
-            toWinBtn.style.background = 'var(--gradient-gold)';
-            toWinBtn.style.color = 'var(--dark-bg)';
-            riskBtn.style.background = 'var(--card-bg)';
-            riskBtn.style.color = 'var(--text-primary)';
-            if (explanation) explanation.textContent = 'Enter units you want to WIN (0.5 - 5). Risk calculated from odds.';
-        }
-        console.log('[TMR] Units mode set to:', mode);
-    }
-    window.setUnitsMode = setUnitsMode;
+    // setUnitsMode and getUnitsValue are defined in the early script block on window.TMR
+    // Local aliases for convenience
+    var selectedUnitsMode = window.TMR.selectedUnitsMode;
 
     function getUnitsValue() {
-        var input = document.getElementById('unitsInput');
-        var val = parseFloat(input ? input.value : '1');
-        if (isNaN(val) || val < 0.5) val = 0.5;
-        if (val > 5) val = 5;
-        // Round to nearest 0.5
-        val = Math.round(val * 2) / 2;
-        return val;
+        return window.TMR.getUnitsValue();
     }
 
     function setUnits(units) {
@@ -14334,7 +14366,7 @@ document.addEventListener('DOMContentLoaded', function() {
             odds: summaryOdds,
             confidence: selectedConfidence,
             units: getUnitsValue(),
-            unitsMode: selectedUnitsMode || 'risk',
+            unitsMode: window.TMR.selectedUnitsMode || 'risk',
             reasoning: reasoning,
             timestamp: new Date().toISOString(),
             status: 'pending'
@@ -14374,7 +14406,7 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedGame = null;
         selectedConfidence = 3;
         selectedUnits = 1;
-        selectedUnitsMode = 'risk';
+        window.TMR.selectedUnitsMode = 'risk';
         currentSelectedPick = null;
 
         document.querySelectorAll('.sport-card').forEach(c => c.classList.remove('selected'));
