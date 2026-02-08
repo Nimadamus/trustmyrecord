@@ -6835,16 +6835,15 @@
 
             <div class="pick-options">
                 <div class="option-group">
-                    <label>Units to Win</label>
-                    <p class="units-explanation" id="unitsExplanation" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Select how many units you want to WIN. Risk calculated based on odds.</p>
-                    <div class="units-buttons" id="unitsButtonsContainer">
-                        <button type="button" class="unit-btn" data-units="0.5">0.5</button>
-                        <button type="button" class="unit-btn active" data-units="1">1</button>
-                        <button type="button" class="unit-btn" data-units="1.5">1.5</button>
-                        <button type="button" class="unit-btn" data-units="2">2</button>
-                        <button type="button" class="unit-btn" data-units="3">3</button>
-                        <button type="button" class="unit-btn" data-units="5">5 MAX</button>
+                    <label>Units</label>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+                        <input type="number" id="unitsInput" min="0.5" max="5" step="0.5" value="1" style="width: 90px; padding: 12px 14px; background: var(--card-bg); border: 2px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 18px; font-weight: 700; text-align: center; font-family: 'Orbitron', monospace;" />
+                        <div id="unitsModeToggle" style="display: flex; border-radius: 10px; overflow: hidden; border: 2px solid var(--glass-border);">
+                            <button type="button" id="modeRisk" class="units-mode-btn active" onclick="setUnitsMode('risk')" style="padding: 12px 18px; background: var(--gradient-gold); border: none; color: var(--dark-bg); font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s;">RISK</button>
+                            <button type="button" id="modeToWin" class="units-mode-btn" onclick="setUnitsMode('towin')" style="padding: 12px 18px; background: var(--card-bg); border: none; color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s;">TO WIN</button>
+                        </div>
                     </div>
+                    <p id="unitsExplanation" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 8px;">Enter units you want to RISK (0.5 - 5). Winnings calculated from odds.</p>
                 </div>
 
                 <div class="option-group">
@@ -13904,15 +13903,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const reasoning = document.getElementById('pickReasoning')?.value || '';
 
-        // Get confidence and units from selected buttons
+        // Get confidence from selected button and units from input
         let confidence = 3;
-        let units = 1;
         document.querySelectorAll('.conf-btn.active').forEach(btn => {
             confidence = parseInt(btn.dataset.conf) || 3;
         });
-        document.querySelectorAll('.unit-btn.active').forEach(btn => {
-            units = parseFloat(btn.dataset.units) || 1;
-        });
+        let units = getUnitsValue();
+        let unitsMode = selectedUnitsMode || 'risk';
 
         // Prepare pick data for API
         const pickData = {
@@ -13925,6 +13922,7 @@ document.addEventListener('DOMContentLoaded', function() {
             betDetails: currentSelectedPick.team + ' ' + currentSelectedPick.line,
             odds: parseFloat(currentSelectedPick.odds) || -110,
             units: units,
+            unitsMode: unitsMode,
             confidenceLevel: confidence,
             reasoning: reasoning,
             isPublic: true
@@ -14276,21 +14274,45 @@ document.addEventListener('DOMContentLoaded', function() {
         if (targetBtn) targetBtn.classList.add('active');
     }
 
-    function setUnits(units) {
-        console.log('[TMR] setUnits called with:', units, 'type:', typeof units);
-        selectedUnits = units;
-        document.querySelectorAll('.unit-btn').forEach(btn => btn.classList.remove('active'));
-        // Find button by data-units attribute - convert to string to match HTML attribute
-        const selector = `.unit-btn[data-units="${String(units)}"]`;
-        console.log('[TMR] Looking for button with selector:', selector);
-        const targetBtn = document.querySelector(selector);
-        console.log('[TMR] Found button:', targetBtn);
-        if (targetBtn) {
-            targetBtn.classList.add('active');
-            console.log('[TMR] Added active class to button');
+    let selectedUnitsMode = 'risk'; // 'risk' or 'towin'
+
+    function setUnitsMode(mode) {
+        selectedUnitsMode = mode;
+        var riskBtn = document.getElementById('modeRisk');
+        var toWinBtn = document.getElementById('modeToWin');
+        var explanation = document.getElementById('unitsExplanation');
+        if (mode === 'risk') {
+            riskBtn.style.background = 'var(--gradient-gold)';
+            riskBtn.style.color = 'var(--dark-bg)';
+            toWinBtn.style.background = 'var(--card-bg)';
+            toWinBtn.style.color = 'var(--text-primary)';
+            if (explanation) explanation.textContent = 'Enter units you want to RISK (0.5 - 5). Winnings calculated from odds.';
         } else {
-            console.error('[TMR] Button not found for units:', units);
+            toWinBtn.style.background = 'var(--gradient-gold)';
+            toWinBtn.style.color = 'var(--dark-bg)';
+            riskBtn.style.background = 'var(--card-bg)';
+            riskBtn.style.color = 'var(--text-primary)';
+            if (explanation) explanation.textContent = 'Enter units you want to WIN (0.5 - 5). Risk calculated from odds.';
         }
+        console.log('[TMR] Units mode set to:', mode);
+    }
+    window.setUnitsMode = setUnitsMode;
+
+    function getUnitsValue() {
+        var input = document.getElementById('unitsInput');
+        var val = parseFloat(input ? input.value : '1');
+        if (isNaN(val) || val < 0.5) val = 0.5;
+        if (val > 5) val = 5;
+        // Round to nearest 0.5
+        val = Math.round(val * 2) / 2;
+        return val;
+    }
+
+    function setUnits(units) {
+        console.log('[TMR] setUnits called with:', units);
+        selectedUnits = units;
+        var input = document.getElementById('unitsInput');
+        if (input) input.value = units;
     }
 
     function submitPick() {
@@ -14311,7 +14333,8 @@ document.addEventListener('DOMContentLoaded', function() {
             pick: summaryPick,
             odds: summaryOdds,
             confidence: selectedConfidence,
-            units: selectedUnits,
+            units: getUnitsValue(),
+            unitsMode: selectedUnitsMode || 'risk',
             reasoning: reasoning,
             timestamp: new Date().toISOString(),
             status: 'pending'
@@ -14351,17 +14374,19 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedGame = null;
         selectedConfidence = 3;
         selectedUnits = 1;
+        selectedUnitsMode = 'risk';
         currentSelectedPick = null;
 
         document.querySelectorAll('.sport-card').forEach(c => c.classList.remove('selected'));
         document.querySelectorAll('.bet-type-btn').forEach(b => b.classList.remove('selected'));
         document.querySelectorAll('.conf-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
 
         const defaultConf = document.querySelector('.conf-btn[data-conf="3"]');
-        const defaultUnit = document.querySelector('.unit-btn[data-units="1"]');
         if (defaultConf) defaultConf.classList.add('active');
-        if (defaultUnit) defaultUnit.classList.add('active');
+
+        var unitsInput = document.getElementById('unitsInput');
+        if (unitsInput) unitsInput.value = '1';
+        if (typeof setUnitsMode === 'function') setUnitsMode('risk');
 
         const reasoning = document.getElementById('pickReasoning');
         if (reasoning) reasoning.value = '';
@@ -14487,18 +14512,17 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update game counts
         updateGameCounts();
 
-        // Event delegation for unit buttons (more reliable than onclick)
-        const unitsContainer = document.getElementById('unitsButtonsContainer');
-        if (unitsContainer) {
-            unitsContainer.addEventListener('click', function(e) {
-                const btn = e.target.closest('.unit-btn');
-                if (btn) {
-                    const units = parseFloat(btn.dataset.units);
-                    selectedUnits = units;
-                    unitsContainer.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    console.log('[TMR] Units set to:', units);
-                }
+        // Units input validation
+        var unitsInput = document.getElementById('unitsInput');
+        if (unitsInput) {
+            unitsInput.addEventListener('change', function() {
+                var val = parseFloat(this.value);
+                if (isNaN(val) || val < 0.5) val = 0.5;
+                if (val > 5) val = 5;
+                val = Math.round(val * 2) / 2;
+                this.value = val;
+                selectedUnits = val;
+                console.log('[TMR] Units set to:', val);
             });
         }
     });
