@@ -345,7 +345,45 @@
         window.showPickStep('pickDetails');
     };
 
-    console.log('[TMR EARLY] Core functions defined. selectSportAndShowGames:', typeof window.selectSportAndShowGames, 'selectGameBet:', typeof window.selectGameBet);
+    // Fallback submitPickNew defined early - if the later script block fails, this still works
+    window.submitPickNew = function() {
+        var thePick = window.TMR.currentSelectedPick;
+        if (!thePick) { alert('No pick selected! Please select a bet first.'); return; }
+        var units = 1;
+        try { units = window.TMR.getUnitsValue(); } catch(e) {
+            try { var inp = document.getElementById('unitsInput'); if (inp) units = parseFloat(inp.value) || 1; } catch(e2) {}
+        }
+        var unitsMode = window.TMR.selectedUnitsMode || 'risk';
+        var reasoning = '';
+        try { reasoning = document.getElementById('pickReasoning').value || ''; } catch(e) {}
+        var currentUser = null;
+        try { currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null'); } catch(e) {}
+        var localPick = {
+            id: 'pick_' + Date.now(),
+            sport: thePick.sport,
+            team1: thePick.awayTeam,
+            team2: thePick.homeTeam,
+            betType: thePick.betType,
+            pick: thePick.team + ' ' + thePick.line,
+            odds: parseFloat(thePick.odds) || -110,
+            confidence: 3,
+            units: units,
+            unitsMode: unitsMode,
+            reasoning: reasoning,
+            username: currentUser ? currentUser.username : 'Guest',
+            timestamp: new Date().toISOString(),
+            status: 'pending'
+        };
+        var picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+        picks.unshift(localPick);
+        localStorage.setItem('trustMyRecordPicks', JSON.stringify(picks));
+        alert('Pick locked in! ' + localPick.pick + ' (' + localPick.odds + ')\n\nYou can view it in "My Picks".');
+        window.TMR.currentSelectedPick = null;
+        try { document.getElementById('pickReasoning').value = ''; } catch(e) {}
+        window.showPickStep('sportSelection');
+    };
+
+    console.log('[TMR EARLY] Core functions defined. selectSportAndShowGames:', typeof window.selectSportAndShowGames, 'selectGameBet:', typeof window.selectGameBet, 'submitPickNew:', typeof window.submitPickNew);
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -6881,7 +6919,7 @@
                 </div>
             </div>
 
-            <button class="submit-pick-btn" onclick="submitPickNew()">
+            <button class="submit-pick-btn" onclick="window.submitPickNew()">
                 <span class="btn-icon">🔒</span>
                 <span class="btn-text">LOCK IN PICK</span>
             </button>
@@ -13913,7 +13951,7 @@ document.addEventListener('DOMContentLoaded', function() {
             odds,
             awayTeam,
             homeTeam,
-            sport: selectedSport,
+            sport: window.TMR.selectedSport || selectedSport,
             gameTime: gameTime,
             gameId: gameId
         };
@@ -13937,36 +13975,44 @@ document.addEventListener('DOMContentLoaded', function() {
     window.selectGameBet = selectGameBet;
 
     async function submitPickNew() {
-        var pick = window.TMR.currentSelectedPick || currentSelectedPick;
-        if (!pick) {
-            alert('No pick selected!');
+        var thePick = window.TMR.currentSelectedPick;
+        if (!thePick) {
+            alert('No pick selected! Please select a bet first.');
             return;
         }
-        var currentSelectedPick = pick;
 
-        // Get user info if logged in (optional - picks save to localStorage regardless)
-        const currentUser = (typeof api !== 'undefined' && api.getCurrentUser) ? api.getCurrentUser() : JSON.parse(localStorage.getItem('currentUser') || 'null');
+        var currentUser = null;
+        try { currentUser = (typeof api !== 'undefined' && api.getCurrentUser) ? api.getCurrentUser() : JSON.parse(localStorage.getItem('currentUser') || 'null'); } catch(e) {}
 
-        const reasoning = document.getElementById('pickReasoning')?.value || '';
+        var reasoning = '';
+        try { reasoning = document.getElementById('pickReasoning').value || ''; } catch(e) {}
 
-        // Get confidence from selected button and units from input
-        let confidence = 3;
-        document.querySelectorAll('.conf-btn.active').forEach(btn => {
-            confidence = parseInt(btn.dataset.conf) || 3;
-        });
-        let units = getUnitsValue();
-        let unitsMode = window.TMR.selectedUnitsMode || 'risk';
+        var confidence = 3;
+        var units = 1;
+        var unitsMode = window.TMR.selectedUnitsMode || 'risk';
 
-        // Prepare pick data for API
-        const pickData = {
-            sport: currentSelectedPick.sport,
-            gameId: currentSelectedPick.gameId || null,
-            gameDate: currentSelectedPick.gameTime || new Date(Date.now() + 86400000).toISOString(), // Default to tomorrow if no game time
-            team: currentSelectedPick.team,
-            opponent: currentSelectedPick.team === currentSelectedPick.homeTeam ? currentSelectedPick.awayTeam : currentSelectedPick.homeTeam,
-            betType: currentSelectedPick.betType,
-            betDetails: currentSelectedPick.team + ' ' + currentSelectedPick.line,
-            odds: parseFloat(currentSelectedPick.odds) || -110,
+        try {
+            document.querySelectorAll('.conf-btn.active').forEach(function(btn) {
+                confidence = parseInt(btn.dataset.conf) || 3;
+            });
+        } catch(e) {}
+
+        try { units = window.TMR.getUnitsValue(); } catch(e) {
+            try {
+                var inp = document.getElementById('unitsInput');
+                if (inp) units = parseFloat(inp.value) || 1;
+            } catch(e2) {}
+        }
+
+        var pickData = {
+            sport: thePick.sport,
+            gameId: thePick.gameId || null,
+            gameDate: thePick.gameTime || new Date(Date.now() + 86400000).toISOString(),
+            team: thePick.team,
+            opponent: thePick.team === thePick.homeTeam ? thePick.awayTeam : thePick.homeTeam,
+            betType: thePick.betType,
+            betDetails: thePick.team + ' ' + thePick.line,
+            odds: parseFloat(thePick.odds) || -110,
             units: units,
             unitsMode: unitsMode,
             confidenceLevel: confidence,
@@ -13974,52 +14020,48 @@ document.addEventListener('DOMContentLoaded', function() {
             isPublic: true
         };
 
-        // Show loading state
-        const submitBtn = document.querySelector('.submit-pick-btn');
-        const originalText = submitBtn ? submitBtn.textContent : 'Submit Pick';
+        var submitBtn = document.querySelector('.submit-pick-btn');
+        var originalText = submitBtn ? submitBtn.textContent : 'Submit Pick';
         if (submitBtn) {
             submitBtn.textContent = 'Submitting...';
             submitBtn.disabled = true;
         }
 
         try {
-            // Save pick to localStorage
-            const localPick = {
+            var localPick = {
                 id: 'pick_' + Date.now(),
                 sport: pickData.sport,
-                team1: currentSelectedPick.awayTeam,
-                team2: currentSelectedPick.homeTeam,
-                betType: currentSelectedPick.betType,
+                team1: thePick.awayTeam,
+                team2: thePick.homeTeam,
+                betType: thePick.betType,
                 pick: pickData.betDetails,
                 odds: pickData.odds,
-                confidence,
-                units,
+                confidence: confidence,
+                units: units,
                 unitsMode: unitsMode,
-                reasoning,
+                reasoning: reasoning,
                 username: currentUser ? currentUser.username : 'Guest',
                 timestamp: new Date().toISOString(),
                 status: 'pending'
             };
-            const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+            var picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
             picks.unshift(localPick);
             localStorage.setItem('trustMyRecordPicks', JSON.stringify(picks));
 
             alert('Pick locked in! ' + pickData.betDetails + ' (' + pickData.odds + ')\n\nYou can view it in "My Picks".');
 
-            // Reset and go back to sports
             window.TMR.currentSelectedPick = null;
             var reasoningEl = document.getElementById('pickReasoning');
             if (reasoningEl) reasoningEl.value = '';
-            showPickStep('sportSelection');
+            if (typeof showPickStep === 'function') showPickStep('sportSelection');
+            else if (window.showPickStep) window.showPickStep('sportSelection');
 
-            // Update stats dashboard
             if (typeof updateStatsDashboard === 'function') updateStatsDashboard();
 
         } catch (error) {
             console.error('Submit pick error:', error);
             alert('Error submitting pick: ' + error.message);
         } finally {
-            // Restore button state
             if (submitBtn) {
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
