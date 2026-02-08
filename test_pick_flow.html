@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>TrustMyRecord - Pick Flow Test</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a0a0f; color: #e0e0e0; font-family: Arial, sans-serif; padding: 20px; }
+h1 { color: #ffd700; margin-bottom: 10px; }
+.step { display: none; margin-top: 20px; }
+.step.active { display: block; }
+.debug { background: #1a0000; border: 2px solid #ff0; color: #0f0; padding: 15px; margin: 15px 0; border-radius: 8px; font-family: monospace; font-size: 13px; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
+.sport-btn { background: #222; border: 2px solid #444; color: #fff; padding: 15px 30px; margin: 5px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; }
+.sport-btn:hover { border-color: #ffd700; }
+.game-card { background: #1a1a2e; border: 1px solid #333; border-radius: 10px; padding: 15px; margin: 10px 0; }
+.bet-btn { background: #1a2a1a; border: 2px solid #333; color: #0f0; padding: 10px 15px; margin: 3px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+.bet-btn:hover { border-color: #ffd700; background: #2a3a2a; }
+.submit-btn { background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; border: none; padding: 18px 40px; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+.submit-btn:hover { transform: scale(1.02); }
+.back-btn { background: #333; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-bottom: 15px; }
+#pickSummary { background: #1a1a2e; border: 2px solid #ffd700; border-radius: 10px; padding: 20px; margin: 15px 0; }
+.label { color: #888; font-size: 12px; text-transform: uppercase; }
+.value { color: #fff; font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<h1>TrustMyRecord - Pick Flow Test</h1>
+<p style="color:#888;margin-bottom:5px;">This is an isolated test of the entire pick flow. No external JS loaded.</p>
+<div class="debug" id="log">Ready. Click a sport to begin...</div>
+
+<!-- STEP 1: Pick a Sport -->
+<div class="step active" id="step1">
+    <h2 style="color:#ffd700;">Step 1: Choose a Sport</h2>
+    <div style="margin-top:15px;">
+        <button class="sport-btn" onclick="pickSport('NFL', 'football/nfl')">NFL</button>
+        <button class="sport-btn" onclick="pickSport('NBA', 'basketball/nba')">NBA</button>
+        <button class="sport-btn" onclick="pickSport('NHL', 'hockey/nhl')">NHL</button>
+        <button class="sport-btn" onclick="pickSport('NCAAB', 'basketball/mens-college-basketball')">NCAAB</button>
+    </div>
+</div>
+
+<!-- STEP 2: Pick a Game & Bet -->
+<div class="step" id="step2">
+    <button class="back-btn" onclick="goToStep(1)">&larr; Back to Sports</button>
+    <h2 style="color:#ffd700;">Step 2: Choose a Game &amp; Bet</h2>
+    <div id="gamesContainer">Loading games...</div>
+</div>
+
+<!-- STEP 3: Confirm & Submit -->
+<div class="step" id="step3">
+    <button class="back-btn" onclick="goToStep(2)">&larr; Back to Games</button>
+    <h2 style="color:#ffd700;">Step 3: Confirm Your Pick</h2>
+    <div id="pickSummary">
+        <div class="label">Game</div>
+        <div class="value" id="sumGame">-</div>
+        <div class="label">Pick</div>
+        <div class="value" id="sumPick">-</div>
+        <div class="label">Odds</div>
+        <div class="value" id="sumOdds">-</div>
+    </div>
+    <div style="margin:15px 0;">
+        <label style="color:#888;display:block;margin-bottom:5px;">Units (0.5 - 5):</label>
+        <input type="number" id="unitsInput" min="0.5" max="5" step="0.5" value="1" style="width:100px;padding:12px;background:#1a1a2e;border:2px solid #444;border-radius:8px;color:#fff;font-size:18px;text-align:center;" />
+        <button onclick="setMode('risk')" id="btnRisk" style="padding:12px 18px;background:#ffd700;color:#000;border:none;border-radius:6px;font-weight:bold;cursor:pointer;margin-left:10px;">RISK</button>
+        <button onclick="setMode('towin')" id="btnToWin" style="padding:12px 18px;background:#333;color:#fff;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">TO WIN</button>
+    </div>
+    <div style="margin:15px 0;">
+        <label style="color:#888;display:block;margin-bottom:5px;">Reasoning (optional):</label>
+        <textarea id="reasoning" rows="2" style="width:100%;max-width:500px;padding:10px;background:#1a1a2e;border:1px solid #444;border-radius:8px;color:#fff;font-size:14px;" placeholder="Why do you like this pick?"></textarea>
+    </div>
+    <button class="submit-btn" onclick="lockInPick()">🔒 LOCK IN PICK</button>
+</div>
+
+<!-- STEP 4: Success -->
+<div class="step" id="step4">
+    <h2 style="color:#00ff00;">Pick Locked In!</h2>
+    <div id="successInfo" style="background:#1a2a1a;border:2px solid #0f0;border-radius:10px;padding:20px;margin:15px 0;font-size:16px;"></div>
+    <button class="sport-btn" onclick="goToStep(1)" style="margin-top:15px;">Make Another Pick</button>
+    <h3 style="color:#ffd700;margin-top:30px;">Saved Picks (localStorage):</h3>
+    <div id="savedPicks" style="margin-top:10px;"></div>
+</div>
+
+<script>
+var currentPick = null;
+var unitsMode = 'risk';
+
+function log(msg) {
+    var el = document.getElementById('log');
+    el.textContent += '\n' + new Date().toLocaleTimeString() + ' | ' + msg;
+    el.scrollTop = el.scrollHeight;
+}
+
+function goToStep(n) {
+    document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
+    document.getElementById('step' + n).classList.add('active');
+    log('Showing step ' + n);
+}
+
+function setMode(mode) {
+    unitsMode = mode;
+    document.getElementById('btnRisk').style.background = mode === 'risk' ? '#ffd700' : '#333';
+    document.getElementById('btnRisk').style.color = mode === 'risk' ? '#000' : '#fff';
+    document.getElementById('btnToWin').style.background = mode === 'towin' ? '#ffd700' : '#333';
+    document.getElementById('btnToWin').style.color = mode === 'towin' ? '#000' : '#fff';
+    log('Units mode set to: ' + mode);
+}
+
+function pickSport(name, espnPath) {
+    log('Sport selected: ' + name);
+    log('Fetching from ESPN: https://site.api.espn.com/apis/site/v2/sports/' + espnPath + '/scoreboard');
+
+    var container = document.getElementById('gamesContainer');
+    container.innerHTML = '<p style="color:#ffd700;">Loading ' + name + ' games from ESPN...</p>';
+    goToStep(2);
+
+    var url = 'https://site.api.espn.com/apis/site/v2/sports/' + espnPath + '/scoreboard';
+
+    fetch(url)
+        .then(function(response) {
+            log('ESPN response status: ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            var events = data.events || [];
+            log('ESPN returned ' + events.length + ' events');
+
+            if (events.length === 0) {
+                container.innerHTML = '<p style="color:#ff6b6b;">No games found for ' + name + '.</p>';
+                return;
+            }
+
+            var html = '';
+            events.forEach(function(event, idx) {
+                var competition = event.competitions[0];
+                var homeTeam = '';
+                var awayTeam = '';
+                competition.competitors.forEach(function(c) {
+                    if (c.homeAway === 'home') homeTeam = c.team.displayName;
+                    else awayTeam = c.team.displayName;
+                });
+
+                var gameTime = event.date;
+                var gameId = event.id;
+
+                log('Game ' + idx + ': ' + awayTeam + ' @ ' + homeTeam);
+
+                // Parse odds
+                var spread = null, total = null, awayML = null, homeML = null;
+                var odds = (competition.odds && competition.odds[0]) ? competition.odds[0] : null;
+                if (odds) {
+                    if (odds.spread) spread = parseFloat(odds.spread);
+                    if (odds.overUnder) total = parseFloat(odds.overUnder);
+                    if (odds.homeTeamOdds && odds.homeTeamOdds.moneyLine) homeML = odds.homeTeamOdds.moneyLine;
+                    if (odds.awayTeamOdds && odds.awayTeamOdds.moneyLine) awayML = odds.awayTeamOdds.moneyLine;
+                    log('  Odds: spread=' + spread + ', total=' + total + ', homeML=' + homeML + ', awayML=' + awayML);
+                } else {
+                    log('  No odds available');
+                }
+
+                html += '<div class="game-card">';
+                html += '<div style="font-size:18px;font-weight:bold;margin-bottom:10px;">' + awayTeam + ' @ ' + homeTeam + '</div>';
+                html += '<div style="color:#888;font-size:13px;margin-bottom:10px;">' + new Date(gameTime).toLocaleString() + ' | ID: ' + gameId + '</div>';
+
+                // Spread buttons
+                if (spread !== null) {
+                    var awaySpread = spread > 0 ? '+' + spread : spread;
+                    var homeSpread = spread > 0 ? -spread : '+' + Math.abs(spread);
+                    html += '<button class="bet-btn" onclick="selectBet(\'' + esc(awayTeam) + '\',\'' + esc(awayTeam) + ' ' + awaySpread + '\',\'-110\',\'' + esc(awayTeam) + '\',\'' + esc(homeTeam) + '\',\'' + gameId + '\',\'' + gameTime + '\',\'' + name + '\')">' + awayTeam + ' ' + awaySpread + ' (-110)</button>';
+                    html += '<button class="bet-btn" onclick="selectBet(\'' + esc(homeTeam) + '\',\'' + esc(homeTeam) + ' ' + homeSpread + '\',\'-110\',\'' + esc(awayTeam) + '\',\'' + esc(homeTeam) + '\',\'' + gameId + '\',\'' + gameTime + '\',\'' + name + '\')">' + homeTeam + ' ' + homeSpread + ' (-110)</button>';
+                }
+
+                // ML buttons
+                if (awayML !== null) {
+                    html += '<button class="bet-btn" onclick="selectBet(\'' + esc(awayTeam) + '\',\'' + esc(awayTeam) + ' ML\',\'' + awayML + '\',\'' + esc(awayTeam) + '\',\'' + esc(homeTeam) + '\',\'' + gameId + '\',\'' + gameTime + '\',\'' + name + '\')">' + awayTeam + ' ML (' + (awayML > 0 ? '+' : '') + awayML + ')</button>';
+                }
+                if (homeML !== null) {
+                    html += '<button class="bet-btn" onclick="selectBet(\'' + esc(homeTeam) + '\',\'' + esc(homeTeam) + ' ML\',\'' + homeML + '\',\'' + esc(awayTeam) + '\',\'' + esc(homeTeam) + '\',\'' + gameId + '\',\'' + gameTime + '\',\'' + name + '\')">' + homeTeam + ' ML (' + (homeML > 0 ? '+' : '') + homeML + ')</button>';
+                }
+
+                // Total buttons
+                if (total !== null) {
+                    html += '<button class="bet-btn" onclick="selectBet(\'Over\',\'Over ' + total + '\',\'-110\',\'' + esc(awayTeam) + '\',\'' + esc(homeTeam) + '\',\'' + gameId + '\',\'' + gameTime + '\',\'' + name + '\')">Over ' + total + ' (-110)</button>';
+                    html += '<button class="bet-btn" onclick="selectBet(\'Under\',\'Under ' + total + '\',\'-110\',\'' + esc(awayTeam) + '\',\'' + esc(homeTeam) + '\',\'' + gameId + '\',\'' + gameTime + '\',\'' + name + '\')">Under ' + total + ' (-110)</button>';
+                }
+
+                if (!spread && !awayML && !total) {
+                    html += '<p style="color:#888;">No betting lines available for this game.</p>';
+                }
+
+                html += '</div>';
+            });
+
+            container.innerHTML = html;
+            log('Rendered ' + events.length + ' game cards');
+        })
+        .catch(function(err) {
+            log('ERROR fetching ESPN: ' + err.message);
+            container.innerHTML = '<p style="color:#ff0000;">Error: ' + err.message + '</p>';
+        });
+}
+
+function esc(str) {
+    return str.replace(/'/g, "\\'");
+}
+
+function selectBet(team, pickLabel, odds, awayTeam, homeTeam, gameId, gameTime, sport) {
+    log('Bet selected: ' + pickLabel + ' (' + odds + ')');
+    currentPick = {
+        team: team,
+        pickLabel: pickLabel,
+        odds: odds,
+        awayTeam: awayTeam,
+        homeTeam: homeTeam,
+        gameId: gameId,
+        gameTime: gameTime,
+        sport: sport
+    };
+
+    document.getElementById('sumGame').textContent = awayTeam + ' @ ' + homeTeam;
+    document.getElementById('sumPick').textContent = pickLabel;
+    document.getElementById('sumOdds').textContent = (parseInt(odds) > 0 ? '+' : '') + odds;
+
+    goToStep(3);
+}
+
+function lockInPick() {
+    log('LOCK IN PICK clicked!');
+
+    if (!currentPick) {
+        log('ERROR: No pick selected!');
+        alert('No pick selected!');
+        return;
+    }
+
+    var units = parseFloat(document.getElementById('unitsInput').value) || 1;
+    var reasoning = document.getElementById('reasoning').value || '';
+
+    log('Units: ' + units + ' (' + unitsMode + ')');
+    log('Pick data: ' + JSON.stringify(currentPick));
+
+    var pickRecord = {
+        id: 'pick_' + Date.now(),
+        sport: currentPick.sport,
+        team1: currentPick.awayTeam,
+        team2: currentPick.homeTeam,
+        pick: currentPick.pickLabel,
+        odds: parseFloat(currentPick.odds) || -110,
+        units: units,
+        unitsMode: unitsMode,
+        reasoning: reasoning,
+        gameId: currentPick.gameId,
+        gameTime: currentPick.gameTime,
+        timestamp: new Date().toISOString(),
+        status: 'pending'
+    };
+
+    log('Saving to localStorage...');
+
+    try {
+        var picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+        picks.unshift(pickRecord);
+        localStorage.setItem('trustMyRecordPicks', JSON.stringify(picks));
+        log('SUCCESS! Pick saved. Total picks in storage: ' + picks.length);
+
+        // Show success
+        document.getElementById('successInfo').innerHTML =
+            '<div style="color:#0f0;font-size:20px;margin-bottom:10px;">' + pickRecord.pick + ' (' + (pickRecord.odds > 0 ? '+' : '') + pickRecord.odds + ')</div>' +
+            '<div>' + pickRecord.team1 + ' @ ' + pickRecord.team2 + '</div>' +
+            '<div>Units: ' + pickRecord.units + ' (' + pickRecord.unitsMode + ')</div>' +
+            '<div style="color:#888;margin-top:10px;">Saved at ' + new Date().toLocaleTimeString() + '</div>';
+
+        // Show all saved picks
+        showSavedPicks();
+
+        goToStep(4);
+        currentPick = null;
+
+    } catch(err) {
+        log('ERROR saving: ' + err.message);
+        alert('Error saving pick: ' + err.message);
+    }
+}
+
+function showSavedPicks() {
+    var container = document.getElementById('savedPicks');
+    try {
+        var picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+        if (picks.length === 0) {
+            container.innerHTML = '<p style="color:#888;">No picks saved yet.</p>';
+            return;
+        }
+        var html = '';
+        picks.forEach(function(p, i) {
+            html += '<div style="background:#1a1a2e;border:1px solid #333;border-radius:8px;padding:12px;margin:8px 0;">';
+            html += '<strong>' + p.pick + '</strong> (' + (p.odds > 0 ? '+' : '') + p.odds + ')';
+            html += '<br>' + (p.team1 || '?') + ' @ ' + (p.team2 || '?');
+            html += '<br><span style="color:#888;">' + p.units + 'u ' + (p.unitsMode || 'risk') + ' | ' + (p.sport || '?') + ' | ' + new Date(p.timestamp).toLocaleString() + '</span>';
+            html += '</div>';
+        });
+        container.innerHTML = html;
+    } catch(e) {
+        container.innerHTML = '<p style="color:red;">Error reading picks: ' + e.message + '</p>';
+    }
+}
+</script>
+</body>
+</html>
