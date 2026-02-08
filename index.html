@@ -13942,22 +13942,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Check if user is logged in (use backend API client)
-        if (typeof api !== 'undefined' && !api.isLoggedIn()) {
-            alert('Please log in to submit picks!');
-            showSection('login');
-            return;
-        }
-
-        // Fallback check for older auth system
-        const currentUser = api?.getCurrentUser() || JSON.parse(localStorage.getItem('currentUser') || 'null');
-        const authToken = api?.token || localStorage.getItem('tmr_token') || localStorage.getItem('authToken');
-
-        if (!currentUser || !authToken) {
-            alert('Please log in to submit picks!');
-            showSection('login');
-            return;
-        }
+        // Get user info if logged in (optional - picks save to localStorage regardless)
+        const currentUser = (typeof api !== 'undefined' && api.getCurrentUser) ? api.getCurrentUser() : JSON.parse(localStorage.getItem('currentUser') || 'null');
 
         const reasoning = document.getElementById('pickReasoning')?.value || '';
 
@@ -14006,7 +13992,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 odds: pickData.odds,
                 confidence,
                 units,
+                unitsMode: unitsMode,
                 reasoning,
+                username: currentUser ? currentUser.username : 'Guest',
                 timestamp: new Date().toISOString(),
                 status: 'pending'
             };
@@ -14017,8 +14005,9 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Pick locked in! ' + pickData.betDetails + ' (' + pickData.odds + ')\n\nYou can view it in "My Picks".');
 
             // Reset and go back to sports
-            currentSelectedPick = null;
-            document.getElementById('pickReasoning').value = '';
+            window.TMR.currentSelectedPick = null;
+            var reasoningEl = document.getElementById('pickReasoning');
+            if (reasoningEl) reasoningEl.value = '';
             showPickStep('sportSelection');
 
             // Update stats dashboard
