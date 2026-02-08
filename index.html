@@ -6919,7 +6919,40 @@
                 </div>
             </div>
 
-            <button class="submit-pick-btn" onclick="window.submitPickNew()">
+            <div id="debugOutput" style="background:#1a0000;border:2px solid #ff0;color:#0f0;padding:15px;margin:15px 0;border-radius:8px;font-family:monospace;font-size:14px;display:none;white-space:pre-wrap;max-height:300px;overflow-y:auto;"></div>
+            <button class="submit-pick-btn" onclick="
+                var dbg = document.getElementById('debugOutput');
+                dbg.style.display = 'block';
+                dbg.textContent = 'LOCK IN PICK clicked at ' + new Date().toLocaleTimeString() + '\n';
+                try {
+                    dbg.textContent += 'window.TMR exists: ' + !!window.TMR + '\n';
+                    dbg.textContent += 'window.TMR.currentSelectedPick: ' + JSON.stringify(window.TMR.currentSelectedPick) + '\n';
+                    dbg.textContent += 'window.submitPickNew type: ' + typeof window.submitPickNew + '\n';
+                    dbg.textContent += 'window.TMR.getUnitsValue type: ' + typeof window.TMR.getUnitsValue + '\n';
+                    dbg.textContent += 'unitsInput value: ' + (document.getElementById('unitsInput') ? document.getElementById('unitsInput').value : 'NOT FOUND') + '\n';
+                    dbg.textContent += 'selectedUnitsMode: ' + window.TMR.selectedUnitsMode + '\n';
+                    dbg.textContent += '\nCalling window.submitPickNew()...\n';
+                    if (typeof window.submitPickNew === 'function') {
+                        window.submitPickNew();
+                        dbg.textContent += 'submitPickNew completed!\n';
+                    } else {
+                        dbg.textContent += 'ERROR: submitPickNew is NOT a function!\n';
+                        dbg.textContent += 'Trying direct localStorage save...\n';
+                        var p = window.TMR.currentSelectedPick;
+                        if (p) {
+                            var picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+                            picks.unshift({id:'pick_'+Date.now(),sport:p.sport,team1:p.awayTeam,team2:p.homeTeam,betType:p.betType,pick:p.team+' '+p.line,odds:parseFloat(p.odds)||-110,units:parseFloat(document.getElementById('unitsInput').value)||1,timestamp:new Date().toISOString(),status:'pending'});
+                            localStorage.setItem('trustMyRecordPicks', JSON.stringify(picks));
+                            dbg.textContent += 'SAVED directly to localStorage!\n';
+                            alert('Pick saved! ' + p.team + ' ' + p.line);
+                        } else {
+                            dbg.textContent += 'No pick data available to save.\n';
+                        }
+                    }
+                } catch(err) {
+                    dbg.textContent += 'ERROR: ' + err.message + '\n' + err.stack + '\n';
+                }
+            ">
                 <span class="btn-icon">🔒</span>
                 <span class="btn-text">LOCK IN PICK</span>
             </button>
