@@ -418,6 +418,16 @@
 
         console.log('[TMR] Pick saved to localStorage:', newPick.selection, newPick.line_snapshot, newPick.odds_snapshot);
 
+        // Auto-post to social feed
+        if (typeof window.autoPostPickToFeed === 'function') {
+            try { window.autoPostPickToFeed(newPick); } catch(e) { console.warn('[TMR] Feed post failed:', e); }
+        }
+
+        // Check achievements after new pick
+        if (typeof window.checkAndAwardAchievements === 'function') {
+            try { window.checkAndAwardAchievements(); } catch(e) {}
+        }
+
         // Show inline confirmation
         var el1 = document.getElementById('confirmPickDetail');
         var el2 = document.getElementById('confirmPickMeta');
@@ -662,6 +672,17 @@
                 pick.graded_at = new Date().toISOString();
                 gradedCount++;
                 console.log('[TMR] Graded: ' + pick.selection + ' -> ' + result.status + ' (' + (result.resultUnits >= 0 ? '+' : '') + result.resultUnits.toFixed(2) + 'u)');
+
+                // Auto-post grade to social feed
+                if (typeof window.autoPostGradeToFeed === 'function') {
+                    try { window.autoPostGradeToFeed(pick); } catch(e) {}
+                }
+
+                // Notification for graded pick
+                if (typeof window.addNotification === 'function') {
+                    var emoji = result.status === 'won' ? '&#9989;' : result.status === 'lost' ? '&#10060;' : '&#9196;';
+                    try { window.addNotification('pick_graded', emoji + ' ' + pick.selection + ' ' + result.status.toUpperCase() + ' (' + (result.resultUnits >= 0 ? '+' : '') + result.resultUnits.toFixed(2) + 'u)'); } catch(e) {}
+                }
             }
         }
 
@@ -10609,6 +10630,14 @@
             </button>
         </div>
 
+        <!-- Achievements / Badges -->
+        <div class="breakdown-section" style="margin-top: 30px;">
+            <h3>Achievements</h3>
+            <div id="achievementsBadgeGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 16px;">
+                <div style="text-align: center; padding: 20px; color: var(--text-muted);">Loading badges...</div>
+            </div>
+        </div>
+
         <!-- Pick History - Collapsible -->
         <div class="full-history-section" id="fullHistorySection" style="display: none;">
             <h3>Complete Pick History</h3>
@@ -17486,6 +17515,408 @@ document.addEventListener('DOMContentLoaded', function() {
     window.getArchivedPicks = getArchivedPicks;
 
     // =====================================================
+    // ACHIEVEMENT / BADGE SYSTEM
+    // =====================================================
+
+    const ACHIEVEMENTS = [
+        { id: 'first_pick', icon: '&#127919;', name: 'First Blood', desc: 'Make your first pick', check: function(s) { return s.totalPicks >= 1; } },
+        { id: 'ten_picks', icon: '&#127922;', name: 'Getting Started', desc: 'Make 10 picks', check: function(s) { return s.totalPicks >= 10; } },
+        { id: 'fifty_picks', icon: '&#128170;', name: 'Dedicated', desc: 'Make 50 picks', check: function(s) { return s.totalPicks >= 50; } },
+        { id: 'hundred_picks', icon: '&#127942;', name: 'Centurion', desc: 'Make 100 picks', check: function(s) { return s.totalPicks >= 100; } },
+        { id: 'first_win', icon: '&#9989;', name: 'Winner', desc: 'Win your first pick', check: function(s) { return s.wins >= 1; } },
+        { id: 'ten_wins', icon: '&#128293;', name: 'Hot Hand', desc: 'Win 10 picks', check: function(s) { return s.wins >= 10; } },
+        { id: 'fifty_wins', icon: '&#11088;', name: 'Sharp', desc: 'Win 50 picks', check: function(s) { return s.wins >= 50; } },
+        { id: 'three_streak', icon: '&#9889;', name: 'On Fire', desc: '3-win streak', check: function(s) { return s.bestWinStreak >= 3; } },
+        { id: 'five_streak', icon: '&#128293;', name: 'Unstoppable', desc: '5-win streak', check: function(s) { return s.bestWinStreak >= 5; } },
+        { id: 'ten_streak', icon: '&#128081;', name: 'Legendary', desc: '10-win streak', check: function(s) { return s.bestWinStreak >= 10; } },
+        { id: 'plus_ten_units', icon: '&#128176;', name: 'In Profit', desc: '+10 units lifetime', check: function(s) { return s.totalUnits >= 10; } },
+        { id: 'plus_fifty_units', icon: '&#128184;', name: 'Bankroll Builder', desc: '+50 units lifetime', check: function(s) { return s.totalUnits >= 50; } },
+        { id: 'sixty_pct', icon: '&#127775;', name: '60% Club', desc: '60%+ win rate (min 20 picks)', check: function(s) { return s.graded >= 20 && s.winRate >= 60; } },
+        { id: 'seventy_pct', icon: '&#128142;', name: 'Diamond Capper', desc: '70%+ win rate (min 30 picks)', check: function(s) { return s.graded >= 30 && s.winRate >= 70; } },
+        { id: 'trivia_perfect', icon: '&#129504;', name: 'Trivia God', desc: 'Score 100% on a trivia quiz', check: function(s) { return s.perfectTrivia; } },
+        { id: 'trivia_ten', icon: '&#128218;', name: 'Quiz Regular', desc: 'Complete 10 trivia quizzes', check: function(s) { return s.triviaPlayed >= 10; } },
+        { id: 'multi_sport', icon: '&#127941;', name: 'Multi-Sport', desc: 'Pick in 3+ different sports', check: function(s) { return s.sportsCount >= 3; } },
+        { id: 'underdog', icon: '&#128054;', name: 'Underdog Hunter', desc: 'Win 5 underdog picks (+150 or higher)', check: function(s) { return s.underdogWins >= 5; } },
+        { id: 'poll_creator', icon: '&#128200;', name: 'Pollster', desc: 'Create 5 polls', check: function(s) { return s.pollsCreated >= 5; } },
+        { id: 'question_creator', icon: '&#129300;', name: 'Quizmaster', desc: 'Create 10 trivia questions', check: function(s) { return s.questionsCreated >= 10; } }
+    ];
+
+    function getAchievementStats() {
+        var picks = [];
+        try { picks = JSON.parse(localStorage.getItem('tmr_picks') || '[]'); } catch(e) {}
+
+        // Filter to current user
+        var userId = 'local';
+        if (window.auth && window.auth.isLoggedIn()) {
+            var user = window.auth.getCurrentUser();
+            userId = user.username || user.id || 'local';
+        }
+        picks = picks.filter(function(p) { return p.user_id === userId; });
+
+        var wins = picks.filter(function(p) { return p.status === 'won'; }).length;
+        var losses = picks.filter(function(p) { return p.status === 'lost'; }).length;
+        var graded = wins + losses;
+        var totalUnits = 0;
+        picks.forEach(function(p) { totalUnits += (parseFloat(p.result_units) || 0); });
+
+        // Best win streak
+        var gradedPicks = picks.filter(function(p) { return p.status === 'won' || p.status === 'lost'; });
+        gradedPicks.sort(function(a, b) { return new Date(a.locked_at || 0) - new Date(b.locked_at || 0); });
+        var bestWinStreak = 0, currentWS = 0;
+        gradedPicks.forEach(function(p) {
+            if (p.status === 'won') { currentWS++; if (currentWS > bestWinStreak) bestWinStreak = currentWS; }
+            else currentWS = 0;
+        });
+
+        // Sports count
+        var sports = {};
+        picks.forEach(function(p) { if (p.sport_key || p.sport_display) sports[p.sport_key || p.sport_display] = true; });
+
+        // Underdog wins
+        var underdogWins = picks.filter(function(p) { return p.status === 'won' && p.odds_snapshot >= 150; }).length;
+
+        // Trivia stats
+        var triviaScores = [];
+        try { triviaScores = JSON.parse(localStorage.getItem('trustMyRecordTriviaScores') || '[]'); } catch(e) {}
+        var userTrivia = triviaScores.filter(function(s) { return s.username === userId; });
+        var perfectTrivia = userTrivia.some(function(s) { return s.percentage >= 100; });
+
+        // Polls created
+        var polls = [];
+        try { polls = JSON.parse(localStorage.getItem('trustmyrecord_polls') || '[]'); } catch(e) {}
+        var pollsCreated = polls.filter(function(p) { return p.createdBy === userId; }).length;
+
+        // Custom trivia questions
+        var customQ = [];
+        try { customQ = JSON.parse(localStorage.getItem('tmr_custom_trivia') || '[]'); } catch(e) {}
+        var questionsCreated = customQ.filter(function(q) { return q.createdBy === userId; }).length;
+
+        return {
+            totalPicks: picks.length,
+            wins: wins,
+            losses: losses,
+            graded: graded,
+            winRate: graded > 0 ? (wins / graded * 100) : 0,
+            totalUnits: totalUnits,
+            bestWinStreak: bestWinStreak,
+            sportsCount: Object.keys(sports).length,
+            underdogWins: underdogWins,
+            perfectTrivia: perfectTrivia,
+            triviaPlayed: userTrivia.length,
+            pollsCreated: pollsCreated,
+            questionsCreated: questionsCreated
+        };
+    }
+
+    function checkAndAwardAchievements() {
+        var stats = getAchievementStats();
+        var earned = [];
+        try { earned = JSON.parse(localStorage.getItem('tmr_achievements') || '[]'); } catch(e) {}
+
+        var newlyEarned = [];
+        ACHIEVEMENTS.forEach(function(ach) {
+            if (earned.indexOf(ach.id) === -1 && ach.check(stats)) {
+                earned.push(ach.id);
+                newlyEarned.push(ach);
+            }
+        });
+
+        if (newlyEarned.length > 0) {
+            localStorage.setItem('tmr_achievements', JSON.stringify(earned));
+            newlyEarned.forEach(function(ach) {
+                addNotification('achievement', ach.icon + ' Achievement Unlocked: ' + ach.name + ' - ' + ach.desc);
+            });
+        }
+
+        return earned;
+    }
+
+    function renderAchievements() {
+        var grid = document.getElementById('achievementsBadgeGrid');
+        if (!grid) return;
+
+        var earned = checkAndAwardAchievements();
+
+        grid.innerHTML = ACHIEVEMENTS.map(function(ach) {
+            var isEarned = earned.indexOf(ach.id) !== -1;
+            return '<div style="background: ' + (isEarned ? 'rgba(0,255,255,0.08)' : 'rgba(255,255,255,0.02)') + '; border: 1px solid ' + (isEarned ? 'var(--neon-cyan)' : 'var(--glass-border)') + '; border-radius: 12px; padding: 16px; text-align: center; transition: all 0.2s;' + (isEarned ? '' : ' opacity: 0.4; filter: grayscale(1);') + '">' +
+                '<div style="font-size: 32px; margin-bottom: 8px;">' + ach.icon + '</div>' +
+                '<div style="color: ' + (isEarned ? 'var(--text-primary)' : 'var(--text-muted)') + '; font-weight: 700; font-size: 13px; margin-bottom: 4px;">' + ach.name + '</div>' +
+                '<div style="color: var(--text-muted); font-size: 11px;">' + ach.desc + '</div>' +
+                (isEarned ? '<div style="color: var(--neon-cyan); font-size: 10px; margin-top: 6px; font-weight: 600;">UNLOCKED</div>' : '') +
+                '</div>';
+        }).join('');
+    }
+
+    window.renderAchievements = renderAchievements;
+    window.checkAndAwardAchievements = checkAndAwardAchievements;
+
+    // =====================================================
+    // NOTIFICATION SYSTEM
+    // =====================================================
+
+    function getNotifications() {
+        try { return JSON.parse(localStorage.getItem('tmr_notifications') || '[]'); } catch(e) { return []; }
+    }
+
+    function addNotification(type, message) {
+        var notifs = getNotifications();
+        notifs.unshift({
+            id: 'n_' + Date.now(),
+            type: type,
+            message: message,
+            read: false,
+            timestamp: new Date().toISOString()
+        });
+        notifs = notifs.slice(0, 50); // Keep last 50
+        localStorage.setItem('tmr_notifications', JSON.stringify(notifs));
+        updateNotificationBadge();
+    }
+
+    function updateNotificationBadge() {
+        var notifs = getNotifications();
+        var unread = notifs.filter(function(n) { return !n.read; }).length;
+        var badges = document.querySelectorAll('.notif-badge-count');
+        badges.forEach(function(b) {
+            b.textContent = unread;
+            b.style.display = unread > 0 ? 'inline-block' : 'none';
+        });
+        // Also update the bell icon badge if it exists
+        var bellBadge = document.querySelector('.header-icon-btn .badge');
+        if (bellBadge) {
+            bellBadge.textContent = unread;
+            bellBadge.style.display = unread > 0 ? 'block' : 'none';
+        }
+    }
+
+    function markAllNotificationsRead() {
+        var notifs = getNotifications();
+        notifs.forEach(function(n) { n.read = true; });
+        localStorage.setItem('tmr_notifications', JSON.stringify(notifs));
+        updateNotificationBadge();
+    }
+
+    function renderNotificationsDropdown() {
+        var container = document.getElementById('notificationsContainer');
+        if (!container) return;
+
+        var notifs = getNotifications();
+        markAllNotificationsRead();
+
+        if (notifs.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 30px; color: var(--text-muted);">No notifications yet</div>';
+            return;
+        }
+
+        container.innerHTML = notifs.slice(0, 20).map(function(n) {
+            var timeAgo = getTimeAgo(new Date(n.timestamp));
+            var typeIcons = { achievement: '&#127942;', pick_graded: '&#9889;', social: '&#128172;', system: '&#128276;' };
+            var icon = typeIcons[n.type] || '&#128276;';
+            return '<div style="padding: 12px 16px; border-bottom: 1px solid var(--glass-border); display: flex; gap: 12px; align-items: flex-start;">' +
+                '<span style="font-size: 20px; flex-shrink: 0;">' + icon + '</span>' +
+                '<div style="flex: 1;">' +
+                '<div style="color: var(--text-primary); font-size: 14px;">' + n.message + '</div>' +
+                '<div style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">' + timeAgo + '</div>' +
+                '</div></div>';
+        }).join('');
+    }
+
+    function getTimeAgo(date) {
+        var seconds = Math.floor((new Date() - date) / 1000);
+        if (seconds < 60) return 'just now';
+        var minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return minutes + 'm ago';
+        var hours = Math.floor(minutes / 60);
+        if (hours < 24) return hours + 'h ago';
+        var days = Math.floor(hours / 24);
+        return days + 'd ago';
+    }
+
+    window.addNotification = addNotification;
+    window.renderNotificationsDropdown = renderNotificationsDropdown;
+    window.updateNotificationBadge = updateNotificationBadge;
+
+    // =====================================================
+    // SOCIAL FEED - Pick Activity
+    // =====================================================
+
+    function createFeedPost() {
+        var textarea = document.getElementById('newPostContent');
+        if (!textarea) return;
+        var content = textarea.value.trim();
+        if (!content) return;
+
+        if (!window.auth || !window.auth.isLoggedIn()) {
+            alert('Please log in to post.');
+            return;
+        }
+
+        var user = window.auth.getCurrentUser();
+        var post = {
+            id: 'post_' + Date.now(),
+            type: 'text',
+            content: content,
+            author: user.username || 'Anonymous',
+            authorDisplay: user.displayName || user.username || 'Anonymous',
+            timestamp: new Date().toISOString(),
+            likes: 0,
+            likedBy: [],
+            comments: []
+        };
+
+        var feed = [];
+        try { feed = JSON.parse(localStorage.getItem('trustMyRecordFeed') || '[]'); } catch(e) {}
+        feed.unshift(post);
+        feed = feed.slice(0, 200); // Keep last 200 posts
+        localStorage.setItem('trustMyRecordFeed', JSON.stringify(feed));
+
+        textarea.value = '';
+        renderFeed();
+    }
+
+    function autoPostPickToFeed(pick) {
+        var post = {
+            id: 'post_pick_' + Date.now(),
+            type: 'pick',
+            pickId: pick.id,
+            content: pick.selection + (pick.line_snapshot ? ' ' + pick.line_snapshot : '') + ' (' + (pick.odds_snapshot > 0 ? '+' : '') + pick.odds_snapshot + ')',
+            matchup: (pick.away_team || '') + ' @ ' + (pick.home_team || ''),
+            sport: pick.sport_display || pick.sport_key || '',
+            units: pick.units || 1,
+            author: pick.user_id || 'Anonymous',
+            authorDisplay: pick.user_id || 'Anonymous',
+            timestamp: pick.locked_at || new Date().toISOString(),
+            likes: 0,
+            likedBy: [],
+            comments: []
+        };
+
+        var feed = [];
+        try { feed = JSON.parse(localStorage.getItem('trustMyRecordFeed') || '[]'); } catch(e) {}
+        feed.unshift(post);
+        feed = feed.slice(0, 200);
+        localStorage.setItem('trustMyRecordFeed', JSON.stringify(feed));
+    }
+
+    function autoPostGradeToFeed(pick) {
+        var resultEmoji = pick.status === 'won' ? '&#9989;' : pick.status === 'lost' ? '&#10060;' : '&#128260;';
+        var unitsText = pick.result_units !== null ? ((pick.result_units >= 0 ? '+' : '') + parseFloat(pick.result_units).toFixed(2) + 'u') : '';
+        var post = {
+            id: 'post_grade_' + Date.now() + '_' + Math.random().toString(36).substr(2,4),
+            type: 'grade',
+            content: resultEmoji + ' ' + pick.selection + (pick.line_snapshot ? ' ' + pick.line_snapshot : '') + ' - ' + pick.status.toUpperCase() + ' ' + unitsText,
+            matchup: (pick.away_team || '') + ' @ ' + (pick.home_team || ''),
+            score: (pick.away_score !== null ? pick.away_team + ' ' + pick.away_score + ' - ' + pick.home_team + ' ' + pick.home_score : ''),
+            author: pick.user_id || 'Anonymous',
+            authorDisplay: pick.user_id || 'Anonymous',
+            timestamp: new Date().toISOString(),
+            likes: 0,
+            likedBy: [],
+            comments: []
+        };
+
+        var feed = [];
+        try { feed = JSON.parse(localStorage.getItem('trustMyRecordFeed') || '[]'); } catch(e) {}
+        feed.unshift(post);
+        feed = feed.slice(0, 200);
+        localStorage.setItem('trustMyRecordFeed', JSON.stringify(feed));
+    }
+
+    function likeFeedPost(postId) {
+        if (!window.auth || !window.auth.isLoggedIn()) return;
+        var user = window.auth.getCurrentUser();
+        var userId = user.username || user.id;
+
+        var feed = [];
+        try { feed = JSON.parse(localStorage.getItem('trustMyRecordFeed') || '[]'); } catch(e) {}
+        var post = feed.find(function(p) { return p.id === postId; });
+        if (!post) return;
+
+        if (!post.likedBy) post.likedBy = [];
+        var idx = post.likedBy.indexOf(userId);
+        if (idx === -1) {
+            post.likedBy.push(userId);
+            post.likes = (post.likes || 0) + 1;
+        } else {
+            post.likedBy.splice(idx, 1);
+            post.likes = Math.max(0, (post.likes || 1) - 1);
+        }
+
+        localStorage.setItem('trustMyRecordFeed', JSON.stringify(feed));
+        renderFeed();
+    }
+
+    function renderFeed() {
+        var container = document.getElementById('socialFeedContainer');
+        if (!container) return;
+
+        var feed = [];
+        try { feed = JSON.parse(localStorage.getItem('trustMyRecordFeed') || '[]'); } catch(e) {}
+
+        // Update sidebar stats
+        if (window.auth && window.auth.isLoggedIn()) {
+            var user = window.auth.getCurrentUser();
+            var userId = user.username || user.id;
+            var userPicks = [];
+            try { userPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]').filter(function(p) { return p.user_id === userId; }); } catch(e) {}
+            var wins = userPicks.filter(function(p) { return p.status === 'won'; }).length;
+            var graded = userPicks.filter(function(p) { return p.status === 'won' || p.status === 'lost'; }).length;
+            var el1 = document.getElementById('sidebarPicks'); if (el1) el1.textContent = userPicks.length;
+            var el2 = document.getElementById('sidebarWinRate'); if (el2) el2.textContent = (graded > 0 ? Math.round(wins/graded*100) : 0) + '%';
+            var following = []; try { following = JSON.parse(localStorage.getItem('trustMyRecordFollowers') || '[]'); } catch(e) {}
+            var el3 = document.getElementById('sidebarFollowers'); if (el3) el3.textContent = following.length;
+        }
+
+        if (feed.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);"><div style="font-size: 40px; margin-bottom: 12px;">&#128172;</div><p>No posts yet. Make a pick or share your thoughts!</p></div>';
+            return;
+        }
+
+        var currentUser = '';
+        if (window.auth && window.auth.isLoggedIn()) currentUser = window.auth.getCurrentUser().username || '';
+
+        container.innerHTML = feed.slice(0, 50).map(function(post) {
+            var timeAgo = getTimeAgo(new Date(post.timestamp));
+            var isLiked = post.likedBy && post.likedBy.indexOf(currentUser) !== -1;
+            var typeColors = { text: 'var(--neon-cyan)', pick: 'var(--neon-gold)', grade: '#00c853' };
+            var typeLabels = { text: 'POST', pick: 'PICK', grade: 'RESULT' };
+            var borderColor = typeColors[post.type] || 'var(--glass-border)';
+
+            var html = '<div style="background: var(--card-bg); border: 1px solid var(--glass-border); border-left: 3px solid ' + borderColor + '; border-radius: 10px; padding: 16px; margin-bottom: 12px;">';
+            html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">';
+            html += '<div style="display: flex; align-items: center; gap: 8px;">';
+            html += '<div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--neon-cyan), var(--neon-gold)); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #000;">' + (post.authorDisplay || post.author || '?').charAt(0).toUpperCase() + '</div>';
+            html += '<div><span style="color: var(--text-primary); font-weight: 600; font-size: 14px;">' + (post.authorDisplay || post.author) + '</span>';
+            html += '<span style="color: var(--text-muted); font-size: 12px; margin-left: 8px;">' + timeAgo + '</span></div>';
+            html += '</div>';
+            html += '<span style="font-size: 10px; padding: 3px 8px; border-radius: 8px; background: ' + borderColor + '20; color: ' + borderColor + '; font-weight: 700; text-transform: uppercase;">' + (typeLabels[post.type] || 'POST') + '</span>';
+            html += '</div>';
+
+            html += '<div style="color: var(--text-primary); font-size: 15px; margin-bottom: 8px;">' + post.content + '</div>';
+            if (post.matchup) html += '<div style="color: var(--text-muted); font-size: 13px;">' + post.matchup + (post.sport ? ' | ' + post.sport : '') + '</div>';
+            if (post.score) html += '<div style="color: var(--text-secondary); font-size: 13px; margin-top: 4px;">Final: ' + post.score + '</div>';
+
+            // Like button
+            html += '<div style="margin-top: 10px; display: flex; gap: 16px; align-items: center;">';
+            html += '<button onclick="likeFeedPost(\'' + post.id + '\')" style="background: none; border: none; cursor: pointer; color: ' + (isLiked ? '#ff4444' : 'var(--text-muted)') + '; font-size: 14px; display: flex; align-items: center; gap: 4px;">' + (isLiked ? '&#10084;' : '&#9825;') + ' ' + (post.likes || 0) + '</button>';
+            html += '</div>';
+            html += '</div>';
+            return html;
+        }).join('');
+    }
+
+    window.createFeedPost = createFeedPost;
+    window.autoPostPickToFeed = autoPostPickToFeed;
+    window.autoPostGradeToFeed = autoPostGradeToFeed;
+    window.likeFeedPost = likeFeedPost;
+    window.renderFeed = renderFeed;
+
+    // Init notifications on load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateNotificationBadge();
+    });
+
+    // =====================================================
     // Enhanced showSection for all pages
     // =====================================================
 
@@ -17508,11 +17939,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             viewingUserId = null; // Reset after loading so next showSection('profile') loads own profile
         }
+        if (sectionId === 'feed') {
+            if (typeof window.renderFeed === 'function') window.renderFeed();
+        }
+        if (sectionId === 'my-record') {
+            if (typeof window.renderAchievements === 'function') window.renderAchievements();
+        }
         if (sectionId === 'mypicks') {
             // Auto-grade pending picks when viewing My Picks section
             if (typeof window.autoGradeAll === 'function') {
                 window.autoGradeAll().then(function() {
                     loadMyPicks('pending');
+                    // Check achievements after grading
+                    if (typeof window.checkAndAwardAchievements === 'function') window.checkAndAwardAchievements();
                 }).catch(function() {
                     loadMyPicks('pending');
                 });
