@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Premium Membership | Trust My Record</title>
+
+    <link rel="canonical" href="https://trustmyrecord.com/premium.html">
+    <meta name="description" content="Unlock premium features on Trust My Record. Advanced analytics, unlimited picks, premium contests, and more. Choose the plan that fits your style.">
+
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>👑</text></svg>">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link href="static/css/social.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --neon-cyan: #00ffff;
+            --neon-purple: #ff00ff;
+            --neon-green: #39ff14;
+            --neon-gold: #ffd700;
+            --neon-red: #ff073a;
+            --dark-bg: #0a0a0f;
+            --darker-bg: #050508;
+            --card-bg: rgba(20, 20, 35, 0.8);
+            --glass-border: rgba(0, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0c0;
+            --text-muted: #808090;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: var(--dark-bg);
+            background-image:
+                radial-gradient(circle at 25% 75%, rgba(0, 255, 255, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 75% 25%, rgba(255, 215, 0, 0.06) 0%, transparent 50%),
+                linear-gradient(180deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(0, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
+
+        /* Header */
+        header {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .main-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            color: var(--neon-cyan);
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        /* Page Hero */
+        .premium-hero {
+            text-align: center;
+            padding: 80px 20px 60px;
+            position: relative;
+        }
+
+        .premium-hero h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--neon-gold), var(--neon-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        .premium-hero .crown-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .premium-hero p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Current Status Banner */
+        .status-banner {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 0 auto 40px;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .status-banner.premium {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: var(--neon-gold);
+        }
+
+        .status-banner h3 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .current-tier {
+            display: inline-block;
+            padding: 5px 15px;
+            background: rgba(0, 255, 255, 0.2);
+            border-radius: 20px;
+            font-weight: 700;
+            color: var(--neon-cyan);
+        }
+
+        .current-tier.elite { background: rgba(255, 215, 0, 0.2); color: var(--neon-gold); }
+        .current-tier.pro { background: rgba(255, 0, 255, 0.2); color: var(--neon-purple); }
+        .current-tier.basic { background: rgba(57, 255, 20, 0.2); color: var(--neon-green); }
+
+        /* Billing Toggle */
+        .billing-toggle {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 50px;
+        }
+
+        .billing-toggle span {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .billing-toggle span.active {
+            color: var(--neon-cyan);
+        }
+
+        .toggle-switch {
+            width: 60px;
+            height: 30px;
+            background: rgba(0, 255, 255, 0.2);
+            border-radius: 15px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+            border: 1px solid var(--glass-border);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: var(--neon-cyan);
+            border-radius: 50%;
+            top: 2px;
+            left: 3px;
+            transition: all 0.3s;
+            box-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        .toggle-switch.yearly::after {
+            left: 33px;
+        }
+
+        .save-badge {
+            background: var(--neon-green);
+            color: #000;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        /* Pricing Grid */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px 80px;
+        }
+
+        .pricing-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .pricing-card.featured {
+            border-color: var(--neon-gold);
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(0, 255, 255, 0.1));
+        }
+
+        .pricing-card.featured::before {
+            content: 'MOST POPULAR';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(45deg, var(--neon-gold), var(--neon-cyan));
+            color: #000;
+            padding: 5px 20px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.75rem;
+        }
+
+        .tier-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .tier-name {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .tier-price {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 5px;
+        }
+
+        .tier-price span {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .tier-original-price {
+            text-decoration: line-through;
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .tier-features {
+            list-style: none;
+            text-align: left;
+            margin: 25px 0;
+        }
+
+        .tier-features li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tier-features li:last-child {
+            border-bottom: none;
+        }
+
+        .tier-features .check {
+            color: var(--neon-green);
+            font-weight: bold;
+        }
+
+        .tier-features .x {
+            color: var(--text-muted);
+        }
+
+        .tier-features .limit {
+            color: var(--neon-cyan);
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        .upgrade-btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Orbitron', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .upgrade-btn.primary {
+            background: linear-gradient(45deg, var(--neon-gold), var(--neon-cyan));
+            color: #000;
+        }
+
+        .upgrade-btn.primary:hover {
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            transform: scale(1.02);
+        }
+
+        .upgrade-btn.secondary {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        .upgrade-btn.secondary:hover {
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        .upgrade-btn:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+            color: #666;
+        }
+
+        .upgrade-btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Features Comparison */
+        .features-section {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 80px 20px;
+        }
+
+        .features-section h2 {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 50px;
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .feature-row {
+            display: grid;
+            grid-template-columns: 2fr repeat(4, 1fr);
+            gap: 10px;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-row.header {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            border-bottom: 2px solid var(--glass-border);
+        }
+
+        .feature-row .feature-name {
+            text-align: left;
+        }
+
+        .feature-row .tier-value {
+            text-align: center;
+        }
+
+        .feature-row .tier-value.yes {
+            color: var(--neon-green);
+        }
+
+        .feature-row .tier-value.no {
+            color: var(--text-muted);
+        }
+
+        /* Analytics Preview */
+        .analytics-preview {
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .analytics-preview h2 {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, var(--neon-gold), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .analytics-preview p {
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .analytics-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .analytics-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+        }
+
+        .analytics-card h4 {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .analytics-card .value {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--neon-cyan);
+        }
+
+        .analytics-card .label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        .premium-lock {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: 700;
+            color: var(--neon-gold);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .analytics-card.locked .value,
+        .analytics-card.locked .label {
+            filter: blur(5px);
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(0, 0, 0, 0.4);
+            border-top: 1px solid var(--glass-border);
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Notification Toast */
+        .notification {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 20px 25px;
+            display: none;
+            align-items: center;
+            gap: 15px;
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+            max-width: 400px;
+        }
+
+        .notification.show { display: flex; }
+        .notification.success { border-color: var(--neon-green); }
+        .notification.error { border-color: var(--neon-red); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .premium-hero h1 { font-size: 2rem; }
+            .pricing-grid { grid-template-columns: 1fr; }
+            .feature-row { grid-template-columns: 1fr; gap: 5px; }
+            .feature-row .tier-value { display: none; }
+            .feature-row.header { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">TRUST MY RECORD</a>
+                <nav class="main-nav">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="challenges.html" class="nav-link">Challenges</a>
+                    <a href="premium.html" class="nav-link" style="color: var(--neon-gold);">Premium</a>
+                    <a href="#" class="nav-link" id="profileLink" style="display: none;">Profile</a>
+                    <a href="#" class="nav-link" id="loginLink">Login</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="premium-hero">
+        <div class="crown-icon">👑</div>
+        <h1>UNLOCK YOUR POTENTIAL</h1>
+        <p>Upgrade to Premium and get access to advanced analytics, unlimited picks, exclusive contests, and more.</p>
+    </section>
+
+    <!-- Current Status -->
+    <div class="container">
+        <div class="status-banner" id="statusBanner">
+            <h3>Your Current Plan</h3>
+            <span class="current-tier" id="currentTier">Free</span>
+            <p style="margin-top: 10px; color: var(--text-muted);" id="tierExpiry"></p>
+        </div>
+
+        <!-- Billing Toggle -->
+        <div class="billing-toggle">
+            <span class="active" id="monthlyLabel">Monthly</span>
+            <div class="toggle-switch" id="billingToggle" onclick="toggleBilling()"></div>
+            <span id="yearlyLabel">Yearly</span>
+            <span class="save-badge">Save 17%</span>
+        </div>
+    </div>
+
+    <!-- Pricing Cards -->
+    <div class="pricing-grid" id="pricingGrid">
+        <!-- Free Tier -->
+        <div class="pricing-card" data-tier="free">
+            <div class="tier-icon">🎯</div>
+            <h3 class="tier-name">Free</h3>
+            <div class="tier-price">$0<span>/mo</span></div>
+            <ul class="tier-features">
+                <li><span class="check">✓</span> Track your picks <span class="limit">5/day</span></li>
+                <li><span class="check">✓</span> Basic stats</li>
+                <li><span class="check">✓</span> Join contests <span class="limit">1/month</span></li>
+                <li><span class="check">✓</span> Follow users</li>
+                <li><span class="x">✗</span> Advanced analytics</li>
+                <li><span class="x">✗</span> Private picks</li>
+                <li><span class="x">✗</span> Priority support</li>
+            </ul>
+            <button class="upgrade-btn secondary" disabled>Current Plan</button>
+        </div>
+
+        <!-- Basic Tier -->
+        <div class="pricing-card" data-tier="basic">
+            <div class="tier-icon">🚀</div>
+            <h3 class="tier-name">Basic</h3>
+            <div class="tier-price" id="basicPrice">$9.99<span>/mo</span></div>
+            <div class="tier-original-price" id="basicOriginal" style="display: none;">$119.88/yr</div>
+            <ul class="tier-features">
+                <li><span class="check">✓</span> Track your picks <span class="limit">15/day</span></li>
+                <li><span class="check">✓</span> Basic stats</li>
+                <li><span class="check">✓</span> Join contests <span class="limit">5/month</span></li>
+                <li><span class="check">✓</span> Ad-free experience</li>
+                <li><span class="check">✓</span> Private picks</li>
+                <li><span class="check">✓</span> Custom challenges <span class="limit">3 active</span></li>
+                <li><span class="x">✗</span> Advanced analytics</li>
+            </ul>
+            <button class="upgrade-btn secondary" onclick="upgrade('basic')">Upgrade to Basic</button>
+        </div>
+
+        <!-- Pro Tier -->
+        <div class="pricing-card featured" data-tier="pro">
+            <div class="tier-icon">⚡</div>
+            <h3 class="tier-name">Pro</h3>
+            <div class="tier-price" id="proPrice">$19.99<span>/mo</span></div>
+            <div class="tier-original-price" id="proOriginal" style="display: none;">$239.88/yr</div>
+            <ul class="tier-features">
+                <li><span class="check">✓</span> Track your picks <span class="limit">50/day</span></li>
+                <li><span class="check">✓</span> Advanced analytics</li>
+                <li><span class="check">✓</span> Join contests <span class="limit">20/month</span></li>
+                <li><span class="check">✓</span> Premium contests</li>
+                <li><span class="check">✓</span> Verified badge ✓</li>
+                <li><span class="check">✓</span> Priority support</li>
+                <li><span class="check">✓</span> Early access features</li>
+            </ul>
+            <button class="upgrade-btn primary" onclick="upgrade('pro')">Upgrade to Pro</button>
+        </div>
+
+        <!-- Elite Tier -->
+        <div class="pricing-card" data-tier="elite">
+            <div class="tier-icon">💎</div>
+            <h3 class="tier-name">Elite</h3>
+            <div class="tier-price" id="elitePrice">$49.99<span>/mo</span></div>
+            <div class="tier-original-price" id="eliteOriginal" style="display: none;">$599.88/yr</div>
+            <ul class="tier-features">
+                <li><span class="check">✓</span> <strong>Unlimited</strong> picks</li>
+                <li><span class="check">✓</span> <strong>Unlimited</strong> challenges</li>
+                <li><span class="check">✓</span> <strong>Unlimited</strong> contests</li>
+                <li><span class="check">✓</span> Custom analytics dashboard</li>
+                <li><span class="check">✓</span> API access</li>
+                <li><span class="check">✓</span> Dedicated support</li>
+                <li><span class="check">✓</span> All Pro features</li>
+            </ul>
+            <button class="upgrade-btn secondary" onclick="upgrade('elite')">Upgrade to Elite</button>
+        </div>
+    </div>
+
+    <!-- Features Comparison -->
+    <section class="features-section">
+        <div class="container">
+            <h2>Feature Comparison</h2>
+
+            <div class="feature-row header">
+                <div class="feature-name">Feature</div>
+                <div class="tier-value">Free</div>
+                <div class="tier-value">Basic</div>
+                <div class="tier-value">Pro</div>
+                <div class="tier-value">Elite</div>
+            </div>
+
+            <div class="feature-row">
+                <div class="feature-name">Daily Pick Limit</div>
+                <div class="tier-value">5</div>
+                <div class="tier-value">15</div>
+                <div class="tier-value">50</div>
+                <div class="tier-value yes">Unlimited</div>
+            </div>
+
+            <div class="feature-row">
+                <div class="feature-name">Active Challenges</div>
+                <div class="tier-value">1</div>
+                <div class="tier-value">3</div>
+                <div class="tier-value">10</div>
+                <div class="tier-value yes">Unlimited</div>
+            </div>
+
+            <div class="feature-row">
+                <div class="feature-name">Contest Entries/Month</div>
+                <div class="tier-value">1</div>
+                <div class="tier-value">5</div>
+                <div class="tier-value">20</div>
+                <div class="tier-value yes">Unlimited</div>
+            </div>
+
+            <div class="feature-row">
+                <div class="feature-name">Private Picks</div>
+                <div class="tier-value no">No</div>
+                <div class="tier-value yes">Yes</div>
+                <div class="tier-value yes">Yes</div>
+                <div class="tier-value yes">Yes</div>
+            </div>
+
+            <div class="feature-row">
+                <div class="feature-name">Advanced Analytics</div>
+                <div class="tier-value no">No</div>
+                <div class="tier-value no">No</div>
+                <div class="tier-value yes">Yes</div>
+                <div class="tier-value yes">Yes</div>
+            </div>
+
+            <div class="feature-row">
+                <div class="feature-name">Premium Contests</div>
+                <div class="tier-value no">No</div>
+                <div class="tier-value no">No</div>
+                <div class="tier-value yes">Yes</div>
+                <div class="tier-value yes">Yes</div>
+            </div>
+
+            <div class="feature-row">
+                <div class="feature-name">Verified Badge</div>
+                <div class="tier-value no">No</div>
+                <div class="tier-value no">No</div>
+                <div class="tier-value yes">Yes</div>
+                <div class="tier-value yes">Yes</div>
+            </div>
+
+            <div class="feature-row">
+                <div class="feature-name">Ad-Free Experience</div>
+                <div class="tier-value no">No</div>
+                <div class="tier-value yes">Yes</div>
+                <div class="tier-value yes">Yes</div>
+                <div class="tier-value yes">Yes</div>
+            </div>
+
+            <div class="feature-row">
+                <div class="feature-name">API Access</div>
+                <div class="tier-value no">No</div>
+                <div class="tier-value no">No</div>
+                <div class="tier-value no">No</div>
+                <div class="tier-value yes">Yes</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analytics Preview -->
+    <section class="analytics-preview">
+        <h2>Premium Analytics Preview</h2>
+        <p>See exactly where your edge is. Break down your performance by sport, bet type, and more.</p>
+
+        <div class="analytics-grid">
+            <div class="analytics-card locked">
+                <h4>Best Sport</h4>
+                <div class="value">NBA</div>
+                <div class="label">+23.4 units</div>
+                <div class="premium-lock">🔒 Pro Required</div>
+            </div>
+
+            <div class="analytics-card locked">
+                <h4>Best Bet Type</h4>
+                <div class="value">Spreads</div>
+                <div class="label">58.3% win rate</div>
+                <div class="premium-lock">🔒 Pro Required</div>
+            </div>
+
+            <div class="analytics-card locked">
+                <h4>Best Streak</h4>
+                <div class="value">12</div>
+                <div class="label">consecutive wins</div>
+                <div class="premium-lock">🔒 Pro Required</div>
+            </div>
+
+            <div class="analytics-card locked">
+                <h4>Optimal Odds Range</h4>
+                <div class="value">+120 to +180</div>
+                <div class="label">highest ROI zone</div>
+                <div class="premium-lock">🔒 Pro Required</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 Trust My Record. All rights reserved. The future of transparent sports betting.</p>
+    </footer>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <span class="icon"></span>
+        <span class="message"></span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="static/js/backend-api.js?v=20260121"></script>
+    <script>
+        // State
+        let billingPeriod = 'monthly';
+        let tiers = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('[Premium] Initializing...');
+
+            // Update nav based on auth state
+            updateNav();
+
+            // Load tiers
+            await loadTiers();
+
+            // Load current subscription status
+            await loadSubscriptionStatus();
+        });
+
+        function updateNav() {
+            const loginLink = document.getElementById('loginLink');
+            const profileLink = document.getElementById('profileLink');
+
+            if (api.isLoggedIn()) {
+                loginLink.textContent = 'Logout';
+                loginLink.onclick = () => { api.logout(); location.reload(); };
+                profileLink.style.display = 'block';
+                profileLink.textContent = api.getCurrentUser()?.username || 'Profile';
+            } else {
+                loginLink.textContent = 'Login';
+                loginLink.href = 'index.html';
+                profileLink.style.display = 'none';
+            }
+        }
+
+        async function loadTiers() {
+            try {
+                const data = await api.getSubscriptionTiers();
+                tiers = data.tiers || [];
+                console.log('[Premium] Loaded tiers:', tiers);
+            } catch (err) {
+                console.error('[Premium] Failed to load tiers:', err);
+            }
+        }
+
+        async function loadSubscriptionStatus() {
+            if (!api.isLoggedIn()) {
+                document.getElementById('currentTier').textContent = 'Free (Not logged in)';
+                return;
+            }
+
+            try {
+                const status = await api.getSubscriptionStatus();
+                console.log('[Premium] Subscription status:', status);
+
+                const tierEl = document.getElementById('currentTier');
+                const expiryEl = document.getElementById('tierExpiry');
+                const banner = document.getElementById('statusBanner');
+
+                tierEl.textContent = status.display_name || 'Free';
+                tierEl.className = 'current-tier ' + (status.tier || 'free');
+
+                if (status.tier !== 'free' && status.expires_at) {
+                    expiryEl.textContent = 'Expires: ' + new Date(status.expires_at).toLocaleDateString();
+                    banner.classList.add('premium');
+                }
+
+                // Update button states
+                updateButtonStates(status.tier);
+
+                // If premium, unlock analytics preview
+                if (status.tier === 'pro' || status.tier === 'elite') {
+                    document.querySelectorAll('.analytics-card').forEach(card => {
+                        card.classList.remove('locked');
+                        const lock = card.querySelector('.premium-lock');
+                        if (lock) lock.remove();
+                    });
+                }
+
+            } catch (err) {
+                console.error('[Premium] Failed to load status:', err);
+            }
+        }
+
+        function updateButtonStates(currentTier) {
+            const tierOrder = ['free', 'basic', 'pro', 'elite'];
+            const currentIndex = tierOrder.indexOf(currentTier || 'free');
+
+            document.querySelectorAll('.pricing-card').forEach(card => {
+                const cardTier = card.dataset.tier;
+                const cardIndex = tierOrder.indexOf(cardTier);
+                const btn = card.querySelector('.upgrade-btn');
+
+                if (cardIndex <= currentIndex) {
+                    if (cardTier === currentTier) {
+                        btn.textContent = 'Current Plan';
+                        btn.disabled = true;
+                        btn.classList.remove('primary');
+                        btn.classList.add('secondary');
+                    } else if (cardIndex < currentIndex) {
+                        btn.textContent = 'Downgrade';
+                        btn.disabled = false;
+                        btn.classList.remove('primary');
+                        btn.classList.add('secondary');
+                    }
+                }
+            });
+        }
+
+        function toggleBilling() {
+            const toggle = document.getElementById('billingToggle');
+            const monthlyLabel = document.getElementById('monthlyLabel');
+            const yearlyLabel = document.getElementById('yearlyLabel');
+
+            if (billingPeriod === 'monthly') {
+                billingPeriod = 'yearly';
+                toggle.classList.add('yearly');
+                monthlyLabel.classList.remove('active');
+                yearlyLabel.classList.add('active');
+
+                // Update prices
+                document.getElementById('basicPrice').innerHTML = '$99.99<span>/yr</span>';
+                document.getElementById('basicOriginal').style.display = 'block';
+                document.getElementById('proPrice').innerHTML = '$199.99<span>/yr</span>';
+                document.getElementById('proOriginal').style.display = 'block';
+                document.getElementById('elitePrice').innerHTML = '$499.99<span>/yr</span>';
+                document.getElementById('eliteOriginal').style.display = 'block';
+            } else {
+                billingPeriod = 'monthly';
+                toggle.classList.remove('yearly');
+                monthlyLabel.classList.add('active');
+                yearlyLabel.classList.remove('active');
+
+                // Update prices
+                document.getElementById('basicPrice').innerHTML = '$9.99<span>/mo</span>';
+                document.getElementById('basicOriginal').style.display = 'none';
+                document.getElementById('proPrice').innerHTML = '$19.99<span>/mo</span>';
+                document.getElementById('proOriginal').style.display = 'none';
+                document.getElementById('elitePrice').innerHTML = '$49.99<span>/mo</span>';
+                document.getElementById('eliteOriginal').style.display = 'none';
+            }
+        }
+
+        async function upgrade(tier) {
+            if (!api.isLoggedIn()) {
+                showNotification('Please log in to upgrade', 'error');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+                return;
+            }
+
+            try {
+                const result = await api.upgradeSubscription(tier, billingPeriod);
+                showNotification(result.message || 'Upgrade successful!', 'success');
+
+                // Reload status
+                setTimeout(() => {
+                    loadSubscriptionStatus();
+                }, 1000);
+
+            } catch (err) {
+                showNotification(err.message || 'Upgrade failed', 'error');
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.className = 'notification show ' + type;
+            notification.querySelector('.message').textContent = message;
+            notification.querySelector('.icon').textContent = type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ';
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+    </script>
+</body>
+</html>

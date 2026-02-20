@@ -28,15 +28,14 @@ function updateProfilePage() {
 }
 
 function updateProfileStats() {
-    const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
-    const graded = picks.filter(p => p.status === 'win' || p.status === 'loss');
-    const wins = graded.filter(p => p.status === 'win').length;
-    const losses = graded.filter(p => p.status === 'loss').length;
+    const picks = window._cachedBackendPicks || [];
+    const graded = picks.filter(p => p.status === 'won' || p.status === 'lost');
+    const wins = graded.filter(p => p.status === 'won').length;
+    const losses = graded.filter(p => p.status === 'lost').length;
 
     let totalUnits = 0;
     graded.forEach(p => {
-        const units = parseFloat(p.units) || 1;
-        totalUnits += p.status === 'win' ? units : -units;
+        totalUnits += (parseFloat(p.result_units) || 0);
     });
 
     const winRate = graded.length > 0 ? ((wins / graded.length) * 100).toFixed(1) : '0.0';

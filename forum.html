@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum - TrustMyRecord</title>
+    <link rel="stylesheet" href="static/css/style.css">
+    <style>
+        /* 2+2 Style Forum CSS */
+        .forum-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .forum-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary-blue);
+        }
+
+        .forum-header h1 {
+            color: var(--primary-blue);
+            margin: 0;
+        }
+
+        .forum-stats {
+            display: flex;
+            gap: 30px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .forum-stats span strong {
+            color: var(--primary-blue);
+        }
+
+        /* Category List (2+2 Style) */
+        .category-list {
+            background: var(--surface-dark);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .category-header {
+            background: linear-gradient(90deg, #1a1a2e, #16213e);
+            padding: 12px 20px;
+            border-bottom: 2px solid var(--primary-blue);
+            display: grid;
+            grid-template-columns: 1fr 100px 100px 200px;
+            gap: 20px;
+            font-weight: bold;
+            color: var(--text-muted);
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .category-row {
+            display: grid;
+            grid-template-columns: 1fr 100px 100px 200px;
+            gap: 20px;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .category-row:hover {
+            background: rgba(0, 174, 255, 0.05);
+        }
+
+        .category-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+        }
+
+        .category-info h3 a {
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+
+        .category-info h3 a:hover {
+            text-decoration: underline;
+        }
+
+        .category-info p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .stat-cell {
+            text-align: center;
+            color: var(--text-light);
+        }
+
+        .latest-thread {
+            font-size: 13px;
+        }
+
+        .latest-thread .thread-title {
+            color: var(--text-light);
+            text-decoration: none;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .latest-thread .thread-title:hover {
+            color: var(--primary-blue);
+        }
+
+        .latest-thread .thread-meta {
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+
+        /* Thread List */
+        .thread-list {
+            background: var(--surface-dark);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .thread-header {
+            background: linear-gradient(90deg, #1a1a2e, #16213e);
+            padding: 12px 20px;
+            border-bottom: 2px solid var(--primary-blue);
+            display: grid;
+            grid-template-columns: 1fr 80px 80px 180px;
+            gap: 20px;
+            font-weight: bold;
+            color: var(--text-muted);
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .thread-row {
+            display: grid;
+            grid-template-columns: 1fr 80px 80px 180px;
+            gap: 20px;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+        }
+
+        .thread-row:hover {
+            background: rgba(0, 174, 255, 0.05);
+        }
+
+        .thread-row.pinned {
+            background: rgba(255, 193, 7, 0.1);
+        }
+
+        .thread-row.pinned .thread-title::before {
+            content: '📌 ';
+        }
+
+        .thread-info .thread-title {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 15px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .thread-info .thread-title:hover {
+            color: var(--primary-blue);
+        }
+
+        .thread-info .thread-author {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .thread-info .thread-author a {
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+
+        /* Post View (2+2 Classic Style) */
+        .post-container {
+            margin-bottom: 20px;
+        }
+
+        .post {
+            background: var(--surface-dark);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 180px 1fr;
+        }
+
+        .post-sidebar {
+            background: #1a1a2e;
+            padding: 15px;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .post-author-name {
+            color: var(--primary-blue);
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 10px;
+            display: block;
+            text-decoration: none;
+        }
+
+        .post-author-name:hover {
+            text-decoration: underline;
+        }
+
+        .post-author-stats {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.8;
+        }
+
+        .post-author-stats div {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .post-main {
+            padding: 15px 20px;
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .post-content {
+            line-height: 1.7;
+            color: var(--text-light);
+        }
+
+        .post-content p {
+            margin: 0 0 15px 0;
+        }
+
+        .post-actions {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 15px;
+        }
+
+        .post-action-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .post-action-btn:hover {
+            background: rgba(0, 174, 255, 0.1);
+            color: var(--primary-blue);
+        }
+
+        .post-action-btn.liked {
+            color: #f44336;
+        }
+
+        /* Quote Block */
+        .quote-block {
+            background: #1a1a2e;
+            border-left: 3px solid var(--primary-blue);
+            padding: 10px 15px;
+            margin: 10px 0;
+            font-style: italic;
+            color: var(--text-muted);
+        }
+
+        .quote-block .quote-author {
+            color: var(--primary-blue);
+            font-style: normal;
+            font-weight: bold;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        /* Reply Form */
+        .reply-form {
+            background: var(--surface-dark);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .reply-form h3 {
+            margin: 0 0 15px 0;
+            color: var(--primary-blue);
+        }
+
+        .reply-textarea {
+            width: 100%;
+            min-height: 150px;
+            background: #1a1a2e;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-light);
+            padding: 15px;
+            font-size: 14px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .reply-textarea:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .reply-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #00aeff, #0077ff);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 4px 12px rgba(0, 174, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .breadcrumb a {
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 20px;
+        }
+
+        .page-btn {
+            padding: 8px 14px;
+            background: var(--surface-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover, .page-btn.active {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+        }
+
+        /* New Thread Form */
+        .new-thread-form {
+            background: var(--surface-dark);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .new-thread-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: #1a1a2e;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        /* Search */
+        .forum-search {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 15px;
+            background: var(--surface-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-light);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: var(--text-muted);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .category-header, .category-row,
+            .thread-header, .thread-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .category-header > div:not(:first-child),
+            .thread-header > div:not(:first-child) {
+                display: none;
+            }
+
+            .post {
+                grid-template-columns: 1fr;
+            }
+
+            .post-sidebar {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo"><a href="index.html">TrustMyRecord</a></div>
+                <ul>
+                    <li><a href="index.html">Make Picks</a></li>
+                    <li><a href="challenges.html">Challenges</a></li>
+                    <li><a href="forum.html" class="active">Forum</a></li>
+                    <li><a href="trivia.html">Trivia</a></li>
+                    <li><a href="polls.html">Polls</a></li>
+                    <li id="authNav"></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="forum-container">
+        <!-- Forum Home View -->
+        <div id="forumHome">
+            <div class="forum-header">
+                <h1>Community Forum</h1>
+                <div class="forum-stats" id="forumStats">
+                    <span><strong id="totalThreads">0</strong> Threads</span>
+                    <span><strong id="totalPosts">0</strong> Posts</span>
+                    <span><strong id="activeUsers">0</strong> Active Users</span>
+                </div>
+            </div>
+
+            <div class="forum-search">
+                <input type="text" class="search-input" id="forumSearchInput" placeholder="Search forum...">
+                <button class="btn btn-primary" onclick="searchForum()">Search</button>
+            </div>
+
+            <div id="categoriesContainer">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    Loading categories...
+                </div>
+            </div>
+
+            <h2 style="color: var(--primary-blue); margin: 30px 0 15px;">Recent Threads</h2>
+            <div id="recentThreadsContainer">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    Loading recent threads...
+                </div>
+            </div>
+        </div>
+
+        <!-- Category View -->
+        <div id="categoryView" style="display: none;">
+            <div class="breadcrumb">
+                <a href="#" onclick="showForumHome(); return false;">Forum</a>
+                <span>></span>
+                <span id="categoryName">Category</span>
+            </div>
+
+            <div class="forum-header">
+                <div>
+                    <h1 id="categoryTitle">Category Name</h1>
+                    <p id="categoryDescription" style="color: var(--text-muted); margin: 5px 0 0;">Description</p>
+                </div>
+                <button class="btn btn-primary" onclick="toggleNewThreadForm()" id="newThreadBtn">New Thread</button>
+            </div>
+
+            <!-- New Thread Form -->
+            <div class="new-thread-form" id="newThreadForm">
+                <h3>Create New Thread</h3>
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" class="form-input" id="newThreadTitle" placeholder="Thread title..." maxlength="300">
+                </div>
+                <div class="form-group">
+                    <label>Content</label>
+                    <textarea class="reply-textarea" id="newThreadContent" placeholder="Write your post..."></textarea>
+                </div>
+                <div class="reply-actions">
+                    <button class="btn btn-secondary" onclick="toggleNewThreadForm()">Cancel</button>
+                    <button class="btn btn-primary" onclick="createThread()">Create Thread</button>
+                </div>
+            </div>
+
+            <div id="threadsContainer">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    Loading threads...
+                </div>
+            </div>
+
+            <div class="pagination" id="threadsPagination"></div>
+        </div>
+
+        <!-- Thread View -->
+        <div id="threadView" style="display: none;">
+            <div class="breadcrumb" id="threadBreadcrumb">
+                <a href="#" onclick="showForumHome(); return false;">Forum</a>
+                <span>></span>
+                <a href="#" id="threadCategoryLink">Category</a>
+                <span>></span>
+                <span id="threadTitleBreadcrumb">Thread</span>
+            </div>
+
+            <div class="forum-header">
+                <h1 id="threadTitle">Thread Title</h1>
+            </div>
+
+            <div id="postsContainer" class="post-container">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    Loading posts...
+                </div>
+            </div>
+
+            <div class="pagination" id="postsPagination"></div>
+
+            <!-- Reply Form -->
+            <div class="reply-form" id="replyForm">
+                <h3>Post Reply</h3>
+                <textarea class="reply-textarea" id="replyContent" placeholder="Write your reply..."></textarea>
+                <div class="reply-actions">
+                    <button class="btn btn-primary" onclick="postReply()">Post Reply</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Results -->
+        <div id="searchResults" style="display: none;">
+            <div class="breadcrumb">
+                <a href="#" onclick="showForumHome(); return false;">Forum</a>
+                <span>></span>
+                <span>Search Results</span>
+            </div>
+
+            <div class="forum-header">
+                <h1>Search Results for "<span id="searchQuery"></span>"</h1>
+            </div>
+
+            <div id="searchResultsContainer"></div>
+        </div>
+    </main>
+
+    <script src="static/js/backend-api.js"></script>
+    <script>
+        // State
+        let currentCategory = null;
+        let currentThread = null;
+        let currentPage = 1;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            updateAuthNav();
+            await loadForumHome();
+        });
+
+        function updateAuthNav() {
+            const authNav = document.getElementById('authNav');
+            if (api.isLoggedIn()) {
+                const user = api.getCurrentUser();
+                authNav.innerHTML = `
+                    <span style="color: var(--primary-blue);">@${user.username}</span>
+                    <a href="#" onclick="api.logout(); location.reload();" style="margin-left: 10px;">Logout</a>
+                `;
+            } else {
+                authNav.innerHTML = `<a href="index.html">Login</a>`;
+            }
+        }
+
+        // Load Forum Home
+        async function loadForumHome() {
+            try {
+                // Load stats
+                const stats = await api.getForumStats();
+                document.getElementById('totalThreads').textContent = stats.total_threads || 0;
+                document.getElementById('totalPosts').textContent = stats.total_posts || 0;
+                document.getElementById('activeUsers').textContent = stats.active_users || 0;
+
+                // Load categories
+                const categoriesData = await api.getForumCategories();
+                renderCategories(categoriesData.categories || []);
+
+                // Load recent threads
+                const recentData = await api.getRecentThreads(10);
+                renderRecentThreads(recentData.threads || []);
+            } catch (error) {
+                console.error('Error loading forum:', error);
+                document.getElementById('categoriesContainer').innerHTML =
+                    '<p style="color: #f44336; text-align: center;">Error loading forum. Please try again.</p>';
+            }
+        }
+
+        function renderCategories(categories) {
+            if (categories.length === 0) {
+                document.getElementById('categoriesContainer').innerHTML =
+                    '<p style="text-align: center; color: var(--text-muted);">No categories yet.</p>';
+                return;
+            }
+
+            let html = `
+                <div class="category-list">
+                    <div class="category-header">
+                        <div>Category</div>
+                        <div style="text-align: center;">Threads</div>
+                        <div style="text-align: center;">Posts</div>
+                        <div>Latest Thread</div>
+                    </div>
+            `;
+
+            categories.forEach(cat => {
+                const latest = cat.latest_thread;
+                html += `
+                    <div class="category-row">
+                        <div class="category-info">
+                            <h3><a href="#" onclick="loadCategory('${cat.slug}'); return false;">${cat.name}</a></h3>
+                            <p>${cat.description || ''}</p>
+                        </div>
+                        <div class="stat-cell">${cat.thread_count || 0}</div>
+                        <div class="stat-cell">${cat.post_count || 0}</div>
+                        <div class="latest-thread">
+                            ${latest ? `
+                                <a href="#" class="thread-title" onclick="loadThread(${latest.id}); return false;">
+                                    ${latest.title.substring(0, 40)}${latest.title.length > 40 ? '...' : ''}
+                                </a>
+                                <div class="thread-meta">
+                                    by ${latest.username} - ${formatDate(latest.created_at)}
+                                </div>
+                            ` : '<span style="color: var(--text-muted);">No threads</span>'}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            document.getElementById('categoriesContainer').innerHTML = html;
+        }
+
+        function renderRecentThreads(threads) {
+            if (threads.length === 0) {
+                document.getElementById('recentThreadsContainer').innerHTML =
+                    '<p style="text-align: center; color: var(--text-muted);">No threads yet.</p>';
+                return;
+            }
+
+            let html = `
+                <div class="thread-list">
+                    <div class="thread-header">
+                        <div>Thread</div>
+                        <div style="text-align: center;">Replies</div>
+                        <div style="text-align: center;">Views</div>
+                        <div>Last Post</div>
+                    </div>
+            `;
+
+            threads.forEach(thread => {
+                html += `
+                    <div class="thread-row ${thread.is_pinned ? 'pinned' : ''}">
+                        <div class="thread-info">
+                            <a href="#" class="thread-title" onclick="loadThread(${thread.id}); return false;">
+                                ${thread.title}
+                            </a>
+                            <div class="thread-author">
+                                by <a href="#">${thread.username}</a> in
+                                <a href="#" onclick="loadCategory('${thread.category_slug}'); return false;">${thread.category_name}</a>
+                            </div>
+                        </div>
+                        <div class="stat-cell">${thread.reply_count || 0}</div>
+                        <div class="stat-cell">${thread.view_count || 0}</div>
+                        <div class="latest-thread">
+                            <div class="thread-meta">
+                                ${thread.last_post_username ? `by ${thread.last_post_username}` : ''}<br>
+                                ${formatDate(thread.last_post_at || thread.created_at)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            document.getElementById('recentThreadsContainer').innerHTML = html;
+        }
+
+        // Load Category
+        async function loadCategory(slug, page = 1) {
+            currentCategory = slug;
+            currentPage = page;
+
+            document.getElementById('forumHome').style.display = 'none';
+            document.getElementById('threadView').style.display = 'none';
+            document.getElementById('searchResults').style.display = 'none';
+            document.getElementById('categoryView').style.display = 'block';
+
+            document.getElementById('threadsContainer').innerHTML =
+                '<div class="loading"><div class="loading-spinner"></div>Loading threads...</div>';
+
+            try {
+                const data = await api.request(`/forum/categories/${slug}?page=${page}&limit=25`);
+                currentCategory = data.category;
+
+                document.getElementById('categoryName').textContent = data.category.name;
+                document.getElementById('categoryTitle').textContent = data.category.name;
+                document.getElementById('categoryDescription').textContent = data.category.description || '';
+
+                // Show/hide new thread button based on login
+                document.getElementById('newThreadBtn').style.display = api.isLoggedIn() ? 'block' : 'none';
+
+                renderThreadList(data.threads || [], data.pagination);
+            } catch (error) {
+                console.error('Error loading category:', error);
+                document.getElementById('threadsContainer').innerHTML =
+                    '<p style="color: #f44336; text-align: center;">Error loading category.</p>';
+            }
+        }
+
+        function renderThreadList(threads, pagination) {
+            if (threads.length === 0) {
+                document.getElementById('threadsContainer').innerHTML =
+                    '<p style="text-align: center; color: var(--text-muted); padding: 30px;">No threads in this category yet. Be the first to post!</p>';
+                return;
+            }
+
+            let html = `
+                <div class="thread-list">
+                    <div class="thread-header">
+                        <div>Thread</div>
+                        <div style="text-align: center;">Replies</div>
+                        <div style="text-align: center;">Views</div>
+                        <div>Last Post</div>
+                    </div>
+            `;
+
+            threads.forEach(thread => {
+                html += `
+                    <div class="thread-row ${thread.is_pinned ? 'pinned' : ''}">
+                        <div class="thread-info">
+                            <a href="#" class="thread-title" onclick="loadThread(${thread.id}); return false;">
+                                ${thread.title}
+                            </a>
+                            <div class="thread-author">
+                                by <a href="#">${thread.username}</a> - ${formatDate(thread.created_at)}
+                            </div>
+                        </div>
+                        <div class="stat-cell">${thread.post_count || 0}</div>
+                        <div class="stat-cell">${thread.view_count || 0}</div>
+                        <div class="latest-thread">
+                            <div class="thread-meta">
+                                ${thread.last_post_username ? `by ${thread.last_post_username}` : ''}<br>
+                                ${formatDate(thread.last_post_at || thread.created_at)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            document.getElementById('threadsContainer').innerHTML = html;
+
+            // Pagination
+            renderPagination('threadsPagination', pagination, (p) => loadCategory(currentCategory.slug, p));
+        }
+
+        // Load Thread
+        async function loadThread(threadId, page = 1) {
+            currentThread = threadId;
+            currentPage = page;
+
+            document.getElementById('forumHome').style.display = 'none';
+            document.getElementById('categoryView').style.display = 'none';
+            document.getElementById('searchResults').style.display = 'none';
+            document.getElementById('threadView').style.display = 'block';
+
+            document.getElementById('postsContainer').innerHTML =
+                '<div class="loading"><div class="loading-spinner"></div>Loading posts...</div>';
+
+            try {
+                const data = await api.getThread(threadId);
+                currentThread = data.thread;
+
+                document.getElementById('threadTitle').textContent = data.thread.title;
+                document.getElementById('threadTitleBreadcrumb').textContent = data.thread.title.substring(0, 50) + (data.thread.title.length > 50 ? '...' : '');
+                document.getElementById('threadCategoryLink').textContent = data.thread.category_name;
+                document.getElementById('threadCategoryLink').onclick = () => { loadCategory(data.thread.category_slug); return false; };
+
+                // Show/hide reply form based on login and thread lock status
+                document.getElementById('replyForm').style.display =
+                    (api.isLoggedIn() && !data.thread.is_locked) ? 'block' : 'none';
+
+                renderPosts(data.thread, data.posts || [], data.pagination);
+            } catch (error) {
+                console.error('Error loading thread:', error);
+                document.getElementById('postsContainer').innerHTML =
+                    '<p style="color: #f44336; text-align: center;">Error loading thread.</p>';
+            }
+        }
+
+        function renderPosts(thread, posts, pagination) {
+            // First post is the thread itself
+            let html = `
+                <div class="post">
+                    <div class="post-sidebar">
+                        <a href="#" class="post-author-name">${thread.username}</a>
+                        <div class="post-author-stats">
+                            <div><span>Joined:</span><span>${formatDate(thread.user_joined, true)}</span></div>
+                            <div><span>Picks:</span><span>${thread.user_picks || 0}</span></div>
+                        </div>
+                    </div>
+                    <div class="post-main">
+                        <div class="post-header">
+                            <span>Posted: ${formatDate(thread.created_at)}</span>
+                            <span>#1</span>
+                        </div>
+                        <div class="post-content">${formatContent(thread.content)}</div>
+                    </div>
+                </div>
+            `;
+
+            // Replies
+            posts.forEach((post, index) => {
+                html += `
+                    <div class="post" id="post-${post.id}">
+                        <div class="post-sidebar">
+                            <a href="#" class="post-author-name">${post.username}</a>
+                            <div class="post-author-stats">
+                                <div><span>Joined:</span><span>${formatDate(post.user_joined, true)}</span></div>
+                                <div><span>Posts:</span><span>${post.user_post_count || 0}</span></div>
+                                <div><span>Picks:</span><span>${post.user_picks || 0}</span></div>
+                            </div>
+                        </div>
+                        <div class="post-main">
+                            <div class="post-header">
+                                <span>Posted: ${formatDate(post.created_at)}${post.is_edited ? ' (edited)' : ''}</span>
+                                <span>#${index + 2}</span>
+                            </div>
+                            <div class="post-content">${formatContent(post.content)}</div>
+                            <div class="post-actions">
+                                <button class="post-action-btn ${post.user_liked ? 'liked' : ''}" onclick="likePost(${post.id})">
+                                    ❤️ ${post.like_count || 0}
+                                </button>
+                                <button class="post-action-btn" onclick="quotePost(${post.id}, '${post.username}', '${escapeQuotes(post.content)}')">
+                                    💬 Quote
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('postsContainer').innerHTML = html;
+
+            // Pagination
+            renderPagination('postsPagination', pagination, (p) => loadThread(currentThread.id, p));
+        }
+
+        // Actions
+        function toggleNewThreadForm() {
+            const form = document.getElementById('newThreadForm');
+            form.classList.toggle('active');
+        }
+
+        async function createThread() {
+            if (!api.isLoggedIn()) {
+                alert('Please log in to create a thread.');
+                return;
+            }
+
+            const title = document.getElementById('newThreadTitle').value.trim();
+            const content = document.getElementById('newThreadContent').value.trim();
+
+            if (title.length < 5) {
+                alert('Title must be at least 5 characters.');
+                return;
+            }
+
+            if (content.length < 10) {
+                alert('Content must be at least 10 characters.');
+                return;
+            }
+
+            try {
+                const result = await api.request('/forum/threads', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        category_id: currentCategory.id,
+                        title,
+                        content
+                    })
+                });
+
+                // Clear form and reload
+                document.getElementById('newThreadTitle').value = '';
+                document.getElementById('newThreadContent').value = '';
+                toggleNewThreadForm();
+
+                loadThread(result.thread.id);
+            } catch (error) {
+                alert('Error creating thread: ' + error.message);
+            }
+        }
+
+        async function postReply() {
+            if (!api.isLoggedIn()) {
+                alert('Please log in to reply.');
+                return;
+            }
+
+            const content = document.getElementById('replyContent').value.trim();
+
+            if (content.length < 1) {
+                alert('Reply cannot be empty.');
+                return;
+            }
+
+            try {
+                await api.replyToThread(currentThread.id, content);
+                document.getElementById('replyContent').value = '';
+                loadThread(currentThread.id, currentPage);
+            } catch (error) {
+                alert('Error posting reply: ' + error.message);
+            }
+        }
+
+        async function likePost(postId) {
+            if (!api.isLoggedIn()) {
+                alert('Please log in to like posts.');
+                return;
+            }
+
+            try {
+                await api.likeForumPost(postId);
+                loadThread(currentThread.id, currentPage);
+            } catch (error) {
+                console.error('Error liking post:', error);
+            }
+        }
+
+        function quotePost(postId, username, content) {
+            const textarea = document.getElementById('replyContent');
+            const quote = `[quote="${username}"]${content.substring(0, 500)}[/quote]\n\n`;
+            textarea.value = quote + textarea.value;
+            textarea.focus();
+        }
+
+        async function searchForum() {
+            const query = document.getElementById('forumSearchInput').value.trim();
+            if (query.length < 3) {
+                alert('Search query must be at least 3 characters.');
+                return;
+            }
+
+            document.getElementById('forumHome').style.display = 'none';
+            document.getElementById('categoryView').style.display = 'none';
+            document.getElementById('threadView').style.display = 'none';
+            document.getElementById('searchResults').style.display = 'block';
+
+            document.getElementById('searchQuery').textContent = query;
+            document.getElementById('searchResultsContainer').innerHTML =
+                '<div class="loading"><div class="loading-spinner"></div>Searching...</div>';
+
+            try {
+                const data = await api.searchForum(query);
+                renderSearchResults(data.results || []);
+            } catch (error) {
+                document.getElementById('searchResultsContainer').innerHTML =
+                    '<p style="color: #f44336; text-align: center;">Error searching. Please try again.</p>';
+            }
+        }
+
+        function renderSearchResults(results) {
+            if (results.length === 0) {
+                document.getElementById('searchResultsContainer').innerHTML =
+                    '<p style="text-align: center; color: var(--text-muted); padding: 30px;">No results found.</p>';
+                return;
+            }
+
+            let html = `<div class="thread-list">`;
+            results.forEach(thread => {
+                html += `
+                    <div class="thread-row">
+                        <div class="thread-info">
+                            <a href="#" class="thread-title" onclick="loadThread(${thread.id}); return false;">
+                                ${thread.title}
+                            </a>
+                            <div class="thread-author">
+                                by <a href="#">${thread.username}</a> in
+                                <a href="#" onclick="loadCategory('${thread.category_slug}'); return false;">${thread.category_name}</a>
+                            </div>
+                        </div>
+                        <div class="stat-cell">${thread.reply_count || 0}</div>
+                        <div class="stat-cell">${thread.view_count || 0}</div>
+                        <div class="latest-thread">
+                            <div class="thread-meta">${formatDate(thread.created_at)}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            document.getElementById('searchResultsContainer').innerHTML = html;
+        }
+
+        function showForumHome() {
+            document.getElementById('categoryView').style.display = 'none';
+            document.getElementById('threadView').style.display = 'none';
+            document.getElementById('searchResults').style.display = 'none';
+            document.getElementById('forumHome').style.display = 'block';
+        }
+
+        // Helpers
+        function renderPagination(containerId, pagination, callback) {
+            if (!pagination || pagination.pages <= 1) {
+                document.getElementById(containerId).innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            for (let i = 1; i <= pagination.pages; i++) {
+                html += `<button class="page-btn ${i === pagination.page ? 'active' : ''}" onclick="(${callback})(${i})">${i}</button>`;
+            }
+            document.getElementById(containerId).innerHTML = html;
+        }
+
+        function formatDate(dateStr, dateOnly = false) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            if (dateOnly) {
+                return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+            }
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric', month: 'short', day: 'numeric',
+                hour: 'numeric', minute: '2-digit'
+            });
+        }
+
+        function formatContent(content) {
+            if (!content) return '';
+            // Basic formatting - convert line breaks and handle quotes
+            let formatted = content
+                .replace(/\n/g, '<br>')
+                .replace(/\[quote="([^"]+)"\]([\s\S]*?)\[\/quote\]/g,
+                    '<div class="quote-block"><div class="quote-author">$1 wrote:</div>$2</div>');
+            return formatted;
+        }
+
+        function escapeQuotes(str) {
+            return str.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n');
+        }
+    </script>
+</body>
+</html>

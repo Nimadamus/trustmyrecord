@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trivia - TrustMyRecord</title>
+    <link rel="stylesheet" href="static/css/style.css">
+    <style>
+        .trivia-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .trivia-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--primary-blue);
+        }
+
+        .trivia-header h1 {
+            color: var(--primary-blue);
+            margin: 0 0 10px 0;
+            font-size: 2.5rem;
+        }
+
+        .trivia-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            color: var(--text-muted);
+        }
+
+        .trivia-stats span strong {
+            color: var(--primary-blue);
+        }
+
+        /* Categories Grid */
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .category-card {
+            background: var(--surface-dark);
+            border-radius: 12px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .category-card:hover {
+            border-color: var(--primary-blue);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 174, 255, 0.2);
+        }
+
+        .category-card h3 {
+            color: var(--primary-blue);
+            margin: 0 0 10px 0;
+        }
+
+        .category-card p {
+            color: var(--text-muted);
+            margin: 0 0 15px 0;
+            font-size: 14px;
+        }
+
+        .category-card .category-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Question Display */
+        .question-container {
+            background: var(--surface-dark);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+        }
+
+        .timer-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+        }
+
+        .timer-ring {
+            transform: rotate(-90deg);
+        }
+
+        .timer-ring-bg {
+            fill: none;
+            stroke: #333;
+            stroke-width: 8;
+        }
+
+        .timer-ring-progress {
+            fill: none;
+            stroke: var(--primary-blue);
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.1s linear;
+        }
+
+        .timer-ring-progress.warning {
+            stroke: #ffc107;
+        }
+
+        .timer-ring-progress.danger {
+            stroke: #f44336;
+        }
+
+        .timer-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--text-light);
+        }
+
+        .question-difficulty {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .difficulty-easy {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+
+        .difficulty-medium {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .difficulty-hard {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+        }
+
+        .question-text {
+            font-size: 1.5rem;
+            color: var(--text-light);
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .question-points {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .question-points strong {
+            color: #ffc107;
+        }
+
+        /* Answer Options */
+        .answers-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .answer-btn {
+            padding: 20px;
+            background: #1a1a2e;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-light);
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .answer-btn:hover:not(:disabled) {
+            border-color: var(--primary-blue);
+            background: rgba(0, 174, 255, 0.1);
+        }
+
+        .answer-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .answer-btn.correct {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .answer-btn.incorrect {
+            border-color: #f44336;
+            background: rgba(244, 67, 54, 0.2);
+        }
+
+        .answer-btn.selected {
+            border-color: var(--primary-blue);
+            background: rgba(0, 174, 255, 0.2);
+        }
+
+        /* Result Display */
+        .result-display {
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 30px;
+        }
+
+        .result-correct {
+            background: rgba(76, 175, 80, 0.1);
+            border: 2px solid #4caf50;
+        }
+
+        .result-incorrect {
+            background: rgba(244, 67, 54, 0.1);
+            border: 2px solid #f44336;
+        }
+
+        .result-display h3 {
+            margin: 0 0 15px 0;
+        }
+
+        .result-correct h3 {
+            color: #4caf50;
+        }
+
+        .result-incorrect h3 {
+            color: #f44336;
+        }
+
+        .result-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .result-stat {
+            text-align: center;
+        }
+
+        .result-stat .value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+        }
+
+        .result-stat .label {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        /* Speed Bonus Animation */
+        .speed-bonus {
+            font-size: 1.2rem;
+            color: #ffc107;
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        /* Leaderboard */
+        .leaderboard {
+            background: var(--surface-dark);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .leaderboard-header {
+            background: linear-gradient(90deg, #1a1a2e, #16213e);
+            padding: 15px 20px;
+            border-bottom: 2px solid var(--primary-blue);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .leaderboard-header h3 {
+            margin: 0;
+            color: var(--primary-blue);
+        }
+
+        .leaderboard-row {
+            display: grid;
+            grid-template-columns: 50px 1fr 100px 80px;
+            gap: 15px;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+        }
+
+        .leaderboard-row:hover {
+            background: rgba(0, 174, 255, 0.05);
+        }
+
+        .rank {
+            font-weight: bold;
+            color: var(--text-muted);
+        }
+
+        .rank-1 { color: #ffd700; }
+        .rank-2 { color: #c0c0c0; }
+        .rank-3 { color: #cd7f32; }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: var(--primary-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Create Question Form */
+        .create-form {
+            background: var(--surface-dark);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .create-form h3 {
+            color: var(--primary-blue);
+            margin: 0 0 20px 0;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 15px;
+            background: #1a1a2e;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .answers-form {
+            margin-top: 20px;
+        }
+
+        .answer-input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .answer-input-row input[type="text"] {
+            flex: 1;
+        }
+
+        .answer-input-row input[type="radio"] {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #00aeff, #0077ff);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 4px 15px rgba(0, 174, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+        }
+
+        .btn-large {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-light);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn.active {
+            color: var(--primary-blue);
+            background: rgba(0, 174, 255, 0.1);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: var(--text-muted);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .answers-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .leaderboard-row {
+                grid-template-columns: 40px 1fr 80px;
+            }
+
+            .leaderboard-row > div:nth-child(4) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo"><a href="index.html">TrustMyRecord</a></div>
+                <ul>
+                    <li><a href="index.html">Make Picks</a></li>
+                    <li><a href="challenges.html">Challenges</a></li>
+                    <li><a href="forum.html">Forum</a></li>
+                    <li><a href="trivia.html" class="active">Trivia</a></li>
+                    <li><a href="polls.html">Polls</a></li>
+                    <li id="authNav"></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="trivia-container">
+        <!-- Trivia Home -->
+        <div id="triviaHome">
+            <div class="trivia-header">
+                <h1>Sports Trivia</h1>
+                <p style="color: var(--text-muted);">Test your sports knowledge - faster answers earn more points!</p>
+                <div class="trivia-stats" id="triviaStats">
+                    <span><strong id="totalQuestions">0</strong> Questions</span>
+                    <span><strong id="totalPlayers">0</strong> Players</span>
+                    <span><strong id="totalAttempts">0</strong> Attempts</span>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('play')">Play</button>
+                <button class="tab-btn" onclick="showTab('leaderboard')">Leaderboard</button>
+                <button class="tab-btn" onclick="showTab('create')">Create Question</button>
+            </div>
+
+            <!-- Play Tab -->
+            <div id="playTab">
+                <h2 style="color: var(--text-light); margin-bottom: 20px;">Choose a Category</h2>
+                <div class="categories-grid" id="categoriesGrid">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        Loading categories...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leaderboard Tab -->
+            <div id="leaderboardTab" style="display: none;">
+                <div class="leaderboard" id="leaderboardContainer">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        Loading leaderboard...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Tab -->
+            <div id="createTab" style="display: none;">
+                <div class="create-form">
+                    <h3>Create a Trivia Question</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select class="form-select" id="questionCategory">
+                                <option value="">Select category...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Difficulty</label>
+                            <select class="form-select" id="questionDifficulty">
+                                <option value="easy">Easy (100 pts)</option>
+                                <option value="medium" selected>Medium (200 pts)</option>
+                                <option value="hard">Hard (300 pts)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Question</label>
+                        <textarea class="form-textarea" id="questionText" placeholder="Enter your trivia question..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Time Limit (seconds)</label>
+                            <input type="number" class="form-input" id="questionTime" value="30" min="5" max="120">
+                        </div>
+                        <div class="form-group">
+                            <label>Points</label>
+                            <input type="number" class="form-input" id="questionPoints" value="100" min="10" max="1000">
+                        </div>
+                    </div>
+                    <div class="answers-form">
+                        <label>Answers (select the correct one)</label>
+                        <div id="answerInputs">
+                            <div class="answer-input-row">
+                                <input type="radio" name="correctAnswer" value="0" checked>
+                                <input type="text" class="form-input" placeholder="Answer 1 (correct)">
+                            </div>
+                            <div class="answer-input-row">
+                                <input type="radio" name="correctAnswer" value="1">
+                                <input type="text" class="form-input" placeholder="Answer 2">
+                            </div>
+                            <div class="answer-input-row">
+                                <input type="radio" name="correctAnswer" value="2">
+                                <input type="text" class="form-input" placeholder="Answer 3">
+                            </div>
+                            <div class="answer-input-row">
+                                <input type="radio" name="correctAnswer" value="3">
+                                <input type="text" class="form-input" placeholder="Answer 4">
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="createQuestion()">Create Question</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Question View -->
+        <div id="questionView" style="display: none;">
+            <div class="question-container">
+                <div class="timer-container">
+                    <svg class="timer-ring" width="120" height="120">
+                        <circle class="timer-ring-bg" cx="60" cy="60" r="52"></circle>
+                        <circle class="timer-ring-progress" id="timerProgress" cx="60" cy="60" r="52"
+                                stroke-dasharray="326.73" stroke-dashoffset="0"></circle>
+                    </svg>
+                    <div class="timer-text" id="timerText">30</div>
+                </div>
+
+                <span class="question-difficulty" id="questionDifficultyDisplay">MEDIUM</span>
+
+                <p class="question-text" id="questionTextDisplay">Loading question...</p>
+
+                <p class="question-points">
+                    Base: <strong id="basePoints">100</strong> pts |
+                    Speed Bonus: up to <strong>2x</strong>
+                </p>
+
+                <div class="answers-grid" id="answersGrid">
+                    <!-- Answers will be rendered here -->
+                </div>
+
+                <div class="result-display" id="resultDisplay" style="display: none;">
+                    <h3 id="resultTitle">Correct!</h3>
+                    <div class="result-stats">
+                        <div class="result-stat">
+                            <div class="value" id="resultPoints">+150</div>
+                            <div class="label">Points Earned</div>
+                        </div>
+                        <div class="result-stat">
+                            <div class="value" id="resultTime">2.3s</div>
+                            <div class="label">Response Time</div>
+                        </div>
+                        <div class="result-stat">
+                            <div class="value speed-bonus" id="resultBonus">1.5x</div>
+                            <div class="label">Speed Bonus</div>
+                        </div>
+                    </div>
+                    <p id="correctAnswerText" style="color: var(--text-muted);"></p>
+                    <div style="margin-top: 20px;">
+                        <button class="btn btn-primary btn-large" onclick="playNext()">Next Question</button>
+                        <button class="btn btn-secondary" onclick="backToCategories()">Back to Categories</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="static/js/backend-api.js"></script>
+    <script>
+        // State
+        let currentCategory = null;
+        let currentAttempt = null;
+        let timerInterval = null;
+        let timeRemaining = 0;
+        let timeLimit = 0;
+        let answered = false;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            updateAuthNav();
+            await loadTriviaHome();
+        });
+
+        function updateAuthNav() {
+            const authNav = document.getElementById('authNav');
+            if (api.isLoggedIn()) {
+                const user = api.getCurrentUser();
+                authNav.innerHTML = `
+                    <span style="color: var(--primary-blue);">@${user.username}</span>
+                    <a href="#" onclick="api.logout(); location.reload();" style="margin-left: 10px;">Logout</a>
+                `;
+            } else {
+                authNav.innerHTML = `<a href="index.html">Login</a>`;
+            }
+        }
+
+        // Load Home
+        async function loadTriviaHome() {
+            try {
+                // Load stats
+                const stats = await api.getTriviaStats();
+                document.getElementById('totalQuestions').textContent = stats.total_questions || 0;
+                document.getElementById('totalPlayers').textContent = stats.unique_players || 0;
+                document.getElementById('totalAttempts').textContent = stats.total_attempts || 0;
+
+                // Load categories
+                const categoriesData = await api.getTriviaCategories();
+                renderCategories(categoriesData.categories || []);
+
+                // Load leaderboard
+                await loadLeaderboard();
+
+                // Populate category select
+                const select = document.getElementById('questionCategory');
+                (categoriesData.categories || []).forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.id;
+                    option.textContent = cat.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading trivia:', error);
+            }
+        }
+
+        function renderCategories(categories) {
+            if (categories.length === 0) {
+                document.getElementById('categoriesGrid').innerHTML =
+                    '<p style="text-align: center; color: var(--text-muted); grid-column: 1/-1;">No categories available yet.</p>';
+                return;
+            }
+
+            const icons = {
+                'NFL': '🏈', 'NBA': '🏀', 'MLB': '⚾', 'NHL': '🏒',
+                'Soccer': '⚽', 'General': '🎯', 'History': '📚'
+            };
+
+            let html = '';
+            categories.forEach(cat => {
+                const icon = icons[cat.name] || '❓';
+                html += `
+                    <div class="category-card" onclick="startCategory('${cat.slug}')">
+                        <h3>${icon} ${cat.name}</h3>
+                        <p>${cat.description || 'Test your knowledge!'}</p>
+                        <div class="category-stats">
+                            <span>${cat.question_count || 0} questions</span>
+                            <span>${cat.players_count || 0} players</span>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('categoriesGrid').innerHTML = html;
+        }
+
+        async function loadLeaderboard() {
+            try {
+                const data = await api.getTriviaLeaderboard({ limit: 20 });
+                renderLeaderboard(data.leaderboard || []);
+            } catch (error) {
+                console.error('Error loading leaderboard:', error);
+            }
+        }
+
+        function renderLeaderboard(leaderboard) {
+            if (leaderboard.length === 0) {
+                document.getElementById('leaderboardContainer').innerHTML =
+                    '<p style="text-align: center; padding: 30px; color: var(--text-muted);">No scores yet. Be the first!</p>';
+                return;
+            }
+
+            let html = `
+                <div class="leaderboard-header">
+                    <h3>Top Players</h3>
+                </div>
+            `;
+
+            leaderboard.forEach(player => {
+                html += `
+                    <div class="leaderboard-row">
+                        <div class="rank rank-${player.rank}">#${player.rank}</div>
+                        <div class="user-info">
+                            <div class="user-avatar">${player.username.charAt(0).toUpperCase()}</div>
+                            <span>${player.username}</span>
+                        </div>
+                        <div style="text-align: right; color: var(--primary-blue); font-weight: bold;">
+                            ${player.total_points.toLocaleString()}
+                        </div>
+                        <div style="text-align: right; color: var(--text-muted); font-size: 13px;">
+                            ${player.accuracy || 0}% acc
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('leaderboardContainer').innerHTML = html;
+        }
+
+        // Tabs
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.getElementById('playTab').style.display = tabName === 'play' ? 'block' : 'none';
+            document.getElementById('leaderboardTab').style.display = tabName === 'leaderboard' ? 'block' : 'none';
+            document.getElementById('createTab').style.display = tabName === 'create' ? 'block' : 'none';
+        }
+
+        // Start Category
+        async function startCategory(slug) {
+            if (!api.isLoggedIn()) {
+                alert('Please log in to play trivia.');
+                return;
+            }
+
+            currentCategory = slug;
+            await loadRandomQuestion();
+        }
+
+        async function loadRandomQuestion() {
+            try {
+                const data = await api.getRandomTriviaQuestion(currentCategory);
+                if (data.question_id) {
+                    await playQuestion(data.question_id);
+                } else {
+                    alert('No questions available in this category.');
+                    backToCategories();
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+                backToCategories();
+            }
+        }
+
+        async function playQuestion(questionId) {
+            try {
+                const data = await api.playTriviaQuestion(questionId);
+
+                currentAttempt = {
+                    id: data.attempt_id,
+                    questionId: questionId,
+                    startTime: new Date(data.server_time)
+                };
+
+                // Show question view
+                document.getElementById('triviaHome').style.display = 'none';
+                document.getElementById('questionView').style.display = 'block';
+
+                // Render question
+                renderQuestion(data.question, data.answers);
+
+                // Start timer
+                startTimer(data.question.time_limit_seconds);
+            } catch (error) {
+                alert('Error loading question: ' + error.message);
+                backToCategories();
+            }
+        }
+
+        function renderQuestion(question, answers) {
+            answered = false;
+
+            // Difficulty
+            const diffEl = document.getElementById('questionDifficultyDisplay');
+            diffEl.textContent = question.difficulty.toUpperCase();
+            diffEl.className = `question-difficulty difficulty-${question.difficulty}`;
+
+            // Question text
+            document.getElementById('questionTextDisplay').textContent = question.question_text;
+            document.getElementById('basePoints').textContent = question.points;
+
+            // Answers
+            let html = '';
+            answers.forEach(answer => {
+                html += `
+                    <button class="answer-btn" onclick="submitAnswer(${answer.id})" id="answer-${answer.id}">
+                        ${answer.answer_text}
+                    </button>
+                `;
+            });
+            document.getElementById('answersGrid').innerHTML = html;
+
+            // Hide result
+            document.getElementById('resultDisplay').style.display = 'none';
+        }
+
+        function startTimer(seconds) {
+            timeLimit = seconds;
+            timeRemaining = seconds;
+
+            const circumference = 2 * Math.PI * 52;
+            const timerProgress = document.getElementById('timerProgress');
+            const timerText = document.getElementById('timerText');
+
+            timerProgress.style.strokeDasharray = circumference;
+            timerProgress.style.strokeDashoffset = 0;
+            timerProgress.className = 'timer-ring-progress';
+
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeRemaining -= 0.1;
+
+                if (timeRemaining <= 0) {
+                    timeRemaining = 0;
+                    clearInterval(timerInterval);
+                    if (!answered) {
+                        timeOut();
+                    }
+                }
+
+                // Update display
+                timerText.textContent = Math.ceil(timeRemaining);
+
+                // Update ring
+                const offset = circumference * (1 - timeRemaining / timeLimit);
+                timerProgress.style.strokeDashoffset = offset;
+
+                // Color changes
+                if (timeRemaining <= 5) {
+                    timerProgress.classList.add('danger');
+                    timerProgress.classList.remove('warning');
+                } else if (timeRemaining <= 10) {
+                    timerProgress.classList.add('warning');
+                }
+            }, 100);
+        }
+
+        async function submitAnswer(answerId) {
+            if (answered) return;
+            answered = true;
+            clearInterval(timerInterval);
+
+            // Disable all buttons and mark selected
+            document.querySelectorAll('.answer-btn').forEach(btn => {
+                btn.disabled = true;
+            });
+            document.getElementById(`answer-${answerId}`).classList.add('selected');
+
+            try {
+                const result = await api.submitTriviaAnswer(
+                    currentAttempt.questionId,
+                    currentAttempt.id,
+                    answerId
+                );
+
+                showResult(result, answerId);
+            } catch (error) {
+                alert('Error submitting answer: ' + error.message);
+            }
+        }
+
+        function timeOut() {
+            answered = true;
+            clearInterval(timerInterval);
+
+            document.querySelectorAll('.answer-btn').forEach(btn => {
+                btn.disabled = true;
+            });
+
+            const resultDisplay = document.getElementById('resultDisplay');
+            resultDisplay.className = 'result-display result-incorrect';
+            resultDisplay.style.display = 'block';
+
+            document.getElementById('resultTitle').textContent = "Time's Up!";
+            document.getElementById('resultPoints').textContent = '0';
+            document.getElementById('resultTime').textContent = `${timeLimit}s`;
+            document.getElementById('resultBonus').textContent = '0x';
+            document.getElementById('correctAnswerText').textContent = '';
+        }
+
+        function showResult(result, selectedAnswerId) {
+            // Mark correct/incorrect answers
+            document.querySelectorAll('.answer-btn').forEach(btn => {
+                const id = parseInt(btn.id.replace('answer-', ''));
+                if (id === result.correct_answer.id) {
+                    btn.classList.add('correct');
+                } else if (id === selectedAnswerId && !result.is_correct) {
+                    btn.classList.add('incorrect');
+                }
+            });
+
+            // Show result panel
+            const resultDisplay = document.getElementById('resultDisplay');
+            resultDisplay.className = `result-display ${result.is_correct ? 'result-correct' : 'result-incorrect'}`;
+            resultDisplay.style.display = 'block';
+
+            document.getElementById('resultTitle').textContent = result.is_correct ?
+                (result.timed_out ? "Time's Up!" : 'Correct!') : 'Incorrect';
+
+            document.getElementById('resultPoints').textContent =
+                (result.points_earned > 0 ? '+' : '') + result.points_earned;
+
+            document.getElementById('resultTime').textContent =
+                (result.response_time_ms / 1000).toFixed(1) + 's';
+
+            document.getElementById('resultBonus').textContent = result.speed_bonus + 'x';
+
+            document.getElementById('correctAnswerText').textContent = result.is_correct ?
+                '' : `Correct answer: ${result.correct_answer.answer_text}`;
+        }
+
+        async function playNext() {
+            document.getElementById('resultDisplay').style.display = 'none';
+            await loadRandomQuestion();
+        }
+
+        function backToCategories() {
+            clearInterval(timerInterval);
+            document.getElementById('questionView').style.display = 'none';
+            document.getElementById('triviaHome').style.display = 'block';
+        }
+
+        // Create Question
+        async function createQuestion() {
+            if (!api.isLoggedIn()) {
+                alert('Please log in to create questions.');
+                return;
+            }
+
+            const categoryId = document.getElementById('questionCategory').value;
+            const difficulty = document.getElementById('questionDifficulty').value;
+            const questionText = document.getElementById('questionText').value.trim();
+            const timeLimit = parseInt(document.getElementById('questionTime').value);
+            const points = parseInt(document.getElementById('questionPoints').value);
+
+            if (!categoryId) {
+                alert('Please select a category.');
+                return;
+            }
+
+            if (questionText.length < 10) {
+                alert('Question must be at least 10 characters.');
+                return;
+            }
+
+            // Gather answers
+            const answerInputs = document.querySelectorAll('#answerInputs input[type="text"]');
+            const correctIndex = parseInt(document.querySelector('input[name="correctAnswer"]:checked').value);
+
+            const answers = [];
+            answerInputs.forEach((input, index) => {
+                const text = input.value.trim();
+                if (text) {
+                    answers.push({
+                        answer_text: text,
+                        is_correct: index === correctIndex
+                    });
+                }
+            });
+
+            if (answers.length < 2) {
+                alert('Please provide at least 2 answers.');
+                return;
+            }
+
+            if (!answers.some(a => a.is_correct)) {
+                alert('Please mark one answer as correct.');
+                return;
+            }
+
+            try {
+                await api.createTriviaQuestion({
+                    category_id: parseInt(categoryId),
+                    question_text: questionText,
+                    difficulty,
+                    time_limit_seconds: timeLimit,
+                    points,
+                    answers
+                });
+
+                alert('Question created successfully!');
+
+                // Clear form
+                document.getElementById('questionText').value = '';
+                answerInputs.forEach(input => input.value = '');
+
+                // Reload stats
+                await loadTriviaHome();
+                showTab('play');
+            } catch (error) {
+                alert('Error creating question: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

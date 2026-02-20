@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Polls - TrustMyRecord</title>
+    <link rel="stylesheet" href="static/css/style.css">
+    <style>
+        .polls-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .polls-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--primary-blue);
+        }
+
+        .polls-header h1 {
+            color: var(--primary-blue);
+            margin: 0 0 10px 0;
+        }
+
+        .polls-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            color: var(--text-muted);
+        }
+
+        .polls-stats span strong {
+            color: var(--primary-blue);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-light);
+        }
+
+        .tab-btn.active {
+            color: var(--primary-blue);
+            border-bottom: 2px solid var(--primary-blue);
+            margin-bottom: -2px;
+        }
+
+        /* Poll Cards */
+        .polls-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .poll-card {
+            background: var(--surface-dark);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+
+        .poll-card:hover {
+            border-color: var(--primary-blue);
+        }
+
+        .poll-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .poll-title {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .poll-title:hover {
+            color: var(--primary-blue);
+        }
+
+        .poll-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-active {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+
+        .badge-resolved {
+            background: rgba(0, 174, 255, 0.2);
+            color: var(--primary-blue);
+        }
+
+        .badge-closed {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+        }
+
+        .poll-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+
+        .poll-description {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        /* Voting Options */
+        .poll-options {
+            display: grid;
+            gap: 10px;
+        }
+
+        .poll-option {
+            background: #1a1a2e;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .poll-option:hover:not(.voted):not(.disabled) {
+            border-color: var(--primary-blue);
+        }
+
+        .poll-option.selected {
+            border-color: var(--primary-blue);
+            background: rgba(0, 174, 255, 0.1);
+        }
+
+        .poll-option.voted {
+            cursor: default;
+        }
+
+        .poll-option.correct {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .poll-option.user-vote {
+            border-width: 3px;
+        }
+
+        .poll-option-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .poll-option-text {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .poll-option-stats {
+            text-align: right;
+        }
+
+        .poll-option-percent {
+            font-weight: bold;
+            color: var(--primary-blue);
+        }
+
+        .poll-option-votes {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .poll-option-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: rgba(0, 174, 255, 0.1);
+            transition: width 0.5s ease;
+        }
+
+        /* Confidence Slider */
+        .confidence-container {
+            margin-top: 20px;
+            padding: 20px;
+            background: #1a1a2e;
+            border-radius: 8px;
+        }
+
+        .confidence-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .confidence-value {
+            color: var(--primary-blue);
+            font-weight: bold;
+        }
+
+        .confidence-slider {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--border-color);
+            outline: none;
+        }
+
+        .confidence-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--primary-blue);
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 174, 255, 0.5);
+        }
+
+        /* Poll Actions */
+        .poll-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .poll-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Scoring Type Badge */
+        .scoring-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        /* Create Poll Form */
+        .create-form {
+            background: var(--surface-dark);
+            border-radius: 12px;
+            padding: 30px;
+        }
+
+        .create-form h3 {
+            color: var(--primary-blue);
+            margin: 0 0 25px 0;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 15px;
+            background: #1a1a2e;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .options-form {
+            margin-top: 15px;
+        }
+
+        .option-input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .option-input-row input {
+            flex: 1;
+        }
+
+        .add-option-btn {
+            background: none;
+            border: 1px dashed var(--border-color);
+            color: var(--text-muted);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .add-option-btn:hover {
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+        }
+
+        /* Leaderboard */
+        .leaderboard {
+            background: var(--surface-dark);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .leaderboard-header {
+            background: linear-gradient(90deg, #1a1a2e, #16213e);
+            padding: 15px 20px;
+            border-bottom: 2px solid var(--primary-blue);
+        }
+
+        .leaderboard-header h3 {
+            margin: 0;
+            color: var(--primary-blue);
+        }
+
+        .leaderboard-row {
+            display: grid;
+            grid-template-columns: 50px 1fr 100px 80px;
+            gap: 15px;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+        }
+
+        .leaderboard-row:hover {
+            background: rgba(0, 174, 255, 0.05);
+        }
+
+        .rank {
+            font-weight: bold;
+            color: var(--text-muted);
+        }
+
+        .rank-1 { color: #ffd700; }
+        .rank-2 { color: #c0c0c0; }
+        .rank-3 { color: #cd7f32; }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: var(--primary-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #00aeff, #0077ff);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 4px 15px rgba(0, 174, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        /* Comments Section */
+        .comments-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .comment {
+            display: flex;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .comment-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .comment-content {
+            flex: 1;
+        }
+
+        .comment-header {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+
+        .comment-author {
+            color: var(--primary-blue);
+            font-weight: bold;
+        }
+
+        .comment-date {
+            color: var(--text-muted);
+        }
+
+        .comment-text {
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+
+        .comment-form {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .comment-form input {
+            flex: 1;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: var(--text-muted);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .poll-card-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .leaderboard-row {
+                grid-template-columns: 40px 1fr 80px;
+            }
+
+            .leaderboard-row > div:nth-child(4) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo"><a href="index.html">TrustMyRecord</a></div>
+                <ul>
+                    <li><a href="index.html">Make Picks</a></li>
+                    <li><a href="challenges.html">Challenges</a></li>
+                    <li><a href="forum.html">Forum</a></li>
+                    <li><a href="trivia.html">Trivia</a></li>
+                    <li><a href="polls.html" class="active">Polls</a></li>
+                    <li id="authNav"></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="polls-container">
+        <!-- Polls Home -->
+        <div id="pollsHome">
+            <div class="polls-header">
+                <h1>Prediction Polls</h1>
+                <p style="color: var(--text-muted);">Make predictions, earn points when you're right!</p>
+                <div class="polls-stats" id="pollsStats">
+                    <span><strong id="activePolls">0</strong> Active Polls</span>
+                    <span><strong id="totalVotes">0</strong> Total Votes</span>
+                    <span><strong id="uniqueVoters">0</strong> Voters</span>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('active')">Active Polls</button>
+                <button class="tab-btn" onclick="showTab('resolved')">Resolved</button>
+                <button class="tab-btn" onclick="showTab('leaderboard')">Leaderboard</button>
+                <button class="tab-btn" onclick="showTab('create')">Create Poll</button>
+            </div>
+
+            <!-- Active Polls Tab -->
+            <div id="activeTab">
+                <div class="polls-grid" id="activePollsGrid">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        Loading polls...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resolved Polls Tab -->
+            <div id="resolvedTab" style="display: none;">
+                <div class="polls-grid" id="resolvedPollsGrid">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        Loading resolved polls...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leaderboard Tab -->
+            <div id="leaderboardTab" style="display: none;">
+                <div class="leaderboard" id="leaderboardContainer">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        Loading leaderboard...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Poll Tab -->
+            <div id="createTab" style="display: none;">
+                <div class="create-form">
+                    <h3>Create a Prediction Poll</h3>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select class="form-select" id="pollCategory">
+                                <option value="">Select category...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Sport (optional)</label>
+                            <select class="form-select" id="pollSport">
+                                <option value="">Any / General</option>
+                                <option value="NFL">NFL</option>
+                                <option value="NBA">NBA</option>
+                                <option value="MLB">MLB</option>
+                                <option value="NHL">NHL</option>
+                                <option value="NCAAF">NCAAF</option>
+                                <option value="NCAAB">NCAAB</option>
+                                <option value="Soccer">Soccer</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Question / Title</label>
+                        <input type="text" class="form-input" id="pollTitle" placeholder="e.g., Who will win Super Bowl LIX?">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description (optional)</label>
+                        <textarea class="form-textarea" id="pollDescription" placeholder="Additional context or rules..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Scoring Type</label>
+                            <select class="form-select" id="pollScoringType">
+                                <option value="binary">Binary (Win/Lose points)</option>
+                                <option value="confidence">Confidence (Risk more to win more)</option>
+                                <option value="weighted">Weighted by Odds</option>
+                                <option value="partial">Partial Credit (Less popular = more points)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Points for Correct</label>
+                            <input type="number" class="form-input" id="pollPointsCorrect" value="100" min="1" max="1000">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Voting Deadline</label>
+                            <input type="datetime-local" class="form-input" id="pollDeadline">
+                        </div>
+                        <div class="form-group">
+                            <label>Resolution Date (when answer is known)</label>
+                            <input type="datetime-local" class="form-input" id="pollResolution">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Options</label>
+                        <div class="options-form" id="pollOptionsForm">
+                            <div class="option-input-row">
+                                <input type="text" class="form-input" placeholder="Option 1">
+                            </div>
+                            <div class="option-input-row">
+                                <input type="text" class="form-input" placeholder="Option 2">
+                            </div>
+                        </div>
+                        <button type="button" class="add-option-btn" onclick="addPollOption()">+ Add Option</button>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="createPoll()">Create Poll</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Single Poll View -->
+        <div id="pollView" style="display: none;">
+            <a href="#" onclick="backToPolls(); return false;" style="color: var(--primary-blue); text-decoration: none; display: block; margin-bottom: 20px;">
+                ← Back to Polls
+            </a>
+
+            <div class="poll-card" id="pollDetailCard">
+                <!-- Poll details will be rendered here -->
+            </div>
+
+            <div class="comments-section" id="commentsSection">
+                <h3 style="color: var(--text-light); margin-bottom: 20px;">Comments</h3>
+                <div id="commentsContainer"></div>
+                <div class="comment-form" id="commentForm">
+                    <input type="text" class="form-input" id="commentInput" placeholder="Add a comment...">
+                    <button class="btn btn-primary btn-small" onclick="postComment()">Post</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="static/js/backend-api.js"></script>
+    <script>
+        // State
+        let currentPoll = null;
+        let selectedOption = null;
+        let confidenceLevel = 50;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            updateAuthNav();
+            await loadPollsHome();
+        });
+
+        function updateAuthNav() {
+            const authNav = document.getElementById('authNav');
+            if (api.isLoggedIn()) {
+                const user = api.getCurrentUser();
+                authNav.innerHTML = `
+                    <span style="color: var(--primary-blue);">@${user.username}</span>
+                    <a href="#" onclick="api.logout(); location.reload();" style="margin-left: 10px;">Logout</a>
+                `;
+            } else {
+                authNav.innerHTML = `<a href="index.html">Login</a>`;
+            }
+        }
+
+        // Load Home
+        async function loadPollsHome() {
+            try {
+                // Load stats
+                const stats = await api.getPollStats();
+                document.getElementById('activePolls').textContent = stats.active_polls || 0;
+                document.getElementById('totalVotes').textContent = stats.total_votes || 0;
+                document.getElementById('uniqueVoters').textContent = stats.unique_voters || 0;
+
+                // Load categories for form
+                const categoriesData = await api.getPollCategories();
+                const select = document.getElementById('pollCategory');
+                (categoriesData.categories || []).forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.id;
+                    option.textContent = cat.name;
+                    select.appendChild(option);
+                });
+
+                // Load active polls
+                await loadActivePolls();
+
+                // Load leaderboard
+                await loadLeaderboard();
+            } catch (error) {
+                console.error('Error loading polls:', error);
+            }
+        }
+
+        async function loadActivePolls() {
+            try {
+                const data = await api.getActivePolls({ limit: 20 });
+                renderPollsList(data.polls || [], 'activePollsGrid');
+            } catch (error) {
+                document.getElementById('activePollsGrid').innerHTML =
+                    '<p style="color: #f44336;">Error loading polls.</p>';
+            }
+        }
+
+        async function loadResolvedPolls() {
+            try {
+                const data = await api.request('/polls/active?status=resolved&limit=20');
+                renderPollsList(data.polls || [], 'resolvedPollsGrid', true);
+            } catch (error) {
+                document.getElementById('resolvedPollsGrid').innerHTML =
+                    '<p style="color: #f44336;">Error loading polls.</p>';
+            }
+        }
+
+        function renderPollsList(polls, containerId, resolved = false) {
+            if (polls.length === 0) {
+                document.getElementById(containerId).innerHTML =
+                    `<p style="text-align: center; color: var(--text-muted); padding: 30px;">
+                        No ${resolved ? 'resolved' : 'active'} polls yet.
+                    </p>`;
+                return;
+            }
+
+            let html = '';
+            polls.forEach(poll => {
+                const deadline = poll.voting_deadline ? new Date(poll.voting_deadline) : null;
+                const timeLeft = deadline ? getTimeLeft(deadline) : 'No deadline';
+
+                html += `
+                    <div class="poll-card">
+                        <div class="poll-card-header">
+                            <h3 class="poll-title" onclick="viewPoll(${poll.id})">${poll.title}</h3>
+                            <span class="poll-badge badge-${poll.status}">${poll.status}</span>
+                        </div>
+                        <div class="poll-meta">
+                            <span>by ${poll.username}</span>
+                            ${poll.sport ? `<span>${poll.sport}</span>` : ''}
+                            <span>${poll.vote_count || 0} votes</span>
+                            <span class="scoring-badge">${formatScoringType(poll.scoring_type)}</span>
+                        </div>
+                        ${poll.description ? `<p class="poll-description">${poll.description}</p>` : ''}
+                        <div class="poll-footer">
+                            <span>${deadline ? `Closes: ${timeLeft}` : 'No deadline'}</span>
+                            <button class="btn btn-primary btn-small" onclick="viewPoll(${poll.id})">
+                                ${poll.status === 'active' ? 'Vote' : 'View Results'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById(containerId).innerHTML = html;
+        }
+
+        async function loadLeaderboard() {
+            try {
+                const data = await api.getPollLeaderboard({ limit: 20 });
+                renderLeaderboard(data.leaderboard || []);
+            } catch (error) {
+                console.error('Error loading leaderboard:', error);
+            }
+        }
+
+        function renderLeaderboard(leaderboard) {
+            if (leaderboard.length === 0) {
+                document.getElementById('leaderboardContainer').innerHTML =
+                    '<p style="text-align: center; padding: 30px; color: var(--text-muted);">No scores yet.</p>';
+                return;
+            }
+
+            let html = `
+                <div class="leaderboard-header">
+                    <h3>Top Predictors</h3>
+                </div>
+            `;
+
+            leaderboard.forEach(player => {
+                html += `
+                    <div class="leaderboard-row">
+                        <div class="rank rank-${player.rank}">#${player.rank}</div>
+                        <div class="user-info">
+                            <div class="user-avatar">${player.username.charAt(0).toUpperCase()}</div>
+                            <span>${player.username}</span>
+                        </div>
+                        <div style="text-align: right; color: var(--primary-blue); font-weight: bold;">
+                            ${(player.total_points || 0).toLocaleString()}
+                        </div>
+                        <div style="text-align: right; color: var(--text-muted); font-size: 13px;">
+                            ${player.accuracy || 0}% acc
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('leaderboardContainer').innerHTML = html;
+        }
+
+        // Tabs
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.getElementById('activeTab').style.display = tabName === 'active' ? 'block' : 'none';
+            document.getElementById('resolvedTab').style.display = tabName === 'resolved' ? 'block' : 'none';
+            document.getElementById('leaderboardTab').style.display = tabName === 'leaderboard' ? 'block' : 'none';
+            document.getElementById('createTab').style.display = tabName === 'create' ? 'block' : 'none';
+
+            if (tabName === 'resolved') {
+                loadResolvedPolls();
+            }
+        }
+
+        // View Single Poll
+        async function viewPoll(pollId) {
+            try {
+                const data = await api.getPoll(pollId);
+                currentPoll = data;
+                selectedOption = data.user_vote ? data.user_vote.option_id : null;
+
+                document.getElementById('pollsHome').style.display = 'none';
+                document.getElementById('pollView').style.display = 'block';
+
+                renderPollDetail(data);
+                renderComments(data.comments || []);
+            } catch (error) {
+                alert('Error loading poll: ' + error.message);
+            }
+        }
+
+        function renderPollDetail(data) {
+            const poll = data.poll;
+            const options = data.options;
+            const userVote = data.user_vote;
+            const hasVoted = !!userVote;
+            const isActive = poll.status === 'active';
+            const canVote = isActive && !hasVoted;
+
+            let html = `
+                <div class="poll-card-header">
+                    <h2 class="poll-title" style="cursor: default;">${poll.title}</h2>
+                    <span class="poll-badge badge-${poll.status}">${poll.status}</span>
+                </div>
+                <div class="poll-meta">
+                    <span>by ${poll.username}</span>
+                    ${poll.sport ? `<span>${poll.sport}</span>` : ''}
+                    <span>${data.total_votes} votes</span>
+                    <span class="scoring-badge">${formatScoringType(poll.scoring_type)}</span>
+                </div>
+                ${poll.description ? `<p class="poll-description">${poll.description}</p>` : ''}
+
+                <div class="poll-options">
+            `;
+
+            options.forEach(opt => {
+                const isSelected = selectedOption === opt.id;
+                const isUserVote = userVote && userVote.option_id === opt.id;
+                const isCorrect = opt.is_correct;
+                const percent = opt.vote_percentage || 0;
+
+                let classes = ['poll-option'];
+                if (hasVoted || poll.status === 'resolved') classes.push('voted');
+                if (isSelected) classes.push('selected');
+                if (isUserVote) classes.push('user-vote');
+                if (isCorrect && poll.status === 'resolved') classes.push('correct');
+                if (!canVote) classes.push('disabled');
+
+                html += `
+                    <div class="${classes.join(' ')}" onclick="${canVote ? `selectOption(${opt.id})` : ''}">
+                        <div class="poll-option-bar" style="width: ${hasVoted || poll.status === 'resolved' ? percent : 0}%"></div>
+                        <div class="poll-option-content">
+                            <span class="poll-option-text">
+                                ${isCorrect && poll.status === 'resolved' ? '✓ ' : ''}
+                                ${opt.option_text}
+                                ${isUserVote ? ' (Your vote)' : ''}
+                            </span>
+                            ${hasVoted || poll.status === 'resolved' ? `
+                                <div class="poll-option-stats">
+                                    <div class="poll-option-percent">${percent}%</div>
+                                    <div class="poll-option-votes">${opt.vote_count} votes</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+
+            // Confidence slider for confidence scoring
+            if (canVote && poll.scoring_type === 'confidence') {
+                html += `
+                    <div class="confidence-container">
+                        <div class="confidence-label">
+                            <span>Confidence Level</span>
+                            <span class="confidence-value" id="confidenceValue">${confidenceLevel}%</span>
+                        </div>
+                        <input type="range" class="confidence-slider" id="confidenceSlider"
+                               min="1" max="100" value="${confidenceLevel}"
+                               oninput="updateConfidence(this.value)">
+                        <p style="color: var(--text-muted); font-size: 12px; margin-top: 10px;">
+                            Higher confidence = more points if correct, more penalty if wrong
+                        </p>
+                    </div>
+                `;
+            }
+
+            // Vote button
+            if (canVote) {
+                html += `
+                    <div class="poll-actions">
+                        <button class="btn btn-primary" onclick="submitVote()" id="voteBtn" disabled>
+                            Submit Vote
+                        </button>
+                    </div>
+                `;
+            }
+
+            // Result if already voted
+            if (hasVoted && poll.status === 'resolved') {
+                const points = userVote.points_earned || 0;
+                html += `
+                    <div style="margin-top: 20px; padding: 15px; background: ${points > 0 ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)'}; border-radius: 8px;">
+                        <strong style="color: ${points > 0 ? '#4caf50' : '#f44336'};">
+                            ${points > 0 ? '+' : ''}${points} points
+                        </strong>
+                    </div>
+                `;
+            }
+
+            html += `
+                <div class="poll-footer">
+                    <span>Created: ${formatDate(poll.created_at)}</span>
+                    ${poll.voting_deadline ? `<span>Deadline: ${formatDate(poll.voting_deadline)}</span>` : ''}
+                </div>
+            `;
+
+            document.getElementById('pollDetailCard').innerHTML = html;
+
+            // Show/hide comment form
+            document.getElementById('commentForm').style.display = api.isLoggedIn() ? 'flex' : 'none';
+        }
+
+        function selectOption(optionId) {
+            selectedOption = optionId;
+
+            // Update UI
+            document.querySelectorAll('.poll-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+
+            // Enable vote button
+            const voteBtn = document.getElementById('voteBtn');
+            if (voteBtn) voteBtn.disabled = false;
+        }
+
+        function updateConfidence(value) {
+            confidenceLevel = parseInt(value);
+            document.getElementById('confidenceValue').textContent = confidenceLevel + '%';
+        }
+
+        async function submitVote() {
+            if (!api.isLoggedIn()) {
+                alert('Please log in to vote.');
+                return;
+            }
+
+            if (!selectedOption) {
+                alert('Please select an option.');
+                return;
+            }
+
+            try {
+                const confidence = currentPoll.poll.scoring_type === 'confidence' ? confidenceLevel : null;
+                await api.voteOnPoll(currentPoll.poll.id, selectedOption, confidence);
+
+                // Reload poll
+                await viewPoll(currentPoll.poll.id);
+            } catch (error) {
+                alert('Error submitting vote: ' + error.message);
+            }
+        }
+
+        // Comments
+        function renderComments(comments) {
+            if (comments.length === 0) {
+                document.getElementById('commentsContainer').innerHTML =
+                    '<p style="color: var(--text-muted);">No comments yet.</p>';
+                return;
+            }
+
+            let html = '';
+            comments.forEach(comment => {
+                html += `
+                    <div class="comment">
+                        <div class="comment-avatar">${comment.username.charAt(0).toUpperCase()}</div>
+                        <div class="comment-content">
+                            <div class="comment-header">
+                                <span class="comment-author">${comment.username}</span>
+                                <span class="comment-date">${formatDate(comment.created_at)}</span>
+                            </div>
+                            <p class="comment-text">${comment.content}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('commentsContainer').innerHTML = html;
+        }
+
+        async function postComment() {
+            if (!api.isLoggedIn()) {
+                alert('Please log in to comment.');
+                return;
+            }
+
+            const content = document.getElementById('commentInput').value.trim();
+            if (!content) return;
+
+            try {
+                await api.commentOnPoll(currentPoll.poll.id, content);
+                document.getElementById('commentInput').value = '';
+
+                // Reload comments
+                const data = await api.getPollComments(currentPoll.poll.id);
+                renderComments(data.comments || []);
+            } catch (error) {
+                alert('Error posting comment: ' + error.message);
+            }
+        }
+
+        // Create Poll
+        function addPollOption() {
+            const form = document.getElementById('pollOptionsForm');
+            const count = form.children.length + 1;
+
+            const row = document.createElement('div');
+            row.className = 'option-input-row';
+            row.innerHTML = `<input type="text" class="form-input" placeholder="Option ${count}">`;
+            form.appendChild(row);
+        }
+
+        async function createPoll() {
+            if (!api.isLoggedIn()) {
+                alert('Please log in to create polls.');
+                return;
+            }
+
+            const categoryId = document.getElementById('pollCategory').value;
+            const title = document.getElementById('pollTitle').value.trim();
+            const description = document.getElementById('pollDescription').value.trim();
+            const sport = document.getElementById('pollSport').value;
+            const scoringType = document.getElementById('pollScoringType').value;
+            const pointsCorrect = parseInt(document.getElementById('pollPointsCorrect').value);
+            const deadline = document.getElementById('pollDeadline').value;
+            const resolution = document.getElementById('pollResolution').value;
+
+            if (!categoryId) {
+                alert('Please select a category.');
+                return;
+            }
+
+            if (title.length < 10) {
+                alert('Title must be at least 10 characters.');
+                return;
+            }
+
+            // Gather options
+            const optionInputs = document.querySelectorAll('#pollOptionsForm input');
+            const options = [];
+            optionInputs.forEach(input => {
+                const text = input.value.trim();
+                if (text) {
+                    options.push({ text });
+                }
+            });
+
+            if (options.length < 2) {
+                alert('Please provide at least 2 options.');
+                return;
+            }
+
+            try {
+                const pollData = {
+                    category_id: parseInt(categoryId),
+                    title,
+                    description: description || null,
+                    sport: sport || null,
+                    scoring_type: scoringType,
+                    points_correct: pointsCorrect,
+                    voting_deadline: deadline || null,
+                    resolution_date: resolution || null,
+                    options
+                };
+
+                const result = await api.createPoll(pollData);
+
+                alert('Poll created successfully!');
+
+                // Clear form
+                document.getElementById('pollTitle').value = '';
+                document.getElementById('pollDescription').value = '';
+                document.getElementById('pollOptionsForm').innerHTML = `
+                    <div class="option-input-row">
+                        <input type="text" class="form-input" placeholder="Option 1">
+                    </div>
+                    <div class="option-input-row">
+                        <input type="text" class="form-input" placeholder="Option 2">
+                    </div>
+                `;
+
+                // View the new poll
+                viewPoll(result.poll.id);
+            } catch (error) {
+                alert('Error creating poll: ' + error.message);
+            }
+        }
+
+        function backToPolls() {
+            currentPoll = null;
+            selectedOption = null;
+            document.getElementById('pollView').style.display = 'none';
+            document.getElementById('pollsHome').style.display = 'block';
+        }
+
+        // Helpers
+        function formatScoringType(type) {
+            const types = {
+                binary: 'Win/Lose',
+                confidence: 'Confidence',
+                weighted: 'Weighted',
+                partial: 'Partial'
+            };
+            return types[type] || type;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            return new Date(dateStr).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'short', day: 'numeric',
+                hour: 'numeric', minute: '2-digit'
+            });
+        }
+
+        function getTimeLeft(deadline) {
+            const now = new Date();
+            const diff = deadline - now;
+
+            if (diff <= 0) return 'Closed';
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+            if (days > 0) return `${days}d ${hours}h left`;
+            if (hours > 0) return `${hours}h left`;
+            return 'Closing soon';
+        }
+    </script>
+</body>
+</html>

@@ -24,7 +24,7 @@ const CONFIG = {
 
     // API Configuration
     api: {
-        baseUrl: "https://trustmyrecord.com/api",
+        baseUrl: "http://localhost:3000/api",
         timeout: 10000
     },
 

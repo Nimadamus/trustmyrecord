@@ -300,6 +300,13 @@ class AuthSystem {
     }
 
     /**
+     * Get current user object
+     */
+    getCurrentUser() {
+        return this.currentUser;
+    }
+
+    /**
      * Require authentication
      */
     requireAuth() {

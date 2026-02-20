@@ -258,6 +258,7 @@ class PersistentAuthSystem {
 
     saveUsers() { localStorage.setItem(this.usersKey, JSON.stringify(this.users)); }
     isLoggedIn() { return this.currentUser !== null; }
+    getCurrentUser() { return this.currentUser; }
     requireAuth() {
         if (!this.isLoggedIn()) {
             if (typeof showSection === 'function') showSection('signup');

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test Games API</title></head>
+<body style="background:#111;color:#0f0;font-family:monospace;padding:20px;">
+<h1>Games API Test</h1>
+<button onclick="testFetch('americanfootball_nfl')">Test NFL</button>
+<button onclick="testFetch('basketball_nba')">Test NBA</button>
+<button onclick="testFetch('icehockey_nhl')">Test NHL</button>
+<button onclick="testFetch('basketball_ncaab')">Test NCAAB</button>
+<pre id="output">Click a button to test...</pre>
+<script>
+async function testFetch(sportKey) {
+    const output = document.getElementById('output');
+    output.textContent = 'Fetching ' + sportKey + '...\n';
+
+    const url = 'http://localhost:3000/api/games/odds/' + sportKey;
+    output.textContent += 'URL: ' + url + '\n\n';
+
+    try {
+        const response = await fetch(url);
+        output.textContent += 'Status: ' + response.status + '\n';
+        output.textContent += 'Headers: ' + JSON.stringify(Object.fromEntries(response.headers)) + '\n\n';
+
+        const data = await response.json();
+        output.textContent += 'Games returned: ' + data.length + '\n\n';
+
+        if (data.length > 0) {
+            data.forEach(function(game, i) {
+                output.textContent += (i+1) + '. ' + game.away_team + ' @ ' + game.home_team + '\n';
+                output.textContent += '   Time: ' + game.commence_time + '\n';
+                output.textContent += '   Bookmakers: ' + (game.bookmakers ? game.bookmakers.length : 0) + '\n';
+                if (game.bookmakers && game.bookmakers[0]) {
+                    var bk = game.bookmakers[0];
+                    output.textContent += '   Bookmaker: ' + bk.title + '\n';
+                    output.textContent += '   Markets: ' + bk.markets.map(function(m){return m.key}).join(', ') + '\n';
+                }
+                output.textContent += '\n';
+            });
+        } else {
+            output.textContent += 'No games found for this sport.\n';
+        }
+    } catch(err) {
+        output.textContent += 'ERROR: ' + err.message + '\n';
+        output.textContent += 'This likely means:\n';
+        output.textContent += '1. Server not running on localhost:3000\n';
+        output.textContent += '2. CORS blocking the request\n';
+        output.textContent += '3. Network error\n';
+        console.error('Full error:', err);
+    }
+}
+</script>
+</body>
+</html>

@@ -1360,7 +1360,12 @@
         </div>
     </footer>
 
+    <!-- Backend API Integration -->
+    <script src="static/js/backend-api.js?v=20260121"></script>
+
     <script>
+        const API_BASE = 'http://localhost:3000/api';
+
         // Mode switching
         function setMode(mode) {
             document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
@@ -1382,8 +1387,7 @@
         function filterChallenges(sport) {
             document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
             event.target.classList.add('active');
-            // In real implementation, this would filter the challenges
-            console.log('Filtering by:', sport);
+            loadChallenges(sport === 'all' ? null : sport);
         }
 
         // Stake selection
@@ -1407,22 +1411,197 @@
             stakeSection.style.display = type === 'money' ? 'block' : 'none';
         }
 
-        // Form submission
-        document.getElementById('challengeForm').addEventListener('submit', function(e) {
+        // Form submission - Create Challenge via API
+        document.getElementById('challengeForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+
+            if (!api.isLoggedIn()) {
+                alert('Please log in to create challenges!');
+                window.location.href = 'index.html#login';
+                return;
+            }
 
             const type = document.getElementById('challengeType').value;
             const sport = document.getElementById('challengeSport').value;
             const numPicks = document.getElementById('numPicks').value;
             const duration = document.getElementById('duration').value;
             const title = document.getElementById('challengeTitle').value;
+            const opponentUsername = document.getElementById('opponentUsername')?.value;
 
-            // In real implementation, this would send to backend
-            alert(`Challenge Created!\n\nType: ${type}\nSport: ${sport.toUpperCase()}\nPicks: ${numPicks}\nDuration: ${duration}\n\nYour challenge is now live in The Arena!`);
+            // Calculate end date based on duration
+            const now = new Date();
+            let endDate = new Date(now);
+            if (duration === '1day') endDate.setDate(endDate.getDate() + 1);
+            else if (duration === '3days') endDate.setDate(endDate.getDate() + 3);
+            else if (duration === '1week') endDate.setDate(endDate.getDate() + 7);
+            else if (duration === '2weeks') endDate.setDate(endDate.getDate() + 14);
+            else if (duration === '1month') endDate.setMonth(endDate.getMonth() + 1);
+
+            // Get stake info if money challenge
+            let stakeAmount = 0;
+            if (type === 'money') {
+                const selectedStake = document.querySelector('.stake-btn.selected');
+                if (selectedStake) {
+                    stakeAmount = selectedStake.dataset.stake === 'custom'
+                        ? parseFloat(document.getElementById('customStake').value) || 0
+                        : parseFloat(selectedStake.dataset.stake) || 0;
+                }
+            }
+
+            try {
+                // If opponent specified, look them up
+                let challengedId = null;
+                if (opponentUsername) {
+                    const searchResult = await api.searchUsers(opponentUsername);
+                    if (searchResult.users && searchResult.users.length > 0) {
+                        challengedId = searchResult.users[0].id;
+                    } else {
+                        alert('Opponent username not found. Creating open challenge instead.');
+                    }
+                }
+
+                // Create contest (open challenge) or direct challenge
+                if (challengedId) {
+                    // Direct challenge
+                    const result = await api.createChallenge({
+                        challenged_id: challengedId,
+                        title: title || `${sport.toUpperCase()} Challenge`,
+                        sport: sport === 'all' ? null : sport.toUpperCase(),
+                        start_date: now.toISOString(),
+                        end_date: endDate.toISOString(),
+                        min_picks: parseInt(numPicks),
+                        stake_type: type === 'money' ? 'units' : 'bragging_rights',
+                        stake_amount: stakeAmount
+                    });
+
+                    alert(`Challenge sent to ${opponentUsername}!\n\nThey have 24 hours to accept or decline.`);
+                } else {
+                    // Create open contest
+                    const result = await api.createContest({
+                        title: title || `${sport.toUpperCase()} Open Challenge`,
+                        description: `${numPicks} picks, ${duration} duration`,
+                        sport: sport === 'all' ? null : sport.toUpperCase(),
+                        contest_type: 'custom',
+                        scoring_type: 'units',
+                        start_date: now.toISOString(),
+                        end_date: endDate.toISOString(),
+                        min_picks: parseInt(numPicks),
+                        is_public: true,
+                        prize_pool: type === 'money' ? JSON.stringify([`Winner takes ${stakeAmount} units`]) : null
+                    });
+
+                    alert(`Open Challenge Created!\n\nType: ${type}\nSport: ${sport.toUpperCase()}\nPicks: ${numPicks}\nDuration: ${duration}\n\nYour challenge is now live in The Arena!`);
+                }
+
+                // Reload challenges
+                loadChallenges();
+
+            } catch (error) {
+                console.error('Create challenge error:', error);
+                alert('Error creating challenge: ' + (error.message || 'Unknown error'));
+            }
         });
+
+        // Load challenges from backend
+        async function loadChallenges(sportFilter = null) {
+            const grid = document.getElementById('openChallengesGrid');
+            if (!grid) return;
+
+            grid.innerHTML = '<div style="text-align:center;padding:40px;color:#808090;">Loading challenges...</div>';
+
+            try {
+                const data = await api.getContests({ status: 'active', sport: sportFilter });
+                const contests = data.contests || [];
+
+                if (contests.length === 0) {
+                    grid.innerHTML = `
+                        <div style="grid-column: 1/-1; text-align:center; padding:60px 20px; color:#808090;">
+                            <div style="font-size:48px; margin-bottom:20px;">⚔️</div>
+                            <h3 style="margin-bottom:10px; color:#fff;">No Active Challenges</h3>
+                            <p>Be the first to create a challenge and prove your skills!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                grid.innerHTML = contests.map(contest => renderChallengeCard(contest)).join('');
+
+            } catch (error) {
+                console.error('Load challenges error:', error);
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align:center; padding:40px; color:#ff6b6b;">
+                        Failed to load challenges. Make sure the backend server is running.
+                    </div>
+                `;
+            }
+        }
+
+        // Render a challenge card
+        function renderChallengeCard(contest) {
+            const isMoney = contest.prize_pool && contest.prize_pool !== 'null';
+            const sportIcon = {
+                'NFL': '🏈', 'NBA': '🏀', 'NHL': '🏒', 'MLB': '⚾',
+                'NCAAF': '🎓', 'NCAAB': '🏫'
+            }[contest.sport] || '🎯';
+
+            return `
+                <div class="challenge-card ${isMoney ? 'money' : ''}">
+                    <div class="challenge-header">
+                        <div class="challenger-info">
+                            <img class="challenger-avatar"
+                                 src="https://api.dicebear.com/7.x/avataaars/svg?seed=${contest.creator_id || 'open'}"
+                                 alt="Creator">
+                            <div>
+                                <div class="challenger-name">${contest.creator_username || 'Open Challenge'}</div>
+                                <div class="challenger-record">${contest.participant_count || 0} participants</div>
+                            </div>
+                        </div>
+                        <div class="challenge-status ${contest.status}">${contest.status.toUpperCase()}</div>
+                    </div>
+                    <div class="challenge-title">${sportIcon} ${contest.title}</div>
+                    <div class="challenge-description">${contest.description || 'Best record wins!'}</div>
+                    <div class="challenge-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Sport</span>
+                            <span class="detail-value">${contest.sport || 'All Sports'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Min Picks</span>
+                            <span class="detail-value">${contest.min_picks}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Stakes</span>
+                            <span class="detail-value">${isMoney ? 'Money' : 'Bragging Rights'}</span>
+                        </div>
+                    </div>
+                    <button class="join-btn" onclick="joinContest(${contest.id})">
+                        ${contest.is_joined ? '✓ JOINED' : 'JOIN CHALLENGE'}
+                    </button>
+                </div>
+            `;
+        }
+
+        // Join a contest
+        async function joinContest(contestId) {
+            if (!api.isLoggedIn()) {
+                alert('Please log in to join challenges!');
+                window.location.href = 'index.html#login';
+                return;
+            }
+
+            try {
+                await api.joinContest(contestId);
+                alert('Successfully joined the challenge!');
+                loadChallenges();
+            } catch (error) {
+                console.error('Join contest error:', error);
+                alert('Error joining challenge: ' + (error.message || 'Unknown error'));
+            }
+        }
 
         // Animate stats on load
         function animateValue(element, start, end, duration) {
+            if (!element) return;
             const range = end - start;
             const increment = end > start ? 1 : -1;
             const stepTime = Math.abs(Math.floor(duration / range));
@@ -1447,6 +1626,9 @@
             setTimeout(() => {
                 animateValue(document.getElementById('totalCompetitors'), 0, 1842, 1000);
             }, 500);
+
+            // Load challenges from backend
+            loadChallenges();
         });
     </script>
 </body>
