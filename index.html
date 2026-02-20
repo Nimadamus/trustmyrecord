@@ -8667,8 +8667,17 @@
                         </div>
                     </div>
 
-                    <!-- Category Grid -->
-                    <h3 style="color: var(--text-primary); margin-bottom: 16px;">Choose a Category</h3>
+                    <!-- Create Question + Category Grid -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3 style="color: var(--text-primary); margin: 0;">Choose a Category</h3>
+                        <button onclick="openCreateTriviaModal()" style="background: linear-gradient(135deg, var(--neon-gold), #e6a800); color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 6px;">
+                            <span style="font-size: 18px;">+</span> Create Question
+                        </button>
+                    </div>
+                    <!-- Community Questions Pool -->
+                    <div id="communityQuestionsCount" style="color: var(--text-muted); font-size: 13px; margin-bottom: 12px; display: none;">
+                        <span style="color: var(--neon-gold);">&#9733;</span> <span id="customQCount">0</span> community questions in the pool
+                    </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 30px;">
                         <button onclick="startTrivia('nfl')" style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 20px 12px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--neon-cyan)'" onmouseout="this.style.borderColor='var(--glass-border)'">
                             <div style="font-size: 32px; margin-bottom: 8px;">🏈</div>
@@ -10411,6 +10420,60 @@
                 <span>200 pts</span>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Create Trivia Question Modal -->
+<div id="createTriviaModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 550px; padding: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h2 style="color: var(--text-primary); margin: 0; font-family: Orbitron, sans-serif;">Create Question</h2>
+            <span class="close-modal" onclick="closeCreateTriviaModal()" style="cursor: pointer; font-size: 28px; color: var(--text-muted);">&times;</span>
+        </div>
+
+        <form onsubmit="submitCustomTrivia(event)">
+            <div style="margin-bottom: 16px;">
+                <label style="color: var(--text-secondary); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 6px;">Category</label>
+                <select id="triviaCreateCategory" style="width: 100%; padding: 12px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-primary); font-size: 15px;">
+                    <option value="NFL">NFL</option>
+                    <option value="NBA">NBA</option>
+                    <option value="MLB">MLB</option>
+                    <option value="NHL">NHL</option>
+                    <option value="Soccer">Soccer</option>
+                    <option value="Mixed" selected>Mixed</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <label style="color: var(--text-secondary); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 6px;">Question</label>
+                <textarea id="triviaCreateQuestion" placeholder="Type your trivia question here..." required rows="2" style="width: 100%; padding: 12px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-primary); font-size: 15px; resize: vertical; font-family: inherit;"></textarea>
+            </div>
+
+            <div style="margin-bottom: 8px;">
+                <label style="color: var(--text-secondary); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 6px;">Answers (click the correct one)</label>
+            </div>
+            <div id="triviaCreateAnswers" style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <button type="button" onclick="setCorrectTriviaAnswer(0)" id="triviaCorrectBtn0" class="trivia-correct-btn" style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--glass-border); background: transparent; color: var(--text-muted); font-weight: 700; cursor: pointer; flex-shrink: 0; transition: all 0.2s;">A</button>
+                    <input type="text" id="triviaAnswer0" placeholder="Answer A" required style="flex: 1; padding: 10px 12px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-primary); font-size: 14px;" />
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <button type="button" onclick="setCorrectTriviaAnswer(1)" id="triviaCorrectBtn1" class="trivia-correct-btn" style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--glass-border); background: transparent; color: var(--text-muted); font-weight: 700; cursor: pointer; flex-shrink: 0; transition: all 0.2s;">B</button>
+                    <input type="text" id="triviaAnswer1" placeholder="Answer B" required style="flex: 1; padding: 10px 12px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-primary); font-size: 14px;" />
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <button type="button" onclick="setCorrectTriviaAnswer(2)" id="triviaCorrectBtn2" class="trivia-correct-btn" style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--glass-border); background: transparent; color: var(--text-muted); font-weight: 700; cursor: pointer; flex-shrink: 0; transition: all 0.2s;">C</button>
+                    <input type="text" id="triviaAnswer2" placeholder="Answer C" required style="flex: 1; padding: 10px 12px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-primary); font-size: 14px;" />
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <button type="button" onclick="setCorrectTriviaAnswer(3)" id="triviaCorrectBtn3" class="trivia-correct-btn" style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--glass-border); background: transparent; color: var(--text-muted); font-weight: 700; cursor: pointer; flex-shrink: 0; transition: all 0.2s;">D</button>
+                    <input type="text" id="triviaAnswer3" placeholder="Answer D" required style="flex: 1; padding: 10px 12px; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-primary); font-size: 14px;" />
+                </div>
+            </div>
+            <div id="triviaCreateError" style="color: #ff4444; font-size: 13px; margin-bottom: 12px; display: none;"></div>
+
+            <button type="submit" style="width: 100%; padding: 14px; background: linear-gradient(135deg, var(--neon-cyan), #0088cc); color: #000; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">Submit Question</button>
+        </form>
     </div>
 </div>
 
@@ -12192,57 +12255,271 @@ const triviaQuestions = {
 };
 
 function startDailyQuiz() {
-    currentQuiz = triviaQuestions.Mixed.slice(0, 10);
+    currentQuiz = shuffleArray(triviaQuestions.Mixed.slice()).slice(0, 10);
     currentQuizProgress = 0;
     currentQuizScore = 0;
     selectedQuizAnswer = null;
+    triviaQuizActive = true;
+    triviaCheatCount = 0;
+    triviaAnswerLocked = false;
     loadQuizQuestion();
     document.getElementById('triviaQuizModal').style.display = 'flex';
 }
 
+function shuffleArray(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+}
+
 function startTrivia(category) {
-    console.log(`Starting ${category} trivia`);
-    // Normalize category: 'nfl' -> 'NFL', 'mixed' -> 'Mixed'
+    console.log('Starting ' + category + ' trivia');
     var catKey = category.toUpperCase();
     if (catKey === 'MIXED') catKey = 'Mixed';
     if (catKey === 'SOCCER') catKey = 'Soccer';
-    const questions = triviaQuestions[catKey] || triviaQuestions.Mixed;
-    currentQuiz = questions.slice(0, 10);
+    var questions = triviaQuestions[catKey] || triviaQuestions.Mixed;
+    currentQuiz = shuffleArray(questions.slice()).slice(0, 10);
     currentQuizProgress = 0;
     currentQuizScore = 0;
     selectedQuizAnswer = null;
+    triviaQuizActive = true;
+    triviaCheatCount = 0;
+    triviaAnswerLocked = false;
+    currentTriviaCategory = category;
     loadQuizQuestion();
     document.getElementById('triviaQuizModal').style.display = 'flex';
+}
+
+// =========================================================
+// TRIVIA TIMER + ANTI-CHEAT SYSTEM
+// =========================================================
+var triviaTimer = null;
+var triviaTimeLeft = 20;
+var triviaCheatCount = 0;
+var triviaQuizActive = false;
+var triviaAnswerLocked = false;
+
+// Anti-cheat: detect tab switching and window blur during quiz
+function triviaCheatHandler() {
+    if (!triviaQuizActive || triviaAnswerLocked) return;
+    triviaCheatCount++;
+    console.log('[TMR Anti-Cheat] Tab switch detected! Violation #' + triviaCheatCount);
+
+    // Show cheat warning in quiz
+    var modal = document.getElementById('triviaQuizModal');
+    if (modal) {
+        var existingWarning = modal.querySelector('.cheat-warning-banner');
+        if (existingWarning) existingWarning.remove();
+        var warning = document.createElement('div');
+        warning.className = 'cheat-warning-banner';
+        warning.style.cssText = 'background: rgba(255,68,68,0.15); border: 1px solid #ff4444; border-radius: 8px; padding: 10px 16px; margin: 8px 0; text-align: center; color: #ff4444; font-weight: 700; font-size: 14px; animation: fadeIn 0.3s ease;';
+        warning.innerHTML = '&#9888; TAB SWITCH DETECTED - Answer marked WRONG (Violation #' + triviaCheatCount + ')';
+        var questionDiv = modal.querySelector('.quiz-question');
+        if (questionDiv) questionDiv.parentNode.insertBefore(warning, questionDiv.nextSibling);
+    }
+
+    // Auto-mark wrong and advance
+    triviaAnswerLocked = true;
+    clearInterval(triviaTimer);
+    triviaTimer = null;
+
+    var question = currentQuiz[currentQuizProgress];
+    var options = document.querySelectorAll('.quiz-option');
+    options.forEach(function(opt, idx) {
+        opt.style.pointerEvents = 'none';
+        if (idx === question.correct) {
+            opt.style.background = 'rgba(0, 200, 83, 0.25)';
+            opt.style.border = '2px solid #00c853';
+        }
+    });
+
+    var submitBtn = document.querySelector('.submit-answer-btn');
+    if (submitBtn) {
+        submitBtn.textContent = '&#9888; CHEATING DETECTED - ' + question.a[question.correct];
+        submitBtn.style.background = 'rgba(255,68,68,0.3)';
+        submitBtn.style.color = '#ff4444';
+        submitBtn.style.pointerEvents = 'none';
+    }
+
+    // Update stats
+    var statsContainer = document.querySelector('.quiz-stats');
+    if (statsContainer) {
+        var wrongCount = (currentQuizProgress + 1) - currentQuizScore;
+        statsContainer.innerHTML =
+            '<div class="stat-item"><span class="stat-icon">&#9989;</span><span>' + currentQuizScore + ' Correct</span></div>' +
+            '<div class="stat-item"><span class="stat-icon">&#10060;</span><span>' + wrongCount + ' Wrong</span></div>' +
+            '<div class="stat-item"><span class="stat-icon">&#127919;</span><span>' + (currentQuizScore * 50) + ' pts</span></div>' +
+            '<div class="stat-item"><span class="stat-icon">&#9888;</span><span style="color:#ff4444;">' + triviaCheatCount + ' Flags</span></div>';
+    }
+
+    currentQuizProgress++;
+    setTimeout(function() {
+        if (submitBtn) {
+            submitBtn.textContent = 'SUBMIT ANSWER';
+            submitBtn.style.background = '';
+            submitBtn.style.color = '';
+            submitBtn.style.pointerEvents = '';
+        }
+        loadQuizQuestion();
+    }, 1500);
+}
+
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden && triviaQuizActive) triviaCheatHandler();
+});
+window.addEventListener('blur', function() {
+    if (triviaQuizActive && !document.hidden) triviaCheatHandler();
+});
+
+// Timer display update
+function updateTimerDisplay(seconds) {
+    var timerEl = document.getElementById('triviaTimerDisplay');
+    if (!timerEl) return;
+    timerEl.textContent = seconds + 's';
+    if (seconds <= 5) {
+        timerEl.style.color = '#ff4444';
+        timerEl.style.animation = 'pulse 0.5s ease-in-out infinite';
+    } else if (seconds <= 10) {
+        timerEl.style.color = '#ff9800';
+        timerEl.style.animation = '';
+    } else {
+        timerEl.style.color = 'var(--neon-cyan)';
+        timerEl.style.animation = '';
+    }
+}
+
+function startQuizTimer() {
+    clearInterval(triviaTimer);
+    triviaTimeLeft = 20;
+    triviaAnswerLocked = false;
+    updateTimerDisplay(20);
+
+    triviaTimer = setInterval(function() {
+        triviaTimeLeft--;
+        updateTimerDisplay(triviaTimeLeft);
+        if (triviaTimeLeft <= 0) {
+            clearInterval(triviaTimer);
+            triviaTimer = null;
+            timeUpHandler();
+        }
+    }, 1000);
+}
+
+function timeUpHandler() {
+    if (triviaAnswerLocked) return;
+    triviaAnswerLocked = true;
+
+    var question = currentQuiz[currentQuizProgress];
+    // Show correct answer
+    var options = document.querySelectorAll('.quiz-option');
+    options.forEach(function(opt, idx) {
+        opt.style.pointerEvents = 'none';
+        if (idx === question.correct) {
+            opt.style.background = 'rgba(0, 200, 83, 0.25)';
+            opt.style.border = '2px solid #00c853';
+        }
+    });
+
+    var submitBtn = document.querySelector('.submit-answer-btn');
+    if (submitBtn) {
+        submitBtn.textContent = '&#8987; TIME UP - ' + question.a[question.correct];
+        submitBtn.style.background = 'rgba(255,152,0,0.3)';
+        submitBtn.style.color = '#ff9800';
+        submitBtn.style.pointerEvents = 'none';
+    }
+
+    // Update stats
+    var statsContainer = document.querySelector('.quiz-stats');
+    if (statsContainer) {
+        var wrongCount = (currentQuizProgress + 1) - currentQuizScore;
+        statsContainer.innerHTML =
+            '<div class="stat-item"><span class="stat-icon">&#9989;</span><span>' + currentQuizScore + ' Correct</span></div>' +
+            '<div class="stat-item"><span class="stat-icon">&#10060;</span><span>' + wrongCount + ' Wrong</span></div>' +
+            '<div class="stat-item"><span class="stat-icon">&#127919;</span><span>' + (currentQuizScore * 50) + ' pts</span></div>';
+    }
+
+    currentQuizProgress++;
+    setTimeout(function() {
+        if (submitBtn) {
+            submitBtn.textContent = 'SUBMIT ANSWER';
+            submitBtn.style.background = '';
+            submitBtn.style.color = '';
+            submitBtn.style.pointerEvents = '';
+        }
+        loadQuizQuestion();
+    }, 1500);
 }
 
 function loadQuizQuestion() {
     if (currentQuizProgress >= currentQuiz.length) {
+        triviaQuizActive = false;
+        clearInterval(triviaTimer);
+        triviaTimer = null;
         finishQuiz();
         return;
     }
 
+    triviaAnswerLocked = false;
     const question = currentQuiz[currentQuizProgress];
     const modal = document.getElementById('triviaQuizModal');
 
+    // Remove any cheat warning
+    var existingWarning = modal.querySelector('.cheat-warning-banner');
+    if (existingWarning) existingWarning.remove();
+
     modal.querySelector('.progress-fill').style.width = ((currentQuizProgress / currentQuiz.length) * 100) + '%';
-    modal.querySelector('.progress-text').textContent = `Question ${currentQuizProgress + 1} of ${currentQuiz.length}`;
+    modal.querySelector('.progress-text').textContent = 'Question ' + (currentQuizProgress + 1) + ' of ' + currentQuiz.length;
+
+    // Add timer to the header if not present
+    var quizHeader = modal.querySelector('.quiz-header');
+    var timerEl = document.getElementById('triviaTimerDisplay');
+    if (!timerEl && quizHeader) {
+        var timerDiv = document.createElement('div');
+        timerDiv.id = 'triviaTimerDisplay';
+        timerDiv.style.cssText = 'font-family: Orbitron, monospace; font-size: 28px; font-weight: 700; color: var(--neon-cyan); min-width: 60px; text-align: center;';
+        timerDiv.textContent = '20s';
+        quizHeader.insertBefore(timerDiv, quizHeader.firstChild);
+    }
+
     modal.querySelector('.quiz-question').textContent = question.q;
 
+    // Shuffle answer order to prevent memorization
+    var answerIndices = [0, 1, 2, 3];
+    for (var si = answerIndices.length - 1; si > 0; si--) {
+        var sj = Math.floor(Math.random() * (si + 1));
+        var tmp = answerIndices[si]; answerIndices[si] = answerIndices[sj]; answerIndices[sj] = tmp;
+    }
+    // Store the mapping so we know which shuffled index = correct
+    question._shuffledIndices = answerIndices;
+
     const optionsContainer = modal.querySelector('.quiz-options');
-    optionsContainer.innerHTML = question.a.map((answer, idx) => `
-        <div class="quiz-option" onclick="selectAnswer(${idx})">
-            <span class="option-letter">${String.fromCharCode(65 + idx)}</span>
-            <span class="option-text">${answer}</span>
-        </div>
-    `).join('');
+    optionsContainer.innerHTML = answerIndices.map(function(origIdx, displayIdx) {
+        return '<div class="quiz-option" onclick="selectAnswer(' + displayIdx + ')">' +
+            '<span class="option-letter">' + String.fromCharCode(65 + displayIdx) + '</span>' +
+            '<span class="option-text">' + question.a[origIdx] + '</span>' +
+            '</div>';
+    }).join('');
 
     selectedQuizAnswer = null;
+
+    // Start the 20-second timer
+    startQuizTimer();
 }
 
 function closeQuizModal() {
     var modal = document.getElementById('triviaQuizModal');
     modal.style.display = 'none';
     currentQuiz = null;
+    triviaQuizActive = false;
+    triviaCheatCount = 0;
+    clearInterval(triviaTimer);
+    triviaTimer = null;
+
+    // Remove timer element
+    var timerEl = document.getElementById('triviaTimerDisplay');
+    if (timerEl) timerEl.remove();
 
     // Restore quiz modal structure if finishQuiz replaced it
     var quizModal = modal.querySelector('.quiz-modal');
@@ -12259,27 +12536,38 @@ function closeQuizModal() {
 }
 
 function selectAnswer(answer) {
-    document.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected'));
-    event.currentTarget.classList.add('selected');
+    if (triviaAnswerLocked) return;
+    document.querySelectorAll('.quiz-option').forEach(function(opt) { opt.classList.remove('selected'); });
+    document.querySelectorAll('.quiz-option')[answer].classList.add('selected');
     selectedQuizAnswer = answer;
 }
 
 function submitAnswer() {
+    if (triviaAnswerLocked) return;
     if (selectedQuizAnswer === null) {
-        // Flash the submit button red briefly
         var submitBtn = document.querySelector('.submit-answer-btn');
         if (submitBtn) { submitBtn.style.background = '#ff4444'; submitBtn.textContent = 'SELECT AN ANSWER FIRST'; setTimeout(function() { submitBtn.style.background = ''; submitBtn.textContent = 'SUBMIT ANSWER'; }, 1500); }
         return;
     }
 
+    triviaAnswerLocked = true;
+    clearInterval(triviaTimer);
+    triviaTimer = null;
+
     const question = currentQuiz[currentQuizProgress];
-    const isCorrect = selectedQuizAnswer === question.correct;
+    // Map back from shuffled display index to original index
+    var shuffled = question._shuffledIndices || [0, 1, 2, 3];
+    var selectedOriginal = shuffled[selectedQuizAnswer];
+    const isCorrect = selectedOriginal === question.correct;
+
+    // Find the display index of the correct answer
+    var correctDisplayIdx = shuffled.indexOf(question.correct);
 
     // Visual feedback on answer options
     var options = document.querySelectorAll('.quiz-option');
     options.forEach(function(opt, idx) {
         opt.style.pointerEvents = 'none';
-        if (idx === question.correct) {
+        if (idx === correctDisplayIdx) {
             opt.style.background = 'rgba(0, 200, 83, 0.25)';
             opt.style.border = '2px solid #00c853';
         } else if (idx === selectedQuizAnswer && !isCorrect) {
@@ -12292,21 +12580,24 @@ function submitAnswer() {
         currentQuizScore++;
     }
 
-    // Update running stats in the quiz modal
+    // Update running stats
     var statsContainer = document.querySelector('.quiz-stats');
     if (statsContainer) {
         var correctCount = currentQuizScore;
         var wrongCount = (currentQuizProgress + 1) - currentQuizScore;
-        statsContainer.innerHTML =
-            '<div class="stat-item"><span class="stat-icon">✅</span><span>' + correctCount + ' Correct</span></div>' +
-            '<div class="stat-item"><span class="stat-icon">❌</span><span>' + wrongCount + ' Wrong</span></div>' +
-            '<div class="stat-item"><span class="stat-icon">🎯</span><span>' + (correctCount * 50) + ' pts</span></div>';
+        var statsHtml = '<div class="stat-item"><span class="stat-icon">&#9989;</span><span>' + correctCount + ' Correct</span></div>' +
+            '<div class="stat-item"><span class="stat-icon">&#10060;</span><span>' + wrongCount + ' Wrong</span></div>' +
+            '<div class="stat-item"><span class="stat-icon">&#127919;</span><span>' + (correctCount * 50) + ' pts</span></div>';
+        if (triviaCheatCount > 0) {
+            statsHtml += '<div class="stat-item"><span class="stat-icon">&#9888;</span><span style="color:#ff4444;">' + triviaCheatCount + ' Flags</span></div>';
+        }
+        statsContainer.innerHTML = statsHtml;
     }
 
-    // Show feedback briefly, then advance
+    // Show feedback
     var submitBtn = document.querySelector('.submit-answer-btn');
     if (submitBtn) {
-        submitBtn.textContent = isCorrect ? '✅ CORRECT! +50 pts' : '❌ Wrong - ' + question.a[question.correct];
+        submitBtn.textContent = isCorrect ? '&#9989; CORRECT! +50 pts' : '&#10060; Wrong - ' + question.a[question.correct];
         submitBtn.style.background = isCorrect ? 'rgba(0,200,83,0.3)' : 'rgba(255,68,68,0.3)';
         submitBtn.style.color = isCorrect ? '#00c853' : '#ff4444';
         submitBtn.style.pointerEvents = 'none';
@@ -12324,9 +12615,137 @@ function submitAnswer() {
     }, 1200);
 }
 
+// =========================================================
+// CUSTOM TRIVIA QUESTION CREATOR
+// =========================================================
+var selectedCorrectTriviaAnswer = -1;
+
+function openCreateTriviaModal() {
+    if (!window.auth || !window.auth.isLoggedIn()) {
+        alert('Please log in to create trivia questions.');
+        return;
+    }
+    selectedCorrectTriviaAnswer = -1;
+    document.getElementById('triviaCreateQuestion').value = '';
+    for (var i = 0; i < 4; i++) {
+        document.getElementById('triviaAnswer' + i).value = '';
+        var btn = document.getElementById('triviaCorrectBtn' + i);
+        btn.style.background = 'transparent';
+        btn.style.borderColor = 'var(--glass-border)';
+        btn.style.color = 'var(--text-muted)';
+    }
+    document.getElementById('triviaCreateError').style.display = 'none';
+    document.getElementById('createTriviaModal').style.display = 'flex';
+}
+
+function closeCreateTriviaModal() {
+    document.getElementById('createTriviaModal').style.display = 'none';
+}
+
+function setCorrectTriviaAnswer(idx) {
+    selectedCorrectTriviaAnswer = idx;
+    for (var i = 0; i < 4; i++) {
+        var btn = document.getElementById('triviaCorrectBtn' + i);
+        if (i === idx) {
+            btn.style.background = '#00c853';
+            btn.style.borderColor = '#00c853';
+            btn.style.color = '#000';
+        } else {
+            btn.style.background = 'transparent';
+            btn.style.borderColor = 'var(--glass-border)';
+            btn.style.color = 'var(--text-muted)';
+        }
+    }
+}
+
+function submitCustomTrivia(e) {
+    e.preventDefault();
+    var errEl = document.getElementById('triviaCreateError');
+
+    var question = document.getElementById('triviaCreateQuestion').value.trim();
+    var answers = [];
+    for (var i = 0; i < 4; i++) {
+        answers.push(document.getElementById('triviaAnswer' + i).value.trim());
+    }
+    var category = document.getElementById('triviaCreateCategory').value;
+
+    if (!question) { errEl.textContent = 'Please enter a question.'; errEl.style.display = 'block'; return; }
+    if (answers.some(function(a) { return !a; })) { errEl.textContent = 'Please fill in all 4 answers.'; errEl.style.display = 'block'; return; }
+    if (selectedCorrectTriviaAnswer < 0) { errEl.textContent = 'Click the letter button (A/B/C/D) next to the correct answer.'; errEl.style.display = 'block'; return; }
+
+    var user = window.auth.getCurrentUser();
+    var newQ = {
+        q: question,
+        a: answers,
+        correct: selectedCorrectTriviaAnswer,
+        createdBy: user.username || 'Anonymous',
+        createdAt: new Date().toISOString(),
+        category: category,
+        id: 'cq_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4)
+    };
+
+    // Save to custom trivia localStorage
+    var custom = [];
+    try { custom = JSON.parse(localStorage.getItem('tmr_custom_trivia') || '[]'); } catch(e) { custom = []; }
+    custom.unshift(newQ);
+    localStorage.setItem('tmr_custom_trivia', JSON.stringify(custom));
+
+    // Also inject into the live triviaQuestions pool for this session
+    var catKey = category;
+    if (catKey !== 'Mixed' && catKey !== 'Soccer') catKey = catKey.toUpperCase();
+    if (triviaQuestions[catKey]) {
+        triviaQuestions[catKey].push({ q: question, a: answers, correct: selectedCorrectTriviaAnswer });
+    }
+    // Also add to Mixed pool
+    if (catKey !== 'Mixed') {
+        triviaQuestions.Mixed.push({ q: question, a: answers, correct: selectedCorrectTriviaAnswer });
+    }
+
+    closeCreateTriviaModal();
+    updateCustomQCount();
+    alert('Question added! It will appear in ' + category + ' quizzes.');
+}
+
+function updateCustomQCount() {
+    var custom = [];
+    try { custom = JSON.parse(localStorage.getItem('tmr_custom_trivia') || '[]'); } catch(e) {}
+    var countEl = document.getElementById('customQCount');
+    var containerEl = document.getElementById('communityQuestionsCount');
+    if (countEl) countEl.textContent = custom.length;
+    if (containerEl) containerEl.style.display = custom.length > 0 ? 'block' : 'none';
+}
+
+// Load custom trivia questions into the pool on page load
+function loadCustomTriviaIntoPool() {
+    var custom = [];
+    try { custom = JSON.parse(localStorage.getItem('tmr_custom_trivia') || '[]'); } catch(e) {}
+    custom.forEach(function(cq) {
+        var catKey = cq.category || 'Mixed';
+        if (catKey !== 'Mixed' && catKey !== 'Soccer') catKey = catKey.toUpperCase();
+        var entry = { q: cq.q, a: cq.a, correct: cq.correct };
+        if (triviaQuestions[catKey]) triviaQuestions[catKey].push(entry);
+        if (catKey !== 'Mixed') triviaQuestions.Mixed.push(entry);
+    });
+    updateCustomQCount();
+}
+
+// Run on load
+document.addEventListener('DOMContentLoaded', loadCustomTriviaIntoPool);
+
 function finishQuiz() {
+    triviaQuizActive = false;
+    clearInterval(triviaTimer);
+    triviaTimer = null;
+
     const percentage = (currentQuizScore / currentQuiz.length) * 100;
-    const points = currentQuizScore * 50;
+    var points = currentQuizScore * 50;
+
+    // Penalty for cheating: halve points if any violations detected
+    var cheatPenalty = triviaCheatCount > 0;
+    if (cheatPenalty) {
+        points = Math.floor(points * 0.5);
+    }
+
     var user = (window.auth && window.auth.isLoggedIn()) ? window.auth.getCurrentUser() : null;
 
     // Save score
@@ -12338,26 +12757,32 @@ function finishQuiz() {
         category: currentTriviaCategory || 'mixed',
         username: user ? user.username : 'Guest',
         date: new Date().toISOString().split('T')[0],
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        cheatFlags: triviaCheatCount
     };
 
     triviaScores.unshift(score);
-    triviaScores = triviaScores.slice(0, 100); // Keep last 100 scores
+    triviaScores = triviaScores.slice(0, 100);
     localStorage.setItem('trustMyRecordTriviaScores', JSON.stringify(triviaScores));
 
-    // Show results in modal instead of alert
+    // Show results
     var modal = document.getElementById('triviaQuizModal');
     if (modal) {
-        var emoji = percentage >= 80 ? '🏆' : percentage >= 60 ? '🎉' : percentage >= 40 ? '👍' : '📚';
+        var emoji = cheatPenalty ? '&#9888;' : (percentage >= 80 ? '&#127942;' : percentage >= 60 ? '&#127881;' : percentage >= 40 ? '&#128077;' : '&#128218;');
+        var cheatMsg = cheatPenalty
+            ? '<div style="background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.3); border-radius: 12px; padding: 12px; margin-bottom: 16px; color: #ff4444; font-weight: 600;">' +
+              '&#9888; ' + triviaCheatCount + ' tab-switch violation' + (triviaCheatCount > 1 ? 's' : '') + ' detected. Points halved as penalty.</div>'
+            : '';
         modal.querySelector('.quiz-modal').innerHTML =
             '<div style="text-align: center; padding: 40px 20px;">' +
             '<div style="font-size: 64px; margin-bottom: 20px;">' + emoji + '</div>' +
             '<h2 style="color: var(--text-primary); margin-bottom: 10px;">Quiz Complete!</h2>' +
             '<div style="font-size: 48px; font-weight: 700; color: var(--neon-cyan); margin-bottom: 5px;">' + currentQuizScore + '/' + currentQuiz.length + '</div>' +
             '<div style="color: #6c7380; margin-bottom: 20px;">' + percentage.toFixed(0) + '% correct</div>' +
+            cheatMsg +
             '<div style="background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3); border-radius: 12px; padding: 16px; margin-bottom: 24px;">' +
             '<span style="color: var(--neon-gold); font-weight: 700; font-size: 24px;">+' + points + '</span>' +
-            '<span style="color: #6c7380; margin-left: 8px;">points earned</span>' +
+            '<span style="color: #6c7380; margin-left: 8px;">points earned' + (cheatPenalty ? ' (penalized)' : '') + '</span>' +
             '</div>' +
             '<button onclick="closeQuizModal()" style="background: linear-gradient(135deg, var(--neon-cyan), #0088cc); color: #000; border: none; padding: 14px 40px; border-radius: 30px; font-weight: 700; cursor: pointer; font-size: 16px; margin-right: 10px;">Done</button>' +
             '<button onclick="closeQuizModal(); startTrivia(\'' + (currentTriviaCategory || 'mixed') + '\')" style="background: var(--card-bg); color: var(--text-primary); border: 1px solid var(--glass-border); padding: 14px 40px; border-radius: 30px; font-weight: 700; cursor: pointer; font-size: 16px;">Play Again</button>' +
@@ -16196,6 +16621,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectedUnits = val;
                 console.log('[TMR] Units set to:', val);
             });
+        }
+
+        // =========================================================
+        // PERIODIC AUTO-GRADING - Check every 5 minutes for completed games
+        // =========================================================
+        if (typeof window.autoGradeAll === 'function') {
+            // Run initial auto-grade after a short delay (let page settle)
+            setTimeout(function() {
+                console.log('[TMR] Running initial auto-grade check...');
+                window.autoGradeAll().catch(function() {});
+            }, 10000);
+
+            // Then check every 5 minutes
+            setInterval(function() {
+                var pendingPicks = [];
+                try { pendingPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]').filter(function(p) { return p.status === 'pending'; }); } catch(e) {}
+                if (pendingPicks.length > 0) {
+                    console.log('[TMR] Periodic auto-grade: ' + pendingPicks.length + ' pending picks...');
+                    window.autoGradeAll().then(function() {
+                        // Refresh UI if user is on My Picks tab
+                        if (typeof loadMyPicks === 'function' && document.getElementById('mypicks') && document.getElementById('mypicks').style.display !== 'none') {
+                            loadMyPicks(window.currentPicksTab || 'pending');
+                        }
+                    }).catch(function() {});
+                }
+            }, 300000); // 5 minutes = 300,000ms
         }
     });
 
