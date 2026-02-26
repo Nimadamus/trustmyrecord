@@ -953,33 +953,25 @@
     </section>
 
     <!-- Scripts -->
-    <script src="static/js/config.js"></script>
-    <script src="static/js/backend-api.js"></script>
+    <script src="static/js/auth-persistent.js"></script>
     <script>
+        // Initialize auth system
+        const auth = new PersistentAuthSystem();
+        
         // Get username from URL parameter
         const urlParams = new URLSearchParams(window.location.search);
-        const profileUsername = urlParams.get('username') || (api.user ? api.user.username : null);
+        let profileUsername = urlParams.get('username');
 
         // Current user info
-        let currentUser = null;
+        let currentUser = auth.getCurrentUser();
         let isOwnProfile = false;
         let profileData = null;
 
         // Initialize page
-        async function init() {
-            // Check if logged in
-            if (api.token) {
-                try {
-                    currentUser = await api.loadUser();
-                } catch (e) {
-                    console.log('Not logged in');
-                }
-            }
-
+        function init() {
             // If no username provided, use current user
             if (!profileUsername && currentUser) {
-                window.location.href = `profile.html?username=${currentUser.username}`;
-                return;
+                profileUsername = currentUser.username;
             }
 
             if (!profileUsername) {
@@ -999,7 +991,7 @@
             updateHeader();
 
             // Load profile data
-            await loadProfile();
+            loadProfile();
         }
 
         function updateHeader() {
@@ -1026,36 +1018,70 @@
             }
         }
 
-        async function followUser(userId) {
-            if (!api.token) {
+        function followUser(userId) {
+            if (!currentUser) {
                 showToast('Please log in to follow users', 'error');
                 return;
             }
-            try {
-                await api.followUser(userId);
-                showToast('User followed!', 'success');
-                // Reload followers/following
-                await loadProfile();
-            } catch (error) {
-                console.error('Error following user:', error);
-                showToast(error.message || 'Failed to follow user', 'error');
+            
+            // Get all users
+            const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
+            const targetUser = users.find(u => u.username === userId || u.id === userId);
+            const currentUserData = users.find(u => u.username === currentUser.username);
+            
+            if (!targetUser || !currentUserData) {
+                showToast('User not found', 'error');
+                return;
             }
+            
+            // Add to following
+            if (!currentUserData.social.following) currentUserData.social.following = [];
+            if (!currentUserData.social.following.includes(targetUser.username)) {
+                currentUserData.social.following.push(targetUser.username);
+            }
+            
+            // Add to target's followers
+            if (!targetUser.social.followers) targetUser.social.followers = [];
+            if (!targetUser.social.followers.includes(currentUser.username)) {
+                targetUser.social.followers.push(currentUser.username);
+            }
+            
+            // Save
+            localStorage.setItem('trustmyrecord_users', JSON.stringify(users));
+            showToast('User followed!', 'success');
+            loadProfile();
         }
 
-        async function unfollowUser(userId) {
-            if (!api.token) {
+        function unfollowUser(userId) {
+            if (!currentUser) {
                 showToast('Please log in', 'error');
                 return;
             }
-            try {
-                await api.unfollowUser(userId);
-                showToast('User unfollowed', 'success');
-                // Reload followers/following
-                await loadProfile();
-            } catch (error) {
-                console.error('Error unfollowing user:', error);
-                showToast(error.message || 'Failed to unfollow user', 'error');
+            
+            // Get all users
+            const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
+            const targetUser = users.find(u => u.username === userId || u.id === userId);
+            const currentUserData = users.find(u => u.username === currentUser.username);
+            
+            if (!targetUser || !currentUserData) {
+                showToast('User not found', 'error');
+                return;
             }
+            
+            // Remove from following
+            if (currentUserData.social.following) {
+                currentUserData.social.following = currentUserData.social.following.filter(u => u !== targetUser.username);
+            }
+            
+            // Remove from target's followers
+            if (targetUser.social.followers) {
+                targetUser.social.followers = targetUser.social.followers.filter(u => u !== currentUser.username);
+            }
+            
+            // Save
+            localStorage.setItem('trustmyrecord_users', JSON.stringify(users));
+            showToast('User unfollowed', 'success');
+            loadProfile();
         }
 
         function showToast(message, type = 'info') {
@@ -1103,40 +1129,111 @@
             }, 3000);
         }
 
-        async function loadProfile() {
+        function loadProfile() {
             try {
-                // Load main profile stats
-                const stats = await api.getProfileStats(profileUsername);
-                profileData = stats.profile; // Store for later use
+                // Get user from localStorage
+                const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
+                const profileUser = users.find(u => u.username === profileUsername);
+                
+                if (!profileUser) {
+                    document.getElementById('profileHeader').innerHTML = `
+                        <div class="error-message">
+                            <h3>❌ User Not Found</h3>
+                            <p>User "${profileUsername}" does not exist.</p>
+                            <a href="index.html" class="btn btn-primary" style="margin-top: 20px;">Go Home</a>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                profileData = profileUser;
+                
+                // Calculate stats from picks
+                const allPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
+                const userPicks = allPicks.filter(p => p.user_id === profileUsername);
+                
+                const stats = {
+                    wins: userPicks.filter(p => p.status === 'won').length,
+                    losses: userPicks.filter(p => p.status === 'lost').length,
+                    pushes: userPicks.filter(p => p.status === 'pushed').length,
+                    pending: userPicks.filter(p => p.status === 'pending').length,
+                    totalPicks: userPicks.length
+                };
+                
+                // Update profile stats
+                profileData.stats = {
+                    ...profileData.stats,
+                    ...stats,
+                    winRate: stats.totalPicks > 0 ? ((stats.wins / (stats.totalPicks - stats.pushes)) * 100).toFixed(1) : 0
+                };
+                
+                // Ensure social data exists
+                if (!profileData.social) profileData.social = { followers: [], following: [], reputation: 100, badges: [] };
+                if (!profileData.social.followers) profileData.social.followers = [];
+                if (!profileData.social.following) profileData.social.following = [];
+
                 renderProfileHeader(profileData);
                 renderStatsGrid(profileData);
                 renderHandicappingStats(profileData);
-                renderSportBreakdown(stats.picks_by_sport);
-                renderActivity(stats.recent_activity);
+                
+                // Get picks by sport
+                const picksBySport = {};
+                userPicks.forEach(p => {
+                    const sport = p.sport_display || 'Other';
+                    if (!picksBySport[sport]) {
+                        picksBySport[sport] = { wins: 0, losses: 0, pushes: 0, total: 0 };
+                    }
+                    picksBySport[sport].total++;
+                    if (p.status === 'won') picksBySport[sport].wins++;
+                    else if (p.status === 'lost') picksBySport[sport].losses++;
+                    else if (p.status === 'pushed') picksBySport[sport].pushes++;
+                });
+                renderSportBreakdown(picksBySport);
+                
+                // Recent activity (last 10 picks)
+                const recentActivity = userPicks.slice(0, 10).map(p => ({
+                    type: 'pick',
+                    description: `${p.selection} (${p.status})`,
+                    date: p.locked_at || new Date().toISOString()
+                }));
+                renderActivity(recentActivity);
 
-                // Load additional data in parallel
-                const [friendsData, competitionsData, challengesData, pollTriviaData, followersData, followingData] = await Promise.all([
-                    api.getProfileFriends(profileUsername).catch(() => ({ friends: [] })),
-                    api.getProfileCompetitions(profileUsername).catch(() => ({ competitions: [] })),
-                    api.getProfileChallenges(profileUsername).catch(() => ({ challenges: [] })),
-                    api.getProfilePollTriviaStats(profileUsername).catch(() => null),
-                    api.getProfileFollowers(profileUsername).catch(() => ({ followers: [] })),
-                    api.getProfileFollowing(profileUsername).catch(() => ({ following: [] }))
-                ]);
-
-                renderFriends(friendsData.friends || []);
-                renderFollowers(followersData.followers || []);
-                renderFollowing(followingData.following || []);
-                renderCompetitions(competitionsData.competitions || []);
-                renderChallenges(challengesData.challenges || []);
-                renderPollTriviaStats(pollTriviaData);
+                // Load followers/following
+                renderFollowers(profileData.social.followers);
+                renderFollowing(profileData.social.following);
+                
+                // Load friends (mutual follows)
+                const friends = profileData.social.following.filter(f => 
+                    profileData.social.followers.includes(f)
+                );
+                renderFriends(friends);
+                
+                // Competitions and challenges from localStorage
+                const competitions = JSON.parse(localStorage.getItem('tmr_competitions') || '[]')
+                    .filter(c => c.participants && c.participants.includes(profileUsername));
+                renderCompetitions(competitions);
+                
+                const challenges = JSON.parse(localStorage.getItem('tmr_challenges') || '[]')
+                    .filter(c => c.challenger === profileUsername || c.opponent === profileUsername);
+                renderChallenges(challenges);
+                
+                // Poll/trivia stats
+                const pollTriviaStats = {
+                    pollPoints: profileData.stats?.pollPoints || 0,
+                    triviaPoints: profileData.stats?.triviaPoints || 0,
+                    pollsCorrect: profileData.stats?.pollsCorrect || 0,
+                    pollsTotal: profileData.stats?.pollsTotal || 0,
+                    triviaGames: profileData.stats?.triviaGames || 0,
+                    triviaWins: profileData.stats?.triviaWins || 0
+                };
+                renderPollTriviaStats(pollTriviaStats);
 
             } catch (error) {
                 console.error('Error loading profile:', error);
                 document.getElementById('profileHeader').innerHTML = `
                     <div class="error-message">
                         <h3>❌ Error Loading Profile</h3>
-                        <p>${error.message || 'Could not load profile data. Please try again later.'}</p>
+                        <p>Could not load profile data. Please try again later.</p>
                     </div>
                 `;
             }
@@ -1376,16 +1473,21 @@
                 `;
                 return;
             }
+            
+            // Get user data for each friend
+            const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
 
-            container.innerHTML = friends.map(friend => `
+            container.innerHTML = friends.map(friendUsername => {
+                const friend = users.find(u => u.username === friendUsername) || { username: friendUsername, stats: {} };
+                return `
                 <div class="friend-card" onclick="window.location.href='profile.html?username=${friend.username}'">
                     <div class="friend-avatar">${friend.username.charAt(0).toUpperCase()}</div>
                     <div class="friend-info">
                         <div class="friend-name">${friend.username}</div>
-                        <div class="friend-record">${friend.win_percentage || 0}% win rate • ${friend.total_picks || 0} picks</div>
+                        <div class="friend-record">${friend.stats?.winRate || 0}% win rate • ${friend.stats?.totalPicks || 0} picks</div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function renderFollowers(followers) {
@@ -1401,17 +1503,22 @@
                 `;
                 return;
             }
+            
+            // Get user data for each follower
+            const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
 
-            container.innerHTML = followers.map(follower => `
+            container.innerHTML = followers.map(followerUsername => {
+                const follower = users.find(u => u.username === followerUsername) || { username: followerUsername, stats: {} };
+                return `
                 <div class="friend-card" onclick="window.location.href='profile.html?username=${follower.username}'">
                     <div class="friend-avatar">${follower.username.charAt(0).toUpperCase()}</div>
                     <div class="friend-info">
                         <div class="friend-name">${follower.username}</div>
-                        <div class="friend-record">${follower.win_percentage || 0}% win rate • ${follower.total_picks || 0} picks</div>
+                        <div class="friend-record">${follower.stats?.winRate || 0}% win rate • ${follower.stats?.totalPicks || 0} picks</div>
                     </div>
-                    ${isOwnProfile ? '' : `<button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); followUser('${follower.id}')">Follow</button>`}
+                    ${isOwnProfile ? '' : `<button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); followUser('${follower.username}')">Follow</button>`}
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function renderFollowing(following) {
@@ -1427,17 +1534,22 @@
                 `;
                 return;
             }
+            
+            // Get user data for each followed user
+            const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
 
-            container.innerHTML = following.map(user => `
+            container.innerHTML = following.map(followedUsername => {
+                const user = users.find(u => u.username === followedUsername) || { username: followedUsername, stats: {} };
+                return `
                 <div class="friend-card" onclick="window.location.href='profile.html?username=${user.username}'">
                     <div class="friend-avatar">${user.username.charAt(0).toUpperCase()}</div>
                     <div class="friend-info">
                         <div class="friend-name">${user.username}</div>
-                        <div class="friend-record">${user.win_percentage || 0}% win rate • ${user.total_picks || 0} picks</div>
+                        <div class="friend-record">${user.stats?.winRate || 0}% win rate • ${user.stats?.totalPicks || 0} picks</div>
                     </div>
-                    ${isOwnProfile ? `<button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); unfollowUser('${user.id}')">Unfollow</button>` : ''}
+                    ${isOwnProfile ? `<button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); unfollowUser('${user.username}')">Unfollow</button>` : ''}
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function renderCompetitions(competitions) {
