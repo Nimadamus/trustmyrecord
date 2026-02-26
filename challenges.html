@@ -920,6 +920,232 @@
         .challenge-card:nth-child(2) { animation-delay: 0.1s; }
         .challenge-card:nth-child(3) { animation-delay: 0.2s; }
         .challenge-card:nth-child(4) { animation-delay: 0.3s; }
+
+        /* ==================== TRIVIA STYLES ==================== */
+        .trivia-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 30px;
+        }
+
+        .trivia-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .trivia-badge {
+            background: linear-gradient(45deg, var(--neon-gold), var(--neon-orange));
+            color: black;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .trivia-timer {
+            color: var(--neon-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+        }
+
+        .trivia-question {
+            font-size: 1.3rem;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .trivia-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .trivia-option {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+            color: white;
+            text-align: left;
+        }
+
+        .trivia-option:hover {
+            background: rgba(0, 255, 255, 0.1);
+            border-color: var(--neon-cyan);
+            transform: translateX(5px);
+        }
+
+        .trivia-option.correct {
+            background: rgba(57, 255, 20, 0.2);
+            border-color: var(--neon-green);
+        }
+
+        .trivia-option.wrong {
+            background: rgba(255, 7, 58, 0.2);
+            border-color: var(--neon-red);
+        }
+
+        .trivia-result {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .result-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .trivia-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 25px;
+        }
+
+        .trivia-stats .stat {
+            text-align: center;
+        }
+
+        .trivia-stats .stat-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: var(--neon-gold);
+        }
+
+        .trivia-stats .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .mini-leaderboard {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .mini-leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .mini-leaderboard-item:last-child {
+            border-bottom: none;
+        }
+
+        /* ==================== POLL STYLES ==================== */
+        .poll-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 30px;
+        }
+
+        .poll-question {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .poll-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .poll-option {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .poll-option:hover {
+            background: rgba(0, 255, 255, 0.1);
+            border-color: var(--neon-cyan);
+        }
+
+        .poll-option-bar {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, rgba(0, 255, 255, 0.2), rgba(255, 0, 255, 0.2));
+            transition: width 0.5s ease;
+            z-index: 0;
+        }
+
+        .poll-option-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .poll-meta {
+            display: flex;
+            gap: 10px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .poll-results {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 30px;
+        }
+
+        .result-bar {
+            margin-bottom: 15px;
+        }
+
+        .result-bar-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .result-bar-track {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .result-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .result-bar-fill.winner {
+            background: linear-gradient(90deg, var(--neon-gold), var(--neon-orange));
+        }
+
+        .section-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
     </style>
 </head>
 <body>
@@ -1248,6 +1474,84 @@
                 <div class="empty-state-icon">&#9876;</div>
                 <h3>No Active Challenges</h3>
                 <p>Accept a challenge above or create your own to get started!</p>
+            </div>
+        </section>
+
+        <!-- Daily Trivia Section -->
+        <section class="challenges-section">
+            <div class="section-header">
+                <h2 class="section-title">🎯 Daily Sports Trivia</h2>
+                <span class="section-subtitle" style="color: var(--text-muted); font-size: 14px;">Answer correctly to earn points!</span>
+            </div>
+
+            <div id="triviaContainer">
+                <!-- Trivia Question -->
+                <div class="trivia-card" id="triviaQuestion">
+                    <div class="trivia-header">
+                        <span class="trivia-badge">🏆 +50 Points</span>
+                        <span class="trivia-timer" id="triviaTimer">⏱️ 24:00:00</span>
+                    </div>
+                    <h3 class="trivia-question" id="triviaQuestionText">Loading today's question...</h3>
+                    <div class="trivia-options" id="triviaOptions">
+                        <!-- Options loaded by JS -->
+                    </div>
+                </div>
+
+                <!-- Trivia Results -->
+                <div class="trivia-result" id="triviaResult" style="display: none;">
+                    <div class="result-icon" id="resultIcon">✅</div>
+                    <h3 id="resultTitle">Correct!</h3>
+                    <p id="resultMessage">You earned 50 trivia points!</p>
+                    <div class="trivia-stats">
+                        <div class="stat">
+                            <span class="stat-number" id="triviaStreak">0</span>
+                            <span class="stat-label">Day Streak</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number" id="triviaTotalPoints">0</span>
+                            <span class="stat-label">Total Points</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trivia Leaderboard -->
+            <div class="mini-leaderboard" style="margin-top: 30px;">
+                <h4 style="font-family: 'Orbitron', sans-serif; margin-bottom: 15px;">🏆 Trivia Leaders</h4>
+                <div id="triviaLeaderboard">
+                    <!-- Loaded by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Daily Poll Section -->
+        <section class="challenges-section">
+            <div class="section-header">
+                <h2 class="section-title">📊 Daily Poll</h2>
+                <span class="section-subtitle" style="color: var(--text-muted); font-size: 14px;">Vote and see what the community thinks!</span>
+            </div>
+
+            <div id="pollContainer">
+                <div class="poll-card" id="pollQuestion">
+                    <h3 class="poll-question" id="pollQuestionText">Loading today's poll...</h3>
+                    <div class="poll-options" id="pollOptions">
+                        <!-- Options loaded by JS -->
+                    </div>
+                    <div class="poll-meta">
+                        <span id="pollVotes">0 votes</span>
+                        <span>•</span>
+                        <span id="pollTimeLeft">Ends in 12 hours</span>
+                    </div>
+                </div>
+
+                <!-- Poll Results -->
+                <div class="poll-results" id="pollResults" style="display: none;">
+                    <h4 style="margin-bottom: 15px;">Results</h4>
+                    <div id="pollResultsBars">
+                        <!-- Bars loaded by JS -->
+                    </div>
+                    <p style="margin-top: 15px; color: var(--text-muted);">You voted: <strong id="yourVote" style="color: var(--neon-cyan);">-</strong></p>
+                </div>
             </div>
         </section>
 
@@ -1649,7 +1953,334 @@
 
             // Load challenges from backend
             loadChallenges();
+
+            // Initialize Trivia and Polls
+            initTrivia();
+            initPolls();
         });
+
+        // ==================== TRIVIA SYSTEM ====================
+        const TRIVIA_KEY = 'tmr_trivia';
+        const TRIVIA_POINTS_KEY = 'tmr_trivia_points';
+
+        const dailyTrivia = [
+            {
+                question: "Which NFL team has won the most Super Bowl championships?",
+                options: ["Pittsburgh Steelers", "New England Patriots", "Dallas Cowboys", "San Francisco 49ers"],
+                correct: 0,
+                explanation: "The Pittsburgh Steelers and New England Patriots are tied with 6 Super Bowl wins each!"
+            },
+            {
+                question: "Who holds the NBA record for most points scored in a single game?",
+                options: ["Michael Jordan", "Kobe Bryant", "Wilt Chamberlain", "LeBron James"],
+                correct: 2,
+                explanation: "Wilt Chamberlain scored 100 points on March 2, 1962 - a record that still stands!"
+            },
+            {
+                question: "In baseball, what is a 'perfect game'?",
+                options: ["No hits allowed", "No runs allowed", "No baserunners allowed", "27 strikeouts"],
+                correct: 2,
+                explanation: "A perfect game means no batter reaches base - 27 up, 27 down!"
+            },
+            {
+                question: "Which NHL player is known as 'The Great One'?",
+                options: ["Mario Lemieux", "Wayne Gretzky", "Bobby Orr", "Sidney Crosby"],
+                correct: 1,
+                explanation: "Wayne Gretzky holds 61 NHL records and is widely considered the greatest hockey player ever!"
+            },
+            {
+                question: "What does 'ATS' mean in sports betting?",
+                options: ["Against The Spread", "All Time Stats", "Average Team Score", "Advanced Trades System"],
+                correct: 0,
+                explanation: "ATS = Against The Spread - betting on a team to cover the point spread!"
+            },
+            {
+                question: "In soccer betting, what is an 'accumulator'?",
+                options: ["A single bet", "Multiple bets combined", "A refund offer", "Live betting"],
+                correct: 1,
+                explanation: "An accumulator (parlay) combines multiple selections into one bet with higher odds!"
+            },
+            {
+                question: "Which college football team has the most all-time wins?",
+                options: ["Alabama", "Notre Dame", "Michigan", "Ohio State"],
+                correct: 2,
+                explanation: "Michigan holds the record for most all-time wins in college football history!"
+            }
+        ];
+
+        function getTodayIndex() {
+            const now = new Date();
+            const start = new Date(now.getFullYear(), 0, 0);
+            const diff = now - start;
+            const oneDay = 1000 * 60 * 60 * 24;
+            const day = Math.floor(diff / oneDay);
+            return day % dailyTrivia.length;
+        }
+
+        function getTriviaData() {
+            return JSON.parse(localStorage.getItem(TRIVIA_KEY) || '{}');
+        }
+
+        function saveTriviaData(data) {
+            localStorage.setItem(TRIVIA_KEY, JSON.stringify(data));
+        }
+
+        function getTriviaPoints() {
+            const points = JSON.parse(localStorage.getItem(TRIVIA_POINTS_KEY) || '{}');
+            return points[currentUser?.username] || { total: 0, streak: 0, lastAnswered: null };
+        }
+
+        function saveTriviaPoints(points) {
+            const allPoints = JSON.parse(localStorage.getItem(TRIVIA_POINTS_KEY) || '{}');
+            allPoints[currentUser?.username] = points;
+            localStorage.setItem(TRIVIA_POINTS_KEY, JSON.stringify(allPoints));
+        }
+
+        function initTrivia() {
+            const today = getTodayIndex();
+            const data = getTriviaData();
+            const points = getTriviaPoints();
+            const todayStr = new Date().toDateString();
+
+            if (points.lastAnswered === todayStr) {
+                showTriviaResult(true, points);
+                return;
+            }
+
+            const trivia = dailyTrivia[today];
+            document.getElementById('triviaQuestionText').textContent = trivia.question;
+
+            const optionsContainer = document.getElementById('triviaOptions');
+            optionsContainer.innerHTML = trivia.options.map((opt, idx) => `
+                <button class="trivia-option" onclick="answerTrivia(${idx})">${opt}</button>
+            `).join('');
+
+            updateTriviaLeaderboard();
+            startTriviaTimer();
+        }
+
+        function startTriviaTimer() {
+            const timerEl = document.getElementById('triviaTimer');
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+
+            function update() {
+                const diff = tomorrow - new Date();
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const secs = Math.floor((diff % (1000 * 60)) / 1000);
+                timerEl.textContent = `⏱️ ${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            update();
+            setInterval(update, 1000);
+        }
+
+        function answerTrivia(selectedIndex) {
+            const today = getTodayIndex();
+            const trivia = dailyTrivia[today];
+            const isCorrect = selectedIndex === trivia.correct;
+
+            const buttons = document.querySelectorAll('.trivia-option');
+            buttons.forEach((btn, idx) => {
+                btn.disabled = true;
+                if (idx === trivia.correct) {
+                    btn.classList.add('correct');
+                } else if (idx === selectedIndex && !isCorrect) {
+                    btn.classList.add('wrong');
+                }
+            });
+
+            const points = getTriviaPoints();
+            const todayStr = new Date().toDateString();
+
+            if (isCorrect) {
+                points.total += 50;
+                points.streak += 1;
+            } else {
+                points.streak = 0;
+            }
+            points.lastAnswered = todayStr;
+
+            saveTriviaPoints(points);
+
+            setTimeout(() => {
+                showTriviaResult(isCorrect, points);
+            }, 1500);
+        }
+
+        function showTriviaResult(isCorrect, points) {
+            document.getElementById('triviaQuestion').style.display = 'none';
+            const resultEl = document.getElementById('triviaResult');
+            resultEl.style.display = 'block';
+
+            document.getElementById('resultIcon').textContent = isCorrect ? '✅' : '❌';
+            document.getElementById('resultTitle').textContent = isCorrect ? 'Correct!' : 'Wrong!';
+            document.getElementById('resultMessage').textContent = isCorrect
+                ? 'You earned 50 trivia points!'
+                : 'Better luck tomorrow!';
+            document.getElementById('triviaStreak').textContent = points.streak;
+            document.getElementById('triviaTotalPoints').textContent = points.total;
+        }
+
+        function updateTriviaLeaderboard() {
+            const allPoints = JSON.parse(localStorage.getItem(TRIVIA_POINTS_KEY) || '{}');
+            const leaderboard = Object.entries(allPoints)
+                .map(([user, data]) => ({ user, total: data.total || 0 }))
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 5);
+
+            const container = document.getElementById('triviaLeaderboard');
+            if (leaderboard.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted);">No scores yet - be the first!</p>';
+                return;
+            }
+
+            container.innerHTML = leaderboard.map((entry, idx) => `
+                <div class="mini-leaderboard-item">
+                    <span style="width: 30px; font-weight: 700; color: ${idx < 3 ? 'var(--neon-gold)' : 'var(--text-muted)'};">${idx + 1}</span>
+                    <span style="flex: 1;">${entry.user}</span>
+                    <span style="font-family: 'Orbitron', sans-serif; color: var(--neon-cyan);">${entry.total} pts</span>
+                </div>
+            `).join('');
+        }
+
+        // ==================== POLLS SYSTEM ====================
+        const POLLS_KEY = 'tmr_polls';
+        const POLLS_VOTES_KEY = 'tmr_polls_votes';
+
+        const dailyPolls = [
+            {
+                question: "Who will win Super Bowl 2025?",
+                options: ["Kansas City Chiefs", "San Francisco 49ers", "Baltimore Ravens", "Detroit Lions", "Other"]
+            },
+            {
+                question: "Best sport to bet on?",
+                options: ["NFL", "NBA", "MLB", "NHL", "Soccer", "College Football"]
+            },
+            {
+                question: "Favorite type of bet?",
+                options: ["Spread", "Moneyline", "Over/Under", "Parlay", "Props"]
+            },
+            {
+                question: "Best betting strategy?",
+                options: ["Fade the public", "Bet favorites", "Bet underdogs", "Martingale", "Unit betting"]
+            },
+            {
+                question: "Which NBA team wins the 2025 championship?",
+                options: ["Celtics", "Nuggets", "Bucks", "Suns", "Warriors", "Other"]
+            },
+            {
+                question: "Most profitable betting approach?",
+                options: ["Single bets", "2-team parlays", "3-team parlays", "4+ team parlays", "Live betting"]
+            },
+            {
+                question: "Best time to place bets?",
+                options: ["Early in week", "Right before game", "Halftime", "When lines move", "Random"]
+            }
+        ];
+
+        function getPollVotes() {
+            return JSON.parse(localStorage.getItem(POLLS_VOTES_KEY) || '{}');
+        }
+
+        function savePollVotes(votes) {
+            localStorage.setItem(POLLS_VOTES_KEY, JSON.stringify(votes));
+        }
+
+        function initPolls() {
+            const today = getTodayIndex();
+            const poll = dailyPolls[today % dailyPolls.length];
+
+            document.getElementById('pollQuestionText').textContent = poll.question;
+
+            const votes = getPollVotes();
+            const todayStr = new Date().toDateString();
+            const userVote = votes[currentUser?.username]?.[todayStr];
+
+            if (userVote !== undefined) {
+                showPollResults(poll, userVote);
+            } else {
+                renderPollOptions(poll);
+            }
+        }
+
+        function renderPollOptions(poll) {
+            const container = document.getElementById('pollOptions');
+            container.innerHTML = poll.options.map((opt, idx) => `
+                <div class="poll-option" onclick="votePoll(${idx})">
+                    <div class="poll-option-content">
+                        <span>${opt}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            const votes = getPollVotes();
+            const todayStr = new Date().toDateString();
+            let totalVotes = 0;
+            Object.values(votes).forEach(userVotes => {
+                if (userVotes[todayStr] !== undefined) totalVotes++;
+            });
+            document.getElementById('pollVotes').textContent = `${totalVotes} votes`;
+        }
+
+        function votePoll(optionIndex) {
+            const todayStr = new Date().toDateString();
+            const votes = getPollVotes();
+
+            if (!votes[currentUser?.username]) {
+                votes[currentUser?.username] = {};
+            }
+            votes[currentUser?.username][todayStr] = optionIndex;
+            savePollVotes(votes);
+
+            const today = getTodayIndex();
+            const poll = dailyPolls[today % dailyPolls.length];
+            showPollResults(poll, optionIndex);
+        }
+
+        function showPollResults(poll, userVoteIndex) {
+            document.getElementById('pollQuestion').style.display = 'none';
+            document.getElementById('pollResults').style.display = 'block';
+            document.getElementById('yourVote').textContent = poll.options[userVoteIndex];
+
+            const votes = getPollVotes();
+            const todayStr = new Date().toDateString();
+            const counts = new Array(poll.options.length).fill(0);
+            let total = 0;
+
+            Object.values(votes).forEach(userVotes => {
+                if (userVotes[todayStr] !== undefined) {
+                    counts[userVotes[todayStr]]++;
+                    total++;
+                }
+            });
+
+            const maxVotes = Math.max(...counts);
+            const winners = counts.map((c, i) => c === maxVotes ? i : -1).filter(i => i !== -1);
+
+            const container = document.getElementById('pollResultsBars');
+            container.innerHTML = poll.options.map((opt, idx) => {
+                const count = counts[idx];
+                const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+                const isWinner = winners.includes(idx);
+                const isUserChoice = idx === userVoteIndex;
+
+                return `
+                    <div class="result-bar">
+                        <div class="result-bar-label">
+                            <span>${opt} ${isUserChoice ? '✓' : ''}</span>
+                            <span>${count} votes (${percent}%)</span>
+                        </div>
+                        <div class="result-bar-track">
+                            <div class="result-bar-fill ${isWinner ? 'winner' : ''}" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
     </script>
     <script src="static/js/verification-banner.js?v=20251208c"></script>
 </body>
