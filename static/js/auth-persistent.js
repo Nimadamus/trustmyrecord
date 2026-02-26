@@ -246,36 +246,29 @@ class PersistentAuthSystem {
         const avatar = this.currentUser.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + username;
         const profileUrl = 'profile.html?username=' + encodeURIComponent(username);
         
-        // Update main navigation - modify "My Profile" link to go to actual profile page
+        // Update main navigation - modify "My Profile" link to show username
         const profileLink = document.querySelector('.profile-link');
         if (profileLink) {
             console.log('[Auth] Found profile link, updating...');
-            const profileLinkUrl = 'profile.html?username=' + encodeURIComponent(username);
-            // Modify the existing link instead of replacing it
-            profileLink.href = profileLinkUrl;
+            profileLink.href = profileUrl;
             profileLink.classList.remove('profile-link');
             profileLink.classList.add('nav-username-link');
-            profileLink.style.color = 'var(--neon-cyan)';
-            profileLink.style.fontWeight = '600';
-            profileLink.style.display = 'inline-flex';
-            profileLink.style.alignItems = 'center';
-            profileLink.style.gap = '5px';
-            // Remove the onclick handler so href works normally
+            profileLink.style.cssText = 'color: var(--neon-cyan); font-weight: 600; display: inline-flex; align-items: center; gap: 8px;';
             profileLink.removeAttribute('onclick');
-            // Update the content to show avatar + username
-            profileLink.innerHTML = '<img src="' + avatar + '" style="width:24px;height:24px;border-radius:50%; border: 2px solid var(--neon-cyan);">' + username;
+            profileLink.innerHTML = '<img src="' + avatar + '" style="width:28px;height:28px;border-radius:50%; border: 2px solid var(--neon-cyan);"><span>@' + username + '</span>';
         }
         
-        // Add user button to header-actions if not already there
-        const headerActions = document.querySelector('.header-actions');
-        if (headerActions && !headerActions.querySelector('.user-menu-btn')) {
-            console.log('[Auth] Adding user button to header-actions...');
-            const userBtn = document.createElement('a');
-            userBtn.href = profileUrl;
-            userBtn.className = 'user-menu-btn';
-            userBtn.style.cssText = 'display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(0, 255, 255, 0.1); border: 1px solid var(--neon-cyan); border-radius: 20px; color: var(--neon-cyan); text-decoration: none; font-weight: 600; font-size: 14px; margin-left: 10px; cursor: pointer; transition: all 0.3s ease;';
-            userBtn.innerHTML = '<img src="' + avatar + '" style="width: 24px; height: 24px; border-radius: 50%;">' + username;
-            headerActions.appendChild(userBtn);
+        // Update header auth buttons to show username + logout
+        const headerAuthButtons = document.getElementById('headerAuthButtons');
+        if (headerAuthButtons) {
+            console.log('[Auth] Updating header auth buttons...');
+            headerAuthButtons.innerHTML = `
+                <a href="${profileUrl}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--neon-cyan); text-decoration: none; font-weight: 600;">
+                    <img src="${avatar}" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--neon-cyan);">
+                    <span>${username}</span>
+                </a>
+                <button onclick="auth.logout(); location.reload();" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">Logout</button>
+            `;
         }
     }
 
@@ -293,6 +286,12 @@ class PersistentAuthSystem {
         // Remove user button from header-actions
         const userBtn = document.querySelector('.user-menu-btn');
         if (userBtn) userBtn.remove();
+        
+        // Restore header auth buttons to Login
+        const headerAuthButtons = document.getElementById('headerAuthButtons');
+        if (headerAuthButtons) {
+            headerAuthButtons.innerHTML = '<button onclick="showSection('login')" class="btn btn-primary" style="padding: 8px 20px; font-size: 14px;">Login</button>';
+        }
     }
 
     generateUserId() { return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9); }

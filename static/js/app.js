@@ -44,8 +44,14 @@ const TMRApp = {
     // AUTHENTICATION
     // ============================================
 
+    isProcessingLogin: false,
+
     handleLogin: function(e) {
         e.preventDefault();
+        
+        // Prevent double submission
+        if (this.isProcessingLogin) return;
+        this.isProcessingLogin = true;
         
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
@@ -53,6 +59,7 @@ const TMRApp = {
 
         if (!email || !password) {
             this.showNotification('Please enter email and password', 'error');
+            this.isProcessingLogin = false;
             return;
         }
 
@@ -63,6 +70,9 @@ const TMRApp = {
             this.showNotification('Welcome back, ' + user.username + '!', 'success');
             this.onUserLoggedIn();
 
+            // Clear the form to prevent accidental resubmission
+            document.getElementById('loginForm').reset();
+
             // Redirect to feed
             if (typeof showSection === 'function') {
                 showSection('feed');
@@ -71,6 +81,8 @@ const TMRApp = {
         } catch (error) {
             console.error('[TMR] Login error:', error);
             this.showNotification(error.message || 'Login failed', 'error');
+        } finally {
+            this.isProcessingLogin = false;
         }
     },
 
