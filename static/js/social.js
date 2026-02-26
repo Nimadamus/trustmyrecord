@@ -315,9 +315,16 @@ function getUserForumStats(userId) {
 }
 
 /**
- * Show user profile
+ * Show user profile - Redirects to profile.html
  */
 function showProfile(username) {
+    window.location.href = `profile.html?username=${encodeURIComponent(username)}`;
+}
+
+/**
+ * Legacy profile modal (kept for reference)
+ */
+function showProfileModal(username) {
     const user = auth.getUser(username);
     if (!user) {
         alert('User not found');

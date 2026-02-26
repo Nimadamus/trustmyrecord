@@ -117,7 +117,7 @@ class BackendAPI {
     async login(email, password) {
         const data = await this.request('/auth/login', {
             method: 'POST',
-            body: JSON.stringify({ login: email, password }),
+            body: JSON.stringify({ email: email, password: password }),
             auth: false
         });
 
@@ -179,6 +179,51 @@ class BackendAPI {
         return this.user;
     }
 
+    isEmailVerified() {
+        const user = this.getCurrentUser();
+        return user && user.email_verified === true;
+    }
+
+    async resendVerification(email) {
+        return this.request('/auth/resend-verification', {
+            method: 'POST',
+            body: JSON.stringify({ email }),
+            auth: false
+        });
+    }
+
+    async verifyEmail(token) {
+        const data = await this.request(`/auth/verify-email?token=${token}`, {
+            method: 'GET',
+            auth: false
+        });
+        if (data.accessToken) {
+            this.token = data.accessToken;
+            this.refreshToken = data.refreshToken || null;
+            this.user = data.user;
+            localStorage.setItem('tmr_token', this.token);
+            if (this.refreshToken) localStorage.setItem('tmr_refresh_token', this.refreshToken);
+            localStorage.setItem('tmr_user', JSON.stringify(data.user));
+        }
+        return data;
+    }
+
+    async forgotPassword(email) {
+        return this.request('/auth/forgot-password', {
+            method: 'POST',
+            body: JSON.stringify({ email }),
+            auth: false
+        });
+    }
+
+    async resetPassword(token, newPassword) {
+        return this.request('/auth/reset-password', {
+            method: 'POST',
+            body: JSON.stringify({ token, newPassword }),
+            auth: false
+        });
+    }
+
     // ============================================
     // USERS & PROFILES
     // ============================================
@@ -202,6 +247,73 @@ class BackendAPI {
      */
     async getUserCommunityStats(username) {
         return this.request(`/users/${username}/community-stats`);
+    }
+
+    /**
+     * Get comprehensive profile stats (NEW API - includes all stats)
+     */
+    async getProfileStats(username) {
+        return this.request(`/profile/${username}/stats`);
+    }
+
+    /**
+     * Get user's friends list
+     */
+    async getProfileFriends(username) {
+        return this.request(`/profile/${username}/friends`);
+    }
+
+    /**
+     * Get user's competition history
+     */
+    async getProfileCompetitions(username) {
+        return this.request(`/profile/${username}/competitions`);
+    }
+
+    /**
+     * Get user's challenge history
+     */
+    async getProfileChallenges(username) {
+        return this.request(`/profile/${username}/challenges`);
+    }
+
+    /**
+     * Get user's poll and trivia stats
+     */
+    async getProfilePollTriviaStats(username) {
+        return this.request(`/profile/${username}/poll-trivia-stats`);
+    }
+
+    /**
+     * Get user's followers list
+     */
+    async getProfileFollowers(username) {
+        return this.request(`/profile/${username}/followers`);
+    }
+
+    /**
+     * Get users this person is following
+     */
+    async getProfileFollowing(username) {
+        return this.request(`/profile/${username}/following`);
+    }
+
+    /**
+     * Follow a user
+     */
+    async followUser(userId) {
+        return this.request(`/users/${userId}/follow`, {
+            method: 'POST'
+        });
+    }
+
+    /**
+     * Unfollow a user
+     */
+    async unfollowUser(userId) {
+        return this.request(`/users/${userId}/unfollow`, {
+            method: 'POST'
+        });
     }
 
     /**

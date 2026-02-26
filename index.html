@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <!-- CRITICAL: Early script to define core functions BEFORE anything else loads -->
@@ -6797,21 +6797,20 @@
                 </div>
 
                 <nav class="main-nav">
-                    <a href="#home" class="nav-link" onclick="showSection('home')">Home</a>
+                    <a href="#home" class="nav-link" onclick="showSection('home')">The Record</a>
                     <a href="#picks" class="nav-link" onclick="showSection('picks')">Make Picks</a>
                     <a href="#mypicks" class="nav-link" onclick="showSection('mypicks')">My Picks</a>
                     <div class="nav-dropdown">
                         <a href="#" class="nav-link nav-dropdown-toggle">The Arena</a>
                         <div class="nav-dropdown-menu">
-                            <a href="#trivia" class="nav-dropdown-item" onclick="showSection('trivia'); return false;"><span class="dropdown-icon">🎯</span><span>Trivia</span></a>
-                            <a href="#polls-trivia" class="nav-dropdown-item" onclick="showSection('polls-trivia'); return false;"><span class="dropdown-icon">📊</span><span>Prediction Polls</span></a>
-                            <a href="#contests" class="nav-dropdown-item" onclick="showSection('contests'); return false;"><span class="dropdown-icon">🏆</span><span>Handicapping Contests</span></a>
-                            <a href="#arena" class="nav-dropdown-item" onclick="showSection('arena'); return false;"><span class="dropdown-icon">⚔️</span><span>Challenges</span></a>
+                            <a href="trivia.html" class="nav-dropdown-item"><span class="dropdown-icon">🎯</span><span>Trivia</span></a>
+                            <a href="polls.html" class="nav-dropdown-item"><span class="dropdown-icon">📊</span><span>Polls</span></a>
+                            <a href="challenges.html" class="nav-dropdown-item"><span class="dropdown-icon">⚔️</span><span>Challenges</span></a>
                         </div>
                     </div>
-                    <a href="#forums" class="nav-link" onclick="showSection('forums'); return false;">Forums</a>
+                    <a href="forum.html" class="nav-link">Forum</a>
                     <a href="premium.html" class="nav-link" style="color: var(--neon-gold);">👑 Premium</a>
-                    <a href="#profile" class="nav-link profile-link" onclick="showSection('profile')">My Profile</a>
+                    <a href="profile.html" class="nav-link profile-link">My Profile</a>
                     <!-- Additional auth buttons populated by auth.js -->
                 </nav>
             </div>
@@ -10035,7 +10034,7 @@
                     </div>
 
                     <div class="pick-form" style="max-width: 500px; margin: 0 auto;">
-                        <form id="loginForm" onsubmit="handleLogin(event)">
+                        <form id="loginForm">
                             <div class="form-group">
                                 <label for="loginEmail">Email or Username</label>
                                 <input type="text" id="loginEmail" name="loginEmail" placeholder="Enter your email or username" required>
@@ -15180,43 +15179,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Handle user signup
-        function handleSignup(e) {
-            const formData = new FormData(e.target);
-            const username = formData.get('username');
-            const email = formData.get('email');
-            const password = formData.get('password');
-            const confirmPassword = formData.get('confirmPassword');
-
-            if (password !== confirmPassword) {
-                alert('Passwords do not match!');
-                return;
-            }
-
-            try {
-                const user = auth.register(username, email, password);
-
-                // Update optional fields
-                const updates = {};
-                if (formData.get('displayName')) updates.displayName = formData.get('displayName');
-                if (formData.get('favoriteTeam')) updates.favoriteTeam = formData.get('favoriteTeam');
-                if (formData.get('favoriteSport')) updates.favoriteSport = formData.get('favoriteSport');
-                if (formData.get('location')) updates.location = formData.get('location');
-                if (formData.get('bio')) updates.bio = formData.get('bio');
-
-                if (Object.keys(updates).length > 0) {
-                    auth.updateProfile(updates);
-                }
-
-                // Auto-login
-                auth.login(username, password);
-
-                alert('Account created successfully! Welcome to Trust My Record!');
-                showSection('home');
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        }
+        // NOTE: handleSignup is now defined in forms-fixed.js with backend API support
+        // This includes email verification flow
 
         // Switch feed tabs
         function switchFeedTab(tabName) {
@@ -15623,8 +15587,36 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- External Scripts -->
     <script src="static/js/config.js?v=20251208c"></script>
     <script src="static/js/api.js?v=20251208c"></script>
-    <script src="static/js/auth-persistent.js?v=20251208c"></script>
-    <script src="static/js/forms-fixed.js?v=20251208c"></script>
+    <script src="static/js/auth-persistent.js?v=20251209g"></script>
+    <script>
+        // Clear any cached backend API to prevent "Failed to fetch" errors
+        window.api = undefined;
+        console.log('[TMR] Cleared window.api - using local auth only');
+        
+        // Intercept ALL fetch calls to debug "Failed to fetch" errors
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+            console.log('[TMR FETCH INTERCEPTOR] Fetch called with:', args[0]);
+            console.log('[TMR FETCH INTERCEPTOR] Stack trace:', new Error().stack);
+            return originalFetch.apply(this, args).catch(err => {
+                console.error('[TMR FETCH INTERCEPTOR] Fetch failed:', err);
+                console.error('[TMR FETCH INTERCEPTOR] Failed URL:', args[0]);
+                throw err;
+            });
+        };
+        console.log('[TMR] Fetch interceptor installed');
+    </script>
+    <script src="static/js/forms-fixed.js?v=20250122c"></script>
+    <script>
+        // DEBUG: Trace which handleLogin is being used
+        const originalHandleLogin = handleLogin;
+        handleLogin = function(event) {
+            console.log('[TMR DEBUG] handleLogin called from:', originalHandleLogin.toString().substring(0, 100));
+            return originalHandleLogin(event);
+        };
+        console.log('[TMR DEBUG] handleLogin wrapped for tracing');
+    </script>
+    <script src="static/js/verification-banner.js?v=20251208c"></script>
     <script>
         // Notifications System
         function toggleNotifications() {
@@ -15758,9 +15750,9 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="static/js/grading.js?v=20260105"></script>
     <script src="static/js/social-hub.js?v=20251216"></script>
 
-    <!-- Backend API Integration -->
-    <script src="static/js/backend-api.js?v=20260121"></script>
-    <script src="static/js/app.js?v=20260121"></script>
+    <!-- Backend API Integration (DISABLED - using local auth instead) -->
+    <!-- <script src="static/js/backend-api.js?v=20260121"></script> -->
+    <!-- <script src="static/js/app.js?v=20260121"></script> -->
 
     <script>
     // COMPLETE PICKS MODULE - FIXED VERSION v2 - January 13, 2026

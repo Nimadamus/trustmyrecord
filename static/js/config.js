@@ -1,4 +1,4 @@
-// Configuration for Trust My Record
+﻿// Configuration for Trust My Record
 // Replace these values with your actual API keys
 
 const CONFIG = {
@@ -24,7 +24,7 @@ const CONFIG = {
 
     // API Configuration
     api: {
-        baseUrl: "http://localhost:3000/api",
+        baseUrl: "https://trustmyrecord-api.onrender.com/api",
         timeout: 10000
     },
 

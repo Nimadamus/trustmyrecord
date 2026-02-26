@@ -1,4 +1,4 @@
-// Enhanced Authentication System with PERMANENT Login
+﻿// Enhanced Authentication System with PERMANENT Login
 // v3.1 - Dec 8, 2025
 
 class PersistentAuthSystem {
@@ -63,6 +63,24 @@ class PersistentAuthSystem {
                 stats: { totalPicks: 25, wins: 15, losses: 9, pushes: 1, winRate: 62.5, roi: 8.3 },
                 social: { followers: [], following: [], reputation: 50, badges: ['newbie'] },
                 isPremium: false
+            });
+            this.saveUsers();
+        }
+
+        if (!this.users.find(u => u.username === 'testuser')) {
+            this.users.push({
+                id: 'user_testuser',
+                username: 'testuser',
+                email: 'test@example.com',
+                passwordHash: this.hashPassword('password123'),
+                displayName: 'Test User',
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=testuser',
+                bio: 'Test Account for Development',
+                joinedDate: new Date().toISOString(),
+                verified: true,
+                stats: { totalPicks: 16, wins: 10, losses: 5, pushes: 1, winRate: 62.5, roi: 12.5 },
+                social: { followers: [], following: [], reputation: 100, badges: ['tester'] },
+                isPremium: true
             });
             this.saveUsers();
         }
@@ -133,6 +151,7 @@ class PersistentAuthSystem {
     setRememberMe(value) { localStorage.setItem(this.rememberKey, value ? 'true' : 'false'); }
 
     initializeUI() {
+        console.log('[Auth] Initializing UI. Current user:', (this.currentUser ? this.currentUser.username : null) || 'none');
         if (this.currentUser) this.updateUIForLoggedInUser();
         else this.updateUIForLoggedOutUser();
     }
@@ -220,18 +239,60 @@ class PersistentAuthSystem {
     }
 
     updateUIForLoggedInUser() {
+        console.log('[Auth] Updating UI for logged in user:', (this.currentUser ? this.currentUser.username : null));
         if (!this.currentUser) return;
-        const nav = document.querySelector('nav');
-        if (nav) {
-            nav.innerHTML = '<a onclick="showSection(\'record\')">The Record</a><a onclick="showSection(\'arena\')">The Arena</a><a onclick="showSection(\'search\')">Search</a><a onclick="showSection(\'feed\')">Feed</a><a onclick="showSection(\'picks\')" class="make-picks-link">Make Picks</a><a onclick="showSection(\'leaderboards\')">Leaderboards</a><a onclick="showProfile(\'' + this.currentUser.username + '\')"><img src="' + this.currentUser.avatar + '" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:5px;">' + this.currentUser.username + '</a><a onclick="auth.logout()" style="color: var(--neon-red);">Logout</a>';
+        
+        const username = this.currentUser.username || this.currentUser.displayName || 'User';
+        const avatar = this.currentUser.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + username;
+        const profileUrl = 'profile.html?username=' + encodeURIComponent(username);
+        
+        // Update main navigation - modify "My Profile" link to go to actual profile page
+        const profileLink = document.querySelector('.profile-link');
+        if (profileLink) {
+            console.log('[Auth] Found profile link, updating...');
+            const profileLinkUrl = 'profile.html?username=' + encodeURIComponent(username);
+            // Modify the existing link instead of replacing it
+            profileLink.href = profileLinkUrl;
+            profileLink.classList.remove('profile-link');
+            profileLink.classList.add('nav-username-link');
+            profileLink.style.color = 'var(--neon-cyan)';
+            profileLink.style.fontWeight = '600';
+            profileLink.style.display = 'inline-flex';
+            profileLink.style.alignItems = 'center';
+            profileLink.style.gap = '5px';
+            // Remove the onclick handler so href works normally
+            profileLink.removeAttribute('onclick');
+            // Update the content to show avatar + username
+            profileLink.innerHTML = '<img src="' + avatar + '" style="width:24px;height:24px;border-radius:50%; border: 2px solid var(--neon-cyan);">' + username;
+        }
+        
+        // Add user button to header-actions if not already there
+        const headerActions = document.querySelector('.header-actions');
+        if (headerActions && !headerActions.querySelector('.user-menu-btn')) {
+            console.log('[Auth] Adding user button to header-actions...');
+            const userBtn = document.createElement('a');
+            userBtn.href = profileUrl;
+            userBtn.className = 'user-menu-btn';
+            userBtn.style.cssText = 'display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(0, 255, 255, 0.1); border: 1px solid var(--neon-cyan); border-radius: 20px; color: var(--neon-cyan); text-decoration: none; font-weight: 600; font-size: 14px; margin-left: 10px; cursor: pointer; transition: all 0.3s ease;';
+            userBtn.innerHTML = '<img src="' + avatar + '" style="width: 24px; height: 24px; border-radius: 50%;">' + username;
+            headerActions.appendChild(userBtn);
         }
     }
 
     updateUIForLoggedOutUser() {
-        const nav = document.querySelector('nav');
-        if (nav) {
-            nav.innerHTML = '<a onclick="showSection(\'record\')">The Record</a><a onclick="showSection(\'arena\')">The Arena</a><a onclick="showSection(\'picks\')" class="make-picks-link">Make Your Picks</a><a onclick="showSection(\'leaderboards\')">Leaderboards</a><a onclick="showSection(\'forums\')">Forums</a><a onclick="showSection(\'login\')" class="login-btn">Login</a><a onclick="showSection(\'signup\')" class="signup-btn">Sign Up</a>';
+        // Restore "My Profile" link if it was modified
+        const usernameLink = document.querySelector('.nav-username-link');
+        if (usernameLink) {
+            usernameLink.href = '#profile';
+            usernameLink.classList.remove('nav-username-link');
+            usernameLink.classList.add('profile-link');
+            usernameLink.removeAttribute('style');
+            usernameLink.setAttribute('onclick', "showSection('profile')");
+            usernameLink.textContent = 'My Profile';
         }
+        // Remove user button from header-actions
+        const userBtn = document.querySelector('.user-menu-btn');
+        if (userBtn) userBtn.remove();
     }
 
     generateUserId() { return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9); }
@@ -273,3 +334,11 @@ if (typeof window !== 'undefined') {
     window.PersistentAuthSystem = PersistentAuthSystem;
 }
 console.log('Auth System loaded');
+
+
+// Debug: Log all clicks on nav-username-link
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.nav-username-link')) {
+        console.log('[Debug] Username link clicked!', e.target.closest('.nav-username-link').href);
+    }
+});

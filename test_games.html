@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head><title>Test Games API</title></head>
 <body style="background:#111;color:#0f0;font-family:monospace;padding:20px;">
@@ -13,7 +13,7 @@ async function testFetch(sportKey) {
     const output = document.getElementById('output');
     output.textContent = 'Fetching ' + sportKey + '...\n';
 
-    const url = 'http://localhost:3000/api/games/odds/' + sportKey;
+    const url = 'https://trustmyrecord-api.onrender.com/api/games/odds/' + sportKey;
     output.textContent += 'URL: ' + url + '\n\n';
 
     try {
@@ -42,7 +42,7 @@ async function testFetch(sportKey) {
     } catch(err) {
         output.textContent += 'ERROR: ' + err.message + '\n';
         output.textContent += 'This likely means:\n';
-        output.textContent += '1. Server not running on localhost:3000\n';
+        output.textContent += '1. Backend server not responding\n';
         output.textContent += '2. CORS blocking the request\n';
         output.textContent += '3. Network error\n';
         console.error('Full error:', err);

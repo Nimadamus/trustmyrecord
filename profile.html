@@ -1,0 +1,1613 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile | Trust My Record</title>
+
+    <meta name="description" content="View user profile, stats, and achievements on Trust My Record.">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://trustmyrecord.com/profile.html">
+    <meta property="og:title" content="User Profile | Trust My Record">
+    <meta property="og:description" content="Check out my handicapping record and stats.">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>👤</text></svg>">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --neon-cyan: #00ffff;
+            --neon-purple: #ff00ff;
+            --neon-green: #39ff14;
+            --neon-gold: #ffd700;
+            --neon-red: #ff073a;
+            --neon-orange: #ff6b35;
+            --dark-bg: #0a0a0f;
+            --darker-bg: #050508;
+            --card-bg: rgba(20, 20, 35, 0.8);
+            --glass-border: rgba(0, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0c0;
+            --text-muted: #808090;
+            --gradient-neon: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
+            --gradient-gold: linear-gradient(45deg, var(--neon-gold), var(--neon-cyan));
+            --gradient-fire: linear-gradient(45deg, var(--neon-orange), var(--neon-red));
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: var(--dark-bg);
+            background-image:
+                radial-gradient(circle at 25% 75%, rgba(0, 255, 255, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 75% 25%, rgba(255, 215, 0, 0.06) 0%, transparent 50%),
+                linear-gradient(180deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(0, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: grid-move 20s linear infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        @keyframes grid-move {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ==================== HEADER ==================== */
+        header {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 900;
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo:hover {
+            filter: brightness(1.2);
+        }
+
+        nav {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        nav a:hover, nav a.active {
+            color: var(--neon-cyan);
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gradient-neon);
+            transition: width 0.3s ease;
+        }
+
+        nav a:hover::after, nav a.active::after {
+            width: 100%;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--gradient-neon);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.1);
+        }
+
+        /* ==================== PROFILE HERO ==================== */
+        .profile-hero {
+            padding: 60px 0 40px;
+            background: linear-gradient(180deg, rgba(0,255,255,0.05) 0%, transparent 100%);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .profile-header {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+        }
+
+        .profile-avatar-section {
+            flex-shrink: 0;
+        }
+
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: var(--gradient-neon);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            font-weight: 900;
+            border: 4px solid rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.3);
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .profile-bio {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            max-width: 600px;
+        }
+
+        .profile-meta {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+
+        .profile-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .profile-meta-item i {
+            color: var(--neon-cyan);
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--gradient-neon);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .btn-success {
+            background: var(--neon-green);
+            color: #000;
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 10px 30px rgba(57, 255, 20, 0.4);
+        }
+
+        /* ==================== STATS GRID ==================== */
+        .stats-section {
+            padding: 40px 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 10px 40px rgba(0, 255, 255, 0.2);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--neon-cyan);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-card.gold .stat-value {
+            color: var(--neon-gold);
+        }
+
+        .stat-card.green .stat-value {
+            color: var(--neon-green);
+        }
+
+        .stat-card.purple .stat-value {
+            color: var(--neon-purple);
+        }
+
+        .stat-card.red .stat-value {
+            color: var(--neon-red);
+        }
+
+        .stat-card.cyan .stat-value {
+            color: var(--neon-cyan);
+        }
+
+        .stat-card[style*="--card-color"] .stat-value {
+            color: var(--card-color, var(--neon-cyan));
+        }
+
+        /* ==================== CONTENT TABS ==================== */
+        .content-section {
+            padding: 40px 0;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-family: 'Exo 2', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab:hover {
+            color: var(--neon-cyan);
+        }
+
+        .tab.active {
+            color: var(--neon-cyan);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--gradient-neon);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==================== CARDS ==================== */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .card-title.gold {
+            color: var(--neon-gold);
+        }
+
+        .card-title.cyan {
+            color: var(--neon-cyan);
+        }
+
+        .card-title.purple {
+            color: var(--neon-purple);
+        }
+
+        /* ==================== HANDICAPPING STATS ==================== */
+        .handicapping-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+
+        .handicap-stat {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+        }
+
+        .handicap-stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 5px;
+        }
+
+        .handicap-stat-value.win {
+            color: var(--neon-green);
+        }
+
+        .handicap-stat-value.loss {
+            color: var(--neon-red);
+        }
+
+        .handicap-stat-value.push {
+            color: var(--text-muted);
+        }
+
+        .handicap-stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* ==================== SPORT BREAKDOWN ==================== */
+        .sport-breakdown {
+            display: grid;
+            gap: 15px;
+        }
+
+        .sport-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+        }
+
+        .sport-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            text-align: center;
+        }
+
+        .sport-info {
+            flex: 1;
+        }
+
+        .sport-name {
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .sport-record {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .sport-winrate {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--neon-cyan);
+        }
+
+        /* ==================== ACTIVITY FEED ==================== */
+        .activity-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            border-left: 3px solid var(--neon-cyan);
+        }
+
+        .activity-item.win {
+            border-left-color: var(--neon-green);
+        }
+
+        .activity-item.loss {
+            border-left-color: var(--neon-red);
+        }
+
+        .activity-icon {
+            font-size: 1.5rem;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-text {
+            margin-bottom: 3px;
+        }
+
+        .activity-time {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .activity-result {
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .activity-result.win {
+            background: rgba(57, 255, 20, 0.2);
+            color: var(--neon-green);
+        }
+
+        .activity-result.loss {
+            background: rgba(255, 7, 58, 0.2);
+            color: var(--neon-red);
+        }
+
+        /* ==================== FRIENDS LIST ==================== */
+        .friends-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .friend-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .friend-card:hover {
+            border-color: var(--neon-cyan);
+            transform: translateY(-3px);
+        }
+
+        .friend-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--gradient-neon);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .friend-info {
+            flex: 1;
+        }
+
+        .friend-name {
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .friend-record {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* ==================== COMPETITIONS & CHALLENGES ==================== */
+        .competition-list, .challenge-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .competition-item, .challenge-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            border-left: 3px solid var(--neon-gold);
+        }
+
+        .competition-item {
+            border-left-color: var(--neon-purple);
+        }
+
+        .competition-info, .challenge-info {
+            flex: 1;
+        }
+
+        .competition-name, .challenge-type {
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .competition-meta, .challenge-meta {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .competition-result, .challenge-result {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .competition-result.win, .challenge-result.win {
+            background: rgba(57, 255, 20, 0.2);
+            color: var(--neon-green);
+        }
+
+        .competition-result.loss, .challenge-result.loss {
+            background: rgba(255, 7, 58, 0.2);
+            color: var(--neon-red);
+        }
+
+        /* ==================== LOADING & EMPTY STATES ==================== */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 255, 255, 0.1);
+            border-top-color: var(--neon-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .error-message {
+            background: rgba(255, 7, 58, 0.1);
+            border: 1px solid var(--neon-red);
+            color: var(--neon-red);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .profile-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .profile-avatar {
+                width: 120px;
+                height: 120px;
+                font-size: 3rem;
+            }
+
+            .profile-name {
+                font-size: 1.8rem;
+            }
+
+            .profile-meta {
+                justify-content: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .handicapping-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .friends-grid {
+                grid-template-columns: 1fr;
+            }
+
+            nav {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-content">
+            <a href="index.html" class="logo">⚡ TRUST MY RECORD</a>
+            <nav>
+                <a href="index.html">The Record</a>
+                <a href="challenges.html">The Arena</a>
+                <a href="forum.html">Forum</a>
+                <a href="polls.html">Polls</a>
+                <a href="trivia.html">Trivia</a>
+                <a href="premium.html" style="color: var(--neon-gold);">👑 Premium</a>
+                <a href="#" id="myProfileLink" style="display: none;">My Profile</a>
+            </nav>
+            <div class="user-menu" id="userMenu">
+                <!-- Will be populated by JS -->
+            </div>
+        </div>
+    </header>
+
+    <!-- Profile Hero -->
+    <section class="profile-hero">
+        <div class="container">
+            <div class="profile-header" id="profileHeader">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading profile...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid" id="statsGrid">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Content Tabs -->
+    <section class="content-section">
+        <div class="container">
+            <div class="tabs">
+                <button class="tab active" data-tab="overview">Overview</button>
+                <button class="tab" data-tab="handicapping">Handicapping</button>
+                <button class="tab" data-tab="activity">Activity</button>
+                <button class="tab" data-tab="followers">Followers</button>
+                <button class="tab" data-tab="following">Following</button>
+                <button class="tab" data-tab="friends">Friends</button>
+                <button class="tab" data-tab="competitions">Competitions</button>
+                <button class="tab" data-tab="challenges">Challenges</button>
+            </div>
+
+            <!-- Overview Tab -->
+            <div class="tab-content active" id="tab-overview">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title gold">🏆 Poll & Trivia Stats</h3>
+                    </div>
+                    <div id="pollTriviaStats">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Handicapping Tab -->
+            <div class="tab-content" id="tab-handicapping">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title cyan">📊 Overall Record</h3>
+                    </div>
+                    <div class="handicapping-stats" id="handicappingStats">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title cyan">🏈 By Sport</h3>
+                    </div>
+                    <div class="sport-breakdown" id="sportBreakdown">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Tab -->
+            <div class="tab-content" id="tab-activity">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title purple">📈 Recent Activity</h3>
+                    </div>
+                    <div class="activity-list" id="activityList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Followers Tab -->
+            <div class="tab-content" id="tab-followers">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">👥 Followers</h3>
+                    </div>
+                    <div class="friends-grid" id="followersList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Following Tab -->
+            <div class="tab-content" id="tab-following">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🎯 Following</h3>
+                    </div>
+                    <div class="friends-grid" id="followingList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Friends Tab -->
+            <div class="tab-content" id="tab-friends">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">👥 Friends</h3>
+                    </div>
+                    <div class="friends-grid" id="friendsList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Competitions Tab -->
+            <div class="tab-content" id="tab-competitions">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🎯 Competition History</h3>
+                    </div>
+                    <div class="competition-list" id="competitionList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Challenges Tab -->
+            <div class="tab-content" id="tab-challenges">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">⚔️ Challenge History</h3>
+                    </div>
+                    <div class="challenge-list" id="challengeList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scripts -->
+    <script src="static/js/config.js"></script>
+    <script src="static/js/backend-api.js"></script>
+    <script>
+        // Get username from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const profileUsername = urlParams.get('username') || (api.user ? api.user.username : null);
+
+        // Current user info
+        let currentUser = null;
+        let isOwnProfile = false;
+        let profileData = null;
+
+        // Initialize page
+        async function init() {
+            // Check if logged in
+            if (api.token) {
+                try {
+                    currentUser = await api.loadUser();
+                } catch (e) {
+                    console.log('Not logged in');
+                }
+            }
+
+            // If no username provided, use current user
+            if (!profileUsername && currentUser) {
+                window.location.href = `profile.html?username=${currentUser.username}`;
+                return;
+            }
+
+            if (!profileUsername) {
+                document.getElementById('profileHeader').innerHTML = `
+                    <div class="error-message">
+                        <h3>👤 No User Specified</h3>
+                        <p>Please provide a username or log in to view your profile.</p>
+                        <a href="index.html" class="btn btn-primary" style="margin-top: 20px;">Go Home</a>
+                    </div>
+                `;
+                return;
+            }
+
+            isOwnProfile = currentUser && currentUser.username === profileUsername;
+
+            // Update header
+            updateHeader();
+
+            // Load profile data
+            await loadProfile();
+        }
+
+        function updateHeader() {
+            const userMenu = document.getElementById('userMenu');
+            const myProfileLink = document.getElementById('myProfileLink');
+
+            if (currentUser) {
+                userMenu.innerHTML = `
+                    <a href="profile.html?username=${currentUser.username}" class="user-avatar">
+                        ${currentUser.username.charAt(0).toUpperCase()}
+                    </a>
+                `;
+                if (myProfileLink) {
+                    myProfileLink.href = `profile.html?username=${currentUser.username}`;
+                    myProfileLink.style.display = 'inline-block';
+                }
+            } else {
+                userMenu.innerHTML = `
+                    <a href="index.html" class="btn btn-secondary">Log In</a>
+                `;
+                if (myProfileLink) {
+                    myProfileLink.style.display = 'none';
+                }
+            }
+        }
+
+        async function followUser(userId) {
+            if (!api.token) {
+                showToast('Please log in to follow users', 'error');
+                return;
+            }
+            try {
+                await api.followUser(userId);
+                showToast('User followed!', 'success');
+                // Reload followers/following
+                await loadProfile();
+            } catch (error) {
+                console.error('Error following user:', error);
+                showToast(error.message || 'Failed to follow user', 'error');
+            }
+        }
+
+        async function unfollowUser(userId) {
+            if (!api.token) {
+                showToast('Please log in', 'error');
+                return;
+            }
+            try {
+                await api.unfollowUser(userId);
+                showToast('User unfollowed', 'success');
+                // Reload followers/following
+                await loadProfile();
+            } catch (error) {
+                console.error('Error unfollowing user:', error);
+                showToast(error.message || 'Failed to unfollow user', 'error');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            // Check if toast container exists
+            let toastContainer = document.getElementById('toastContainer');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toastContainer';
+                toastContainer.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    z-index: 9999;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                `;
+                document.body.appendChild(toastContainer);
+            }
+
+            const toast = document.createElement('div');
+            const colors = {
+                success: '#10b981',
+                error: '#ef4444',
+                warning: '#f59e0b',
+                info: '#3b82f6'
+            };
+            
+            toast.style.cssText = `
+                background: ${colors[type] || colors.info};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                font-weight: 500;
+                animation: slideIn 0.3s ease;
+            `;
+            toast.textContent = message;
+            
+            toastContainer.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        async function loadProfile() {
+            try {
+                // Load main profile stats
+                const stats = await api.getProfileStats(profileUsername);
+                profileData = stats.profile; // Store for later use
+                renderProfileHeader(profileData);
+                renderStatsGrid(profileData);
+                renderHandicappingStats(profileData);
+                renderSportBreakdown(stats.picks_by_sport);
+                renderActivity(stats.recent_activity);
+
+                // Load additional data in parallel
+                const [friendsData, competitionsData, challengesData, pollTriviaData, followersData, followingData] = await Promise.all([
+                    api.getProfileFriends(profileUsername).catch(() => ({ friends: [] })),
+                    api.getProfileCompetitions(profileUsername).catch(() => ({ competitions: [] })),
+                    api.getProfileChallenges(profileUsername).catch(() => ({ challenges: [] })),
+                    api.getProfilePollTriviaStats(profileUsername).catch(() => null),
+                    api.getProfileFollowers(profileUsername).catch(() => ({ followers: [] })),
+                    api.getProfileFollowing(profileUsername).catch(() => ({ following: [] }))
+                ]);
+
+                renderFriends(friendsData.friends || []);
+                renderFollowers(followersData.followers || []);
+                renderFollowing(followingData.following || []);
+                renderCompetitions(competitionsData.competitions || []);
+                renderChallenges(challengesData.challenges || []);
+                renderPollTriviaStats(pollTriviaData);
+
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                document.getElementById('profileHeader').innerHTML = `
+                    <div class="error-message">
+                        <h3>❌ Error Loading Profile</h3>
+                        <p>${error.message || 'Could not load profile data. Please try again later.'}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderProfileHeader(profile) {
+            const header = document.getElementById('profileHeader');
+            const joinDate = new Date(profile.created_at).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long'
+            });
+
+            header.innerHTML = `
+                <div class="profile-avatar-section">
+                    <div class="profile-avatar">
+                        ${profile.username.charAt(0).toUpperCase()}
+                    </div>
+                </div>
+                <div class="profile-info">
+                    <h1 class="profile-name">${profile.username}</h1>
+                    <p class="profile-bio">${profile.bio || 'No bio yet.'}</p>
+                    <div class="profile-meta">
+                        <div class="profile-meta-item">
+                            <span>📅</span>
+                            <span>Joined ${joinDate}</span>
+                        </div>
+                        <div class="profile-meta-item">
+                            <span>📍</span>
+                            <span>${profile.location || 'Location not set'}</span>
+                        </div>
+                        ${profile.website ? `
+                        <div class="profile-meta-item">
+                            <span>🔗</span>
+                            <a href="${profile.website}" target="_blank" style="color: var(--neon-cyan);">${profile.website}</a>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="profile-actions">
+                        ${isOwnProfile ? `
+                            <button class="btn btn-secondary" onclick="editProfile()">✏️ Edit Profile</button>
+                        ` : `
+                            <button class="btn btn-primary" onclick="followUser('${profile.id}')">➕ Follow</button>
+                            <button class="btn btn-secondary" onclick="challengeUser('${profile.username}')">⚔️ Challenge</button>
+                            <button class="btn btn-success" onclick="messageUser('${profile.username}')">💬 Message</button>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStatsGrid(profile) {
+            const grid = document.getElementById('statsGrid');
+            const record = profile.record || { wins: 0, losses: 0, pushes: 0 };
+            const totalBets = (record.wins || 0) + (record.losses || 0) + (record.pushes || 0);
+            const winRate = totalBets > 0 ? ((record.wins / totalBets) * 100).toFixed(1) : 0;
+            
+            grid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value">${profile.total_picks || totalBets || 0}</div>
+                    <div class="stat-label">Total Picks</div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-value">${winRate}%</div>
+                    <div class="stat-label">Win Rate</div>
+                </div>
+                <div class="stat-card gold">
+                    <div class="stat-icon">🔥</div>
+                    <div class="stat-value">${profile.streak || 0}</div>
+                    <div class="stat-label">Current Streak</div>
+                </div>
+                <div class="stat-card" style="--card-color: var(--neon-green);">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-value">${profile.units || 0}</div>
+                    <div class="stat-label">Units</div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-value">${profile.followers_count || 0}</div>
+                    <div class="stat-label">Followers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-value">${profile.following_count || 0}</div>
+                    <div class="stat-label">Following</div>
+                </div>
+                <div class="stat-card cyan">
+                    <div class="stat-icon">🤝</div>
+                    <div class="stat-value">${profile.friends_count || 0}</div>
+                    <div class="stat-label">Friends</div>
+                </div>
+                <div class="stat-card gold">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-value">${profile.competitions_won || 0}</div>
+                    <div class="stat-label">Competitions Won</div>
+                </div>
+                <div class="stat-card red">
+                    <div class="stat-icon">⚔️</div>
+                    <div class="stat-value">${profile.challenges_won || 0}</div>
+                    <div class="stat-label">Challenges Won</div>
+                </div>
+                <div class="stat-card" style="--card-color: #8a2be2;">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-value">${profile.polls_created || 0}</div>
+                    <div class="stat-label">Polls Created</div>
+                </div>
+                <div class="stat-card" style="--card-color: var(--neon-cyan);">
+                    <div class="stat-icon">🧠</div>
+                    <div class="stat-value">${profile.trivia_points || 0}</div>
+                    <div class="stat-label">Trivia Points</div>
+                </div>
+                <div class="stat-card" style="--card-color: #ff6b35;">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-value">${profile.polls_answered || 0}</div>
+                    <div class="stat-label">Polls Answered</div>
+                </div>
+            `;
+        }
+
+        function renderHandicappingStats(profile) {
+            const container = document.getElementById('handicappingStats');
+            const record = profile.record || { wins: 0, losses: 0, pushes: 0 };
+
+            container.innerHTML = `
+                <div class="handicap-stat">
+                    <div class="handicap-stat-value win">${record.wins || 0}</div>
+                    <div class="handicap-stat-label">Wins</div>
+                </div>
+                <div class="handicap-stat">
+                    <div class="handicap-stat-value loss">${record.losses || 0}</div>
+                    <div class="handicap-stat-label">Losses</div>
+                </div>
+                <div class="handicap-stat">
+                    <div class="handicap-stat-value push">${record.pushes || 0}</div>
+                    <div class="handicap-stat-label">Pushes</div>
+                </div>
+                <div class="handicap-stat">
+                    <div class="handicap-stat-value" style="color: var(--neon-gold);">${profile.units || 0}</div>
+                    <div class="handicap-stat-label">Units</div>
+                </div>
+            `;
+        }
+
+        function renderSportBreakdown(picksBySport) {
+            const container = document.getElementById('sportBreakdown');
+
+            if (!picksBySport || picksBySport.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🏈</div>
+                        <p>No picks by sport yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const sportIcons = {
+                'NFL': '🏈',
+                'NBA': '🏀',
+                'MLB': '⚾',
+                'NHL': '🏒',
+                'Soccer': '⚽',
+                'Tennis': '🎾',
+                'Golf': '⛳',
+                'UFC': '🥊'
+            };
+
+            container.innerHTML = picksBySport.map(sport => {
+                const icon = sportIcons[sport.sport] || '🏆';
+                const winRate = sport.total > 0
+                    ? ((sport.wins / (sport.total - sport.pushes)) * 100).toFixed(1)
+                    : 0;
+
+                return `
+                    <div class="sport-item">
+                        <div class="sport-icon">${icon}</div>
+                        <div class="sport-info">
+                            <div class="sport-name">${sport.sport}</div>
+                            <div class="sport-record">${sport.wins}-${sport.losses}-${sport.pushes} (${sport.total} picks)</div>
+                        </div>
+                        <div class="sport-winrate">${winRate}%</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderActivity(activity) {
+            const container = document.getElementById('activityList');
+
+            if (!activity || activity.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>No recent activity</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const typeIcons = {
+                'pick': '📊',
+                'competition': '🏆',
+                'challenge': '⚔️'
+            };
+
+            container.innerHTML = activity.map(item => {
+                const icon = typeIcons[item.type] || '📌';
+                const timeAgo = getTimeAgo(new Date(item.created_at));
+                const resultClass = item.result === 'won' ? 'win' : (item.result === 'lost' ? 'loss' : '');
+
+                return `
+                    <div class="activity-item ${resultClass}">
+                        <div class="activity-icon">${icon}</div>
+                        <div class="activity-content">
+                            <div class="activity-text">
+                                <strong>${item.type.charAt(0).toUpperCase() + item.type.slice(1)}</strong>
+                                ${item.detail ? `- ${item.detail}` : ''}
+                            </div>
+                            <div class="activity-time">${timeAgo}</div>
+                        </div>
+                        <div class="activity-result ${resultClass}">${item.result}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderFriends(friends) {
+            const container = document.getElementById('friendsList');
+
+            if (!friends || friends.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <div class="empty-state-icon">👥</div>
+                        <p>No friends yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = friends.map(friend => `
+                <div class="friend-card" onclick="window.location.href='profile.html?username=${friend.username}'">
+                    <div class="friend-avatar">${friend.username.charAt(0).toUpperCase()}</div>
+                    <div class="friend-info">
+                        <div class="friend-name">${friend.username}</div>
+                        <div class="friend-record">${friend.win_percentage || 0}% win rate • ${friend.total_picks || 0} picks</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderFollowers(followers) {
+            const container = document.getElementById('followersList');
+
+            if (!followers || followers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <div class="empty-state-icon">👥</div>
+                        <p>No followers yet</p>
+                        <p style="font-size: 0.9rem; margin-top: 10px;">When someone follows this user, they'll appear here.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = followers.map(follower => `
+                <div class="friend-card" onclick="window.location.href='profile.html?username=${follower.username}'">
+                    <div class="friend-avatar">${follower.username.charAt(0).toUpperCase()}</div>
+                    <div class="friend-info">
+                        <div class="friend-name">${follower.username}</div>
+                        <div class="friend-record">${follower.win_percentage || 0}% win rate • ${follower.total_picks || 0} picks</div>
+                    </div>
+                    ${isOwnProfile ? '' : `<button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); followUser('${follower.id}')">Follow</button>`}
+                </div>
+            `).join('');
+        }
+
+        function renderFollowing(following) {
+            const container = document.getElementById('followingList');
+
+            if (!following || following.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <div class="empty-state-icon">🎯</div>
+                        <p>Not following anyone yet</p>
+                        <p style="font-size: 0.9rem; margin-top: 10px;">Users this person follows will appear here.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = following.map(user => `
+                <div class="friend-card" onclick="window.location.href='profile.html?username=${user.username}'">
+                    <div class="friend-avatar">${user.username.charAt(0).toUpperCase()}</div>
+                    <div class="friend-info">
+                        <div class="friend-name">${user.username}</div>
+                        <div class="friend-record">${user.win_percentage || 0}% win rate • ${user.total_picks || 0} picks</div>
+                    </div>
+                    ${isOwnProfile ? `<button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); unfollowUser('${user.id}')">Unfollow</button>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderCompetitions(competitions) {
+            const container = document.getElementById('competitionList');
+
+            if (!competitions || competitions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🏆</div>
+                        <p>No competition history</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = competitions.map(comp => {
+                const resultClass = comp.final_rank === 1 ? 'win' : '';
+                const resultText = comp.final_rank === 1 ? '🥇 1st Place' : `#${comp.final_rank} Place`;
+
+                return `
+                    <div class="competition-item">
+                        <div class="competition-info">
+                            <div class="competition-name">${comp.competition_name || 'Competition'}</div>
+                            <div class="competition-meta">${comp.prize_amount ? `$${comp.prize_amount} prize` : 'No prize'} • ${new Date(comp.completed_at).toLocaleDateString()}</div>
+                        </div>
+                        <div class="competition-result ${resultClass}">${resultText}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderChallenges(challenges) {
+            const container = document.getElementById('challengeList');
+
+            if (!challenges || challenges.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚔️</div>
+                        <p>No challenge history</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = challenges.map(challenge => {
+                const isWinner = challenge.winner_id === profileData?.id;
+                const resultClass = isWinner ? 'win' : 'loss';
+                const resultText = isWinner ? 'Won' : 'Lost';
+                const opponent = challenge.challenger_username === profileUsername
+                    ? challenge.challenged_username
+                    : challenge.challenger_username;
+
+                return `
+                    <div class="challenge-item">
+                        <div class="challenge-info">
+                            <div class="challenge-type">${challenge.type || 'Head-to-Head'} vs ${opponent}</div>
+                            <div class="challenge-meta">${new Date(challenge.completed_at).toLocaleDateString()}</div>
+                        </div>
+                        <div class="challenge-result ${resultClass}">${resultText}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderPollTriviaStats(data) {
+            const container = document.getElementById('pollTriviaStats');
+
+            if (!data) {
+                container.innerHTML = `
+                    <div class="handicapping-stats">
+                        <div class="handicap-stat">
+                            <div class="handicap-stat-value" style="color: var(--neon-cyan);">0</div>
+                            <div class="handicap-stat-label">Poll Points</div>
+                        </div>
+                        <div class="handicap-stat">
+                            <div class="handicap-stat-value" style="color: var(--neon-purple);">0</div>
+                            <div class="handicap-stat-label">Trivia Points</div>
+                        </div>
+                        <div class="handicap-stat">
+                            <div class="handicap-stat-value" style="color: var(--neon-gold);">0</div>
+                            <div class="handicap-stat-label">Polls Answered</div>
+                        </div>
+                        <div class="handicap-stat">
+                            <div class="handicap-stat-value" style="color: var(--neon-green);">0</div>
+                            <div class="handicap-stat-label">Trivia Played</div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="handicapping-stats">
+                    <div class="handicap-stat">
+                        <div class="handicap-stat-value" style="color: var(--neon-cyan);">${data.poll_points || 0}</div>
+                        <div class="handicap-stat-label">Poll Points</div>
+                    </div>
+                    <div class="handicap-stat">
+                        <div class="handicap-stat-value" style="color: var(--neon-purple);">${data.trivia_points || 0}</div>
+                        <div class="handicap-stat-label">Trivia Points</div>
+                    </div>
+                    <div class="handicap-stat">
+                        <div class="handicap-stat-value" style="color: var(--neon-gold);">${data.total_polls_answered || 0}</div>
+                        <div class="handicap-stat-label">Polls Answered</div>
+                    </div>
+                    <div class="handicap-stat">
+                        <div class="handicap-stat-value" style="color: var(--neon-green);">${data.total_trivia_played || 0}</div>
+                        <div class="handicap-stat-label">Trivia Played</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Helper function for time ago
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            const intervals = {
+                year: 31536000,
+                month: 2592000,
+                week: 604800,
+                day: 86400,
+                hour: 3600,
+                minute: 60
+            };
+
+            for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+                const interval = Math.floor(seconds / secondsInUnit);
+                if (interval >= 1) {
+                    return `${interval} ${unit}${interval > 1 ? 's' : ''} ago`;
+                }
+            }
+            return 'Just now';
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                tab.classList.add('active');
+                document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+            });
+        });
+
+        // Action handlers
+        function editProfile() {
+            alert('Edit profile coming soon!');
+        }
+
+        async function followUser(userId) {
+            try {
+                await api.followUser(userId);
+                alert('Now following user!');
+                location.reload();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function challengeUser(username) {
+            window.location.href = `challenges.html?challenge=${username}`;
+        }
+
+        function messageUser(username) {
+            window.location.href = `messages.html?to=${username}`;
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>

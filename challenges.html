@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -928,11 +928,13 @@
             <a href="index.html" class="logo">TRUST<span>MY</span>RECORD</a>
 
             <nav class="nav-links">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="index.html#picks" class="nav-link">Make Picks</a>
+                <a href="index.html" class="nav-link">The Record</a>
                 <a href="challenges.html" class="nav-link active">The Arena</a>
-                <a href="index.html#forums" class="nav-link">Forums</a>
-                <a href="index.html#profile" class="nav-btn profile-btn">My Profile</a>
+                <a href="forum.html" class="nav-link">Forum</a>
+                <a href="polls.html" class="nav-link">Polls</a>
+                <a href="trivia.html" class="nav-link">Trivia</a>
+                <a href="premium.html" class="nav-link" style="color: #ffd700;">👑 Premium</a>
+                <a href="profile.html" class="nav-btn profile-btn" id="profileLink">My Profile</a>
             </nav>
         </div>
     </header>
@@ -1351,7 +1353,7 @@
         <div class="footer-content">
             <div class="footer-links">
                 <a href="index.html" class="footer-link">Home</a>
-                <a href="index.html#profile" class="footer-link">Profile</a>
+                <a href="profile.html" class="footer-link" id="footerProfileLink">Profile</a>
                 <a href="index.html#forums" class="footer-link">Forums</a>
                 <a href="challenges.html" class="footer-link">The Arena</a>
                 <a href="index.html#leaderboards" class="footer-link">Leaderboards</a>
@@ -1364,7 +1366,7 @@
     <script src="static/js/backend-api.js?v=20260121"></script>
 
     <script>
-        const API_BASE = 'http://localhost:3000/api';
+        const API_BASE = 'https://trustmyrecord-api.onrender.com/api';
 
         // Mode switching
         function setMode(mode) {
@@ -1617,6 +1619,21 @@
             }, stepTime);
         }
 
+        // Update profile links based on logged in user
+        async function updateProfileLinks() {
+            try {
+                const user = await api.loadUser();
+                if (user) {
+                    const profileLink = document.getElementById('profileLink');
+                    const footerProfileLink = document.getElementById('footerProfileLink');
+                    if (profileLink) profileLink.href = `profile.html?username=${user.username}`;
+                    if (footerProfileLink) footerProfileLink.href = `profile.html?username=${user.username}`;
+                }
+            } catch (e) {
+                // User not logged in, keep default links
+            }
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             // Animate hero stats
@@ -1627,9 +1644,13 @@
                 animateValue(document.getElementById('totalCompetitors'), 0, 1842, 1000);
             }, 500);
 
+            // Update profile links
+            updateProfileLinks();
+
             // Load challenges from backend
             loadChallenges();
         });
     </script>
+    <script src="static/js/verification-banner.js?v=20251208c"></script>
 </body>
 </html>
