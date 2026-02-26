@@ -147,7 +147,7 @@ const TMRApp = {
         }
 
         // Update auth buttons if they exist
-        const authButtons = document.getElementById('authButtons');
+        const authButtons = document.getElementById('authButtons') || document.getElementById('headerAuthButtons');
         if (authButtons) {
             authButtons.innerHTML = `
                 <span style="color: var(--text-secondary); margin-right: 15px;">${user.username}</span>
@@ -165,7 +165,7 @@ const TMRApp = {
             `;
         }
 
-        const authButtons = document.getElementById('authButtons');
+        const authButtons = document.getElementById('authButtons') || document.getElementById('headerAuthButtons');
         if (authButtons) {
             authButtons.innerHTML = `
                 <button onclick="showSection('login')" class="btn btn-secondary">Login</button>
