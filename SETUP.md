@@ -1,201 +1,187 @@
-﻿# TrustMyRecord - Complete Setup Guide
+﻿# Trust My Record - Setup Guide
 
-## Overview
+## 1. Environment Setup
 
-TrustMyRecord is a social sports handicapping platform with:
-- User accounts with email verification
-- Sports picks and tracking
-- Competitions and leaderboards
-- Social features (follow, posts, notifications)
-
-## Project Structure
-
-```
-trustmyrecord/
-├── index.html              # Main app (frontend)
-├── verify-email.html       # Email verification page
-├── reset-password.html     # Password reset page
-├── static/
-│   ├── js/
-│   │   ├── backend-api.js      # API client
-│   │   ├── forms-fixed.js      # Login/signup handlers
-│   │   ├── verification-banner.js  # Email verification banner
-│   │   └── ...
-│   └── css/
-│       └── ...
-└── backend/
-    ├── server.js           # Express API server
-    ├── migrations/
-    │   └── migrate.js      # Database setup
-    ├── package.json
-    └── .env.example
-```
-
-## Quick Start
-
-### 1. Database Setup (PostgreSQL)
-
+### Install Python Dependencies
 ```bash
-# Install PostgreSQL if needed
-# Then create database
-createdb trustmyrecord
+pip install -r requirements.txt
 ```
 
-### 2. Backend Setup
-
+### Database Setup (PostgreSQL)
 ```bash
-cd backend
+# Create database
+psql -U postgres -c "CREATE DATABASE trustmyrecord;"
 
-# Install dependencies
-npm install
+# Or using createdb
+createdb -U postgres trustmyrecord
+```
 
-# Copy environment file
+### Redis Setup
+```bash
+# macOS
+brew install redis
+brew services start redis
+
+# Ubuntu/Debian
+sudo apt-get install redis-server
+sudo systemctl start redis
+
+# Windows (WSL or Docker)
+docker run -d -p 6379:6379 redis:alpine
+```
+
+## 2. Configuration
+
+### Create .env file
+```bash
 cp .env.example .env
-
-# Edit .env with your settings:
-# - DATABASE_URL
-# - JWT_SECRET (random string)
-# - SMTP credentials for email
-# - FRONTEND_URL
-
-# Run database migrations
-npm run migrate
-
-# Start server
-npm run dev
 ```
 
-Backend runs on http://localhost:3000
+### Required Environment Variables
+```bash
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/trustmyrecord
 
-### 3. Frontend Setup
+# Security
+SECRET_KEY=your-super-secret-key-here
+JWT_SECRET_KEY=your-jwt-secret-key-here
 
-The frontend is static HTML/JS. Just serve it:
+# Redis
+REDIS_URL=redis://localhost:6379/0
+
+# Optional: Email (for notifications)
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=true
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+
+# Optional: The Odds API (for live lines)
+ODDS_API_KEY=your-odds-api-key
+
+# Optional: AWS S3 (for file uploads)
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+S3_BUCKET=your-bucket-name
+```
+
+## 3. Database Migrations
+
+### Initialize (if needed)
+```bash
+flask db init
+```
+
+### Create migration
+```bash
+flask db migrate -m "Initial migration"
+```
+
+### Apply migrations
+```bash
+flask db upgrade
+```
+
+## 4. Seed Data (Development)
 
 ```bash
-# Using Python
-python -m http.server 8000
-
-# Or using Node
-npx serve -l 8000
-
-# Or using VS Code Live Server extension
+flask seed-db
 ```
 
-Frontend runs on http://localhost:8000
+This creates:
+- 4 test users
+- Sample games (NFL)
+- Sample picks
+- Forum threads and posts
+- Competition
 
-## Email Setup (Gmail)
+## 5. Run Development Server
 
-1. Enable 2-Factor Authentication on your Gmail
-2. Go to https://myaccount.google.com/apppasswords
-3. Generate an App Password
-4. Use it in `SMTP_PASS` in your `.env`
-
-```env
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-16-char-app-password
-FROM_EMAIL=your-email@gmail.com
+```bash
+python run.py
 ```
 
-## Testing Email Verification
+Server runs at `http://127.0.0.1:5000`
 
-1. Register a new account at http://localhost:8000
-2. Check your email for verification link
-3. Click the link or go to `verify-email.html?token=xxx`
-4. After verification, you can login and use all features
+## 6. Start Celery (Background Tasks)
 
-## Features Implemented
+In a separate terminal:
 
-### Authentication
-- ✅ Registration with email/password
-- ✅ Email verification required before login
-- ✅ Resend verification email
-- ✅ Password reset via email
-- ✅ JWT tokens with refresh
-- ✅ Rate limiting on auth
+```bash
+# Worker
+celery -A tasks worker --loglevel=info
 
-### Frontend Integration
-- ✅ Verification banner shows when logged in but not verified
-- ✅ Login redirects with "verify email" prompt if not verified
-- ✅ Signup shows "check email" message
-- ✅ Auto-login after email verification
-- ✅ Password reset flow
-
-### API Routes
-- Auth: `/api/auth/*`
-- Picks: `/api/picks`
-- Competitions: `/api/competitions`
-- Social: `/api/users/*`, `/api/posts`, `/api/follows`
-- Notifications: `/api/notifications`
-
-## Deployment
-
-### Backend (Railway)
-
-1. Push to GitHub
-2. Create new Railway project
-3. Add PostgreSQL plugin
-4. Set environment variables
-5. Deploy
-
-### Frontend (GitHub Pages / Netlify)
-
-1. Update `config.js` with production API URL:
-```javascript
-api: {
-    baseUrl: "https://your-api.railway.app/api"
-}
+# Scheduler (for periodic tasks)
+celery -A tasks beat --loglevel=info
 ```
 
-2. Deploy to GitHub Pages or Netlify
+## 7. Verify Installation
 
-## Environment Variables Reference
+### Health Check
+```bash
+curl http://localhost:5000/health
+```
 
-```env
-# Required
-DATABASE_URL=postgresql://...
-JWT_SECRET=at-least-32-characters-secret-key
-JWT_REFRESH_SECRET=another-32-char-secret
+### API Documentation
+```bash
+curl http://localhost:5000/api/v1/docs
+```
 
-# Email
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-FROM_EMAIL=noreply@trustmyrecord.com
+### Test Login
+```bash
+curl -X POST http://localhost:5000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"sharpshooter","password":"Password123!"}'
+```
 
-# URLs
-FRONTEND_URL=https://trustmyrecord.com
-PORT=3000
-NODE_ENV=production
+## 8. Production Deployment
+
+### Environment
+```bash
+export FLASK_ENV=production
+export DATABASE_URL=postgresql://... # Production DB
+export SECRET_KEY=... # Strong random key
+```
+
+### Gunicorn
+```bash
+gunicorn -w 4 -b 0.0.0.0:5000 wsgi:application
+```
+
+### Docker
+```bash
+docker-compose up -d
 ```
 
 ## Troubleshooting
 
-### Email not sending
-- Check SMTP credentials
-- For Gmail, use App Password (not regular password)
-- Check spam folders
-- Use Mailtrap for testing
-
-### Database connection failed
+### Database Connection Issues
+- Verify PostgreSQL is running
 - Check DATABASE_URL format
-- Ensure PostgreSQL is running
-- Verify database exists
+- Ensure user has database permissions
 
-### CORS errors
-- Update FRONTEND_URL in backend .env
-- Ensure it matches your frontend URL exactly
+### Redis Connection Issues
+- Verify Redis is running: `redis-cli ping`
+- Check REDIS_URL format
 
-### JWT errors
-- Ensure JWT_SECRET is set
-- Should be at least 32 characters
+### Import Errors
+- Ensure virtual environment is activated
+- Reinstall requirements: `pip install -r requirements.txt`
 
-## Next Steps
+### Migration Issues
+- Reset migrations: `flask db downgrade base && flask db upgrade`
+- Or recreate: `dropdb trustmyrecord && createdb trustmyrecord`
 
-1. Test the full flow locally
-2. Set up staging environment
-3. Configure production email service (SendGrid/Postmark)
-4. Add admin dashboard
-5. Implement real-time features with WebSockets
+## CLI Commands
+
+```bash
+# Create admin user
+flask create-admin admin admin@example.com
+
+# Reset database
+flask drop-db  # WARNING: Deletes all data
+flask create-db
+
+# Database shell
+flask shell
+```
