@@ -959,12 +959,19 @@
         // Do NOT redeclare it here - that causes a const redeclaration error
         // which kills this entire script block and the page never loads.
 
+        // Safety check - if auth-persistent.js failed to load
+        if (typeof auth === 'undefined' && typeof window.auth !== 'undefined') {
+            var auth = window.auth;
+        } else if (typeof auth === 'undefined') {
+            console.error('auth-persistent.js failed to load. Check for syntax errors.');
+        }
+
         // Get username from URL parameter
         const urlParams = new URLSearchParams(window.location.search);
         let profileUsername = urlParams.get('username');
 
         // Current user info
-        let currentUser = auth.getCurrentUser();
+        let currentUser = (typeof auth !== 'undefined' && auth) ? auth.getCurrentUser() : null;
         let isOwnProfile = false;
         let profileData = null;
 

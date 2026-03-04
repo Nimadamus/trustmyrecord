@@ -290,7 +290,7 @@ class PersistentAuthSystem {
         // Restore header auth buttons to Login
         const headerAuthButtons = document.getElementById('headerAuthButtons');
         if (headerAuthButtons) {
-            headerAuthButtons.innerHTML = '<button onclick="showSection('login')" class="btn btn-primary" style="padding: 8px 20px; font-size: 14px;">Login</button>';
+            headerAuthButtons.innerHTML = '<button onclick="showSection(\'login\')" class="btn btn-primary" style="padding: 8px 20px; font-size: 14px;">Login</button>';
         }
     }
 
