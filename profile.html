@@ -955,9 +955,10 @@
     <!-- Scripts -->
     <script src="static/js/auth-persistent.js"></script>
     <script>
-        // Initialize auth system
-        const auth = new PersistentAuthSystem();
-        
+        // auth is already created by auth-persistent.js (window.auth)
+        // Do NOT redeclare it here - that causes a const redeclaration error
+        // which kills this entire script block and the page never loads.
+
         // Get username from URL parameter
         const urlParams = new URLSearchParams(window.location.search);
         let profileUsername = urlParams.get('username');
@@ -1147,25 +1148,25 @@
                 }
                 
                 profileData = profileUser;
-                
-                // Calculate stats from picks
+
+                // Calculate stats from picks stored in tmr_picks
                 const allPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
-                const userPicks = allPicks.filter(p => p.user_id === profileUsername);
-                
-                const stats = {
-                    wins: userPicks.filter(p => p.status === 'won').length,
-                    losses: userPicks.filter(p => p.status === 'lost').length,
-                    pushes: userPicks.filter(p => p.status === 'pushed').length,
-                    pending: userPicks.filter(p => p.status === 'pending').length,
-                    totalPicks: userPicks.length
-                };
-                
-                // Update profile stats
-                profileData.stats = {
-                    ...profileData.stats,
-                    ...stats,
-                    winRate: stats.totalPicks > 0 ? ((stats.wins / (stats.totalPicks - stats.pushes)) * 100).toFixed(1) : 0
-                };
+                const userPicks = allPicks.filter(p => p.user_id === profileUsername || p.user_id === profileUser.id);
+
+                // If user has picks in tmr_picks, compute stats from them
+                // Otherwise keep the default stats from the user profile
+                if (userPicks.length > 0) {
+                    const pickStats = {
+                        wins: userPicks.filter(p => p.status === 'won').length,
+                        losses: userPicks.filter(p => p.status === 'lost').length,
+                        pushes: userPicks.filter(p => p.status === 'pushed').length,
+                        pending: userPicks.filter(p => p.status === 'pending').length,
+                        totalPicks: userPicks.length
+                    };
+                    const denominator = pickStats.totalPicks - pickStats.pushes;
+                    pickStats.winRate = denominator > 0 ? ((pickStats.wins / denominator) * 100).toFixed(1) : 0;
+                    profileData.stats = { ...profileData.stats, ...pickStats };
+                }
                 
                 // Ensure social data exists
                 if (!profileData.social) profileData.social = { followers: [], following: [], reputation: 100, badges: [] };
@@ -1241,7 +1242,7 @@
 
         function renderProfileHeader(profile) {
             const header = document.getElementById('profileHeader');
-            const joinDate = new Date(profile.created_at).toLocaleDateString('en-US', {
+            const joinDate = new Date(profile.joinedDate || profile.created_at || Date.now()).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long'
             });
@@ -1286,14 +1287,21 @@
 
         function renderStatsGrid(profile) {
             const grid = document.getElementById('statsGrid');
-            const record = profile.record || { wins: 0, losses: 0, pushes: 0 };
-            const totalBets = (record.wins || 0) + (record.losses || 0) + (record.pushes || 0);
-            const winRate = totalBets > 0 ? ((record.wins / totalBets) * 100).toFixed(1) : 0;
-            
+            const stats = profile.stats || {};
+            const social = profile.social || { followers: [], following: [] };
+            const wins = stats.wins || 0;
+            const losses = stats.losses || 0;
+            const pushes = stats.pushes || 0;
+            const totalPicks = stats.totalPicks || (wins + losses + pushes);
+            const winRate = stats.winRate || (totalPicks > 0 ? ((wins / totalPicks) * 100).toFixed(1) : 0);
+            const followers = social.followers || [];
+            const following = social.following || [];
+            const friends = following.filter(f => followers.includes(f));
+
             grid.innerHTML = `
                 <div class="stat-card">
                     <div class="stat-icon">📊</div>
-                    <div class="stat-value">${profile.total_picks || totalBets || 0}</div>
+                    <div class="stat-value">${totalPicks}</div>
                     <div class="stat-label">Total Picks</div>
                 </div>
                 <div class="stat-card green">
@@ -1303,85 +1311,71 @@
                 </div>
                 <div class="stat-card gold">
                     <div class="stat-icon">🔥</div>
-                    <div class="stat-value">${profile.streak || 0}</div>
-                    <div class="stat-label">Current Streak</div>
+                    <div class="stat-value">${stats.roi || 0}</div>
+                    <div class="stat-label">ROI %</div>
                 </div>
                 <div class="stat-card" style="--card-color: var(--neon-green);">
                     <div class="stat-icon">💰</div>
-                    <div class="stat-value">${profile.units || 0}</div>
-                    <div class="stat-label">Units</div>
+                    <div class="stat-value">${wins}-${losses}-${pushes}</div>
+                    <div class="stat-label">W-L-P</div>
                 </div>
                 <div class="stat-card purple">
                     <div class="stat-icon">👥</div>
-                    <div class="stat-value">${profile.followers_count || 0}</div>
+                    <div class="stat-value">${followers.length}</div>
                     <div class="stat-label">Followers</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">🎯</div>
-                    <div class="stat-value">${profile.following_count || 0}</div>
+                    <div class="stat-value">${following.length}</div>
                     <div class="stat-label">Following</div>
                 </div>
                 <div class="stat-card cyan">
                     <div class="stat-icon">🤝</div>
-                    <div class="stat-value">${profile.friends_count || 0}</div>
+                    <div class="stat-value">${friends.length}</div>
                     <div class="stat-label">Friends</div>
                 </div>
                 <div class="stat-card gold">
                     <div class="stat-icon">🏆</div>
-                    <div class="stat-value">${profile.competitions_won || 0}</div>
-                    <div class="stat-label">Competitions Won</div>
+                    <div class="stat-value">${social.reputation || 0}</div>
+                    <div class="stat-label">Reputation</div>
                 </div>
                 <div class="stat-card red">
                     <div class="stat-icon">⚔️</div>
-                    <div class="stat-value">${profile.challenges_won || 0}</div>
-                    <div class="stat-label">Challenges Won</div>
-                </div>
-                <div class="stat-card" style="--card-color: #8a2be2;">
-                    <div class="stat-icon">📋</div>
-                    <div class="stat-value">${profile.polls_created || 0}</div>
-                    <div class="stat-label">Polls Created</div>
-                </div>
-                <div class="stat-card" style="--card-color: var(--neon-cyan);">
-                    <div class="stat-icon">🧠</div>
-                    <div class="stat-value">${profile.trivia_points || 0}</div>
-                    <div class="stat-label">Trivia Points</div>
-                </div>
-                <div class="stat-card" style="--card-color: #ff6b35;">
-                    <div class="stat-icon">📅</div>
-                    <div class="stat-value">${profile.polls_answered || 0}</div>
-                    <div class="stat-label">Polls Answered</div>
+                    <div class="stat-value">${(social.badges || []).length}</div>
+                    <div class="stat-label">Badges</div>
                 </div>
             `;
         }
 
         function renderHandicappingStats(profile) {
             const container = document.getElementById('handicappingStats');
-            const record = profile.record || { wins: 0, losses: 0, pushes: 0 };
+            const stats = profile.stats || {};
 
             container.innerHTML = `
                 <div class="handicap-stat">
-                    <div class="handicap-stat-value win">${record.wins || 0}</div>
+                    <div class="handicap-stat-value win">${stats.wins || 0}</div>
                     <div class="handicap-stat-label">Wins</div>
                 </div>
                 <div class="handicap-stat">
-                    <div class="handicap-stat-value loss">${record.losses || 0}</div>
+                    <div class="handicap-stat-value loss">${stats.losses || 0}</div>
                     <div class="handicap-stat-label">Losses</div>
                 </div>
                 <div class="handicap-stat">
-                    <div class="handicap-stat-value push">${record.pushes || 0}</div>
+                    <div class="handicap-stat-value push">${stats.pushes || 0}</div>
                     <div class="handicap-stat-label">Pushes</div>
                 </div>
                 <div class="handicap-stat">
-                    <div class="handicap-stat-value" style="color: var(--neon-gold);">${profile.units || 0}</div>
-                    <div class="handicap-stat-label">Units</div>
+                    <div class="handicap-stat-value" style="color: var(--neon-gold);">${stats.roi || 0}%</div>
+                    <div class="handicap-stat-label">ROI</div>
                 </div>
             `;
         }
 
         function renderSportBreakdown(picksBySport) {
             const container = document.getElementById('sportBreakdown');
+            const sportNames = Object.keys(picksBySport || {});
 
-            if (!picksBySport || picksBySport.length === 0) {
+            if (!picksBySport || sportNames.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">🏈</div>
@@ -1402,17 +1396,19 @@
                 'UFC': '🥊'
             };
 
-            container.innerHTML = picksBySport.map(sport => {
-                const icon = sportIcons[sport.sport] || '🏆';
-                const winRate = sport.total > 0
-                    ? ((sport.wins / (sport.total - sport.pushes)) * 100).toFixed(1)
+            container.innerHTML = sportNames.map(sportName => {
+                const sport = picksBySport[sportName];
+                const icon = sportIcons[sportName] || '🏆';
+                const denominator = sport.total - sport.pushes;
+                const winRate = denominator > 0
+                    ? ((sport.wins / denominator) * 100).toFixed(1)
                     : 0;
 
                 return `
                     <div class="sport-item">
                         <div class="sport-icon">${icon}</div>
                         <div class="sport-info">
-                            <div class="sport-name">${sport.sport}</div>
+                            <div class="sport-name">${sportName}</div>
                             <div class="sport-record">${sport.wins}-${sport.losses}-${sport.pushes} (${sport.total} picks)</div>
                         </div>
                         <div class="sport-winrate">${winRate}%</div>
@@ -1442,20 +1438,19 @@
 
             container.innerHTML = activity.map(item => {
                 const icon = typeIcons[item.type] || '📌';
-                const timeAgo = getTimeAgo(new Date(item.created_at));
-                const resultClass = item.result === 'won' ? 'win' : (item.result === 'lost' ? 'loss' : '');
+                const timeAgo = getTimeAgo(new Date(item.date));
+                const statusText = item.description || '';
 
                 return `
-                    <div class="activity-item ${resultClass}">
+                    <div class="activity-item">
                         <div class="activity-icon">${icon}</div>
                         <div class="activity-content">
                             <div class="activity-text">
                                 <strong>${item.type.charAt(0).toUpperCase() + item.type.slice(1)}</strong>
-                                ${item.detail ? `- ${item.detail}` : ''}
+                                ${statusText ? `- ${statusText}` : ''}
                             </div>
                             <div class="activity-time">${timeAgo}</div>
                         </div>
-                        <div class="activity-result ${resultClass}">${item.result}</div>
                     </div>
                 `;
             }).join('');
@@ -1644,19 +1639,19 @@
             container.innerHTML = `
                 <div class="handicapping-stats">
                     <div class="handicap-stat">
-                        <div class="handicap-stat-value" style="color: var(--neon-cyan);">${data.poll_points || 0}</div>
+                        <div class="handicap-stat-value" style="color: var(--neon-cyan);">${data.pollPoints || 0}</div>
                         <div class="handicap-stat-label">Poll Points</div>
                     </div>
                     <div class="handicap-stat">
-                        <div class="handicap-stat-value" style="color: var(--neon-purple);">${data.trivia_points || 0}</div>
+                        <div class="handicap-stat-value" style="color: var(--neon-purple);">${data.triviaPoints || 0}</div>
                         <div class="handicap-stat-label">Trivia Points</div>
                     </div>
                     <div class="handicap-stat">
-                        <div class="handicap-stat-value" style="color: var(--neon-gold);">${data.total_polls_answered || 0}</div>
+                        <div class="handicap-stat-value" style="color: var(--neon-gold);">${data.pollsTotal || 0}</div>
                         <div class="handicap-stat-label">Polls Answered</div>
                     </div>
                     <div class="handicap-stat">
-                        <div class="handicap-stat-value" style="color: var(--neon-green);">${data.total_trivia_played || 0}</div>
+                        <div class="handicap-stat-value" style="color: var(--neon-green);">${data.triviaGames || 0}</div>
                         <div class="handicap-stat-label">Trivia Played</div>
                     </div>
                 </div>
@@ -1697,17 +1692,7 @@
 
         // Action handlers
         function editProfile() {
-            alert('Edit profile coming soon!');
-        }
-
-        async function followUser(userId) {
-            try {
-                await api.followUser(userId);
-                alert('Now following user!');
-                location.reload();
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
+            showToast('Edit profile coming soon!', 'info');
         }
 
         function challengeUser(username) {
