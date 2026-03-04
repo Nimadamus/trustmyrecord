@@ -953,53 +953,73 @@
     </section>
 
     <!-- Scripts -->
+    <script>
+        // Global error catcher - shows errors visually on page
+        window.onerror = function(msg, url, line, col, error) {
+            var el = document.getElementById('profileHeader');
+            if (el) {
+                el.innerHTML = '<div style="background:#ff073a22;border:2px solid #ff073a;border-radius:12px;padding:20px;margin:20px;color:#fff;"><h3 style="color:#ff073a;">JS Error</h3><p>' + msg + '</p><p>File: ' + url + ' Line: ' + line + '</p></div>';
+            }
+            console.error('Global error:', msg, url, line);
+            return false;
+        };
+    </script>
     <script src="static/js/auth-persistent.js"></script>
     <script>
         // auth is already created by auth-persistent.js (window.auth)
-        // Do NOT redeclare it here - that causes a const redeclaration error
-        // which kills this entire script block and the page never loads.
+        console.log('[Profile] Script starting. auth exists:', typeof auth !== 'undefined');
+        console.log('[Profile] window.auth exists:', typeof window !== 'undefined' && typeof window.auth !== 'undefined');
 
-        // Safety check - if auth-persistent.js failed to load
-        if (typeof auth === 'undefined' && typeof window.auth !== 'undefined') {
-            var auth = window.auth;
-        } else if (typeof auth === 'undefined') {
-            console.error('auth-persistent.js failed to load. Check for syntax errors.');
+        let currentUser = null;
+        try {
+            if (typeof auth !== 'undefined' && auth) {
+                currentUser = auth.getCurrentUser();
+                console.log('[Profile] Got currentUser from auth:', currentUser ? currentUser.username : null);
+            } else if (typeof window.auth !== 'undefined' && window.auth) {
+                currentUser = window.auth.getCurrentUser();
+                console.log('[Profile] Got currentUser from window.auth:', currentUser ? currentUser.username : null);
+            } else {
+                console.log('[Profile] No auth system available');
+            }
+        } catch(e) {
+            console.error('[Profile] Auth system error:', e);
         }
 
         // Get username from URL parameter
         const urlParams = new URLSearchParams(window.location.search);
         let profileUsername = urlParams.get('username');
-
-        // Current user info
-        let currentUser = (typeof auth !== 'undefined' && auth) ? auth.getCurrentUser() : null;
+        console.log('[Profile] URL username param:', profileUsername);
         let isOwnProfile = false;
         let profileData = null;
 
         // Initialize page
         function init() {
-            // If no username provided, use current user
-            if (!profileUsername && currentUser) {
-                profileUsername = currentUser.username;
+            console.log('[Profile] init() called');
+            try {
+                // If no username provided, use current user or default to BetLegend
+                if (!profileUsername && currentUser) {
+                    profileUsername = currentUser.username;
+                    console.log('[Profile] Using current user:', profileUsername);
+                }
+                if (!profileUsername) {
+                    profileUsername = 'BetLegend';
+                    console.log('[Profile] Defaulting to BetLegend');
+                }
+
+                isOwnProfile = currentUser && currentUser.username === profileUsername;
+                console.log('[Profile] Loading profile for:', profileUsername, 'isOwnProfile:', isOwnProfile);
+
+                // Update header
+                updateHeader();
+                console.log('[Profile] Header updated');
+
+                // Load profile data
+                loadProfile();
+                console.log('[Profile] loadProfile() completed');
+            } catch(e) {
+                console.error('[Profile] Init error:', e);
+                document.getElementById('profileHeader').innerHTML = '<div class="error-message" style="background:#ff073a22;border:2px solid #ff073a;border-radius:12px;padding:20px;color:#fff;"><h3 style="color:#ff073a;">Error loading profile</h3><p>' + e.message + '</p><pre style="color:#aaa;font-size:12px;">' + e.stack + '</pre></div>';
             }
-
-            if (!profileUsername) {
-                document.getElementById('profileHeader').innerHTML = `
-                    <div class="error-message">
-                        <h3>👤 No User Specified</h3>
-                        <p>Please provide a username or log in to view your profile.</p>
-                        <a href="index.html" class="btn btn-primary" style="margin-top: 20px;">Go Home</a>
-                    </div>
-                `;
-                return;
-            }
-
-            isOwnProfile = currentUser && currentUser.username === profileUsername;
-
-            // Update header
-            updateHeader();
-
-            // Load profile data
-            loadProfile();
         }
 
         function updateHeader() {
