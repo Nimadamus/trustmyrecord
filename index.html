@@ -13283,7 +13283,9 @@ function renderPollsGrid(filterCategory) {
 
     var polls = getPolls();
     var now = new Date();
-    var currentUser = (window.auth && window.auth.isLoggedIn()) ? window.auth.getCurrentUser() : null;
+    var currentUser = null;
+    try { currentUser = window.auth && window.auth.getCurrentUser ? window.auth.getCurrentUser() : null; } catch(e) {}
+    if (!currentUser) { try { currentUser = JSON.parse(localStorage.getItem('tmr_current_user') || 'null'); } catch(e) {} }
     var username = currentUser ? (currentUser.username || '') : '';
 
     // Filter by category if specified
@@ -13406,12 +13408,19 @@ function renderPollsGrid(filterCategory) {
 }
 
 function votePoll(pollId, optionIndex) {
-    if (!window.auth || !window.auth.isLoggedIn()) {
+    var _li = false;
+    if (window.auth && typeof window.auth.isLoggedIn === 'function') _li = window.auth.isLoggedIn();
+    if (!_li && localStorage.getItem('tmr_is_logged_in') === 'true') _li = true;
+    if (!_li && localStorage.getItem('trustmyrecord_session') !== null) _li = true;
+    if (!_li) {
         alert('Please log in to vote.');
         return;
     }
 
-    var user = window.auth.getCurrentUser();
+    var user = null;
+    try { user = window.auth && window.auth.getCurrentUser ? window.auth.getCurrentUser() : null; } catch(e) {}
+    if (!user) { try { user = JSON.parse(localStorage.getItem('tmr_current_user') || 'null'); } catch(e) {} }
+    user = user || { username: 'local' };
     var username = user.username || '';
     var polls = getPolls();
     var pollIdx = -1;
@@ -13467,12 +13476,19 @@ function closeCreatePollModal() {
 function submitPoll(event) {
     event.preventDefault();
 
-    if (!window.auth || !window.auth.isLoggedIn()) {
+    var _li = false;
+    if (window.auth && typeof window.auth.isLoggedIn === 'function') _li = window.auth.isLoggedIn();
+    if (!_li && localStorage.getItem('tmr_is_logged_in') === 'true') _li = true;
+    if (!_li && localStorage.getItem('trustmyrecord_session') !== null) _li = true;
+    if (!_li) {
         alert('Please log in to create a poll.');
         return;
     }
 
-    var user = window.auth.getCurrentUser();
+    var user = null;
+    try { user = window.auth && window.auth.getCurrentUser ? window.auth.getCurrentUser() : null; } catch(e) {}
+    if (!user) { try { user = JSON.parse(localStorage.getItem('tmr_current_user') || 'null'); } catch(e) {} }
+    user = user || { username: 'local' };
     var question = document.getElementById('pollQuestion').value.trim();
     var category = document.getElementById('pollCategory').value;
     var opt1 = document.getElementById('pollOption1').value.trim();
@@ -14540,7 +14556,9 @@ function renderArenaPollsList() {
 
     var polls = getPolls();
     var now = new Date();
-    var currentUser = (window.auth && window.auth.isLoggedIn()) ? window.auth.getCurrentUser() : null;
+    var currentUser = null;
+    try { currentUser = window.auth && window.auth.getCurrentUser ? window.auth.getCurrentUser() : null; } catch(e) {}
+    if (!currentUser) { try { currentUser = JSON.parse(localStorage.getItem('tmr_current_user') || 'null'); } catch(e) {} }
     var username = currentUser ? (currentUser.username || '') : '';
 
     if (arenaPolllFilter && arenaPolllFilter !== 'all') {

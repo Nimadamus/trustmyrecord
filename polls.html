@@ -4,1236 +4,1285 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prediction Polls - TrustMyRecord</title>
-    <link rel="stylesheet" href="static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        .polls-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: rgba(30, 41, 59, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #6c7380;
+            --primary: #0ea5e9;
+            --primary-glow: rgba(14, 165, 233, 0.3);
+            --accent-purple: #8b5cf6;
+            --accent-green: #00c853;
+            --accent-red: #ff4444;
         }
 
-        .polls-header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid var(--primary-blue);
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
         }
 
-        .polls-header h1 {
-            color: var(--primary-blue);
-            margin: 0 0 10px 0;
-        }
-
-        .polls-stats {
+        /* Nav Bar */
+        .nav-bar {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
             display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 800;
+            font-size: 1.15rem;
+        }
+
+        .nav-brand-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary), var(--accent-purple));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
             justify-content: center;
-            gap: 40px;
-            color: var(--text-muted);
+            font-size: 18px;
         }
 
-        .polls-stats span strong {
-            color: var(--primary-blue);
-        }
-
-        /* Tabs */
-        .tabs {
+        .nav-links {
             display: flex;
-            gap: 5px;
-            margin-bottom: 30px;
-            border-bottom: 2px solid var(--border-color);
+            align-items: center;
+            gap: 8px;
         }
 
-        .tab-btn {
-            padding: 12px 24px;
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-weight: bold;
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
             transition: all 0.2s;
         }
 
-        .tab-btn:hover {
-            color: var(--text-light);
+        .nav-links a:hover {
+            color: var(--text-primary);
+            background: rgba(14, 165, 233, 0.1);
         }
 
-        .tab-btn.active {
-            color: var(--primary-blue);
-            border-bottom: 2px solid var(--primary-blue);
-            margin-bottom: -2px;
+        .nav-links a.active {
+            color: var(--primary);
+            background: rgba(14, 165, 233, 0.15);
         }
 
-        /* Poll Cards */
+        .nav-user-status {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--glass-border);
+        }
+
+        .nav-user-status.logged-in {
+            color: var(--accent-green);
+            border-color: rgba(0, 200, 83, 0.3);
+            background: rgba(0, 200, 83, 0.08);
+        }
+
+        /* Page Container */
+        .page-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 32px 20px 80px;
+        }
+
+        /* Page Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .page-header h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+        }
+
+        /* Stats Card */
+        .user-stats-card {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+            padding: 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            backdrop-filter: blur(12px);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        /* Category Filters */
+        .category-filters {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            background: rgba(14, 165, 233, 0.1);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .filter-btn.active {
+            background: rgba(14, 165, 233, 0.2);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Create Poll Button */
+        .create-poll-btn {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .create-poll-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Polls Grid */
         .polls-grid {
             display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
             gap: 20px;
+            margin-bottom: 40px;
         }
 
+        /* Poll Card */
         .poll-card {
-            background: var(--surface-dark);
-            border-radius: 12px;
-            padding: 25px;
-            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(12px);
             transition: all 0.3s;
         }
 
         .poll-card:hover {
-            border-color: var(--primary-blue);
+            border-color: rgba(14, 165, 233, 0.3);
+            box-shadow: 0 8px 40px rgba(14, 165, 233, 0.08);
+            transform: translateY(-2px);
         }
 
-        .poll-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
+        .poll-card.expired {
+            opacity: 0.65;
+            border-color: #333;
         }
 
-        .poll-title {
-            font-size: 1.2rem;
-            color: var(--text-light);
-            margin: 0;
-            cursor: pointer;
+        .poll-card.expired:hover {
+            transform: none;
+            box-shadow: none;
         }
 
-        .poll-title:hover {
-            color: var(--primary-blue);
-        }
-
-        .poll-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .badge-active {
-            background: rgba(76, 175, 80, 0.2);
-            color: #4caf50;
-        }
-
-        .badge-resolved {
-            background: rgba(0, 174, 255, 0.2);
-            color: var(--primary-blue);
-        }
-
-        .badge-closed {
-            background: rgba(244, 67, 54, 0.2);
-            color: #f44336;
-        }
-
-        .poll-meta {
-            display: flex;
-            gap: 20px;
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-bottom: 15px;
-        }
-
-        .poll-description {
-            color: var(--text-muted);
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-
-        /* Voting Options */
-        .poll-options {
-            display: grid;
-            gap: 10px;
-        }
-
-        .poll-option {
-            background: #1a1a2e;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .poll-option:hover:not(.voted):not(.disabled) {
-            border-color: var(--primary-blue);
-        }
-
-        .poll-option.selected {
-            border-color: var(--primary-blue);
-            background: rgba(0, 174, 255, 0.1);
-        }
-
-        .poll-option.voted {
-            cursor: default;
-        }
-
-        .poll-option.correct {
-            border-color: #4caf50;
-            background: rgba(76, 175, 80, 0.1);
-        }
-
-        .poll-option.user-vote {
-            border-width: 3px;
-        }
-
-        .poll-option-content {
+        .poll-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: relative;
-            z-index: 1;
+            margin-bottom: 14px;
         }
 
-        .poll-option-text {
-            color: var(--text-light);
+        .poll-category-pill {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .poll-time-left {
+            color: var(--text-muted);
+            font-size: 0.75rem;
             font-weight: 500;
         }
 
-        .poll-option-stats {
-            text-align: right;
+        .poll-time-left.ended {
+            color: var(--accent-red);
         }
 
-        .poll-option-percent {
-            font-weight: bold;
-            color: var(--primary-blue);
+        .poll-question {
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            line-height: 1.4;
         }
 
-        .poll-option-votes {
-            font-size: 12px;
+        .poll-meta {
             color: var(--text-muted);
+            font-size: 0.78rem;
+            margin-bottom: 16px;
         }
 
-        .poll-option-bar {
+        /* Vote Buttons */
+        .vote-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-family: inherit;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .vote-btn:hover {
+            background: rgba(102, 126, 234, 0.15);
+            border-color: #667eea;
+        }
+
+        /* Result Bars */
+        .result-bar {
+            position: relative;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            overflow: hidden;
+            border: 1px solid transparent;
+        }
+
+        .result-bar.my-vote {
+            border-color: var(--primary);
+        }
+
+        .result-bar-fill {
             position: absolute;
             top: 0;
             left: 0;
             height: 100%;
-            background: rgba(0, 174, 255, 0.1);
-            transition: width 0.5s ease;
+            border-radius: 10px;
+            transition: width 0.6s ease;
         }
 
-        /* Confidence Slider */
-        .confidence-container {
-            margin-top: 20px;
-            padding: 20px;
-            background: #1a1a2e;
-            border-radius: 8px;
+        .result-bar-fill.winner {
+            background: rgba(0, 200, 83, 0.15);
         }
 
-        .confidence-label {
+        .result-bar-fill.normal {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .result-bar-content {
+            position: relative;
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .result-bar-text {
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .result-bar-text.voted {
+            font-weight: 700;
+        }
+
+        .result-bar-pct {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .result-bar-pct.winner {
+            color: var(--accent-green);
+        }
+
+        .result-bar-pct.normal {
             color: var(--text-muted);
-            font-size: 14px;
         }
 
-        .confidence-value {
-            color: var(--primary-blue);
-            font-weight: bold;
-        }
-
-        .confidence-slider {
-            width: 100%;
-            -webkit-appearance: none;
-            height: 8px;
-            border-radius: 4px;
-            background: var(--border-color);
-            outline: none;
-        }
-
-        .confidence-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: var(--primary-blue);
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0, 174, 255, 0.5);
-        }
-
-        /* Poll Actions */
-        .poll-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
+        /* Poll Footer */
         .poll-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid var(--border-color);
-            font-size: 13px;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.78rem;
             color: var(--text-muted);
         }
 
-        /* Scoring Type Badge */
-        .scoring-badge {
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            background: rgba(255, 193, 7, 0.2);
-            color: #ffc107;
+        /* Expired Section Divider */
+        .expired-divider {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 16px 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            position: relative;
         }
 
-        /* Create Poll Form */
-        .create-form {
-            background: var(--surface-dark);
-            border-radius: 12px;
-            padding: 30px;
+        .expired-divider::before,
+        .expired-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: calc(50% - 80px);
+            height: 1px;
+            background: var(--glass-border);
         }
 
-        .create-form h3 {
-            color: var(--primary-blue);
-            margin: 0 0 25px 0;
+        .expired-divider::before { left: 0; }
+        .expired-divider::after { right: 0; }
+
+        /* Empty State */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-muted);
         }
 
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
         }
 
+        .empty-state h3 {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            margin-bottom: 20px;
+        }
+
+        .empty-state button {
+            padding: 12px 28px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 36px;
+            width: 100%;
+            max-width: 520px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.6rem;
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-box h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: var(--text-primary);
+        }
+
+        /* Form Styles */
         .form-group {
             margin-bottom: 20px;
         }
 
         .form-group label {
             display: block;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 600;
             margin-bottom: 8px;
-            color: var(--text-muted);
-            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .form-input, .form-select, .form-textarea {
+        .form-group input,
+        .form-group select {
             width: 100%;
-            padding: 12px 15px;
-            background: #1a1a2e;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-light);
-            font-size: 14px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+            margin-bottom: 8px;
         }
 
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
+        .form-group input:focus,
+        .form-group select:focus {
             outline: none;
-            border-color: var(--primary-blue);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
         }
 
-        .form-textarea {
-            min-height: 80px;
-            resize: vertical;
+        .form-group select option {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
         }
 
-        .options-form {
-            margin-top: 15px;
-        }
-
-        .option-input-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .option-input-row input {
-            flex: 1;
-        }
-
-        .add-option-btn {
-            background: none;
-            border: 1px dashed var(--border-color);
+        .form-group input::placeholder {
             color: var(--text-muted);
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
+        }
+
+        .submit-btn {
             width: 100%;
-            transition: all 0.2s;
-        }
-
-        .add-option-btn:hover {
-            border-color: var(--primary-blue);
-            color: var(--primary-blue);
-        }
-
-        /* Leaderboard */
-        .leaderboard {
-            background: var(--surface-dark);
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        .leaderboard-header {
-            background: linear-gradient(90deg, #1a1a2e, #16213e);
-            padding: 15px 20px;
-            border-bottom: 2px solid var(--primary-blue);
-        }
-
-        .leaderboard-header h3 {
-            margin: 0;
-            color: var(--primary-blue);
-        }
-
-        .leaderboard-row {
-            display: grid;
-            grid-template-columns: 50px 1fr 100px 80px;
-            gap: 15px;
-            padding: 12px 20px;
-            border-bottom: 1px solid var(--border-color);
-            align-items: center;
-        }
-
-        .leaderboard-row:hover {
-            background: rgba(0, 174, 255, 0.05);
-        }
-
-        .rank {
-            font-weight: bold;
-            color: var(--text-muted);
-        }
-
-        .rank-1 { color: #ffd700; }
-        .rank-2 { color: #c0c0c0; }
-        .rank-3 { color: #cd7f32; }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .user-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background: var(--primary-blue);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-
-        /* Buttons */
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-primary {
-            background: linear-gradient(90deg, #00aeff, #0077ff);
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            font-family: inherit;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
         }
 
-        .btn-primary:hover {
-            box-shadow: 0 4px 15px rgba(0, 174, 255, 0.4);
+        .submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text-light);
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 14px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            z-index: 3000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s ease;
+            backdrop-filter: blur(12px);
         }
 
-        .btn-small {
-            padding: 8px 16px;
-            font-size: 13px;
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
         }
 
-        /* Comments Section */
-        .comments-section {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border-color);
+        .toast.success {
+            background: rgba(0, 200, 83, 0.9);
+            border: 1px solid rgba(0, 200, 83, 0.5);
         }
 
-        .comment {
-            display: flex;
-            gap: 15px;
-            padding: 15px 0;
-            border-bottom: 1px solid var(--border-color);
+        .toast.error {
+            background: rgba(255, 68, 68, 0.9);
+            border: 1px solid rgba(255, 68, 68, 0.5);
         }
 
-        .comment-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--primary-blue);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-
-        .comment-content {
-            flex: 1;
-        }
-
-        .comment-header {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 5px;
-            font-size: 13px;
-        }
-
-        .comment-author {
-            color: var(--primary-blue);
-            font-weight: bold;
-        }
-
-        .comment-date {
-            color: var(--text-muted);
-        }
-
-        .comment-text {
-            color: var(--text-light);
-            line-height: 1.5;
-        }
-
-        .comment-form {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .comment-form input {
-            flex: 1;
-        }
-
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 50px;
-            color: var(--text-muted);
-        }
-
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border-color);
-            border-top-color: var(--primary-blue);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .toast.info {
+            background: rgba(14, 165, 233, 0.9);
+            border: 1px solid rgba(14, 165, 233, 0.5);
         }
 
         /* Responsive */
         @media (max-width: 768px) {
-            .form-row {
+            .nav-links { display: none; }
+
+            .page-header h1 { font-size: 1.6rem; }
+
+            .user-stats-card {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+                padding: 18px;
+            }
+
+            .stat-value { font-size: 1.4rem; }
+
+            .action-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .category-filters {
+                justify-content: center;
+            }
+
+            .create-poll-btn {
+                justify-content: center;
+            }
+
+            .polls-grid {
                 grid-template-columns: 1fr;
             }
 
-            .poll-card-header {
-                flex-direction: column;
-                gap: 10px;
+            .modal-box {
+                padding: 24px;
             }
+        }
 
-            .leaderboard-row {
-                grid-template-columns: 40px 1fr 80px;
-            }
-
-            .leaderboard-row > div:nth-child(4) {
-                display: none;
+        @media (max-width: 480px) {
+            .filter-btn {
+                padding: 6px 12px;
+                font-size: 0.78rem;
             }
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <nav>
-                <div class="logo"><a href="index.html">TrustMyRecord</a></div>
-                <ul>
-                    <li><a href="index.html">The Record</a></li>
-                    <li><a href="challenges.html">The Arena</a></li>
-                    <li><a href="forum.html">Forum</a></li>
-                    <li><a href="trivia.html">Trivia</a></li>
-                    <li><a href="polls.html" class="active">Polls</a></li>
-                    <li><a href="premium.html" style="color: #ffd700;">👑 Premium</a></li>
-                    <li id="authNav"></li>
-                </ul>
-            </nav>
+
+    <!-- Nav Bar -->
+    <nav class="nav-bar">
+        <a href="index.html" class="nav-brand">
+            <div class="nav-brand-icon">&#x1F3AF;</div>
+            TrustMyRecord
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="polls.html" class="active">Polls</a>
+            <a href="index.html#leaderboards">Leaderboards</a>
+            <a href="index.html#record">My Record</a>
         </div>
-    </header>
+        <div class="nav-user-status" id="navUserStatus">Not logged in</div>
+    </nav>
 
-    <main class="polls-container">
-        <!-- Polls Home -->
-        <div id="pollsHome">
-            <div class="polls-header">
-                <h1>Prediction Polls</h1>
-                <p style="color: var(--text-muted);">Make predictions, earn points when you're right!</p>
-                <div class="polls-stats" id="pollsStats">
-                    <span><strong id="activePolls">0</strong> Active Polls</span>
-                    <span><strong id="totalVotes">0</strong> Total Votes</span>
-                    <span><strong id="uniqueVoters">0</strong> Voters</span>
-                </div>
+    <!-- Page Container -->
+    <div class="page-container">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>Prediction Polls</h1>
+            <p>Make predictions on upcoming games and compete for the top spot</p>
+        </div>
+
+        <!-- User Stats Card -->
+        <div class="user-stats-card">
+            <div class="stat-item">
+                <div class="stat-value" id="pollsAccuracy">--</div>
+                <div class="stat-label">Accuracy</div>
             </div>
-
-            <div class="tabs">
-                <button class="tab-btn active" onclick="showTab('active')">Active Polls</button>
-                <button class="tab-btn" onclick="showTab('resolved')">Resolved</button>
-                <button class="tab-btn" onclick="showTab('leaderboard')">Leaderboard</button>
-                <button class="tab-btn" onclick="showTab('create')">Create Poll</button>
+            <div class="stat-item">
+                <div class="stat-value" id="pollsVoteCount">0</div>
+                <div class="stat-label">Predictions</div>
             </div>
-
-            <!-- Active Polls Tab -->
-            <div id="activeTab">
-                <div class="polls-grid" id="activePollsGrid">
-                    <div class="loading">
-                        <div class="loading-spinner"></div>
-                        Loading polls...
-                    </div>
-                </div>
+            <div class="stat-item">
+                <div class="stat-value" id="pollsRank">--</div>
+                <div class="stat-label">Rank</div>
             </div>
-
-            <!-- Resolved Polls Tab -->
-            <div id="resolvedTab" style="display: none;">
-                <div class="polls-grid" id="resolvedPollsGrid">
-                    <div class="loading">
-                        <div class="loading-spinner"></div>
-                        Loading resolved polls...
-                    </div>
-                </div>
-            </div>
-
-            <!-- Leaderboard Tab -->
-            <div id="leaderboardTab" style="display: none;">
-                <div class="leaderboard" id="leaderboardContainer">
-                    <div class="loading">
-                        <div class="loading-spinner"></div>
-                        Loading leaderboard...
-                    </div>
-                </div>
-            </div>
-
-            <!-- Create Poll Tab -->
-            <div id="createTab" style="display: none;">
-                <div class="create-form">
-                    <h3>Create a Prediction Poll</h3>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Category</label>
-                            <select class="form-select" id="pollCategory">
-                                <option value="">Select category...</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Sport (optional)</label>
-                            <select class="form-select" id="pollSport">
-                                <option value="">Any / General</option>
-                                <option value="NFL">NFL</option>
-                                <option value="NBA">NBA</option>
-                                <option value="MLB">MLB</option>
-                                <option value="NHL">NHL</option>
-                                <option value="NCAAF">NCAAF</option>
-                                <option value="NCAAB">NCAAB</option>
-                                <option value="Soccer">Soccer</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Question / Title</label>
-                        <input type="text" class="form-input" id="pollTitle" placeholder="e.g., Who will win Super Bowl LIX?">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Description (optional)</label>
-                        <textarea class="form-textarea" id="pollDescription" placeholder="Additional context or rules..."></textarea>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Scoring Type</label>
-                            <select class="form-select" id="pollScoringType">
-                                <option value="binary">Binary (Win/Lose points)</option>
-                                <option value="confidence">Confidence (Risk more to win more)</option>
-                                <option value="weighted">Weighted by Odds</option>
-                                <option value="partial">Partial Credit (Less popular = more points)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Points for Correct</label>
-                            <input type="number" class="form-input" id="pollPointsCorrect" value="100" min="1" max="1000">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Voting Deadline</label>
-                            <input type="datetime-local" class="form-input" id="pollDeadline">
-                        </div>
-                        <div class="form-group">
-                            <label>Resolution Date (when answer is known)</label>
-                            <input type="datetime-local" class="form-input" id="pollResolution">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Options</label>
-                        <div class="options-form" id="pollOptionsForm">
-                            <div class="option-input-row">
-                                <input type="text" class="form-input" placeholder="Option 1">
-                            </div>
-                            <div class="option-input-row">
-                                <input type="text" class="form-input" placeholder="Option 2">
-                            </div>
-                        </div>
-                        <button type="button" class="add-option-btn" onclick="addPollOption()">+ Add Option</button>
-                    </div>
-
-                    <button class="btn btn-primary" onclick="createPoll()">Create Poll</button>
-                </div>
+            <div class="stat-item">
+                <div class="stat-value" id="pollsPoints">0</div>
+                <div class="stat-label">Points</div>
             </div>
         </div>
 
-        <!-- Single Poll View -->
-        <div id="pollView" style="display: none;">
-            <a href="#" onclick="backToPolls(); return false;" style="color: var(--primary-blue); text-decoration: none; display: block; margin-bottom: 20px;">
-                ← Back to Polls
-            </a>
-
-            <div class="poll-card" id="pollDetailCard">
-                <!-- Poll details will be rendered here -->
+        <!-- Action Bar -->
+        <div class="action-bar">
+            <div class="category-filters" id="categoryFilters">
+                <button class="filter-btn active" data-cat="all" onclick="filterPolls('all', this)">All</button>
+                <button class="filter-btn" data-cat="nfl" onclick="filterPolls('nfl', this)">&#x1F3C8; NFL</button>
+                <button class="filter-btn" data-cat="nba" onclick="filterPolls('nba', this)">&#x1F3C0; NBA</button>
+                <button class="filter-btn" data-cat="mlb" onclick="filterPolls('mlb', this)">&#x26BE; MLB</button>
+                <button class="filter-btn" data-cat="nhl" onclick="filterPolls('nhl', this)">&#x1F3D2; NHL</button>
+                <button class="filter-btn" data-cat="soccer" onclick="filterPolls('soccer', this)">&#x26BD; Soccer</button>
             </div>
-
-            <div class="comments-section" id="commentsSection">
-                <h3 style="color: var(--text-light); margin-bottom: 20px;">Comments</h3>
-                <div id="commentsContainer"></div>
-                <div class="comment-form" id="commentForm">
-                    <input type="text" class="form-input" id="commentInput" placeholder="Add a comment...">
-                    <button class="btn btn-primary btn-small" onclick="postComment()">Post</button>
-                </div>
-            </div>
+            <button class="create-poll-btn" onclick="openCreatePollModal()">
+                <span>&#x2795;</span> Create Poll
+            </button>
         </div>
-    </main>
 
-    <script src="static/js/backend-api.js"></script>
+        <!-- Polls Grid -->
+        <div class="polls-grid" id="pollsGrid">
+            <!-- Rendered by JS -->
+        </div>
+
+    </div>
+
+    <!-- Create Poll Modal -->
+    <div class="modal-overlay" id="createPollModal">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeCreatePollModal()">&times;</button>
+            <h2>Create Prediction Poll</h2>
+            <form id="createPollForm" onsubmit="submitPoll(event)">
+                <div class="form-group">
+                    <label>Sport Category</label>
+                    <select id="pollCategory" required>
+                        <option value="">Select Sport</option>
+                        <option value="nfl">&#x1F3C8; NFL</option>
+                        <option value="nba">&#x1F3C0; NBA</option>
+                        <option value="mlb">&#x26BE; MLB</option>
+                        <option value="nhl">&#x1F3D2; NHL</option>
+                        <option value="soccer">&#x26BD; Soccer</option>
+                        <option value="ncaaf">&#x1F393; NCAAF</option>
+                        <option value="ncaab">&#x1F3EB; NCAAB</option>
+                        <option value="other">&#x1F3B2; Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Poll Question</label>
+                    <input type="text" id="pollQuestion" placeholder="e.g., Who will win tonight's game?" required>
+                </div>
+                <div class="form-group">
+                    <label>Options (2-4)</label>
+                    <input type="text" id="pollOption1" placeholder="Option 1" required>
+                    <input type="text" id="pollOption2" placeholder="Option 2" required>
+                    <input type="text" id="pollOption3" placeholder="Option 3 (optional)">
+                    <input type="text" id="pollOption4" placeholder="Option 4 (optional)">
+                </div>
+                <div class="form-group">
+                    <label>End Time</label>
+                    <input type="datetime-local" id="pollEndTime" required>
+                </div>
+                <div class="form-group">
+                    <label>Points Reward</label>
+                    <select id="pollPoints">
+                        <option value="25">25 points (Easy)</option>
+                        <option value="50" selected>50 points (Medium)</option>
+                        <option value="75">75 points (Hard)</option>
+                        <option value="100">100 points (Expert)</option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn">Create Poll</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
     <script>
-        // State
-        let currentPoll = null;
-        let selectedOption = null;
-        let confidenceLevel = 50;
+    // ============ AUTH HELPERS ============
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', async () => {
-            updateAuthNav();
-            await loadPollsHome();
+    function isLoggedIn() {
+        if (localStorage.getItem('tmr_is_logged_in') === 'true') return true;
+        if (localStorage.getItem('trustmyrecord_session') !== null) return true;
+        return false;
+    }
+
+    function getCurrentUsername() {
+        try {
+            var u = JSON.parse(localStorage.getItem('tmr_current_user') || 'null');
+            if (u && u.username) return u.username;
+        } catch(e) {}
+        try {
+            var sess = JSON.parse(localStorage.getItem('trustmyrecord_session') || 'null');
+            if (sess && sess.userId) {
+                var users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
+                var user = users.find(function(u) { return u.id === sess.userId; });
+                if (user) return user.username;
+            }
+        } catch(e) {}
+        return null;
+    }
+
+    // ============ TOAST ============
+
+    function showToast(message, type) {
+        var t = document.getElementById('toast');
+        t.textContent = message;
+        t.className = 'toast ' + (type || 'info');
+        setTimeout(function() { t.classList.add('show'); }, 10);
+        setTimeout(function() { t.classList.remove('show'); }, 3000);
+    }
+
+    // ============ NAV STATUS ============
+
+    function updateNavStatus() {
+        var el = document.getElementById('navUserStatus');
+        if (!el) return;
+        var username = getCurrentUsername();
+        if (isLoggedIn() && username) {
+            el.textContent = '@' + username;
+            el.classList.add('logged-in');
+        } else if (isLoggedIn()) {
+            el.textContent = 'Logged in';
+            el.classList.add('logged-in');
+        } else {
+            el.textContent = 'Not logged in';
+            el.classList.remove('logged-in');
+        }
+    }
+
+    // ============ POLLS DATA ============
+
+    function getPolls() {
+        return JSON.parse(localStorage.getItem('trustmyrecord_polls') || '[]');
+    }
+
+    function savePolls(polls) {
+        localStorage.setItem('trustmyrecord_polls', JSON.stringify(polls));
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
+
+    // ============ SEED SAMPLE POLLS ============
+
+    function seedSamplePolls() {
+        var polls = getPolls();
+        if (polls.length > 0) return;
+
+        var now = Date.now();
+        var samplePolls = [
+            {
+                id: 'poll_seed_1',
+                question: 'Who wins the NBA Finals this season?',
+                category: 'nba',
+                options: [
+                    { text: 'Boston Celtics', votes: 12, voters: ['demo1','demo2','demo3','demo4','demo5','demo6','demo7','demo8','demo9','demo10','demo11','demo12'] },
+                    { text: 'Oklahoma City Thunder', votes: 18, voters: ['d1','d2','d3','d4','d5','d6','d7','d8','d9','d10','d11','d12','d13','d14','d15','d16','d17','d18'] },
+                    { text: 'Cleveland Cavaliers', votes: 8, voters: ['c1','c2','c3','c4','c5','c6','c7','c8'] },
+                    { text: 'Denver Nuggets', votes: 5, voters: ['n1','n2','n3','n4','n5'] }
+                ],
+                createdBy: 'BetLegend',
+                createdAt: new Date(now - 172800000).toISOString(),
+                expiresAt: new Date(now + 604800000).toISOString(),
+                points: 100,
+                totalVotes: 43
+            },
+            {
+                id: 'poll_seed_2',
+                question: 'Which NFL team will have the best record next season?',
+                category: 'nfl',
+                options: [
+                    { text: 'Kansas City Chiefs', votes: 22, voters: Array.from({length:22}, function(_,i){ return 'kc'+i; }) },
+                    { text: 'Philadelphia Eagles', votes: 15, voters: Array.from({length:15}, function(_,i){ return 'phi'+i; }) },
+                    { text: 'Detroit Lions', votes: 10, voters: Array.from({length:10}, function(_,i){ return 'det'+i; }) },
+                    { text: 'Buffalo Bills', votes: 8, voters: Array.from({length:8}, function(_,i){ return 'buf'+i; }) }
+                ],
+                createdBy: 'SharpMoney',
+                createdAt: new Date(now - 86400000).toISOString(),
+                expiresAt: new Date(now + 1209600000).toISOString(),
+                points: 50,
+                totalVotes: 55
+            },
+            {
+                id: 'poll_seed_3',
+                question: 'Best NHL goalie right now?',
+                category: 'nhl',
+                options: [
+                    { text: 'Connor Hellebuyck', votes: 14, voters: Array.from({length:14}, function(_,i){ return 'hel'+i; }) },
+                    { text: 'Igor Shesterkin', votes: 11, voters: Array.from({length:11}, function(_,i){ return 'igor'+i; }) },
+                    { text: 'Sergei Bobrovsky', votes: 6, voters: Array.from({length:6}, function(_,i){ return 'bob'+i; }) }
+                ],
+                createdBy: 'PuckAnalyst',
+                createdAt: new Date(now - 43200000).toISOString(),
+                expiresAt: new Date(now + 259200000).toISOString(),
+                points: 50,
+                totalVotes: 31
+            },
+            {
+                id: 'poll_seed_4',
+                question: 'Will the Dodgers repeat as World Series champions?',
+                category: 'mlb',
+                options: [
+                    { text: 'Yes, they repeat', votes: 20, voters: Array.from({length:20}, function(_,i){ return 'yes'+i; }) },
+                    { text: 'No, someone else wins', votes: 25, voters: Array.from({length:25}, function(_,i){ return 'no'+i; }) }
+                ],
+                createdBy: 'DiamondSharp',
+                createdAt: new Date(now - 7200000).toISOString(),
+                expiresAt: new Date(now + 2592000000).toISOString(),
+                points: 75,
+                totalVotes: 45
+            },
+            {
+                id: 'poll_seed_5',
+                question: 'Who will win the Champions League this year?',
+                category: 'soccer',
+                options: [
+                    { text: 'Real Madrid', votes: 16, voters: Array.from({length:16}, function(_,i){ return 'rm'+i; }) },
+                    { text: 'Manchester City', votes: 13, voters: Array.from({length:13}, function(_,i){ return 'mc'+i; }) },
+                    { text: 'Barcelona', votes: 9, voters: Array.from({length:9}, function(_,i){ return 'barca'+i; }) },
+                    { text: 'Bayern Munich', votes: 7, voters: Array.from({length:7}, function(_,i){ return 'bay'+i; }) }
+                ],
+                createdBy: 'FutbolFan',
+                createdAt: new Date(now - 120000000).toISOString(),
+                expiresAt: new Date(now + 1814400000).toISOString(),
+                points: 75,
+                totalVotes: 45
+            }
+        ];
+
+        savePolls(samplePolls);
+    }
+
+    // ============ CURRENT FILTER STATE ============
+    var currentFilter = 'all';
+
+    function filterPolls(cat, btnEl) {
+        currentFilter = cat;
+        // Update active button
+        var btns = document.querySelectorAll('.filter-btn');
+        btns.forEach(function(b) { b.classList.remove('active'); });
+        if (btnEl) btnEl.classList.add('active');
+        renderPollsGrid();
+    }
+
+    // ============ RENDER POLLS ============
+
+    function renderPollsGrid() {
+        var grid = document.getElementById('pollsGrid');
+        if (!grid) return;
+
+        var polls = getPolls();
+        var now = new Date();
+        var username = getCurrentUsername() || '';
+
+        // Filter by category
+        if (currentFilter && currentFilter !== 'all') {
+            polls = polls.filter(function(p) { return p.category === currentFilter; });
+        }
+
+        // Separate active vs expired
+        var active = polls.filter(function(p) { return new Date(p.expiresAt) > now; });
+        var expired = polls.filter(function(p) { return new Date(p.expiresAt) <= now; });
+
+        if (active.length === 0 && expired.length === 0) {
+            grid.innerHTML = '<div class="empty-state">' +
+                '<div class="empty-state-icon">&#x1F4CA;</div>' +
+                '<h3>No polls found</h3>' +
+                '<p>' + (currentFilter !== 'all' ? 'No polls in this category yet.' : 'Create a poll to get predictions from the community!') + '</p>' +
+                '<button onclick="openCreatePollModal()">Create Poll</button>' +
+                '</div>';
+            return;
+        }
+
+        // Update user stats
+        updateUserStats(username);
+
+        var html = '';
+
+        // Render active polls
+        active.forEach(function(poll) {
+            html += buildPollCard(poll, username, now, false);
         });
 
-        function updateAuthNav() {
-            const authNav = document.getElementById('authNav');
-            if (api.isLoggedIn()) {
-                const user = api.getCurrentUser();
-                authNav.innerHTML = `
-                    <span style="color: var(--primary-blue);">@${user.username}</span>
-                    <a href="#" onclick="api.logout(); location.reload();" style="margin-left: 10px;">Logout</a>
-                `;
-            } else {
-                authNav.innerHTML = `<a href="index.html">Login</a>`;
-            }
+        // Expired divider
+        if (expired.length > 0 && active.length > 0) {
+            html += '<div class="expired-divider">Expired Polls</div>';
+        } else if (expired.length > 0 && active.length === 0) {
+            html += '<div class="expired-divider">All Polls Expired</div>';
         }
 
-        // Load Home
-        async function loadPollsHome() {
-            try {
-                // Load stats
-                const stats = await api.getPollStats();
-                document.getElementById('activePolls').textContent = stats.active_polls || 0;
-                document.getElementById('totalVotes').textContent = stats.total_votes || 0;
-                document.getElementById('uniqueVoters').textContent = stats.unique_voters || 0;
+        // Render expired polls
+        expired.forEach(function(poll) {
+            html += buildPollCard(poll, username, now, true);
+        });
 
-                // Load categories for form
-                const categoriesData = await api.getPollCategories();
-                const select = document.getElementById('pollCategory');
-                (categoriesData.categories || []).forEach(cat => {
-                    const option = document.createElement('option');
-                    option.value = cat.id;
-                    option.textContent = cat.name;
-                    select.appendChild(option);
-                });
+        grid.innerHTML = html;
+    }
 
-                // Load active polls
-                await loadActivePolls();
+    function buildPollCard(poll, username, now, isExpired) {
+        var totalVotes = 0;
+        poll.options.forEach(function(o) { totalVotes += (o.votes || 0); });
 
-                // Load leaderboard
-                await loadLeaderboard();
-            } catch (error) {
-                console.error('Error loading polls:', error);
-            }
-        }
-
-        async function loadActivePolls() {
-            try {
-                const data = await api.getActivePolls({ limit: 20 });
-                renderPollsList(data.polls || [], 'activePollsGrid');
-            } catch (error) {
-                document.getElementById('activePollsGrid').innerHTML =
-                    '<p style="color: #f44336;">Error loading polls.</p>';
-            }
-        }
-
-        async function loadResolvedPolls() {
-            try {
-                const data = await api.request('/polls/active?status=resolved&limit=20');
-                renderPollsList(data.polls || [], 'resolvedPollsGrid', true);
-            } catch (error) {
-                document.getElementById('resolvedPollsGrid').innerHTML =
-                    '<p style="color: #f44336;">Error loading polls.</p>';
-            }
-        }
-
-        function renderPollsList(polls, containerId, resolved = false) {
-            if (polls.length === 0) {
-                document.getElementById(containerId).innerHTML =
-                    `<p style="text-align: center; color: var(--text-muted); padding: 30px;">
-                        No ${resolved ? 'resolved' : 'active'} polls yet.
-                    </p>`;
-                return;
-            }
-
-            let html = '';
-            polls.forEach(poll => {
-                const deadline = poll.voting_deadline ? new Date(poll.voting_deadline) : null;
-                const timeLeft = deadline ? getTimeLeft(deadline) : 'No deadline';
-
-                html += `
-                    <div class="poll-card">
-                        <div class="poll-card-header">
-                            <h3 class="poll-title" onclick="viewPoll(${poll.id})">${poll.title}</h3>
-                            <span class="poll-badge badge-${poll.status}">${poll.status}</span>
-                        </div>
-                        <div class="poll-meta">
-                            <span>by ${poll.username}</span>
-                            ${poll.sport ? `<span>${poll.sport}</span>` : ''}
-                            <span>${poll.vote_count || 0} votes</span>
-                            <span class="scoring-badge">${formatScoringType(poll.scoring_type)}</span>
-                        </div>
-                        ${poll.description ? `<p class="poll-description">${poll.description}</p>` : ''}
-                        <div class="poll-footer">
-                            <span>${deadline ? `Closes: ${timeLeft}` : 'No deadline'}</span>
-                            <button class="btn btn-primary btn-small" onclick="viewPoll(${poll.id})">
-                                ${poll.status === 'active' ? 'Vote' : 'View Results'}
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-            document.getElementById(containerId).innerHTML = html;
-        }
-
-        async function loadLeaderboard() {
-            try {
-                const data = await api.getPollLeaderboard({ limit: 20 });
-                renderLeaderboard(data.leaderboard || []);
-            } catch (error) {
-                console.error('Error loading leaderboard:', error);
-            }
-        }
-
-        function renderLeaderboard(leaderboard) {
-            if (leaderboard.length === 0) {
-                document.getElementById('leaderboardContainer').innerHTML =
-                    '<p style="text-align: center; padding: 30px; color: var(--text-muted);">No scores yet.</p>';
-                return;
-            }
-
-            let html = `
-                <div class="leaderboard-header">
-                    <h3>Top Predictors</h3>
-                </div>
-            `;
-
-            leaderboard.forEach(player => {
-                html += `
-                    <div class="leaderboard-row">
-                        <div class="rank rank-${player.rank}">#${player.rank}</div>
-                        <div class="user-info">
-                            <div class="user-avatar">${player.username.charAt(0).toUpperCase()}</div>
-                            <span>${player.username}</span>
-                        </div>
-                        <div style="text-align: right; color: var(--primary-blue); font-weight: bold;">
-                            ${(player.total_points || 0).toLocaleString()}
-                        </div>
-                        <div style="text-align: right; color: var(--text-muted); font-size: 13px;">
-                            ${player.accuracy || 0}% acc
-                        </div>
-                    </div>
-                `;
-            });
-
-            document.getElementById('leaderboardContainer').innerHTML = html;
-        }
-
-        // Tabs
-        function showTab(tabName) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-
-            document.getElementById('activeTab').style.display = tabName === 'active' ? 'block' : 'none';
-            document.getElementById('resolvedTab').style.display = tabName === 'resolved' ? 'block' : 'none';
-            document.getElementById('leaderboardTab').style.display = tabName === 'leaderboard' ? 'block' : 'none';
-            document.getElementById('createTab').style.display = tabName === 'create' ? 'block' : 'none';
-
-            if (tabName === 'resolved') {
-                loadResolvedPolls();
-            }
-        }
-
-        // View Single Poll
-        async function viewPoll(pollId) {
-            try {
-                const data = await api.getPoll(pollId);
-                currentPoll = data;
-                selectedOption = data.user_vote ? data.user_vote.option_id : null;
-
-                document.getElementById('pollsHome').style.display = 'none';
-                document.getElementById('pollView').style.display = 'block';
-
-                renderPollDetail(data);
-                renderComments(data.comments || []);
-            } catch (error) {
-                alert('Error loading poll: ' + error.message);
-            }
-        }
-
-        function renderPollDetail(data) {
-            const poll = data.poll;
-            const options = data.options;
-            const userVote = data.user_vote;
-            const hasVoted = !!userVote;
-            const isActive = poll.status === 'active';
-            const canVote = isActive && !hasVoted;
-
-            let html = `
-                <div class="poll-card-header">
-                    <h2 class="poll-title" style="cursor: default;">${poll.title}</h2>
-                    <span class="poll-badge badge-${poll.status}">${poll.status}</span>
-                </div>
-                <div class="poll-meta">
-                    <span>by ${poll.username}</span>
-                    ${poll.sport ? `<span>${poll.sport}</span>` : ''}
-                    <span>${data.total_votes} votes</span>
-                    <span class="scoring-badge">${formatScoringType(poll.scoring_type)}</span>
-                </div>
-                ${poll.description ? `<p class="poll-description">${poll.description}</p>` : ''}
-
-                <div class="poll-options">
-            `;
-
-            options.forEach(opt => {
-                const isSelected = selectedOption === opt.id;
-                const isUserVote = userVote && userVote.option_id === opt.id;
-                const isCorrect = opt.is_correct;
-                const percent = opt.vote_percentage || 0;
-
-                let classes = ['poll-option'];
-                if (hasVoted || poll.status === 'resolved') classes.push('voted');
-                if (isSelected) classes.push('selected');
-                if (isUserVote) classes.push('user-vote');
-                if (isCorrect && poll.status === 'resolved') classes.push('correct');
-                if (!canVote) classes.push('disabled');
-
-                html += `
-                    <div class="${classes.join(' ')}" onclick="${canVote ? `selectOption(${opt.id})` : ''}">
-                        <div class="poll-option-bar" style="width: ${hasVoted || poll.status === 'resolved' ? percent : 0}%"></div>
-                        <div class="poll-option-content">
-                            <span class="poll-option-text">
-                                ${isCorrect && poll.status === 'resolved' ? '✓ ' : ''}
-                                ${opt.option_text}
-                                ${isUserVote ? ' (Your vote)' : ''}
-                            </span>
-                            ${hasVoted || poll.status === 'resolved' ? `
-                                <div class="poll-option-stats">
-                                    <div class="poll-option-percent">${percent}%</div>
-                                    <div class="poll-option-votes">${opt.vote_count} votes</div>
-                                </div>
-                            ` : ''}
-                        </div>
-                    </div>
-                `;
-            });
-
-            html += '</div>';
-
-            // Confidence slider for confidence scoring
-            if (canVote && poll.scoring_type === 'confidence') {
-                html += `
-                    <div class="confidence-container">
-                        <div class="confidence-label">
-                            <span>Confidence Level</span>
-                            <span class="confidence-value" id="confidenceValue">${confidenceLevel}%</span>
-                        </div>
-                        <input type="range" class="confidence-slider" id="confidenceSlider"
-                               min="1" max="100" value="${confidenceLevel}"
-                               oninput="updateConfidence(this.value)">
-                        <p style="color: var(--text-muted); font-size: 12px; margin-top: 10px;">
-                            Higher confidence = more points if correct, more penalty if wrong
-                        </p>
-                    </div>
-                `;
-            }
-
-            // Vote button
-            if (canVote) {
-                html += `
-                    <div class="poll-actions">
-                        <button class="btn btn-primary" onclick="submitVote()" id="voteBtn" disabled>
-                            Submit Vote
-                        </button>
-                    </div>
-                `;
-            }
-
-            // Result if already voted
-            if (hasVoted && poll.status === 'resolved') {
-                const points = userVote.points_earned || 0;
-                html += `
-                    <div style="margin-top: 20px; padding: 15px; background: ${points > 0 ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)'}; border-radius: 8px;">
-                        <strong style="color: ${points > 0 ? '#4caf50' : '#f44336'};">
-                            ${points > 0 ? '+' : ''}${points} points
-                        </strong>
-                    </div>
-                `;
-            }
-
-            html += `
-                <div class="poll-footer">
-                    <span>Created: ${formatDate(poll.created_at)}</span>
-                    ${poll.voting_deadline ? `<span>Deadline: ${formatDate(poll.voting_deadline)}</span>` : ''}
-                </div>
-            `;
-
-            document.getElementById('pollDetailCard').innerHTML = html;
-
-            // Show/hide comment form
-            document.getElementById('commentForm').style.display = api.isLoggedIn() ? 'flex' : 'none';
-        }
-
-        function selectOption(optionId) {
-            selectedOption = optionId;
-
-            // Update UI
-            document.querySelectorAll('.poll-option').forEach(el => {
-                el.classList.remove('selected');
-            });
-            event.currentTarget.classList.add('selected');
-
-            // Enable vote button
-            const voteBtn = document.getElementById('voteBtn');
-            if (voteBtn) voteBtn.disabled = false;
-        }
-
-        function updateConfidence(value) {
-            confidenceLevel = parseInt(value);
-            document.getElementById('confidenceValue').textContent = confidenceLevel + '%';
-        }
-
-        async function submitVote() {
-            if (!api.isLoggedIn()) {
-                alert('Please log in to vote.');
-                return;
-            }
-
-            if (!selectedOption) {
-                alert('Please select an option.');
-                return;
-            }
-
-            try {
-                const confidence = currentPoll.poll.scoring_type === 'confidence' ? confidenceLevel : null;
-                await api.voteOnPoll(currentPoll.poll.id, selectedOption, confidence);
-
-                // Reload poll
-                await viewPoll(currentPoll.poll.id);
-            } catch (error) {
-                alert('Error submitting vote: ' + error.message);
-            }
-        }
-
-        // Comments
-        function renderComments(comments) {
-            if (comments.length === 0) {
-                document.getElementById('commentsContainer').innerHTML =
-                    '<p style="color: var(--text-muted);">No comments yet.</p>';
-                return;
-            }
-
-            let html = '';
-            comments.forEach(comment => {
-                html += `
-                    <div class="comment">
-                        <div class="comment-avatar">${comment.username.charAt(0).toUpperCase()}</div>
-                        <div class="comment-content">
-                            <div class="comment-header">
-                                <span class="comment-author">${comment.username}</span>
-                                <span class="comment-date">${formatDate(comment.created_at)}</span>
-                            </div>
-                            <p class="comment-text">${comment.content}</p>
-                        </div>
-                    </div>
-                `;
-            });
-            document.getElementById('commentsContainer').innerHTML = html;
-        }
-
-        async function postComment() {
-            if (!api.isLoggedIn()) {
-                alert('Please log in to comment.');
-                return;
-            }
-
-            const content = document.getElementById('commentInput').value.trim();
-            if (!content) return;
-
-            try {
-                await api.commentOnPoll(currentPoll.poll.id, content);
-                document.getElementById('commentInput').value = '';
-
-                // Reload comments
-                const data = await api.getPollComments(currentPoll.poll.id);
-                renderComments(data.comments || []);
-            } catch (error) {
-                alert('Error posting comment: ' + error.message);
-            }
-        }
-
-        // Create Poll
-        function addPollOption() {
-            const form = document.getElementById('pollOptionsForm');
-            const count = form.children.length + 1;
-
-            const row = document.createElement('div');
-            row.className = 'option-input-row';
-            row.innerHTML = `<input type="text" class="form-input" placeholder="Option ${count}">`;
-            form.appendChild(row);
-        }
-
-        async function createPoll() {
-            if (!api.isLoggedIn()) {
-                alert('Please log in to create polls.');
-                return;
-            }
-
-            const categoryId = document.getElementById('pollCategory').value;
-            const title = document.getElementById('pollTitle').value.trim();
-            const description = document.getElementById('pollDescription').value.trim();
-            const sport = document.getElementById('pollSport').value;
-            const scoringType = document.getElementById('pollScoringType').value;
-            const pointsCorrect = parseInt(document.getElementById('pollPointsCorrect').value);
-            const deadline = document.getElementById('pollDeadline').value;
-            const resolution = document.getElementById('pollResolution').value;
-
-            if (!categoryId) {
-                alert('Please select a category.');
-                return;
-            }
-
-            if (title.length < 10) {
-                alert('Title must be at least 10 characters.');
-                return;
-            }
-
-            // Gather options
-            const optionInputs = document.querySelectorAll('#pollOptionsForm input');
-            const options = [];
-            optionInputs.forEach(input => {
-                const text = input.value.trim();
-                if (text) {
-                    options.push({ text });
+        var hasVoted = false;
+        var votedIndex = -1;
+        if (username) {
+            poll.options.forEach(function(o, idx) {
+                if (o.voters && o.voters.indexOf(username) !== -1) {
+                    hasVoted = true;
+                    votedIndex = idx;
                 }
             });
-
-            if (options.length < 2) {
-                alert('Please provide at least 2 options.');
-                return;
-            }
-
-            try {
-                const pollData = {
-                    category_id: parseInt(categoryId),
-                    title,
-                    description: description || null,
-                    sport: sport || null,
-                    scoring_type: scoringType,
-                    points_correct: pointsCorrect,
-                    voting_deadline: deadline || null,
-                    resolution_date: resolution || null,
-                    options
-                };
-
-                const result = await api.createPoll(pollData);
-
-                alert('Poll created successfully!');
-
-                // Clear form
-                document.getElementById('pollTitle').value = '';
-                document.getElementById('pollDescription').value = '';
-                document.getElementById('pollOptionsForm').innerHTML = `
-                    <div class="option-input-row">
-                        <input type="text" class="form-input" placeholder="Option 1">
-                    </div>
-                    <div class="option-input-row">
-                        <input type="text" class="form-input" placeholder="Option 2">
-                    </div>
-                `;
-
-                // View the new poll
-                viewPoll(result.poll.id);
-            } catch (error) {
-                alert('Error creating poll: ' + error.message);
-            }
         }
 
-        function backToPolls() {
-            currentPoll = null;
-            selectedOption = null;
-            document.getElementById('pollView').style.display = 'none';
-            document.getElementById('pollsHome').style.display = 'block';
+        var showResults = hasVoted || isExpired;
+
+        // Time left
+        var timeLeft = '';
+        if (!isExpired) {
+            var diff = new Date(poll.expiresAt) - now;
+            var days = Math.floor(diff / 86400000);
+            var hours = Math.floor((diff % 86400000) / 3600000);
+            var mins = Math.floor((diff % 3600000) / 60000);
+            if (days > 0) timeLeft = days + 'd ' + hours + 'h left';
+            else if (hours > 0) timeLeft = hours + 'h ' + mins + 'm left';
+            else timeLeft = mins + 'm left';
+        } else {
+            timeLeft = 'Ended';
         }
 
-        // Helpers
-        function formatScoringType(type) {
-            const types = {
-                binary: 'Win/Lose',
-                confidence: 'Confidence',
-                weighted: 'Weighted',
-                partial: 'Partial'
-            };
-            return types[type] || type;
-        }
+        var catIcons = { nfl: '\uD83C\uDFC8', nba: '\uD83C\uDFC0', mlb: '\u26BE', nhl: '\uD83C\uDFD2', ncaaf: '\uD83C\uDF93', ncaab: '\uD83C\uDFEB', soccer: '\u26BD', other: '\uD83C\uDFB2' };
+        var catIcon = catIcons[poll.category] || '\uD83D\uDCCA';
 
-        function formatDate(dateStr) {
-            if (!dateStr) return '';
-            return new Date(dateStr).toLocaleDateString('en-US', {
-                year: 'numeric', month: 'short', day: 'numeric',
-                hour: 'numeric', minute: '2-digit'
+        var card = '<div class="poll-card' + (isExpired ? ' expired' : '') + '">';
+
+        // Top row
+        card += '<div class="poll-top">';
+        card += '<span class="poll-category-pill">' + catIcon + ' ' + (poll.category || 'general').toUpperCase() + '</span>';
+        card += '<span class="poll-time-left' + (isExpired ? ' ended' : '') + '">' + timeLeft + '</span>';
+        card += '</div>';
+
+        // Question
+        card += '<div class="poll-question">' + escapeHtml(poll.question) + '</div>';
+        card += '<div class="poll-meta">by @' + escapeHtml(poll.createdBy) + ' &middot; ' + totalVotes + ' votes</div>';
+
+        // Get max percentage for winner detection
+        var maxPct = 0;
+        if (showResults && totalVotes > 0) {
+            poll.options.forEach(function(o) {
+                var p = Math.round((o.votes / totalVotes) * 100);
+                if (p > maxPct) maxPct = p;
             });
         }
 
-        function getTimeLeft(deadline) {
-            const now = new Date();
-            const diff = deadline - now;
+        // Options
+        poll.options.forEach(function(opt, idx) {
+            var pct = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 100) : 0;
+            var isWinner = showResults && pct === maxPct && pct > 0;
+            var isMyVote = votedIndex === idx;
 
-            if (diff <= 0) return 'Closed';
+            if (showResults) {
+                card += '<div class="result-bar' + (isMyVote ? ' my-vote' : '') + '">';
+                card += '<div class="result-bar-fill ' + (isWinner ? 'winner' : 'normal') + '" style="width: ' + pct + '%;"></div>';
+                card += '<div class="result-bar-content">';
+                card += '<span class="result-bar-text' + (isMyVote ? ' voted' : '') + '">' + escapeHtml(opt.text) + (isMyVote ? ' \u2713' : '') + '</span>';
+                card += '<span class="result-bar-pct ' + (isWinner ? 'winner' : 'normal') + '">' + pct + '%</span>';
+                card += '</div></div>';
+            } else {
+                card += '<button class="vote-btn" onclick="votePoll(\'' + poll.id + '\',' + idx + ')">' + escapeHtml(opt.text) + '</button>';
+            }
+        });
 
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        // Footer
+        card += '<div class="poll-footer">';
+        card += '<span>\uD83C\uDFC6 ' + (poll.points || 50) + ' pts</span>';
+        card += '<span>' + totalVotes + ' total votes</span>';
+        card += '</div>';
 
-            if (days > 0) return `${days}d ${hours}h left`;
-            if (hours > 0) return `${hours}h left`;
-            return 'Closing soon';
+        card += '</div>';
+        return card;
+    }
+
+    // ============ UPDATE USER STATS ============
+
+    function updateUserStats(username) {
+        var allPolls = getPolls();
+        var userVoteCount = 0;
+
+        allPolls.forEach(function(p) {
+            p.options.forEach(function(o) {
+                if (o.voters && o.voters.indexOf(username) !== -1) userVoteCount++;
+            });
+        });
+
+        var vcEl = document.getElementById('pollsVoteCount');
+        if (vcEl) vcEl.textContent = userVoteCount;
+
+        // Points
+        var pollPoints = parseInt(localStorage.getItem('trustMyRecordPollPoints') || '0', 10);
+        var ppEl = document.getElementById('pollsPoints');
+        if (ppEl) ppEl.textContent = pollPoints;
+
+        // Rank
+        var voterMap = {};
+        allPolls.forEach(function(p) {
+            p.options.forEach(function(o) {
+                if (o.voters) o.voters.forEach(function(v) {
+                    voterMap[v] = (voterMap[v] || 0) + 1;
+                });
+            });
+        });
+
+        var voterList = Object.entries(voterMap).sort(function(a, b) { return b[1] - a[1]; });
+        var rank = voterList.findIndex(function(v) { return v[0] === username; });
+        var rkEl = document.getElementById('pollsRank');
+        if (rkEl) rkEl.textContent = rank >= 0 ? '#' + (rank + 1) : '--';
+
+        // Accuracy (votes out of total polls)
+        var acEl = document.getElementById('pollsAccuracy');
+        if (acEl) acEl.textContent = userVoteCount > 0 ? Math.round((userVoteCount / Math.max(allPolls.length, 1)) * 100) + '%' : '--';
+    }
+
+    // ============ VOTE ============
+
+    function votePoll(pollId, optionIndex) {
+        if (!isLoggedIn()) {
+            showToast('Please log in to vote on polls.', 'error');
+            return;
         }
+
+        var username = getCurrentUsername();
+        if (!username) {
+            showToast('Could not determine your username. Please log in again.', 'error');
+            return;
+        }
+
+        var polls = getPolls();
+        var pollIdx = -1;
+        for (var i = 0; i < polls.length; i++) {
+            if (polls[i].id === pollId) { pollIdx = i; break; }
+        }
+        if (pollIdx === -1) return;
+
+        var poll = polls[pollIdx];
+
+        // Check expiry
+        if (new Date(poll.expiresAt) <= new Date()) {
+            showToast('This poll has expired.', 'error');
+            renderPollsGrid();
+            return;
+        }
+
+        // Check already voted
+        for (var j = 0; j < poll.options.length; j++) {
+            if (poll.options[j].voters && poll.options[j].voters.indexOf(username) !== -1) {
+                showToast('You already voted on this poll!', 'info');
+                renderPollsGrid();
+                return;
+            }
+        }
+
+        // Cast vote
+        poll.options[optionIndex].votes = (poll.options[optionIndex].votes || 0) + 1;
+        if (!poll.options[optionIndex].voters) poll.options[optionIndex].voters = [];
+        poll.options[optionIndex].voters.push(username);
+        poll.totalVotes = (poll.totalVotes || 0) + 1;
+
+        polls[pollIdx] = poll;
+        savePolls(polls);
+
+        showToast('Vote recorded! +' + (poll.points || 50) + ' pts', 'success');
+
+        // Add points
+        var currentPts = parseInt(localStorage.getItem('trustMyRecordPollPoints') || '0', 10);
+        localStorage.setItem('trustMyRecordPollPoints', String(currentPts + (poll.points || 50)));
+
+        renderPollsGrid();
+    }
+
+    // ============ CREATE POLL MODAL ============
+
+    function openCreatePollModal() {
+        if (!isLoggedIn()) {
+            showToast('Please log in to create a poll.', 'error');
+            return;
+        }
+        // Set default end time to 24h from now
+        var dt = new Date(Date.now() + 86400000);
+        var local = dt.toISOString().slice(0, 16);
+        document.getElementById('pollEndTime').value = local;
+        document.getElementById('createPollModal').classList.add('active');
+    }
+
+    function closeCreatePollModal() {
+        document.getElementById('createPollModal').classList.remove('active');
+        document.getElementById('createPollForm').reset();
+    }
+
+    function submitPoll(event) {
+        event.preventDefault();
+
+        if (!isLoggedIn()) {
+            showToast('Please log in to create a poll.', 'error');
+            return;
+        }
+
+        var username = getCurrentUsername() || 'Anonymous';
+        var question = document.getElementById('pollQuestion').value.trim();
+        var category = document.getElementById('pollCategory').value;
+        var opt1 = document.getElementById('pollOption1').value.trim();
+        var opt2 = document.getElementById('pollOption2').value.trim();
+        var opt3 = document.getElementById('pollOption3').value.trim();
+        var opt4 = document.getElementById('pollOption4').value.trim();
+        var endTime = document.getElementById('pollEndTime').value;
+        var points = document.getElementById('pollPoints').value;
+
+        if (!question || !opt1 || !opt2 || !category) {
+            showToast('Please fill in the question, category, and at least 2 options.', 'error');
+            return;
+        }
+
+        var options = [
+            { text: opt1, votes: 0, voters: [] },
+            { text: opt2, votes: 0, voters: [] }
+        ];
+        if (opt3) options.push({ text: opt3, votes: 0, voters: [] });
+        if (opt4) options.push({ text: opt4, votes: 0, voters: [] });
+
+        var poll = {
+            id: 'poll_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+            question: question,
+            category: category,
+            options: options,
+            createdBy: username,
+            createdAt: new Date().toISOString(),
+            expiresAt: endTime ? new Date(endTime).toISOString() : new Date(Date.now() + 86400000).toISOString(),
+            points: parseInt(points) || 50,
+            totalVotes: 0
+        };
+
+        var polls = getPolls();
+        polls.unshift(poll);
+        savePolls(polls);
+
+        closeCreatePollModal();
+        showToast('Poll created successfully!', 'success');
+        renderPollsGrid();
+    }
+
+    // Close modal on overlay click
+    document.getElementById('createPollModal').addEventListener('click', function(e) {
+        if (e.target === this) closeCreatePollModal();
+    });
+
+    // Close modal on Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeCreatePollModal();
+    });
+
+    // ============ INIT ============
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateNavStatus();
+        seedSamplePolls();
+        renderPollsGrid();
+    });
     </script>
-    <script src="static/js/verification-banner.js?v=20251208c"></script>
+
 </body>
 </html>
