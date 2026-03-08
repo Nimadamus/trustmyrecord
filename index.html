@@ -802,9 +802,46 @@
         }
 
         /* Animated background grid */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(14, 165, 233, 0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 50%, rgba(245, 158, 11, 0.06) 0%, transparent 50%),
+                linear-gradient(180deg, transparent 0%, rgba(10, 15, 28, 0.5) 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
 
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(14, 165, 233, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+            animation: gridShift 20s linear infinite;
+        }
 
+        @keyframes gridShift {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(60px, 60px); }
+        }
 
+        body > * {
+            position: relative;
+            z-index: 1;
+        }
 
         .container {
             max-width: 1400px;
@@ -1460,8 +1497,45 @@
         /* Hero Section */
         .hero {
             text-align: center;
-            padding: 60px 20px;
+            padding: 80px 20px 70px;
             position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(14, 165, 233, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(245, 158, 11, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.05) 0%, transparent 70%);
+            animation: heroGlow 8s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+
+        @keyframes heroGlow {
+            0% { transform: translate(0, 0) scale(1); opacity: 0.7; }
+            100% { transform: translate(-2%, -2%) scale(1.05); opacity: 1; }
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), var(--warning), var(--primary), transparent);
+            animation: shimmerLine 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmerLine {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
         }
 
         .hero h1 {
@@ -1469,21 +1543,34 @@
             font-size: clamp(2.5rem, 6vw, 4rem);
             font-weight: 900;
             margin-bottom: 20px;
-            color: #00ffff;
+            color: #fff;
             line-height: 1.1;
             letter-spacing: 2px;
             text-transform: uppercase;
+            background: linear-gradient(135deg, #0ea5e9, #fff, #f59e0b);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: textShine 4s ease-in-out infinite alternate;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes textShine {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
         }
 
         @keyframes neon-flash {
             0% {
-                text-shadow: 
+                text-shadow:
                     0 0 3px #00ffff,
                     0 0 6px #00ffff,
                     0 0 9px #00ffff;
             }
             100% {
-                text-shadow: 
+                text-shadow:
                     0 0 5px #00ffff,
                     0 0 10px #00ffff,
                     0 0 15px #00ffff,
@@ -1500,6 +1587,242 @@
             margin-right: auto;
             line-height: 1.6;
             font-weight: 400;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Hero Badge & Stats Strip */
+        .hero-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-stats-strip {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 10px;
+            padding: 20px 40px;
+            background: rgba(14, 165, 233, 0.05);
+            border: 1px solid rgba(14, 165, 233, 0.15);
+            border-radius: 50px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .hero-stat-num {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
+        }
+
+        .hero-stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .hero-stat-divider {
+            width: 1px;
+            height: 30px;
+            background: linear-gradient(180deg, transparent, rgba(14, 165, 233, 0.3), transparent);
+        }
+
+        @media (max-width: 600px) {
+            .hero-stats-strip {
+                gap: 15px;
+                padding: 15px 20px;
+                flex-wrap: wrap;
+                border-radius: 16px;
+            }
+            .hero-stat-num { font-size: 1.2rem; }
+            .hero-stat-divider { display: none; }
+        }
+
+        /* Section Visual Separators */
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(14, 165, 233, 0.3), rgba(245, 158, 11, 0.3), rgba(14, 165, 233, 0.3), transparent);
+            margin: 0 auto;
+            max-width: 900px;
+        }
+
+        /* Enhanced Section Headers */
+        .section-header h2 {
+            position: relative;
+        }
+
+        .section-header h2::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--warning));
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+        /* Feature Card Visual Upgrade */
+        .feature-card .feature-icon {
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(14, 165, 233, 0.05));
+            border: 1px solid rgba(14, 165, 233, 0.2);
+            font-size: 2rem;
+        }
+
+        .feature-card:hover .feature-icon {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.25), rgba(245, 158, 11, 0.1));
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+        }
+
+        /* Sport Card Visual Enhancements */
+        .sport-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sport-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--warning));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .sport-card:hover::before {
+            opacity: 1;
+        }
+
+        .sport-card[data-sport="NBA"] { border-color: rgba(201, 8, 42, 0.3); }
+        .sport-card[data-sport="NFL"] { border-color: rgba(1, 51, 105, 0.3); }
+        .sport-card[data-sport="NHL"] { border-color: rgba(0, 0, 0, 0.3); }
+        .sport-card[data-sport="MLB"] { border-color: rgba(0, 45, 114, 0.3); }
+        .sport-card[data-sport="NCAAF"] { border-color: rgba(204, 85, 0, 0.3); }
+        .sport-card[data-sport="NCAAB"] { border-color: rgba(0, 121, 52, 0.3); }
+
+        .sport-card[data-sport="NBA"]:hover { border-color: rgba(201, 8, 42, 0.6); box-shadow: 0 0 25px rgba(201, 8, 42, 0.15); }
+        .sport-card[data-sport="NFL"]:hover { border-color: rgba(1, 51, 105, 0.6); box-shadow: 0 0 25px rgba(1, 51, 105, 0.15); }
+        .sport-card[data-sport="NHL"]:hover { border-color: rgba(0, 120, 200, 0.6); box-shadow: 0 0 25px rgba(0, 120, 200, 0.15); }
+        .sport-card[data-sport="MLB"]:hover { border-color: rgba(0, 45, 114, 0.6); box-shadow: 0 0 25px rgba(0, 45, 114, 0.15); }
+
+        /* CTA Section Upgrade */
+        .cta {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse at 50% 0%, rgba(14, 165, 233, 0.1) 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 100%, rgba(245, 158, 11, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .cta-button {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Page Banners */
+        .page-banner {
+            position: relative;
+            padding: 40px 30px 35px;
+            margin-bottom: 25px;
+            border-radius: 16px;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.08) 0%, rgba(15, 23, 42, 0.95) 50%, rgba(245, 158, 11, 0.06) 100%);
+            border: 1px solid rgba(14, 165, 233, 0.15);
+        }
+
+        .page-banner::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--warning), var(--primary));
+        }
+
+        .banner-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .banner-content h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .banner-content p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .banner-icon-row {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 1.5rem;
+            opacity: 0.8;
+        }
+
+        .banner-bg-art {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* Footer Enhancement */
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--primary), var(--warning), var(--primary), transparent) !important;
         }
 
         /* Glass Cards */
@@ -2397,18 +2720,36 @@
             opacity: 0.2;
         }
 
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 20%;
+            right: 20%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .feature-card:hover::after {
+            opacity: 1;
+        }
+
         .feature-icon {
             width: 55px;
             height: 55px;
             margin: 0 auto 15px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(14, 165, 233, 0.05));
+            border: 1px solid rgba(14, 165, 233, 0.2);
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
-            color: var(--dark-bg);
+            color: var(--text-primary);
             font-weight: bold;
+            transition: all 0.3s;
         }
 
         .feature-card h3 {
@@ -2436,23 +2777,30 @@
             font-size: clamp(0.95rem, 2vw, 1.1rem);
             font-weight: 700;
             color: var(--dark-bg);
-            background: var(--gradient-gold);
+            background: linear-gradient(135deg, #f59e0b, #0ea5e9);
+            background-size: 200% auto;
             border: none;
-            padding: 12px 28px;
-            border-radius: 30px;
+            padding: 16px 40px;
+            border-radius: 50px;
             text-decoration: none;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3);
+            transition: all 0.4s ease;
+            box-shadow: 0 6px 25px rgba(14, 165, 233, 0.3), 0 4px 15px rgba(245, 158, 11, 0.2);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
             display: inline-block;
+            position: relative;
+            animation: ctaShine 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes ctaShine {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
         }
 
         .cta-button:hover {
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 10px 25px rgba(255, 215, 0, 0.5);
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 35px rgba(14, 165, 233, 0.4), 0 6px 20px rgba(245, 158, 11, 0.3);
         }
 
         /* Make Your Picks Section */
@@ -6848,8 +7196,31 @@
             <!-- Home Section -->
             <div id="home" class="page-section active">
                 <section class="hero">
+                    <div class="hero-badge">
+                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style="margin-bottom: 12px;">
+                            <path d="M20 2L25.5 13.5L38 15.5L29 24.5L31 37L20 31L9 37L11 24.5L2 15.5L14.5 13.5L20 2Z" stroke="url(#heroGrad)" stroke-width="1.5" fill="none"/>
+                            <defs><linearGradient id="heroGrad" x1="2" y1="2" x2="38" y2="38"><stop offset="0%" stop-color="#0ea5e9"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient></defs>
+                        </svg>
+                        <span style="font-family: 'Orbitron', sans-serif; font-size: 11px; letter-spacing: 4px; color: var(--text-muted); text-transform: uppercase;">Verified Pick Tracking</span>
+                    </div>
                     <h1 class="reveal">THE END OF THE BULLSHIT</h1>
                     <p class="reveal">A new standard for sports betting has arrived. Built on absolute proof, radical transparency, and zero excuses.</p>
+                    <div class="hero-stats-strip">
+                        <div class="hero-stat-item">
+                            <span class="hero-stat-num" id="heroTotalUsers">0</span>
+                            <span class="hero-stat-label">Verified Users</span>
+                        </div>
+                        <div class="hero-stat-divider"></div>
+                        <div class="hero-stat-item">
+                            <span class="hero-stat-num" id="heroTotalPicks">0</span>
+                            <span class="hero-stat-label">Picks Tracked</span>
+                        </div>
+                        <div class="hero-stat-divider"></div>
+                        <div class="hero-stat-item">
+                            <span class="hero-stat-num">6</span>
+                            <span class="hero-stat-label">Sports Covered</span>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- LOGGED-IN USER DASHBOARD - Command Center -->
@@ -6982,6 +7353,7 @@
                     </div>
                 </section>
 
+                <div class="section-divider"></div>
                 <section class="section">
                     <div class="section-header reveal">
                         <h2>The Platform is the <span class="highlight">Future</span></h2>
@@ -7021,6 +7393,7 @@
                     </div>
                 </section>
 
+                <div class="section-divider"></div>
                 <section class="section">
                     <div class="section-header reveal">
                         <h2>Enter <span class="highlight">The Arena</span></h2>
@@ -7045,6 +7418,7 @@
                     </div>
                 </section>
 
+                <div class="section-divider"></div>
                 <section class="section">
                     <div class="section-header reveal">
                         <h2>Community <span class="highlight">Forums</span></h2>
@@ -7069,6 +7443,7 @@
                     </div>
                 </section>
                 
+                <div class="section-divider"></div>
                 <section class="cta">
                     <div class="section-header reveal">
                         <h2>The Record Starts Now.</h2>
@@ -7081,7 +7456,12 @@
 <!-- SOCIAL FEED SECTION -->
 <div id="feed" class="page-section">
     <div class="feed-container-social">
-        <h2 class="section-title">Community Feed</h2>
+        <div class="page-banner" style="margin-bottom: 20px;">
+            <div class="banner-content">
+                <h2>Community <span class="highlight">Feed</span></h2>
+                <p>Share picks, analysis, and discussion with the community</p>
+            </div>
+        </div>
 
         <div class="feed-grid">
             <!-- Main Feed Column -->
@@ -7138,9 +7518,23 @@
 <!-- REDESIGNED PICKS SECTION - Games First Flow -->
 <div id="picks" class="page-section">
     <div class="picks-container-modern">
-        <div class="section-header">
-            <h2>Make Your <span class="highlight">Picks</span></h2>
-            <p>Select a sport, see all games, choose your bet</p>
+        <div class="page-banner picks-banner">
+            <div class="banner-bg-art">
+                <svg viewBox="0 0 400 120" preserveAspectRatio="none" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.06;">
+                    <circle cx="50" cy="60" r="40" stroke="#0ea5e9" fill="none" stroke-width="0.5"/>
+                    <circle cx="120" cy="80" r="25" stroke="#f59e0b" fill="none" stroke-width="0.5"/>
+                    <circle cx="300" cy="40" r="35" stroke="#0ea5e9" fill="none" stroke-width="0.5"/>
+                    <circle cx="380" cy="90" r="20" stroke="#f59e0b" fill="none" stroke-width="0.5"/>
+                    <line x1="0" y1="100" x2="400" y2="100" stroke="#0ea5e9" stroke-width="0.3"/>
+                </svg>
+            </div>
+            <div class="banner-content">
+                <div class="banner-icon-row">
+                    <span>🏀</span><span>🏈</span><span>🏒</span><span>⚾</span>
+                </div>
+                <h2>Make Your <span class="highlight">Picks</span></h2>
+                <p>Select a sport, see all games, choose your bet. Every pick is permanently recorded.</p>
+            </div>
         </div>
 
         <!-- Step 1: Sport Selection -->
@@ -8431,9 +8825,20 @@
 
             <div id="arena" class="page-section">
                 <div style="max-width: 1000px; margin: 0 auto; padding: 20px;">
-                    <div style="text-align: center; margin-bottom: 30px;">
-                        <h1 style="font-family: Orbitron, sans-serif; font-size: 2.5rem; background: linear-gradient(45deg, #ff6b35, #ff073a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;">THE ARENA</h1>
-                        <p style="color: var(--text-secondary); font-size: 1.1rem;">Challenge other handicappers to head-to-head pick battles</p>
+                    <div class="page-banner arena-banner" style="margin-bottom: 24px;">
+                        <div class="banner-bg-art">
+                            <svg viewBox="0 0 400 120" preserveAspectRatio="none" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.08;">
+                                <polygon points="200,10 220,50 260,55 230,80 240,120 200,95 160,120 170,80 140,55 180,50" stroke="#ff6b35" fill="none" stroke-width="0.5"/>
+                                <line x1="50" y1="60" x2="140" y2="55" stroke="#ff073a" stroke-width="0.3"/>
+                                <line x1="260" y1="55" x2="350" y2="60" stroke="#ff073a" stroke-width="0.3"/>
+                                <circle cx="50" cy="60" r="8" stroke="#ff6b35" fill="none" stroke-width="0.3"/>
+                                <circle cx="350" cy="60" r="8" stroke="#ff6b35" fill="none" stroke-width="0.3"/>
+                            </svg>
+                        </div>
+                        <div class="banner-content">
+                            <h2 style="background: linear-gradient(45deg, #ff6b35, #ff073a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">THE ARENA</h2>
+                            <p>Challenge other handicappers to head-to-head pick battles. Prove your skill.</p>
+                        </div>
                     </div>
 
                     <!-- Arena Stats -->
@@ -8568,10 +8973,14 @@
             <!-- MY PICKS SECTION -->
             <div id="mypicks" class="page-section">
                 <div class="mypicks-container" style="max-width: 1000px; margin: 0 auto; padding: 20px;">
-                    <div class="mypicks-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                        <h1 style="font-family: 'Orbitron', sans-serif; color: #fff; margin: 0;">
-                            <span style="color: #00ffff;">My</span> Picks
-                        </h1>
+                    <div class="page-banner" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; padding: 25px 30px;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(14, 165, 233, 0.05)); border: 1px solid rgba(14, 165, 233, 0.3); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">📋</div>
+                            <div>
+                                <h2 style="font-family: 'Orbitron', sans-serif; font-size: 1.4rem; color: #fff; margin: 0;"><span style="color: #0ea5e9;">My</span> Picks</h2>
+                                <p style="color: var(--text-muted); font-size: 0.85rem; margin: 4px 0 0;">Track your pending and graded picks</p>
+                            </div>
+                        </div>
                         <button onclick="showSection('picks')" style="background: linear-gradient(135deg, #00c853, #00a648); border: none; padding: 12px 24px; border-radius: 8px; color: #000; font-weight: 700; cursor: pointer; font-size: 14px;">
                             + Make New Pick
                         </button>
@@ -8637,9 +9046,22 @@
 
                     <!-- Forum Categories - 2+2 Style -->
                     <div id="forumCategoriesView">
-                        <div class="forum-header">
-                            <h2>Community Forums</h2>
-                            <p>Join the conversation with thousands of sports bettors</p>
+                        <div class="page-banner forum-banner">
+                            <div class="banner-bg-art">
+                                <svg viewBox="0 0 400 120" preserveAspectRatio="none" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.06;">
+                                    <rect x="20" y="20" width="60" height="40" rx="4" stroke="#0ea5e9" fill="none" stroke-width="0.5"/>
+                                    <rect x="100" y="50" width="50" height="35" rx="4" stroke="#f59e0b" fill="none" stroke-width="0.5"/>
+                                    <rect x="280" y="15" width="55" height="38" rx="4" stroke="#0ea5e9" fill="none" stroke-width="0.5"/>
+                                    <rect x="360" y="60" width="30" height="30" rx="4" stroke="#f59e0b" fill="none" stroke-width="0.5"/>
+                                    <path d="M10 110 Q200 80 390 110" stroke="#0ea5e9" fill="none" stroke-width="0.3"/>
+                                </svg>
+                            </div>
+                            <div class="banner-content">
+                                <h2>Community <span class="highlight">Forums</span></h2>
+                                <p>Join the conversation with thousands of sports bettors. Your record speaks for you.</p>
+                            </div>
+                        </div>
+                        <div class="forum-header" style="padding-top: 0; margin-top: 0;">
                             <div class="forum-search-bar">
                                 <input type="text" id="forumSearchInput" placeholder="Search all forums..." onkeyup="searchForumThreads(this.value)">
                             </div>
@@ -10024,8 +10446,14 @@
             <!-- LEADERBOARDS SECTION -->
             <div id="leaderboards" class="page-section">
                 <div class="leaderboards-container">
+                    <div class="page-banner" style="margin-bottom: 20px;">
+                        <div class="banner-content">
+                            <h2 style="margin-bottom: 5px;">🏆 <span class="highlight">Leaderboards</span></h2>
+                            <p>See who's dominating. Rankings updated in real-time.</p>
+                        </div>
+                    </div>
                     <div class="leaderboard-header-row">
-                        <h2 class="section-title">Leaderboards</h2>
+                        <h2 class="section-title" style="display: none;">Leaderboards</h2>
                         <button class="compare-users-btn" onclick="openCompareModal()">
                             <span>⚔️</span> Compare Users
                         </button>
@@ -10111,9 +10539,12 @@
             <!-- LOGIN SECTION -->
             <div id="login" class="page-section">
                 <div class="picks-container">
-                    <div class="section-header">
-                        <h2>Welcome <span class="highlight">Back</span></h2>
-                        <p>Login to access your verified track record and continue dominating.</p>
+                    <div class="page-banner" style="margin-bottom: 30px; max-width: 500px; margin-left: auto; margin-right: auto;">
+                        <div class="banner-content">
+                            <div style="font-size: 2.5rem; margin-bottom: 10px;">🔐</div>
+                            <h2>Welcome <span class="highlight">Back</span></h2>
+                            <p>Login to access your verified track record and continue dominating.</p>
+                        </div>
                     </div>
 
                     <div class="pick-form" style="max-width: 500px; margin: 0 auto;">
@@ -10165,9 +10596,12 @@
             <!-- SIGNUP SECTION -->
             <div id="signup" class="page-section">
                 <div class="picks-container">
-                    <div class="section-header">
-                        <h2>Join the <span class="highlight">Revolution</span></h2>
-                        <p>Create your account and start building your verified track record today.</p>
+                    <div class="page-banner" style="margin-bottom: 30px; max-width: 500px; margin-left: auto; margin-right: auto;">
+                        <div class="banner-content">
+                            <div style="font-size: 2.5rem; margin-bottom: 10px;">🚀</div>
+                            <h2>Join the <span class="highlight">Revolution</span></h2>
+                            <p>Create your account and start building your verified track record today.</p>
+                        </div>
                     </div>
 
                     <div class="pick-form">
@@ -14417,20 +14851,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load social feed
     loadSocialFeed();
+
+    // Update hero stats strip with real data
+    try {
+        var users = JSON.parse(localStorage.getItem('tmr_users') || '[]');
+        var picks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
+        var heroUsers = document.getElementById('heroTotalUsers');
+        var heroPicks = document.getElementById('heroTotalPicks');
+        if (heroUsers) heroUsers.textContent = users.length || '0';
+        if (heroPicks) heroPicks.textContent = picks.length || '0';
+    } catch(e) {}
 });
 </script>
         </main>
 
-        <footer style="background: rgba(0, 0, 0, 0.4); border-top: 1px solid rgba(0, 255, 255, 0.2); padding: 30px 0; text-align: center;">
+        <footer style="background: rgba(0, 0, 0, 0.5); border-top: none; padding: 40px 0 30px; text-align: center; position: relative;">
             <div style="max-width: 1400px; margin: 0 auto; padding: 0 20px;">
-                <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 20px; flex-wrap: wrap;">
-                    <a href="#home" onclick="showSection('home')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Home</a>
-                    <a href="#profile" onclick="showSection('profile')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Profile</a>
-                    <a href="#forums" onclick="showSection('forums')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forums</a>
-                    <a href="challenges.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">The Arena</a>
-                    <a href="#leaderboards" onclick="showSection('leaderboards')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
+                <div style="margin-bottom: 20px;">
+                    <span style="font-family: 'Orbitron', sans-serif; font-size: 1.3rem; font-weight: 700; background: linear-gradient(135deg, #0ea5e9, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">TRUST MY RECORD</span>
                 </div>
-                <p style="color: #808090; font-size: 0.85rem;">© 2026 TrustMyRecord.com - The End of the Bullshit. All rights reserved.</p>
+                <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <a href="#home" onclick="showSection('home')" style="color: #94a3b8; text-decoration: none; font-size: 0.85rem; transition: color 0.3s; letter-spacing: 0.5px;">Home</a>
+                    <a href="#picks" onclick="showSection('picks')" style="color: #94a3b8; text-decoration: none; font-size: 0.85rem; transition: color 0.3s; letter-spacing: 0.5px;">Make Picks</a>
+                    <a href="#profile" onclick="showSection('profile')" style="color: #94a3b8; text-decoration: none; font-size: 0.85rem; transition: color 0.3s; letter-spacing: 0.5px;">Profile</a>
+                    <a href="#forums" onclick="showSection('forums')" style="color: #94a3b8; text-decoration: none; font-size: 0.85rem; transition: color 0.3s; letter-spacing: 0.5px;">Forums</a>
+                    <a href="#arena" onclick="showSection('arena')" style="color: #94a3b8; text-decoration: none; font-size: 0.85rem; transition: color 0.3s; letter-spacing: 0.5px;">The Arena</a>
+                    <a href="#leaderboards" onclick="showSection('leaderboards')" style="color: #94a3b8; text-decoration: none; font-size: 0.85rem; transition: color 0.3s; letter-spacing: 0.5px;">Leaderboards</a>
+                </div>
+                <div style="width: 120px; height: 1px; background: linear-gradient(90deg, transparent, rgba(14, 165, 233, 0.4), transparent); margin: 15px auto;"></div>
+                <p style="color: #64748b; font-size: 0.8rem; letter-spacing: 0.5px;">© 2026 TrustMyRecord.com - The End of the Bullshit. All rights reserved.</p>
             </div>
         </footer>
     </div>
