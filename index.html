@@ -187,12 +187,46 @@
                     if (games.length === 0 && daysOffset < maxDays) {
                         tryFetch(daysOffset + 1);
                     } else {
-                        // Always try summary/predictor for games missing odds
-                        var anyMissingOdds = games.some(function(g) {
-                            return !g.bookmakers || g.bookmakers.length === 0 || !g.bookmakers[0].markets || g.bookmakers[0].markets.length === 0;
+                        // Generate estimated odds from records for any game without odds (synchronous baseline)
+                        var sf = (espnPath.indexOf('basketball') !== -1) ? 2.5 : (espnPath.indexOf('football') !== -1 ? 2.0 : 3.0);
+                        var dt = 220;
+                        if (espnPath.indexOf('hockey') !== -1) { dt = 6; sf = 3.5; }
+                        else if (espnPath.indexOf('basketball') !== -1 && espnPath.indexOf('college') !== -1) dt = 145;
+                        else if (espnPath.indexOf('football') !== -1 && espnPath.indexOf('college') !== -1) dt = 52;
+                        else if (espnPath.indexOf('football') !== -1) dt = 45;
+
+                        games.forEach(function(g) {
+                            var hasMkts = g.bookmakers && g.bookmakers.length > 0 && g.bookmakers[0].markets && g.bookmakers[0].markets.length > 0;
+                            if (!hasMkts && g.home_record && g.away_record) {
+                                var pr = function(rec) {
+                                    var pts = rec.split('-');
+                                    var w = parseInt(pts[0]) || 0, l = parseInt(pts[1]) || 0, ot = parseInt(pts[2]) || 0;
+                                    var t = w + l + ot;
+                                    return t > 0 ? (w + ot * 0.5) / t : 0.5;
+                                };
+                                var hw = pr(g.home_record), aw = pr(g.away_record);
+                                var rh = (hw + 0.04) / ((hw + 0.04) + aw);
+                                var hp = Math.max(0.15, Math.min(0.85, rh)) * 100;
+                                var ap = 100 - hp;
+                                var ml = function(pct) { var p = pct/100; if (p >= 0.5) return Math.round(-100*p/(1-p)); return Math.round(100*(1-p)/p); };
+                                var hSpd = Math.round(-((hp - 50) / sf) * 2) / 2;
+                                g.estimatedOdds = true;
+                                g.bookmakers = [{
+                                    key: 'record_estimate', title: 'Estimated',
+                                    markets: [
+                                        { key: 'spreads', outcomes: [{ name: g.home_team, point: hSpd, price: -110 }, { name: g.away_team, point: -hSpd, price: -110 }]},
+                                        { key: 'h2h', outcomes: [{ name: g.home_team, price: ml(hp) }, { name: g.away_team, price: ml(ap) }]},
+                                        { key: 'totals', outcomes: [{ name: 'Over', point: dt, price: -110 }, { name: 'Under', point: dt, price: -110 }]}
+                                    ]
+                                }];
+                                console.log('[TMR] Pre-generated odds from records: ' + g.away_team + ' @ ' + g.home_team + ' ML=' + ml(hp) + '/' + ml(ap) + ' Spd=' + hSpd);
+                            }
                         });
-                        if (anyMissingOdds && games.length > 0) {
-                            console.log('[TMR] Some/all games missing odds, fetching from summary endpoints...');
+
+                        // Always try summary for better odds, then call back with whatever we have
+                        var anyMissingReal = games.some(function(g) { return g.estimatedOdds; });
+                        if (anyMissingReal && games.length > 0) {
+                            console.log('[TMR] Trying summary endpoints for real odds...');
                             window.TMR.fetchOddsFromSummary(games, espnPath, function(enrichedGames) {
                                 callback(enrichedGames, daysOffset > 0 ? daysOffset : null);
                             });
@@ -239,9 +273,9 @@
 
         games.forEach(function(game) {
             var eventId = game.espn_event_id;
-            // Skip games that already have real odds from scoreboard
-            var alreadyHasOdds = game.bookmakers && game.bookmakers.length > 0 && game.bookmakers[0].markets && game.bookmakers[0].markets.length > 0;
-            if (!eventId || alreadyHasOdds) { completed++; if (completed >= total) callback(games); return; }
+            // Skip games that already have REAL (non-estimated) odds
+            var alreadyHasRealOdds = !game.estimatedOdds && game.bookmakers && game.bookmakers.length > 0 && game.bookmakers[0].markets && game.bookmakers[0].markets.length > 0;
+            if (!eventId || alreadyHasRealOdds) { completed++; if (completed >= total) callback(games); return; }
 
             var summaryUrl = 'https://site.api.espn.com/apis/site/v2/sports/' + espnPath + '/summary?event=' + eventId;
             fetch(summaryUrl)
@@ -447,6 +481,12 @@
                 return;
             }
             console.log('[TMR] GOT ' + games.length + ' GAMES', daysOffset ? `(from ${daysOffset} day(s) ahead)` : '');
+            // Debug: log bookmakers state for each game
+            games.forEach(function(g, i) {
+                var bk = g.bookmakers;
+                var mkts = bk && bk[0] ? bk[0].markets : [];
+                console.log('[TMR] Game ' + i + ': ' + g.away_team + ' @ ' + g.home_team + ' | bookmakers=' + (bk ? bk.length : 'null') + ' markets=' + mkts.length + ' estimated=' + !!g.estimatedOdds + ' record=' + g.home_record);
+            });
             window.TMR.currentGames = games;
 
             // Update games count badge
