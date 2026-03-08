@@ -859,95 +859,7 @@
         return div.innerHTML;
     }
 
-    // ============ SEED SAMPLE POLLS ============
-
-    function seedSamplePolls() {
-        var polls = getPolls();
-        if (polls.length > 0) return;
-
-        var now = Date.now();
-        var samplePolls = [
-            {
-                id: 'poll_seed_1',
-                question: 'Who wins the NBA Finals this season?',
-                category: 'nba',
-                options: [
-                    { text: 'Boston Celtics', votes: 12, voters: ['demo1','demo2','demo3','demo4','demo5','demo6','demo7','demo8','demo9','demo10','demo11','demo12'] },
-                    { text: 'Oklahoma City Thunder', votes: 18, voters: ['d1','d2','d3','d4','d5','d6','d7','d8','d9','d10','d11','d12','d13','d14','d15','d16','d17','d18'] },
-                    { text: 'Cleveland Cavaliers', votes: 8, voters: ['c1','c2','c3','c4','c5','c6','c7','c8'] },
-                    { text: 'Denver Nuggets', votes: 5, voters: ['n1','n2','n3','n4','n5'] }
-                ],
-                createdBy: 'BetLegend',
-                createdAt: new Date(now - 172800000).toISOString(),
-                expiresAt: new Date(now + 604800000).toISOString(),
-                points: 100,
-                totalVotes: 43
-            },
-            {
-                id: 'poll_seed_2',
-                question: 'Which NFL team will have the best record next season?',
-                category: 'nfl',
-                options: [
-                    { text: 'Kansas City Chiefs', votes: 22, voters: Array.from({length:22}, function(_,i){ return 'kc'+i; }) },
-                    { text: 'Philadelphia Eagles', votes: 15, voters: Array.from({length:15}, function(_,i){ return 'phi'+i; }) },
-                    { text: 'Detroit Lions', votes: 10, voters: Array.from({length:10}, function(_,i){ return 'det'+i; }) },
-                    { text: 'Buffalo Bills', votes: 8, voters: Array.from({length:8}, function(_,i){ return 'buf'+i; }) }
-                ],
-                createdBy: 'SharpMoney',
-                createdAt: new Date(now - 86400000).toISOString(),
-                expiresAt: new Date(now + 1209600000).toISOString(),
-                points: 50,
-                totalVotes: 55
-            },
-            {
-                id: 'poll_seed_3',
-                question: 'Best NHL goalie right now?',
-                category: 'nhl',
-                options: [
-                    { text: 'Connor Hellebuyck', votes: 14, voters: Array.from({length:14}, function(_,i){ return 'hel'+i; }) },
-                    { text: 'Igor Shesterkin', votes: 11, voters: Array.from({length:11}, function(_,i){ return 'igor'+i; }) },
-                    { text: 'Sergei Bobrovsky', votes: 6, voters: Array.from({length:6}, function(_,i){ return 'bob'+i; }) }
-                ],
-                createdBy: 'PuckAnalyst',
-                createdAt: new Date(now - 43200000).toISOString(),
-                expiresAt: new Date(now + 259200000).toISOString(),
-                points: 50,
-                totalVotes: 31
-            },
-            {
-                id: 'poll_seed_4',
-                question: 'Will the Dodgers repeat as World Series champions?',
-                category: 'mlb',
-                options: [
-                    { text: 'Yes, they repeat', votes: 20, voters: Array.from({length:20}, function(_,i){ return 'yes'+i; }) },
-                    { text: 'No, someone else wins', votes: 25, voters: Array.from({length:25}, function(_,i){ return 'no'+i; }) }
-                ],
-                createdBy: 'DiamondSharp',
-                createdAt: new Date(now - 7200000).toISOString(),
-                expiresAt: new Date(now + 2592000000).toISOString(),
-                points: 75,
-                totalVotes: 45
-            },
-            {
-                id: 'poll_seed_5',
-                question: 'Who will win the Champions League this year?',
-                category: 'soccer',
-                options: [
-                    { text: 'Real Madrid', votes: 16, voters: Array.from({length:16}, function(_,i){ return 'rm'+i; }) },
-                    { text: 'Manchester City', votes: 13, voters: Array.from({length:13}, function(_,i){ return 'mc'+i; }) },
-                    { text: 'Barcelona', votes: 9, voters: Array.from({length:9}, function(_,i){ return 'barca'+i; }) },
-                    { text: 'Bayern Munich', votes: 7, voters: Array.from({length:7}, function(_,i){ return 'bay'+i; }) }
-                ],
-                createdBy: 'FutbolFan',
-                createdAt: new Date(now - 120000000).toISOString(),
-                expiresAt: new Date(now + 1814400000).toISOString(),
-                points: 75,
-                totalVotes: 45
-            }
-        ];
-
-        savePolls(samplePolls);
-    }
+    // No sample data - polls start empty until real users create them
 
     // ============ CURRENT FILTER STATE ============
     var currentFilter = 'all';
@@ -1279,7 +1191,6 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         updateNavStatus();
-        seedSamplePolls();
         renderPollsGrid();
     });
     </script>

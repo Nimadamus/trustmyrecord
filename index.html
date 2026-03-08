@@ -7447,6 +7447,7 @@
                     <a href="index.html#home" class="tmr-nav-link" data-page="home">The Record</a>
                     <a href="index.html#picks" class="tmr-nav-link" data-page="picks">Make Picks</a>
                     <a href="index.html#mypicks" class="tmr-nav-link" data-page="mypicks">My Picks</a>
+                    <a href="index.html#arena" class="tmr-nav-link" data-page="arena" onclick="showSection('arena')">Arena</a>
                     <a href="forum.html" class="tmr-nav-link">Forum</a>
                     <a href="messages.html" class="tmr-nav-link">Messages</a>
                     <a href="premium.html" class="tmr-nav-link premium">Premium</a>
@@ -7625,7 +7626,7 @@
                                     <span class="action-icon">🏆</span>
                                     <span class="action-text">Leaderboards</span>
                                 </button>
-                                <button onclick="showSection('polls-trivia')" class="action-btn">
+                                <button onclick="showSection('arena'); setTimeout(function(){ switchArenaMode('trivia'); }, 100);" class="action-btn">
                                     <span class="action-icon">🧠</span>
                                     <span class="action-text">Take Quiz</span>
                                 </button>
@@ -9621,7 +9622,8 @@
                     <!-- Arena Mode Toggle -->
                     <div style="display: flex; gap: 8px; margin-bottom: 20px; background: rgba(255,255,255,0.03); border-radius: 12px; padding: 4px;">
                         <button id="arenaModeChallenge" onclick="switchArenaMode('challenges')" style="flex: 1; background: rgba(255,107,53,0.2); color: #ff6b35; border: 1px solid #ff6b35; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px;">⚔️ Challenges</button>
-                        <button id="arenaModePolls" onclick="switchArenaMode('polls')" style="flex: 1; background: transparent; color: #6c7380; border: 1px solid #333; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px;">📊 Prediction Polls</button>
+                        <button id="arenaModePolls" onclick="switchArenaMode('polls')" style="flex: 1; background: transparent; color: #6c7380; border: 1px solid #333; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px;">📊 Polls</button>
+                        <button id="arenaModeTrivia" onclick="switchArenaMode('trivia')" style="flex: 1; background: transparent; color: #6c7380; border: 1px solid #333; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px;">🧠 Trivia</button>
                     </div>
 
                     <!-- Challenges Sub-Section -->
@@ -9656,6 +9658,120 @@
                             <button onclick="openCreatePollModal()" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 14px;">+ Create Poll</button>
                         </div>
                         <div id="arenaPollsList" style="display: grid; gap: 12px;"></div>
+                    </div>
+
+                    <!-- Trivia Sub-Section -->
+                    <div id="arenaTriviaSection" style="display: none;">
+                        <!-- Category Select -->
+                        <div id="triviaCategorySelect" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+                            <button onclick="startArenaTrivia('nfl')" style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 24px 16px; cursor: pointer; text-align: center; transition: all 0.2s;" onmouseover="this.style.borderColor='#22c55e'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--glass-border)'; this.style.transform='none'">
+                                <div style="font-size: 36px; margin-bottom: 8px;">🏈</div>
+                                <div style="color: var(--text-primary); font-weight: 700; font-size: 14px;">NFL</div>
+                            </button>
+                            <button onclick="startArenaTrivia('nba')" style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 24px 16px; cursor: pointer; text-align: center; transition: all 0.2s;" onmouseover="this.style.borderColor='#22c55e'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--glass-border)'; this.style.transform='none'">
+                                <div style="font-size: 36px; margin-bottom: 8px;">🏀</div>
+                                <div style="color: var(--text-primary); font-weight: 700; font-size: 14px;">NBA</div>
+                            </button>
+                            <button onclick="startArenaTrivia('mlb')" style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 24px 16px; cursor: pointer; text-align: center; transition: all 0.2s;" onmouseover="this.style.borderColor='#22c55e'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--glass-border)'; this.style.transform='none'">
+                                <div style="font-size: 36px; margin-bottom: 8px;">⚾</div>
+                                <div style="color: var(--text-primary); font-weight: 700; font-size: 14px;">MLB</div>
+                            </button>
+                            <button onclick="startArenaTrivia('nhl')" style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 24px 16px; cursor: pointer; text-align: center; transition: all 0.2s;" onmouseover="this.style.borderColor='#22c55e'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--glass-border)'; this.style.transform='none'">
+                                <div style="font-size: 36px; margin-bottom: 8px;">🏒</div>
+                                <div style="color: var(--text-primary); font-weight: 700; font-size: 14px;">NHL</div>
+                            </button>
+                            <button onclick="startArenaTrivia('soccer')" style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 24px 16px; cursor: pointer; text-align: center; transition: all 0.2s;" onmouseover="this.style.borderColor='#22c55e'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--glass-border)'; this.style.transform='none'">
+                                <div style="font-size: 36px; margin-bottom: 8px;">⚽</div>
+                                <div style="color: var(--text-primary); font-weight: 700; font-size: 14px;">Soccer</div>
+                            </button>
+                            <button onclick="startArenaTrivia('mixed')" style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 24px 16px; cursor: pointer; text-align: center; transition: all 0.2s;" onmouseover="this.style.borderColor='#22c55e'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--glass-border)'; this.style.transform='none'">
+                                <div style="font-size: 36px; margin-bottom: 8px;">🎲</div>
+                                <div style="color: var(--text-primary); font-weight: 700; font-size: 14px;">Mixed</div>
+                            </button>
+                        </div>
+                        <!-- Trivia Leaderboard below categories -->
+                        <div id="triviaLeaderboardPanel" style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 24px;">
+                            <h3 style="color: var(--text-primary); margin-bottom: 16px; font-size: 1.1rem;">🏆 Trivia Leaderboard</h3>
+                            <div id="triviaLeaderboardList" style="color: var(--text-muted); font-size: 14px;">No scores yet. Be the first to play!</div>
+                        </div>
+
+                        <!-- Quiz In Progress (hidden until started) -->
+                        <div id="triviaQuizArea" style="display: none;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                <button onclick="exitArenaTrivia()" style="background: transparent; color: var(--text-muted); border: 1px solid #333; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px;">← Back</button>
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <span id="triviaProgress" style="color: var(--text-muted); font-size: 13px;">1 / 10</span>
+                                    <span id="triviaTimer" style="background: rgba(34,197,94,0.2); color: #22c55e; padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 14px;">20s</span>
+                                    <span id="triviaScore" style="color: var(--gold); font-weight: 700; font-size: 14px;">0 pts</span>
+                                </div>
+                            </div>
+                            <div id="triviaQuestionCard" style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 32px;">
+                                <div id="triviaQuestionText" style="color: var(--text-primary); font-size: 1.2rem; font-weight: 600; margin-bottom: 24px; line-height: 1.5;"></div>
+                                <div id="triviaAnswers" style="display: grid; gap: 10px;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Quiz Results (hidden until finished) -->
+                        <div id="triviaResultsArea" style="display: none;">
+                            <div style="background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 32px; text-align: center;">
+                                <div style="font-size: 64px; margin-bottom: 16px;" id="triviaResultEmoji">🏆</div>
+                                <h3 style="color: var(--text-primary); font-size: 1.5rem; margin-bottom: 8px;" id="triviaResultTitle">Quiz Complete!</h3>
+                                <p style="color: var(--text-muted); margin-bottom: 24px;" id="triviaResultSummary"></p>
+                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px;">
+                                    <div style="background: rgba(34,197,94,0.1); border-radius: 10px; padding: 16px;">
+                                        <div style="font-size: 24px; font-weight: 700; color: #22c55e;" id="triviaResultCorrect">0</div>
+                                        <div style="color: var(--text-muted); font-size: 12px;">Correct</div>
+                                    </div>
+                                    <div style="background: rgba(14,165,233,0.1); border-radius: 10px; padding: 16px;">
+                                        <div style="font-size: 24px; font-weight: 700; color: var(--primary);" id="triviaResultPercent">0%</div>
+                                        <div style="color: var(--text-muted); font-size: 12px;">Accuracy</div>
+                                    </div>
+                                    <div style="background: rgba(251,191,36,0.1); border-radius: 10px; padding: 16px;">
+                                        <div style="font-size: 24px; font-weight: 700; color: var(--gold);" id="triviaResultPoints">0</div>
+                                        <div style="color: var(--text-muted); font-size: 12px;">Points</div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 12px; justify-content: center;">
+                                    <button onclick="exitArenaTrivia()" style="background: transparent; color: var(--text-secondary); border: 1px solid #333; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">Back to Categories</button>
+                                    <button onclick="startArenaTrivia(window._lastTriviaCategory)" style="background: linear-gradient(135deg, #22c55e, #16a34a); color: #000; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 700;">Play Again</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Create Custom Question -->
+                        <div id="triviaCreateSection" style="margin-top: 20px;">
+                            <button onclick="toggleTriviaCreator()" style="width: 100%; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 10px; padding: 14px; cursor: pointer; color: #22c55e; font-weight: 700; font-size: 14px;">+ Create Custom Question</button>
+                            <div id="triviaCreatorForm" style="display: none; background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 14px; padding: 24px; margin-top: 12px;">
+                                <h4 style="color: var(--text-primary); margin-bottom: 16px;">New Trivia Question</h4>
+                                <div style="margin-bottom: 12px;">
+                                    <label style="color: var(--text-secondary); display: block; margin-bottom: 4px; font-size: 13px;">Category</label>
+                                    <select id="customTriviaCategory" style="width: 100%; background: var(--dark-bg); color: var(--text-primary); border: 1px solid var(--glass-border); border-radius: 8px; padding: 10px;">
+                                        <option value="nfl">NFL</option><option value="nba">NBA</option><option value="mlb">MLB</option><option value="nhl">NHL</option><option value="soccer">Soccer</option><option value="mixed">Mixed</option>
+                                    </select>
+                                </div>
+                                <div style="margin-bottom: 12px;">
+                                    <label style="color: var(--text-secondary); display: block; margin-bottom: 4px; font-size: 13px;">Question</label>
+                                    <input type="text" id="customTriviaQuestion" placeholder="Enter your question" style="width: 100%; background: var(--dark-bg); color: var(--text-primary); border: 1px solid var(--glass-border); border-radius: 8px; padding: 10px;">
+                                </div>
+                                <div style="margin-bottom: 12px;">
+                                    <label style="color: var(--text-secondary); display: block; margin-bottom: 4px; font-size: 13px;">Answer A (correct)</label>
+                                    <input type="text" id="customTriviaA" placeholder="Correct answer" style="width: 100%; background: var(--dark-bg); color: var(--text-primary); border: 1px solid var(--glass-border); border-radius: 8px; padding: 10px;">
+                                </div>
+                                <div style="margin-bottom: 12px;">
+                                    <label style="color: var(--text-secondary); display: block; margin-bottom: 4px; font-size: 13px;">Answer B</label>
+                                    <input type="text" id="customTriviaB" placeholder="Wrong answer" style="width: 100%; background: var(--dark-bg); color: var(--text-primary); border: 1px solid var(--glass-border); border-radius: 8px; padding: 10px;">
+                                </div>
+                                <div style="margin-bottom: 12px;">
+                                    <label style="color: var(--text-secondary); display: block; margin-bottom: 4px; font-size: 13px;">Answer C</label>
+                                    <input type="text" id="customTriviaC" placeholder="Wrong answer" style="width: 100%; background: var(--dark-bg); color: var(--text-primary); border: 1px solid var(--glass-border); border-radius: 8px; padding: 10px;">
+                                </div>
+                                <div style="margin-bottom: 16px;">
+                                    <label style="color: var(--text-secondary); display: block; margin-bottom: 4px; font-size: 13px;">Answer D</label>
+                                    <input type="text" id="customTriviaD" placeholder="Wrong answer" style="width: 100%; background: var(--dark-bg); color: var(--text-primary); border: 1px solid var(--glass-border); border-radius: 8px; padding: 10px;">
+                                </div>
+                                <button onclick="submitCustomTrivia()" style="width: 100%; background: linear-gradient(135deg, #22c55e, #16a34a); color: #000; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 700;">Submit Question</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -9826,7 +9942,6 @@
                         <div class="forum-stats-bar">
                             <div><strong id="forumTotalThreads">0</strong> Threads</div>
                             <div><strong id="forumTotalPosts">0</strong> Posts</div>
-                            <div><strong id="forumTotalMembers">0</strong> Members</div>
                         </div>
                         <div id="forumCategoriesTable">
                             <!-- Rendered by renderForumCategories() -->
@@ -14517,21 +14632,27 @@ function switchArenaMode(mode) {
     currentArenaMode = mode;
     var challengeSection = document.getElementById('arenaChallengesSection');
     var pollsSection = document.getElementById('arenaPollsSection');
+    var triviaSection = document.getElementById('arenaTriviaSection');
     var challengeBtn = document.getElementById('arenaModeChallenge');
     var pollsBtn = document.getElementById('arenaModePolls');
+    var triviaBtn = document.getElementById('arenaModeTrivia');
+
+    // Reset all
+    [challengeSection, pollsSection, triviaSection].forEach(function(s) { if (s) s.style.display = 'none'; });
+    [challengeBtn, pollsBtn, triviaBtn].forEach(function(b) { if (b) { b.style.background = 'transparent'; b.style.color = '#6c7380'; b.style.borderColor = '#333'; } });
 
     if (mode === 'challenges') {
         if (challengeSection) challengeSection.style.display = 'block';
-        if (pollsSection) pollsSection.style.display = 'none';
         if (challengeBtn) { challengeBtn.style.background = 'rgba(255,107,53,0.2)'; challengeBtn.style.color = '#ff6b35'; challengeBtn.style.borderColor = '#ff6b35'; }
-        if (pollsBtn) { pollsBtn.style.background = 'transparent'; pollsBtn.style.color = '#6c7380'; pollsBtn.style.borderColor = '#333'; }
         renderChallengesList();
-    } else {
-        if (challengeSection) challengeSection.style.display = 'none';
+    } else if (mode === 'polls') {
         if (pollsSection) pollsSection.style.display = 'block';
         if (pollsBtn) { pollsBtn.style.background = 'rgba(102,126,234,0.2)'; pollsBtn.style.color = '#667eea'; pollsBtn.style.borderColor = '#667eea'; }
-        if (challengeBtn) { challengeBtn.style.background = 'transparent'; challengeBtn.style.color = '#6c7380'; challengeBtn.style.borderColor = '#333'; }
         renderArenaPollsList();
+    } else if (mode === 'trivia') {
+        if (triviaSection) triviaSection.style.display = 'block';
+        if (triviaBtn) { triviaBtn.style.background = 'rgba(34,197,94,0.2)'; triviaBtn.style.color = '#22c55e'; triviaBtn.style.borderColor = '#22c55e'; }
+        renderTriviaLeaderboard();
     }
 }
 
@@ -14639,6 +14760,264 @@ function renderArenaPollsList() {
     });
 
     container.innerHTML = html;
+}
+
+// ============ ARENA TRIVIA ENGINE ============
+var TRIVIA_QUESTIONS = {
+    nfl: [
+        { q: "Which team won the first Super Bowl?", a: ["Green Bay Packers", "Dallas Cowboys", "Pittsburgh Steelers", "Miami Dolphins"], c: 0 },
+        { q: "Who holds the NFL record for most career passing touchdowns?", a: ["Tom Brady", "Peyton Manning", "Drew Brees", "Brett Favre"], c: 0 },
+        { q: "Which NFL team has the most Super Bowl victories?", a: ["New England Patriots", "Pittsburgh Steelers", "Dallas Cowboys", "San Francisco 49ers"], c: 0 },
+        { q: "What year was the NFL founded?", a: ["1920", "1930", "1940", "1910"], c: 0 },
+        { q: "Who is the NFL's all-time leading rusher?", a: ["Emmitt Smith", "Walter Payton", "Barry Sanders", "Adrian Peterson"], c: 0 },
+        { q: "Which team went 16-0 in the 2007 regular season?", a: ["New England Patriots", "Indianapolis Colts", "Pittsburgh Steelers", "Green Bay Packers"], c: 0 },
+        { q: "How many players are on an NFL roster (active)?", a: ["53", "46", "48", "55"], c: 0 },
+        { q: "Who has the most receiving yards in NFL history?", a: ["Jerry Rice", "Larry Fitzgerald", "Terrell Owens", "Randy Moss"], c: 0 },
+        { q: "What is the only NFL team to go undefeated and win the Super Bowl?", a: ["1972 Miami Dolphins", "1985 Chicago Bears", "2007 New England Patriots", "1984 San Francisco 49ers"], c: 0 },
+        { q: "Which QB was drafted #1 overall in the 2021 NFL Draft?", a: ["Trevor Lawrence", "Zach Wilson", "Trey Lance", "Justin Fields"], c: 0 }
+    ],
+    nba: [
+        { q: "Who has won the most NBA championships as a player?", a: ["Bill Russell", "Michael Jordan", "LeBron James", "Kareem Abdul-Jabbar"], c: 0 },
+        { q: "What is the NBA record for most points in a single game?", a: ["100", "81", "78", "73"], c: 0 },
+        { q: "Which team has the most NBA championships?", a: ["Boston Celtics", "Los Angeles Lakers", "Chicago Bulls", "Golden State Warriors"], c: 0 },
+        { q: "Who scored 100 points in a single NBA game?", a: ["Wilt Chamberlain", "Michael Jordan", "Kobe Bryant", "LeBron James"], c: 0 },
+        { q: "How many games are in an NBA regular season?", a: ["82", "78", "80", "84"], c: 0 },
+        { q: "Which team drafted Kobe Bryant?", a: ["Charlotte Hornets", "Los Angeles Lakers", "Philadelphia 76ers", "Chicago Bulls"], c: 0 },
+        { q: "Who is the NBA's all-time leading scorer?", a: ["LeBron James", "Kareem Abdul-Jabbar", "Karl Malone", "Michael Jordan"], c: 0 },
+        { q: "What year was the 3-point line introduced in the NBA?", a: ["1979", "1980", "1984", "1976"], c: 0 },
+        { q: "Which NBA player is known as 'The Greek Freak'?", a: ["Giannis Antetokounmpo", "Luka Doncic", "Nikola Jokic", "Joel Embiid"], c: 0 },
+        { q: "How many quarters are in an NBA game?", a: ["4", "2", "3", "6"], c: 0 }
+    ],
+    mlb: [
+        { q: "Who holds the MLB record for most career home runs?", a: ["Barry Bonds", "Hank Aaron", "Babe Ruth", "Alex Rodriguez"], c: 0 },
+        { q: "How many innings are in a standard baseball game?", a: ["9", "7", "8", "10"], c: 0 },
+        { q: "Which MLB team has won the most World Series?", a: ["New York Yankees", "St. Louis Cardinals", "Boston Red Sox", "Oakland Athletics"], c: 0 },
+        { q: "What is a perfect game in baseball?", a: ["No hits, no walks, no errors, 27 up 27 down", "No runs scored", "Striking out every batter", "Winning by 10+ runs"], c: 0 },
+        { q: "Who broke the color barrier in MLB in 1947?", a: ["Jackie Robinson", "Satchel Paige", "Larry Doby", "Hank Aaron"], c: 0 },
+        { q: "How many stitches are on a baseball?", a: ["108", "88", "120", "96"], c: 0 },
+        { q: "What is the distance between bases in MLB?", a: ["90 feet", "80 feet", "100 feet", "60 feet"], c: 0 },
+        { q: "Who has the most career hits in MLB history?", a: ["Pete Rose", "Ty Cobb", "Hank Aaron", "Derek Jeter"], c: 0 },
+        { q: "What does ERA stand for in baseball?", a: ["Earned Run Average", "Extra Run Allowed", "Equal Run Assessment", "Earned Runs Against"], c: 0 },
+        { q: "Which pitcher has the most career strikeouts?", a: ["Nolan Ryan", "Randy Johnson", "Roger Clemens", "Steve Carlton"], c: 0 }
+    ],
+    nhl: [
+        { q: "Who holds the NHL record for most career goals?", a: ["Wayne Gretzky", "Gordie Howe", "Jaromir Jagr", "Alex Ovechkin"], c: 0 },
+        { q: "How many periods are in an NHL game?", a: ["3", "2", "4", "5"], c: 0 },
+        { q: "Which NHL team has won the most Stanley Cups?", a: ["Montreal Canadiens", "Toronto Maple Leafs", "Detroit Red Wings", "Boston Bruins"], c: 0 },
+        { q: "What is a hat trick in hockey?", a: ["3 goals by one player", "3 assists by one player", "3 penalties by one player", "3 saves in a row"], c: 0 },
+        { q: "How long is an NHL regulation game?", a: ["60 minutes", "48 minutes", "80 minutes", "90 minutes"], c: 0 },
+        { q: "Who is known as 'The Great One'?", a: ["Wayne Gretzky", "Mario Lemieux", "Bobby Orr", "Gordie Howe"], c: 0 },
+        { q: "How many players from each team are on the ice during regulation play?", a: ["6", "5", "7", "4"], c: 0 },
+        { q: "What is the trophy given to the NHL's regular season MVP?", a: ["Hart Trophy", "Vezina Trophy", "Norris Trophy", "Art Ross Trophy"], c: 0 },
+        { q: "Which was the last Original Six team to win the Stanley Cup before their drought ended?", a: ["Chicago Blackhawks", "New York Rangers", "Toronto Maple Leafs", "Boston Bruins"], c: 0 },
+        { q: "What year did the NHL expand from 6 to 12 teams?", a: ["1967", "1970", "1965", "1972"], c: 0 }
+    ],
+    soccer: [
+        { q: "Which country has won the most FIFA World Cups?", a: ["Brazil", "Germany", "Italy", "Argentina"], c: 0 },
+        { q: "How long is a standard soccer match?", a: ["90 minutes", "80 minutes", "100 minutes", "120 minutes"], c: 0 },
+        { q: "Who has scored the most goals in international soccer history?", a: ["Cristiano Ronaldo", "Ali Daei", "Lionel Messi", "Pele"], c: 0 },
+        { q: "How many players are on a soccer team during a match?", a: ["11", "10", "12", "9"], c: 0 },
+        { q: "What is the maximum number of substitutions allowed in a standard match?", a: ["5", "3", "4", "6"], c: 0 },
+        { q: "Which club has won the most UEFA Champions League titles?", a: ["Real Madrid", "AC Milan", "Barcelona", "Liverpool"], c: 0 },
+        { q: "What is the penalty area also known as?", a: ["The 18-yard box", "The 16-yard box", "The goal box", "The danger zone"], c: 0 },
+        { q: "In what year was the first FIFA World Cup held?", a: ["1930", "1934", "1928", "1950"], c: 0 },
+        { q: "Which player is known as 'The Egyptian King'?", a: ["Mohamed Salah", "Ahmed Hegazi", "Mohamed Elneny", "Amr Zaki"], c: 0 },
+        { q: "What does VAR stand for?", a: ["Video Assistant Referee", "Visual Aid Review", "Video Analysis Replay", "Virtual Assisted Ruling"], c: 0 }
+    ],
+    mixed: [
+        { q: "In which sport would you perform a 'slam dunk'?", a: ["Basketball", "Volleyball", "Tennis", "Baseball"], c: 0 },
+        { q: "How many holes are there in a standard round of golf?", a: ["18", "9", "12", "16"], c: 0 },
+        { q: "What sport is played at Wimbledon?", a: ["Tennis", "Cricket", "Golf", "Soccer"], c: 0 },
+        { q: "In boxing, how many rounds is a championship fight?", a: ["12", "10", "15", "8"], c: 0 },
+        { q: "Which country invented cricket?", a: ["England", "Australia", "India", "South Africa"], c: 0 },
+        { q: "How many points is a touchdown worth in football?", a: ["6", "7", "3", "2"], c: 0 },
+        { q: "What is the diameter of a basketball hoop in inches?", a: ["18", "16", "20", "15"], c: 0 },
+        { q: "How many Grand Slam tournaments are there in tennis?", a: ["4", "3", "5", "6"], c: 0 },
+        { q: "Which sport uses a shuttlecock?", a: ["Badminton", "Tennis", "Squash", "Table Tennis"], c: 0 },
+        { q: "In what sport do you 'spike' the ball?", a: ["Volleyball", "Basketball", "Football", "Tennis"], c: 0 }
+    ]
+};
+
+var _triviaState = { questions: [], current: 0, score: 0, timer: null, timeLeft: 20, answered: false };
+window._lastTriviaCategory = 'mixed';
+
+function startArenaTrivia(category) {
+    window._lastTriviaCategory = category;
+    var pool = (TRIVIA_QUESTIONS[category] || TRIVIA_QUESTIONS.mixed).slice();
+    // Add custom questions
+    try {
+        var custom = JSON.parse(localStorage.getItem('trustmyrecord_custom_trivia') || '[]');
+        custom.forEach(function(cq) { if (cq.category === category || category === 'mixed') pool.push(cq); });
+    } catch(e) {}
+    // Shuffle and pick 10
+    for (var i = pool.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
+    // Shuffle answers for each question
+    _triviaState.questions = pool.slice(0, 10).map(function(q) {
+        var answers = q.a.map(function(txt, idx) { return { text: txt, isCorrect: idx === q.c }; });
+        for (var i = answers.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = answers[i]; answers[i] = answers[j]; answers[j] = t; }
+        return { question: q.q, answers: answers };
+    });
+    _triviaState.current = 0;
+    _triviaState.score = 0;
+    document.getElementById('triviaCategorySelect').style.display = 'none';
+    document.getElementById('triviaLeaderboardPanel').style.display = 'none';
+    document.getElementById('triviaCreateSection').style.display = 'none';
+    document.getElementById('triviaQuizArea').style.display = 'block';
+    document.getElementById('triviaResultsArea').style.display = 'none';
+    showTriviaQuestion();
+}
+
+function showTriviaQuestion() {
+    var q = _triviaState.questions[_triviaState.current];
+    if (!q) { finishArenaTrivia(); return; }
+    _triviaState.answered = false;
+    _triviaState.timeLeft = 20;
+    document.getElementById('triviaProgress').textContent = (_triviaState.current + 1) + ' / ' + _triviaState.questions.length;
+    document.getElementById('triviaScore').textContent = _triviaState.score + ' pts';
+    document.getElementById('triviaQuestionText').textContent = q.question;
+    var html = '';
+    q.answers.forEach(function(ans, idx) {
+        html += '<button onclick="answerArenaTrivia(' + idx + ')" id="triviaAns' + idx + '" style="display: block; width: 100%; text-align: left; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 10px; padding: 14px 18px; color: var(--text-primary); cursor: pointer; font-size: 15px; transition: all 0.2s;" onmouseover="if(!window._triviaState || !window._triviaState.answered) this.style.background=\'rgba(34,197,94,0.15)\'" onmouseout="if(!window._triviaState || !window._triviaState.answered) this.style.background=\'rgba(255,255,255,0.05)\'">' + escapeHtml(ans.text) + '</button>';
+    });
+    document.getElementById('triviaAnswers').innerHTML = html;
+    window._triviaState = _triviaState;
+    // Start timer
+    clearInterval(_triviaState.timer);
+    updateTriviaTimer();
+    _triviaState.timer = setInterval(function() {
+        _triviaState.timeLeft--;
+        updateTriviaTimer();
+        if (_triviaState.timeLeft <= 0) {
+            clearInterval(_triviaState.timer);
+            if (!_triviaState.answered) { answerArenaTrivia(-1); }
+        }
+    }, 1000);
+}
+
+function updateTriviaTimer() {
+    var el = document.getElementById('triviaTimer');
+    if (!el) return;
+    el.textContent = _triviaState.timeLeft + 's';
+    if (_triviaState.timeLeft <= 5) { el.style.background = 'rgba(239,68,68,0.2)'; el.style.color = '#ef4444'; }
+    else if (_triviaState.timeLeft <= 10) { el.style.background = 'rgba(245,158,11,0.2)'; el.style.color = '#f59e0b'; }
+    else { el.style.background = 'rgba(34,197,94,0.2)'; el.style.color = '#22c55e'; }
+}
+
+function answerArenaTrivia(idx) {
+    if (_triviaState.answered) return;
+    _triviaState.answered = true;
+    clearInterval(_triviaState.timer);
+    var q = _triviaState.questions[_triviaState.current];
+    var correct = idx >= 0 && q.answers[idx] && q.answers[idx].isCorrect;
+    if (correct) {
+        var timeBonus = Math.max(0, _triviaState.timeLeft);
+        _triviaState.score += 10 + timeBonus;
+    }
+    // Highlight answers
+    q.answers.forEach(function(ans, i) {
+        var btn = document.getElementById('triviaAns' + i);
+        if (!btn) return;
+        btn.style.cursor = 'default';
+        if (ans.isCorrect) { btn.style.background = 'rgba(34,197,94,0.3)'; btn.style.borderColor = '#22c55e'; btn.style.color = '#22c55e'; }
+        else if (i === idx) { btn.style.background = 'rgba(239,68,68,0.3)'; btn.style.borderColor = '#ef4444'; btn.style.color = '#ef4444'; }
+    });
+    document.getElementById('triviaScore').textContent = _triviaState.score + ' pts';
+    setTimeout(function() {
+        _triviaState.current++;
+        if (_triviaState.current < _triviaState.questions.length) { showTriviaQuestion(); }
+        else { finishArenaTrivia(); }
+    }, 1200);
+}
+
+function finishArenaTrivia() {
+    clearInterval(_triviaState.timer);
+    document.getElementById('triviaQuizArea').style.display = 'none';
+    document.getElementById('triviaResultsArea').style.display = 'block';
+    var total = _triviaState.questions.length;
+    var correctCount = 0;
+    // Count correct by score (each correct = 10 + bonus, so if score > 0 at least some correct)
+    // Simpler: recalculate
+    var pts = _triviaState.score;
+    correctCount = Math.min(total, Math.floor(pts / 10)); // approximate
+    var pct = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+    document.getElementById('triviaResultCorrect').textContent = correctCount + ' / ' + total;
+    document.getElementById('triviaResultPercent').textContent = pct + '%';
+    document.getElementById('triviaResultPoints').textContent = pts;
+    if (pct >= 80) { document.getElementById('triviaResultEmoji').textContent = '🏆'; document.getElementById('triviaResultTitle').textContent = 'Outstanding!'; }
+    else if (pct >= 60) { document.getElementById('triviaResultEmoji').textContent = '🎯'; document.getElementById('triviaResultTitle').textContent = 'Nice Job!'; }
+    else if (pct >= 40) { document.getElementById('triviaResultEmoji').textContent = '👍'; document.getElementById('triviaResultTitle').textContent = 'Not Bad!'; }
+    else { document.getElementById('triviaResultEmoji').textContent = '📚'; document.getElementById('triviaResultTitle').textContent = 'Keep Studying!'; }
+    document.getElementById('triviaResultSummary').textContent = 'You scored ' + pts + ' points on the ' + (window._lastTriviaCategory || 'mixed').toUpperCase() + ' quiz.';
+    // Save score
+    var username = 'Guest';
+    try {
+        var u = window.auth && window.auth.getCurrentUser ? window.auth.getCurrentUser() : null;
+        if (!u) u = JSON.parse(localStorage.getItem('tmr_current_user') || 'null');
+        if (u && u.username) username = u.username;
+    } catch(e) {}
+    var scores = [];
+    try { scores = JSON.parse(localStorage.getItem('trustmyrecord_trivia_scores') || '[]'); } catch(e) {}
+    scores.push({ username: username, score: pts, total: total, correct: correctCount, category: window._lastTriviaCategory || 'mixed', date: new Date().toISOString() });
+    scores.sort(function(a, b) { return b.score - a.score; });
+    scores = scores.slice(0, 50);
+    localStorage.setItem('trustmyrecord_trivia_scores', JSON.stringify(scores));
+}
+
+function exitArenaTrivia() {
+    clearInterval(_triviaState.timer);
+    document.getElementById('triviaQuizArea').style.display = 'none';
+    document.getElementById('triviaResultsArea').style.display = 'none';
+    document.getElementById('triviaCategorySelect').style.display = 'grid';
+    document.getElementById('triviaLeaderboardPanel').style.display = 'block';
+    document.getElementById('triviaCreateSection').style.display = 'block';
+    renderTriviaLeaderboard();
+}
+
+function renderTriviaLeaderboard() {
+    var el = document.getElementById('triviaLeaderboardList');
+    if (!el) return;
+    var scores = [];
+    try { scores = JSON.parse(localStorage.getItem('trustmyrecord_trivia_scores') || '[]'); } catch(e) {}
+    if (scores.length === 0) { el.innerHTML = '<p style="color: var(--text-muted);">No scores yet. Be the first to play!</p>'; return; }
+    var html = '';
+    scores.slice(0, 10).forEach(function(s, i) {
+        var medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1) + '.';
+        html += '<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">';
+        html += '<div style="display: flex; align-items: center; gap: 12px;">';
+        html += '<span style="font-size: 16px; min-width: 28px;">' + medal + '</span>';
+        html += '<span style="color: var(--text-primary); font-weight: 600;">@' + escapeHtml(s.username) + '</span>';
+        html += '<span style="color: var(--text-muted); font-size: 12px;">' + (s.category || 'mixed').toUpperCase() + '</span>';
+        html += '</div>';
+        html += '<span style="color: var(--gold); font-weight: 700;">' + s.score + ' pts</span>';
+        html += '</div>';
+    });
+    el.innerHTML = html;
+}
+
+function toggleTriviaCreator() {
+    var form = document.getElementById('triviaCreatorForm');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+function submitCustomTrivia() {
+    var cat = document.getElementById('customTriviaCategory').value;
+    var q = document.getElementById('customTriviaQuestion').value.trim();
+    var a = document.getElementById('customTriviaA').value.trim();
+    var b = document.getElementById('customTriviaB').value.trim();
+    var c = document.getElementById('customTriviaC').value.trim();
+    var d = document.getElementById('customTriviaD').value.trim();
+    if (!q || !a || !b || !c || !d) { alert('Please fill in all fields.'); return; }
+    var custom = [];
+    try { custom = JSON.parse(localStorage.getItem('trustmyrecord_custom_trivia') || '[]'); } catch(e) {}
+    custom.push({ q: q, a: [a, b, c, d], c: 0, category: cat });
+    localStorage.setItem('trustmyrecord_custom_trivia', JSON.stringify(custom));
+    document.getElementById('customTriviaQuestion').value = '';
+    document.getElementById('customTriviaA').value = '';
+    document.getElementById('customTriviaB').value = '';
+    document.getElementById('customTriviaC').value = '';
+    document.getElementById('customTriviaD').value = '';
+    document.getElementById('triviaCreatorForm').style.display = 'none';
+    alert('Question added! It will appear in future quizzes.');
 }
 
 // ============ CONTESTS SYSTEM ============
@@ -16706,8 +17085,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const el = (id) => document.getElementById(id);
             if (el('forumTotalThreads')) el('forumTotalThreads').textContent = totalThreads;
             if (el('forumTotalPosts')) el('forumTotalPosts').textContent = totalPosts;
-            const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
-            if (el('forumTotalMembers')) el('forumTotalMembers').textContent = Array.isArray(users) ? users.length : Object.keys(users).length;
 
             // Update breadcrumb
             document.getElementById('breadcrumbCategory').innerHTML = '';

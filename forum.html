@@ -535,7 +535,6 @@
         <div class="stats-bar">
             <div><strong id="statThreads">0</strong> Threads</div>
             <div><strong id="statPosts">0</strong> Posts</div>
-            <div><strong id="statMembers">0</strong> Members</div>
         </div>
 
         <div class="search-row">
@@ -651,15 +650,21 @@ function getCurrentUserId() {
 // CATEGORIES (static, matching ForumsSystem)
 // ================================================================
 var CATEGORIES = [
-    { id: 'general',       name: 'General Discussion',  description: 'Talk about anything sports betting related',                        icon: '💬', group: 'main' },
-    { id: 'gameday',       name: 'Game Day Chat',       description: 'Live game discussion, reactions, and in-play bets',                 icon: '🏟️', group: 'main' },
-    { id: 'strategy',      name: 'Strategy & Analysis', description: 'Handicapping methods, systems, bankroll management, and analytics', icon: '📊', group: 'main' },
-    { id: 'props',         name: 'Props & Parlays',     description: 'Player props, same-game parlays, and creative bets',                icon: '🎯', group: 'main' },
-    { id: 'news',          name: 'News & Updates',      description: 'Breaking news, injuries, line moves, and market updates',           icon: '📰', group: 'main' }
+    { id: 'nfl',      name: 'NFL',     description: 'National Football League discussion',    icon: '🏈', group: 'sports' },
+    { id: 'nhl',      name: 'NHL',     description: 'National Hockey League discussion',      icon: '🏒', group: 'sports' },
+    { id: 'nba',      name: 'NBA',     description: 'National Basketball Association discussion', icon: '🏀', group: 'sports' },
+    { id: 'mlb',      name: 'MLB',     description: 'Major League Baseball discussion',       icon: '⚾', group: 'sports' },
+    { id: 'soccer',   name: 'Soccer',  description: 'Soccer and football worldwide',          icon: '⚽', group: 'sports' },
+    { id: 'tennis',   name: 'Tennis',  description: 'ATP, WTA, and Grand Slam discussion',    icon: '🎾', group: 'sports' },
+    { id: 'travel',   name: 'Travel',  description: 'Travel tips, destinations, and stories', icon: '✈️', group: 'other' },
+    { id: 'food',     name: 'Food',    description: 'Restaurants, recipes, and food culture', icon: '🍔', group: 'other' },
+    { id: 'history',  name: 'History', description: 'Historical events and discussion',       icon: '📜', group: 'other' },
+    { id: 'worldnews', name: 'World News', description: 'Current events and global news',     icon: '🌍', group: 'other' }
 ];
 
 var GROUPS = [
-    { id: 'main', name: 'FORUMS', icon: '🏆' }
+    { id: 'sports', name: 'SPORTS', icon: '🏆' },
+    { id: 'other',  name: 'OTHER TOPICS', icon: '💬' }
 ];
 
 // ================================================================
@@ -672,10 +677,7 @@ var KEY_VOTES   = 'trustmyrecord_forum_votes';
 function loadThreads() {
     var raw = localStorage.getItem(KEY_THREADS);
     if (raw) { try { return JSON.parse(raw); } catch(e) {} }
-    // Seed sample data
-    var samples = getSampleThreads();
-    localStorage.setItem(KEY_THREADS, JSON.stringify(samples));
-    return samples;
+    return [];
 }
 
 function saveThreads(threads) {
@@ -685,9 +687,7 @@ function saveThreads(threads) {
 function loadReplies() {
     var raw = localStorage.getItem(KEY_REPLIES);
     if (raw) { try { return JSON.parse(raw); } catch(e) {} }
-    var samples = getSampleReplies();
-    localStorage.setItem(KEY_REPLIES, JSON.stringify(samples));
-    return samples;
+    return [];
 }
 
 function saveReplies(replies) {
@@ -704,70 +704,7 @@ function saveVotes(votes) {
     localStorage.setItem(KEY_VOTES, JSON.stringify(votes));
 }
 
-// ================================================================
-// SAMPLE DATA
-// ================================================================
-function getSampleThreads() {
-    var now = Date.now();
-    return [
-        {
-            id: 'th_1', categoryId: 'general', title: 'Welcome to Trust My Record Forums!',
-            content: 'This is the official community forum. Share picks, discuss strategies, and connect with other bettors. Every pick is tracked and verified. Let\'s build a community of honest handicappers!',
-            author: 'SharpBettor', createdAt: new Date(now - 7*86400000).toISOString(),
-            views: 342, tags: ['welcome', 'community'], replyCount: 3,
-            lastActivityTime: new Date(now - 86400000).toISOString(),
-            isPinned: true, upvotes: 47, downvotes: 2
-        },
-        {
-            id: 'th_2', categoryId: 'gameday', title: 'NBA Slate Tonight - Who\'s Everyone On?',
-            content: 'Big slate tonight with 12 games. I really like the Celtics at home and the under in the Nuggets game. The Nuggets have played 4 games in 6 days and their pace is way down. What are you all looking at?',
-            author: 'HoopsMaster', createdAt: new Date(now - 2*86400000).toISOString(),
-            views: 156, tags: ['nba', 'picks'], replyCount: 2,
-            lastActivityTime: new Date(now - 3*3600000).toISOString(),
-            isPinned: false, upvotes: 28, downvotes: 3
-        },
-        {
-            id: 'th_3', categoryId: 'strategy', title: 'Bankroll Management 101 - The Key to Long-Term Success',
-            content: 'Never bet more than 2-3% per play. Use flat betting until you have 6+ months of tracked results. The goal is sustainable profits, not one big night. I\'ve been doing this for 8 years and the number one reason people go broke is poor bankroll management, not bad picks.',
-            author: 'BankrollKing', createdAt: new Date(now - 10*86400000).toISOString(),
-            views: 412, tags: ['bankroll', 'strategy', 'beginner'], replyCount: 2,
-            lastActivityTime: new Date(now - 2*86400000).toISOString(),
-            isPinned: false, upvotes: 89, downvotes: 1
-        },
-        {
-            id: 'th_4', categoryId: 'props', title: 'Best Player Props Process - How I Find Value',
-            content: 'My process for player props:\n1. Check the matchup (opponent defensive rankings vs. position)\n2. Look at recent usage rate and minutes trends\n3. Compare the line to my projected number\n4. Only bet when I see 10%+ edge\n\nLine shopping across 4+ books is essential. The difference between DraftKings and FanDuel on the same prop can be massive.',
-            author: 'ValueFinder', createdAt: new Date(now - 3*86400000).toISOString(),
-            views: 567, tags: ['props', 'process', 'strategy'], replyCount: 2,
-            lastActivityTime: new Date(now - 6*3600000).toISOString(),
-            isPinned: false, upvotes: 112, downvotes: 8
-        },
-        {
-            id: 'th_5', categoryId: 'news', title: 'NFL Injury Report Tracker - Week 15 Updates',
-            content: 'Keeping a running thread for Week 15 injury updates as they come in. Will update throughout the week. Check back before lock for the latest.\n\nKey injuries to monitor:\n- Multiple starting QBs questionable\n- Several RB1s dealing with ankle issues\n- Weather concerns for outdoor games',
-            author: 'GridironGuru', createdAt: new Date(now - 86400000).toISOString(),
-            views: 203, tags: ['nfl', 'injuries', 'news'], replyCount: 1,
-            lastActivityTime: new Date(now - 4*3600000).toISOString(),
-            isPinned: false, upvotes: 34, downvotes: 0
-        }
-    ];
-}
-
-function getSampleReplies() {
-    var now = Date.now();
-    return [
-        { id: 'rp_1', threadId: 'th_1', content: 'Love this platform! Finally a place where everyone\'s record is transparent. No more fake gurus.', author: 'GridironGuru', createdAt: new Date(now - 6*86400000).toISOString(), parentId: null, upvotes: 12, downvotes: 0 },
-        { id: 'rp_2', threadId: 'th_1', content: 'The verified record feature is a game changer. Looking forward to seeing how the community grows.', author: 'HoopsMaster', createdAt: new Date(now - 5*86400000).toISOString(), parentId: null, upvotes: 8, downvotes: 0 },
-        { id: 'rp_3', threadId: 'th_1', content: 'Agreed. Transparency is everything in this space. Too many scammers out there selling garbage picks.', author: 'ValueFinder', createdAt: new Date(now - 86400000).toISOString(), parentId: null, upvotes: 15, downvotes: 1 },
-        { id: 'rp_4', threadId: 'th_2', content: 'Celtics at home is solid. I\'m also looking at the under in the Pacers game. Both teams on a back-to-back.', author: 'BankrollKing', createdAt: new Date(now - 12*3600000).toISOString(), parentId: null, upvotes: 6, downvotes: 1 },
-        { id: 'rp_5', threadId: 'th_2', content: 'Nuggets under is my favorite play on the board. Their defense has been elite at home this month.', author: 'SharpBettor', createdAt: new Date(now - 3*3600000).toISOString(), parentId: null, upvotes: 9, downvotes: 0 },
-        { id: 'rp_6', threadId: 'th_3', content: 'The back-to-back fade is my bread and butter. Especially in the second half of the season when fatigue sets in.', author: 'HoopsMaster', createdAt: new Date(now - 4*86400000).toISOString(), parentId: null, upvotes: 18, downvotes: 0 },
-        { id: 'rp_7', threadId: 'th_3', content: 'What percentage of your bankroll do you typically risk per unit? I\'ve been doing 1% and it feels too conservative.', author: 'GridironGuru', createdAt: new Date(now - 2*86400000).toISOString(), parentId: null, upvotes: 4, downvotes: 0 },
-        { id: 'rp_8', threadId: 'th_4', content: 'Congrats on the process. What books are you using for line shopping? I mainly stick to DK and FD.', author: 'SharpBettor', createdAt: new Date(now - 2*86400000).toISOString(), parentId: null, upvotes: 5, downvotes: 0 },
-        { id: 'rp_9', threadId: 'th_4', content: 'DK, FD, Caesars, and BetMGM. Sometimes Pinnacle for the sharpest lines. Line shopping alone adds 2-3 units/month.', author: 'ValueFinder', createdAt: new Date(now - 6*3600000).toISOString(), parentId: 'rp_8', upvotes: 22, downvotes: 0 },
-        { id: 'rp_10', threadId: 'th_5', content: 'Thanks for keeping this updated. Weather in Green Bay is going to be brutal this weekend, keep an eye on the under there.', author: 'BankrollKing', createdAt: new Date(now - 4*3600000).toISOString(), parentId: null, upvotes: 7, downvotes: 0 }
-    ];
-}
+// No sample data - forum starts empty until real users post
 
 // ================================================================
 // STATE
@@ -925,11 +862,8 @@ function renderCategories() {
     container.innerHTML = html;
 
     // Stats
-    var users = [];
-    try { users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]'); } catch(e) {}
     document.getElementById('statThreads').textContent = totalThreads;
     document.getElementById('statPosts').textContent = totalPosts;
-    document.getElementById('statMembers').textContent = Array.isArray(users) ? users.length : 0;
 }
 
 // ================================================================
