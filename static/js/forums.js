@@ -14,76 +14,17 @@ class ForumsSystem {
      */
     initializeCategories() {
         return [
-            {
-                id: 'general',
-                name: 'General Discussion',
-                description: 'General sports betting talk, strategies, and discussions',
-                icon: '💬',
-                color: 'var(--neon-cyan)'
-            },
-            {
-                id: 'picks',
-                name: 'Pick Analysis',
-                description: 'Discuss specific picks, matchups, and betting opportunities',
-                icon: '🎯',
-                color: 'var(--neon-gold)'
-            },
-            {
-                id: 'nfl',
-                name: 'NFL',
-                description: 'All things NFL betting',
-                icon: '🏈',
-                color: 'var(--neon-green)'
-            },
-            {
-                id: 'nba',
-                name: 'NBA',
-                description: 'Basketball betting discussion',
-                icon: '🏀',
-                color: 'var(--neon-purple)'
-            },
-            {
-                id: 'mlb',
-                name: 'MLB',
-                description: 'Baseball betting and analysis',
-                icon: '⚾',
-                color: 'var(--neon-cyan)'
-            },
-            {
-                id: 'nhl',
-                name: 'NHL',
-                description: 'Hockey betting talk',
-                icon: '🏒',
-                color: 'var(--neon-cyan)'
-            },
-            {
-                id: 'soccer',
-                name: 'Soccer',
-                description: 'Soccer/Football betting worldwide',
-                icon: '⚽',
-                color: 'var(--neon-green)'
-            },
-            {
-                id: 'strategies',
-                name: 'Strategies & Systems',
-                description: 'Betting strategies, bankroll management, and systems',
-                icon: '📊',
-                color: 'var(--neon-gold)'
-            },
-            {
-                id: 'tools',
-                name: 'Tools & Resources',
-                description: 'Betting tools, data sources, and helpful resources',
-                icon: '🔧',
-                color: 'var(--neon-purple)'
-            },
-            {
-                id: 'newbies',
-                name: 'Newbie Corner',
-                description: 'Questions and help for new bettors',
-                icon: '🆕',
-                color: 'var(--neon-cyan)'
-            }
+            { id: 'nfl', name: 'NFL Betting', description: 'NFL handicapping discussion, game analysis, spreads, totals, and player props', icon: '🏈', color: '#013369', group: 'sports' },
+            { id: 'nba', name: 'NBA Betting', description: 'NBA matchups, player props, system plays, and betting angles', icon: '🏀', color: '#C9082A', group: 'sports' },
+            { id: 'mlb', name: 'MLB Betting', description: 'Baseball betting, run lines, totals, player props, and advanced analytics', icon: '⚾', color: '#002D72', group: 'sports' },
+            { id: 'nhl', name: 'NHL Betting', description: 'Hockey betting, puck lines, totals, goalie matchups, and playoff action', icon: '🏒', color: '#A2AAAD', group: 'sports' },
+            { id: 'soccer', name: 'Soccer Betting', description: 'Premier League, La Liga, Champions League, MLS, and worldwide football betting', icon: '⚽', color: '#00A651', group: 'sports' },
+            { id: 'tennis', name: 'Tennis Betting', description: 'ATP, WTA, Grand Slams, match betting, sets, and tournament futures', icon: '🎾', color: '#CFB53B', group: 'sports' },
+            { id: 'international', name: 'International Sports', description: 'Rugby, cricket, F1, boxing, MMA, golf, and more from around the world', icon: '🌍', color: '#2196F3', group: 'sports' },
+            { id: 'handicappers', name: "Handicapper's Corner", description: 'Discuss betting systems, strategies, bankroll management, and handicapping methods', icon: '📊', color: '#FF9800', group: 'strategy' },
+            { id: 'food', name: 'Food & Drink', description: 'Restaurant reviews, recipes, cooking tips, and food culture', icon: '🍔', color: '#E91E63', group: 'offtopic' },
+            { id: 'travel', name: 'Travel', description: 'Travel destinations, tips, stories, and recommendations', icon: '✈️', color: '#00BCD4', group: 'offtopic' },
+            { id: 'history', name: 'History', description: 'Historical discussions, debates, and fascinating stories from the past', icon: '📚', color: '#795548', group: 'offtopic' }
         ];
     }
 
@@ -424,7 +365,7 @@ class ForumsSystem {
         // Initialize with sample threads
         const sampleThreads = [
             {
-                id: 'thread_sample_1', categoryId: 'general', authorId: 'user_sample_1', authorUsername: 'SharpBettor',
+                id: 'thread_sample_1', categoryId: 'handicappers', authorId: 'user_sample_1', authorUsername: 'SharpBettor',
                 authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sharp',
                 title: 'Welcome to Trust My Record Forums!',
                 content: 'This is the official community forum. Share picks, discuss strategies, and connect with other bettors. Every pick is tracked and verified. Let's build a community of honest handicappers!',
@@ -454,7 +395,7 @@ class ForumsSystem {
                 views: 289, replyCount: 31, isPinned: false, isLocked: false, upvotes: 52, downvotes: 4
             },
             {
-                id: 'thread_sample_4', categoryId: 'strategies', authorId: 'user_sample_4', authorUsername: 'BankrollKing',
+                id: 'thread_sample_4', categoryId: 'handicappers', authorId: 'user_sample_4', authorUsername: 'BankrollKing',
                 authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=bank',
                 title: 'Bankroll Management 101 - The Key to Long-Term Success',
                 content: 'Never bet more than 2-3% per play. Use flat betting until 6+ months tracked. The goal is sustainable profits.',
@@ -464,7 +405,7 @@ class ForumsSystem {
                 views: 412, replyCount: 18, isPinned: false, isLocked: false, upvotes: 89, downvotes: 1
             },
             {
-                id: 'thread_sample_5', categoryId: 'picks', authorId: 'user_sample_5', authorUsername: 'ValueFinder',
+                id: 'thread_sample_5', categoryId: 'handicappers', authorId: 'user_sample_5', authorUsername: 'ValueFinder',
                 authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=value',
                 title: 'How I'm up 45 units this month - Process breakdown',
                 content: 'Line shopping, waiting for my number, heavy on player props, fading public on primetime. Verified record: 67-41 (+45.2u)',
@@ -549,6 +490,17 @@ class ForumsSystem {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
     }
 }
+
+// Clear old forum data if categories changed (v2 = new categories with groups)
+(function() {
+    const FORUM_VERSION = 'v2_groups';
+    if (localStorage.getItem('tmr_forum_version') !== FORUM_VERSION) {
+        localStorage.removeItem('trustmyrecord_threads');
+        localStorage.removeItem('trustmyrecord_replies');
+        localStorage.removeItem('trustmyrecord_forum_votes');
+        localStorage.setItem('tmr_forum_version', FORUM_VERSION);
+    }
+})();
 
 // Initialize forums system
 const forums = new ForumsSystem();

@@ -52,14 +52,15 @@ async function handleLogin(event) {
         const modal = document.getElementById('loginModal');
         if (modal) modal.style.display = 'none';
         
-        // Show profile section
-        console.log('[TMR] Calling showSection(profile)...');
-        if (typeof showSection === 'function') {
-            showSection('profile');
-        } else {
-            console.warn('[TMR] showSection not found');
+        // Navigate to profile within SPA
+        console.log('[TMR] Navigating to profile...');
+        if (typeof window.showSection === 'function') {
+            window.showSection('profile');
         }
-        
+        // Update nav UI
+        if (typeof updateHeaderAuthButtons === 'function') updateHeaderAuthButtons();
+        if (typeof updateProfileLink === 'function') updateProfileLink();
+
         console.log('[TMR] ==================== LOGIN COMPLETE ====================');
         
     } catch (error) {
@@ -111,10 +112,13 @@ async function handleSignup(event) {
         const modal = document.getElementById('signupModal');
         if (modal) modal.style.display = 'none';
         
-        if (typeof showSection === 'function') {
-            showSection('profile');
+        // Navigate to profile within SPA
+        if (typeof window.showSection === 'function') {
+            window.showSection('profile');
         }
-        
+        if (typeof updateHeaderAuthButtons === 'function') updateHeaderAuthButtons();
+        if (typeof updateProfileLink === 'function') updateProfileLink();
+
         console.log('[TMR] ==================== SIGNUP COMPLETE ====================');
         
     } catch (error) {
