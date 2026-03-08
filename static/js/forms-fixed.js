@@ -35,23 +35,41 @@ async function handleLogin(event) {
         
         // Attempt login
         console.log('[TMR] Calling auth.login...');
-        const user = auth.login(email, password, rememberMe);
-        console.log('[TMR] auth.login returned:', user);
-        
+        let result = auth.login(email, password, rememberMe);
+        // Handle both sync and async login
+        if (result && typeof result.then === 'function') {
+            result = await result;
+        }
+        console.log('[TMR] auth.login returned:', result);
+
+        // Check result format (some return {success, user}, some return user directly)
+        var user = null;
+        if (result && result.success === false) {
+            throw new Error(result.error || 'Invalid credentials');
+        } else if (result && result.user) {
+            user = result.user;
+        } else if (result && result.username) {
+            user = result;
+        }
+
         if (!user) {
             throw new Error('Login returned no user');
         }
-        
+
+        // Ensure tmr_* keys are set (belt and suspenders)
+        localStorage.setItem('tmr_is_logged_in', 'true');
+        localStorage.setItem('tmr_current_user', JSON.stringify(user));
+
         console.log('[TMR] Login successful for:', user.username);
-        
+
         // Reset form
         const loginForm = document.getElementById('loginForm');
         if (loginForm) loginForm.reset();
-        
+
         // Close modal
         const modal = document.getElementById('loginModal');
         if (modal) modal.style.display = 'none';
-        
+
         // Navigate to profile within SPA
         console.log('[TMR] Navigating to profile...');
         if (typeof window.showSection === 'function') {
@@ -101,17 +119,33 @@ async function handleSignup(event) {
         }
         
         console.log('[TMR] Calling auth.register...');
-        const user = auth.register(username, email, password, true);
-        console.log('[TMR] auth.register returned:', user);
-        
+        let result = auth.register(username, email, password);
+        // Handle both sync and async register
+        if (result && typeof result.then === 'function') {
+            result = await result;
+        }
+        console.log('[TMR] auth.register returned:', result);
+
+        if (result && result.success === false) {
+            throw new Error(result.error || 'Registration failed');
+        }
+
+        // Ensure tmr_* keys are set (belt and suspenders)
+        localStorage.setItem('tmr_is_logged_in', 'true');
+        if (result && result.user) {
+            localStorage.setItem('tmr_current_user', JSON.stringify(result.user));
+        } else {
+            localStorage.setItem('tmr_current_user', JSON.stringify({ username: username, email: email }));
+        }
+
         alert('Account created successfully! You are now logged in.');
-        
+
         const signupForm = document.getElementById('signupForm');
         if (signupForm) signupForm.reset();
-        
+
         const modal = document.getElementById('signupModal');
         if (modal) modal.style.display = 'none';
-        
+
         // Navigate to profile within SPA
         if (typeof window.showSection === 'function') {
             window.showSection('profile');

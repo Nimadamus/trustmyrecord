@@ -791,8 +791,12 @@
         var statsBar = document.getElementById('picksStatsBar');
         if (!container) return;
 
-        // Must be logged in
-        if (!window.auth || !window.auth.isLoggedIn()) {
+        // Must be logged in (check both auth key formats)
+        var loggedIn = false;
+        if (window.auth && typeof window.auth.isLoggedIn === 'function') loggedIn = window.auth.isLoggedIn();
+        if (!loggedIn && localStorage.getItem('tmr_is_logged_in') === 'true') loggedIn = true;
+        if (!loggedIn && localStorage.getItem('trustmyrecord_session') !== null) loggedIn = true;
+        if (!loggedIn) {
             container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);"><div style="font-size:48px;margin-bottom:15px;">&#128274;</div><p>Please log in to view your picks.</p></div>';
             if (statsBar) statsBar.innerHTML = '';
             return;
@@ -802,7 +806,10 @@
         try { picks = JSON.parse(localStorage.getItem('tmr_picks') || '[]'); } catch(e) { picks = []; }
 
         // Filter to current user's picks
-        var user = window.auth.getCurrentUser();
+        var user = null;
+        try { user = window.auth && window.auth.getCurrentUser ? window.auth.getCurrentUser() : null; } catch(e) {}
+        if (!user) { try { user = JSON.parse(localStorage.getItem('tmr_current_user') || 'null'); } catch(e) {} }
+        user = user || { username: 'local', id: 'local' };
         var userId = user.username || user.id || 'local';
         picks = picks.filter(function(p) { return p.user_id === userId; });
 
@@ -932,11 +939,13 @@
     };
 
     // Fetch scores for a sport from ESPN (includes completed games)
-    window.TMR.fetchScoresFromESPN = function(sportPath) {
-        return fetch('https://site.api.espn.com/apis/site/v2/sports/' + sportPath + '/scoreboard')
+    window.TMR.fetchScoresForDate = function(sportPath, dateStr) {
+        var url = 'https://site.api.espn.com/apis/site/v2/sports/' + sportPath + '/scoreboard';
+        if (dateStr) url += '?dates=' + dateStr;
+        return fetch(url)
             .then(function(r) { return r.ok ? r.json() : { events: [] }; })
             .then(function(data) {
-                var scoreMap = {}; // espn_eventId -> { homeScore, awayScore, completed }
+                var scoreMap = {};
                 var events = data.events || [];
                 for (var i = 0; i < events.length; i++) {
                     var evt = events[i];
@@ -961,6 +970,44 @@
             .catch(function() { return {}; });
     };
 
+    // Fetch scores for today + past days (covers picks from previous days)
+    window.TMR.fetchScoresFromESPN = function(sportPath, pendingPicks) {
+        // Collect unique dates we need to check (today + dates of pending picks)
+        var datesToCheck = {};
+        var today = new Date();
+        var todayStr = today.toISOString().split('T')[0].replace(/-/g, '');
+        datesToCheck[todayStr] = true;
+
+        if (pendingPicks && pendingPicks.length > 0) {
+            pendingPicks.forEach(function(p) {
+                if (p.commence_time) {
+                    try {
+                        var d = new Date(p.commence_time);
+                        if (!isNaN(d.getTime())) {
+                            var ds = d.toISOString().split('T')[0].replace(/-/g, '');
+                            // Only check up to 14 days back
+                            var diffDays = (today - d) / (1000 * 60 * 60 * 24);
+                            if (diffDays >= 0 && diffDays <= 14) datesToCheck[ds] = true;
+                        }
+                    } catch(e) {}
+                }
+            });
+        }
+
+        var dateList = Object.keys(datesToCheck);
+        console.log('[TMR] Fetching scores for dates:', dateList);
+
+        var promises = dateList.map(function(ds) {
+            return window.TMR.fetchScoresForDate(sportPath, ds);
+        });
+
+        return Promise.all(promises).then(function(results) {
+            var merged = {};
+            results.forEach(function(scoreMap) { Object.assign(merged, scoreMap); });
+            return merged;
+        });
+    };
+
     // Main auto-grade function: checks all pending picks against ESPN scores
     window.autoGradeAll = async function() {
         var statusEl = document.getElementById('gradeStatusMsg');
@@ -977,22 +1024,25 @@
             return;
         }
 
-        // Collect unique sport paths needed
+        // Collect unique sport paths needed and group pending picks by sport
         var sportKeyToPath = {
             'americanfootball_nfl': 'football/nfl', 'basketball_nba': 'basketball/nba',
             'icehockey_nhl': 'hockey/nhl', 'baseball_mlb': 'baseball/mlb',
             'americanfootball_ncaaf': 'football/college-football', 'basketball_ncaab': 'basketball/mens-college-basketball'
         };
-        var neededPaths = {};
+        var picksBySport = {};
         pendingPicks.forEach(function(p) {
             var path = sportKeyToPath[p.sport_key];
-            if (path) neededPaths[path] = true;
+            if (path) {
+                if (!picksBySport[path]) picksBySport[path] = [];
+                picksBySport[path].push(p);
+            }
         });
 
-        // Fetch scores for each needed sport in parallel
+        // Fetch scores for each needed sport (checks today + dates of pending picks)
         var allScores = {};
-        var fetchPromises = Object.keys(neededPaths).map(function(path) {
-            return window.TMR.fetchScoresFromESPN(path).then(function(scores) {
+        var fetchPromises = Object.keys(picksBySport).map(function(path) {
+            return window.TMR.fetchScoresFromESPN(path, picksBySport[path]).then(function(scores) {
                 Object.assign(allScores, scores);
             });
         });
@@ -1032,12 +1082,19 @@
         // Save updated picks back
         localStorage.setItem('tmr_picks', JSON.stringify(allPicks));
 
+        // Invalidate cached picks so profile stats recalculate
+        window._cachedBackendPicks = null;
+
         if (statusEl) statusEl.textContent = gradedCount > 0 ? 'Graded ' + gradedCount + ' pick(s)!' : 'No completed games found for pending picks.';
         console.log('[TMR] Auto-grade complete: ' + gradedCount + ' picks graded.');
 
         // Refresh UI
         if (typeof window.renderPicksList === 'function') window.renderPicksList();
         if (typeof window.loadMyPicks === 'function') window.loadMyPicks(window.currentPicksTab || 'pending');
+        // Refresh profile stats if on profile page
+        if (typeof window.loadUserProfile === 'function') {
+            try { window.loadUserProfile(); } catch(e) {}
+        }
     };
     window.tryAutoGradeAll = window.autoGradeAll;
 
@@ -14882,8 +14939,13 @@ function loadUserProfile() {
     // Merge auth user data with profile data for complete picture
     var profile = JSON.parse(localStorage.getItem('trustMyRecordProfile') || '{}');
     var authUser = null;
-    if (window.auth && window.auth.isLoggedIn()) {
-        authUser = window.auth.getCurrentUser();
+    var isLoggedIn = false;
+    if (window.auth && typeof window.auth.isLoggedIn === 'function') isLoggedIn = window.auth.isLoggedIn();
+    if (!isLoggedIn && localStorage.getItem('tmr_is_logged_in') === 'true') isLoggedIn = true;
+    if (!isLoggedIn && localStorage.getItem('trustmyrecord_session') !== null) isLoggedIn = true;
+    if (isLoggedIn) {
+        try { authUser = window.auth && window.auth.getCurrentUser ? window.auth.getCurrentUser() : null; } catch(e) {}
+        if (!authUser) { try { authUser = JSON.parse(localStorage.getItem('tmr_current_user') || 'null'); } catch(e) {} }
     }
 
     // Auth user takes priority, then profile, then defaults
@@ -15628,8 +15690,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!window._cachedBackendPicks) {
                 try {
                     var allPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
-                    var user = window.auth ? window.auth.getCurrentUser() : null;
-                    var userId = user ? (user.username || user.id || 'local') : 'local';
+                    var user = null;
+                    try { user = window.auth && window.auth.getCurrentUser ? window.auth.getCurrentUser() : null; } catch(e) {}
+                    if (!user) { try { user = JSON.parse(localStorage.getItem('tmr_current_user') || 'null'); } catch(e) {} }
+                    user = user || { username: 'local', id: 'local' };
+                    var userId = user.username || user.id || 'local';
                     window._cachedBackendPicks = allPicks.filter(function(p) { return p.user_id === userId; });
                 } catch (e) {
                     window._cachedBackendPicks = [];
@@ -19427,14 +19492,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('myPicksList');
         if (!container) return;
 
-        // Check login via localStorage auth
-        if (!window.auth || !window.auth.isLoggedIn()) {
+        // Check login via localStorage auth (supports both session key formats)
+        let loggedIn = false;
+        if (window.auth && typeof window.auth.isLoggedIn === 'function') loggedIn = window.auth.isLoggedIn();
+        if (!loggedIn && localStorage.getItem('tmr_is_logged_in') === 'true') loggedIn = true;
+        if (!loggedIn && localStorage.getItem('trustmyrecord_session') !== null) loggedIn = true;
+        if (!loggedIn) {
             container.innerHTML = `
                 <div style="text-align: center; padding: 40px; color: #6c7380;">
                     <div style="font-size: 48px; margin-bottom: 16px;">&#128274;</div>
                     <h3 style="color: #fff; margin-bottom: 10px;">Login Required</h3>
                     <p>Please log in to view your picks.</p>
-                    <button onclick="openLoginModal()" style="margin-top: 20px; background: linear-gradient(135deg, #00ffff, #0088cc); border: none; padding: 12px 24px; border-radius: 8px; color: #000; font-weight: 700; cursor: pointer;">
+                    <button onclick="document.getElementById('loginModal').style.display='flex'" style="margin-top: 20px; background: linear-gradient(135deg, #00ffff, #0088cc); border: none; padding: 12px 24px; border-radius: 8px; color: #000; font-weight: 700; cursor: pointer;">
                         Log In
                     </button>
                 </div>`;
@@ -19450,8 +19519,11 @@ document.addEventListener('DOMContentLoaded', function() {
         let allUserPicks = [];
         try { allUserPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]'); } catch(e) { allUserPicks = []; }
 
-        // Filter to current user
-        const user = window.auth.getCurrentUser();
+        // Filter to current user (check both auth systems)
+        let user = null;
+        try { user = window.auth && window.auth.getCurrentUser ? window.auth.getCurrentUser() : null; } catch(e) {}
+        if (!user) { try { user = JSON.parse(localStorage.getItem('tmr_current_user') || 'null'); } catch(e) {} }
+        user = user || { username: 'local', id: 'local' };
         const userId = user.username || user.id || 'local';
         allUserPicks = allUserPicks.filter(p => p.user_id === userId);
 

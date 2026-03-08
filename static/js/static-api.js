@@ -361,11 +361,14 @@
             const user = users.find(u => u.email === email && u.password === password);
             if (user) {
                 setStorage(STORAGE_KEYS.SESSION, { userId: user.id, timestamp: Date.now() });
+                // Sync tmr_* keys for compatibility with inline auth
+                localStorage.setItem('tmr_is_logged_in', 'true');
+                localStorage.setItem('tmr_current_user', JSON.stringify(user));
                 return { success: true, user };
             }
             return { success: false, error: 'Invalid credentials' };
         },
-        
+
         async register(username, email, password) {
             let users = getStorage(STORAGE_KEYS.USERS);
             if (users.find(u => u.email === email)) {
@@ -391,11 +394,17 @@
             users.push(newUser);
             setStorage(STORAGE_KEYS.USERS, users);
             setStorage(STORAGE_KEYS.SESSION, { userId: newUser.id, timestamp: Date.now() });
+            // Sync tmr_* keys for compatibility with inline auth
+            localStorage.setItem('tmr_is_logged_in', 'true');
+            localStorage.setItem('tmr_current_user', JSON.stringify(newUser));
             return { success: true, user: newUser };
         },
-        
+
         logout() {
             localStorage.removeItem(STORAGE_KEYS.SESSION);
+            // Sync tmr_* keys for compatibility
+            localStorage.removeItem('tmr_is_logged_in');
+            localStorage.removeItem('tmr_current_user');
         },
         
         // User methods
