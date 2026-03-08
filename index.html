@@ -46,6 +46,9 @@
             }
             if (!homeML && o.homeTeamOdds && o.homeTeamOdds.moneyLine) homeML = parseFloat(o.homeTeamOdds.moneyLine);
             if (!awayML && o.awayTeamOdds && o.awayTeamOdds.moneyLine) awayML = parseFloat(o.awayTeamOdds.moneyLine);
+            // Reject zero moneylines (ESPN sends 0 when odds are unavailable)
+            if (homeML === 0) homeML = null;
+            if (awayML === 0) awayML = null;
             if (homeML && awayML && !isNaN(homeML) && !isNaN(awayML)) {
                 markets.push({ key: 'h2h', outcomes: [
                     { name: homeTeam, price: homeML },
@@ -67,11 +70,11 @@
                     if (!isNaN(aso)) awaySpreadOdds = aso;
                 }
             }
-            if (homeLine == null && o.spread != null) {
+            if (homeLine == null && o.spread != null && parseFloat(o.spread) !== 0) {
                 homeLine = parseFloat(o.spread);
                 awayLine = -homeLine;
             }
-            if (homeLine != null && awayLine != null && !isNaN(homeLine) && !isNaN(awayLine)) {
+            if (homeLine != null && awayLine != null && !isNaN(homeLine) && !isNaN(awayLine) && (homeLine !== 0 || awayLine !== 0)) {
                 markets.push({ key: 'spreads', outcomes: [
                     { name: homeTeam, price: homeSpreadOdds, point: homeLine },
                     { name: awayTeam, price: awaySpreadOdds, point: awayLine }
@@ -98,8 +101,8 @@
                     }
                 }
             }
-            if (totalLine == null && o.overUnder != null) totalLine = parseFloat(o.overUnder);
-            if (totalLine != null && !isNaN(totalLine)) {
+            if (totalLine == null && o.overUnder != null && parseFloat(o.overUnder) !== 0) totalLine = parseFloat(o.overUnder);
+            if (totalLine != null && !isNaN(totalLine) && totalLine !== 0) {
                 markets.push({ key: 'totals', outcomes: [
                     { name: 'Over', price: overOdds, point: totalLine },
                     { name: 'Under', price: underOdds, point: totalLine }
@@ -162,6 +165,9 @@
                         if (status.completed === true) continue;
 
                         var bookmakers = window.TMR.parseEspnOdds(comp.odds || [], homeTeam, awayTeam);
+                        // Extract team records for fallback odds estimation
+                        var homeRecord = homeComp.records && homeComp.records[0] && homeComp.records[0].summary;
+                        var awayRecord = awayComp.records && awayComp.records[0] && awayComp.records[0].summary;
                         games.push({
                             id: 'espn_' + evt.id,
                             espn_event_id: evt.id,
@@ -170,7 +176,9 @@
                             home_team: homeTeam,
                             away_team: awayTeam,
                             commence_time: evt.date || comp.date,
-                            bookmakers: bookmakers
+                            bookmakers: bookmakers,
+                            home_record: homeRecord || '',
+                            away_record: awayRecord || ''
                         });
                     }
                     console.log('[TMR] PARSED GAMES: ' + games.length);
@@ -179,10 +187,12 @@
                     if (games.length === 0 && daysOffset < maxDays) {
                         tryFetch(daysOffset + 1);
                     } else {
-                        // Check if any games have odds - if not, try to fetch from summary endpoint
-                        var needsOdds = games.length > 0 && games.every(function(g) { return !g.bookmakers || g.bookmakers.length === 0; });
-                        if (needsOdds) {
-                            console.log('[TMR] No odds from scoreboard, fetching from summary endpoints...');
+                        // Always try summary/predictor for games missing odds
+                        var anyMissingOdds = games.some(function(g) {
+                            return !g.bookmakers || g.bookmakers.length === 0 || !g.bookmakers[0].markets || g.bookmakers[0].markets.length === 0;
+                        });
+                        if (anyMissingOdds && games.length > 0) {
+                            console.log('[TMR] Some/all games missing odds, fetching from summary endpoints...');
                             window.TMR.fetchOddsFromSummary(games, espnPath, function(enrichedGames) {
                                 callback(enrichedGames, daysOffset > 0 ? daysOffset : null);
                             });
@@ -210,26 +220,147 @@
         var total = games.length;
         if (total === 0) { callback(games); return; }
 
+        // Convert win probability % to American moneyline
+        var toML = function(pct) {
+            var p = pct / 100;
+            if (p <= 0.01) return 10000;
+            if (p >= 0.99) return -10000;
+            if (p >= 0.5) return Math.round(-100 * p / (1 - p));
+            return Math.round(100 * (1 - p) / p);
+        };
+
+        // Sport-specific spread/total defaults
+        var spreadFactor = (espnPath.indexOf('basketball') !== -1) ? 2.5 : (espnPath.indexOf('football') !== -1 ? 2.0 : 3.0);
+        var defaultTotal = 220;
+        if (espnPath.indexOf('hockey') !== -1) { defaultTotal = 6; spreadFactor = 3.5; }
+        else if (espnPath.indexOf('basketball') !== -1 && espnPath.indexOf('college') !== -1) defaultTotal = 145;
+        else if (espnPath.indexOf('football') !== -1 && espnPath.indexOf('college') !== -1) defaultTotal = 52;
+        else if (espnPath.indexOf('football') !== -1) defaultTotal = 45;
+
         games.forEach(function(game) {
             var eventId = game.espn_event_id;
-            if (!eventId) { completed++; if (completed >= total) callback(games); return; }
+            // Skip games that already have real odds from scoreboard
+            var alreadyHasOdds = game.bookmakers && game.bookmakers.length > 0 && game.bookmakers[0].markets && game.bookmakers[0].markets.length > 0;
+            if (!eventId || alreadyHasOdds) { completed++; if (completed >= total) callback(games); return; }
 
             var summaryUrl = 'https://site.api.espn.com/apis/site/v2/sports/' + espnPath + '/summary?event=' + eventId;
             fetch(summaryUrl)
                 .then(function(r) { return r.ok ? r.json() : null; })
                 .then(function(data) {
                     if (!data) return;
-                    // Try pickcenter first, then odds
+                    // Try pickcenter first (real odds)
                     var oddsArray = data.pickcenter || data.odds || [];
                     if (oddsArray.length > 0) {
                         var bookmakers = window.TMR.parseEspnOdds(oddsArray, game.home_team, game.away_team);
                         if (bookmakers.length > 0) {
                             game.bookmakers = bookmakers;
-                            console.log('[TMR] Got odds from summary for: ' + game.away_team + ' @ ' + game.home_team);
+                            console.log('[TMR] Got real odds from summary for: ' + game.away_team + ' @ ' + game.home_team);
+                            return;
                         }
                     }
+                    // Fallback: ESPN Predictor win probabilities
+                    var pred = data.predictor;
+                    if (pred && pred.homeTeam && pred.awayTeam) {
+                        var homeProj = parseFloat(pred.homeTeam.gameProjection);
+                        var awayProj = parseFloat(pred.awayTeam.gameProjection);
+                        if (!isNaN(homeProj) && !isNaN(awayProj) && (homeProj + awayProj) > 10) {
+                            var homeMLVal = toML(homeProj);
+                            var awayMLVal = toML(awayProj);
+                            var rawSpread = -((homeProj - 50) / spreadFactor);
+                            var homeSpreadVal = Math.round(rawSpread * 2) / 2;
+                            var awaySpreadVal = -homeSpreadVal;
+                            game.estimatedOdds = true;
+                            game.bookmakers = [{
+                                key: 'espn_predictor',
+                                title: 'ESPN Predictor',
+                                markets: [
+                                    { key: 'spreads', outcomes: [
+                                        { name: game.home_team, point: homeSpreadVal, price: -110 },
+                                        { name: game.away_team, point: awaySpreadVal, price: -110 }
+                                    ]},
+                                    { key: 'h2h', outcomes: [
+                                        { name: game.home_team, price: homeMLVal },
+                                        { name: game.away_team, price: awayMLVal }
+                                    ]},
+                                    { key: 'totals', outcomes: [
+                                        { name: 'Over', point: defaultTotal, price: -110 },
+                                        { name: 'Under', point: defaultTotal, price: -110 }
+                                    ]}
+                                ]
+                            }];
+                            console.log('[TMR] Generated odds from predictor for: ' + game.away_team + ' @ ' + game.home_team + ' (home ' + homeProj + '%, ML ' + homeMLVal + ', spread ' + homeSpreadVal + ')');
+                            return;
+                        }
+                    }
+                    // Final fallback: estimate from team records
+                    if ((!game.bookmakers || game.bookmakers.length === 0) && game.home_record && game.away_record) {
+                        var parseRecord = function(rec) {
+                            var parts = rec.split('-');
+                            var w = parseInt(parts[0]) || 0;
+                            var l = parseInt(parts[1]) || 0;
+                            var otl = parseInt(parts[2]) || 0;
+                            var total = w + l + otl;
+                            return total > 0 ? (w + otl * 0.5) / total : 0.5;
+                        };
+                        var homeWinPct = parseRecord(game.home_record);
+                        var awayWinPct = parseRecord(game.away_record);
+                        // Blend with home advantage (add ~4% to home)
+                        var homeAdv = 0.04;
+                        var rawHome = (homeWinPct + homeAdv) / ((homeWinPct + homeAdv) + awayWinPct);
+                        var homePct = Math.max(0.15, Math.min(0.85, rawHome)) * 100;
+                        var awayPct = 100 - homePct;
+                        var recHomeML = toML(homePct);
+                        var recAwayML = toML(awayPct);
+                        var recSpread = -((homePct - 50) / spreadFactor);
+                        var recHomeSpread = Math.round(recSpread * 2) / 2;
+                        game.estimatedOdds = true;
+                        game.bookmakers = [{
+                            key: 'record_estimate',
+                            title: 'Estimated',
+                            markets: [
+                                { key: 'spreads', outcomes: [
+                                    { name: game.home_team, point: recHomeSpread, price: -110 },
+                                    { name: game.away_team, point: -recHomeSpread, price: -110 }
+                                ]},
+                                { key: 'h2h', outcomes: [
+                                    { name: game.home_team, price: recHomeML },
+                                    { name: game.away_team, price: recAwayML }
+                                ]},
+                                { key: 'totals', outcomes: [
+                                    { name: 'Over', point: defaultTotal, price: -110 },
+                                    { name: 'Under', point: defaultTotal, price: -110 }
+                                ]}
+                            ]
+                        }];
+                        console.log('[TMR] Generated odds from records for: ' + game.away_team + ' @ ' + game.home_team + ' (home ' + homePct.toFixed(1) + '%)');
+                    }
                 })
-                .catch(function(e) { console.warn('[TMR] Summary fetch failed for event ' + eventId, e); })
+                .catch(function(e) {
+                    console.warn('[TMR] Summary fetch failed for event ' + eventId, e);
+                    // Apply record-based fallback even on fetch failure
+                    if ((!game.bookmakers || game.bookmakers.length === 0) && game.home_record && game.away_record) {
+                        var parseRec = function(rec) {
+                            var parts = rec.split('-');
+                            var w = parseInt(parts[0]) || 0, l = parseInt(parts[1]) || 0, otl = parseInt(parts[2]) || 0;
+                            var t = w + l + otl;
+                            return t > 0 ? (w + otl * 0.5) / t : 0.5;
+                        };
+                        var hPct = parseRec(game.home_record), aPct = parseRec(game.away_record);
+                        var rawH = (hPct + 0.04) / ((hPct + 0.04) + aPct);
+                        var hp = Math.max(0.15, Math.min(0.85, rawH)) * 100;
+                        var ap = 100 - hp;
+                        var hSpd = Math.round(-((hp - 50) / spreadFactor) * 2) / 2;
+                        game.estimatedOdds = true;
+                        game.bookmakers = [{
+                            key: 'record_estimate', title: 'Estimated',
+                            markets: [
+                                { key: 'spreads', outcomes: [{ name: game.home_team, point: hSpd, price: -110 }, { name: game.away_team, point: -hSpd, price: -110 }]},
+                                { key: 'h2h', outcomes: [{ name: game.home_team, price: toML(hp) }, { name: game.away_team, price: toML(ap) }]},
+                                { key: 'totals', outcomes: [{ name: 'Over', point: defaultTotal, price: -110 }, { name: 'Under', point: defaultTotal, price: -110 }]}
+                            ]
+                        }];
+                    }
+                })
                 .finally(function() {
                     completed++;
                     if (completed >= total) callback(games);
@@ -328,9 +459,12 @@
             }
 
             var anyHasOdds = games.some(function(g) { return g.bookmakers && g.bookmakers.length > 0 && g.bookmakers[0].markets && g.bookmakers[0].markets.length > 0; });
+            var anyEstimated = games.some(function(g) { return g.estimatedOdds; });
             var html = '';
             if (!anyHasOdds) {
-                html += '<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;color:#f59e0b;font-size:14px;"><span style="font-size:20px;">&#128203;</span> Lines not yet available. Select a pick and enter your line from your sportsbook.</div>';
+                html += '<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;color:#f59e0b;font-size:14px;"><span style="font-size:20px;">&#128203;</span> Lines not yet available. Select a game and enter your line from your sportsbook.</div>';
+            } else if (anyEstimated) {
+                html += '<div style="background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.3);border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;color:#7dd3fc;font-size:14px;"><span style="font-size:20px;">&#9889;</span> Estimated lines shown. You can edit the line and odds after selecting a pick.</div>';
             }
             html += '<div class="market-headers"><div class="market-label">Matchup</div><div class="market-label">Spread</div><div class="market-label">Moneyline</div><div class="market-label">Total</div></div>';
             games.forEach(function(game, index) {
