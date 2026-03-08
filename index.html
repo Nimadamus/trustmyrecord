@@ -1624,8 +1624,33 @@
         /* Hero Section */
         .hero {
             text-align: center;
-            padding: 60px 20px;
+            padding: 80px 20px 60px;
             position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse 600px 400px at 50% 30%, rgba(0, 255, 255, 0.08) 0%, transparent 70%),
+                radial-gradient(ellipse 300px 300px at 20% 80%, rgba(245, 158, 11, 0.05) 0%, transparent 70%),
+                radial-gradient(ellipse 300px 300px at 80% 80%, rgba(14, 165, 233, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.4), rgba(245, 158, 11, 0.3), rgba(0, 255, 255, 0.4), transparent);
         }
 
         .hero h1 {
@@ -1637,21 +1662,25 @@
             line-height: 1.1;
             letter-spacing: 2px;
             text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.3), 0 0 30px rgba(0, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
+            animation: neon-flash 3s ease-in-out infinite alternate;
         }
 
         @keyframes neon-flash {
             0% {
                 text-shadow:
-                    0 0 3px #00ffff,
-                    0 0 6px #00ffff,
-                    0 0 9px #00ffff;
+                    0 0 5px rgba(0, 255, 255, 0.4),
+                    0 0 10px rgba(0, 255, 255, 0.2),
+                    0 0 20px rgba(0, 255, 255, 0.1);
             }
             100% {
                 text-shadow:
-                    0 0 5px #00ffff,
-                    0 0 10px #00ffff,
-                    0 0 15px #00ffff,
-                    0 0 20px #00ffff;
+                    0 0 10px rgba(0, 255, 255, 0.6),
+                    0 0 20px rgba(0, 255, 255, 0.3),
+                    0 0 40px rgba(0, 255, 255, 0.15),
+                    0 0 60px rgba(0, 255, 255, 0.05);
             }
         }
 
@@ -1664,6 +1693,74 @@
             margin-right: auto;
             line-height: 1.6;
             font-weight: 400;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-cta-row {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-cta-primary {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--dark-bg);
+            background: linear-gradient(135deg, #00ffff, #0ea5e9);
+            border: none;
+            padding: 14px 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-decoration: none;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.25);
+        }
+
+        .hero-cta-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(0, 255, 255, 0.4);
+        }
+
+        .hero-cta-secondary {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #00ffff;
+            background: transparent;
+            border: 1px solid rgba(0, 255, 255, 0.4);
+            padding: 14px 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .hero-cta-secondary:hover {
+            background: rgba(0, 255, 255, 0.08);
+            border-color: rgba(0, 255, 255, 0.7);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 500px) {
+            .hero-cta-row { flex-direction: column; align-items: center; }
+            .hero-cta-primary, .hero-cta-secondary { width: 100%; max-width: 280px; text-align: center; }
+        }
+
+        /* Section Accent Lines */
+        .home-section-accent {
+            height: 1px;
+            max-width: 200px;
+            margin: 0 auto 30px;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.3), transparent);
         }
 
         /* Page Banners */
@@ -2545,12 +2642,13 @@
         }
 
         .glass-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0, 255, 255, 0.2);
+            transform: translateY(-6px);
+            box-shadow: 0 15px 35px rgba(0, 255, 255, 0.15);
+            border-color: rgba(0, 255, 255, 0.3);
         }
 
         .glass-card:hover::before {
-            opacity: 0.2;
+            opacity: 0.15;
         }
 
         /* Sections */
@@ -2569,18 +2667,27 @@
             font-weight: 700;
             margin-bottom: 12px;
             color: var(--text-primary);
+            position: relative;
+        }
+
+        .section-header h2::after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 2px;
+            background: linear-gradient(90deg, #00ffff, var(--warning));
+            margin: 14px auto 0;
+            border-radius: 1px;
         }
 
         .section-header .highlight {
-            background: var(--gradient-gold);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #00ffff;
+            -webkit-text-fill-color: #00ffff;
         }
 
         .section-header p {
             font-size: clamp(0.9rem, 2vw, 1rem);
-            color: var(--text-secondary);
+            color: var(--text-muted);
             max-width: 700px;
             margin: 0 auto;
             line-height: 1.5;
@@ -2621,37 +2728,54 @@
         }
 
         .feature-icon {
-            width: 55px;
-            height: 55px;
-            margin: 0 auto 15px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 18px;
+            background: rgba(0, 255, 255, 0.08);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            color: var(--dark-bg);
-            font-weight: bold;
+            font-size: 1.6rem;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover .feature-icon {
+            background: rgba(0, 255, 255, 0.15);
+            border-color: rgba(0, 255, 255, 0.5);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
+            transform: scale(1.05);
         }
 
         .feature-card h3 {
             font-family: 'Orbitron', monospace;
             font-size: clamp(1rem, 2vw, 1.2rem);
-            color: var(--warning);
+            color: #00ffff;
             margin-bottom: 12px;
         }
 
         .feature-card p {
             color: var(--text-secondary);
-            line-height: 1.6;
+            line-height: 1.7;
             font-size: clamp(0.85rem, 1.8vw, 0.95rem);
         }
 
         /* CTA Section */
         .cta {
             text-align: center;
-            padding: 40px 20px;
+            padding: 50px 20px 40px;
             position: relative;
+        }
+
+        .cta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.3), transparent);
         }
 
         .cta-button {
@@ -2659,23 +2783,22 @@
             font-size: clamp(0.95rem, 2vw, 1.1rem);
             font-weight: 700;
             color: var(--dark-bg);
-            background: var(--gradient-gold);
+            background: linear-gradient(135deg, #00ffff, #0ea5e9);
             border: none;
-            padding: 12px 28px;
-            border-radius: 30px;
+            padding: 16px 40px;
+            border-radius: 8px;
             text-decoration: none;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 255, 255, 0.25);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
             display: inline-block;
         }
 
         .cta-button:hover {
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 10px 25px rgba(255, 215, 0, 0.5);
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 255, 255, 0.4);
         }
 
         /* Make Your Picks Section */
@@ -7073,6 +7196,10 @@
                 <section class="hero">
                     <h1 class="reveal">THE END OF THE BULLSHIT</h1>
                     <p class="reveal">A new standard for sports betting has arrived. Built on absolute proof, radical transparency, and zero excuses.</p>
+                    <div class="hero-cta-row reveal">
+                        <a onclick="showSection('picks')" class="hero-cta-primary">Start Tracking</a>
+                        <a onclick="showSection('leaderboards')" class="hero-cta-secondary">View Leaderboards</a>
+                    </div>
                 </section>
 
                 <!-- LOGGED-IN USER DASHBOARD - Command Center -->
@@ -14766,16 +14893,20 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
         </main>
 
-        <footer style="background: rgba(0, 0, 0, 0.4); border-top: 1px solid rgba(0, 255, 255, 0.2); padding: 30px 0; text-align: center;">
+        <footer style="background: rgba(0, 0, 0, 0.5); border-top: 1px solid rgba(0, 255, 255, 0.15); padding: 35px 0 25px; text-align: center;">
             <div style="max-width: 1400px; margin: 0 auto; padding: 0 20px;">
-                <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 20px; flex-wrap: wrap;">
-                    <a href="#home" onclick="showSection('home')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Home</a>
-                    <a href="#profile" onclick="showSection('profile')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Profile</a>
-                    <a href="#forums" onclick="showSection('forums')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forums</a>
-                    <a href="#arena" onclick="showSection('arena')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">The Arena</a>
-                    <a href="#leaderboards" onclick="showSection('leaderboards')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
+                <div style="margin-bottom: 18px;">
+                    <span style="font-family: 'Orbitron', sans-serif; font-size: 1.1rem; font-weight: 700; color: #00ffff; letter-spacing: 3px;">TRUST MY RECORD</span>
                 </div>
-                <p style="color: #808090; font-size: 0.85rem;">© 2026 TrustMyRecord.com - The End of the Bullshit. All rights reserved.</p>
+                <div style="display: flex; justify-content: center; gap: 28px; margin-bottom: 18px; flex-wrap: wrap;">
+                    <a href="#home" onclick="showSection('home')" style="color: #94a3b8; text-decoration: none; font-size: 0.85rem; transition: color 0.3s; letter-spacing: 0.5px;">Home</a>
+                    <a href="#picks" onclick="showSection('picks')" style="color: #94a3b8; text-decoration: none; font-size: 0.85rem; transition: color 0.3s; letter-spacing: 0.5px;">Make Picks</a>
+                    <a href="#profile" onclick="showSection('profile')" style="color: #94a3b8; text-decoration: none; font-size: 0.85rem; transition: color 0.3s; letter-spacing: 0.5px;">Profile</a>
+                    <a href="#forums" onclick="showSection('forums')" style="color: #94a3b8; text-decoration: none; font-size: 0.85rem; transition: color 0.3s; letter-spacing: 0.5px;">Forums</a>
+                    <a href="#arena" onclick="showSection('arena')" style="color: #94a3b8; text-decoration: none; font-size: 0.85rem; transition: color 0.3s; letter-spacing: 0.5px;">The Arena</a>
+                    <a href="#leaderboards" onclick="showSection('leaderboards')" style="color: #94a3b8; text-decoration: none; font-size: 0.85rem; transition: color 0.3s; letter-spacing: 0.5px;">Leaderboards</a>
+                </div>
+                <p style="color: #64748b; font-size: 0.8rem; letter-spacing: 0.5px;">© 2026 TrustMyRecord.com - The End of the Bullshit. All rights reserved.</p>
             </div>
         </footer>
     </div>
