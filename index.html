@@ -734,7 +734,7 @@
         var newPick = {
             id: 'pick_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
             user_id: user.username || user.id || 'local',
-            game_id: thePick.gameId || ('espn_' + thePick.gameIndex),
+            game_id: thePick.gameId || (window.TMR.currentGames && window.TMR.currentGames[thePick.gameIndex] ? window.TMR.currentGames[thePick.gameIndex].id : 'espn_unknown'),
             sport_key: sportKeyMap[thePick.sport] || thePick.sport || '',
             sport_display: thePick.sport || '',
             home_team: thePick.homeTeam,
