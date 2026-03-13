@@ -20,12 +20,12 @@ class PersistentAuthSystem {
                 email: 'admin@trustmyrecord.com',
                 passwordHash: this.hashPassword('admin123'),
                 displayName: 'Admin',
-                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+                avatar: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23ef4444%22/><text x=%2250%22 y=%2265%22 font-size=%2250%22 text-anchor=%22middle%22 fill=%22white%22>A</text></svg>',
                 bio: 'Site Administrator',
                 joinedDate: new Date().toISOString(),
                 verified: true,
                 stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
-                social: { followers: [], following: [], reputation: 100, badges: ['admin'] },
+                social: { followers: [], following: [], reputation: 0, badges: ['admin'] },
                 isPremium: true
             });
             this.saveUsers();
@@ -38,12 +38,12 @@ class PersistentAuthSystem {
                 email: 'nima@betlegendpicks.com',
                 passwordHash: this.hashPassword('betlegend2025'),
                 displayName: 'BetLegend',
-                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=betlegend',
+                avatar: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%2322c55e%22/><text x=%2250%22 y=%2265%22 font-size=%2250%22 text-anchor=%22middle%22 fill=%22white%22>B</text></svg>',
                 bio: 'Founder',
                 joinedDate: '2025-10-01',
                 verified: true,
-                stats: { totalPicks: 247, wins: 152, losses: 89, pushes: 6, winRate: 63.1, roi: 14.7 },
-                social: { followers: [], following: [], reputation: 500, badges: ['founder', 'verified'] },
+                stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
+                social: { followers: [], following: [], reputation: 0, badges: ['founder', 'verified'] },
                 isPremium: true
             });
             this.saveUsers();
@@ -56,12 +56,12 @@ class PersistentAuthSystem {
                 email: 'demo@trustmyrecord.com',
                 passwordHash: this.hashPassword('demo123'),
                 displayName: 'Demo User',
-                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=demo',
+                avatar: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%230ea5e9%22/><text x=%2250%22 y=%2265%22 font-size=%2250%22 text-anchor=%22middle%22 fill=%22white%22>D</text></svg>',
                 bio: 'Test Account',
                 joinedDate: '2025-11-01',
                 verified: false,
-                stats: { totalPicks: 25, wins: 15, losses: 9, pushes: 1, winRate: 62.5, roi: 8.3 },
-                social: { followers: [], following: [], reputation: 50, badges: ['newbie'] },
+                stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
+                social: { followers: [], following: [], reputation: 0, badges: ['newbie'] },
                 isPremium: false
             });
             this.saveUsers();
@@ -74,12 +74,12 @@ class PersistentAuthSystem {
                 email: 'test@example.com',
                 passwordHash: this.hashPassword('password123'),
                 displayName: 'Test User',
-                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=testuser',
+                avatar: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23f59e0b%22/><text x=%2250%22 y=%2265%22 font-size=%2250%22 text-anchor=%22middle%22 fill=%22white%22>T</text></svg>',
                 bio: 'Test Account for Development',
                 joinedDate: new Date().toISOString(),
                 verified: true,
-                stats: { totalPicks: 16, wins: 10, losses: 5, pushes: 1, winRate: 62.5, roi: 12.5 },
-                social: { followers: [], following: [], reputation: 100, badges: ['tester'] },
+                stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
+                social: { followers: [], following: [], reputation: 0, badges: ['tester'] },
                 isPremium: true
             });
             this.saveUsers();
@@ -306,9 +306,11 @@ class PersistentAuthSystem {
         return hash.toString();
     }
 
-    getDefaultAvatar() {
-        const avatars = ['https://api.dicebear.com/7.x/avataaars/svg?seed=1','https://api.dicebear.com/7.x/avataaars/svg?seed=2','https://api.dicebear.com/7.x/avataaars/svg?seed=3'];
-        return avatars[Math.floor(Math.random() * avatars.length)];
+    getDefaultAvatar(seed) {
+        const colors = ['0ea5e9', '22c55e', 'ef4444', 'f59e0b', '8b5cf6'];
+        const color = colors[(seed ? seed.length : 0) % colors.length];
+        const letter = seed ? seed.charAt(0).toUpperCase() : 'U';
+        return `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23${color}%22/><text x=%2250%22 y=%2265%22 font-size=%2250%22 text-anchor=%22middle%22 fill=%22white%22>${letter}</text></svg>`;
     }
 
     loadUsers() {

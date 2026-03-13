@@ -1,17 +1,26 @@
 ﻿/**
  * Auto-Grading Frontend Module
  * Handles pick grading status, results display, and admin controls
+ * Updated for static site - uses TMR_GRADER instead of backend API
  */
 
 class GradingUI {
     constructor() {
-        this.apiBase = '/api';
+        // Static site mode - no API needed
+        this.useStaticGrader = true;
     }
 
     /**
      * Get game result for a pick
      */
     async getGameResult(pickId) {
+        if (this.useStaticGrader && window.TMR_GRADER) {
+            const picks = TMR_GRADER.getPicks();
+            const pick = picks.find(p => p.id === pickId);
+            return pick || null;
+        }
+        
+        // Fallback to API (for future backend integration)
         try {
             const response = await fetch(`${this.apiBase}/picks/${pickId}/result`);
             return await response.json();
@@ -24,14 +33,20 @@ class GradingUI {
     /**
      * Manually grade a pick
      */
-    async gradePick(pickId) {
+    async gradePick(pickId, result) {
+        if (this.useStaticGrader && window.TMR_GRADER) {
+            return TMR_GRADER.manualGrade(pickId, result);
+        }
+        
         try {
             const token = localStorage.getItem('token');
             const response = await fetch(`${this.apiBase}/picks/${pickId}/grade`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ result })
             });
             return await response.json();
         } catch (error) {
@@ -41,9 +56,19 @@ class GradingUI {
     }
 
     /**
-     * Run bulk grading (admin)
+     * Run bulk grading
      */
     async runBulkGrading() {
+        if (this.useStaticGrader && window.TMR_GRADER) {
+            const result = TMR_GRADER.runAutoGrading();
+            return {
+                success: true,
+                graded: result.graded,
+                message: `Graded ${result.graded} picks`,
+                results: result.newResults
+            };
+        }
+        
         try {
             const token = localStorage.getItem('token');
             const response = await fetch(`${this.apiBase}/grade/run`, {
@@ -63,6 +88,13 @@ class GradingUI {
      * Get grading status
      */
     async getGradingStatus() {
+        if (this.useStaticGrader && window.TMR_GRADER) {
+            const picks = TMR_GRADER.getPicks();
+            const pending = picks.filter(p => p.status === 'pending').length;
+            const settled = picks.filter(p => p.status === 'settled').length;
+            return { pending, settled, total: picks.length };
+        }
+        
         try {
             const response = await fetch(`${this.apiBase}/grade/status`);
             return await response.json();
@@ -76,46 +108,27 @@ class GradingUI {
      * Render grading status badge
      */
     renderStatusBadge(pick) {
-        const status = pick.status || 'pending';
-        const statusClasses = {
-            'pending': 'badge-pending',
-            'won': 'badge-won',
-            'lost': 'badge-lost',
-            'push': 'badge-push'
-        };
+        const status = pick.status === 'settled' ? pick.result : pick.status || 'pending';
         
-        const statusText = {
-            'pending': '⏳ Pending',
-            'won': '✅ Won',
-            'lost': '❌ Lost',
-            'push': '🔄 Push'
-        };
-
-        return `
-            <span class="status-badge ${statusClasses[status]}" data-pick-id="${pick.id}">
-                ${statusText[status]}
-                ${pick.auto_graded ? '<small>(auto)</small>' : ''}
-            </span>
-        `;
+        return TMR_GRADER ? TMR_GRADER.renderStatusBadge(pick.status || 'pending', pick.result) : '';
     }
 
     /**
      * Render game result overlay
      */
-    renderGameResult(gameResult) {
-        if (!gameResult) return '';
+    renderGameResult(pick) {
+        if (!pick || !pick.finalScore) return '';
+        
+        const isWin = pick.result === 'win';
+        const isLoss = pick.result === 'loss';
+        const resultClass = isWin ? 'win' : isLoss ? 'loss' : 'push';
         
         return `
-            <div class="game-result-overlay">
+            <div class="game-result-overlay ${resultClass}">
                 <div class="final-score">
-                    <span class="score">${gameResult.home_score ?? '-'}</span>
-                    <span class="divider">-</span>
-                    <span class="score">${gameResult.away_score ?? '-'}</span>
+                    <span class="score">${pick.finalScore}</span>
                 </div>
-                ${gameResult.finished ? 
-                    '<span class="status finished">FINAL</span>' : 
-                    '<span class="status live">LIVE</span>'
-                }
+                <span class="status finished">FINAL</span>
             </div>
         `;
     }
@@ -130,163 +143,50 @@ class GradingUI {
             <div class="modal-content">
                 <div class="modal-header">
                     <h3>Grade Pick</h3>
-                    <button class="close-btn">&times;</button>
+                    <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="pick-details">
                         <p><strong>${pick.team1}</strong> vs <strong>${pick.team2}</strong></p>
-                        <p>${pick.pick_selection}</p>
-                        <p>@ ${pick.odds}</p>
+                        <p>${pick.pickTeam} ${pick.pickType} @ ${pick.odds}</p>
                     </div>
-                    <div class="grading-actions">
-                        <button class="btn btn-won" onclick="gradingUI.confirmGrade(${pick.id}, 'won')">
-                            ✅ Won
+                    <div class="grading-actions" style="display: flex; gap: 12px; margin-top: 20px;">
+                        <button class="tmr-btn tmr-btn-success" onclick="gradingUI.confirmGrade('${pick.id}', 'win')">
+                            ✓ Win
                         </button>
-                        <button class="btn btn-lost" onclick="gradingUI.confirmGrade(${pick.id}, 'lost')">
-                            ❌ Lost
+                        <button class="tmr-btn tmr-btn-danger" onclick="gradingUI.confirmGrade('${pick.id}', 'loss')">
+                            ✗ Loss
                         </button>
-                        <button class="btn btn-push" onclick="gradingUI.confirmGrade(${pick.id}, 'push')">
-                            🔄 Push
+                        <button class="tmr-btn tmr-btn-secondary" onclick="gradingUI.confirmGrade('${pick.id}', 'push')">
+                            ↔ Push
                         </button>
                     </div>
                 </div>
             </div>
         `;
-        
         document.body.appendChild(modal);
-        
-        modal.querySelector('.close-btn').addEventListener('click', () => {
-            modal.remove();
-        });
-        
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.remove();
-        });
+        modal.style.display = 'flex';
     }
 
     /**
-     * Confirm manual grade
+     * Confirm grade selection
      */
     async confirmGrade(pickId, result) {
-        if (!confirm(`Mark this pick as ${result.toUpperCase()}?`)) return;
-        
-        const data = await this.gradePick(pickId);
-        
-        if (data.success) {
-            this.showToast(`Pick marked as ${result.toUpperCase()}!`, 'success');
-            // Refresh the pick display
-            location.reload();
-        } else {
-            this.showToast(data.error || 'Failed to grade pick', 'error');
-        }
-    }
-
-    /**
-     * Show admin grading panel
-     */
-    async showAdminPanel() {
-        const status = await this.getGradingStatus();
-        
-        const panel = document.createElement('div');
-        panel.className = 'admin-grading-panel';
-        panel.innerHTML = `
-            <div class="panel-header">
-                <h3>🤖 Auto-Grading Control</h3>
-                <button class="close-btn">&times;</button>
-            </div>
-            <div class="panel-stats">
-                <div class="stat">
-                    <span class="stat-value">${status?.pending_picks || 0}</span>
-                    <span class="stat-label">Pending</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-value">${status?.recently_graded || 0}</span>
-                    <span class="stat-label">Last 24h</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-value">${status?.total_graded || 0}</span>
-                    <span class="stat-label">Total Graded</span>
-                </div>
-            </div>
-            <div class="panel-actions">
-                <button class="btn btn-primary btn-run" id="runGrading">
-                    <span class="icon">⚡</span> Run Grading Now
-                </button>
-                <p class="info-text">Auto-grading runs every 15 minutes</p>
-            </div>
-            <div class="grading-log" id="gradingLog"></div>
-        `;
-        
-        document.body.appendChild(panel);
-        
-        panel.querySelector('.close-btn').addEventListener('click', () => {
-            panel.remove();
-        });
-        
-        document.getElementById('runGrading').addEventListener('click', async () => {
-            const btn = document.getElementById('runGrading');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span> Grading...';
+        const resultText = result.charAt(0).toUpperCase() + result.slice(1);
+        if (confirm(`Are you sure you want to mark this pick as ${resultText}?`)) {
+            const response = await this.gradePick(pickId, result);
             
-            const result = await this.runBulkGrading();
-            
-            const log = document.getElementById('gradingLog');
-            const entry = document.createElement('div');
-            entry.className = `log-entry ${result.success ? 'success' : 'error'}`;
-            entry.innerHTML = `
-                <span class="time">${new Date().toLocaleTimeString()}</span>
-                <span class="message">${result.graded || 0} picks graded</span>
-            `;
-            log.prepend(entry);
-            
-            btn.disabled = false;
-            btn.innerHTML = '<span class="icon">⚡</span> Run Grading Now';
-        });
-    }
-
-    /**
-     * Show toast notification
-     */
-    showToast(message, type = 'info') {
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            toast.classList.add('show');
-        }, 10);
-        
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    }
-
-    /**
-     * Initialize grading on a page
-     */
-    init() {
-        // Add grading badges to all pick cards
-        document.querySelectorAll('[data-pick-id]').forEach(el => {
-            const pickId = el.dataset.pickId;
-            this.fetchAndDisplayGameResult(pickId, el);
-        });
-        
-        // Add admin button if user is admin
-        if (window.currentUser?.is_admin) {
-            this.addAdminButton();
-        }
-    }
-
-    /**
-     * Fetch and display game result for a pick
-     */
-    async fetchAndDisplayGameResult(pickId, element) {
-        const result = await this.getGameResult(pickId);
-        if (result && result.home_score !== undefined) {
-            const overlay = this.renderGameResult(result);
-            element.insertAdjacentHTML('beforeend', overlay);
+            if (response.success) {
+                this.showToast(`Pick graded as ${resultText}!`, 'success');
+                // Close modal
+                document.querySelector('.grading-modal')?.remove();
+                // Refresh UI
+                if (typeof loadMyPicks === 'function') {
+                    loadMyPicks(window.currentPicksTab || 'pending');
+                }
+            } else {
+                this.showToast(response.error || 'Grading failed', 'error');
+            }
         }
     }
 
@@ -294,25 +194,82 @@ class GradingUI {
      * Add admin grading button
      */
     addAdminButton() {
-        const adminNav = document.querySelector('.admin-nav') || document.querySelector('nav');
-        if (adminNav) {
-            const btn = document.createElement('button');
-            btn.className = 'btn btn-grading-admin';
-            btn.innerHTML = '🤖 Grading';
-            btn.addEventListener('click', () => this.showAdminPanel());
-            adminNav.appendChild(btn);
+        const existing = document.getElementById('adminGradeBtn');
+        if (existing) return;
+        
+        const btn = document.createElement('button');
+        btn.id = 'adminGradeBtn';
+        btn.className = 'tmr-btn tmr-btn-primary';
+        btn.innerHTML = '<span>⚡</span> Run Auto-Grading';
+        btn.onclick = () => this.runBulkGrading();
+        
+        const target = document.querySelector('.mypicks-header') || document.querySelector('#mypicks .container');
+        if (target) {
+            target.appendChild(btn);
         }
+    }
+
+    /**
+     * Show toast notification
+     */
+    showToast(message, type = 'info') {
+        if (window.showToast) {
+            window.showToast(message, type);
+        } else {
+            // Fallback
+            alert(message);
+        }
+    }
+
+    /**
+     * Initialize grading on a page
+     */
+    init() {
+        console.log('[GradingUI] Initialized for static site');
+        
+        // Listen for picks graded events
+        window.addEventListener('picksGraded', (e) => {
+            if (e.detail && e.detail.graded > 0) {
+                this.showToast(`${e.detail.graded} pick(s) auto-graded!`, 'success');
+            }
+        });
     }
 }
 
-// Global instance
+// Initialize
 const gradingUI = new GradingUI();
 
-// Initialize when DOM is ready
+// Auto-grade function for index.html
+window.autoGradeAll = async function() {
+    const statusEl = document.getElementById('myPicksGradeStatus');
+    if (statusEl) {
+        statusEl.textContent = 'Grading picks...';
+    }
+    
+    try {
+        const result = await gradingUI.runBulkGrading();
+        
+        if (result.success) {
+            if (statusEl) {
+                statusEl.textContent = `✓ ${result.graded} picks graded`;
+                setTimeout(() => statusEl.textContent = '', 3000);
+            }
+            return result;
+        } else {
+            if (statusEl) {
+                statusEl.textContent = 'Grading failed';
+            }
+            return { success: false, error: result.error };
+        }
+    } catch (err) {
+        if (statusEl) {
+            statusEl.textContent = 'Error: ' + err.message;
+        }
+        return { success: false, error: err.message };
+    }
+};
+
+// Initialize when DOM ready
 document.addEventListener('DOMContentLoaded', () => {
     gradingUI.init();
 });
-
-// Export for use in other modules
-window.GradingUI = GradingUI;
-window.gradingUI = gradingUI;

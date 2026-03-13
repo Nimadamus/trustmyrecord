@@ -1,187 +1,229 @@
 ﻿# Trust My Record - Setup Guide
 
-## 1. Environment Setup
+## Quick Start
 
-### Install Python Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### Database Setup (PostgreSQL)
-```bash
-# Create database
-psql -U postgres -c "CREATE DATABASE trustmyrecord;"
-
-# Or using createdb
-createdb -U postgres trustmyrecord
-```
-
-### Redis Setup
-```bash
-# macOS
-brew install redis
-brew services start redis
-
-# Ubuntu/Debian
-sudo apt-get install redis-server
-sudo systemctl start redis
-
-# Windows (WSL or Docker)
-docker run -d -p 6379:6379 redis:alpine
-```
-
-## 2. Configuration
-
-### Create .env file
-```bash
-cp .env.example .env
-```
-
-### Required Environment Variables
-```bash
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/trustmyrecord
-
-# Security
-SECRET_KEY=your-super-secret-key-here
-JWT_SECRET_KEY=your-jwt-secret-key-here
-
-# Redis
-REDIS_URL=redis://localhost:6379/0
-
-# Optional: Email (for notifications)
-MAIL_SERVER=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USE_TLS=true
-MAIL_USERNAME=your-email@gmail.com
-MAIL_PASSWORD=your-app-password
-
-# Optional: The Odds API (for live lines)
-ODDS_API_KEY=your-odds-api-key
-
-# Optional: AWS S3 (for file uploads)
-AWS_ACCESS_KEY_ID=your-access-key
-AWS_SECRET_ACCESS_KEY=your-secret-key
-S3_BUCKET=your-bucket-name
-```
-
-## 3. Database Migrations
-
-### Initialize (if needed)
-```bash
-flask db init
-```
-
-### Create migration
-```bash
-flask db migrate -m "Initial migration"
-```
-
-### Apply migrations
-```bash
-flask db upgrade
-```
-
-## 4. Seed Data (Development)
+### 1. Clone & Run
 
 ```bash
-flask seed-db
+git clone https://github.com/Nimadamus/trustmyrecord.git
+cd trustmyrecord
+python -m http.server 8000
 ```
 
-This creates:
-- 4 test users
-- Sample games (NFL)
-- Sample picks
-- Forum threads and posts
-- Competition
+Visit: `http://localhost:8000`
 
-## 5. Run Development Server
+That's it. No database, no dependencies, no build step.
 
+---
+
+## Development
+
+### Local Server (Recommended)
+
+Using Python:
 ```bash
-python run.py
+python -m http.server 8000
 ```
 
-Server runs at `http://127.0.0.1:5000`
-
-## 6. Start Celery (Background Tasks)
-
-In a separate terminal:
-
+Using Node (if you prefer):
 ```bash
-# Worker
-celery -A tasks worker --loglevel=info
-
-# Scheduler (for periodic tasks)
-celery -A tasks beat --loglevel=info
+npx serve .
 ```
 
-## 7. Verify Installation
-
-### Health Check
+Using PHP:
 ```bash
-curl http://localhost:5000/health
+php -S localhost:8000
 ```
 
-### API Documentation
-```bash
-curl http://localhost:5000/api/v1/docs
+### File Structure
+
+```
+trustmyrecord/
+├── index.html              # Landing / Auth page
+├── profile.html            # User profile dashboard
+├── challenges.html         # Betting challenges
+├── forum.html              # Community forum
+├── friends.html            # Friends management
+├── messages.html           # Private messaging
+├── polls.html              # Community polls
+├── trivia.html             # Sports trivia
+├── activity.html           # Activity feed
+├── premium.html            # Premium features
+├── 404.html                # SPA redirect for GitHub Pages
+├── CNAME                   # Domain configuration
+├── static/
+│   ├── css/
+│   │   └── main.css        # Main stylesheet
+│   ├── js/
+│   │   ├── auth.js         # Authentication logic
+│   │   ├── picks.js        # Pick tracking
+│   │   ├── profile.js      # Profile management
+│   │   ├── challenges.js   # Challenge system
+│   │   ├── forum.js        # Forum functionality
+│   │   ├── friends.js      # Friends system
+│   │   ├── messages.js     # Messaging
+│   │   ├── polls.js        # Polls system
+│   │   ├── trivia.js       # Trivia game
+│   │   ├── activity.js     # Activity feed
+│   │   ├── utils.js        # Helper functions
+│   │   └── data.js         # Sample/demo data
+│   └── data/
+│       ├── sample-picks.json
+│       ├── sample-users.json
+│       └── sample-forum.json
 ```
 
-### Test Login
-```bash
-curl -X POST http://localhost:5000/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"sharpshooter","password":"Password123!"}'
+---
+
+## Data Storage
+
+All data lives in browser localStorage:
+
+```javascript
+// Key structure
+'tmr_user'              // Current logged in user
+'tmr_users'             // All registered users array
+'tmr_picks'             // User's picks
+'tmr_feed'              // Social feed posts
+'tmr_following'         // Who user follows
+'tmr_polls'             // Available polls
+'tmr_poll_votes'        // User's poll votes
+'tmr_trivia_scores'     // Trivia results
+'tmr_messages'          // Conversation history
+'tmr_notifications'     // User notifications
+'tmr_challenges'        // Active challenges
 ```
 
-## 8. Production Deployment
+### Clear Data
 
-### Environment
-```bash
-export FLASK_ENV=production
-export DATABASE_URL=postgresql://... # Production DB
-export SECRET_KEY=... # Strong random key
+To reset all data in development:
+```javascript
+// Open browser console and run:
+localStorage.clear();
+location.reload();
 ```
 
-### Gunicorn
-```bash
-gunicorn -w 4 -b 0.0.0.0:5000 wsgi:application
+---
+
+## Authentication
+
+Simple client-side auth:
+- Username/password stored in localStorage
+- No email verification (static site)
+- Session stored in `tmr_user`
+- Logout clears session
+
+### Demo Account
+
+Login with any username - if it doesn't exist, a new account is created.
+Or use the pre-seeded demo accounts:
+- `sharpshooter` / `password`
+- `vegasinsider` / `password`
+- `underdog` / `password`
+
+---
+
+## Customization
+
+### Colors
+
+Edit `static/css/main.css`:
+
+```css
+:root {
+  --primary: #FF6B35;      /* Orange */
+  --secondary: #004E89;    /* Navy */
+  --accent: #1A659E;       /* Blue */
+  --success: #4CAF50;      /* Green */
+  --danger: #F44336;       /* Red */
+  --warning: #FFC107;      /* Yellow */
+  --gold: #FFD700;         /* Premium gold */
+}
 ```
 
-### Docker
-```bash
-docker-compose up -d
+### Sports/Leagues
+
+Edit `static/js/data.js` to add/remove sports:
+
+```javascript
+const SPORTS = [
+  { id: 'nfl', name: 'NFL', icon: '🏈' },
+  { id: 'nba', name: 'NBA', icon: '🏀' },
+  // Add your own...
+];
 ```
+
+---
+
+## Deployment
+
+### GitHub Pages
+
+1. Push to GitHub repository
+2. Go to Settings > Pages
+3. Select "Deploy from a branch"
+4. Choose `main` branch, `/ (root)` folder
+5. Save
+
+Site deploys to: `https://yourusername.github.io/trustmyrecord`
+
+### Custom Domain
+
+1. Add your domain to `CNAME` file:
+   ```
+   trustmyrecord.com
+   ```
+
+2. Configure DNS with your registrar:
+   - A record: `185.199.108.153`
+   - A record: `185.199.109.153`
+   - A record: `185.199.110.153`
+   - A record: `185.199.111.153`
+   - Or CNAME: `yourusername.github.io`
+
+3. Enable HTTPS in GitHub Pages settings
+
+### Netlify / Vercel
+
+Drag and drop the project folder. Done.
+
+---
 
 ## Troubleshooting
 
-### Database Connection Issues
-- Verify PostgreSQL is running
-- Check DATABASE_URL format
-- Ensure user has database permissions
+### localStorage Not Working
 
-### Redis Connection Issues
-- Verify Redis is running: `redis-cli ping`
-- Check REDIS_URL format
+- Check if browser is in private/incognito mode
+- Check if localStorage is disabled
+- Check for storage quota exceeded (5-10MB limit)
 
-### Import Errors
-- Ensure virtual environment is activated
-- Reinstall requirements: `pip install -r requirements.txt`
+### Changes Not Showing
 
-### Migration Issues
-- Reset migrations: `flask db downgrade base && flask db upgrade`
-- Or recreate: `dropdb trustmyrecord && createdb trustmyrecord`
+- Hard refresh: `Ctrl+Shift+R` (or `Cmd+Shift+R` on Mac)
+- Clear browser cache
+- Check file paths are correct
 
-## CLI Commands
+### GitHub Pages 404
 
-```bash
-# Create admin user
-flask create-admin admin admin@example.com
+- Ensure `404.html` is present
+- Check CNAME is correct
+- Wait 5-10 minutes for DNS propagation
 
-# Reset database
-flask drop-db  # WARNING: Deletes all data
-flask create-db
+---
 
-# Database shell
-flask shell
-```
+## Browser Support
+
+| Browser | Version |
+|---------|---------|
+| Chrome  | 90+     |
+| Firefox | 88+     |
+| Safari  | 14+     |
+| Edge    | 90+     |
+| Mobile Safari | 14+ |
+| Chrome Android | 90+ |
+
+---
+
+## License
+
+Copyright © 2025 Trust My Record. All rights reserved.

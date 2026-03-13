@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Profile Test</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #0f172a; color: white; }
+        .test-section { margin: 20px 0; padding: 15px; background: #1e293b; border-radius: 8px; }
+        .success { color: #22c55e; }
+        .error { color: #ef4444; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>TrustMyRecord Profile Page Test</h1>
+    
+    <div class="test-section">
+        <h2>Setup Test User</h2>
+        <button onclick="createTestUser()">Create Test User</button>
+        <button onclick="clearUser()">Clear User</button>
+        <div id="userStatus"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Profile Page Features</h2>
+        <ul>
+            <li>&#9989; Avatar upload (click on avatar to upload)</li>
+            <li>&#9989; Edit Profile modal (click Edit Profile button)</li>
+            <li>&#9989; Bio, Location, Favorite Sports fields</li>
+            <li>&#9989; Profile header with location/sports display</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>Navigation</h2>
+        <a href="profile.html" style="color: #0ea5e9;">Go to Profile Page &rarr;</a>
+    </div>
+
+    <script>
+        function createTestUser() {
+            var user = {
+                username: 'TestUser123',
+                bio: 'I love sports betting!',
+                location: 'New York, NY',
+                favoriteSports: 'NFL, NBA, MLB',
+                avatar: null,
+                joinDate: new Date().toISOString()
+            };
+            localStorage.setItem('tmr_current_user', JSON.stringify(user));
+            localStorage.setItem('tmr_users', JSON.stringify([user]));
+            updateStatus('Test user created! <span class="success">&#10004;</span>');
+        }
+        
+        function clearUser() {
+            localStorage.removeItem('tmr_current_user');
+            localStorage.removeItem('tmr_users');
+            updateStatus('User cleared. <span class="error">&#10008;</span>');
+        }
+        
+        function updateStatus(msg) {
+            document.getElementById('userStatus').innerHTML = msg;
+        }
+        
+        // Check current user
+        var current = localStorage.getItem('tmr_current_user');
+        if (current) {
+            var user = JSON.parse(current);
+            updateStatus('Logged in as: <strong>' + user.username + '</strong>');
+        } else {
+            updateStatus('No user logged in');
+        }
+    </script>
+</body>
+</html>

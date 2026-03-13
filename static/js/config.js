@@ -28,6 +28,12 @@ const CONFIG = {
         timeout: 10000
     },
 
+    // Feature flags for backend integration
+    features: {
+        useBackendAPI: false,
+        requireEmailVerification: false
+    },
+
     // App Settings
     settings: {
         itemsPerPage: 20,

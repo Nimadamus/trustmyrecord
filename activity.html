@@ -1,0 +1,1227 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Feed | TrustMyRecord</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="static/css/professional.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0ea5e9;
+            --primary-dark: #0284c7;
+            --success: #22c55e;
+            --success-dark: #16a34a;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --gold: #fbbf24;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #334155;
+            --bg-hover: #475569;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: rgba(148, 163, 184, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        /* Main Navigation - LARGER, CLEARER, BETTER SPACED */
+        header {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 18px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            cursor: pointer;
+            letter-spacing: 1px;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            transition: all 0.3s;
+        }
+
+        .logo:hover {
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            transform: scale(1.02);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .main-nav {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            justify-content: center;
+            margin: 0 20px;
+        }
+
+        .main-nav .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.05rem;
+            padding: 14px 22px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            letter-spacing: 0.3px;
+        }
+
+        .main-nav .nav-link:hover {
+            color: var(--neon-cyan);
+            background: rgba(0, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 255, 255, 0.2);
+        }
+
+        .main-nav .nav-link.active {
+            color: var(--neon-cyan);
+            background: rgba(0, 255, 255, 0.15);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .main-nav .nav-link.profile-link {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(0, 255, 255, 0.05));
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            border-radius: 25px;
+            padding: 12px 26px;
+        }
+
+        .main-nav .nav-link.profile-link:hover {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.25), rgba(0, 255, 255, 0.1));
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+        }
+
+        .main-nav .nav-link.premium-link {
+            color: var(--neon-gold);
+            font-weight: 700;
+        }
+
+        .main-nav .nav-link.premium-link:hover {
+            background: rgba(255, 215, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+        }
+
+        /* Arena Dropdown - LARGER */
+        .nav-dropdown {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-dropdown-toggle {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.05rem;
+            padding: 14px 22px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dropdown-toggle::after {
+            content: '▼';
+            font-size: 10px;
+            transition: transform 0.3s;
+            opacity: 0.7;
+        }
+
+        .nav-dropdown:hover .nav-dropdown-toggle::after {
+            transform: rotate(180deg);
+        }
+
+        .nav-dropdown:hover .nav-dropdown-toggle {
+            color: var(--neon-cyan);
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .nav-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            min-width: 240px;
+            background: rgba(15, 15, 25, 0.98);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 255, 255, 0.1);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            padding: 10px 0;
+            overflow: hidden;
+        }
+
+        .nav-dropdown:hover .nav-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .nav-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 22px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-dropdown-item:hover {
+            background: rgba(0, 255, 255, 0.08);
+            color: var(--neon-cyan);
+            border-left-color: var(--neon-cyan);
+            padding-left: 26px;
+        }
+
+        .dropdown-icon {
+            font-size: 1.3rem;
+            width: 26px;
+            text-align: center;
+        }
+
+        /* Header Icon Buttons - LARGER */
+        .header-icon-btn {
+            position: relative;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+        }
+
+        .header-icon-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        }
+
+        .header-icon-btn .badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--neon-red);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 1100px) {
+            .main-nav {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+                margin: 10px 0 0 0;
+                gap: 4px;
+            }
+
+            .main-nav .nav-link {
+                font-size: 0.95rem;
+                padding: 12px 18px;
+            }
+
+            .header-content {
+                flex-wrap: wrap;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-nav {
+                gap: 3px;
+            }
+
+            .main-nav .nav-link {
+                font-size: 0.85rem;
+                padding: 10px 14px;
+            }
+
+            .logo {
+                font-size: 1.4rem;
+            }
+
+            .nav-dropdown-toggle {
+                font-size: 0.9rem;
+                padding: 10px 14px;
+            }
+        }
+
+        /* Profile Tab Content Styles */
+        .profile-tab-content { display: none; }
+        .profile-tab-content.active { display: block; }
+        
+
+        /* Main Container */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .page-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--primary), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+        }
+
+        /* Feed Filters */
+        .feed-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(45deg, var(--primary), var(--primary));
+            border-color: transparent;
+            color: white;
+        }
+
+        /* Activity Cards */
+        .activity-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .activity-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .activity-card:hover {
+            border-color: rgba(0, 243, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .activity-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .activity-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary), var(--primary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .activity-meta {
+            flex: 1;
+        }
+
+        .activity-user {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .activity-user a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .activity-user a:hover {
+            color: var(--primary);
+        }
+
+        .activity-action {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .activity-time {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .activity-icon.bet-placed { background: rgba(0, 243, 255, 0.1); color: var(--primary); }
+        .activity-icon.bet-won { background: rgba(57, 255, 20, 0.1); color: var(--success); }
+        .activity-icon.bet-lost { background: rgba(255, 7, 58, 0.1); color: var(--danger); }
+        .activity-icon.challenge { background: rgba(255, 215, 0, 0.1); color: var(--warning); }
+        .activity-icon.achievement { background: rgba(255, 140, 0, 0.1); color: var(--neon-orange); }
+        .activity-icon.friend { background: rgba(0, 243, 255, 0.1); color: var(--primary); }
+        .activity-icon.milestone { background: rgba(255, 0, 255, 0.1); color: var(--primary); }
+
+        /* Bet Card Content */
+        .bet-content {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .bet-teams {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .bet-team {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .team-logo {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .vs {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .bet-details {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+        }
+
+        .bet-detail {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .bet-detail i {
+            color: var(--primary);
+        }
+
+        .bet-outcome {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .bet-outcome.win {
+            background: rgba(57, 255, 20, 0.2);
+            color: var(--success);
+        }
+
+        .bet-outcome.loss {
+            background: rgba(255, 7, 58, 0.2);
+            color: var(--danger);
+        }
+
+        .bet-outcome.pending {
+            background: rgba(255, 215, 0, 0.2);
+            color: var(--warning);
+        }
+
+        /* Achievement Card */
+        .achievement-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: linear-gradient(90deg, rgba(255, 140, 0, 0.1), rgba(255, 215, 0, 0.1));
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .achievement-icon {
+            font-size: 3rem;
+        }
+
+        .achievement-info h4 {
+            font-family: 'Inter', sans-serif;
+            color: var(--warning);
+            margin-bottom: 5px;
+        }
+
+        .achievement-info p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Challenge Card */
+        .challenge-content {
+            background: rgba(255, 215, 0, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .challenge-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .challenge-title {
+            font-weight: 600;
+        }
+
+        .challenge-prize {
+            color: var(--warning);
+            font-weight: 700;
+        }
+
+        .challenge-vs {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .challenge-player {
+            text-align: center;
+        }
+
+        .challenge-player-name {
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        /* Actions Bar */
+        .activity-actions {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .activity-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .activity-action-btn:hover {
+            color: var(--primary);
+        }
+
+        .activity-action-btn.liked {
+            color: var(--danger);
+        }
+
+        /* Comments Section */
+        .comments-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+            display: none;
+        }
+
+        .comments-section.show {
+            display: block;
+        }
+
+        .comment-input-wrapper {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .comment-input {
+            flex: 1;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            color: white;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .comment-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .comment-submit {
+            padding: 10px 20px;
+            background: var(--primary);
+            border: none;
+            border-radius: 20px;
+            color: black;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .comment {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary), var(--primary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .comment-content {
+            flex: 1;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .comment-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .comment-time {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* New Activity Animation */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .activity-card.new {
+            animation: slideIn 0.5s ease;
+            border-color: var(--primary);
+        }
+
+        /* Live Indicator */
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 7, 58, 0.2);
+            color: var(--danger);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--danger);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Load More */
+        .load-more {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .load-more-btn {
+            padding: 12px 40px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+        }
+
+        .load-more-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .page-title {
+                font-size: 1.8rem;
+            }
+
+            .bet-teams {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .challenge-vs {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+        <header>
+        <div class="header-content">
+            <a href="index.html" class="logo">TRUST<span>MY</span>RECORD</a>
+            <nav class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="challenges.html" class="nav-link">Arena</a>
+                <a href="forum.html" class="nav-link">Forum</a>
+                <a href="polls.html" class="nav-link">Polls</a>
+                <a href="trivia.html" class="nav-link">Trivia</a>
+                <a href="activity.html" class="nav-link active">Activity</a>
+                
+                <a href="messages.html" class="nav-link nav-icon">
+                    <i class="fas fa-envelope"></i>
+                    <span class="nav-badge" id="messageBadge" style="display: none;">0</span>
+                </a>
+                <a href="#" class="nav-link nav-icon" id="notificationsBtn">
+                    <i class="fas fa-bell"></i>
+                    <span class="nav-badge" id="notifBadge" style="display: none;">0</span>
+                </a>
+                <a href="profile.html" class="nav-link" id="profileLink">My Profile</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title"><i class="fas fa-stream"></i> Activity Feed</h1>
+            <p class="page-subtitle">See what your friends are betting on</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="feed-filters">
+            <button class="filter-btn active" onclick="filterFeed('all')">All Activity</button>
+            <button class="filter-btn" onclick="filterFeed('bets')">🎯 Bets</button>
+            <button class="filter-btn" onclick="filterFeed('wins')">🏆 Wins</button>
+            <button class="filter-btn" onclick="filterFeed('challenges')">⚔️ Challenges</button>
+            <button class="filter-btn" onclick="filterFeed('achievements')">🏅 Achievements</button>
+        </div>
+
+        <!-- Activity Feed -->
+        <div class="activity-feed" id="activityFeed">
+            <!-- Activities loaded by JS -->
+        </div>
+
+        <div class="load-more">
+            <button class="load-more-btn" onclick="loadMore()">Load More</button>
+        </div>
+    </main>
+
+    <script src="static/js/auth.js"></script>
+    <script src="static/js/notifications.js"></script>
+    <script>
+        const ACTIVITY_KEY = 'tmr_activity';
+
+        // No mock activity data - all data comes from real user activity
+        const mockActivities = [];
+
+        let currentFilter = 'all';
+        let activities = [];
+
+        function getActivities() {
+            return JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]').sort((a, b) => b.time - a.time);
+        }
+
+        function saveActivity(activity) {
+            const activities = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]');
+            activities.unshift({
+                ...activity,
+                id: Date.now(),
+                time: Date.now(),
+                likes: 0,
+                comments: []
+            });
+            // Keep only last 100
+            if (activities.length > 100) activities.pop();
+            localStorage.setItem(ACTIVITY_KEY, JSON.stringify(activities));
+        }
+
+        function renderFeed() {
+            const container = document.getElementById('activityFeed');
+            activities = getActivities();
+
+            // Filter
+            let filtered = activities;
+            if (currentFilter === 'bets') {
+                filtered = activities.filter(a => a.type === 'bet-placed');
+            } else if (currentFilter === 'wins') {
+                filtered = activities.filter(a => a.type === 'bet-won');
+            } else if (currentFilter === 'challenges') {
+                filtered = activities.filter(a => a.type === 'challenge');
+            } else if (currentFilter === 'achievements') {
+                filtered = activities.filter(a => a.type === 'achievement' || a.type === 'milestone');
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="text-align: center; padding: 60px; color: var(--text-muted);">
+                        <i class="fas fa-stream" style="font-size: 3rem; margin-bottom: 20px; display: block;"></i>
+                        <h3>No Activity Yet</h3>
+                        <p>Follow more friends to see their betting activity</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(activity => renderActivityCard(activity)).join('');
+        }
+
+        function renderActivityCard(activity) {
+            const iconClass = getActivityIconClass(activity.type);
+            const icon = getActivityIcon(activity.type);
+
+            let contentHtml = '';
+
+            if (activity.type === 'bet-placed' || activity.type === 'bet-won' || activity.type === 'bet-lost') {
+                const isWin = activity.type === 'bet-won';
+                const isLoss = activity.type === 'bet-lost';
+                contentHtml = `
+                    <div class="bet-content">
+                        <div class="bet-teams">
+                            <div class="bet-team">
+                                <div class="team-logo">${activity.content.teams[0][0]}</div>
+                                <span>${activity.content.teams[0]}</span>
+                            </div>
+                            <span class="vs">VS</span>
+                            <div class="bet-team">
+                                <div class="team-logo">${activity.content.teams[1][0]}</div>
+                                <span>${activity.content.teams[1]}</span>
+                            </div>
+                        </div>
+                        <div class="bet-details">
+                            <div class="bet-detail">
+                                <i class="fas fa-crosshairs"></i>
+                                <span>${activity.content.pick}</span>
+                            </div>
+                            <div class="bet-detail">
+                                <i class="fas fa-chart-line"></i>
+                                <span>${activity.content.odds}</span>
+                            </div>
+                            <div class="bet-detail">
+                                <i class="fas fa-coins"></i>
+                                <span>${activity.content.stake} units</span>
+                            </div>
+                        </div>
+                        ${isWin ? `<div style="margin-top: 10px;"><span class="bet-outcome win">Win +${activity.content.profit} units</span></div>` : ''}
+                        ${isLoss ? `<div style="margin-top: 10px;"><span class="bet-outcome loss">Loss -${activity.content.loss} units</span></div>` : ''}
+                    </div>
+                `;
+            } else if (activity.type === 'achievement') {
+                contentHtml = `
+                    <div class="achievement-content">
+                        <div class="achievement-icon">${activity.content.icon}</div>
+                        <div class="achievement-info">
+                            <h4>${activity.content.title}</h4>
+                            <p>${activity.content.description}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (activity.type === 'milestone') {
+                contentHtml = `
+                    <div class="achievement-content">
+                        <div class="achievement-icon">🏆</div>
+                        <div class="achievement-info">
+                            <h4>${activity.content.title}</h4>
+                            <p>${activity.content.subtitle} • ${activity.content.stat}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (activity.type === 'challenge') {
+                contentHtml = `
+                    <div class="challenge-content">
+                        <div class="challenge-header">
+                            <span class="challenge-title">${activity.content.title}</span>
+                            <span class="challenge-prize">${activity.content.prize}</span>
+                        </div>
+                        <div class="challenge-vs">
+                            <div class="challenge-player">
+                                <div class="activity-avatar" style="width: 40px; height: 40px;">${activity.user[0]}</div>
+                                <div class="challenge-player-name">${activity.user}</div>
+                            </div>
+                            <span style="font-family: 'Orbitron'; color: var(--warning);">VS</span>
+                            <div class="challenge-player">
+                                <div class="activity-avatar" style="width: 40px; height: 40px;">${activity.content.opponent[0]}</div>
+                                <div class="challenge-player-name">${activity.content.opponent}</div>
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin-top: 10px; color: var(--text-muted); font-size: 13px;">
+                            ${activity.content.duration} • ${activity.content.sport || 'All Sports'}
+                        </div>
+                    </div>
+                `;
+            } else if (activity.type === 'friend') {
+                contentHtml = `
+                    <div style="padding: 15px; background: rgba(0, 243, 255, 0.05); border-radius: 12px; margin: 15px 0;">
+                        <i class="fas fa-user-friends" style="color: var(--primary); margin-right: 10px;"></i>
+                        Now connected with <strong>${activity.target}</strong>
+                    </div>
+                `;
+            }
+
+            const commentsHtml = activity.comments?.map(c => `
+                <div class="comment">
+                    <div class="comment-avatar">${c.user[0]}</div>
+                    <div class="comment-content">
+                        <div class="comment-author">${c.user}</div>
+                        <div class="comment-text">${c.text}</div>
+                        <div class="comment-time">${timeAgo(c.time)}</div>
+                    </div>
+                </div>
+            `).join('') || '';
+
+            return `
+                <div class="activity-card" data-id="${activity.id}">
+                    <div class="activity-header">
+                        <div class="activity-avatar">${activity.user[0]}</div>
+                        <div class="activity-meta">
+                            <div class="activity-user">
+                                <a href="profile.html?user=${activity.user}">${activity.user}</a>
+                            </div>
+                            <div class="activity-action">${activity.action}</div>
+                            <div class="activity-time">${timeAgo(activity.time)}</div>
+                        </div>
+                        <div class="activity-icon ${iconClass}">
+                            <i class="fas ${icon}"></i>
+                        </div>
+                    </div>
+                    ${contentHtml}
+                    <div class="activity-actions">
+                        <button class="activity-action-btn ${activity.likedBy?.includes(currentUser?.username) ? 'liked' : ''}" onclick="toggleLike(${activity.id})">
+                            <i class="fas fa-heart"></i>
+                            <span id="likes-${activity.id}">${activity.likes || 0}</span>
+                        </button>
+                        <button class="activity-action-btn" onclick="toggleComments(${activity.id})">
+                            <i class="fas fa-comment"></i>
+                            <span>${activity.comments?.length || 0}</span>
+                        </button>
+                        <button class="activity-action-btn" onclick="shareActivity(${activity.id})">
+                            <i class="fas fa-share"></i>
+                            Share
+                        </button>
+                    </div>
+                    <div class="comments-section" id="comments-${activity.id}">
+                        <div class="comment-input-wrapper">
+                            <input type="text" class="comment-input" id="comment-input-${activity.id}" placeholder="Add a comment...">
+                            <button class="comment-submit" onclick="addComment(${activity.id})">Post</button>
+                        </div>
+                        <div class="comments-list">
+                            ${commentsHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getActivityIconClass(type) {
+            const classes = {
+                'bet-placed': 'bet-placed',
+                'bet-won': 'bet-won',
+                'bet-lost': 'bet-lost',
+                'challenge': 'challenge',
+                'achievement': 'achievement',
+                'milestone': 'milestone',
+                'friend': 'friend'
+            };
+            return classes[type] || 'bet-placed';
+        }
+
+        function getActivityIcon(type) {
+            const icons = {
+                'bet-placed': 'fa-check-circle',
+                'bet-won': 'fa-trophy',
+                'bet-lost': 'fa-times-circle',
+                'challenge': 'fa-bolt',
+                'achievement': 'fa-medal',
+                'milestone': 'fa-flag-checkered',
+                'friend': 'fa-user-plus'
+            };
+            return icons[type] || 'fa-circle';
+        }
+
+        function filterFeed(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderFeed();
+        }
+
+        function toggleLike(activityId) {
+            const activities = getActivities();
+            const activity = activities.find(a => a.id === activityId);
+            if (!activity) return;
+
+            if (!activity.likedBy) activity.likedBy = [];
+
+            const idx = activity.likedBy.indexOf(currentUser?.username);
+            if (idx > -1) {
+                activity.likedBy.splice(idx, 1);
+                activity.likes--;
+            } else {
+                activity.likedBy.push(currentUser?.username);
+                activity.likes++;
+            }
+
+            // Update localStorage
+            const stored = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]');
+            const storedIdx = stored.findIndex(a => a.id === activityId);
+            if (storedIdx > -1) {
+                stored[storedIdx] = activity;
+                localStorage.setItem(ACTIVITY_KEY, JSON.stringify(stored));
+            }
+
+            renderFeed();
+        }
+
+        function toggleComments(activityId) {
+            const section = document.getElementById(`comments-${activityId}`);
+            section.classList.toggle('show');
+        }
+
+        function addComment(activityId) {
+            const input = document.getElementById(`comment-input-${activityId}`);
+            const text = input.value.trim();
+            if (!text) return;
+
+            const activities = getActivities();
+            const activity = activities.find(a => a.id === activityId);
+            if (!activity) return;
+
+            if (!activity.comments) activity.comments = [];
+            activity.comments.push({
+                user: currentUser?.username,
+                text,
+                time: Date.now()
+            });
+
+            // Update localStorage
+            const stored = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]');
+            const storedIdx = stored.findIndex(a => a.id === activityId);
+            if (storedIdx > -1) {
+                stored[storedIdx] = activity;
+                localStorage.setItem(ACTIVITY_KEY, JSON.stringify(stored));
+            }
+
+            input.value = '';
+            renderFeed();
+
+            // Keep comments open
+            setTimeout(() => {
+                document.getElementById(`comments-${activityId}`).classList.add('show');
+            }, 50);
+        }
+
+        function shareActivity(activityId) {
+            const url = `${window.location.origin}/activity.html?id=${activityId}`;
+            navigator.clipboard.writeText(url);
+            alert('Link copied to clipboard!');
+        }
+
+        function loadMore() {
+            // In real implementation, fetch more from API
+            alert('Loading more activity... (Demo: No more items)');
+        }
+
+        function timeAgo(timestamp) {
+            const seconds = Math.floor((Date.now() - timestamp) / 1000);
+            if (seconds < 60) return 'just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            const days = Math.floor(hours / 24);
+            return `${days}d ago`;
+        }
+
+        // Public API to add activity from other pages
+        window.TMR = window.TMR || {};
+        window.TMR.addActivity = function(type, content) {
+            saveActivity({
+                type,
+                user: currentUser?.username,
+                action: getActionText(type),
+                content
+            });
+        };
+
+        function getActionText(type) {
+            const actions = {
+                'bet-placed': 'placed a bet',
+                'bet-won': 'won a bet',
+                'bet-lost': 'lost a bet',
+                'challenge': 'issued a challenge',
+                'achievement': 'earned an achievement',
+                'milestone': 'reached a milestone',
+                'friend': 'became friends with'
+            };
+            return actions[type] || 'did something';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!currentUser) {
+                window.location.href = 'index.html?login=1';
+                return;
+            }
+            renderFeed();
+
+            // Simulate live updates
+            setInterval(() => {
+                if (Math.random() > 0.7) {
+                    const newActivity = mockActivities[Math.floor(Math.random() * mockActivities.length)];
+                    newActivity.id = Date.now();
+                    newActivity.time = Date.now();
+                    const container = document.getElementById('activityFeed');
+                    const card = document.createElement('div');
+                    card.innerHTML = renderActivityCard(newActivity);
+                    card.firstElementChild.classList.add('new');
+                    container.insertBefore(card.firstElementChild, container.firstChild);
+                }
+            }, 30000); // Every 30 seconds
+        });
+    </script>
+</body>
+</html>

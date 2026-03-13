@@ -1,4 +1,4 @@
-// COMPLETE FIX FOR MAKE YOUR PICK MODULE
+﻿// COMPLETE FIX FOR MAKE YOUR PICK MODULE
 // This file completely replaces the broken inline JavaScript
 // Debug alert removed - module loads silently now
 
@@ -376,30 +376,105 @@ function setUnits(units) {
 }
 
 /**
- * Submit pick
+ * Submit pick - FIXED to save in auto-grader compatible format
  */
 function submitPick() {
     const reasoning = document.getElementById('pickReasoning').value;
-
+    
+    // Find the selected game from currentFilteredGames
+    const selectedGameObj = currentFilteredGames.find(g => `${g.away_team} @ ${g.home_team}` === selectedGame);
+    
+    if (!selectedGameObj) {
+        console.error('Could not find game data for:', selectedGame);
+        alert('Error: Could not find game data. Please try again.');
+        return;
+    }
+    
+    // Map sport display name to sport_key for ESPN API
+    const sportKeyMap = {
+        'NFL': 'americanfootball_nfl',
+        'NBA': 'basketball_nba',
+        'NHL': 'icehockey_nhl',
+        'MLB': 'baseball_mlb',
+        'NCAAF': 'americanfootball_ncaaf',
+        'NCAAB': 'basketball_ncaab'
+    };
+    
+    // Map bet type to market_type
+    const marketTypeMap = {
+        'moneyline': 'h2h',
+        'spread': 'spreads',
+        'total': 'totals'
+    };
+    
+    // Get the actual odds based on selection
+    let oddsValue = selectedConfidence === 5 ? -150 : selectedConfidence === 4 ? -120 : selectedConfidence === 3 ? -110 : selectedConfidence === 2 ? -105 : -100;
+    let lineValue = null;
+    
+    // Determine selection and get real odds/line from game data
+    let selection = '';
+    const awayTeam = selectedGameObj.away_team;
+    const homeTeam = selectedGameObj.home_team;
+    
+    if (selectedBetType === 'moneyline') {
+        // Default to away team for moneyline (user should be able to pick either)
+        selection = awayTeam;
+        if (selectedGameObj.odds?.moneyline?.away) {
+            oddsValue = selectedGameObj.odds.moneyline.away;
+        }
+    } else if (selectedBetType === 'spread') {
+        selection = awayTeam;  // Default to away team spread
+        if (selectedGameObj.odds?.spreads) {
+            const spread = selectedGameObj.odds.spreads.find(s => s.name === awayTeam);
+            if (spread) {
+                oddsValue = spread.price;
+                lineValue = spread.point;
+            }
+        }
+    } else if (selectedBetType === 'total') {
+        selection = 'over';  // Default to over
+        if (selectedGameObj.odds?.totals?.over) {
+            oddsValue = selectedGameObj.odds.totals.over.price;
+            lineValue = selectedGameObj.odds.totals.over.point;
+        }
+    }
+    
+    // Get current user for user_id
+    const currentUser = JSON.parse(localStorage.getItem('tmr_current_user') || '{}');
+    const userId = currentUser.username || currentUser.id || 'anonymous';
+    
+    // Build pick in auto-grader compatible format
     const pick = {
-        sport: selectedSport,
-        betType: selectedBetType,
-        game: selectedGame,
-        confidence: selectedConfidence,
-        units: selectedUnits,
-        reasoning: reasoning,
-        timestamp: new Date().toISOString(),
+        id: Date.now().toString(),
+        user_id: userId,
+        // Auto-grader required fields
+        game_id: selectedGameObj.id || null,
+        sport_key: sportKeyMap[selectedSport] || selectedSport.toLowerCase(),
+        sport_title: selectedSport,
+        home_team: homeTeam,
+        away_team: awayTeam,
+        market_type: marketTypeMap[selectedBetType] || selectedBetType,
+        selection: selection,
+        line_snapshot: lineValue,
+        odds_snapshot: oddsValue,
+        units: selectedUnits || 1,
+        commence_time: selectedGameObj.commence_time,
         status: 'pending',
-        id: Date.now()
+        result: 'pending',
+        // Additional metadata
+        confidence: selectedConfidence,
+        reasoning: reasoning,
+        created_at: new Date().toISOString(),
+        locked_at: new Date().toISOString()
     };
 
     // Save to localStorage
-    const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+    const picks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
     picks.unshift(pick);
-    localStorage.setItem('trustMyRecordPicks', JSON.stringify(picks));
+    localStorage.setItem('tmr_picks', JSON.stringify(picks));
 
-    console.log('Pick submitted and saved:', pick);
-    alert('✅ Pick submitted and saved to your permanent record!');
+    console.log('[TMR] Pick submitted with auto-grader format:', pick);
+    alert('Pick submitted and saved to your permanent record!');
 
     // Update picks history display if it exists
     if (typeof loadPicksHistory === 'function') {
@@ -422,12 +497,11 @@ function submitPick() {
 
     showStep('sport');
 }
-
 /**
  * Load picks history
  */
 function loadPicksHistory() {
-    const picks = JSON.parse(localStorage.getItem('trustMyRecordPicks') || '[]');
+    const picks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
     const container = document.getElementById('recentPicksContainer');
 
     if (!container) return;
@@ -441,12 +515,12 @@ function loadPicksHistory() {
         <div class="pick-history-item ${pick.status}">
             <div class="pick-history-header">
                 <span class="pick-sport-badge">${pick.sport}</span>
-                <span class="pick-bet-type">${pick.betType}</span>
-                <span class="pick-date">${new Date(pick.timestamp).toLocaleDateString()}</span>
+                <span class="pick-bet-type">${pick.pickType || pick.betType}</span>
+                <span class="pick-date">${new Date(pick.createdAt || pick.timestamp).toLocaleDateString()}</span>
             </div>
             <div class="pick-history-details">
-                <div class="pick-game-info">Game: ${pick.game}</div>
-                <div class="pick-confidence">Confidence: ${pick.confidence} | Units: ${pick.units}</div>
+                <div class="pick-game-info">${pick.team1} vs ${pick.team2}</div>
+                <div class="pick-confidence">${pick.stake || pick.units} units @ ${pick.odds}</div>
                 ${pick.reasoning ? `<div class="pick-reasoning">${pick.reasoning}</div>` : ''}
             </div>
             <div class="pick-status-badge ${pick.status}">${pick.status.toUpperCase()}</div>

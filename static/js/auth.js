@@ -21,9 +21,19 @@ class AuthSystem {
 
     initializeUI() {
         // Check if user is already logged in
-        const sessionUser = localStorage.getItem('currentUser');
+        // Support both old 'currentUser' and new 'tmr_current_user' keys
+        let sessionUser = localStorage.getItem('tmr_current_user');
+        if (!sessionUser) {
+            // Migrate from old key if exists
+            sessionUser = localStorage.getItem('currentUser');
+            if (sessionUser) {
+                localStorage.setItem('tmr_current_user', sessionUser);
+                console.log('[Auth] Migrated user session to tmr_current_user');
+            }
+        }
         if (sessionUser) {
             this.currentUser = JSON.parse(sessionUser);
+            localStorage.setItem('tmr_current_user', JSON.stringify(this.currentUser));
             this.updateUIForLoggedInUser();
         } else {
             // Initialize navigation for logged-out users
@@ -122,7 +132,7 @@ class AuthSystem {
 
         // Set current user
         this.currentUser = user;
-        localStorage.setItem('currentUser', JSON.stringify(user));
+        localStorage.setItem('tmr_current_user', JSON.stringify(user));
 
         this.updateUIForLoggedInUser();
 
@@ -134,7 +144,7 @@ class AuthSystem {
      */
     logout() {
         this.currentUser = null;
-        localStorage.removeItem('currentUser');
+        localStorage.removeItem('tmr_current_user');
         this.updateUIForLoggedOutUser();
     }
 
@@ -157,7 +167,7 @@ class AuthSystem {
         this.currentUser = this.users[userIndex];
 
         this.saveUsers();
-        localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+        localStorage.setItem('tmr_current_user', JSON.stringify(this.currentUser));
 
         return this.currentUser;
     }
@@ -198,7 +208,7 @@ class AuthSystem {
         }
 
         this.saveUsers();
-        localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+        localStorage.setItem('tmr_current_user', JSON.stringify(this.currentUser));
 
         return !isFollowing; // Return new follow state
     }

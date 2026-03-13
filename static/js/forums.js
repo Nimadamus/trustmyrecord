@@ -397,7 +397,7 @@ class ForumsSystem {
 
 // Clear old forum data if categories changed (v2 = new categories with groups)
 (function() {
-    const FORUM_VERSION = 'v2_groups';
+    const FORUM_VERSION = 'v3_no_fake_data';
     if (localStorage.getItem('tmr_forum_version') !== FORUM_VERSION) {
         localStorage.removeItem('trustmyrecord_threads');
         localStorage.removeItem('trustmyrecord_replies');

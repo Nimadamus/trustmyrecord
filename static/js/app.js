@@ -142,19 +142,28 @@ const App = {
     async handleLogin(e) {
         e.preventDefault();
         const form = e.target;
+        
+        const email = form.querySelector('#loginEmail')?.value;
+        const password = form.querySelector('#loginPassword')?.value;
+        const rememberMe = form.querySelector('#rememberMe')?.checked;
+        
+        if (!email || !password) {
+            this.showToast('Please enter both email and password', 'error');
+            return;
+        }
+        
         const submitBtn = form.querySelector('button[type="submit"]');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Logging in...';
 
         try {
             await api.login({
-                email: form.email.value,
-                password: form.password.value
+                email: email,
+                password: password,
+                rememberMe: rememberMe
             });
-            this.hideModal('login-modal');
-            this.updateNavigation();
             this.showToast('Welcome back!');
-            window.location.reload();
+            showSection('profile');
         } catch (error) {
             this.showToast(error.message || 'Login failed', 'error');
         } finally {
@@ -167,7 +176,17 @@ const App = {
         e.preventDefault();
         const form = e.target;
         
-        if (form.password.value !== form.confirm_password.value) {
+        const username = form.querySelector('#signupUsername')?.value;
+        const email = form.querySelector('#signupEmail')?.value;
+        const password = form.querySelector('#signupPassword')?.value;
+        const confirmPassword = form.querySelector('#confirm_password')?.value;
+        
+        if (!username || !email || !password) {
+            this.showToast('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        if (password !== confirmPassword) {
             this.showToast('Passwords do not match', 'error');
             return;
         }
@@ -178,14 +197,12 @@ const App = {
 
         try {
             await api.register({
-                username: form.username.value,
-                email: form.email.value,
-                password: form.password.value
+                username: username,
+                email: email,
+                password: password
             });
-            this.hideModal('signup-modal');
-            this.updateNavigation();
             this.showToast('Account created successfully!');
-            window.location.reload();
+            showSection('profile');
         } catch (error) {
             this.showToast(error.message || 'Registration failed', 'error');
         } finally {

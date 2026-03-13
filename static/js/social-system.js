@@ -68,10 +68,10 @@ class SocialSystem {
 
         // Check if already following
         if (!users[currentIndex].social) {
-            users[currentIndex].social = { followers: [], following: [], reputation: 100, badges: [] };
+            users[currentIndex].social = { followers: [], following: [], reputation: 0, badges: [] };
         }
         if (!users[targetIndex].social) {
-            users[targetIndex].social = { followers: [], following: [], reputation: 100, badges: [] };
+            users[targetIndex].social = { followers: [], following: [], reputation: 0, badges: [] };
         }
 
         if (users[currentIndex].social.following.includes(targetUsername)) {

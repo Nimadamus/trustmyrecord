@@ -1,4 +1,4 @@
-# Trust My Record
+﻿# Trust My Record
 
 > **The End of the Bullshit** - A transparent, verifiable sports betting platform.
 
@@ -28,7 +28,7 @@ Trust My Record is a sports betting transparency platform where every pick is tr
 
 ## Technology Stack
 
-### Frontend (Complete)
+### Frontend
 - **HTML5/CSS3** - Modern, responsive design
 - **Vanilla JavaScript** - Zero dependencies
 - **localStorage** - All data stored client-side
@@ -75,13 +75,25 @@ Site automatically deploys to: `https://trustmyrecord.com`
 
 ```
 trustmyrecord/
-├── index.html          # Main application (SPA)
-├── CNAME              # Domain configuration
-├── README.md          # This file
-└── QUICKSTART.md      # Quick reference
+├── index.html          # Landing / Auth
+├── profile.html        # User profile
+├── challenges.html     # Head-to-head challenges
+├── forum.html          # Community forum
+├── friends.html        # Friends list
+├── messages.html       # Private messaging
+├── polls.html          # Community polls
+├── trivia.html         # Sports trivia game
+├── activity.html       # Activity feed
+├── premium.html        # Premium tiers
+├── 404.html            # SPA redirect
+├── CNAME               # Domain config
+├── README.md           # This file
+├── SETUP.md            # Quick reference
+└── static/
+    ├── css/            # Stylesheets
+    ├── js/             # JavaScript modules
+    └── data/           # Sample data
 ```
-
-All styles, scripts, and functionality are contained in `index.html`.
 
 ---
 
@@ -94,42 +106,49 @@ All user data is stored in browser localStorage:
 - **Following** - Who you follow
 - **Poll Votes** - Poll participation
 - **Trivia Scores** - Game results
+- **Messages** - Conversation history
+- **Notifications** - User alerts
 
 Data persists in the user's browser. No backend database required.
 
 ---
 
-## Features
+## Core Pages
 
-### Pick Management
-- Submit picks with sport, teams, odds, units
-- Track pending, won, and lost picks
-- View complete pick history
-- Calculate win rate and ROI
+### index.html
+Landing page with login/signup modal. Creates user session in localStorage.
 
-### Social Features
-- Post to community feed
-- Follow other users
-- Like and comment on picks
-- Share strategies
+### profile.html
+User dashboard with:
+- Pick history and stats
+- Win rate, ROI, streaks
+- Units tracking
+- Achievement badges
+- Followers/Following
 
-### Competitions
-- Join head-to-head challenges
-- Compete in tournaments
-- View live leaderboards
-- Earn badges and achievements
+### challenges.html
+1v1 and tournament betting competitions.
 
-### Groups
-- Create betting communities
-- Join group discussions
-- Share exclusive picks
-- Track group stats
+### forum.html
+Community discussion boards.
 
-### Notifications
-- Real-time updates
-- Filter by category (Picks, Social, Alerts)
-- Mark as read
-- Action buttons
+### friends.html
+Manage friends list and discover users.
+
+### messages.html
+Private messaging between users.
+
+### polls.html
+Create and vote on sports polls.
+
+### trivia.html
+Daily sports trivia with points.
+
+### activity.html
+Feed of friends' activity and picks.
+
+### premium.html
+Premium tier features and upgrades.
 
 ---
 
@@ -157,4 +176,4 @@ Copyright © 2025 Trust My Record. All rights reserved.
 
 **The era of the guru is over. The era of the record has begun.**
 
-*Last Updated: 2025-11-10*
+*Last Updated: 2026-03-07*
