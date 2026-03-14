@@ -1024,28 +1024,37 @@
                 console.log('[Profile] loadProfile() completed');
             } catch(e) {
                 console.error('[Profile] Init error:', e);
-                document.getElementById('profileHeader').innerHTML = '<div class="error-message" style="background:#ff073a22;border:2px solid #ff073a;border-radius:12px;padding:20px;color:#fff;"><h3 style="color:#ff073a;">Error loading profile</h3><p>' + e.message + '</p><pre style="color:#aaa;font-size:12px;">' + e.stack + '</pre></div>';
+                const ph = document.getElementById('profileHeader');
+                if (ph) ph.innerHTML = '<div class="error-message" style="background:#ff073a22;border:2px solid #ff073a;border-radius:12px;padding:20px;color:#fff;"><h3 style="color:#ff073a;">Error loading profile</h3><p>' + e.message + '</p><pre style="color:#aaa;font-size:12px;">' + e.stack + '</pre></div>';
             }
         }
 
         function updateHeader() {
             const userMenu = document.getElementById('userMenu');
             const myProfileLink = document.getElementById('myProfileLink');
+            const profileLink = document.getElementById('profileLink');
 
             if (currentUser) {
-                userMenu.innerHTML = `
-                    <a href="profile.html?username=${currentUser.username}" class="user-avatar">
-                        ${currentUser.username.charAt(0).toUpperCase()}
-                    </a>
-                `;
+                if (userMenu) {
+                    userMenu.innerHTML = `
+                        <a href="profile.html?username=${currentUser.username}" class="user-avatar">
+                            ${currentUser.username.charAt(0).toUpperCase()}
+                        </a>
+                    `;
+                }
                 if (myProfileLink) {
                     myProfileLink.href = `profile.html?username=${currentUser.username}`;
                     myProfileLink.style.display = 'inline-block';
                 }
+                if (profileLink) {
+                    profileLink.href = `profile.html?username=${currentUser.username}`;
+                }
             } else {
-                userMenu.innerHTML = `
-                    <a href="index.html" class="btn btn-secondary">Log In</a>
-                `;
+                if (userMenu) {
+                    userMenu.innerHTML = `
+                        <a href="index.html" class="btn btn-secondary">Log In</a>
+                    `;
+                }
                 if (myProfileLink) {
                     myProfileLink.style.display = 'none';
                 }
@@ -1170,7 +1179,8 @@
                 const profileUser = users.find(u => u.username === profileUsername);
                 
                 if (!profileUser) {
-                    document.getElementById('profileHeader').innerHTML = `
+                    const ph = document.getElementById('profileHeader');
+                    if (ph) ph.innerHTML = `
                         <div class="error-message">
                             <h3>❌ User Not Found</h3>
                             <p>User "${profileUsername}" does not exist.</p>
@@ -1264,7 +1274,8 @@
 
             } catch (error) {
                 console.error('Error loading profile:', error);
-                document.getElementById('profileHeader').innerHTML = `
+                const ph = document.getElementById('profileHeader');
+                if (ph) ph.innerHTML = `
                     <div class="error-message">
                         <h3>❌ Error Loading Profile</h3>
                         <p>Could not load profile data. Please try again later.</p>
@@ -1275,6 +1286,7 @@
 
         function renderProfileHeader(profile) {
             const header = document.getElementById('profileHeader');
+            if (!header) return;
             const joinDate = new Date(profile.joinedDate || profile.created_at || Date.now()).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long'
@@ -1320,6 +1332,7 @@
 
         function renderStatsGrid(profile) {
             const grid = document.getElementById('statsGrid');
+            if (!grid) return;
             const stats = profile.stats || {};
             const social = profile.social || { followers: [], following: [] };
             const wins = stats.wins || 0;
@@ -1382,6 +1395,7 @@
 
         function renderHandicappingStats(profile) {
             const container = document.getElementById('handicappingStats');
+            if (!container) return;
             const stats = profile.stats || {};
 
             container.innerHTML = `
@@ -1406,6 +1420,7 @@
 
         function renderSportBreakdown(picksBySport) {
             const container = document.getElementById('sportBreakdown');
+            if (!container) return;
             const sportNames = Object.keys(picksBySport || {});
 
             if (!picksBySport || sportNames.length === 0) {
@@ -1452,6 +1467,7 @@
 
         function renderActivity(activity) {
             const container = document.getElementById('activityList');
+            if (!container) return;
 
             if (!activity || activity.length === 0) {
                 container.innerHTML = `
@@ -1491,6 +1507,7 @@
 
         function renderFriends(friends) {
             const container = document.getElementById('friendsList');
+            if (!container) return;
 
             if (!friends || friends.length === 0) {
                 container.innerHTML = `
@@ -1520,6 +1537,7 @@
 
         function renderFollowers(followers) {
             const container = document.getElementById('followersList');
+            if (!container) return;
 
             if (!followers || followers.length === 0) {
                 container.innerHTML = `
@@ -1551,6 +1569,7 @@
 
         function renderFollowing(following) {
             const container = document.getElementById('followingList');
+            if (!container) return;
 
             if (!following || following.length === 0) {
                 container.innerHTML = `
@@ -1582,6 +1601,7 @@
 
         function renderCompetitions(competitions) {
             const container = document.getElementById('competitionList');
+            if (!container) return;
 
             if (!competitions || competitions.length === 0) {
                 container.innerHTML = `
@@ -1611,6 +1631,7 @@
 
         function renderChallenges(challenges) {
             const container = document.getElementById('challengeList');
+            if (!container) return;
 
             if (!challenges || challenges.length === 0) {
                 container.innerHTML = `
@@ -1644,6 +1665,7 @@
 
         function renderPollTriviaStats(data) {
             const container = document.getElementById('pollTriviaStats');
+            if (!container) return;
 
             if (!data) {
                 container.innerHTML = `
@@ -1719,7 +1741,8 @@
                 document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
                 tab.classList.add('active');
-                document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+                const tabContent = document.getElementById(`tab-${tab.dataset.tab}`);
+                if (tabContent) tabContent.classList.add('active');
             });
         });
 
