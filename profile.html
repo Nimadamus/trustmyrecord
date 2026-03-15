@@ -971,6 +971,7 @@
         };
     </script>
     <script src="static/js/auth-persistent.js"></script>
+    <script src="static/js/auto-grader-fixed.js"></script>
     <script>
         // auth is already created by auth-persistent.js (window.auth)
         console.log('[Profile] Script starting. auth exists:', typeof auth !== 'undefined');
@@ -1019,9 +1020,20 @@
                 updateHeader();
                 console.log('[Profile] Header updated');
 
-                // Load profile data
-                loadProfile();
-                console.log('[Profile] loadProfile() completed');
+                // Run auto-grader before loading profile so stats are up-to-date
+                if (typeof TMR_GRADER !== 'undefined' && TMR_GRADER.runGrading) {
+                    console.log('[Profile] Running grading sweep before loading profile...');
+                    TMR_GRADER.runGrading().then(() => {
+                        console.log('[Profile] Grading sweep complete, loading profile');
+                        loadProfile();
+                    }).catch(() => {
+                        console.log('[Profile] Grading sweep failed, loading profile anyway');
+                        loadProfile();
+                    });
+                } else {
+                    loadProfile();
+                }
+                console.log('[Profile] init() completed');
             } catch(e) {
                 console.error('[Profile] Init error:', e);
                 const ph = document.getElementById('profileHeader');
@@ -1202,11 +1214,11 @@
                     const pickStats = {
                         wins: userPicks.filter(p => p.status === 'won').length,
                         losses: userPicks.filter(p => p.status === 'lost').length,
-                        pushes: userPicks.filter(p => p.status === 'pushed').length,
+                        pushes: userPicks.filter(p => p.status === 'pushed' || p.status === 'push').length,
                         pending: userPicks.filter(p => p.status === 'pending').length,
                         totalPicks: userPicks.length
                     };
-                    const denominator = pickStats.totalPicks - pickStats.pushes;
+                    const denominator = pickStats.totalPicks - pickStats.pushes - pickStats.pending;
                     pickStats.winRate = denominator > 0 ? ((pickStats.wins / denominator) * 100).toFixed(1) : 0;
                     profileData.stats = { ...profileData.stats, ...pickStats };
                 }
