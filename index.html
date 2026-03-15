@@ -7444,20 +7444,6 @@
                 <section class="hero">
                     <h1 class="reveal">THE END OF THE BULLSHIT</h1>
                     <p class="reveal">A new standard for sports betting has arrived. Built on absolute proof, radical transparency, and zero excuses.</p>
-                    <div class="hero-stats-bar reveal">
-                        <div class="hero-stat">
-                            <div class="hero-stat-value">6</div>
-                            <div class="hero-stat-desc">Sports</div>
-                        </div>
-                        <div class="hero-stat">
-                            <div class="hero-stat-value" style="background: linear-gradient(135deg, #f59e0b, #fff); -webkit-background-clip: text; background-clip: text;">100%</div>
-                            <div class="hero-stat-desc">Transparent</div>
-                        </div>
-                        <div class="hero-stat">
-                            <div class="hero-stat-value" style="background: linear-gradient(135deg, #8b5cf6, #fff); -webkit-background-clip: text; background-clip: text;">FREE</div>
-                            <div class="hero-stat-desc">Forever</div>
-                        </div>
-                    </div>
                 </section>
 
                 <!-- LOGGED-IN USER DASHBOARD - Command Center -->
@@ -16367,7 +16353,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="static/js/effects.js?v=20251208c"></script>
 
     <script src="static/js/app.js?v=20260122"></script>
-    <script src="static/js/auto-grader.js"></script>
+    <script src="static/js/auto-grader-fixed.js"></script>
     <!-- AUTO-GRADER INITIALIZATION -->
     <script>
     // Initialize auto-grader on page load and run every 5 minutes
@@ -16381,13 +16367,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 3000);
         
-        // Run every 5 minutes to check for completed games
+        // Run every 2 minutes to check for completed games
         setInterval(function() {
             console.log('[TMR] Scheduled auto-grade check running...');
-            if (typeof TMR_GRADER !== 'undefined' && TMR_GRADER.runAutoGrading) {
-                TMR_GRADER.runAutoGrading();
+            if (typeof TMR_GRADER !== 'undefined' && TMR_GRADER.manualGrade) {
+                TMR_GRADER.manualGrade();
             }
-        }, 5 * 60 * 1000); // 5 minutes
+        }, 2 * 60 * 1000); // 2 minutes
     });
     </script>
     <script src="static/js/picks-complete-fix.js"></script>
