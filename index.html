@@ -16214,34 +16214,17 @@ document.addEventListener('DOMContentLoaded', function() {
     </script>
 
     <!-- External Scripts -->
-    <script src="static/js/auth-persistent.js?v=20251209g"></script>
+    <script src="static/js/config.js?v=20260317"></script>
+    <script src="static/js/backend-api.js?v=20260317"></script>
+    <script src="static/js/auth-persistent.js?v=20260317"></script>
     <script>
-        // Clear any cached backend API to prevent "Failed to fetch" errors
-        window.api = undefined;
-        console.log('[TMR] Cleared window.api - using local auth only');
-        
-        // Intercept ALL fetch calls to debug "Failed to fetch" errors
-        const originalFetch = window.fetch;
-        window.fetch = function(...args) {
-            console.log('[TMR FETCH INTERCEPTOR] Fetch called with:', args[0]);
-            console.log('[TMR FETCH INTERCEPTOR] Stack trace:', new Error().stack);
-            return originalFetch.apply(this, args).catch(err => {
-                console.error('[TMR FETCH INTERCEPTOR] Fetch failed:', err);
-                console.error('[TMR FETCH INTERCEPTOR] Failed URL:', args[0]);
-                throw err;
-            });
-        };
-        console.log('[TMR] Fetch interceptor installed');
+        // Backend API integration active
+        console.log('[TMR] Backend API URL:', CONFIG?.api?.baseUrl);
+        console.log('[TMR] Backend mode:', CONFIG?.features?.useBackendAPI ? 'ENABLED' : 'DISABLED (localStorage fallback)');
     </script>
     <script src="static/js/forms-fixed.js?v=20250122c"></script>
     <script>
-        // DEBUG: Trace which handleLogin is being used
-        const originalHandleLogin = handleLogin;
-        handleLogin = function(event) {
-            console.log('[TMR DEBUG] handleLogin called from:', originalHandleLogin.toString().substring(0, 100));
-            return originalHandleLogin(event);
-        };
-        console.log('[TMR DEBUG] handleLogin wrapped for tracing');
+        console.log('[TMR] Form handlers loaded');
     </script>
     <script>
         // Notifications System

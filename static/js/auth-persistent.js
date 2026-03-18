@@ -156,10 +156,41 @@ class PersistentAuthSystem {
         else this.updateUIForLoggedOutUser();
     }
 
-    register(username, email, password, rememberMe = true) {
+    async register(username, email, password, rememberMe = true) {
         if (!username || !email || !password) throw new Error('All fields are required');
         if (username.length < 3) throw new Error('Username must be at least 3 characters');
-        if (password.length < 6) throw new Error('Password must be at least 6 characters');
+        if (password.length < 8) throw new Error('Password must be at least 8 characters');
+
+        // Try backend API first
+        if (typeof CONFIG !== 'undefined' && CONFIG.features?.useBackendAPI && typeof api !== 'undefined') {
+            try {
+                const data = await api.register({ username, email, password });
+                const user = {
+                    id: data.user?.id || this.generateUserId(),
+                    username: data.user?.username || username,
+                    email: data.user?.email || email,
+                    displayName: data.user?.displayName || username,
+                    avatar: this.getDefaultAvatar(username),
+                    bio: '',
+                    joinedDate: new Date().toISOString(),
+                    verified: data.user?.emailVerified || false,
+                    stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
+                    social: { followers: [], following: [], reputation: 0, badges: ['newbie'] },
+                    isPremium: false,
+                    backendUser: true
+                };
+                this.currentUser = user;
+                this.setRememberMe(rememberMe);
+                this.persistSession();
+                this.updateUIForLoggedInUser();
+                return user;
+            } catch (err) {
+                console.error('[Auth] Backend register failed:', err.message);
+                throw err;
+            }
+        }
+
+        // Fallback to localStorage
         if (this.users.find(u => u.username.toLowerCase() === username.toLowerCase())) throw new Error('Username already taken');
         if (this.users.find(u => u.email.toLowerCase() === email.toLowerCase())) throw new Error('Email already registered');
 
@@ -168,7 +199,7 @@ class PersistentAuthSystem {
             username, email,
             passwordHash: this.hashPassword(password),
             displayName: username,
-            avatar: this.getDefaultAvatar(),
+            avatar: this.getDefaultAvatar(username),
             bio: '',
             joinedDate: new Date().toISOString(),
             verified: false,
@@ -186,7 +217,38 @@ class PersistentAuthSystem {
         return user;
     }
 
-    login(usernameOrEmail, password, rememberMe = true) {
+    async login(usernameOrEmail, password, rememberMe = true) {
+        // Try backend API first
+        if (typeof CONFIG !== 'undefined' && CONFIG.features?.useBackendAPI && typeof api !== 'undefined') {
+            try {
+                const data = await api.login(usernameOrEmail, password);
+                const userData = data.user || {};
+                const user = {
+                    id: userData.id || this.generateUserId(),
+                    username: userData.username || usernameOrEmail,
+                    email: userData.email || '',
+                    displayName: userData.displayName || userData.username || usernameOrEmail,
+                    avatar: userData.avatarUrl || this.getDefaultAvatar(userData.username || usernameOrEmail),
+                    bio: userData.bio || '',
+                    joinedDate: userData.created_at || new Date().toISOString(),
+                    verified: userData.emailVerified || false,
+                    stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
+                    social: { followers: [], following: [], reputation: 0, badges: [] },
+                    isPremium: false,
+                    backendUser: true
+                };
+                this.currentUser = user;
+                this.setRememberMe(rememberMe);
+                this.persistSession();
+                this.updateUIForLoggedInUser();
+                return user;
+            } catch (err) {
+                console.error('[Auth] Backend login failed:', err.message);
+                throw err;
+            }
+        }
+
+        // Fallback to localStorage
         const user = this.users.find(u =>
             u.username.toLowerCase() === usernameOrEmail.toLowerCase() ||
             u.email.toLowerCase() === usernameOrEmail.toLowerCase()
@@ -200,7 +262,11 @@ class PersistentAuthSystem {
         return user;
     }
 
-    logout() {
+    async logout() {
+        // Try backend logout
+        if (typeof api !== 'undefined' && api.isLoggedIn && api.isLoggedIn()) {
+            try { await api.logout(); } catch (e) { /* ignore */ }
+        }
         this.clearSession();
         this.updateUIForLoggedOutUser();
         if (typeof showSection === 'function') showSection('record');

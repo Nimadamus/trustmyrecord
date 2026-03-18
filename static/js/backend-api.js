@@ -111,10 +111,10 @@ class TrustMyRecordAPI {
 
     // ==================== AUTH ROUTES ====================
 
-    async login(username, password) {
+    async login(usernameOrEmail, password) {
         const data = await this.request('/auth/login', {
             method: 'POST',
-            body: { username, password }
+            body: { login: usernameOrEmail, password }
         });
         
         // Handle different response formats
@@ -133,6 +133,10 @@ class TrustMyRecordAPI {
             method: 'POST',
             body: userData
         });
+        // If tokens returned (no email verification required), save them
+        if (data.accessToken) {
+            this.saveTokens(data.accessToken, data.refreshToken);
+        }
         return data;
     }
 

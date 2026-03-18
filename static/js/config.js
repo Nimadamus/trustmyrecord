@@ -22,15 +22,15 @@ const CONFIG = {
         note: "No API key required - completely free!"
     },
 
-    // API Configuration
+    // API Configuration - UPDATE THIS when backend is deployed
     api: {
-        baseUrl: "http://localhost:3000/api",
+        baseUrl: "https://trustmyrecord-api.onrender.com/api",
         timeout: 10000
     },
 
     // Feature flags for backend integration
     features: {
-        useBackendAPI: false,
+        useBackendAPI: true,
         requireEmailVerification: false
     },
 
