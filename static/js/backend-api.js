@@ -10,7 +10,8 @@ class TrustMyRecordAPI {
         this.refreshToken = null;
         this.backendAvailable = null; // null = not checked, true/false
         this.loadTokens();
-        this.detectBackend();
+        // Store the detection promise so callers can await it
+        this.ready = this.detectBackend();
     }
 
     // Auto-detect which backend URL is reachable
@@ -301,10 +302,10 @@ class TrustMyRecordAPI {
         });
     }
 
-    async respondToChallenge(challengeId, response) {
+    async respondToChallenge(challengeId, action) {
         return this.request(`/challenges/${challengeId}/respond`, {
             method: 'PUT',
-            body: { response }
+            body: { action }
         });
     }
 

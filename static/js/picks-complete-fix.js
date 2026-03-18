@@ -2,6 +2,40 @@
 // This file completely replaces the broken inline JavaScript
 // Debug alert removed - module loads silently now
 
+/**
+ * Parse bookmakers array (Odds API format) into simplified odds object
+ * Input: [{key, markets: [{key: 'h2h', outcomes: [{name, price, point}]}]}]
+ * Output: { moneyline: {home, away}, spread: {home: {point, price}, away: {point, price}}, totals: {over: {point, price}, under: {point, price}} }
+ */
+function parseBookmakerOdds(bookmakers) {
+    if (!Array.isArray(bookmakers) || bookmakers.length === 0) return null;
+    // Pick first bookmaker (or preferred)
+    const bk = bookmakers[0];
+    if (!bk || !bk.markets) return null;
+    const result = {};
+    for (const market of bk.markets) {
+        if (market.key === 'h2h' && market.outcomes?.length >= 2) {
+            result.moneyline = {
+                away: market.outcomes[0]?.price,
+                home: market.outcomes[1]?.price
+            };
+        } else if (market.key === 'spreads' && market.outcomes?.length >= 2) {
+            result.spread = {
+                away: { point: market.outcomes[0]?.point, price: market.outcomes[0]?.price },
+                home: { point: market.outcomes[1]?.point, price: market.outcomes[1]?.price }
+            };
+        } else if (market.key === 'totals' && market.outcomes?.length >= 2) {
+            const over = market.outcomes.find(o => o.name === 'Over') || market.outcomes[0];
+            const under = market.outcomes.find(o => o.name === 'Under') || market.outcomes[1];
+            result.totals = {
+                over: { point: over?.point, price: over?.price },
+                under: { point: under?.point, price: under?.price }
+            };
+        }
+    }
+    return Object.keys(result).length > 0 ? result : null;
+}
+
 // Global state
 let selectedSport = null;
 let selectedBetType = null;
@@ -126,15 +160,6 @@ async function loadGames() {
     gamesGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">Loading games...</div>';
 
     try {
-        // Initialize API
-        const apiKey = CONFIG?.oddsApi?.key || 'YOUR_ODDS_API_KEY';
-
-        if (!window.initSportsAPI) {
-            throw new Error('SportsAPI not initialized. Make sure api.js is loaded.');
-        }
-
-        const api = initSportsAPI(apiKey);
-
         // Map sport display names to API keys
         const sportKeyMap = {
             'NFL': 'americanfootball_nfl',
@@ -153,19 +178,54 @@ async function loadGames() {
 
         console.log(`✅ Selected Sport: ${selectedSport}`);
         console.log(`✅ Mapped to API key: ${sportKey}`);
-        console.log(`Fetching games from API for ${sportKey}...`);
+        console.log(`Fetching games for ${sportKey}...`);
 
-        // Fetch games for the selected sport
-        const games = await api.getUpcomingGames(sportKey);
-
-        console.log(`Received ${games?.length || 0} games from API`);
-        if (games && games.length > 0) {
-            console.log('First game details:', {
-                sport: games[0].sport,
-                sport_title: games[0].sport_title,
-                matchup: `${games[0].away_team} @ ${games[0].home_team}`
-            });
+        // Wait for backend detection to complete
+        if (window.api && window.api.ready) {
+            await window.api.ready;
         }
+
+        // Fetch games from backend API (odds endpoint returns bookmakers data)
+        let games = [];
+        if (window.api && window.api.backendAvailable) {
+            // Backend is available - use the odds endpoint for full data
+            const baseUrl = window.api.baseUrl;
+            const res = await fetch(`${baseUrl}/games/odds/${sportKey}`);
+            const rawGames = await res.json();
+            // Transform bookmakers format into simplified odds
+            games = (Array.isArray(rawGames) ? rawGames : []).map(g => {
+                const odds = parseBookmakerOdds(g.bookmakers || []);
+                return { ...g, odds };
+            }).filter(g => new Date(g.commence_time) > new Date());
+        } else {
+            // Fallback: use ESPN free API via TMR inline functions
+            const espnPath = window.TMR?.espnPaths?.[sportKey];
+            if (espnPath) {
+                try {
+                    const res = await fetch(`https://site.api.espn.com/apis/v2/scoreboard/header?sport=${espnPath}`);
+                    const data = await res.json();
+                    const events = data?.sports?.[0]?.leagues?.[0]?.events || [];
+                    games = events.filter(e => e.status !== 'post').map(e => {
+                        const awayTeam = e.competitors?.find(c => !c.homeAway || c.homeAway === 'away')?.displayName || 'Away';
+                        const homeTeam = e.competitors?.find(c => c.homeAway === 'home')?.displayName || 'Home';
+                        const odds = window.TMR?.parseEspnOdds?.(e.odds || [], homeTeam, awayTeam) || [];
+                        const parsedOdds = parseBookmakerOdds(odds);
+                        return {
+                            id: e.id,
+                            sport_key: sportKey,
+                            home_team: homeTeam,
+                            away_team: awayTeam,
+                            commence_time: e.date,
+                            odds: parsedOdds
+                        };
+                    });
+                } catch (espnErr) {
+                    console.error('ESPN API error:', espnErr);
+                }
+            }
+        }
+
+        console.log(`Received ${games?.length || 0} games`);
 
         if (!games || games.length === 0) {
             gamesGrid.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-muted);">No upcoming games available for ${selectedSport}</div>`;
@@ -184,7 +244,7 @@ async function loadGames() {
                 case 'total':
                     return game.odds.totals && game.odds.totals.over && game.odds.totals.under;
                 case 'prop':
-                    return true; // Props are always available for manual entry
+                    return true;
                 default:
                     return false;
             }
@@ -376,21 +436,21 @@ function setUnits(units) {
 }
 
 /**
- * Submit pick - FIXED to save in auto-grader compatible format
+ * Submit pick - Uses backend API when available, localStorage as fallback
  */
-function submitPick() {
-    const reasoning = document.getElementById('pickReasoning').value;
-    
+async function submitPick() {
+    const reasoning = document.getElementById('pickReasoning')?.value || '';
+
     // Find the selected game from currentFilteredGames
     const selectedGameObj = currentFilteredGames.find(g => `${g.away_team} @ ${g.home_team}` === selectedGame);
-    
+
     if (!selectedGameObj) {
         console.error('Could not find game data for:', selectedGame);
         alert('Error: Could not find game data. Please try again.');
         return;
     }
-    
-    // Map sport display name to sport_key for ESPN API
+
+    // Map sport display name to sport_key
     const sportKeyMap = {
         'NFL': 'americanfootball_nfl',
         'NBA': 'basketball_nba',
@@ -399,82 +459,90 @@ function submitPick() {
         'NCAAF': 'americanfootball_ncaaf',
         'NCAAB': 'basketball_ncaab'
     };
-    
+
     // Map bet type to market_type
     const marketTypeMap = {
         'moneyline': 'h2h',
         'spread': 'spreads',
         'total': 'totals'
     };
-    
+
     // Get the actual odds based on selection
-    let oddsValue = selectedConfidence === 5 ? -150 : selectedConfidence === 4 ? -120 : selectedConfidence === 3 ? -110 : selectedConfidence === 2 ? -105 : -100;
+    let oddsValue = -110;
     let lineValue = null;
-    
-    // Determine selection and get real odds/line from game data
     let selection = '';
     const awayTeam = selectedGameObj.away_team;
     const homeTeam = selectedGameObj.home_team;
-    
+
     if (selectedBetType === 'moneyline') {
-        // Default to away team for moneyline (user should be able to pick either)
-        selection = awayTeam;
-        if (selectedGameObj.odds?.moneyline?.away) {
-            oddsValue = selectedGameObj.odds.moneyline.away;
+        selection = homeTeam;  // Default to home team
+        if (selectedGameObj.odds?.moneyline?.home) {
+            oddsValue = selectedGameObj.odds.moneyline.home;
         }
     } else if (selectedBetType === 'spread') {
-        selection = awayTeam;  // Default to away team spread
-        if (selectedGameObj.odds?.spreads) {
-            const spread = selectedGameObj.odds.spreads.find(s => s.name === awayTeam);
-            if (spread) {
-                oddsValue = spread.price;
-                lineValue = spread.point;
-            }
+        selection = homeTeam;
+        if (selectedGameObj.odds?.spread?.home) {
+            oddsValue = selectedGameObj.odds.spread.home.price;
+            lineValue = selectedGameObj.odds.spread.home.point;
         }
     } else if (selectedBetType === 'total') {
-        selection = 'over';  // Default to over
+        selection = 'Over';
         if (selectedGameObj.odds?.totals?.over) {
             oddsValue = selectedGameObj.odds.totals.over.price;
             lineValue = selectedGameObj.odds.totals.over.point;
         }
     }
-    
-    // Get current user for user_id
-    const currentUser = JSON.parse(localStorage.getItem('tmr_current_user') || '{}');
-    const userId = currentUser.username || currentUser.id || 'anonymous';
-    
-    // Build pick in auto-grader compatible format
-    const pick = {
-        id: Date.now().toString(),
-        user_id: userId,
-        // Auto-grader required fields
-        game_id: selectedGameObj.id || null,
-        sport_key: sportKeyMap[selectedSport] || selectedSport.toLowerCase(),
-        sport_title: selectedSport,
-        home_team: homeTeam,
-        away_team: awayTeam,
-        market_type: marketTypeMap[selectedBetType] || selectedBetType,
-        selection: selection,
-        line_snapshot: lineValue,
-        odds_snapshot: oddsValue,
-        units: selectedUnits || 1,
-        commence_time: selectedGameObj.commence_time,
-        status: 'pending',
-        result: 'pending',
-        // Additional metadata
-        confidence: selectedConfidence,
-        reasoning: reasoning,
-        created_at: new Date().toISOString(),
-        locked_at: new Date().toISOString()
-    };
 
-    // Save to localStorage
-    const picks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
-    picks.unshift(pick);
-    localStorage.setItem('tmr_picks', JSON.stringify(picks));
+    const sportKey = sportKeyMap[selectedSport] || selectedSport.toLowerCase();
+    const marketType = marketTypeMap[selectedBetType] || selectedBetType;
 
-    console.log('[TMR] Pick submitted with auto-grader format:', pick);
-    alert('Pick submitted and saved to your permanent record!');
+    // Try backend API first
+    if (window.api && window.api.backendAvailable && window.api.isLoggedIn()) {
+        try {
+            const result = await window.api.createPick({
+                game_id: selectedGameObj.id,
+                sport_key: sportKey,
+                market_type: marketType,
+                selection: selection,
+                odds_snapshot: oddsValue,
+                line_snapshot: lineValue,
+                units: selectedUnits || 1
+            });
+            console.log('[TMR] Pick submitted via backend:', result);
+            alert('Pick submitted and recorded on your permanent record!');
+        } catch (err) {
+            console.error('[TMR] Backend pick submission failed:', err);
+            alert(`Pick submission failed: ${err.message || 'Unknown error'}. Please try again.`);
+            return;
+        }
+    } else {
+        // Fallback: save to localStorage
+        const pick = {
+            id: Date.now().toString(),
+            game_id: selectedGameObj.id || null,
+            sport_key: sportKey,
+            sport_title: selectedSport,
+            home_team: homeTeam,
+            away_team: awayTeam,
+            market_type: marketType,
+            selection: selection,
+            line_snapshot: lineValue,
+            odds_snapshot: oddsValue,
+            units: selectedUnits || 1,
+            commence_time: selectedGameObj.commence_time,
+            status: 'pending',
+            confidence: selectedConfidence,
+            reasoning: reasoning,
+            created_at: new Date().toISOString(),
+            locked_at: new Date().toISOString()
+        };
+
+        const picks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
+        picks.unshift(pick);
+        localStorage.setItem('tmr_picks', JSON.stringify(picks));
+        console.log('[TMR] Pick saved to localStorage:', pick);
+        alert('Pick submitted! (Saved locally - connect to backend for permanent record)');
+    }
 
     // Update picks history display if it exists
     if (typeof loadPicksHistory === 'function') {
@@ -511,21 +579,47 @@ function loadPicksHistory() {
         return;
     }
 
-    container.innerHTML = picks.slice(0, 10).map(pick => `
-        <div class="pick-history-item ${pick.status}">
+    container.innerHTML = picks.slice(0, 10).map(pick => {
+        const sportKey = pick.sport_key || pick.sport || 'general';
+        const homeTeam = pick.home_team || pick.team1 || 'Home';
+        const awayTeam = pick.away_team || pick.team2 || 'Away';
+        const units = pick.units || pick.stake || 1;
+        const odds = pick.odds_snapshot || pick.odds || -110;
+        const selection = pick.selection || 'Unknown';
+        const marketType = pick.market_type || pick.pickType || pick.betType || 'h2h';
+        const status = pick.status || pick.result || 'pending';
+        
+        // Format the pick description based on market type
+        let pickDesc = '';
+        if (marketType === 'h2h' || marketType === 'moneyline' || marketType === 'Moneyline') {
+            pickDesc = selection;
+        } else if (marketType === 'spreads' || marketType === 'spread' || marketType === 'Spread') {
+            const line = pick.line_snapshot || pick.line || 0;
+            pickDesc = `${selection} ${line > 0 ? '+' : ''}${line}`;
+        } else if (marketType === 'totals' || marketType === 'total' || marketType === 'Total') {
+            const line = pick.line_snapshot || pick.line || 0;
+            pickDesc = `${selection} ${line}`;
+        } else {
+            pickDesc = selection;
+        }
+        
+        const createdAt = pick.created_at || pick.createdAt || pick.timestamp || pick.locked_at;
+        
+        return `
+        <div class="pick-history-item ${status}">
             <div class="pick-history-header">
-                <span class="pick-sport-badge">${pick.sport}</span>
-                <span class="pick-bet-type">${pick.pickType || pick.betType}</span>
-                <span class="pick-date">${new Date(pick.createdAt || pick.timestamp).toLocaleDateString()}</span>
+                <span class="pick-sport-badge">${sportKey.split('_')[0].toUpperCase()}</span>
+                <span class="pick-bet-type">${marketType}</span>
+                <span class="pick-date">${createdAt ? new Date(createdAt).toLocaleDateString() : 'Today'}</span>
             </div>
             <div class="pick-history-details">
-                <div class="pick-game-info">${pick.team1} vs ${pick.team2}</div>
-                <div class="pick-confidence">${pick.stake || pick.units} units @ ${pick.odds}</div>
+                <div class="pick-game-info">${awayTeam} @ ${homeTeam}</div>
+                <div class="pick-confidence">${pickDesc} | ${units}u @ ${odds > 0 ? '+' : ''}${odds}</div>
                 ${pick.reasoning ? `<div class="pick-reasoning">${pick.reasoning}</div>` : ''}
             </div>
-            <div class="pick-status-badge ${pick.status}">${pick.status.toUpperCase()}</div>
+            <div class="pick-status-badge ${status}">${status.toUpperCase()}</div>
         </div>
-    `).join('');
+    `}).join('');
 }
 
 // Initialize on page load
