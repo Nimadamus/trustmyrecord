@@ -1,11 +1,12 @@
-﻿// ==================== TRUST MY RECORD - NOTIFICATIONS SYSTEM ====================
+// ==================== TRUST MY RECORD - NOTIFICATIONS SYSTEM ====================
+// Uses backend API (window.api from backend-api.js)
+// Include config.js and backend-api.js BEFORE this script on every page.
 
-const NOTIFICATIONS_KEY = 'tmr_notifications';
-const NOTIFICATIONS_READ_KEY = 'tmr_notifications_read';
+const TMR_NOTIF_POLL_INTERVAL = 60000; // 60 seconds
+let _notifPollTimer = null;
+let _notifCache = { notifications: [], unreadCount: 0 };
 
-// Initialize notifications on all pages
 (function initNotifications() {
-    // Wait for DOM and auth to be ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', setupNotifications);
     } else {
@@ -13,69 +14,40 @@ const NOTIFICATIONS_READ_KEY = 'tmr_notifications_read';
     }
 })();
 
-function setupNotifications() {
-    // Add notification bell to header if not present
-    addNotificationBell();
+async function setupNotifications() {
+    // Ensure the dropdown exists
+    addNotificationDropdown();
 
-    // Start checking for notifications
-    checkNotifications();
-    setInterval(checkNotifications, 5000); // Check every 5 seconds
-
-    // Mark notifications as read when bell is clicked
+    // Bind bell click
     const bell = document.getElementById('notificationsBtn');
     if (bell) {
         bell.addEventListener('click', toggleNotificationsDropdown);
     }
 
-    // Close dropdown when clicking outside
+    // Close dropdown on outside click
     document.addEventListener('click', function(e) {
         const dropdown = document.getElementById('notificationsDropdown');
-        const bell = document.getElementById('notificationsBtn');
-        if (dropdown && !dropdown.contains(e.target) && !bell.contains(e.target)) {
+        const bellBtn = document.getElementById('notificationsBtn');
+        if (dropdown && bellBtn && !dropdown.contains(e.target) && !bellBtn.contains(e.target)) {
             dropdown.style.display = 'none';
         }
     });
+
+    // Wait for API to be ready then start polling
+    if (window.api) {
+        await api.ready;
+        if (api.backendAvailable && api.isLoggedIn()) {
+            await fetchNotifications();
+            _notifPollTimer = setInterval(fetchNotifications, TMR_NOTIF_POLL_INTERVAL);
+        }
+    }
 }
 
-function addNotificationBell() {
-    const nav = document.querySelector('.nav-links');
-    if (!nav) return;
+function addNotificationDropdown() {
+    // Only add the dropdown container if it doesn't exist yet
+    if (document.getElementById('notificationsDropdown')) return;
 
-    // Check if bell already exists
-    if (document.getElementById('notificationsBtn')) return;
-
-    const bellLink = document.createElement('a');
-    bellLink.href = '#';
-    bellLink.className = 'nav-icon';
-    bellLink.id = 'notificationsBtn';
-    bellLink.innerHTML = `
-        <i class="fas fa-bell"></i>
-        <span class="nav-badge" id="notifBadge" style="display: none;">0</span>
-    `;
-
-    // Insert before profile link
-    const profileLink = document.getElementById('profileLink');
-    if (profileLink) {
-        nav.insertBefore(bellLink, profileLink);
-    } else {
-        nav.appendChild(bellLink);
-    }
-
-    // Add dropdown
-    const dropdown = document.createElement('div');
-    dropdown.id = 'notificationsDropdown';
-    dropdown.className = 'notifications-dropdown';
-    dropdown.innerHTML = `
-        <div class="notifications-header">
-            <h4>Notifications</h4>
-            <button onclick="markAllRead()">Mark all read</button>
-        </div>
-        <div class="notifications-list" id="notificationsList">
-            <div class="notification-empty">No notifications yet</div>
-        </div>
-    `;
-
-    // Add styles if not present
+    // Inject styles
     if (!document.getElementById('notifications-styles')) {
         const style = document.createElement('style');
         style.id = 'notifications-styles';
@@ -106,6 +78,7 @@ function addNotificationBell() {
             .notifications-header h4 {
                 font-family: 'Orbitron', sans-serif;
                 margin: 0;
+                color: #fff;
             }
 
             .notifications-header button {
@@ -114,6 +87,9 @@ function addNotificationBell() {
                 color: #00f3ff;
                 cursor: pointer;
                 font-size: 12px;
+            }
+            .notifications-header button:hover {
+                text-decoration: underline;
             }
 
             .notifications-list {
@@ -154,6 +130,7 @@ function addNotificationBell() {
             .notification-icon.challenge { background: rgba(255, 215, 0, 0.1); color: #ffd700; }
             .notification-icon.bet { background: rgba(255, 0, 255, 0.1); color: #ff00ff; }
             .notification-icon.system { background: rgba(255, 140, 0, 0.1); color: #ff8c00; }
+            .notification-icon.premium { background: rgba(255, 215, 0, 0.1); color: #ffd700; }
 
             .notification-content {
                 flex: 1;
@@ -164,6 +141,7 @@ function addNotificationBell() {
                 font-size: 14px;
                 line-height: 1.4;
                 margin-bottom: 4px;
+                color: #e0e0e0;
             }
 
             .notification-time {
@@ -189,195 +167,202 @@ function addNotificationBell() {
         document.head.appendChild(style);
     }
 
+    // Create dropdown element
+    const dropdown = document.createElement('div');
+    dropdown.id = 'notificationsDropdown';
+    dropdown.className = 'notifications-dropdown';
+    dropdown.innerHTML = `
+        <div class="notifications-header">
+            <h4>Notifications</h4>
+            <button onclick="markAllNotificationsRead()">Mark all read</button>
+        </div>
+        <div class="notifications-list" id="notificationsList">
+            <div class="notification-empty">No notifications yet</div>
+        </div>
+    `;
     document.body.appendChild(dropdown);
 }
 
-function checkNotifications() {
-    if (!currentUser?.username) return;
+async function fetchNotifications() {
+    if (!window.api || !api.isLoggedIn() || !api.backendAvailable) return;
 
-    const notifications = getNotifications();
-    const myNotifications = notifications.filter(n => n.to === currentUser.username);
-    const unread = myNotifications.filter(n => !n.read);
+    try {
+        const data = await api.getNotifications({ limit: 20 });
+        _notifCache.notifications = data.notifications || [];
+        _notifCache.unreadCount = data.unreadCount || 0;
+        updateNotifBadge(_notifCache.unreadCount);
 
-    // Update badge
-    const badge = document.getElementById('notifBadge');
-    if (badge) {
-        if (unread.length > 0) {
-            badge.textContent = unread.length > 99 ? '99+' : unread.length;
-            badge.style.display = 'inline';
-        } else {
-            badge.style.display = 'none';
+        // If the dropdown is currently visible, re-render
+        const dropdown = document.getElementById('notificationsDropdown');
+        if (dropdown && dropdown.style.display === 'block') {
+            renderNotificationsList(_notifCache.notifications);
         }
+    } catch (err) {
+        console.error('[Notifications] Fetch error:', err);
     }
+}
 
-    // Update dropdown list
-    const list = document.getElementById('notificationsList');
-    if (list && document.getElementById('notificationsDropdown').style.display === 'block') {
-        renderNotificationsList(myNotifications);
+function updateNotifBadge(count) {
+    const badge = document.getElementById('notifBadge');
+    if (!badge) return;
+    if (count > 0) {
+        badge.textContent = count > 99 ? '99+' : count;
+        badge.style.display = 'inline';
+    } else {
+        badge.style.display = 'none';
     }
 }
 
 function toggleNotificationsDropdown(e) {
     e.preventDefault();
+    e.stopPropagation();
     const dropdown = document.getElementById('notificationsDropdown');
+    if (!dropdown) return;
+
     if (dropdown.style.display === 'block') {
         dropdown.style.display = 'none';
     } else {
         dropdown.style.display = 'block';
-        const notifications = getNotifications().filter(n => n.to === currentUser?.username);
-        renderNotificationsList(notifications);
+        renderNotificationsList(_notifCache.notifications);
+        // Refresh from server when opened
+        fetchNotifications();
     }
 }
 
 function renderNotificationsList(notifications) {
     const list = document.getElementById('notificationsList');
+    if (!list) return;
 
-    if (notifications.length === 0) {
+    if (!notifications || notifications.length === 0) {
         list.innerHTML = '<div class="notification-empty">No notifications yet</div>';
         return;
     }
 
-    // Sort by timestamp, newest first
-    notifications.sort((a, b) => b.timestamp - a.timestamp);
-
-    list.innerHTML = notifications.slice(0, 20).map(n => {
-        const iconClass = getNotificationIcon(n.type);
-        const icon = getNotificationIconChar(n.type);
+    list.innerHTML = notifications.map(n => {
+        const iconClass = getNotifIconClass(n.type);
+        const iconChar = getNotifIconChar(n.type);
+        const isRead = n.is_read;
+        const timeStr = timeAgo(n.created_at);
 
         return `
-            <div class="notification-item ${n.read ? '' : 'unread'}" onclick="handleNotificationClick(${n.timestamp})">
+            <div class="notification-item ${isRead ? '' : 'unread'}" onclick="handleNotifClick('${n.id}', '${n.type}')">
                 <div class="notification-icon ${iconClass}">
-                    <i class="fas ${icon}"></i>
+                    <i class="fas ${iconChar}"></i>
                 </div>
                 <div class="notification-content">
-                    <div class="notification-message">${n.message}</div>
-                    <div class="notification-time">${timeAgo(n.timestamp)}</div>
+                    <div class="notification-message">${escapeHtml(n.message || n.content || '')}</div>
+                    <div class="notification-time">${timeStr}</div>
                 </div>
-                ${n.read ? '' : '<div class="notification-dot"></div>'}
+                ${isRead ? '' : '<div class="notification-dot"></div>'}
             </div>
         `;
     }).join('');
 }
 
-function getNotificationIcon(type) {
-    const icons = {
-        friend_request: 'friend',
-        friend_accept: 'friend',
-        message: 'message',
-        challenge: 'challenge',
-        bet_won: 'bet',
-        bet_lost: 'bet',
-        mention: 'message',
-        system: 'system'
+function getNotifIconClass(type) {
+    const map = {
+        friend_request: 'friend', friend_accept: 'friend',
+        new_message: 'message', message: 'message',
+        challenge_invite: 'challenge', challenge_result: 'challenge', challenge: 'challenge',
+        pick_won: 'bet', pick_lost: 'bet', bet_won: 'bet', bet_lost: 'bet',
+        premium_upgrade: 'premium', premium_expired: 'premium',
+        mention: 'message', system: 'system'
     };
-    return icons[type] || 'system';
+    return map[type] || 'system';
 }
 
-function getNotificationIconChar(type) {
-    const icons = {
-        friend_request: 'fa-user-plus',
-        friend_accept: 'fa-user-check',
-        message: 'fa-comment',
-        challenge: 'fa-trophy',
-        bet_won: 'fa-chart-line',
-        bet_lost: 'fa-chart-line',
-        mention: 'fa-at',
-        system: 'fa-info-circle'
+function getNotifIconChar(type) {
+    const map = {
+        friend_request: 'fa-user-plus', friend_accept: 'fa-user-check',
+        new_message: 'fa-comment', message: 'fa-comment',
+        challenge_invite: 'fa-trophy', challenge_result: 'fa-trophy', challenge: 'fa-trophy',
+        pick_won: 'fa-chart-line', pick_lost: 'fa-chart-line',
+        bet_won: 'fa-chart-line', bet_lost: 'fa-chart-line',
+        premium_upgrade: 'fa-crown', premium_expired: 'fa-crown',
+        mention: 'fa-at', system: 'fa-info-circle'
     };
-    return icons[type] || 'fa-bell';
+    return map[type] || 'fa-bell';
 }
 
-function handleNotificationClick(timestamp) {
-    const notifications = getNotifications();
-    const notif = notifications.find(n => n.timestamp === timestamp);
-
-    if (notif) {
-        notif.read = true;
-        saveNotifications(notifications);
-
-        // Handle navigation based on type
-        switch (notif.type) {
-            case 'friend_request':
-            case 'friend_accept':
-                window.location.href = 'friends.html';
-                break;
-            case 'message':
-                const from = notif.message.match(/from (.+?)(?:\s|$)/);
-                if (from) {
-                    window.location.href = `messages.html?to=${from[1]}`;
-                } else {
-                    window.location.href = 'messages.html';
-                }
-                break;
-            case 'challenge':
-                window.location.href = 'challenges.html';
-                break;
-            default:
-                // Just mark as read, no navigation
-                checkNotifications();
+async function handleNotifClick(notifId, type) {
+    // Mark as read via backend
+    if (window.api && api.isLoggedIn()) {
+        try {
+            await api.markNotificationRead(notifId);
+            // Update cache
+            const n = _notifCache.notifications.find(x => String(x.id) === String(notifId));
+            if (n) n.is_read = true;
+            _notifCache.unreadCount = Math.max(0, _notifCache.unreadCount - 1);
+            updateNotifBadge(_notifCache.unreadCount);
+            renderNotificationsList(_notifCache.notifications);
+        } catch (err) {
+            console.error('[Notifications] Mark read error:', err);
         }
+    }
+
+    // Navigate based on type
+    switch (type) {
+        case 'friend_request':
+        case 'friend_accept':
+            window.location.href = 'friends.html';
+            break;
+        case 'new_message':
+        case 'message':
+            window.location.href = 'messages.html';
+            break;
+        case 'challenge_invite':
+        case 'challenge_result':
+        case 'challenge':
+            window.location.href = 'challenges.html';
+            break;
+        case 'premium_upgrade':
+        case 'premium_expired':
+            window.location.href = 'premium.html';
+            break;
+        default:
+            // Just mark as read, stay on page
+            break;
     }
 }
 
-function markAllRead() {
-    const notifications = getNotifications();
-    notifications.forEach(n => {
-        if (n.to === currentUser?.username) {
-            n.read = true;
-        }
-    });
-    saveNotifications(notifications);
-    checkNotifications();
-}
+async function markAllNotificationsRead() {
+    if (!window.api || !api.isLoggedIn()) return;
 
-function getNotifications() {
-    return JSON.parse(localStorage.getItem(NOTIFICATIONS_KEY) || '[]');
-}
-
-function saveNotifications(notifications) {
-    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
-}
-
-function addNotification(to, message, type, data = {}) {
-    const notifications = getNotifications();
-    notifications.push({
-        to,
-        message,
-        type,
-        timestamp: Date.now(),
-        read: false,
-        ...data
-    });
-
-    // Keep only last 100 notifications per user
-    const userNotifs = notifications.filter(n => n.to === to);
-    if (userNotifs.length > 100) {
-        const toRemove = userNotifs.slice(0, userNotifs.length - 100);
-        toRemove.forEach(n => {
-            const idx = notifications.indexOf(n);
-            if (idx > -1) notifications.splice(idx, 1);
-        });
-    }
-
-    saveNotifications(notifications);
-
-    // Trigger check immediately
-    if (currentUser?.username === to) {
-        checkNotifications();
+    try {
+        await api.markAllNotificationsRead();
+        _notifCache.notifications.forEach(n => n.is_read = true);
+        _notifCache.unreadCount = 0;
+        updateNotifBadge(0);
+        renderNotificationsList(_notifCache.notifications);
+    } catch (err) {
+        console.error('[Notifications] Mark all read error:', err);
     }
 }
 
 function timeAgo(timestamp) {
-    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    const date = typeof timestamp === 'string' ? new Date(timestamp) : new Date(timestamp);
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
     if (seconds < 60) return 'just now';
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes}m ago`;
     const hours = Math.floor(minutes / 60);
     if (hours < 24) return `${hours}h ago`;
     const days = Math.floor(hours / 24);
-    return `${days}d ago`;
+    if (days < 7) return `${days}d ago`;
+    return date.toLocaleDateString();
 }
 
-// Global function to create notifications from anywhere
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// Global access for legacy compatibility
 window.TMR = window.TMR || {};
-window.TMR.notify = addNotification;
+window.TMR.notify = function(to, message, type) {
+    // In backend mode, notifications are created server-side.
+    // This is a no-op stub for backward compatibility.
+    console.log('[Notifications] TMR.notify called (server-side only):', { to, message, type });
+};
+window.TMR.refreshNotifications = fetchNotifications;

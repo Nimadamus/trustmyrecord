@@ -851,322 +851,33 @@
         </div>
     </main>
 
+    <script src="static/js/config.js"></script>
+    <script src="static/js/backend-api.js"></script>
     <script src="static/js/auth.js"></script>
     <script src="static/js/notifications.js"></script>
     <script>
-        const ACTIVITY_KEY = 'tmr_activity';
-
-        // No mock activity data - all data comes from real user activity
-        const mockActivities = [];
-
         let currentFilter = 'all';
-        let activities = [];
+        let feedItems = [];
+        let feedOffset = 0;
+        const FEED_LIMIT = 20;
+        let loadingMore = false;
+        let noMoreItems = false;
 
-        function getActivities() {
-            return JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]').sort((a, b) => b.time - a.time);
+        function getStatusIcon(status) {
+            if (status === 'won') return { cls: 'bet-won', icon: 'fa-trophy' };
+            if (status === 'lost') return { cls: 'bet-lost', icon: 'fa-times-circle' };
+            return { cls: 'bet-placed', icon: 'fa-check-circle' };
         }
 
-        function saveActivity(activity) {
-            const activities = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]');
-            activities.unshift({
-                ...activity,
-                id: Date.now(),
-                time: Date.now(),
-                likes: 0,
-                comments: []
-            });
-            // Keep only last 100
-            if (activities.length > 100) activities.pop();
-            localStorage.setItem(ACTIVITY_KEY, JSON.stringify(activities));
-        }
-
-        function renderFeed() {
-            const container = document.getElementById('activityFeed');
-            activities = getActivities();
-
-            // Filter
-            let filtered = activities;
-            if (currentFilter === 'bets') {
-                filtered = activities.filter(a => a.type === 'bet-placed');
-            } else if (currentFilter === 'wins') {
-                filtered = activities.filter(a => a.type === 'bet-won');
-            } else if (currentFilter === 'challenges') {
-                filtered = activities.filter(a => a.type === 'challenge');
-            } else if (currentFilter === 'achievements') {
-                filtered = activities.filter(a => a.type === 'achievement' || a.type === 'milestone');
-            }
-
-            if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state" style="text-align: center; padding: 60px; color: var(--text-muted);">
-                        <i class="fas fa-stream" style="font-size: 3rem; margin-bottom: 20px; display: block;"></i>
-                        <h3>No Activity Yet</h3>
-                        <p>Follow more friends to see their betting activity</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = filtered.map(activity => renderActivityCard(activity)).join('');
-        }
-
-        function renderActivityCard(activity) {
-            const iconClass = getActivityIconClass(activity.type);
-            const icon = getActivityIcon(activity.type);
-
-            let contentHtml = '';
-
-            if (activity.type === 'bet-placed' || activity.type === 'bet-won' || activity.type === 'bet-lost') {
-                const isWin = activity.type === 'bet-won';
-                const isLoss = activity.type === 'bet-lost';
-                contentHtml = `
-                    <div class="bet-content">
-                        <div class="bet-teams">
-                            <div class="bet-team">
-                                <div class="team-logo">${activity.content.teams[0][0]}</div>
-                                <span>${activity.content.teams[0]}</span>
-                            </div>
-                            <span class="vs">VS</span>
-                            <div class="bet-team">
-                                <div class="team-logo">${activity.content.teams[1][0]}</div>
-                                <span>${activity.content.teams[1]}</span>
-                            </div>
-                        </div>
-                        <div class="bet-details">
-                            <div class="bet-detail">
-                                <i class="fas fa-crosshairs"></i>
-                                <span>${activity.content.pick}</span>
-                            </div>
-                            <div class="bet-detail">
-                                <i class="fas fa-chart-line"></i>
-                                <span>${activity.content.odds}</span>
-                            </div>
-                            <div class="bet-detail">
-                                <i class="fas fa-coins"></i>
-                                <span>${activity.content.stake} units</span>
-                            </div>
-                        </div>
-                        ${isWin ? `<div style="margin-top: 10px;"><span class="bet-outcome win">Win +${activity.content.profit} units</span></div>` : ''}
-                        ${isLoss ? `<div style="margin-top: 10px;"><span class="bet-outcome loss">Loss -${activity.content.loss} units</span></div>` : ''}
-                    </div>
-                `;
-            } else if (activity.type === 'achievement') {
-                contentHtml = `
-                    <div class="achievement-content">
-                        <div class="achievement-icon">${activity.content.icon}</div>
-                        <div class="achievement-info">
-                            <h4>${activity.content.title}</h4>
-                            <p>${activity.content.description}</p>
-                        </div>
-                    </div>
-                `;
-            } else if (activity.type === 'milestone') {
-                contentHtml = `
-                    <div class="achievement-content">
-                        <div class="achievement-icon">🏆</div>
-                        <div class="achievement-info">
-                            <h4>${activity.content.title}</h4>
-                            <p>${activity.content.subtitle} • ${activity.content.stat}</p>
-                        </div>
-                    </div>
-                `;
-            } else if (activity.type === 'challenge') {
-                contentHtml = `
-                    <div class="challenge-content">
-                        <div class="challenge-header">
-                            <span class="challenge-title">${activity.content.title}</span>
-                            <span class="challenge-prize">${activity.content.prize}</span>
-                        </div>
-                        <div class="challenge-vs">
-                            <div class="challenge-player">
-                                <div class="activity-avatar" style="width: 40px; height: 40px;">${activity.user[0]}</div>
-                                <div class="challenge-player-name">${activity.user}</div>
-                            </div>
-                            <span style="font-family: 'Orbitron'; color: var(--warning);">VS</span>
-                            <div class="challenge-player">
-                                <div class="activity-avatar" style="width: 40px; height: 40px;">${activity.content.opponent[0]}</div>
-                                <div class="challenge-player-name">${activity.content.opponent}</div>
-                            </div>
-                        </div>
-                        <div style="text-align: center; margin-top: 10px; color: var(--text-muted); font-size: 13px;">
-                            ${activity.content.duration} • ${activity.content.sport || 'All Sports'}
-                        </div>
-                    </div>
-                `;
-            } else if (activity.type === 'friend') {
-                contentHtml = `
-                    <div style="padding: 15px; background: rgba(0, 243, 255, 0.05); border-radius: 12px; margin: 15px 0;">
-                        <i class="fas fa-user-friends" style="color: var(--primary); margin-right: 10px;"></i>
-                        Now connected with <strong>${activity.target}</strong>
-                    </div>
-                `;
-            }
-
-            const commentsHtml = activity.comments?.map(c => `
-                <div class="comment">
-                    <div class="comment-avatar">${c.user[0]}</div>
-                    <div class="comment-content">
-                        <div class="comment-author">${c.user}</div>
-                        <div class="comment-text">${c.text}</div>
-                        <div class="comment-time">${timeAgo(c.time)}</div>
-                    </div>
-                </div>
-            `).join('') || '';
-
-            return `
-                <div class="activity-card" data-id="${activity.id}">
-                    <div class="activity-header">
-                        <div class="activity-avatar">${activity.user[0]}</div>
-                        <div class="activity-meta">
-                            <div class="activity-user">
-                                <a href="profile.html?user=${activity.user}">${activity.user}</a>
-                            </div>
-                            <div class="activity-action">${activity.action}</div>
-                            <div class="activity-time">${timeAgo(activity.time)}</div>
-                        </div>
-                        <div class="activity-icon ${iconClass}">
-                            <i class="fas ${icon}"></i>
-                        </div>
-                    </div>
-                    ${contentHtml}
-                    <div class="activity-actions">
-                        <button class="activity-action-btn ${activity.likedBy?.includes(currentUser?.username) ? 'liked' : ''}" onclick="toggleLike(${activity.id})">
-                            <i class="fas fa-heart"></i>
-                            <span id="likes-${activity.id}">${activity.likes || 0}</span>
-                        </button>
-                        <button class="activity-action-btn" onclick="toggleComments(${activity.id})">
-                            <i class="fas fa-comment"></i>
-                            <span>${activity.comments?.length || 0}</span>
-                        </button>
-                        <button class="activity-action-btn" onclick="shareActivity(${activity.id})">
-                            <i class="fas fa-share"></i>
-                            Share
-                        </button>
-                    </div>
-                    <div class="comments-section" id="comments-${activity.id}">
-                        <div class="comment-input-wrapper">
-                            <input type="text" class="comment-input" id="comment-input-${activity.id}" placeholder="Add a comment...">
-                            <button class="comment-submit" onclick="addComment(${activity.id})">Post</button>
-                        </div>
-                        <div class="comments-list">
-                            ${commentsHtml}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function getActivityIconClass(type) {
-            const classes = {
-                'bet-placed': 'bet-placed',
-                'bet-won': 'bet-won',
-                'bet-lost': 'bet-lost',
-                'challenge': 'challenge',
-                'achievement': 'achievement',
-                'milestone': 'milestone',
-                'friend': 'friend'
-            };
-            return classes[type] || 'bet-placed';
-        }
-
-        function getActivityIcon(type) {
-            const icons = {
-                'bet-placed': 'fa-check-circle',
-                'bet-won': 'fa-trophy',
-                'bet-lost': 'fa-times-circle',
-                'challenge': 'fa-bolt',
-                'achievement': 'fa-medal',
-                'milestone': 'fa-flag-checkered',
-                'friend': 'fa-user-plus'
-            };
-            return icons[type] || 'fa-circle';
-        }
-
-        function filterFeed(filter) {
-            currentFilter = filter;
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            renderFeed();
-        }
-
-        function toggleLike(activityId) {
-            const activities = getActivities();
-            const activity = activities.find(a => a.id === activityId);
-            if (!activity) return;
-
-            if (!activity.likedBy) activity.likedBy = [];
-
-            const idx = activity.likedBy.indexOf(currentUser?.username);
-            if (idx > -1) {
-                activity.likedBy.splice(idx, 1);
-                activity.likes--;
-            } else {
-                activity.likedBy.push(currentUser?.username);
-                activity.likes++;
-            }
-
-            // Update localStorage
-            const stored = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]');
-            const storedIdx = stored.findIndex(a => a.id === activityId);
-            if (storedIdx > -1) {
-                stored[storedIdx] = activity;
-                localStorage.setItem(ACTIVITY_KEY, JSON.stringify(stored));
-            }
-
-            renderFeed();
-        }
-
-        function toggleComments(activityId) {
-            const section = document.getElementById(`comments-${activityId}`);
-            section.classList.toggle('show');
-        }
-
-        function addComment(activityId) {
-            const input = document.getElementById(`comment-input-${activityId}`);
-            const text = input.value.trim();
-            if (!text) return;
-
-            const activities = getActivities();
-            const activity = activities.find(a => a.id === activityId);
-            if (!activity) return;
-
-            if (!activity.comments) activity.comments = [];
-            activity.comments.push({
-                user: currentUser?.username,
-                text,
-                time: Date.now()
-            });
-
-            // Update localStorage
-            const stored = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]');
-            const storedIdx = stored.findIndex(a => a.id === activityId);
-            if (storedIdx > -1) {
-                stored[storedIdx] = activity;
-                localStorage.setItem(ACTIVITY_KEY, JSON.stringify(stored));
-            }
-
-            input.value = '';
-            renderFeed();
-
-            // Keep comments open
-            setTimeout(() => {
-                document.getElementById(`comments-${activityId}`).classList.add('show');
-            }, 50);
-        }
-
-        function shareActivity(activityId) {
-            const url = `${window.location.origin}/activity.html?id=${activityId}`;
-            navigator.clipboard.writeText(url);
-            alert('Link copied to clipboard!');
-        }
-
-        function loadMore() {
-            // In real implementation, fetch more from API
-            alert('Loading more activity... (Demo: No more items)');
+        function getStatusLabel(status) {
+            if (status === 'won') return 'won a pick';
+            if (status === 'lost') return 'lost a pick';
+            return 'posted a pick';
         }
 
         function timeAgo(timestamp) {
-            const seconds = Math.floor((Date.now() - timestamp) / 1000);
+            const d = typeof timestamp === 'string' ? new Date(timestamp) : new Date(timestamp);
+            const seconds = Math.floor((Date.now() - d.getTime()) / 1000);
             if (seconds < 60) return 'just now';
             const minutes = Math.floor(seconds / 60);
             if (minutes < 60) return `${minutes}m ago`;
@@ -1176,51 +887,272 @@
             return `${days}d ago`;
         }
 
-        // Public API to add activity from other pages
-        window.TMR = window.TMR || {};
-        window.TMR.addActivity = function(type, content) {
-            saveActivity({
-                type,
-                user: currentUser?.username,
-                action: getActionText(type),
-                content
-            });
-        };
+        function renderPickCard(item) {
+            const currentUser = auth.currentUser;
+            const { cls, icon } = getStatusIcon(item.status);
+            const username = item.username || item.display_name || 'Unknown';
+            const avatarLetter = username[0]?.toUpperCase() || '?';
+            const avatarUrl = item.avatar_url;
+            const avatarHtml = avatarUrl
+                ? `<img src="${avatarUrl}" alt="${username}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+                : avatarLetter;
 
-        function getActionText(type) {
-            const actions = {
-                'bet-placed': 'placed a bet',
-                'bet-won': 'won a bet',
-                'bet-lost': 'lost a bet',
-                'challenge': 'issued a challenge',
-                'achievement': 'earned an achievement',
-                'milestone': 'reached a milestone',
-                'friend': 'became friends with'
-            };
-            return actions[type] || 'did something';
+            const oddsStr = item.odds > 0 ? `+${item.odds}` : `${item.odds}`;
+            const outcomeHtml = item.status === 'won'
+                ? `<div style="margin-top:10px;"><span class="bet-outcome win">Won</span></div>`
+                : item.status === 'lost'
+                ? `<div style="margin-top:10px;"><span class="bet-outcome loss">Lost</span></div>`
+                : `<div style="margin-top:10px;"><span class="bet-outcome pending">Pending</span></div>`;
+
+            const isLiked = item.is_liked || false;
+            const likesCount = parseInt(item.likes_count || 0);
+            const commentsCount = parseInt(item.comments_count || 0);
+
+            return `
+                <div class="activity-card" data-pick-id="${item.id}">
+                    <div class="activity-header">
+                        <div class="activity-avatar">${avatarHtml}</div>
+                        <div class="activity-meta">
+                            <div class="activity-user">
+                                <a href="profile.html?user=${username}">${username}</a>
+                                ${item.verification_status === 'verified' ? '<i class="fas fa-check-circle" style="color:var(--primary);margin-left:4px;font-size:12px;" title="Verified"></i>' : ''}
+                            </div>
+                            <div class="activity-action">${getStatusLabel(item.status)}</div>
+                            <div class="activity-time">${timeAgo(item.created_at)}</div>
+                        </div>
+                        <div class="activity-icon ${cls}">
+                            <i class="fas ${icon}"></i>
+                        </div>
+                    </div>
+                    <div class="bet-content">
+                        <div class="bet-teams">
+                            <div class="bet-team">
+                                <div class="team-logo">${(item.away_team || item.team_picked || '?')[0]}</div>
+                                <span>${item.away_team || ''}</span>
+                            </div>
+                            <span class="vs">VS</span>
+                            <div class="bet-team">
+                                <div class="team-logo">${(item.home_team || '?')[0]}</div>
+                                <span>${item.home_team || ''}</span>
+                            </div>
+                        </div>
+                        <div class="bet-details">
+                            <div class="bet-detail">
+                                <i class="fas fa-crosshairs"></i>
+                                <span>${item.pick_type || 'pick'}: ${item.team_picked || ''} ${item.spread ? '(' + item.spread + ')' : ''}</span>
+                            </div>
+                            <div class="bet-detail">
+                                <i class="fas fa-chart-line"></i>
+                                <span>${oddsStr}</span>
+                            </div>
+                            ${item.units ? `<div class="bet-detail"><i class="fas fa-coins"></i><span>${item.units} units</span></div>` : ''}
+                        </div>
+                        ${outcomeHtml}
+                    </div>
+                    <div class="activity-actions">
+                        <button class="activity-action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(${item.id}, this)">
+                            <i class="fas fa-heart"></i>
+                            <span class="like-count">${likesCount}</span>
+                        </button>
+                        <button class="activity-action-btn" onclick="toggleComments(${item.id})">
+                            <i class="fas fa-comment"></i>
+                            <span>${commentsCount}</span>
+                        </button>
+                        <button class="activity-action-btn" onclick="shareActivity(${item.id})">
+                            <i class="fas fa-share"></i>
+                            Share
+                        </button>
+                    </div>
+                    <div class="comments-section" id="comments-${item.id}">
+                        <div class="comment-input-wrapper">
+                            <input type="text" class="comment-input" id="comment-input-${item.id}" placeholder="Add a comment..." onkeypress="if(event.key==='Enter')addComment(${item.id})">
+                            <button class="comment-submit" onclick="addComment(${item.id})">Post</button>
+                        </div>
+                        <div class="comments-list" id="comments-list-${item.id}"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderFeed() {
+            const container = document.getElementById('activityFeed');
+
+            let filtered = feedItems;
+            if (currentFilter === 'bets') {
+                filtered = feedItems.filter(i => i.status === 'pending');
+            } else if (currentFilter === 'wins') {
+                filtered = feedItems.filter(i => i.status === 'won');
+            }
+
+            if (filtered.length === 0) {
+                const isLoggedIn = api.isLoggedIn();
+                container.innerHTML = `
+                    <div class="empty-state" style="text-align: center; padding: 60px; color: var(--text-muted);">
+                        <i class="fas fa-stream" style="font-size: 3rem; margin-bottom: 20px; display: block;"></i>
+                        <h3>No Activity Yet</h3>
+                        <p>${isLoggedIn ? 'Follow more users to see their picks here' : 'Log in and follow users to see their picks'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => renderPickCard(item)).join('');
+        }
+
+        async function loadFeed(reset) {
+            if (reset) {
+                feedOffset = 0;
+                feedItems = [];
+                noMoreItems = false;
+            }
+
+            const container = document.getElementById('activityFeed');
+            if (feedOffset === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);"><i class="fas fa-spinner fa-spin" style="font-size:2rem;"></i><p style="margin-top:10px;">Loading feed...</p></div>';
+            }
+
+            try {
+                await api.ready;
+                if (!api.backendAvailable) {
+                    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);"><i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:10px;display:block;"></i><p>Backend unavailable. Please try again later.</p></div>';
+                    return;
+                }
+
+                let data;
+                if (api.isLoggedIn()) {
+                    data = await api.request(`/social/feed?limit=${FEED_LIMIT}&offset=${feedOffset}`);
+                    // If personal feed is empty, fall back to discover
+                    if (data.feed && data.feed.length === 0 && feedOffset === 0) {
+                        data = await api.request(`/social/discover?limit=${FEED_LIMIT}&offset=${feedOffset}`);
+                        const items = data.picks || [];
+                        feedItems = feedItems.concat(items);
+                        if (items.length < FEED_LIMIT) noMoreItems = true;
+                    } else {
+                        const items = data.feed || [];
+                        feedItems = feedItems.concat(items);
+                        if (items.length < FEED_LIMIT) noMoreItems = true;
+                    }
+                } else {
+                    data = await api.request(`/social/discover?limit=${FEED_LIMIT}&offset=${feedOffset}`);
+                    const items = data.picks || [];
+                    feedItems = feedItems.concat(items);
+                    if (items.length < FEED_LIMIT) noMoreItems = true;
+                }
+
+                feedOffset += FEED_LIMIT;
+                renderFeed();
+                updateLoadMoreBtn();
+            } catch (err) {
+                console.error('Failed to load feed:', err);
+                if (feedItems.length === 0) {
+                    container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted);"><i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:10px;display:block;"></i><p>Failed to load feed. ${err.message || ''}</p></div>`;
+                }
+            }
+        }
+
+        function updateLoadMoreBtn() {
+            const btn = document.querySelector('.load-more-btn');
+            if (noMoreItems || feedItems.length === 0) {
+                btn.style.display = 'none';
+            } else {
+                btn.style.display = 'inline-block';
+                btn.textContent = 'Load More';
+                btn.disabled = false;
+            }
+        }
+
+        function filterFeed(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderFeed();
+        }
+
+        async function toggleLike(pickId, btnEl) {
+            if (!api.isLoggedIn()) {
+                alert('Please log in to like picks.');
+                return;
+            }
+            try {
+                const isLiked = btnEl.classList.contains('liked');
+                let data;
+                if (isLiked) {
+                    data = await api.request(`/picks/${pickId}/like`, { method: 'DELETE' });
+                    btnEl.classList.remove('liked');
+                } else {
+                    data = await api.request(`/picks/${pickId}/like`, { method: 'POST' });
+                    btnEl.classList.add('liked');
+                }
+                const countSpan = btnEl.querySelector('.like-count');
+                if (countSpan && data.likeCount !== undefined) {
+                    countSpan.textContent = data.likeCount;
+                }
+                // Update local state
+                const item = feedItems.find(i => i.id === pickId);
+                if (item) {
+                    item.is_liked = !isLiked;
+                    item.likes_count = data.likeCount ?? item.likes_count;
+                }
+            } catch (err) {
+                console.error('Like error:', err);
+            }
+        }
+
+        function toggleComments(pickId) {
+            const section = document.getElementById(`comments-${pickId}`);
+            section.classList.toggle('show');
+        }
+
+        async function addComment(pickId) {
+            const input = document.getElementById(`comment-input-${pickId}`);
+            const text = input.value.trim();
+            if (!text || !api.isLoggedIn()) return;
+
+            try {
+                await api.request(`/picks/${pickId}/comments`, {
+                    method: 'POST',
+                    body: { content: text }
+                });
+                input.value = '';
+                // Reload just that comments section
+                const listEl = document.getElementById(`comments-list-${pickId}`);
+                const data = await api.request(`/picks/${pickId}/comments`);
+                const comments = data.comments || [];
+                listEl.innerHTML = comments.map(c => `
+                    <div class="comment">
+                        <div class="comment-avatar">${(c.username || '?')[0]}</div>
+                        <div class="comment-content">
+                            <div class="comment-author">${c.username || 'User'}</div>
+                            <div class="comment-text">${c.content}</div>
+                            <div class="comment-time">${timeAgo(c.created_at)}</div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error('Comment error:', err);
+            }
+        }
+
+        function shareActivity(pickId) {
+            const url = `${window.location.origin}/activity.html?pick=${pickId}`;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Link copied to clipboard!');
+            });
+        }
+
+        async function loadMore() {
+            if (loadingMore || noMoreItems) return;
+            loadingMore = true;
+            const btn = document.querySelector('.load-more-btn');
+            btn.textContent = 'Loading...';
+            btn.disabled = true;
+            await loadFeed(false);
+            loadingMore = false;
         }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            if (!currentUser) {
-                window.location.href = 'index.html?login=1';
-                return;
-            }
-            renderFeed();
-
-            // Simulate live updates
-            setInterval(() => {
-                if (Math.random() > 0.7) {
-                    const newActivity = mockActivities[Math.floor(Math.random() * mockActivities.length)];
-                    newActivity.id = Date.now();
-                    newActivity.time = Date.now();
-                    const container = document.getElementById('activityFeed');
-                    const card = document.createElement('div');
-                    card.innerHTML = renderActivityCard(newActivity);
-                    card.firstElementChild.classList.add('new');
-                    container.insertBefore(card.firstElementChild, container.firstChild);
-                }
-            }, 30000); // Every 30 seconds
+            loadFeed(true);
         });
     </script>
 </body>

@@ -508,7 +508,8 @@
     <div class="modal-overlay" id="newMessageModal">
         <div class="modal">
             <h3>💬 New Message</h3>
-            <input type="text" class="modal-input" id="newMessageUsername" placeholder="Enter username...">
+            <input type="text" class="modal-input" id="newMessageUsername" placeholder="Search for a user..." oninput="onUserSearchInput()">
+            <div id="userSearchResults" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;"></div>
             <div class="modal-buttons">
                 <button class="modal-btn secondary" onclick="closeNewMessageModal()">Cancel</button>
                 <button class="modal-btn primary" onclick="startNewConversation()">Start Chat</button>
@@ -518,30 +519,43 @@
 
     <script src="static/js/config.js?v=20260317"></script>
     <script src="static/js/backend-api.js?v=20260317"></script>
+    <script src="static/js/notifications.js?v=20260318"></script>
     <script src="static/js/auth-persistent.js?v=20260317"></script>
     <script>
-        // Message System
-        const MSG_KEY = 'tmr_messages';
-        const CONV_KEY = 'tmr_conversations';
-
+        // Message System - Backend API powered
         let currentUser = null;
-        let activeConversation = null;
+        let activeConversationUserId = null;
+        let activeConversationUsername = null;
         let conversations = [];
+        let refreshInterval = null;
 
-        function init() {
-            currentUser = auth.getCurrentUser();
-            if (!currentUser) {
+        async function init() {
+            // Wait for backend API to be ready
+            await api.ready;
+
+            // Check login
+            if (!api.isLoggedIn()) {
                 window.location.href = 'index.html?section=login';
                 return;
             }
 
-            loadConversations();
+            // Get current user from backend
+            try {
+                const userData = await api.getCurrentUser();
+                currentUser = userData.user || userData;
+            } catch (e) {
+                console.error('Failed to get current user:', e);
+                window.location.href = 'index.html?section=login';
+                return;
+            }
+
+            await loadConversations();
 
             // Check for ?to=username parameter
             const urlParams = new URLSearchParams(window.location.search);
             const toUser = urlParams.get('to');
             if (toUser) {
-                startConversationWithUser(toUser);
+                await startConversationWithUser(toUser);
             }
 
             // Auto-resize textarea
@@ -558,54 +572,33 @@
                     sendMessage();
                 }
             });
-        }
 
-        function getMessages() {
-            return JSON.parse(localStorage.getItem(MSG_KEY) || '[]');
-        }
-
-        function saveMessages(messages) {
-            localStorage.setItem(MSG_KEY, JSON.stringify(messages));
-        }
-
-        function getConversations() {
-            return JSON.parse(localStorage.getItem(CONV_KEY) || '[]');
-        }
-
-        function saveConversations(conversations) {
-            localStorage.setItem(CONV_KEY, JSON.stringify(conversations));
-        }
-
-        function loadConversations() {
-            const allMessages = getMessages();
-            const userConversations = {};
-
-            // Group messages by conversation partner
-            allMessages.forEach(msg => {
-                if (msg.sender === currentUser.username || msg.recipient === currentUser.username) {
-                    const partner = msg.sender === currentUser.username ? msg.recipient : msg.sender;
-                    if (!userConversations[partner]) {
-                        userConversations[partner] = [];
-                    }
-                    userConversations[partner].push(msg);
+            // Auto-refresh conversations every 30 seconds
+            refreshInterval = setInterval(async () => {
+                await loadConversations();
+                // If viewing a conversation, refresh its messages too
+                if (activeConversationUserId) {
+                    await loadChatMessages(activeConversationUserId, false);
                 }
-            });
+            }, 30000);
+        }
 
-            // Convert to conversation objects
-            conversations = Object.keys(userConversations).map(partner => {
-                const msgs = userConversations[partner].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-                const lastMsg = msgs[msgs.length - 1];
-                const unreadCount = msgs.filter(m => m.recipient === currentUser.username && !m.read).length;
-
-                return {
-                    partner: partner,
-                    lastMessage: lastMsg,
-                    unreadCount: unreadCount,
-                    messages: msgs
-                };
-            }).sort((a, b) => new Date(b.lastMessage.timestamp) - new Date(a.lastMessage.timestamp));
-
-            renderConversationsList();
+        async function loadConversations() {
+            try {
+                const data = await api.getConversations();
+                conversations = data.conversations || [];
+                renderConversationsList();
+            } catch (e) {
+                console.error('Failed to load conversations:', e);
+                const list = document.getElementById('conversationsList');
+                list.innerHTML = `
+                    <div class="empty-state" style="padding: 40px 20px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">⚠️</div>
+                        <p style="color: var(--text-muted);">Failed to load conversations</p>
+                        <p style="font-size: 13px; color: var(--text-muted); opacity: 0.7;">Please try again later</p>
+                    </div>
+                `;
+            }
         }
 
         function renderConversationsList() {
@@ -622,55 +615,83 @@
                 return;
             }
 
-            list.innerHTML = conversations.map(conv => `
-                <div class="conversation-item ${activeConversation?.partner === conv.partner ? 'active' : ''}" 
-                     onclick="selectConversation('${conv.partner}')">
-                    <div class="conversation-avatar">${conv.partner.charAt(0).toUpperCase()}</div>
-                    <div class="conversation-info">
-                        <div class="conversation-name">${conv.partner}</div>
-                        <div class="conversation-preview">${conv.lastMessage.content.substring(0, 30)}${conv.lastMessage.content.length > 30 ? '...' : ''}</div>
+            list.innerHTML = conversations.map(conv => {
+                const isActive = activeConversationUserId === conv.other_user_id;
+                const initial = (conv.other_username || '?').charAt(0).toUpperCase();
+                const preview = conv.last_message ? conv.last_message.substring(0, 30) + (conv.last_message.length > 30 ? '...' : '') : 'No messages yet';
+                const time = conv.last_message_at ? formatTime(conv.last_message_at) : '';
+
+                return `
+                    <div class="conversation-item ${isActive ? 'active' : ''}"
+                         onclick="selectConversation(${conv.other_user_id}, '${escapeAttr(conv.other_username)}')">
+                        <div class="conversation-avatar">${initial}</div>
+                        <div class="conversation-info">
+                            <div class="conversation-name">${escapeHtml(conv.other_username)}</div>
+                            <div class="conversation-preview">${escapeHtml(preview)}</div>
+                        </div>
+                        <div class="conversation-meta">
+                            <div class="conversation-time">${time}</div>
+                            ${conv.unread_count > 0 ? `<span class="unread-badge">${conv.unread_count}</span>` : ''}
+                        </div>
                     </div>
-                    <div class="conversation-meta">
-                        <div class="conversation-time">${formatTime(conv.lastMessage.timestamp)}</div>
-                        ${conv.unreadCount > 0 ? `<span class="unread-badge">${conv.unreadCount}</span>` : ''}
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
-        function selectConversation(partner) {
-            const conversation = conversations.find(c => c.partner === partner);
-            if (!conversation) return;
+        async function selectConversation(userId, username) {
+            activeConversationUserId = userId;
+            activeConversationUsername = username;
 
-            activeConversation = conversation;
+            // Mark as read
+            try {
+                await api.markAsRead(userId);
+            } catch (e) {
+                console.error('Failed to mark as read:', e);
+            }
 
-            // Mark messages as read
-            const messages = getMessages();
-            messages.forEach(msg => {
-                if (msg.sender === partner && msg.recipient === currentUser.username) {
-                    msg.read = true;
-                }
-            });
-            saveMessages(messages);
-
-            // Update UI
+            // Update sidebar to reflect active + cleared unread
+            const conv = conversations.find(c => c.other_user_id === userId);
+            if (conv) conv.unread_count = 0;
             renderConversationsList();
-            renderChatHeader(partner);
-            renderMessages(conversation.messages);
 
+            // Show chat header
+            renderChatHeader(username);
             document.getElementById('chatHeader').style.display = 'flex';
             document.getElementById('chatInputArea').style.display = 'flex';
+
+            // Load messages
+            await loadChatMessages(userId, true);
         }
 
-        function renderChatHeader(partner) {
-            document.getElementById('chatAvatar').textContent = partner.charAt(0).toUpperCase();
-            document.getElementById('chatUserName').textContent = partner;
+        async function loadChatMessages(userId, scrollToBottom) {
+            try {
+                const data = await api.getMessages(userId);
+                const messages = data.messages || [];
+                renderMessages(messages);
+                if (scrollToBottom) {
+                    const container = document.getElementById('chatMessages');
+                    container.scrollTop = container.scrollHeight;
+                }
+            } catch (e) {
+                console.error('Failed to load messages:', e);
+                document.getElementById('chatMessages').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <p>Failed to load messages</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderChatHeader(username) {
+            document.getElementById('chatAvatar').textContent = (username || '?').charAt(0).toUpperCase();
+            document.getElementById('chatUserName').textContent = username || 'Unknown';
         }
 
         function renderMessages(messages) {
             const container = document.getElementById('chatMessages');
 
-            if (messages.length === 0) {
+            if (!messages || messages.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">💬</div>
@@ -680,92 +701,153 @@
                 return;
             }
 
-            container.innerHTML = messages.map(msg => `
-                <div class="message ${msg.sender === currentUser.username ? 'sent' : 'received'}">
-                    <div class="message-content">${escapeHtml(msg.content)}</div>
-                    <div class="message-time">${formatTime(msg.timestamp)}</div>
-                </div>
-            `).join('');
-
-            // Scroll to bottom
-            container.scrollTop = container.scrollHeight;
+            container.innerHTML = messages.map(msg => {
+                const isSent = msg.sender_id === currentUser.id;
+                return `
+                    <div class="message ${isSent ? 'sent' : 'received'}">
+                        <div class="message-content">${escapeHtml(msg.content)}</div>
+                        <div class="message-time">${formatTime(msg.created_at)}</div>
+                    </div>
+                `;
+            }).join('');
         }
 
-        function sendMessage() {
+        async function sendMessage() {
             const input = document.getElementById('messageInput');
             const content = input.value.trim();
 
-            if (!content || !activeConversation) return;
+            if (!content || !activeConversationUserId) return;
 
-            const message = {
-                id: Date.now().toString(),
-                sender: currentUser.username,
-                recipient: activeConversation.partner,
-                content: content,
-                timestamp: new Date().toISOString(),
-                read: false
-            };
+            // Disable send button while sending
+            const sendBtn = document.querySelector('.send-btn');
+            sendBtn.disabled = true;
+            sendBtn.textContent = '...';
 
-            const messages = getMessages();
-            messages.push(message);
-            saveMessages(messages);
+            try {
+                await api.sendMessage(activeConversationUserId, content);
+                input.value = '';
+                input.style.height = 'auto';
 
-            input.value = '';
-            input.style.height = 'auto';
-
-            loadConversations();
-            selectConversation(activeConversation.partner);
+                // Reload messages and conversations
+                await loadChatMessages(activeConversationUserId, true);
+                await loadConversations();
+            } catch (e) {
+                console.error('Failed to send message:', e);
+                alert('Failed to send message. Please try again.');
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send';
+            }
         }
 
-        function startConversationWithUser(username) {
-            // Check if conversation exists
-            let conversation = conversations.find(c => c.partner === username);
-
-            if (!conversation) {
-                // Create new conversation
-                conversation = {
-                    partner: username,
-                    lastMessage: null,
-                    unreadCount: 0,
-                    messages: []
-                };
-                conversations.push(conversation);
+        async function startConversationWithUser(username) {
+            // Check if conversation already exists in sidebar
+            const existing = conversations.find(c => c.other_username === username);
+            if (existing) {
+                await selectConversation(existing.other_user_id, existing.other_username);
+                return;
             }
 
-            selectConversation(username);
+            // Look up user by username to get their ID
+            try {
+                const data = await api.searchUsers(username);
+                const users = data.users || [];
+                const target = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+                if (!target) {
+                    alert('User not found: ' + username);
+                    return;
+                }
+
+                activeConversationUserId = target.id;
+                activeConversationUsername = target.username;
+
+                renderChatHeader(target.username);
+                document.getElementById('chatHeader').style.display = 'flex';
+                document.getElementById('chatInputArea').style.display = 'flex';
+
+                // Load any existing messages (may be empty)
+                await loadChatMessages(target.id, true);
+            } catch (e) {
+                console.error('Failed to find user:', e);
+                alert('Could not find user: ' + username);
+            }
         }
 
         function openNewMessageModal() {
             document.getElementById('newMessageModal').classList.add('active');
+            document.getElementById('newMessageUsername').value = '';
+            document.getElementById('userSearchResults').innerHTML = '';
             document.getElementById('newMessageUsername').focus();
         }
 
         function closeNewMessageModal() {
             document.getElementById('newMessageModal').classList.remove('active');
             document.getElementById('newMessageUsername').value = '';
+            document.getElementById('userSearchResults').innerHTML = '';
         }
 
-        function startNewConversation() {
+        let searchTimeout = null;
+        async function onUserSearchInput() {
+            const query = document.getElementById('newMessageUsername').value.trim();
+            const resultsDiv = document.getElementById('userSearchResults');
+
+            if (query.length < 2) {
+                resultsDiv.innerHTML = '';
+                return;
+            }
+
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const data = await api.searchUsers(query, { limit: 5 });
+                    const users = (data.users || []).filter(u => u.id !== currentUser.id);
+                    if (users.length === 0) {
+                        resultsDiv.innerHTML = '<p style="color: var(--text-muted); padding: 8px;">No users found</p>';
+                        return;
+                    }
+                    resultsDiv.innerHTML = users.map(u => `
+                        <div class="search-result-item" onclick="selectUserFromSearch(${u.id}, '${escapeAttr(u.username)}')"
+                             style="display: flex; align-items: center; gap: 10px; padding: 10px; cursor: pointer; border-radius: 8px; transition: background 0.2s;"
+                             onmouseover="this.style.background='rgba(0,255,255,0.1)'" onmouseout="this.style.background='transparent'">
+                            <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px;">${u.username.charAt(0).toUpperCase()}</div>
+                            <span style="font-weight: 600;">${escapeHtml(u.username)}</span>
+                        </div>
+                    `).join('');
+                } catch (e) {
+                    console.error('User search failed:', e);
+                    resultsDiv.innerHTML = '<p style="color: var(--text-muted); padding: 8px;">Search failed</p>';
+                }
+            }, 300);
+        }
+
+        async function selectUserFromSearch(userId, username) {
+            closeNewMessageModal();
+            activeConversationUserId = userId;
+            activeConversationUsername = username;
+
+            renderChatHeader(username);
+            document.getElementById('chatHeader').style.display = 'flex';
+            document.getElementById('chatInputArea').style.display = 'flex';
+
+            await loadChatMessages(userId, true);
+            await loadConversations();
+        }
+
+        async function startNewConversation() {
             const username = document.getElementById('newMessageUsername').value.trim();
             if (!username) return;
 
-            if (username === currentUser.username) {
+            if (username.toLowerCase() === (currentUser.username || '').toLowerCase()) {
                 alert('You cannot message yourself!');
                 return;
             }
 
-            // Check if user exists
-            const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
-            if (!users.find(u => u.username === username)) {
-                alert('User not found: ' + username);
-                return;
-            }
-
             closeNewMessageModal();
-            startConversationWithUser(username);
+            await startConversationWithUser(username);
         }
 
         function formatTime(timestamp) {
+            if (!timestamp) return '';
             const date = new Date(timestamp);
             const now = new Date();
             const diff = now - date;
@@ -777,9 +859,15 @@
         }
 
         function escapeHtml(text) {
+            if (!text) return '';
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        function escapeAttr(text) {
+            if (!text) return '';
+            return text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
         }
 
         // Initialize

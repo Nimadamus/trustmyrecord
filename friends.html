@@ -724,19 +724,15 @@
         <div class="stats-bar">
             <div class="stat-item">
                 <div class="stat-value" id="totalFriends">0</div>
-                <div class="stat-label">Friends</div>
+                <div class="stat-label">Following</div>
             </div>
             <div class="stat-item">
                 <div class="stat-value" id="onlineFriends">0</div>
-                <div class="stat-label">Online</div>
+                <div class="stat-label">Followers</div>
             </div>
             <div class="stat-item">
                 <div class="stat-value" id="pendingRequests">0</div>
-                <div class="stat-label">Requests</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="triviaRank">-</div>
-                <div class="stat-label">Trivia Rank</div>
+                <div class="stat-label">Mutual</div>
             </div>
         </div>
 
@@ -754,339 +750,41 @@
 
         <!-- Tabs -->
         <div class="tabs">
-            <button class="tab active" onclick="showTab('friends')" id="tab-friends">
-                <i class="fas fa-user-friends"></i> My Friends
+            <button class="tab active" onclick="showTab('following')" id="tab-following">
+                <i class="fas fa-user-friends"></i> Following
             </button>
-            <button class="tab" onclick="showTab('requests')" id="tab-requests">
-                <i class="fas fa-user-plus"></i> Requests
-                <span class="tab-badge" id="requestBadge" style="display: none;">0</span>
+            <button class="tab" onclick="showTab('followers')" id="tab-followers">
+                <i class="fas fa-users"></i> Followers
             </button>
-            <button class="tab" onclick="showTab('suggestions')" id="tab-suggestions">
-                <i class="fas fa-lightbulb"></i> Suggestions
+            <button class="tab" onclick="showTab('discover')" id="tab-discover">
+                <i class="fas fa-lightbulb"></i> Discover
             </button>
         </div>
 
-        <!-- Friends List -->
-        <div id="friendsList" class="friends-grid"></div>
+        <!-- Following List -->
+        <div id="followingList" class="friends-grid"></div>
 
-        <!-- Requests List -->
-        <div id="requestsList" class="friends-grid" style="display: none;"></div>
+        <!-- Followers List -->
+        <div id="followersList" class="friends-grid" style="display: none;"></div>
 
-        <!-- Suggestions List -->
-        <div id="suggestionsList" class="friends-grid" style="display: none;"></div>
+        <!-- Discover List -->
+        <div id="discoverList" class="friends-grid" style="display: none;"></div>
     </main>
 
+    <script src="static/js/config.js"></script>
+    <script src="static/js/backend-api.js"></script>
     <script src="static/js/auth.js"></script>
+    <script src="static/js/notifications.js"></script>
     <script>
-        const FRIENDS_KEY = 'tmr_friends';
-        const REQUESTS_KEY = 'tmr_requests';
-        const BLOCKED_KEY = 'tmr_blocked';
-
-        // No mock users - all data comes from real user activity
-        const mockUsers = [];
-
-        function getFriends() {
-            return JSON.parse(localStorage.getItem(FRIENDS_KEY) || '[]');
-        }
-
-        function getRequests() {
-            return JSON.parse(localStorage.getItem(REQUESTS_KEY) || '[]');
-        }
-
-        function getBlocked() {
-            return JSON.parse(localStorage.getItem(BLOCKED_KEY) || '[]');
-        }
-
-        function saveFriends(friends) {
-            localStorage.setItem(FRIENDS_KEY, JSON.stringify(friends));
-        }
-
-        function saveRequests(requests) {
-            localStorage.setItem(REQUESTS_KEY, JSON.stringify(requests));
-        }
-
-        function sendFriendRequest(username) {
-            const requests = getRequests();
-            if (requests.find(r => r.from === currentUser?.username && r.to === username)) {
-                alert('Friend request already sent!');
-                return;
-            }
-            if (requests.find(r => r.from === username && r.to === currentUser?.username)) {
-                alert('This user already sent you a request!');
-                return;
-            }
-
-            requests.push({
-                from: currentUser?.username,
-                to: username,
-                timestamp: Date.now()
-            });
-            saveRequests(requests);
-
-            // Create notification
-            addNotification(username, `${currentUser?.username} sent you a friend request`, 'friend_request');
-
-            alert(`Friend request sent to ${username}!`);
-            renderAll();
-        }
-
-        function acceptRequest(username) {
-            const requests = getRequests();
-            const filtered = requests.filter(r => !(r.from === username && r.to === currentUser?.username));
-            saveRequests(filtered);
-
-            const friends = getFriends();
-            friends.push({ username, addedAt: Date.now() });
-            saveFriends(friends);
-
-            addNotification(username, `${currentUser?.username} accepted your friend request`, 'friend_accept');
-
-            renderAll();
-        }
-
-        function declineRequest(username) {
-            const requests = getRequests();
-            const filtered = requests.filter(r => !(r.from === username && r.to === currentUser?.username));
-            saveRequests(filtered);
-            renderAll();
-        }
-
-        function removeFriend(username) {
-            if (!confirm(`Remove ${username} from friends?`)) return;
-
-            const friends = getFriends();
-            const filtered = friends.filter(f => f.username !== username);
-            saveFriends(filtered);
-            renderAll();
-        }
-
-        function searchUsers() {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            const resultsDiv = document.getElementById('searchResults');
-
-            if (!query) {
-                resultsDiv.innerHTML = '';
-                return;
-            }
-
-            const friends = getFriends();
-            const requests = getRequests();
-
-            const results = mockUsers.filter(u =>
-                u.username.toLowerCase().includes(query) &&
-                u.username !== currentUser?.username &&
-                !friends.find(f => f.username === u.username)
-            );
-
-            if (results.length === 0) {
-                resultsDiv.innerHTML = '<p style="color: var(--text-muted);">No users found</p>';
-                return;
-            }
-
-            resultsDiv.innerHTML = results.map(u => {
-                const isPending = requests.find(r =>
-                    (r.from === currentUser?.username && r.to === u.username) ||
-                    (r.from === u.username && r.to === currentUser?.username)
-                );
-
-                return `
-                    <div class="search-result-item">
-                        <div class="friend-avatar">${u.username[0]}</div>
-                        <div class="friend-info">
-                            <div class="friend-name">${u.username}</div>
-                            <div class="friend-meta">${u.record} • ${u.units} units</div>
-                        </div>
-                        <button class="add-friend-btn" onclick="sendFriendRequest('${u.username}')" ${isPending ? 'disabled' : ''}>
-                            ${isPending ? 'Pending' : '<i class="fas fa-user-plus"></i> Add'}
-                        </button>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function renderAll() {
-            renderFriends();
-            renderRequests();
-            renderSuggestions();
-            updateStats();
-        }
-
-        function renderFriends() {
-            const container = document.getElementById('friendsList');
-            const friends = getFriends();
-
-            if (friends.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1/-1;">
-                        <i class="fas fa-user-friends"></i>
-                        <h3>No Friends Yet</h3>
-                        <p>Search for users above or check suggestions to start building your network</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = friends.map(f => `
-                <div class="friend-card">
-                    <div class="friend-avatar ${f.status || 'offline'}">${f.username[0]}</div>
-                    <div class="friend-info">
-                        <div class="friend-name">${f.username}</div>
-                        <div class="friend-status ${f.status === 'online' ? '' : 'offline'}">
-                            <i class="fas fa-circle" style="font-size: 8px; margin-right: 5px;"></i>
-                            ${f.status === 'online' ? 'Online' : 'Offline'}
-                        </div>
-                        ${f.record ? `<div class="friend-meta">${f.record} • ${f.units} units</div>` : ''}
-                    </div>
-                    <div class="friend-actions">
-                        <button class="action-btn" onclick="messageUser('${f.username}')" title="Message">
-                            <i class="fas fa-comment"></i>
-                        </button>
-                        <button class="action-btn" onclick="challengeUser('${f.username}')" title="Challenge">
-                            <i class="fas fa-trophy"></i>
-                        </button>
-                        <button class="action-btn danger" onclick="removeFriend('${f.username}')" title="Remove">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function renderRequests() {
-            const container = document.getElementById('requestsList');
-            const requests = getRequests().filter(r => r.to === currentUser?.username);
-
-            if (requests.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1/-1;">
-                        <i class="fas fa-inbox"></i>
-                        <h3>No Pending Requests</h3>
-                        <p>Friend requests from other users will appear here</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = requests.map(r => {
-                const mock = mockUsers.find(u => u.username === r.from);
-                return `
-                    <div class="friend-card request-card">
-                        <div class="friend-avatar">${r.from[0]}</div>
-                        <div class="friend-info">
-                            <div class="friend-name">${r.from}</div>
-                            <div class="friend-meta">${mock ? `${mock.record} • ${mock.units} units` : 'New user'}</div>
-                            <div class="friend-meta">Sent ${timeAgo(r.timestamp)}</div>
-                        </div>
-                        <div class="request-actions">
-                            <button class="btn-accept" onclick="acceptRequest('${r.from}')">
-                                <i class="fas fa-check"></i> Accept
-                            </button>
-                            <button class="btn-decline" onclick="declineRequest('${r.from}')">
-                                <i class="fas fa-times"></i> Decline
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function renderSuggestions() {
-            const container = document.getElementById('suggestionsList');
-            const friends = getFriends();
-            const requests = getRequests();
-
-            // Filter out friends and pending requests
-            const suggestions = mockUsers.filter(u =>
-                u.username !== currentUser?.username &&
-                !friends.find(f => f.username === u.username) &&
-                !requests.find(r =>
-                    (r.from === currentUser?.username && r.to === u.username) ||
-                    (r.from === u.username && r.to === currentUser?.username)
-                )
-            ).slice(0, 6);
-
-            if (suggestions.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1/-1;">
-                        <i class="fas fa-lightbulb"></i>
-                        <h3>No Suggestions</h3>
-                        <p>We\'ll suggest users based on your betting activity</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = suggestions.map(u => `
-                <div class="friend-card">
-                    <div class="friend-avatar ${u.status}">${u.username[0]}</div>
-                    <div class="friend-info">
-                        <div class="friend-name">${u.username}</div>
-                        <div class="friend-status ${u.status === 'online' ? '' : 'offline'}">
-                            <i class="fas fa-circle" style="font-size: 8px; margin-right: 5px;"></i>
-                            ${u.status === 'online' ? 'Online' : 'Offline'}
-                        </div>
-                        <div class="friend-meta">${u.record} • ${u.units} units</div>
-                    </div>
-                    <div class="friend-actions">
-                        <button class="action-btn success" onclick="sendFriendRequest('${u.username}')" title="Add Friend">
-                            <i class="fas fa-user-plus"></i>
-                        </button>
-                        <button class="action-btn" onclick="viewProfile('${u.username}')" title="View Profile">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function updateStats() {
-            const friends = getFriends();
-            const requests = getRequests().filter(r => r.to === currentUser?.username);
-            const online = friends.filter(f => f.status === 'online').length;
-
-            document.getElementById('totalFriends').textContent = friends.length;
-            document.getElementById('onlineFriends').textContent = online;
-            document.getElementById('pendingRequests').textContent = requests.length;
-
-            // Update badges
-            const requestBadge = document.getElementById('requestBadge');
-            if (requests.length > 0) {
-                requestBadge.textContent = requests.length;
-                requestBadge.style.display = 'inline';
-            } else {
-                requestBadge.style.display = 'none';
-            }
-
-            // Trivia rank
-            const allPoints = JSON.parse(localStorage.getItem('tmr_trivia_points') || '{}');
-            const sorted = Object.entries(allPoints).sort((a, b) => (b[1].total || 0) - (a[1].total || 0));
-            const myRank = sorted.findIndex(([user]) => user === currentUser?.username);
-            document.getElementById('triviaRank').textContent = myRank >= 0 ? `#${myRank + 1}` : '-';
-        }
-
-        function showTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(`tab-${tab}`).classList.add('active');
-
-            document.getElementById('friendsList').style.display = tab === 'friends' ? 'grid' : 'none';
-            document.getElementById('requestsList').style.display = tab === 'requests' ? 'grid' : 'none';
-            document.getElementById('suggestionsList').style.display = tab === 'suggestions' ? 'grid' : 'none';
-        }
-
-        function messageUser(username) {
-            window.location.href = `messages.html?to=${username}`;
-        }
-
-        function challengeUser(username) {
-            window.location.href = `challenges.html?challenge=${username}`;
-        }
-
-        function viewProfile(username) {
-            window.location.href = `profile.html?user=${username}`;
-        }
+        let myUserId = null;
+        let followingList = [];
+        let followersList = [];
+        // Track which user IDs the current user follows (for follow-back buttons)
+        let followingIds = new Set();
 
         function timeAgo(timestamp) {
-            const seconds = Math.floor((Date.now() - timestamp) / 1000);
+            const d = typeof timestamp === 'string' ? new Date(timestamp) : new Date(timestamp);
+            const seconds = Math.floor((Date.now() - d.getTime()) / 1000);
             if (seconds < 60) return 'just now';
             const minutes = Math.floor(seconds / 60);
             if (minutes < 60) return `${minutes}m ago`;
@@ -1095,26 +793,275 @@
             return `${Math.floor(hours / 24)}d ago`;
         }
 
-        function addNotification(to, message, type) {
-            // This will be handled by notifications system
-            const notifs = JSON.parse(localStorage.getItem('tmr_notifications') || '[]');
-            notifs.push({
-                to,
-                message,
-                type,
-                timestamp: Date.now(),
-                read: false
-            });
-            localStorage.setItem('tmr_notifications', JSON.stringify(notifs));
+        function renderUserCard(user, actions) {
+            const username = user.username || user.display_name || 'Unknown';
+            const avatarLetter = username[0]?.toUpperCase() || '?';
+            const avatarHtml = user.avatar_url
+                ? `<img src="${user.avatar_url}" alt="${username}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+                : avatarLetter;
+
+            const statsHtml = user.total_picks != null
+                ? `<div class="friend-meta">${user.total_picks} picks${user.roi != null ? ' | ROI: ' + (parseFloat(user.roi) || 0).toFixed(1) + '%' : ''}${user.net_units != null ? ' | ' + parseFloat(user.net_units).toFixed(1) + 'u' : ''}</div>`
+                : '';
+
+            const verifiedBadge = user.verification_status === 'verified'
+                ? ' <i class="fas fa-check-circle" style="color:var(--primary);font-size:11px;" title="Verified"></i>'
+                : '';
+
+            return `
+                <div class="friend-card" data-user-id="${user.id}">
+                    <div class="friend-avatar">${avatarHtml}</div>
+                    <div class="friend-info">
+                        <div class="friend-name"><a href="profile.html?user=${username}" style="color:inherit;text-decoration:none;">${username}${verifiedBadge}</a></div>
+                        ${user.display_name && user.display_name !== username ? `<div class="friend-meta" style="color:var(--text-muted);font-size:12px;">${user.display_name}</div>` : ''}
+                        ${statsHtml}
+                    </div>
+                    <div class="friend-actions">
+                        ${actions}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadFollowing() {
+            const container = document.getElementById('followingList');
+            container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+            try {
+                const data = await api.getFollowing(myUserId);
+                followingList = data.following || [];
+                followingIds = new Set(followingList.map(u => u.id));
+
+                if (followingList.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1/-1;">
+                            <i class="fas fa-user-friends"></i>
+                            <h3>Not Following Anyone</h3>
+                            <p>Search for users above or check Discover to find people to follow</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = followingList.map(u => renderUserCard(u, `
+                    <button class="action-btn" onclick="viewProfile('${u.username}')" title="View Profile">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="action-btn danger" onclick="unfollowUser(${u.id}, '${u.username}')" title="Unfollow">
+                        <i class="fas fa-user-minus"></i>
+                    </button>
+                `)).join('');
+            } catch (err) {
+                console.error('Load following error:', err);
+                container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">Failed to load. Please try again.</div>';
+            }
+        }
+
+        async function loadFollowers() {
+            const container = document.getElementById('followersList');
+            container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+            try {
+                const data = await api.getFollowers(myUserId);
+                followersList = data.followers || [];
+
+                if (followersList.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1/-1;">
+                            <i class="fas fa-users"></i>
+                            <h3>No Followers Yet</h3>
+                            <p>Share your picks to attract followers</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = followersList.map(u => {
+                    const isFollowing = followingIds.has(u.id);
+                    const followBackBtn = isFollowing
+                        ? `<button class="action-btn" disabled title="Already following" style="opacity:0.4;"><i class="fas fa-check"></i></button>`
+                        : `<button class="action-btn success" onclick="followUser(${u.id}, '${u.username}')" title="Follow Back"><i class="fas fa-user-plus"></i></button>`;
+                    return renderUserCard(u, `
+                        ${followBackBtn}
+                        <button class="action-btn" onclick="viewProfile('${u.username}')" title="View Profile">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    `);
+                }).join('');
+            } catch (err) {
+                console.error('Load followers error:', err);
+                container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">Failed to load. Please try again.</div>';
+            }
+        }
+
+        async function loadDiscover() {
+            const container = document.getElementById('discoverList');
+            container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+            try {
+                const data = await api.searchUsers('', { limit: 20 });
+                const users = (data.users || []).filter(u => u.id !== myUserId && !followingIds.has(u.id));
+
+                if (users.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1/-1;">
+                            <i class="fas fa-lightbulb"></i>
+                            <h3>No Suggestions</h3>
+                            <p>Check back later for new users to follow</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = users.map(u => renderUserCard(u, `
+                    <button class="action-btn success" onclick="followUser(${u.id}, '${u.username}')" title="Follow">
+                        <i class="fas fa-user-plus"></i>
+                    </button>
+                    <button class="action-btn" onclick="viewProfile('${u.username}')" title="View Profile">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                `)).join('');
+            } catch (err) {
+                console.error('Load discover error:', err);
+                container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">Failed to load suggestions.</div>';
+            }
+        }
+
+        async function followUser(userId, username) {
+            try {
+                await api.followUser(userId);
+                followingIds.add(userId);
+                updateStats();
+                // Refresh current tab
+                const activeTab = document.querySelector('.tab.active');
+                if (activeTab) {
+                    const tabId = activeTab.id.replace('tab-', '');
+                    if (tabId === 'following') await loadFollowing();
+                    else if (tabId === 'followers') await loadFollowers();
+                    else if (tabId === 'discover') await loadDiscover();
+                }
+            } catch (err) {
+                console.error('Follow error:', err);
+                alert('Failed to follow user: ' + (err.message || 'Unknown error'));
+            }
+        }
+
+        async function unfollowUser(userId, username) {
+            if (!confirm(`Unfollow ${username}?`)) return;
+            try {
+                await api.unfollowUser(userId);
+                followingIds.delete(userId);
+                updateStats();
+                await loadFollowing();
+            } catch (err) {
+                console.error('Unfollow error:', err);
+                alert('Failed to unfollow user: ' + (err.message || 'Unknown error'));
+            }
+        }
+
+        async function searchUsers() {
+            const query = document.getElementById('searchInput').value.trim();
+            const resultsDiv = document.getElementById('searchResults');
+
+            if (!query) {
+                resultsDiv.innerHTML = '';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<p style="color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Searching...</p>';
+
+            try {
+                const data = await api.searchUsers(query, { limit: 10 });
+                const results = (data.users || []).filter(u => u.id !== myUserId);
+
+                if (results.length === 0) {
+                    resultsDiv.innerHTML = '<p style="color: var(--text-muted);">No users found</p>';
+                    return;
+                }
+
+                resultsDiv.innerHTML = results.map(u => {
+                    const isFollowing = followingIds.has(u.id);
+                    const avatarLetter = (u.username || '?')[0].toUpperCase();
+                    const avatarHtml = u.avatar_url
+                        ? `<img src="${u.avatar_url}" alt="${u.username}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+                        : avatarLetter;
+
+                    const statsStr = u.total_picks != null ? `${u.total_picks} picks` : '';
+                    const roiStr = u.roi != null ? `ROI: ${(parseFloat(u.roi) || 0).toFixed(1)}%` : '';
+                    const metaParts = [statsStr, roiStr].filter(Boolean).join(' | ');
+
+                    return `
+                        <div class="search-result-item">
+                            <div class="friend-avatar">${avatarHtml}</div>
+                            <div class="friend-info">
+                                <div class="friend-name"><a href="profile.html?user=${u.username}" style="color:inherit;text-decoration:none;">${u.username}</a></div>
+                                ${metaParts ? `<div class="friend-meta">${metaParts}</div>` : ''}
+                            </div>
+                            <button class="add-friend-btn" onclick="${isFollowing ? '' : `followUser(${u.id}, '${u.username}')`}" ${isFollowing ? 'disabled' : ''}>
+                                ${isFollowing ? '<i class="fas fa-check"></i> Following' : '<i class="fas fa-user-plus"></i> Follow'}
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Search error:', err);
+                resultsDiv.innerHTML = '<p style="color:var(--text-muted);">Search failed. Please try again.</p>';
+            }
+        }
+
+        async function updateStats() {
+            document.getElementById('totalFriends').textContent = followingIds.size;
+            document.getElementById('onlineFriends').textContent = followersList.length;
+
+            // Mutual = followers who you also follow
+            const mutualCount = followersList.filter(f => followingIds.has(f.id)).length;
+            document.getElementById('pendingRequests').textContent = mutualCount;
+        }
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            document.getElementById('followingList').style.display = tab === 'following' ? 'grid' : 'none';
+            document.getElementById('followersList').style.display = tab === 'followers' ? 'grid' : 'none';
+            document.getElementById('discoverList').style.display = tab === 'discover' ? 'grid' : 'none';
+
+            // Lazy load tab content
+            if (tab === 'followers') loadFollowers();
+            if (tab === 'discover') loadDiscover();
+        }
+
+        function viewProfile(username) {
+            window.location.href = `profile.html?user=${username}`;
         }
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            if (!currentUser) {
+        document.addEventListener('DOMContentLoaded', async function() {
+            await api.ready;
+
+            if (!api.backendAvailable) {
+                document.getElementById('followingList').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);"><i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:10px;display:block;"></i><p>Backend unavailable. Please try again later.</p></div>';
+                return;
+            }
+
+            if (!api.isLoggedIn()) {
                 window.location.href = 'index.html?login=1';
                 return;
             }
-            renderAll();
+
+            // Get current user's ID from backend
+            try {
+                const me = await api.getCurrentUser();
+                myUserId = me.user?.id || me.id;
+            } catch (err) {
+                console.error('Auth error:', err);
+                window.location.href = 'index.html?login=1';
+                return;
+            }
+
+            // Load following first (default tab), then update stats
+            await loadFollowing();
+            updateStats();
 
             // Search on enter
             document.getElementById('searchInput').addEventListener('keypress', function(e) {
@@ -1122,6 +1069,5 @@
             });
         });
     </script>
-    <script src="static/js/notifications.js"></script>
 </body>
 </html>

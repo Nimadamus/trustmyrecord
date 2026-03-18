@@ -832,60 +832,103 @@
     </div>
 
     <!-- Scripts -->
-    <script src="static/js/backend-api.js?v=20260121"></script>
+    <script src="static/js/config.js?v=20260318"></script>
+    <script src="static/js/backend-api.js?v=20260318"></script>
+    <script src="static/js/notifications.js?v=20260318"></script>
     <script>
         // State
         let billingPeriod = 'monthly';
-        let tiers = [];
+        let tiersData = [];
+        let currentStatus = null;
 
-        // Initialize
+        // Initialize after API is ready
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('[Premium] Initializing...');
+
+            // Wait for backend detection
+            if (window.api) {
+                await api.ready;
+            }
 
             // Update nav based on auth state
             updateNav();
 
-            // Load tiers
+            // Load tiers from backend
             await loadTiers();
 
             // Load current subscription status
             await loadSubscriptionStatus();
+
+            // If premium user, load real analytics
+            if (currentStatus && (currentStatus.tier === 'pro' || currentStatus.tier === 'elite')) {
+                await loadPremiumAnalytics();
+            }
         });
 
         function updateNav() {
-            const loginLink = document.getElementById('loginLink');
             const profileLink = document.getElementById('profileLink');
 
-            if (api.isLoggedIn()) {
-                loginLink.textContent = 'Logout';
-                loginLink.onclick = () => { api.logout(); location.reload(); };
-                profileLink.style.display = 'block';
-                profileLink.textContent = api.getCurrentUser()?.username || 'Profile';
+            if (api && api.isLoggedIn()) {
+                if (profileLink) {
+                    profileLink.style.display = 'block';
+                }
             } else {
-                loginLink.textContent = 'Login';
-                loginLink.href = 'index.html';
-                profileLink.style.display = 'none';
+                if (profileLink) {
+                    profileLink.style.display = 'none';
+                }
             }
         }
 
         async function loadTiers() {
             try {
                 const data = await api.getSubscriptionTiers();
-                tiers = data.tiers || [];
-                console.log('[Premium] Loaded tiers:', tiers);
+                tiersData = data.tiers || [];
+                console.log('[Premium] Loaded tiers:', tiersData);
+
+                // Update pricing cards with server data if available
+                if (tiersData.length > 0) {
+                    renderTierPrices();
+                }
             } catch (err) {
-                console.error('[Premium] Failed to load tiers:', err);
+                console.error('[Premium] Failed to load tiers (using defaults):', err);
+                // Fallback: keep the hardcoded HTML prices
             }
         }
 
+        function renderTierPrices() {
+            tiersData.forEach(tier => {
+                const card = document.querySelector(`.pricing-card[data-tier="${tier.name}"]`);
+                if (!card) return;
+
+                // Update monthly prices
+                const priceEl = card.querySelector('.tier-price');
+                if (priceEl && billingPeriod === 'monthly' && tier.price_monthly !== undefined) {
+                    const price = parseFloat(tier.price_monthly);
+                    priceEl.innerHTML = price === 0 ? '$0<span>/mo</span>' : `$${price.toFixed(2)}<span>/mo</span>`;
+                }
+
+                // Update display name
+                const nameEl = card.querySelector('.tier-name');
+                if (nameEl && tier.display_name) {
+                    nameEl.textContent = tier.display_name;
+                }
+
+                // Update features list if server provides them
+                if (tier.features && typeof tier.features === 'object') {
+                    // Features are already rendered in HTML, server data is supplementary
+                }
+            });
+        }
+
         async function loadSubscriptionStatus() {
-            if (!api.isLoggedIn()) {
+            if (!api || !api.isLoggedIn()) {
                 document.getElementById('currentTier').textContent = 'Free (Not logged in)';
                 return;
             }
 
             try {
                 const status = await api.getSubscriptionStatus();
+                currentStatus = status;
                 console.log('[Premium] Subscription status:', status);
 
                 const tierEl = document.getElementById('currentTier');
@@ -900,7 +943,7 @@
                     banner.classList.add('premium');
                 }
 
-                // Update button states
+                // Update button states based on current tier
                 updateButtonStates(status.tier);
 
                 // If premium, unlock analytics preview
@@ -914,6 +957,58 @@
 
             } catch (err) {
                 console.error('[Premium] Failed to load status:', err);
+                document.getElementById('currentTier').textContent = 'Free';
+            }
+        }
+
+        async function loadPremiumAnalytics() {
+            try {
+                const analytics = await api.getPremiumAnalytics();
+                console.log('[Premium] Analytics:', analytics);
+
+                const cards = document.querySelectorAll('.analytics-card');
+
+                // Best Sport
+                if (cards[0] && analytics.insights?.strongest_sport) {
+                    const bestSportData = analytics.by_sport?.find(s => s.sport === analytics.insights.strongest_sport);
+                    cards[0].querySelector('.value').textContent = analytics.insights.strongest_sport.toUpperCase();
+                    cards[0].querySelector('.label').textContent = bestSportData
+                        ? `+${parseFloat(bestSportData.total_units).toFixed(1)} units`
+                        : 'Top performer';
+                }
+
+                // Best Bet Type
+                if (cards[1] && analytics.by_bet_type?.length > 0) {
+                    const best = analytics.by_bet_type.sort((a, b) =>
+                        parseFloat(b.total_units) - parseFloat(a.total_units))[0];
+                    cards[1].querySelector('.value').textContent = best.bet_type || 'N/A';
+                    const total = parseInt(best.wins || 0) + parseInt(best.losses || 0);
+                    const winRate = total > 0 ? ((parseInt(best.wins) / total) * 100).toFixed(1) : 0;
+                    cards[1].querySelector('.label').textContent = `${winRate}% win rate`;
+                }
+
+                // Best Streak
+                if (cards[2] && analytics.streaks) {
+                    cards[2].querySelector('.value').textContent = analytics.streaks.best_win_streak || 0;
+                    cards[2].querySelector('.label').textContent = 'consecutive wins';
+                }
+
+                // Best Odds Range
+                if (cards[3] && analytics.insights?.best_odds_range) {
+                    const rangeLabels = {
+                        heavy_favorite: '-200 & below',
+                        favorite: '-110 to -200',
+                        even: '-110 to +110',
+                        underdog: '+110 to +200',
+                        heavy_underdog: '+200 & above'
+                    };
+                    cards[3].querySelector('.value').textContent = rangeLabels[analytics.insights.best_odds_range] || analytics.insights.best_odds_range;
+                    cards[3].querySelector('.label').textContent = 'highest ROI zone';
+                }
+
+            } catch (err) {
+                console.error('[Premium] Failed to load analytics:', err);
+                // Keep the placeholder/locked state
             }
         }
 
@@ -925,19 +1020,21 @@
                 const cardTier = card.dataset.tier;
                 const cardIndex = tierOrder.indexOf(cardTier);
                 const btn = card.querySelector('.upgrade-btn');
+                if (!btn) return;
 
-                if (cardIndex <= currentIndex) {
-                    if (cardTier === currentTier) {
-                        btn.textContent = 'Current Plan';
-                        btn.disabled = true;
-                        btn.classList.remove('primary');
-                        btn.classList.add('secondary');
-                    } else if (cardIndex < currentIndex) {
-                        btn.textContent = 'Downgrade';
-                        btn.disabled = false;
-                        btn.classList.remove('primary');
-                        btn.classList.add('secondary');
-                    }
+                if (cardTier === currentTier || cardTier === (currentTier || 'free')) {
+                    btn.textContent = 'Current Plan';
+                    btn.disabled = true;
+                    btn.classList.remove('primary');
+                    btn.classList.add('secondary');
+                } else if (cardIndex < currentIndex) {
+                    btn.textContent = 'Downgrade';
+                    btn.disabled = false;
+                    btn.classList.remove('primary');
+                    btn.classList.add('secondary');
+                } else {
+                    // Higher tier - show upgrade
+                    btn.disabled = false;
                 }
             });
         }
@@ -953,12 +1050,16 @@
                 monthlyLabel.classList.remove('active');
                 yearlyLabel.classList.add('active');
 
-                // Update prices
-                document.getElementById('basicPrice').innerHTML = '$99.99<span>/yr</span>';
+                // Try to use server prices, fallback to hardcoded
+                const basicTier = tiersData.find(t => t.name === 'basic');
+                const proTier = tiersData.find(t => t.name === 'pro');
+                const eliteTier = tiersData.find(t => t.name === 'elite');
+
+                document.getElementById('basicPrice').innerHTML = `$${basicTier ? parseFloat(basicTier.price_yearly).toFixed(2) : '99.99'}<span>/yr</span>`;
                 document.getElementById('basicOriginal').style.display = 'block';
-                document.getElementById('proPrice').innerHTML = '$199.99<span>/yr</span>';
+                document.getElementById('proPrice').innerHTML = `$${proTier ? parseFloat(proTier.price_yearly).toFixed(2) : '199.99'}<span>/yr</span>`;
                 document.getElementById('proOriginal').style.display = 'block';
-                document.getElementById('elitePrice').innerHTML = '$499.99<span>/yr</span>';
+                document.getElementById('elitePrice').innerHTML = `$${eliteTier ? parseFloat(eliteTier.price_yearly).toFixed(2) : '499.99'}<span>/yr</span>`;
                 document.getElementById('eliteOriginal').style.display = 'block';
             } else {
                 billingPeriod = 'monthly';
@@ -966,44 +1067,61 @@
                 monthlyLabel.classList.add('active');
                 yearlyLabel.classList.remove('active');
 
-                // Update prices
-                document.getElementById('basicPrice').innerHTML = '$9.99<span>/mo</span>';
+                const basicTier = tiersData.find(t => t.name === 'basic');
+                const proTier = tiersData.find(t => t.name === 'pro');
+                const eliteTier = tiersData.find(t => t.name === 'elite');
+
+                document.getElementById('basicPrice').innerHTML = `$${basicTier ? parseFloat(basicTier.price_monthly).toFixed(2) : '9.99'}<span>/mo</span>`;
                 document.getElementById('basicOriginal').style.display = 'none';
-                document.getElementById('proPrice').innerHTML = '$19.99<span>/mo</span>';
+                document.getElementById('proPrice').innerHTML = `$${proTier ? parseFloat(proTier.price_monthly).toFixed(2) : '19.99'}<span>/mo</span>`;
                 document.getElementById('proOriginal').style.display = 'none';
-                document.getElementById('elitePrice').innerHTML = '$49.99<span>/mo</span>';
+                document.getElementById('elitePrice').innerHTML = `$${eliteTier ? parseFloat(eliteTier.price_monthly).toFixed(2) : '49.99'}<span>/mo</span>`;
                 document.getElementById('eliteOriginal').style.display = 'none';
             }
         }
 
         async function upgrade(tier) {
-            if (!api.isLoggedIn()) {
-                showNotification('Please log in to upgrade', 'error');
+            if (!api || !api.isLoggedIn()) {
+                showToast('Please log in to upgrade', 'error');
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 1500);
                 return;
             }
 
+            const btn = document.querySelector(`.pricing-card[data-tier="${tier}"] .upgrade-btn`);
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Processing...';
+            }
+
             try {
                 const result = await api.upgradeSubscription(tier, billingPeriod);
-                showNotification(result.message || 'Upgrade successful!', 'success');
+                showToast(result.message || 'Upgrade successful!', 'success');
 
-                // Reload status
-                setTimeout(() => {
-                    loadSubscriptionStatus();
+                // Reload status after short delay
+                setTimeout(async () => {
+                    await loadSubscriptionStatus();
+                    if (currentStatus && (currentStatus.tier === 'pro' || currentStatus.tier === 'elite')) {
+                        await loadPremiumAnalytics();
+                    }
                 }, 1000);
 
             } catch (err) {
-                showNotification(err.message || 'Upgrade failed', 'error');
+                showToast(err.message || 'Upgrade failed', 'error');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = `Upgrade to ${tier.charAt(0).toUpperCase() + tier.slice(1)}`;
+                }
             }
         }
 
-        function showNotification(message, type = 'info') {
+        function showToast(message, type = 'info') {
             const notification = document.getElementById('notification');
+            if (!notification) return;
             notification.className = 'notification show ' + type;
             notification.querySelector('.message').textContent = message;
-            notification.querySelector('.icon').textContent = type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ';
+            notification.querySelector('.icon').textContent = type === 'success' ? '✓' : type === 'error' ? '✗' : 'i';
 
             setTimeout(() => {
                 notification.classList.remove('show');

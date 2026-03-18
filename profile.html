@@ -840,31 +840,13 @@
         <div class="container">
             <div class="tabs">
                 <button class="tab active" data-tab="overview">Overview</button>
-                <button class="tab" data-tab="handicapping">Handicapping</button>
-                <button class="tab" data-tab="activity">Activity</button>
+                <button class="tab" data-tab="picks">Picks</button>
                 <button class="tab" data-tab="followers">Followers</button>
                 <button class="tab" data-tab="following">Following</button>
-                <button class="tab" data-tab="friends">Friends</button>
-                <button class="tab" data-tab="competitions">Competitions</button>
-                <button class="tab" data-tab="challenges">Challenges</button>
             </div>
 
             <!-- Overview Tab -->
             <div class="tab-content active" id="tab-overview">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title gold">🏆 Poll & Trivia Stats</h3>
-                    </div>
-                    <div id="pollTriviaStats">
-                        <div class="loading">
-                            <div class="loading-spinner"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Handicapping Tab -->
-            <div class="tab-content" id="tab-handicapping">
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title cyan">📊 Overall Record</h3>
@@ -882,16 +864,28 @@
                         <!-- Populated by JS -->
                     </div>
                 </div>
-            </div>
 
-            <!-- Activity Tab -->
-            <div class="tab-content" id="tab-activity">
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title purple">📈 Recent Activity</h3>
                     </div>
                     <div class="activity-list" id="activityList">
                         <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Picks Tab -->
+            <div class="tab-content" id="tab-picks">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title gold">🎯 Pick History</h3>
+                    </div>
+                    <div class="activity-list" id="picksList">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div id="picksLoadMore" style="text-align:center;margin-top:20px;display:none;">
+                        <button class="btn btn-secondary" id="loadMorePicksBtn">Load More</button>
                     </div>
                 </div>
             </div>
@@ -919,42 +913,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Friends Tab -->
-            <div class="tab-content" id="tab-friends">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">👥 Friends</h3>
-                    </div>
-                    <div class="friends-grid" id="friendsList">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Competitions Tab -->
-            <div class="tab-content" id="tab-competitions">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">🎯 Competition History</h3>
-                    </div>
-                    <div class="competition-list" id="competitionList">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Challenges Tab -->
-            <div class="tab-content" id="tab-challenges">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">⚔️ Challenge History</h3>
-                    </div>
-                    <div class="challenge-list" id="challengeList">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-            </div>
         </div>
     </section>
 
@@ -970,799 +928,587 @@
             return false;
         };
     </script>
-    <script src="static/js/config.js?v=20260317"></script>
-    <script src="static/js/backend-api.js?v=20260317"></script>
-    <script src="static/js/auth-persistent.js?v=20260317"></script>
-    <script src="static/js/auto-grader-fixed.js"></script>
+    <script src="static/js/config.js?v=20260318"></script>
+    <script src="static/js/backend-api.js?v=20260318"></script>
+    <script src="static/js/notifications.js?v=20260318"></script>
+    <script src="static/js/auth-persistent.js?v=20260318"></script>
     <script>
-        // auth is already created by auth-persistent.js (window.auth)
-        console.log('[Profile] Script starting. auth exists:', typeof auth !== 'undefined');
-        console.log('[Profile] window.auth exists:', typeof window !== 'undefined' && typeof window.auth !== 'undefined');
+        // ============================================================
+        // Profile Page - Backend API Integration
+        // ============================================================
 
-        let currentUser = null;
-        try {
-            if (typeof auth !== 'undefined' && auth) {
-                currentUser = auth.getCurrentUser();
-                console.log('[Profile] Got currentUser from auth:', currentUser ? currentUser.username : null);
-            } else if (typeof window.auth !== 'undefined' && window.auth) {
-                currentUser = window.auth.getCurrentUser();
-                console.log('[Profile] Got currentUser from window.auth:', currentUser ? currentUser.username : null);
-            } else {
-                console.log('[Profile] No auth system available');
-            }
-        } catch(e) {
-            console.error('[Profile] Auth system error:', e);
-        }
-
-        // Get username from URL parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        let profileUsername = urlParams.get('username');
-        console.log('[Profile] URL username param:', profileUsername);
+        let currentUser = null;      // Logged-in user from /api/auth/me
+        let profileData = null;      // The profile being viewed
         let isOwnProfile = false;
-        let profileData = null;
+        let isFollowingProfile = false;
+        let profileUserId = null;    // DB id of the profile being viewed
+        let picksPage = 1;
+        const PICKS_PER_PAGE = 20;
 
-        // Initialize page
-        function init() {
-            console.log('[Profile] init() called');
+        // URL param: ?user=username  (also supports legacy ?username=)
+        const urlParams = new URLSearchParams(window.location.search);
+        let profileUsername = urlParams.get('user') || urlParams.get('username');
+
+        // ======================== INIT ========================
+        async function init() {
+            console.log('[Profile] init() - waiting for api.ready');
             try {
-                // If no username provided, use current user or default to BetLegend
+                await api.ready;
+                console.log('[Profile] API ready. backendAvailable:', api.backendAvailable);
+
+                // 1. Get current logged-in user
+                if (api.isLoggedIn()) {
+                    try {
+                        const meData = await api.getCurrentUser();
+                        currentUser = meData.user || meData;
+                        console.log('[Profile] Logged in as:', currentUser.username);
+                    } catch (e) {
+                        console.warn('[Profile] Not authenticated:', e.message);
+                        currentUser = null;
+                    }
+                }
+
+                // 2. Determine which profile to load
                 if (!profileUsername && currentUser) {
                     profileUsername = currentUser.username;
-                    console.log('[Profile] Using current user:', profileUsername);
                 }
                 if (!profileUsername) {
-                    profileUsername = 'BetLegend';
-                    console.log('[Profile] Defaulting to BetLegend');
+                    // Not logged in, no user param - show message
+                    document.getElementById('profileHeader').innerHTML = `
+                        <div class="error-message">
+                            <h3>Not Logged In</h3>
+                            <p>Please log in to view your profile, or specify a user.</p>
+                            <a href="index.html" class="btn btn-primary" style="margin-top: 20px;">Go Home</a>
+                        </div>`;
+                    return;
                 }
 
                 isOwnProfile = currentUser && currentUser.username === profileUsername;
-                console.log('[Profile] Loading profile for:', profileUsername, 'isOwnProfile:', isOwnProfile);
+                updateHeaderNav();
 
-                // Update header
-                updateHeader();
-                console.log('[Profile] Header updated');
+                // 3. Load the profile from backend
+                await loadProfile();
 
-                // Run auto-grader before loading profile so stats are up-to-date
-                if (typeof TMR_GRADER !== 'undefined' && TMR_GRADER.runGrading) {
-                    console.log('[Profile] Running grading sweep before loading profile...');
-                    TMR_GRADER.runGrading().then(() => {
-                        console.log('[Profile] Grading sweep complete, loading profile');
-                        loadProfile();
-                    }).catch(() => {
-                        console.log('[Profile] Grading sweep failed, loading profile anyway');
-                        loadProfile();
-                    });
-                } else {
-                    loadProfile();
-                }
-                console.log('[Profile] init() completed');
-            } catch(e) {
+            } catch (e) {
                 console.error('[Profile] Init error:', e);
-                const ph = document.getElementById('profileHeader');
-                if (ph) ph.innerHTML = '<div class="error-message" style="background:#ff073a22;border:2px solid #ff073a;border-radius:12px;padding:20px;color:#fff;"><h3 style="color:#ff073a;">Error loading profile</h3><p>' + e.message + '</p><pre style="color:#aaa;font-size:12px;">' + e.stack + '</pre></div>';
+                document.getElementById('profileHeader').innerHTML =
+                    `<div class="error-message"><h3>Error</h3><p>${e.message}</p></div>`;
             }
         }
 
-        function updateHeader() {
-            const userMenu = document.getElementById('userMenu');
-            const myProfileLink = document.getElementById('myProfileLink');
+        // ======================== HEADER NAV ========================
+        function updateHeaderNav() {
             const profileLink = document.getElementById('profileLink');
-
-            if (currentUser) {
-                if (userMenu) {
-                    userMenu.innerHTML = `
-                        <a href="profile.html?username=${currentUser.username}" class="user-avatar">
-                            ${currentUser.username.charAt(0).toUpperCase()}
-                        </a>
-                    `;
-                }
-                if (myProfileLink) {
-                    myProfileLink.href = `profile.html?username=${currentUser.username}`;
-                    myProfileLink.style.display = 'inline-block';
-                }
-                if (profileLink) {
-                    profileLink.href = `profile.html?username=${currentUser.username}`;
-                }
-            } else {
-                if (userMenu) {
-                    userMenu.innerHTML = `
-                        <a href="index.html" class="btn btn-secondary">Log In</a>
-                    `;
-                }
-                if (myProfileLink) {
-                    myProfileLink.style.display = 'none';
-                }
+            if (currentUser && profileLink) {
+                profileLink.href = `profile.html?user=${currentUser.username}`;
             }
         }
 
-        function followUser(userId) {
-            if (!currentUser) {
-                showToast('Please log in to follow users', 'error');
-                return;
-            }
-            
-            // Get all users
-            const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
-            const targetUser = users.find(u => u.username === userId || u.id === userId);
-            const currentUserData = users.find(u => u.username === currentUser.username);
-            
-            if (!targetUser || !currentUserData) {
-                showToast('User not found', 'error');
-                return;
-            }
-            
-            // Add to following
-            if (!currentUserData.social.following) currentUserData.social.following = [];
-            if (!currentUserData.social.following.includes(targetUser.username)) {
-                currentUserData.social.following.push(targetUser.username);
-            }
-            
-            // Add to target's followers
-            if (!targetUser.social.followers) targetUser.social.followers = [];
-            if (!targetUser.social.followers.includes(currentUser.username)) {
-                targetUser.social.followers.push(currentUser.username);
-            }
-            
-            // Save
-            localStorage.setItem('trustmyrecord_users', JSON.stringify(users));
-            showToast('User followed!', 'success');
-            loadProfile();
-        }
-
-        function unfollowUser(userId) {
-            if (!currentUser) {
-                showToast('Please log in', 'error');
-                return;
-            }
-            
-            // Get all users
-            const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
-            const targetUser = users.find(u => u.username === userId || u.id === userId);
-            const currentUserData = users.find(u => u.username === currentUser.username);
-            
-            if (!targetUser || !currentUserData) {
-                showToast('User not found', 'error');
-                return;
-            }
-            
-            // Remove from following
-            if (currentUserData.social.following) {
-                currentUserData.social.following = currentUserData.social.following.filter(u => u !== targetUser.username);
-            }
-            
-            // Remove from target's followers
-            if (targetUser.social.followers) {
-                targetUser.social.followers = targetUser.social.followers.filter(u => u !== currentUser.username);
-            }
-            
-            // Save
-            localStorage.setItem('trustmyrecord_users', JSON.stringify(users));
-            showToast('User unfollowed', 'success');
-            loadProfile();
-        }
-
-        function showToast(message, type = 'info') {
-            // Check if toast container exists
-            let toastContainer = document.getElementById('toastContainer');
-            if (!toastContainer) {
-                toastContainer = document.createElement('div');
-                toastContainer.id = 'toastContainer';
-                toastContainer.style.cssText = `
-                    position: fixed;
-                    bottom: 20px;
-                    right: 20px;
-                    z-index: 9999;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 10px;
-                `;
-                document.body.appendChild(toastContainer);
-            }
-
-            const toast = document.createElement('div');
-            const colors = {
-                success: '#10b981',
-                error: '#ef4444',
-                warning: '#f59e0b',
-                info: '#3b82f6'
-            };
-            
-            toast.style.cssText = `
-                background: ${colors[type] || colors.info};
-                color: white;
-                padding: 12px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                font-weight: 500;
-                animation: slideIn 0.3s ease;
-            `;
-            toast.textContent = message;
-            
-            toastContainer.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        function loadProfile() {
+        // ======================== LOAD PROFILE ========================
+        async function loadProfile() {
             try {
-                // Get user from localStorage
-                const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
-                const profileUser = users.find(u => u.username === profileUsername);
-                
-                if (!profileUser) {
-                    const ph = document.getElementById('profileHeader');
-                    if (ph) ph.innerHTML = `
-                        <div class="error-message">
-                            <h3>❌ User Not Found</h3>
-                            <p>User "${profileUsername}" does not exist.</p>
-                            <a href="index.html" class="btn btn-primary" style="margin-top: 20px;">Go Home</a>
-                        </div>
-                    `;
-                    return;
+                // Fetch profile from backend
+                const data = await api.getUserProfile(profileUsername);
+                // data may be { user: {...}, stats: {...} } or flat
+                profileData = data.user || data;
+                profileUserId = profileData.id;
+                const stats = data.stats || profileData.stats || {};
+
+                // Merge stats into profileData for convenience
+                profileData.stats = stats;
+
+                console.log('[Profile] Loaded profile:', profileData.username, 'id:', profileUserId);
+
+                // Check follow status
+                if (currentUser && !isOwnProfile) {
+                    try {
+                        const followingData = await api.getFollowing(currentUser.id);
+                        const followingList = followingData.following || followingData || [];
+                        isFollowingProfile = followingList.some(f =>
+                            (f.id || f.following_id) === profileUserId ||
+                            (f.username) === profileData.username
+                        );
+                    } catch (e) {
+                        console.warn('[Profile] Could not check follow status:', e.message);
+                    }
                 }
-                
-                profileData = profileUser;
 
-                // Calculate stats from picks stored in tmr_picks
-                const allPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
-                const userPicks = allPicks.filter(p => p.user_id === profileUsername || p.user_id === profileUser.id);
-
-                // If user has picks in tmr_picks, compute stats from them
-                // Otherwise keep the default stats from the user profile
-                if (userPicks.length > 0) {
-                    const pickStats = {
-                        wins: userPicks.filter(p => p.status === 'won').length,
-                        losses: userPicks.filter(p => p.status === 'lost').length,
-                        pushes: userPicks.filter(p => p.status === 'pushed' || p.status === 'push').length,
-                        pending: userPicks.filter(p => p.status === 'pending').length,
-                        totalPicks: userPicks.length
-                    };
-                    const denominator = pickStats.totalPicks - pickStats.pushes - pickStats.pending;
-                    pickStats.winRate = denominator > 0 ? ((pickStats.wins / denominator) * 100).toFixed(1) : 0;
-                    profileData.stats = { ...profileData.stats, ...pickStats };
-                }
-                
-                // Ensure social data exists
-                if (!profileData.social) profileData.social = { followers: [], following: [], reputation: 100, badges: [] };
-                if (!profileData.social.followers) profileData.social.followers = [];
-                if (!profileData.social.following) profileData.social.following = [];
-
+                // Render all sections
                 renderProfileHeader(profileData);
                 renderStatsGrid(profileData);
                 renderHandicappingStats(profileData);
-                
-                // Get picks by sport
-                const picksBySport = {};
-                userPicks.forEach(p => {
-                    const sport = p.sport_display || 'Other';
-                    if (!picksBySport[sport]) {
-                        picksBySport[sport] = { wins: 0, losses: 0, pushes: 0, total: 0 };
-                    }
-                    picksBySport[sport].total++;
-                    if (p.status === 'won') picksBySport[sport].wins++;
-                    else if (p.status === 'lost') picksBySport[sport].losses++;
-                    else if (p.status === 'pushed') picksBySport[sport].pushes++;
-                });
-                renderSportBreakdown(picksBySport);
-                
-                // Recent activity (last 10 picks)
-                const recentActivity = userPicks.slice(0, 10).map(p => ({
-                    type: 'pick',
-                    description: `${p.selection} (${p.status})`,
-                    date: p.locked_at || new Date().toISOString()
-                }));
-                renderActivity(recentActivity);
+                renderSportBreakdown(profileData.stats);
 
-                // Load followers/following
-                renderFollowers(profileData.social.followers);
-                renderFollowing(profileData.social.following);
-                
-                // Load friends (mutual follows)
-                const friends = profileData.social.following.filter(f => 
-                    profileData.social.followers.includes(f)
-                );
-                renderFriends(friends);
-                
-                // Competitions and challenges from localStorage
-                const competitions = JSON.parse(localStorage.getItem('tmr_competitions') || '[]')
-                    .filter(c => c.participants && c.participants.includes(profileUsername));
-                renderCompetitions(competitions);
-                
-                const challenges = JSON.parse(localStorage.getItem('tmr_challenges') || '[]')
-                    .filter(c => c.challenger === profileUsername || c.opponent === profileUsername);
-                renderChallenges(challenges);
-                
-                // Poll/trivia stats
-                const pollTriviaStats = {
-                    pollPoints: profileData.stats?.pollPoints || 0,
-                    triviaPoints: profileData.stats?.triviaPoints || 0,
-                    pollsCorrect: profileData.stats?.pollsCorrect || 0,
-                    pollsTotal: profileData.stats?.pollsTotal || 0,
-                    triviaGames: profileData.stats?.triviaGames || 0,
-                    triviaWins: profileData.stats?.triviaWins || 0
-                };
-                renderPollTriviaStats(pollTriviaStats);
+                // Load picks for activity + picks tab
+                await loadPicks(true);
+
+                // Load followers/following counts + lists
+                await loadFollowers();
+                await loadFollowing();
 
             } catch (error) {
-                console.error('Error loading profile:', error);
-                const ph = document.getElementById('profileHeader');
-                if (ph) ph.innerHTML = `
+                console.error('[Profile] Load error:', error);
+                document.getElementById('profileHeader').innerHTML = `
                     <div class="error-message">
-                        <h3>❌ Error Loading Profile</h3>
-                        <p>Could not load profile data. Please try again later.</p>
-                    </div>
-                `;
+                        <h3>User Not Found</h3>
+                        <p>Could not find user "${profileUsername}".</p>
+                        <a href="index.html" class="btn btn-primary" style="margin-top: 20px;">Go Home</a>
+                    </div>`;
             }
         }
 
+        // ======================== PICKS ========================
+        async function loadPicks(resetPage) {
+            if (resetPage) picksPage = 1;
+            try {
+                const data = await api.getPicks({ userId: profileUserId, page: picksPage, limit: PICKS_PER_PAGE });
+                const picks = data.picks || data || [];
+                const totalPicks = data.total || picks.length;
+
+                renderPicksList(picks, resetPage);
+                renderRecentActivity(picks.slice(0, 10));
+
+                // Show/hide load more
+                const loadMoreDiv = document.getElementById('picksLoadMore');
+                if (loadMoreDiv) {
+                    loadMoreDiv.style.display = (picksPage * PICKS_PER_PAGE < totalPicks) ? 'block' : 'none';
+                }
+            } catch (e) {
+                console.warn('[Profile] Could not load picks:', e.message);
+                renderPicksList([], true);
+                renderRecentActivity([]);
+            }
+        }
+
+        function renderPicksList(picks, reset) {
+            const container = document.getElementById('picksList');
+            if (!container) return;
+
+            if (reset) container.innerHTML = '';
+
+            if ((!picks || picks.length === 0) && reset) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">&#127919;</div>
+                        <p>No picks yet</p>
+                    </div>`;
+                return;
+            }
+
+            const html = picks.map(pick => {
+                const statusClass = pick.result === 'won' || pick.status === 'won' ? 'win' :
+                                    pick.result === 'lost' || pick.status === 'lost' ? 'loss' : '';
+                const statusText = pick.result || pick.status || 'pending';
+                const date = pick.created_at || pick.locked_at || '';
+                const timeAgo = date ? getTimeAgo(new Date(date)) : '';
+                const odds = pick.odds ? `(${pick.odds > 0 ? '+' : ''}${pick.odds})` : '';
+
+                return `
+                    <div class="activity-item ${statusClass}">
+                        <div class="activity-icon">&#127919;</div>
+                        <div class="activity-content">
+                            <div class="activity-text">
+                                <strong>${pick.pick_type || pick.sport || 'Pick'}</strong> -
+                                ${pick.selection || pick.description || 'N/A'} ${odds}
+                            </div>
+                            <div class="activity-time">${timeAgo} ${statusText === 'pending' ? '(pending)' : ''}</div>
+                        </div>
+                        ${statusText !== 'pending' ? `
+                        <div class="activity-result ${statusClass}">
+                            ${statusText.toUpperCase()}
+                        </div>` : ''}
+                    </div>`;
+            }).join('');
+
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        function renderRecentActivity(picks) {
+            const container = document.getElementById('activityList');
+            if (!container) return;
+
+            if (!picks || picks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">&#128203;</div>
+                        <p>No recent activity</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = picks.map(pick => {
+                const statusClass = pick.result === 'won' || pick.status === 'won' ? 'win' :
+                                    pick.result === 'lost' || pick.status === 'lost' ? 'loss' : '';
+                const statusText = pick.result || pick.status || 'pending';
+                const date = pick.created_at || pick.locked_at || '';
+                const timeAgo = date ? getTimeAgo(new Date(date)) : '';
+
+                return `
+                    <div class="activity-item ${statusClass}">
+                        <div class="activity-icon">&#128202;</div>
+                        <div class="activity-content">
+                            <div class="activity-text">
+                                <strong>Pick</strong> - ${pick.selection || pick.description || 'N/A'} (${statusText})
+                            </div>
+                            <div class="activity-time">${timeAgo}</div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        // ======================== FOLLOWERS / FOLLOWING ========================
+        async function loadFollowers() {
+            const container = document.getElementById('followersList');
+            if (!container) return;
+            try {
+                const data = await api.getFollowers(profileUserId);
+                const followers = data.followers || data || [];
+                renderUserCards(container, followers, 'followers');
+            } catch (e) {
+                console.warn('[Profile] Could not load followers:', e.message);
+                renderUserCards(container, [], 'followers');
+            }
+        }
+
+        async function loadFollowing() {
+            const container = document.getElementById('followingList');
+            if (!container) return;
+            try {
+                const data = await api.getFollowing(profileUserId);
+                const following = data.following || data || [];
+                renderUserCards(container, following, 'following');
+            } catch (e) {
+                console.warn('[Profile] Could not load following:', e.message);
+                renderUserCards(container, [], 'following');
+            }
+        }
+
+        function renderUserCards(container, users, type) {
+            if (!users || users.length === 0) {
+                const icon = type === 'followers' ? '&#128101;' : '&#127919;';
+                const msg = type === 'followers' ? 'No followers yet' : 'Not following anyone yet';
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <div class="empty-state-icon">${icon}</div>
+                        <p>${msg}</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = users.map(user => {
+                const username = user.username || user.display_name || 'Unknown';
+                const winRate = user.win_rate || user.winRate || 0;
+                const totalPicks = user.total_picks || user.totalPicks || 0;
+                const userId = user.id || user.follower_id || user.following_id;
+
+                let actionBtn = '';
+                if (isOwnProfile && type === 'following') {
+                    actionBtn = `<button class="btn btn-secondary" style="padding:6px 14px;font-size:0.85rem;" onclick="event.stopPropagation(); doUnfollow(${userId})">Unfollow</button>`;
+                }
+
+                return `
+                    <div class="friend-card" onclick="window.location.href='profile.html?user=${username}'">
+                        <div class="friend-avatar">${username.charAt(0).toUpperCase()}</div>
+                        <div class="friend-info">
+                            <div class="friend-name">${username}</div>
+                            <div class="friend-record">${winRate}% win rate | ${totalPicks} picks</div>
+                        </div>
+                        ${actionBtn}
+                    </div>`;
+            }).join('');
+        }
+
+        // ======================== RENDER FUNCTIONS ========================
         function renderProfileHeader(profile) {
             const header = document.getElementById('profileHeader');
             if (!header) return;
-            const joinDate = new Date(profile.joinedDate || profile.created_at || Date.now()).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long'
-            });
+
+            const joinDate = new Date(profile.created_at || profile.joinedDate || Date.now())
+                .toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+            const displayName = profile.display_name || profile.username;
+            const bio = profile.bio || 'No bio yet.';
+            const location = profile.location || 'Location not set';
+            const avatarLetter = (profile.username || '?').charAt(0).toUpperCase();
+
+            let actionButtons = '';
+            if (isOwnProfile) {
+                actionButtons = `<button class="btn btn-secondary" onclick="openEditModal()">&#9998; Edit Profile</button>`;
+            } else if (currentUser) {
+                const followBtnText = isFollowingProfile ? 'Unfollow' : '+ Follow';
+                const followBtnClass = isFollowingProfile ? 'btn-secondary' : 'btn-primary';
+                const followAction = isFollowingProfile ? 'doUnfollow' : 'doFollow';
+                actionButtons = `
+                    <button class="btn ${followBtnClass}" id="followBtn" onclick="${followAction}(${profileUserId})">${followBtnText}</button>
+                    <button class="btn btn-secondary" onclick="challengeUser('${profile.username}')">&#9876; Challenge</button>
+                    <button class="btn btn-success" onclick="messageUser('${profile.username}')">&#128172; Message</button>`;
+            }
 
             header.innerHTML = `
                 <div class="profile-avatar-section">
-                    <div class="profile-avatar">
-                        ${profile.username.charAt(0).toUpperCase()}
-                    </div>
+                    <div class="profile-avatar">${profile.avatar_url ? `<img src="${profile.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="${displayName}">` : avatarLetter}</div>
                 </div>
                 <div class="profile-info">
-                    <h1 class="profile-name">${profile.username}</h1>
-                    <p class="profile-bio">${profile.bio || 'No bio yet.'}</p>
+                    <h1 class="profile-name">${displayName}</h1>
+                    <p style="color:var(--text-muted);font-size:0.95rem;margin-bottom:8px;">@${profile.username}</p>
+                    <p class="profile-bio">${bio}</p>
                     <div class="profile-meta">
-                        <div class="profile-meta-item">
-                            <span>📅</span>
-                            <span>Joined ${joinDate}</span>
-                        </div>
-                        <div class="profile-meta-item">
-                            <span>📍</span>
-                            <span>${profile.location || 'Location not set'}</span>
-                        </div>
-                        ${profile.website ? `
-                        <div class="profile-meta-item">
-                            <span>🔗</span>
-                            <a href="${profile.website}" target="_blank" style="color: var(--neon-cyan);">${profile.website}</a>
-                        </div>
-                        ` : ''}
+                        <div class="profile-meta-item"><span>&#128197;</span><span>Joined ${joinDate}</span></div>
+                        <div class="profile-meta-item"><span>&#128205;</span><span>${location}</span></div>
                     </div>
-                    <div class="profile-actions">
-                        ${isOwnProfile ? `
-                            <button class="btn btn-secondary" onclick="editProfile()">✏️ Edit Profile</button>
-                        ` : `
-                            <button class="btn btn-primary" onclick="followUser('${profile.id}')">➕ Follow</button>
-                            <button class="btn btn-secondary" onclick="challengeUser('${profile.username}')">⚔️ Challenge</button>
-                            <button class="btn btn-success" onclick="messageUser('${profile.username}')">💬 Message</button>
-                        `}
-                    </div>
-                </div>
-            `;
+                    <div class="profile-actions">${actionButtons}</div>
+                </div>`;
         }
 
         function renderStatsGrid(profile) {
             const grid = document.getElementById('statsGrid');
             if (!grid) return;
-            const stats = profile.stats || {};
-            const social = profile.social || { followers: [], following: [] };
-            const wins = stats.wins || 0;
-            const losses = stats.losses || 0;
-            const pushes = stats.pushes || 0;
-            const totalPicks = stats.totalPicks || (wins + losses + pushes);
-            const winRate = stats.winRate || (totalPicks > 0 ? ((wins / totalPicks) * 100).toFixed(1) : 0);
-            const followers = social.followers || [];
-            const following = social.following || [];
-            const friends = following.filter(f => followers.includes(f));
+            const s = profile.stats || {};
+            const wins = s.wins || s.total_wins || 0;
+            const losses = s.losses || s.total_losses || 0;
+            const pushes = s.pushes || s.total_pushes || 0;
+            const total = s.totalPicks || s.total_picks || (wins + losses + pushes);
+            const winRate = s.winRate || s.win_rate || (total > 0 ? ((wins / total) * 100).toFixed(1) : 0);
+            const roi = s.roi || 0;
+            const followerCount = s.followers_count || s.followersCount || 0;
+            const followingCount = s.following_count || s.followingCount || 0;
 
             grid.innerHTML = `
                 <div class="stat-card">
-                    <div class="stat-icon">📊</div>
-                    <div class="stat-value">${totalPicks}</div>
+                    <div class="stat-icon">&#128202;</div>
+                    <div class="stat-value">${total}</div>
                     <div class="stat-label">Total Picks</div>
                 </div>
                 <div class="stat-card green">
-                    <div class="stat-icon">📈</div>
+                    <div class="stat-icon">&#128200;</div>
                     <div class="stat-value">${winRate}%</div>
                     <div class="stat-label">Win Rate</div>
                 </div>
                 <div class="stat-card gold">
-                    <div class="stat-icon">🔥</div>
-                    <div class="stat-value">${stats.roi || 0}</div>
-                    <div class="stat-label">ROI %</div>
+                    <div class="stat-icon">&#128293;</div>
+                    <div class="stat-value">${roi}%</div>
+                    <div class="stat-label">ROI</div>
                 </div>
                 <div class="stat-card" style="--card-color: var(--neon-green);">
-                    <div class="stat-icon">💰</div>
+                    <div class="stat-icon">&#128176;</div>
                     <div class="stat-value">${wins}-${losses}-${pushes}</div>
                     <div class="stat-label">W-L-P</div>
                 </div>
                 <div class="stat-card purple">
-                    <div class="stat-icon">👥</div>
-                    <div class="stat-value">${followers.length}</div>
+                    <div class="stat-icon">&#128101;</div>
+                    <div class="stat-value">${followerCount}</div>
                     <div class="stat-label">Followers</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon">🎯</div>
-                    <div class="stat-value">${following.length}</div>
+                    <div class="stat-icon">&#127919;</div>
+                    <div class="stat-value">${followingCount}</div>
                     <div class="stat-label">Following</div>
-                </div>
-                <div class="stat-card cyan">
-                    <div class="stat-icon">🤝</div>
-                    <div class="stat-value">${friends.length}</div>
-                    <div class="stat-label">Friends</div>
-                </div>
-                <div class="stat-card gold">
-                    <div class="stat-icon">🏆</div>
-                    <div class="stat-value">${social.reputation || 0}</div>
-                    <div class="stat-label">Reputation</div>
-                </div>
-                <div class="stat-card red">
-                    <div class="stat-icon">⚔️</div>
-                    <div class="stat-value">${(social.badges || []).length}</div>
-                    <div class="stat-label">Badges</div>
-                </div>
-            `;
+                </div>`;
         }
 
         function renderHandicappingStats(profile) {
             const container = document.getElementById('handicappingStats');
             if (!container) return;
-            const stats = profile.stats || {};
+            const s = profile.stats || {};
+            const wins = s.wins || s.total_wins || 0;
+            const losses = s.losses || s.total_losses || 0;
+            const pushes = s.pushes || s.total_pushes || 0;
+            const roi = s.roi || 0;
 
             container.innerHTML = `
                 <div class="handicap-stat">
-                    <div class="handicap-stat-value win">${stats.wins || 0}</div>
+                    <div class="handicap-stat-value win">${wins}</div>
                     <div class="handicap-stat-label">Wins</div>
                 </div>
                 <div class="handicap-stat">
-                    <div class="handicap-stat-value loss">${stats.losses || 0}</div>
+                    <div class="handicap-stat-value loss">${losses}</div>
                     <div class="handicap-stat-label">Losses</div>
                 </div>
                 <div class="handicap-stat">
-                    <div class="handicap-stat-value push">${stats.pushes || 0}</div>
+                    <div class="handicap-stat-value push">${pushes}</div>
                     <div class="handicap-stat-label">Pushes</div>
                 </div>
                 <div class="handicap-stat">
-                    <div class="handicap-stat-value" style="color: var(--neon-gold);">${stats.roi || 0}%</div>
+                    <div class="handicap-stat-value" style="color: var(--neon-gold);">${roi}%</div>
                     <div class="handicap-stat-label">ROI</div>
-                </div>
-            `;
+                </div>`;
         }
 
-        function renderSportBreakdown(picksBySport) {
+        function renderSportBreakdown(stats) {
             const container = document.getElementById('sportBreakdown');
             if (!container) return;
-            const sportNames = Object.keys(picksBySport || {});
 
-            if (!picksBySport || sportNames.length === 0) {
+            // stats.by_sport might be an object or array from the backend
+            const bySport = stats.by_sport || stats.bySport || {};
+            const sportEntries = Array.isArray(bySport) ? bySport : Object.keys(bySport);
+
+            if (!sportEntries || sportEntries.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-state-icon">🏈</div>
+                        <div class="empty-state-icon">&#127944;</div>
                         <p>No picks by sport yet</p>
-                    </div>
-                `;
+                    </div>`;
                 return;
             }
 
-            const sportIcons = {
-                'NFL': '🏈',
-                'NBA': '🏀',
-                'MLB': '⚾',
-                'NHL': '🏒',
-                'Soccer': '⚽',
-                'Tennis': '🎾',
-                'Golf': '⛳',
-                'UFC': '🥊'
-            };
+            const sportIcons = { NFL: '&#127944;', NBA: '&#127936;', MLB: '&#9918;', NHL: '&#127954;', Soccer: '&#9917;', MMA: '&#129354;' };
 
-            container.innerHTML = sportNames.map(sportName => {
-                const sport = picksBySport[sportName];
-                const icon = sportIcons[sportName] || '🏆';
-                const denominator = sport.total - sport.pushes;
-                const winRate = denominator > 0
-                    ? ((sport.wins / denominator) * 100).toFixed(1)
-                    : 0;
+            // Handle array of objects or keyed object
+            const items = Array.isArray(bySport)
+                ? bySport
+                : Object.entries(bySport).map(([name, data]) => ({ sport: name, ...(typeof data === 'object' ? data : {}) }));
+
+            container.innerHTML = items.map(item => {
+                const name = item.sport || item.name || 'Other';
+                const icon = sportIcons[name] || '&#127942;';
+                const w = item.wins || 0;
+                const l = item.losses || 0;
+                const p = item.pushes || 0;
+                const t = item.total || (w + l + p);
+                const denom = t - p;
+                const wr = denom > 0 ? ((w / denom) * 100).toFixed(1) : 0;
 
                 return `
                     <div class="sport-item">
                         <div class="sport-icon">${icon}</div>
                         <div class="sport-info">
-                            <div class="sport-name">${sportName}</div>
-                            <div class="sport-record">${sport.wins}-${sport.losses}-${sport.pushes} (${sport.total} picks)</div>
+                            <div class="sport-name">${name}</div>
+                            <div class="sport-record">${w}-${l}-${p} (${t} picks)</div>
                         </div>
-                        <div class="sport-winrate">${winRate}%</div>
-                    </div>
-                `;
+                        <div class="sport-winrate">${wr}%</div>
+                    </div>`;
             }).join('');
         }
 
-        function renderActivity(activity) {
-            const container = document.getElementById('activityList');
-            if (!container) return;
-
-            if (!activity || activity.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📋</div>
-                        <p>No recent activity</p>
-                    </div>
-                `;
-                return;
+        // ======================== FOLLOW / UNFOLLOW ========================
+        async function doFollow(userId) {
+            if (!currentUser) { showToast('Please log in to follow users', 'error'); return; }
+            try {
+                await api.followUser(userId);
+                isFollowingProfile = true;
+                showToast('Followed!', 'success');
+                renderProfileHeader(profileData);
+                await loadFollowers();
+            } catch (e) {
+                showToast('Could not follow: ' + e.message, 'error');
             }
-
-            const typeIcons = {
-                'pick': '📊',
-                'competition': '🏆',
-                'challenge': '⚔️'
-            };
-
-            container.innerHTML = activity.map(item => {
-                const icon = typeIcons[item.type] || '📌';
-                const timeAgo = getTimeAgo(new Date(item.date));
-                const statusText = item.description || '';
-
-                return `
-                    <div class="activity-item">
-                        <div class="activity-icon">${icon}</div>
-                        <div class="activity-content">
-                            <div class="activity-text">
-                                <strong>${item.type.charAt(0).toUpperCase() + item.type.slice(1)}</strong>
-                                ${statusText ? `- ${statusText}` : ''}
-                            </div>
-                            <div class="activity-time">${timeAgo}</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
         }
 
-        function renderFriends(friends) {
-            const container = document.getElementById('friendsList');
-            if (!container) return;
-
-            if (!friends || friends.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1/-1;">
-                        <div class="empty-state-icon">👥</div>
-                        <p>No friends yet</p>
-                    </div>
-                `;
-                return;
+        async function doUnfollow(userId) {
+            if (!currentUser) { showToast('Please log in', 'error'); return; }
+            try {
+                await api.unfollowUser(userId);
+                isFollowingProfile = false;
+                showToast('Unfollowed', 'success');
+                renderProfileHeader(profileData);
+                await loadFollowers();
+                await loadFollowing();
+            } catch (e) {
+                showToast('Could not unfollow: ' + e.message, 'error');
             }
-            
-            // Get user data for each friend
-            const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
-
-            container.innerHTML = friends.map(friendUsername => {
-                const friend = users.find(u => u.username === friendUsername) || { username: friendUsername, stats: {} };
-                return `
-                <div class="friend-card" onclick="window.location.href='profile.html?username=${friend.username}'">
-                    <div class="friend-avatar">${friend.username.charAt(0).toUpperCase()}</div>
-                    <div class="friend-info">
-                        <div class="friend-name">${friend.username}</div>
-                        <div class="friend-record">${friend.stats?.winRate || 0}% win rate • ${friend.stats?.totalPicks || 0} picks</div>
-                    </div>
-                </div>
-            `}).join('');
         }
 
-        function renderFollowers(followers) {
-            const container = document.getElementById('followersList');
-            if (!container) return;
+        // ======================== EDIT PROFILE ========================
+        function openEditModal() {
+            const existing = document.getElementById('editProfileModal');
+            if (existing) existing.remove();
 
-            if (!followers || followers.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1/-1;">
-                        <div class="empty-state-icon">👥</div>
-                        <p>No followers yet</p>
-                        <p style="font-size: 0.9rem; margin-top: 10px;">When someone follows this user, they'll appear here.</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            // Get user data for each follower
-            const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
+            const modal = document.createElement('div');
+            modal.id = 'editProfileModal';
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9999;display:flex;align-items:center;justify-content:center;';
+            modal.innerHTML = `
+                <div style="background:var(--card-bg);border:1px solid var(--glass-border);border-radius:16px;padding:40px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;">
+                    <h2 style="font-family:'Orbitron',sans-serif;color:var(--neon-cyan);margin-bottom:25px;">Edit Profile</h2>
+                    <form id="editProfileForm">
+                        <label style="display:block;color:var(--text-secondary);margin-bottom:5px;font-size:0.9rem;">Display Name</label>
+                        <input type="text" id="editDisplayName" value="${profileData.display_name || profileData.username || ''}"
+                            style="width:100%;padding:12px;border-radius:8px;border:1px solid var(--glass-border);background:rgba(0,0,0,0.4);color:#fff;font-size:1rem;margin-bottom:15px;">
 
-            container.innerHTML = followers.map(followerUsername => {
-                const follower = users.find(u => u.username === followerUsername) || { username: followerUsername, stats: {} };
-                return `
-                <div class="friend-card" onclick="window.location.href='profile.html?username=${follower.username}'">
-                    <div class="friend-avatar">${follower.username.charAt(0).toUpperCase()}</div>
-                    <div class="friend-info">
-                        <div class="friend-name">${follower.username}</div>
-                        <div class="friend-record">${follower.stats?.winRate || 0}% win rate • ${follower.stats?.totalPicks || 0} picks</div>
-                    </div>
-                    ${isOwnProfile ? '' : `<button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); followUser('${follower.username}')">Follow</button>`}
-                </div>
-            `}).join('');
+                        <label style="display:block;color:var(--text-secondary);margin-bottom:5px;font-size:0.9rem;">Bio</label>
+                        <textarea id="editBio" rows="3"
+                            style="width:100%;padding:12px;border-radius:8px;border:1px solid var(--glass-border);background:rgba(0,0,0,0.4);color:#fff;font-size:1rem;margin-bottom:15px;resize:vertical;">${profileData.bio || ''}</textarea>
+
+                        <label style="display:block;color:var(--text-secondary);margin-bottom:5px;font-size:0.9rem;">Location</label>
+                        <input type="text" id="editLocation" value="${profileData.location || ''}"
+                            style="width:100%;padding:12px;border-radius:8px;border:1px solid var(--glass-border);background:rgba(0,0,0,0.4);color:#fff;font-size:1rem;margin-bottom:15px;">
+
+                        <label style="display:block;color:var(--text-secondary);margin-bottom:5px;font-size:0.9rem;">Avatar URL</label>
+                        <input type="text" id="editAvatarUrl" value="${profileData.avatar_url || ''}"
+                            style="width:100%;padding:12px;border-radius:8px;border:1px solid var(--glass-border);background:rgba(0,0,0,0.4);color:#fff;font-size:1rem;margin-bottom:15px;" placeholder="https://...">
+
+                        <label style="display:block;color:var(--text-secondary);margin-bottom:5px;font-size:0.9rem;">Favorite Sports (comma-separated)</label>
+                        <input type="text" id="editFavSports" value="${(profileData.favorite_sports || []).join(', ')}"
+                            style="width:100%;padding:12px;border-radius:8px;border:1px solid var(--glass-border);background:rgba(0,0,0,0.4);color:#fff;font-size:1rem;margin-bottom:15px;" placeholder="NFL, NBA, MLB">
+
+                        <label style="display:block;color:var(--text-secondary);margin-bottom:5px;font-size:0.9rem;">Favorite Teams (comma-separated)</label>
+                        <input type="text" id="editFavTeams" value="${(profileData.favorite_teams || []).join(', ')}"
+                            style="width:100%;padding:12px;border-radius:8px;border:1px solid var(--glass-border);background:rgba(0,0,0,0.4);color:#fff;font-size:1rem;margin-bottom:25px;" placeholder="Lakers, Cowboys">
+
+                        <div style="display:flex;gap:15px;justify-content:flex-end;">
+                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('editProfileModal').remove()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>`;
+
+            document.body.appendChild(modal);
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+
+            document.getElementById('editProfileForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await saveProfile();
+            });
         }
 
-        function renderFollowing(following) {
-            const container = document.getElementById('followingList');
-            if (!container) return;
+        async function saveProfile() {
+            try {
+                const updates = {
+                    display_name: document.getElementById('editDisplayName').value.trim(),
+                    bio: document.getElementById('editBio').value.trim(),
+                    location: document.getElementById('editLocation').value.trim(),
+                    avatar_url: document.getElementById('editAvatarUrl').value.trim(),
+                    favorite_sports: document.getElementById('editFavSports').value.split(',').map(s => s.trim()).filter(Boolean),
+                    favorite_teams: document.getElementById('editFavTeams').value.split(',').map(s => s.trim()).filter(Boolean)
+                };
 
-            if (!following || following.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1/-1;">
-                        <div class="empty-state-icon">🎯</div>
-                        <p>Not following anyone yet</p>
-                        <p style="font-size: 0.9rem; margin-top: 10px;">Users this person follows will appear here.</p>
-                    </div>
-                `;
-                return;
+                await api.updateProfile(updates);
+                showToast('Profile updated!', 'success');
+                document.getElementById('editProfileModal').remove();
+
+                // Reload profile to reflect changes
+                await loadProfile();
+            } catch (e) {
+                showToast('Error saving: ' + e.message, 'error');
             }
-            
-            // Get user data for each followed user
-            const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
-
-            container.innerHTML = following.map(followedUsername => {
-                const user = users.find(u => u.username === followedUsername) || { username: followedUsername, stats: {} };
-                return `
-                <div class="friend-card" onclick="window.location.href='profile.html?username=${user.username}'">
-                    <div class="friend-avatar">${user.username.charAt(0).toUpperCase()}</div>
-                    <div class="friend-info">
-                        <div class="friend-name">${user.username}</div>
-                        <div class="friend-record">${user.stats?.winRate || 0}% win rate • ${user.stats?.totalPicks || 0} picks</div>
-                    </div>
-                    ${isOwnProfile ? `<button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); unfollowUser('${user.username}')">Unfollow</button>` : ''}
-                </div>
-            `}).join('');
         }
 
-        function renderCompetitions(competitions) {
-            const container = document.getElementById('competitionList');
-            if (!container) return;
-
-            if (!competitions || competitions.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">🏆</div>
-                        <p>No competition history</p>
-                    </div>
-                `;
-                return;
+        // ======================== UTILITY ========================
+        function showToast(message, type = 'info') {
+            let toastContainer = document.getElementById('toastContainer');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toastContainer';
+                toastContainer.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;';
+                document.body.appendChild(toastContainer);
             }
-
-            container.innerHTML = competitions.map(comp => {
-                const resultClass = comp.final_rank === 1 ? 'win' : '';
-                const resultText = comp.final_rank === 1 ? '🥇 1st Place' : `#${comp.final_rank} Place`;
-
-                return `
-                    <div class="competition-item">
-                        <div class="competition-info">
-                            <div class="competition-name">${comp.competition_name || 'Competition'}</div>
-                            <div class="competition-meta">${comp.prize_amount ? `$${comp.prize_amount} prize` : 'No prize'} • ${new Date(comp.completed_at).toLocaleDateString()}</div>
-                        </div>
-                        <div class="competition-result ${resultClass}">${resultText}</div>
-                    </div>
-                `;
-            }).join('');
+            const colors = { success: '#10b981', error: '#ef4444', warning: '#f59e0b', info: '#3b82f6' };
+            const toast = document.createElement('div');
+            toast.style.cssText = `background:${colors[type] || colors.info};color:white;padding:12px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);font-weight:500;`;
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
-        function renderChallenges(challenges) {
-            const container = document.getElementById('challengeList');
-            if (!container) return;
-
-            if (!challenges || challenges.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">⚔️</div>
-                        <p>No challenge history</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = challenges.map(challenge => {
-                const isWinner = challenge.winner_id === profileData?.id;
-                const resultClass = isWinner ? 'win' : 'loss';
-                const resultText = isWinner ? 'Won' : 'Lost';
-                const opponent = challenge.challenger_username === profileUsername
-                    ? challenge.challenged_username
-                    : challenge.challenger_username;
-
-                return `
-                    <div class="challenge-item">
-                        <div class="challenge-info">
-                            <div class="challenge-type">${challenge.type || 'Head-to-Head'} vs ${opponent}</div>
-                            <div class="challenge-meta">${new Date(challenge.completed_at).toLocaleDateString()}</div>
-                        </div>
-                        <div class="challenge-result ${resultClass}">${resultText}</div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function renderPollTriviaStats(data) {
-            const container = document.getElementById('pollTriviaStats');
-            if (!container) return;
-
-            if (!data) {
-                container.innerHTML = `
-                    <div class="handicapping-stats">
-                        <div class="handicap-stat">
-                            <div class="handicap-stat-value" style="color: var(--neon-cyan);">0</div>
-                            <div class="handicap-stat-label">Poll Points</div>
-                        </div>
-                        <div class="handicap-stat">
-                            <div class="handicap-stat-value" style="color: var(--neon-purple);">0</div>
-                            <div class="handicap-stat-label">Trivia Points</div>
-                        </div>
-                        <div class="handicap-stat">
-                            <div class="handicap-stat-value" style="color: var(--neon-gold);">0</div>
-                            <div class="handicap-stat-label">Polls Answered</div>
-                        </div>
-                        <div class="handicap-stat">
-                            <div class="handicap-stat-value" style="color: var(--neon-green);">0</div>
-                            <div class="handicap-stat-label">Trivia Played</div>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = `
-                <div class="handicapping-stats">
-                    <div class="handicap-stat">
-                        <div class="handicap-stat-value" style="color: var(--neon-cyan);">${data.pollPoints || 0}</div>
-                        <div class="handicap-stat-label">Poll Points</div>
-                    </div>
-                    <div class="handicap-stat">
-                        <div class="handicap-stat-value" style="color: var(--neon-purple);">${data.triviaPoints || 0}</div>
-                        <div class="handicap-stat-label">Trivia Points</div>
-                    </div>
-                    <div class="handicap-stat">
-                        <div class="handicap-stat-value" style="color: var(--neon-gold);">${data.pollsTotal || 0}</div>
-                        <div class="handicap-stat-label">Polls Answered</div>
-                    </div>
-                    <div class="handicap-stat">
-                        <div class="handicap-stat-value" style="color: var(--neon-green);">${data.triviaGames || 0}</div>
-                        <div class="handicap-stat-label">Trivia Played</div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Helper function for time ago
         function getTimeAgo(date) {
             const seconds = Math.floor((new Date() - date) / 1000);
-            const intervals = {
-                year: 31536000,
-                month: 2592000,
-                week: 604800,
-                day: 86400,
-                hour: 3600,
-                minute: 60
-            };
-
-            for (const [unit, secondsInUnit] of Object.entries(intervals)) {
-                const interval = Math.floor(seconds / secondsInUnit);
-                if (interval >= 1) {
-                    return `${interval} ${unit}${interval > 1 ? 's' : ''} ago`;
-                }
+            const intervals = { year: 31536000, month: 2592000, week: 604800, day: 86400, hour: 3600, minute: 60 };
+            for (const [unit, secs] of Object.entries(intervals)) {
+                const interval = Math.floor(seconds / secs);
+                if (interval >= 1) return `${interval} ${unit}${interval > 1 ? 's' : ''} ago`;
             }
             return 'Just now';
-        }
-
-        // Tab switching
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-
-                tab.classList.add('active');
-                const tabContent = document.getElementById(`tab-${tab.dataset.tab}`);
-                if (tabContent) tabContent.classList.add('active');
-            });
-        });
-
-        // Action handlers
-        function editProfile() {
-            showToast('Edit profile coming soon!', 'info');
         }
 
         function challengeUser(username) {
@@ -1773,7 +1519,29 @@
             window.location.href = `messages.html?to=${username}`;
         }
 
-        // Initialize on load
+        // ======================== TAB SWITCHING ========================
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                const tabContent = document.getElementById(`tab-${tab.dataset.tab}`);
+                if (tabContent) tabContent.classList.add('active');
+            });
+        });
+
+        // Load more picks button
+        document.addEventListener('DOMContentLoaded', () => {
+            const loadMoreBtn = document.getElementById('loadMorePicksBtn');
+            if (loadMoreBtn) {
+                loadMoreBtn.addEventListener('click', () => {
+                    picksPage++;
+                    loadPicks(false);
+                });
+            }
+        });
+
+        // ======================== START ========================
         init();
     </script>
 </body>

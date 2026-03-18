@@ -709,19 +709,19 @@
         <div class="user-stats-card">
             <div class="stat-item">
                 <div class="stat-value" id="pollsAccuracy">--</div>
-                <div class="stat-label">Accuracy</div>
+                <div class="stat-label">Your Accuracy</div>
             </div>
             <div class="stat-item">
                 <div class="stat-value" id="pollsVoteCount">0</div>
-                <div class="stat-label">Predictions</div>
+                <div class="stat-label">Your Votes</div>
             </div>
             <div class="stat-item">
                 <div class="stat-value" id="pollsRank">--</div>
-                <div class="stat-label">Rank</div>
+                <div class="stat-label">Active Polls</div>
             </div>
             <div class="stat-item">
                 <div class="stat-value" id="pollsPoints">0</div>
-                <div class="stat-label">Points</div>
+                <div class="stat-label">Your Points</div>
             </div>
         </div>
 
@@ -735,9 +735,14 @@
                 <button class="filter-btn" data-cat="nhl" onclick="filterPolls('nhl', this)">&#x1F3D2; NHL</button>
                 <button class="filter-btn" data-cat="soccer" onclick="filterPolls('soccer', this)">&#x26BD; Soccer</button>
             </div>
-            <button class="create-poll-btn" onclick="openCreatePollModal()">
-                <span>&#x2795;</span> Create Poll
-            </button>
+            <div style="display: flex; gap: 10px;">
+                <button class="create-poll-btn" onclick="openLeaderboardModal()" style="background: linear-gradient(135deg, #0ea5e9, #06b6d4);">
+                    <span>&#x1F3C6;</span> Leaderboard
+                </button>
+                <button class="create-poll-btn" onclick="openCreatePollModal()">
+                    <span>&#x2795;</span> Create Poll
+                </button>
+            </div>
         </div>
 
         <!-- Polls Grid -->
@@ -799,108 +804,181 @@
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
+    <!-- Poll Detail Modal -->
+    <div class="modal-overlay" id="pollDetailModal">
+        <div class="modal-box" style="max-width: 640px;">
+            <button class="modal-close" onclick="closePollDetailModal()">&times;</button>
+            <div id="pollDetailContent"><!-- filled by JS --></div>
+            <div id="pollCommentsSection" style="margin-top: 24px; border-top: 1px solid var(--glass-border); padding-top: 20px;">
+                <h3 style="font-size: 1.05rem; margin-bottom: 14px; color: var(--text-primary);">Comments</h3>
+                <div id="pollCommentsList" style="max-height: 260px; overflow-y: auto; margin-bottom: 14px;"></div>
+                <form id="addCommentForm" onsubmit="submitComment(event)" style="display: flex; gap: 8px;">
+                    <input type="text" id="commentInput" placeholder="Add a comment..." style="flex:1; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-primary); font-family: inherit; font-size: 0.9rem;">
+                    <button type="submit" style="padding: 10px 18px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: inherit; font-size: 0.85rem;">Post</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div class="modal-overlay" id="leaderboardModal">
+        <div class="modal-box" style="max-width: 560px;">
+            <button class="modal-close" onclick="closeLeaderboardModal()">&times;</button>
+            <h2 style="margin-bottom: 8px;">Prediction Leaderboard</h2>
+            <div style="display: flex; gap: 6px; margin-bottom: 18px;">
+                <button class="filter-btn active" onclick="loadLeaderboard('all', this)">All Time</button>
+                <button class="filter-btn" onclick="loadLeaderboard('month', this)">Month</button>
+                <button class="filter-btn" onclick="loadLeaderboard('week', this)">Week</button>
+            </div>
+            <div id="leaderboardContent"><!-- filled by JS --></div>
+        </div>
+    </div>
+
+    <script src="static/js/config.js"></script>
+    <script src="static/js/backend-api.js"></script>
+    <script src="static/js/notifications.js?v=20260318"></script>
     <script>
-    // ============ AUTH HELPERS ============
+    // ============ STATE ============
+    let currentFilter = 'all';
+    let pollsCache = [];         // fetched polls with options
+    let categoriesCache = [];    // { id, name, slug, ... }
+    let activePollDetailId = null;
 
-    function isLoggedIn() {
-        if (localStorage.getItem('tmr_is_logged_in') === 'true') return true;
-        if (localStorage.getItem('trustmyrecord_session') !== null) return true;
-        return false;
-    }
-
-    function getCurrentUsername() {
-        try {
-            var u = JSON.parse(localStorage.getItem('tmr_current_user') || 'null');
-            if (u && u.username) return u.username;
-        } catch(e) {}
-        try {
-            var sess = JSON.parse(localStorage.getItem('trustmyrecord_session') || 'null');
-            if (sess && sess.userId) {
-                var users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
-                var user = users.find(function(u) { return u.id === sess.userId; });
-                if (user) return user.username;
-            }
-        } catch(e) {}
-        return null;
-    }
-
-    // ============ TOAST ============
-
-    function showToast(message, type) {
-        var t = document.getElementById('toast');
-        t.textContent = message;
-        t.className = 'toast ' + (type || 'info');
-        setTimeout(function() { t.classList.add('show'); }, 10);
-        setTimeout(function() { t.classList.remove('show'); }, 3000);
-    }
-
-    // ============ NAV STATUS ============
-
-    function updateNavStatus() {
-        var el = document.getElementById('navUserStatus');
-        if (!el) return;
-        var username = getCurrentUsername();
-        if (isLoggedIn() && username) {
-            el.textContent = '@' + username;
-            el.classList.add('logged-in');
-        } else if (isLoggedIn()) {
-            el.textContent = 'Logged in';
-            el.classList.add('logged-in');
-        } else {
-            el.textContent = 'Not logged in';
-            el.classList.remove('logged-in');
-        }
-    }
-
-    // ============ POLLS DATA ============
-
-    function getPolls() {
-        return JSON.parse(localStorage.getItem('trustmyrecord_polls') || '[]');
-    }
-
-    function savePolls(polls) {
-        localStorage.setItem('trustmyrecord_polls', JSON.stringify(polls));
-    }
+    // ============ HELPERS ============
 
     function escapeHtml(str) {
         if (!str) return '';
-        var div = document.createElement('div');
+        const div = document.createElement('div');
         div.appendChild(document.createTextNode(str));
         return div.innerHTML;
     }
 
-    // No sample data - polls start empty until real users create them
-
-    // ============ CURRENT FILTER STATE ============
-    var currentFilter = 'all';
-
-    function filterPolls(cat, btnEl) {
-        currentFilter = cat;
-        // Update active button
-        var btns = document.querySelectorAll('.filter-btn');
-        btns.forEach(function(b) { b.classList.remove('active'); });
-        if (btnEl) btnEl.classList.add('active');
-        renderPollsGrid();
+    function showToast(message, type) {
+        const t = document.getElementById('toast');
+        t.textContent = message;
+        t.className = 'toast ' + (type || 'info');
+        setTimeout(() => t.classList.add('show'), 10);
+        setTimeout(() => t.classList.remove('show'), 3000);
     }
 
-    // ============ RENDER POLLS ============
+    function timeLeft(deadline) {
+        if (!deadline) return '';
+        const diff = new Date(deadline) - new Date();
+        if (diff <= 0) return 'Ended';
+        const days = Math.floor(diff / 86400000);
+        const hours = Math.floor((diff % 86400000) / 3600000);
+        const mins = Math.floor((diff % 3600000) / 60000);
+        if (days > 0) return days + 'd ' + hours + 'h left';
+        if (hours > 0) return hours + 'h ' + mins + 'm left';
+        return mins + 'm left';
+    }
+
+    const catIcons = { nfl: '\uD83C\uDFC8', nba: '\uD83C\uDFC0', mlb: '\u26BE', nhl: '\uD83C\uDFD2', ncaaf: '\uD83C\uDF93', ncaab: '\uD83C\uDFEB', soccer: '\u26BD', other: '\uD83C\uDFB2' };
+
+    // ============ DATA FETCHING ============
+
+    async function fetchCategories() {
+        try {
+            const data = await api.request('/polls/categories');
+            categoriesCache = data.categories || [];
+            // Populate create-poll select with real categories
+            const sel = document.getElementById('pollCategory');
+            sel.innerHTML = '<option value="">Select Category</option>';
+            categoriesCache.forEach(c => {
+                const icon = catIcons[c.slug] || '\uD83D\uDCCA';
+                sel.innerHTML += '<option value="' + c.id + '">' + icon + ' ' + escapeHtml(c.name) + '</option>';
+            });
+            // Build filter buttons from categories
+            buildCategoryFilters();
+        } catch (e) {
+            console.error('Failed to fetch categories:', e);
+        }
+    }
+
+    function buildCategoryFilters() {
+        const container = document.getElementById('categoryFilters');
+        let html = '<button class="filter-btn active" data-cat="all" onclick="filterPolls(\'all\', this)">All</button>';
+        categoriesCache.forEach(c => {
+            const icon = catIcons[c.slug] || '\uD83D\uDCCA';
+            html += '<button class="filter-btn" data-cat="' + escapeHtml(c.slug) + '" onclick="filterPolls(\'' + escapeHtml(c.slug) + '\', this)">' + icon + ' ' + escapeHtml(c.name) + '</button>';
+        });
+        container.innerHTML = html;
+    }
+
+    async function fetchPolls() {
+        try {
+            // Fetch active polls; optionally filter by sport/category slug
+            let endpoint = '/polls/active?limit=50';
+            if (currentFilter && currentFilter !== 'all') {
+                endpoint += '&sport=' + encodeURIComponent(currentFilter.toUpperCase());
+            }
+            const data = await api.request(endpoint);
+            const activePolls = data.polls || [];
+
+            // For each poll, fetch its full details (options + vote counts)
+            const detailed = [];
+            for (const p of activePolls) {
+                try {
+                    const full = await api.request('/polls/' + p.id);
+                    detailed.push(full);
+                } catch (err) {
+                    // If individual fetch fails, build a minimal entry
+                    detailed.push({ poll: p, options: [], total_votes: parseInt(p.vote_count) || 0, user_vote: null, comments: [] });
+                }
+            }
+            pollsCache = detailed;
+        } catch (e) {
+            console.error('Failed to fetch polls:', e);
+            pollsCache = [];
+        }
+    }
+
+    async function fetchStats() {
+        try {
+            const data = await api.request('/polls/stats');
+            // Update the top stats bar with overview numbers
+            const acEl = document.getElementById('pollsAccuracy');
+            const vcEl = document.getElementById('pollsVoteCount');
+            const rkEl = document.getElementById('pollsRank');
+            const ppEl = document.getElementById('pollsPoints');
+
+            if (rkEl) rkEl.textContent = data.active_polls || 0;
+
+            // If user is logged in, try to get personal stats
+            if (api.isLoggedIn()) {
+                try {
+                    const me = await api.getCurrentUser();
+                    if (me && me.user && me.user.username) {
+                        const userStats = await api.request('/polls/users/' + encodeURIComponent(me.user.username) + '/stats');
+                        const overall = userStats.overall || {};
+                        if (acEl) acEl.textContent = overall.accuracy ? overall.accuracy + '%' : '--';
+                        if (vcEl) vcEl.textContent = overall.polls_voted || 0;
+                        if (ppEl) ppEl.textContent = overall.total_points || 0;
+                    }
+                } catch (e) { /* user stats unavailable, keep overview */ }
+            }
+        } catch (e) {
+            console.error('Failed to fetch stats:', e);
+        }
+    }
+
+    // ============ RENDER ============
 
     function renderPollsGrid() {
-        var grid = document.getElementById('pollsGrid');
+        const grid = document.getElementById('pollsGrid');
         if (!grid) return;
 
-        var polls = getPolls();
-        var now = new Date();
-        var username = getCurrentUsername() || '';
+        const now = new Date();
+        const active = [];
+        const expired = [];
 
-        // Filter by category
-        if (currentFilter && currentFilter !== 'all') {
-            polls = polls.filter(function(p) { return p.category === currentFilter; });
-        }
-
-        // Separate active vs expired
-        var active = polls.filter(function(p) { return new Date(p.expiresAt) > now; });
-        var expired = polls.filter(function(p) { return new Date(p.expiresAt) <= now; });
+        pollsCache.forEach(entry => {
+            const p = entry.poll;
+            const deadline = p.voting_deadline;
+            const isExpired = p.status === 'resolved' || (deadline && new Date(deadline) <= now);
+            if (isExpired) expired.push(entry);
+            else active.push(entry);
+        });
 
         if (active.length === 0 && expired.length === 0) {
             grid.innerHTML = '<div class="empty-state">' +
@@ -912,107 +990,72 @@
             return;
         }
 
-        // Update user stats
-        updateUserStats(username);
+        let html = '';
+        active.forEach(entry => { html += buildPollCard(entry, false); });
 
-        var html = '';
-
-        // Render active polls
-        active.forEach(function(poll) {
-            html += buildPollCard(poll, username, now, false);
-        });
-
-        // Expired divider
         if (expired.length > 0 && active.length > 0) {
-            html += '<div class="expired-divider">Expired Polls</div>';
+            html += '<div class="expired-divider">Expired / Resolved Polls</div>';
         } else if (expired.length > 0 && active.length === 0) {
             html += '<div class="expired-divider">All Polls Expired</div>';
         }
 
-        // Render expired polls
-        expired.forEach(function(poll) {
-            html += buildPollCard(poll, username, now, true);
-        });
-
+        expired.forEach(entry => { html += buildPollCard(entry, true); });
         grid.innerHTML = html;
     }
 
-    function buildPollCard(poll, username, now, isExpired) {
-        var totalVotes = 0;
-        poll.options.forEach(function(o) { totalVotes += (o.votes || 0); });
+    function buildPollCard(entry, isExpired) {
+        const poll = entry.poll;
+        const options = entry.options || [];
+        const totalVotes = entry.total_votes || 0;
+        const userVote = entry.user_vote;
+        const hasVoted = !!userVote;
+        const showResults = hasVoted || isExpired;
 
-        var hasVoted = false;
-        var votedIndex = -1;
-        if (username) {
-            poll.options.forEach(function(o, idx) {
-                if (o.voters && o.voters.indexOf(username) !== -1) {
-                    hasVoted = true;
-                    votedIndex = idx;
-                }
-            });
-        }
+        const tl = isExpired ? 'Ended' : timeLeft(poll.voting_deadline);
+        const catSlug = (poll.category_slug || poll.sport || 'other').toLowerCase();
+        const catName = poll.category_name || poll.sport || 'General';
+        const catIcon = catIcons[catSlug] || '\uD83D\uDCCA';
 
-        var showResults = hasVoted || isExpired;
+        let card = '<div class="poll-card' + (isExpired ? ' expired' : '') + '" onclick="openPollDetail(' + poll.id + ')" style="cursor:pointer;">';
 
-        // Time left
-        var timeLeft = '';
-        if (!isExpired) {
-            var diff = new Date(poll.expiresAt) - now;
-            var days = Math.floor(diff / 86400000);
-            var hours = Math.floor((diff % 86400000) / 3600000);
-            var mins = Math.floor((diff % 3600000) / 60000);
-            if (days > 0) timeLeft = days + 'd ' + hours + 'h left';
-            else if (hours > 0) timeLeft = hours + 'h ' + mins + 'm left';
-            else timeLeft = mins + 'm left';
-        } else {
-            timeLeft = 'Ended';
-        }
-
-        var catIcons = { nfl: '\uD83C\uDFC8', nba: '\uD83C\uDFC0', mlb: '\u26BE', nhl: '\uD83C\uDFD2', ncaaf: '\uD83C\uDF93', ncaab: '\uD83C\uDFEB', soccer: '\u26BD', other: '\uD83C\uDFB2' };
-        var catIcon = catIcons[poll.category] || '\uD83D\uDCCA';
-
-        var card = '<div class="poll-card' + (isExpired ? ' expired' : '') + '">';
-
-        // Top row
         card += '<div class="poll-top">';
-        card += '<span class="poll-category-pill">' + catIcon + ' ' + (poll.category || 'general').toUpperCase() + '</span>';
-        card += '<span class="poll-time-left' + (isExpired ? ' ended' : '') + '">' + timeLeft + '</span>';
+        card += '<span class="poll-category-pill">' + catIcon + ' ' + escapeHtml(catName).toUpperCase() + '</span>';
+        card += '<span class="poll-time-left' + (isExpired ? ' ended' : '') + '">' + tl + '</span>';
         card += '</div>';
 
-        // Question
-        card += '<div class="poll-question">' + escapeHtml(poll.question) + '</div>';
-        card += '<div class="poll-meta">by @' + escapeHtml(poll.createdBy) + ' &middot; ' + totalVotes + ' votes</div>';
+        card += '<div class="poll-question">' + escapeHtml(poll.title) + '</div>';
+        card += '<div class="poll-meta">by @' + escapeHtml(poll.username || 'unknown') + ' &middot; ' + totalVotes + ' votes</div>';
 
-        // Get max percentage for winner detection
-        var maxPct = 0;
+        // Find max percentage for winner highlight
+        let maxPct = 0;
         if (showResults && totalVotes > 0) {
-            poll.options.forEach(function(o) {
-                var p = Math.round((o.votes / totalVotes) * 100);
+            options.forEach(o => {
+                const p = parseFloat(o.vote_percentage) || 0;
                 if (p > maxPct) maxPct = p;
             });
         }
 
-        // Options
-        poll.options.forEach(function(opt, idx) {
-            var pct = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 100) : 0;
-            var isWinner = showResults && pct === maxPct && pct > 0;
-            var isMyVote = votedIndex === idx;
+        options.forEach(opt => {
+            const pct = parseFloat(opt.vote_percentage) || 0;
+            const votes = parseInt(opt.vote_count) || 0;
+            const isWinner = showResults && pct === maxPct && pct > 0;
+            const isMyVote = userVote && userVote.option_id === opt.id;
+            const optText = opt.option_text || opt.text || '';
 
             if (showResults) {
                 card += '<div class="result-bar' + (isMyVote ? ' my-vote' : '') + '">';
-                card += '<div class="result-bar-fill ' + (isWinner ? 'winner' : 'normal') + '" style="width: ' + pct + '%;"></div>';
+                card += '<div class="result-bar-fill ' + (isWinner ? 'winner' : 'normal') + '" style="width: ' + Math.round(pct) + '%;"></div>';
                 card += '<div class="result-bar-content">';
-                card += '<span class="result-bar-text' + (isMyVote ? ' voted' : '') + '">' + escapeHtml(opt.text) + (isMyVote ? ' \u2713' : '') + '</span>';
-                card += '<span class="result-bar-pct ' + (isWinner ? 'winner' : 'normal') + '">' + pct + '%</span>';
+                card += '<span class="result-bar-text' + (isMyVote ? ' voted' : '') + '">' + escapeHtml(optText) + (isMyVote ? ' \u2713' : '') + '</span>';
+                card += '<span class="result-bar-pct ' + (isWinner ? 'winner' : 'normal') + '">' + Math.round(pct) + '%</span>';
                 card += '</div></div>';
             } else {
-                card += '<button class="vote-btn" onclick="votePoll(\'' + poll.id + '\',' + idx + ')">' + escapeHtml(opt.text) + '</button>';
+                card += '<button class="vote-btn" onclick="event.stopPropagation(); votePoll(' + poll.id + ',' + opt.id + ')">' + escapeHtml(optText) + '</button>';
             }
         });
 
-        // Footer
         card += '<div class="poll-footer">';
-        card += '<span>\uD83C\uDFC6 ' + (poll.points || 50) + ' pts</span>';
+        card += '<span>\uD83C\uDFC6 ' + (poll.points_correct || 100) + ' pts</span>';
         card += '<span>' + totalVotes + ' total votes</span>';
         card += '</div>';
 
@@ -1020,114 +1063,157 @@
         return card;
     }
 
-    // ============ UPDATE USER STATS ============
-
-    function updateUserStats(username) {
-        var allPolls = getPolls();
-        var userVoteCount = 0;
-
-        allPolls.forEach(function(p) {
-            p.options.forEach(function(o) {
-                if (o.voters && o.voters.indexOf(username) !== -1) userVoteCount++;
-            });
-        });
-
-        var vcEl = document.getElementById('pollsVoteCount');
-        if (vcEl) vcEl.textContent = userVoteCount;
-
-        // Points
-        var pollPoints = parseInt(localStorage.getItem('trustMyRecordPollPoints') || '0', 10);
-        var ppEl = document.getElementById('pollsPoints');
-        if (ppEl) ppEl.textContent = pollPoints;
-
-        // Rank
-        var voterMap = {};
-        allPolls.forEach(function(p) {
-            p.options.forEach(function(o) {
-                if (o.voters) o.voters.forEach(function(v) {
-                    voterMap[v] = (voterMap[v] || 0) + 1;
-                });
-            });
-        });
-
-        var voterList = Object.entries(voterMap).sort(function(a, b) { return b[1] - a[1]; });
-        var rank = voterList.findIndex(function(v) { return v[0] === username; });
-        var rkEl = document.getElementById('pollsRank');
-        if (rkEl) rkEl.textContent = rank >= 0 ? '#' + (rank + 1) : '--';
-
-        // Accuracy (votes out of total polls)
-        var acEl = document.getElementById('pollsAccuracy');
-        if (acEl) acEl.textContent = userVoteCount > 0 ? Math.round((userVoteCount / Math.max(allPolls.length, 1)) * 100) + '%' : '--';
-    }
-
     // ============ VOTE ============
 
-    function votePoll(pollId, optionIndex) {
-        if (!isLoggedIn()) {
+    async function votePoll(pollId, optionId) {
+        if (!api.isLoggedIn()) {
             showToast('Please log in to vote on polls.', 'error');
             return;
         }
 
-        var username = getCurrentUsername();
-        if (!username) {
-            showToast('Could not determine your username. Please log in again.', 'error');
-            return;
-        }
-
-        var polls = getPolls();
-        var pollIdx = -1;
-        for (var i = 0; i < polls.length; i++) {
-            if (polls[i].id === pollId) { pollIdx = i; break; }
-        }
-        if (pollIdx === -1) return;
-
-        var poll = polls[pollIdx];
-
-        // Check expiry
-        if (new Date(poll.expiresAt) <= new Date()) {
-            showToast('This poll has expired.', 'error');
+        try {
+            await api.request('/polls/' + pollId + '/vote', {
+                method: 'POST',
+                body: { option_id: optionId, confidence: 50 }
+            });
+            showToast('Vote recorded!', 'success');
+            // Refresh the poll data
+            await fetchPolls();
             renderPollsGrid();
-            return;
+        } catch (e) {
+            showToast(e.message || 'Failed to vote.', 'error');
         }
-
-        // Check already voted
-        for (var j = 0; j < poll.options.length; j++) {
-            if (poll.options[j].voters && poll.options[j].voters.indexOf(username) !== -1) {
-                showToast('You already voted on this poll!', 'info');
-                renderPollsGrid();
-                return;
-            }
-        }
-
-        // Cast vote
-        poll.options[optionIndex].votes = (poll.options[optionIndex].votes || 0) + 1;
-        if (!poll.options[optionIndex].voters) poll.options[optionIndex].voters = [];
-        poll.options[optionIndex].voters.push(username);
-        poll.totalVotes = (poll.totalVotes || 0) + 1;
-
-        polls[pollIdx] = poll;
-        savePolls(polls);
-
-        showToast('Vote recorded! +' + (poll.points || 50) + ' pts', 'success');
-
-        // Add points
-        var currentPts = parseInt(localStorage.getItem('trustMyRecordPollPoints') || '0', 10);
-        localStorage.setItem('trustMyRecordPollPoints', String(currentPts + (poll.points || 50)));
-
-        renderPollsGrid();
     }
 
-    // ============ CREATE POLL MODAL ============
+    // ============ POLL DETAIL MODAL ============
+
+    async function openPollDetail(pollId) {
+        activePollDetailId = pollId;
+        const modal = document.getElementById('pollDetailModal');
+        const content = document.getElementById('pollDetailContent');
+        const commentsList = document.getElementById('pollCommentsList');
+
+        content.innerHTML = '<p style="color: var(--text-muted);">Loading...</p>';
+        commentsList.innerHTML = '';
+        modal.classList.add('active');
+
+        try {
+            const data = await api.request('/polls/' + pollId);
+            const poll = data.poll;
+            const options = data.options || [];
+            const totalVotes = data.total_votes || 0;
+            const userVote = data.user_vote;
+
+            let html = '<h2 style="margin-bottom: 6px;">' + escapeHtml(poll.title) + '</h2>';
+            if (poll.description) {
+                html += '<p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 14px;">' + escapeHtml(poll.description) + '</p>';
+            }
+            html += '<p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 18px;">by @' + escapeHtml(poll.username) + ' &middot; ' + totalVotes + ' votes &middot; ' + (poll.status === 'resolved' ? 'Resolved' : timeLeft(poll.voting_deadline)) + '</p>';
+
+            const showResults = !!userVote || poll.status === 'resolved' || (poll.voting_deadline && new Date(poll.voting_deadline) <= new Date());
+            let maxPct = 0;
+            if (showResults && totalVotes > 0) {
+                options.forEach(o => { const p = parseFloat(o.vote_percentage) || 0; if (p > maxPct) maxPct = p; });
+            }
+
+            options.forEach(opt => {
+                const pct = parseFloat(opt.vote_percentage) || 0;
+                const isWinner = showResults && pct === maxPct && pct > 0;
+                const isMyVote = userVote && userVote.option_id === opt.id;
+
+                if (showResults) {
+                    html += '<div class="result-bar' + (isMyVote ? ' my-vote' : '') + '" style="margin-bottom: 10px;">';
+                    html += '<div class="result-bar-fill ' + (isWinner ? 'winner' : 'normal') + '" style="width: ' + Math.round(pct) + '%;"></div>';
+                    html += '<div class="result-bar-content">';
+                    html += '<span class="result-bar-text' + (isMyVote ? ' voted' : '') + '">' + escapeHtml(opt.option_text) + (isMyVote ? ' \u2713' : '') + '</span>';
+                    html += '<span class="result-bar-pct ' + (isWinner ? 'winner' : 'normal') + '">' + Math.round(pct) + '% (' + (opt.vote_count || 0) + ')</span>';
+                    html += '</div></div>';
+                } else {
+                    html += '<button class="vote-btn" onclick="voteFromDetail(' + poll.id + ',' + opt.id + ')" style="margin-bottom: 8px;">' + escapeHtml(opt.option_text) + '</button>';
+                }
+            });
+
+            content.innerHTML = html;
+
+            // Load comments
+            loadComments(pollId);
+        } catch (e) {
+            content.innerHTML = '<p style="color: var(--accent-red);">Failed to load poll details.</p>';
+            console.error(e);
+        }
+    }
+
+    function closePollDetailModal() {
+        document.getElementById('pollDetailModal').classList.remove('active');
+        activePollDetailId = null;
+    }
+
+    async function voteFromDetail(pollId, optionId) {
+        await votePoll(pollId, optionId);
+        // Refresh the detail modal
+        openPollDetail(pollId);
+    }
+
+    // ============ COMMENTS ============
+
+    async function loadComments(pollId) {
+        const list = document.getElementById('pollCommentsList');
+        try {
+            const data = await api.request('/polls/' + pollId + '/comments');
+            const comments = data.comments || [];
+            if (comments.length === 0) {
+                list.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem;">No comments yet. Be the first!</p>';
+                return;
+            }
+            let html = '';
+            comments.forEach(c => {
+                const date = new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                html += '<div style="margin-bottom: 12px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">';
+                html += '<div style="display: flex; justify-content: space-between; margin-bottom: 4px;">';
+                html += '<span style="color: var(--primary); font-weight: 600; font-size: 0.85rem;">@' + escapeHtml(c.username) + '</span>';
+                html += '<span style="color: var(--text-muted); font-size: 0.75rem;">' + date + '</span>';
+                html += '</div>';
+                html += '<p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0;">' + escapeHtml(c.content) + '</p>';
+                html += '</div>';
+            });
+            list.innerHTML = html;
+        } catch (e) {
+            list.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem;">Could not load comments.</p>';
+        }
+    }
+
+    async function submitComment(event) {
+        event.preventDefault();
+        if (!api.isLoggedIn()) {
+            showToast('Please log in to comment.', 'error');
+            return;
+        }
+        const input = document.getElementById('commentInput');
+        const content = input.value.trim();
+        if (!content || !activePollDetailId) return;
+
+        try {
+            await api.request('/polls/' + activePollDetailId + '/comments', {
+                method: 'POST',
+                body: { content }
+            });
+            input.value = '';
+            showToast('Comment posted!', 'success');
+            loadComments(activePollDetailId);
+        } catch (e) {
+            showToast(e.message || 'Failed to post comment.', 'error');
+        }
+    }
+
+    // ============ CREATE POLL ============
 
     function openCreatePollModal() {
-        if (!isLoggedIn()) {
+        if (!api.isLoggedIn()) {
             showToast('Please log in to create a poll.', 'error');
             return;
         }
-        // Set default end time to 24h from now
-        var dt = new Date(Date.now() + 86400000);
-        var local = dt.toISOString().slice(0, 16);
-        document.getElementById('pollEndTime').value = local;
+        const dt = new Date(Date.now() + 86400000);
+        document.getElementById('pollEndTime').value = dt.toISOString().slice(0, 16);
         document.getElementById('createPollModal').classList.add('active');
     }
 
@@ -1136,71 +1222,152 @@
         document.getElementById('createPollForm').reset();
     }
 
-    function submitPoll(event) {
+    async function submitPoll(event) {
         event.preventDefault();
 
-        if (!isLoggedIn()) {
+        if (!api.isLoggedIn()) {
             showToast('Please log in to create a poll.', 'error');
             return;
         }
 
-        var username = getCurrentUsername() || 'Anonymous';
-        var question = document.getElementById('pollQuestion').value.trim();
-        var category = document.getElementById('pollCategory').value;
-        var opt1 = document.getElementById('pollOption1').value.trim();
-        var opt2 = document.getElementById('pollOption2').value.trim();
-        var opt3 = document.getElementById('pollOption3').value.trim();
-        var opt4 = document.getElementById('pollOption4').value.trim();
-        var endTime = document.getElementById('pollEndTime').value;
-        var points = document.getElementById('pollPoints').value;
+        const question = document.getElementById('pollQuestion').value.trim();
+        const categoryId = document.getElementById('pollCategory').value;
+        const opt1 = document.getElementById('pollOption1').value.trim();
+        const opt2 = document.getElementById('pollOption2').value.trim();
+        const opt3 = document.getElementById('pollOption3').value.trim();
+        const opt4 = document.getElementById('pollOption4').value.trim();
+        const endTime = document.getElementById('pollEndTime').value;
+        const points = document.getElementById('pollPoints').value;
 
-        if (!question || !opt1 || !opt2 || !category) {
+        if (!question || !opt1 || !opt2 || !categoryId) {
             showToast('Please fill in the question, category, and at least 2 options.', 'error');
             return;
         }
 
-        var options = [
-            { text: opt1, votes: 0, voters: [] },
-            { text: opt2, votes: 0, voters: [] }
-        ];
-        if (opt3) options.push({ text: opt3, votes: 0, voters: [] });
-        if (opt4) options.push({ text: opt4, votes: 0, voters: [] });
+        const options = [{ text: opt1 }, { text: opt2 }];
+        if (opt3) options.push({ text: opt3 });
+        if (opt4) options.push({ text: opt4 });
 
-        var poll = {
-            id: 'poll_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-            question: question,
-            category: category,
-            options: options,
-            createdBy: username,
-            createdAt: new Date().toISOString(),
-            expiresAt: endTime ? new Date(endTime).toISOString() : new Date(Date.now() + 86400000).toISOString(),
-            points: parseInt(points) || 50,
-            totalVotes: 0
-        };
+        // Map points select to scoring
+        const pointsMap = { '25': 25, '50': 50, '75': 75, '100': 100 };
+        const pointsCorrect = pointsMap[points] || 50;
 
-        var polls = getPolls();
-        polls.unshift(poll);
-        savePolls(polls);
+        try {
+            await api.request('/polls', {
+                method: 'POST',
+                body: {
+                    category_id: parseInt(categoryId),
+                    title: question,
+                    description: '',
+                    scoring_type: 'binary',
+                    points_correct: pointsCorrect,
+                    points_incorrect: 0,
+                    voting_deadline: endTime ? new Date(endTime).toISOString() : new Date(Date.now() + 86400000).toISOString(),
+                    options
+                }
+            });
 
-        closeCreatePollModal();
-        showToast('Poll created successfully!', 'success');
+            closeCreatePollModal();
+            showToast('Poll created successfully!', 'success');
+            await fetchPolls();
+            renderPollsGrid();
+        } catch (e) {
+            showToast(e.message || 'Failed to create poll.', 'error');
+        }
+    }
+
+    // ============ FILTER ============
+
+    async function filterPolls(cat, btnEl) {
+        currentFilter = cat;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        if (btnEl) btnEl.classList.add('active');
+        await fetchPolls();
         renderPollsGrid();
     }
 
-    // Close modal on overlay click
+    // ============ LEADERBOARD ============
+
+    function openLeaderboardModal() {
+        document.getElementById('leaderboardModal').classList.add('active');
+        loadLeaderboard('all');
+    }
+
+    function closeLeaderboardModal() {
+        document.getElementById('leaderboardModal').classList.remove('active');
+    }
+
+    async function loadLeaderboard(period, btnEl) {
+        if (btnEl) {
+            btnEl.closest('div').querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btnEl.classList.add('active');
+        }
+        const container = document.getElementById('leaderboardContent');
+        container.innerHTML = '<p style="color: var(--text-muted);">Loading...</p>';
+
+        try {
+            const data = await api.request('/polls/leaderboard?period=' + period + '&limit=25');
+            const lb = data.leaderboard || [];
+
+            if (lb.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 30px 0;">No leaderboard data yet.</p>';
+                return;
+            }
+
+            let html = '<div style="display: flex; flex-direction: column; gap: 6px;">';
+            lb.forEach((entry, idx) => {
+                const medals = ['\uD83E\uDD47', '\uD83E\uDD48', '\uD83E\uDD49'];
+                const rankDisplay = idx < 3 ? medals[idx] : '#' + entry.rank;
+                const accuracy = entry.accuracy ? entry.accuracy + '%' : '--';
+                html += '<div style="display: flex; align-items: center; padding: 10px 14px; background: rgba(255,255,255,0.04); border-radius: 10px; gap: 12px;">';
+                html += '<span style="font-size: 1.1rem; width: 32px; text-align: center; font-weight: 700;">' + rankDisplay + '</span>';
+                html += '<span style="flex: 1; color: var(--text-primary); font-weight: 600;">@' + escapeHtml(entry.username) + '</span>';
+                html += '<span style="color: var(--accent-green); font-weight: 700; font-size: 0.9rem;">' + (entry.total_points || 0) + ' pts</span>';
+                html += '<span style="color: var(--text-muted); font-size: 0.8rem; width: 50px; text-align: right;">' + accuracy + '</span>';
+                html += '</div>';
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        } catch (e) {
+            container.innerHTML = '<p style="color: var(--accent-red);">Failed to load leaderboard.</p>';
+            console.error(e);
+        }
+    }
+
+    // ============ MODAL HANDLERS ============
+
     document.getElementById('createPollModal').addEventListener('click', function(e) {
         if (e.target === this) closeCreatePollModal();
     });
-
-    // Close modal on Escape
+    document.getElementById('pollDetailModal').addEventListener('click', function(e) {
+        if (e.target === this) closePollDetailModal();
+    });
+    document.getElementById('leaderboardModal').addEventListener('click', function(e) {
+        if (e.target === this) closeLeaderboardModal();
+    });
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeCreatePollModal();
+        if (e.key === 'Escape') {
+            closeCreatePollModal();
+            closePollDetailModal();
+            closeLeaderboardModal();
+        }
     });
 
     // ============ INIT ============
 
-    document.addEventListener('DOMContentLoaded', function() {
-        updateNavStatus();
+    document.addEventListener('DOMContentLoaded', async function() {
+        await api.ready;
+
+        if (!api.backendAvailable) {
+            showToast('Backend unavailable. Polls require the API server.', 'error');
+            document.getElementById('pollsGrid').innerHTML =
+                '<div class="empty-state"><div class="empty-state-icon">&#x26A0;</div><h3>Backend Offline</h3><p>The polls system requires the API server to be running.</p></div>';
+            return;
+        }
+
+        // Fetch everything in parallel
+        await Promise.all([fetchCategories(), fetchStats()]);
+        await fetchPolls();
         renderPollsGrid();
     });
     </script>

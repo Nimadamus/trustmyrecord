@@ -793,151 +793,35 @@
     </div>
 </div>
 
+<script src="static/js/config.js?v=20260318"></script>
+<script src="static/js/backend-api.js?v=20260318"></script>
+<script src="static/js/notifications.js?v=20260318"></script>
 <script>
 // ================================================================
-// AUTH HELPERS (localStorage only, no API)
+// AUTH HELPERS
 // ================================================================
 function isLoggedIn() {
-    if (localStorage.getItem('tmr_is_logged_in') === 'true') return true;
-    if (localStorage.getItem('trustmyrecord_session') !== null) return true;
-    return false;
+    return api && api.isLoggedIn();
 }
 function getCurrentUsername() {
     try {
         var u = JSON.parse(localStorage.getItem('tmr_current_user') || 'null');
         if (u && u.username) return u.username;
     } catch(e) {}
-    try {
-        var sess = JSON.parse(localStorage.getItem('trustmyrecord_session') || 'null');
-        if (sess && sess.userId) {
-            var users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
-            var user = users.find(function(u) { return u.id === sess.userId; });
-            if (user) return user.username;
-        }
-    } catch(e) {}
     return null;
-}
-
-// ================================================================
-// TRIVIA QUESTIONS DATA
-// ================================================================
-var triviaQuestions = {
-    NFL: [
-        { q: "Who has the most Super Bowl wins as a quarterback?", a: ["Tom Brady", "Joe Montana", "Terry Bradshaw", "John Elway"], correct: 0 },
-        { q: "What team has the most Super Bowl appearances?", a: ["New England Patriots", "Dallas Cowboys", "Pittsburgh Steelers", "San Francisco 49ers"], correct: 0 },
-        { q: "Who holds the record for most career passing yards?", a: ["Tom Brady", "Drew Brees", "Peyton Manning", "Brett Favre"], correct: 0 },
-        { q: "Which team went undefeated in the regular season in 1972?", a: ["Miami Dolphins", "Chicago Bears", "Green Bay Packers", "Oakland Raiders"], correct: 0 },
-        { q: "Who is known as 'The GOAT' in NFL?", a: ["Tom Brady", "Jerry Rice", "Walter Payton", "Jim Brown"], correct: 0 },
-        { q: "What is the longest field goal in NFL history?", a: ["66 yards", "64 yards", "63 yards", "65 yards"], correct: 0 },
-        { q: "Which QB has thrown the most career touchdowns?", a: ["Tom Brady", "Drew Brees", "Peyton Manning", "Brett Favre"], correct: 0 },
-        { q: "What team has the most NFL championships?", a: ["Green Bay Packers", "Chicago Bears", "New York Giants", "Dallas Cowboys"], correct: 0 },
-        { q: "Who has the most rushing yards in a single season?", a: ["Eric Dickerson", "Adrian Peterson", "Barry Sanders", "O.J. Simpson"], correct: 0 },
-        { q: "Which team won the first Super Bowl?", a: ["Green Bay Packers", "Kansas City Chiefs", "Oakland Raiders", "Baltimore Colts"], correct: 0 }
-    ],
-    NBA: [
-        { q: "Who has the most NBA championships?", a: ["Bill Russell", "Michael Jordan", "LeBron James", "Magic Johnson"], correct: 0 },
-        { q: "Who is the all-time leading scorer in NBA history?", a: ["LeBron James", "Kareem Abdul-Jabbar", "Karl Malone", "Kobe Bryant"], correct: 0 },
-        { q: "Which player has the most MVP awards?", a: ["Kareem Abdul-Jabbar", "Michael Jordan", "LeBron James", "Bill Russell"], correct: 0 },
-        { q: "What team has won the most NBA titles?", a: ["Boston Celtics", "Los Angeles Lakers", "Golden State Warriors", "Chicago Bulls"], correct: 0 },
-        { q: "Who holds the record for most points in a single game?", a: ["Wilt Chamberlain (100)", "Kobe Bryant (81)", "Devin Booker (70)", "David Robinson (71)"], correct: 0 },
-        { q: "Which player has the most career assists?", a: ["John Stockton", "Magic Johnson", "Chris Paul", "Steve Nash"], correct: 0 },
-        { q: "Who won the first NBA championship?", a: ["Philadelphia Warriors", "Boston Celtics", "Minneapolis Lakers", "New York Knicks"], correct: 0 },
-        { q: "What player has the most triple-doubles?", a: ["Russell Westbrook", "Oscar Robertson", "Magic Johnson", "LeBron James"], correct: 0 },
-        { q: "Who has made the most 3-pointers in NBA history?", a: ["Stephen Curry", "Ray Allen", "Reggie Miller", "James Harden"], correct: 0 },
-        { q: "Which team has the best single-season record?", a: ["Golden State Warriors (73-9)", "Chicago Bulls (72-10)", "Lakers (69-13)", "Celtics (68-14)"], correct: 0 }
-    ],
-    MLB: [
-        { q: "Who has the most career home runs?", a: ["Barry Bonds", "Hank Aaron", "Babe Ruth", "Alex Rodriguez"], correct: 0 },
-        { q: "What team has won the most World Series?", a: ["New York Yankees", "St. Louis Cardinals", "Boston Red Sox", "San Francisco Giants"], correct: 0 },
-        { q: "Who holds the record for most hits?", a: ["Pete Rose", "Ty Cobb", "Hank Aaron", "Stan Musial"], correct: 0 },
-        { q: "What pitcher has the most career strikeouts?", a: ["Nolan Ryan", "Randy Johnson", "Roger Clemens", "Steve Carlton"], correct: 0 },
-        { q: "Who hit .406 in 1941, the last player over .400?", a: ["Ted Williams", "Joe DiMaggio", "Ty Cobb", "Stan Musial"], correct: 0 },
-        { q: "Which player has the longest hitting streak?", a: ["Joe DiMaggio (56)", "Pete Rose (44)", "Willie Keeler (45)", "Jimmy Rollins (38)"], correct: 0 },
-        { q: "Who has won the most Cy Young Awards?", a: ["Roger Clemens", "Randy Johnson", "Greg Maddux", "Steve Carlton"], correct: 0 },
-        { q: "What is the most stolen bases in a season?", a: ["Rickey Henderson (130)", "Lou Brock (118)", "Vince Coleman (110)", "Tim Raines (90)"], correct: 0 },
-        { q: "Who pitched the most no-hitters?", a: ["Nolan Ryan", "Sandy Koufax", "Bob Feller", "Cy Young"], correct: 0 },
-        { q: "Which team broke the Curse of the Bambino?", a: ["Boston Red Sox", "Chicago Cubs", "Chicago White Sox", "Cleveland Indians"], correct: 0 }
-    ],
-    NHL: [
-        { q: "Who has won the most Stanley Cups as a franchise?", a: ["Montreal Canadiens", "Toronto Maple Leafs", "Detroit Red Wings", "Boston Bruins"], correct: 0 },
-        { q: "Who holds the record for most career goals?", a: ["Wayne Gretzky", "Gordie Howe", "Jaromir Jagr", "Alex Ovechkin"], correct: 0 },
-        { q: "Who holds the record for most points in a single season?", a: ["Wayne Gretzky (215)", "Mario Lemieux (199)", "Wayne Gretzky (212)", "Phil Esposito (152)"], correct: 0 },
-        { q: "Which goalie has the most career wins?", a: ["Martin Brodeur", "Patrick Roy", "Roberto Luongo", "Ed Belfour"], correct: 0 },
-        { q: "Who was the first European-born player to win the Hart Trophy?", a: ["Dominik Hasek", "Jaromir Jagr", "Peter Forsberg", "Sergei Fedorov"], correct: 0 },
-        { q: "What year was the NHL founded?", a: ["1917", "1920", "1910", "1925"], correct: 0 },
-        { q: "Who scored 'The Goal' in 2010 Olympics for Canada?", a: ["Sidney Crosby", "Jarome Iginla", "Ryan Getzlaf", "Jonathan Toews"], correct: 0 },
-        { q: "Which team had the longest winning streak in NHL history?", a: ["Pittsburgh Penguins (17)", "Columbus Blue Jackets (16)", "Boston Bruins (14)", "Montreal Canadiens (12)"], correct: 0 },
-        { q: "Who has the most career assists in NHL history?", a: ["Wayne Gretzky", "Ron Francis", "Mark Messier", "Ray Bourque"], correct: 0 },
-        { q: "Which goalie recorded the most shutouts in a career?", a: ["Martin Brodeur", "Terry Sawchuk", "George Hainsworth", "Patrick Roy"], correct: 0 },
-        { q: "Who was the youngest captain in NHL history?", a: ["Connor McDavid", "Sidney Crosby", "Gabriel Landeskog", "Vincent Lecavalier"], correct: 3 },
-        { q: "What is the fastest hat trick in NHL history?", a: ["21 seconds", "44 seconds", "52 seconds", "1 minute 8 seconds"], correct: 0 }
-    ],
-    Soccer: [
-        { q: "What country has won the most FIFA World Cups?", a: ["Brazil", "Germany", "Italy", "Argentina"], correct: 0 },
-        { q: "Who holds the record for most international goals?", a: ["Cristiano Ronaldo", "Ali Daei", "Lionel Messi", "Pele"], correct: 0 },
-        { q: "Which club has won the most Champions League titles?", a: ["Real Madrid", "AC Milan", "Liverpool", "Barcelona"], correct: 0 },
-        { q: "Who won the first FIFA World Cup in 1930?", a: ["Uruguay", "Argentina", "Brazil", "Italy"], correct: 0 },
-        { q: "Which player has won the most Ballon d'Or awards?", a: ["Lionel Messi", "Cristiano Ronaldo", "Michel Platini", "Johan Cruyff"], correct: 0 },
-        { q: "What is the highest-scoring World Cup game ever?", a: ["Austria 7-5 Switzerland (1954)", "Brazil 6-5 Poland (1938)", "Hungary 10-1 El Salvador (1982)", "Germany 8-0 Saudi Arabia (2002)"], correct: 0 },
-        { q: "Who scored the 'Hand of God' goal?", a: ["Diego Maradona", "Pele", "Thierry Henry", "Luis Suarez"], correct: 0 },
-        { q: "Which English club has won the most league titles?", a: ["Manchester United", "Liverpool", "Arsenal", "Chelsea"], correct: 0 },
-        { q: "Who is the Premier League's all-time top scorer?", a: ["Alan Shearer", "Wayne Rooney", "Andrew Cole", "Sergio Aguero"], correct: 0 },
-        { q: "What year did the English Premier League start?", a: ["1992", "1990", "1988", "1995"], correct: 0 },
-        { q: "Which country hosted the 2022 FIFA World Cup?", a: ["Qatar", "Russia", "Brazil", "South Africa"], correct: 0 },
-        { q: "Who won the 2022 World Cup?", a: ["Argentina", "France", "Brazil", "Croatia"], correct: 0 }
-    ],
-    Mixed: [
-        { q: "Who has the most Super Bowl wins as a QB?", a: ["Tom Brady", "Joe Montana", "Terry Bradshaw", "John Elway"], correct: 0 },
-        { q: "Who is the NBA's all-time leading scorer?", a: ["LeBron James", "Kareem Abdul-Jabbar", "Karl Malone", "Kobe Bryant"], correct: 0 },
-        { q: "What team has won the most World Series?", a: ["New York Yankees", "St. Louis Cardinals", "Boston Red Sox", "San Francisco Giants"], correct: 0 },
-        { q: "Who has won the most Stanley Cups?", a: ["Montreal Canadiens", "Toronto Maple Leafs", "Detroit Red Wings", "Boston Bruins"], correct: 0 },
-        { q: "Who has won the most Grand Slam titles in tennis?", a: ["Novak Djokovic", "Rafael Nadal", "Roger Federer", "Pete Sampras"], correct: 0 },
-        { q: "What country has won the most FIFA World Cups?", a: ["Brazil", "Germany", "Italy", "Argentina"], correct: 0 },
-        { q: "Who has the most Olympic gold medals?", a: ["Michael Phelps", "Usain Bolt", "Carl Lewis", "Paavo Nurmi"], correct: 0 },
-        { q: "What golfer has won the most Masters tournaments?", a: ["Jack Nicklaus", "Tiger Woods", "Arnold Palmer", "Gary Player"], correct: 0 },
-        { q: "Who is the fastest man in history?", a: ["Usain Bolt", "Tyson Gay", "Yohan Blake", "Asafa Powell"], correct: 0 },
-        { q: "What boxer was known as 'The Greatest'?", a: ["Muhammad Ali", "Mike Tyson", "Floyd Mayweather", "Sugar Ray Robinson"], correct: 0 }
-    ]
-};
-
-// ================================================================
-// LOAD CUSTOM QUESTIONS INTO POOL
-// ================================================================
-function loadCustomQuestionsIntoPool() {
-    var custom = [];
-    try { custom = JSON.parse(localStorage.getItem('trustmyrecord_custom_trivia') || '[]'); } catch(e) { custom = []; }
-    custom.forEach(function(cq) {
-        var catKey = cq.category || 'Mixed';
-        if (catKey !== 'Mixed' && catKey !== 'Soccer') catKey = catKey.toUpperCase();
-        var entry = { q: cq.q, a: cq.a, correct: cq.correct };
-        if (triviaQuestions[catKey]) triviaQuestions[catKey].push(entry);
-        if (catKey !== 'Mixed') triviaQuestions.Mixed.push(entry);
-    });
-}
-loadCustomQuestionsIntoPool();
-
-// ================================================================
-// SCORES - localStorage
-// ================================================================
-var SCORES_KEY = 'trustMyRecordTriviaScores';
-function getScores() {
-    try { return JSON.parse(localStorage.getItem(SCORES_KEY) || '[]'); } catch(e) { return []; }
-}
-function saveScore(score) {
-    var scores = getScores();
-    scores.unshift(score);
-    scores = scores.slice(0, 100);
-    localStorage.setItem(SCORES_KEY, JSON.stringify(scores));
 }
 
 // ================================================================
 // QUIZ STATE
 // ================================================================
-var currentQuiz = null;
+var currentSession = null;
+var currentQuestion = null;
 var currentQuizProgress = 0;
+var currentQuizTotal = 10;
 var currentQuizScore = 0;
 var currentQuizCategory = '';
-var selectedAnswer = null;
+var currentCategorySlug = '';
+var selectedAnswerId = null;
 var quizActive = false;
 var answerLocked = false;
 var cheatCount = 0;
@@ -945,22 +829,15 @@ var timerInterval = null;
 var timeLeft = 20;
 var quizStartTime = null;
 var questionTimes = [];
+var totalPointsEarned = 0;
+var backendCategories = [];
 
 // ================================================================
 // UTILITY
 // ================================================================
-function shuffleArray(arr) {
-    var a = arr.slice();
-    for (var i = a.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var t = a[i]; a[i] = a[j]; a[j] = t;
-    }
-    return a;
-}
-
 function escapeHtml(str) {
     var d = document.createElement('div');
-    d.textContent = str;
+    d.textContent = str || '';
     return d.innerHTML;
 }
 
@@ -979,28 +856,43 @@ function switchView(view) {
 }
 
 // ================================================================
-// CATEGORY CARDS
+// CATEGORY CARDS (from backend API)
 // ================================================================
-var categoryMeta = {
-    NFL: { icon: "\uD83C\uDFC8", desc: "Test your NFL knowledge from Super Bowls to records", color: "#0ea5e9" },
-    NBA: { icon: "\uD83C\uDFC0", desc: "Hoops history, legends, and championship trivia", color: "#f97316" },
-    MLB: { icon: "\u26BE", desc: "Baseball's greatest moments and record holders", color: "#22c55e" },
-    NHL: { icon: "\uD83C\uDFD2", desc: "Hockey legends, Stanley Cups, and ice-cold facts", color: "#a855f7" },
-    Soccer: { icon: "\u26BD", desc: "World Cup, Champions League, and global football", color: "#eab308" },
-    Mixed: { icon: "\uD83C\uDFB2", desc: "Random questions from all sports. The daily challenge.", color: "#06b6d4" }
+var categoryIcons = {
+    'nfl': '\uD83C\uDFC8', 'nba': '\uD83C\uDFC0', 'mlb': '\u26BE',
+    'nhl': '\uD83C\uDFD2', 'soccer': '\u26BD', 'mixed': '\uD83C\uDFB2', 'general': '\uD83C\uDFB2'
 };
+
+async function loadCategories() {
+    var grid = document.getElementById('categoriesGrid');
+    grid.innerHTML = '<div class="empty-state"><p>Loading categories...</p></div>';
+    try {
+        await api.ready;
+        var data = await api.request('/trivia/categories');
+        backendCategories = data.categories || data || [];
+        renderCategories();
+    } catch(e) {
+        console.error('Failed to load categories:', e);
+        grid.innerHTML = '<div class="empty-state"><div class="big-icon">&#9888;</div><p>Could not load trivia categories. Is the backend running?</p></div>';
+    }
+}
 
 function renderCategories() {
     var grid = document.getElementById('categoriesGrid');
+    if (!backendCategories.length) {
+        grid.innerHTML = '<div class="empty-state"><div class="big-icon">&#127942;</div><p>No categories available yet.</p></div>';
+        return;
+    }
     var html = '';
-    var cats = ['NFL', 'NBA', 'MLB', 'NHL', 'Soccer', 'Mixed'];
-    cats.forEach(function(cat) {
-        var meta = categoryMeta[cat];
-        var qCount = triviaQuestions[cat] ? triviaQuestions[cat].length : 0;
-        html += '<div class="category-card" onclick="startQuiz(\'' + cat + '\')">' +
-            '<div class="card-icon">' + meta.icon + '</div>' +
-            '<h3>' + cat + '</h3>' +
-            '<div class="card-desc">' + meta.desc + '</div>' +
+    backendCategories.forEach(function(cat) {
+        var slug = cat.slug || cat.name.toLowerCase();
+        var icon = categoryIcons[slug] || '\uD83C\uDFB2';
+        var qCount = cat.question_count || cat.questionCount || 0;
+        var desc = cat.description || 'Test your ' + cat.name + ' knowledge';
+        html += '<div class="category-card" onclick="startQuiz(\'' + escapeHtml(slug) + '\')">' +
+            '<div class="card-icon">' + icon + '</div>' +
+            '<h3>' + escapeHtml(cat.name) + '</h3>' +
+            '<div class="card-desc">' + escapeHtml(desc) + '</div>' +
             '<div class="card-meta">' +
             '<span class="q-count"><strong>' + qCount + '</strong> questions</span>' +
             '<span class="play-btn">PLAY</span>' +
@@ -1010,25 +902,78 @@ function renderCategories() {
 }
 
 // ================================================================
-// START QUIZ
+// START QUIZ (session-based via backend)
 // ================================================================
-function startQuiz(category) {
-    var catKey = category;
-    var questions = triviaQuestions[catKey] || triviaQuestions.Mixed;
-    currentQuiz = shuffleArray(questions).slice(0, 10);
+async function startQuiz(categorySlug) {
+    currentCategorySlug = categorySlug;
+    currentQuizCategory = categorySlug.toUpperCase();
     currentQuizProgress = 0;
     currentQuizScore = 0;
-    currentQuizCategory = category;
-    selectedAnswer = null;
+    currentQuizTotal = 10;
+    selectedAnswerId = null;
     quizActive = true;
     answerLocked = false;
     cheatCount = 0;
     quizStartTime = Date.now();
     questionTimes = [];
+    totalPointsEarned = 0;
+    currentSession = null;
+    currentQuestion = null;
 
     var overlay = document.getElementById('quizOverlay');
     overlay.classList.add('active');
-    renderQuizQuestion();
+
+    var container = document.getElementById('quizContainer');
+    container.innerHTML = '<div class="quiz-body" style="text-align:center;padding:60px 24px;">' +
+        '<div style="font-size:40px;margin-bottom:16px;">&#9203;</div>' +
+        '<p style="color:var(--text-muted);">Starting quiz...</p></div>';
+
+    try {
+        await api.ready;
+        var sessionData = await api.request('/trivia/sessions', {
+            method: 'POST',
+            body: { category_slug: categorySlug, question_count: 10 }
+        });
+        currentSession = sessionData.session || sessionData;
+        currentQuizTotal = currentSession.question_count || currentSession.questionCount || 10;
+        await loadNextQuestion();
+    } catch(e) {
+        console.error('Failed to start quiz session:', e);
+        container.innerHTML = '<div class="quiz-body" style="text-align:center;padding:60px 24px;">' +
+            '<div style="font-size:40px;margin-bottom:16px;">&#9888;</div>' +
+            '<h2 style="margin-bottom:8px;">Could Not Start Quiz</h2>' +
+            '<p style="color:var(--text-muted);margin-bottom:20px;">' + escapeHtml(e.message || 'Backend error') + '</p>' +
+            '<button class="btn-primary-action" onclick="closeQuiz()">Close</button></div>';
+    }
+}
+
+async function loadNextQuestion() {
+    try {
+        var sessionId = currentSession.id || currentSession.session_id;
+        var data = await api.request('/trivia/sessions/' + sessionId + '/next');
+
+        if (data.complete || data.session_complete) {
+            finishQuiz(data);
+            return;
+        }
+
+        currentQuestion = data.question || data;
+        var answers = data.answers || currentQuestion.answers || [];
+        var timeLimit = data.time_limit || currentQuestion.time_limit || 20;
+
+        renderQuizQuestion(currentQuestion, answers, timeLimit);
+    } catch(e) {
+        console.error('Failed to load next question:', e);
+        if (e.status === 400 || e.status === 404) {
+            finishQuiz({});
+        } else {
+            var container = document.getElementById('quizContainer');
+            container.innerHTML = '<div class="quiz-body" style="text-align:center;padding:60px 24px;">' +
+                '<div style="font-size:40px;margin-bottom:16px;">&#9888;</div>' +
+                '<p style="color:var(--text-muted);">' + escapeHtml(e.message || 'Error loading question') + '</p>' +
+                '<button class="btn-primary-action" onclick="closeQuiz()">Close</button></div>';
+        }
+    }
 }
 
 function closeQuiz() {
@@ -1041,39 +986,29 @@ function closeQuiz() {
 // ================================================================
 // RENDER QUIZ QUESTION
 // ================================================================
-function renderQuizQuestion() {
-    if (currentQuizProgress >= currentQuiz.length) {
-        finishQuiz();
-        return;
-    }
-
+function renderQuizQuestion(question, answers, timeLimit) {
     answerLocked = false;
-    selectedAnswer = null;
-    var question = currentQuiz[currentQuizProgress];
-    var total = currentQuiz.length;
+    selectedAnswerId = null;
+    var total = currentQuizTotal;
     var pct = ((currentQuizProgress / total) * 100).toFixed(0);
     var wrongCount = currentQuizProgress - currentQuizScore;
 
-    // Shuffle answer order
-    var indices = [0, 1, 2, 3];
-    for (var si = indices.length - 1; si > 0; si--) {
-        var sj = Math.floor(Math.random() * (si + 1));
-        var tmp = indices[si]; indices[si] = indices[sj]; indices[sj] = tmp;
-    }
-    question._shuffled = indices;
+    var questionText = question.question_text || question.question || question.text || '';
 
     var letters = ['A', 'B', 'C', 'D'];
     var optionsHtml = '';
-    indices.forEach(function(origIdx, displayIdx) {
-        optionsHtml += '<div class="quiz-option" data-idx="' + displayIdx + '" onclick="selectQuizAnswer(' + displayIdx + ')">' +
-            '<span class="option-letter">' + letters[displayIdx] + '</span>' +
-            '<span class="option-text">' + escapeHtml(question.a[origIdx]) + '</span></div>';
+    answers.forEach(function(ans, idx) {
+        var ansText = ans.answer_text || ans.text || ans;
+        var ansId = ans.id || ans.answer_id || idx;
+        optionsHtml += '<div class="quiz-option" data-answer-id="' + ansId + '" data-idx="' + idx + '" onclick="selectQuizAnswer(' + idx + ', ' + ansId + ')">' +
+            '<span class="option-letter">' + (letters[idx] || String.fromCharCode(65 + idx)) + '</span>' +
+            '<span class="option-text">' + escapeHtml(ansText) + '</span></div>';
     });
 
     var container = document.getElementById('quizContainer');
     container.innerHTML =
         '<div class="quiz-top-bar">' +
-            '<div class="quiz-timer" id="quizTimer">20s</div>' +
+            '<div class="quiz-timer" id="quizTimer">' + timeLimit + 's</div>' +
             '<div class="quiz-progress-wrap">' +
                 '<div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:' + pct + '%"></div></div>' +
                 '<div class="quiz-progress-text">Question ' + (currentQuizProgress + 1) + ' of ' + total + '</div>' +
@@ -1082,38 +1017,26 @@ function renderQuizQuestion() {
         '</div>' +
         '<div class="cheat-banner" id="cheatBanner"></div>' +
         '<div class="quiz-body">' +
-            '<div class="quiz-question-text">' + escapeHtml(question.q) + '</div>' +
+            '<div class="quiz-question-text">' + escapeHtml(questionText) + '</div>' +
             '<div class="quiz-options" id="quizOptions">' + optionsHtml + '</div>' +
             '<button class="quiz-submit-btn" id="submitBtn" onclick="submitQuizAnswer()">SUBMIT ANSWER</button>' +
             '<div class="quiz-live-stats">' +
                 '<div class="quiz-live-stat">&#9989; ' + currentQuizScore + ' Correct</div>' +
                 '<div class="quiz-live-stat">&#10060; ' + wrongCount + ' Wrong</div>' +
-                '<div class="quiz-live-stat">&#127919; ' + calculateCurrentPoints() + ' pts</div>' +
+                '<div class="quiz-live-stat">&#127919; ' + totalPointsEarned + ' pts</div>' +
                 (cheatCount > 0 ? '<div class="quiz-live-stat" style="color:var(--danger);">&#9888; ' + cheatCount + ' Flags</div>' : '') +
             '</div>' +
         '</div>';
 
-    startTimer();
-}
-
-function calculateCurrentPoints() {
-    var pts = 0;
-    questionTimes.forEach(function(qt) {
-        if (qt.correct) {
-            pts += 10;
-            pts += Math.max(0, Math.min(5, Math.floor(qt.timeRemaining / 4)));
-        }
-    });
-    if (cheatCount > 0) pts = Math.floor(pts * 0.5);
-    return pts;
+    startTimer(timeLimit);
 }
 
 // ================================================================
 // TIMER
 // ================================================================
-function startTimer() {
+function startTimer(limit) {
     clearInterval(timerInterval);
-    timeLeft = 20;
+    timeLeft = limit || 20;
     updateTimerDisplay();
     timerInterval = setInterval(function() {
         timeLeft--;
@@ -1135,32 +1058,30 @@ function updateTimerDisplay() {
     else if (timeLeft <= 10) el.classList.add('warning');
 }
 
-function handleTimeUp() {
+async function handleTimeUp() {
     if (answerLocked) return;
     answerLocked = true;
 
-    var question = currentQuiz[currentQuizProgress];
-    var shuffled = question._shuffled || [0, 1, 2, 3];
-    var correctDisplayIdx = shuffled.indexOf(question.correct);
-
-    // Record no answer
     questionTimes.push({ correct: false, timeRemaining: 0 });
 
-    // Show correct
-    var options = document.querySelectorAll('.quiz-option');
-    options.forEach(function(opt, idx) {
-        opt.classList.add('disabled');
-        if (idx === correctDisplayIdx) opt.classList.add('correct');
-    });
-
-    var btn = document.getElementById('submitBtn');
-    btn.innerHTML = '&#8987; TIME UP - ' + escapeHtml(question.a[question.correct]);
-    btn.style.background = 'rgba(255,152,0,0.3)';
-    btn.style.color = '#ff9800';
-    btn.disabled = true;
-
-    currentQuizProgress++;
-    setTimeout(function() { renderQuizQuestion(); }, 1300);
+    try {
+        var sessionId = currentSession.id || currentSession.session_id;
+        var result = await api.request('/trivia/sessions/' + sessionId + '/answer', {
+            method: 'POST',
+            body: { answer_id: null, timed_out: true }
+        });
+        showAnswerResult(result, true);
+    } catch(e) {
+        var btn = document.getElementById('submitBtn');
+        if (btn) {
+            btn.innerHTML = '&#8987; TIME UP';
+            btn.style.background = 'rgba(255,152,0,0.3)';
+            btn.style.color = '#ff9800';
+            btn.disabled = true;
+        }
+        currentQuizProgress++;
+        setTimeout(function() { loadNextQuestion(); }, 1300);
+    }
 }
 
 // ================================================================
@@ -1173,57 +1094,57 @@ window.addEventListener('blur', function() {
     if (quizActive && !answerLocked && !document.hidden) handleCheat();
 });
 
-function handleCheat() {
+async function handleCheat() {
     if (!quizActive || answerLocked) return;
     cheatCount++;
     answerLocked = true;
     clearInterval(timerInterval);
     timerInterval = null;
 
-    var question = currentQuiz[currentQuizProgress];
-    var shuffled = question._shuffled || [0, 1, 2, 3];
-    var correctDisplayIdx = shuffled.indexOf(question.correct);
-
-    // Record cheated answer
     questionTimes.push({ correct: false, timeRemaining: 0 });
 
-    // Show banner
     var banner = document.getElementById('cheatBanner');
     if (banner) {
         banner.innerHTML = '&#9888; TAB SWITCH DETECTED - Answer marked WRONG (Violation #' + cheatCount + ')';
         banner.classList.add('visible');
     }
 
-    // Show correct answer
     var options = document.querySelectorAll('.quiz-option');
-    options.forEach(function(opt, idx) {
-        opt.classList.add('disabled');
-        if (idx === correctDisplayIdx) opt.classList.add('correct');
-    });
+    options.forEach(function(opt) { opt.classList.add('disabled'); });
 
     var btn = document.getElementById('submitBtn');
-    btn.innerHTML = '&#9888; CHEATING DETECTED';
-    btn.style.background = 'rgba(255,68,68,0.3)';
-    btn.style.color = '#ff4444';
-    btn.disabled = true;
+    if (btn) {
+        btn.innerHTML = '&#9888; CHEATING DETECTED';
+        btn.style.background = 'rgba(255,68,68,0.3)';
+        btn.style.color = '#ff4444';
+        btn.disabled = true;
+    }
+
+    try {
+        var sessionId = currentSession.id || currentSession.session_id;
+        await api.request('/trivia/sessions/' + sessionId + '/answer', {
+            method: 'POST',
+            body: { answer_id: null, timed_out: true }
+        });
+    } catch(e) { /* ignore */ }
 
     currentQuizProgress++;
-    setTimeout(function() { renderQuizQuestion(); }, 1500);
+    setTimeout(function() { loadNextQuestion(); }, 1500);
 }
 
 // ================================================================
 // SELECT & SUBMIT ANSWER
 // ================================================================
-function selectQuizAnswer(idx) {
+function selectQuizAnswer(idx, answerId) {
     if (answerLocked) return;
-    selectedAnswer = idx;
+    selectedAnswerId = answerId;
     document.querySelectorAll('.quiz-option').forEach(function(opt) { opt.classList.remove('selected'); });
     document.querySelectorAll('.quiz-option')[idx].classList.add('selected');
 }
 
-function submitQuizAnswer() {
-    if (answerLocked || selectedAnswer === null) {
-        if (selectedAnswer === null) {
+async function submitQuizAnswer() {
+    if (answerLocked || selectedAnswerId === null) {
+        if (selectedAnswerId === null) {
             var btn = document.getElementById('submitBtn');
             btn.textContent = 'SELECT AN ANSWER FIRST';
             btn.style.background = 'rgba(255,68,68,0.3)';
@@ -1241,91 +1162,95 @@ function submitQuizAnswer() {
     clearInterval(timerInterval);
     timerInterval = null;
 
-    var question = currentQuiz[currentQuizProgress];
-    var shuffled = question._shuffled || [0, 1, 2, 3];
-    var selectedOriginal = shuffled[selectedAnswer];
-    var isCorrect = selectedOriginal === question.correct;
-    var correctDisplayIdx = shuffled.indexOf(question.correct);
+    var btn = document.getElementById('submitBtn');
+    btn.textContent = 'SUBMITTING...';
+    btn.disabled = true;
 
-    // Record answer time
-    questionTimes.push({ correct: isCorrect, timeRemaining: timeLeft });
+    try {
+        var sessionId = currentSession.id || currentSession.session_id;
+        var result = await api.request('/trivia/sessions/' + sessionId + '/answer', {
+            method: 'POST',
+            body: { answer_id: selectedAnswerId }
+        });
+        showAnswerResult(result, false);
+    } catch(e) {
+        console.error('Failed to submit answer:', e);
+        btn.innerHTML = '&#9888; Error submitting answer';
+        btn.style.background = 'rgba(255,68,68,0.3)';
+        btn.style.color = '#ff4444';
+        currentQuizProgress++;
+        setTimeout(function() { loadNextQuestion(); }, 1500);
+    }
+}
 
-    if (isCorrect) currentQuizScore++;
+function showAnswerResult(result, wasTimeout) {
+    var isCorrect = result.correct || false;
+    var pointsEarned = result.points_earned || result.pointsEarned || 0;
+    var correctAnswer = result.correct_answer || result.correctAnswer || {};
+    var correctAnswerText = correctAnswer.answer_text || correctAnswer.text || (typeof correctAnswer === 'string' ? correctAnswer : '');
 
-    // Visual feedback
+    questionTimes.push({ correct: isCorrect, timeRemaining: timeLeft, pointsEarned: pointsEarned });
+
+    if (isCorrect) {
+        currentQuizScore++;
+        totalPointsEarned += pointsEarned;
+    }
+
     var options = document.querySelectorAll('.quiz-option');
-    options.forEach(function(opt, idx) {
+    options.forEach(function(opt) {
         opt.classList.add('disabled');
-        if (idx === correctDisplayIdx) opt.classList.add('correct');
-        if (idx === selectedAnswer && !isCorrect) opt.classList.add('wrong');
+        var ansId = parseInt(opt.getAttribute('data-answer-id'));
+        var correctId = correctAnswer.id || correctAnswer.answer_id;
+        if (correctId && ansId === correctId) opt.classList.add('correct');
+        if (!isCorrect && ansId === selectedAnswerId) opt.classList.add('wrong');
     });
 
     var btn = document.getElementById('submitBtn');
-    if (isCorrect) {
-        var timeBonus = Math.max(0, Math.min(5, Math.floor(timeLeft / 4)));
-        btn.innerHTML = '&#9989; CORRECT! +10 pts' + (timeBonus > 0 ? ' (+' + timeBonus + ' speed bonus)' : '');
+    if (wasTimeout) {
+        btn.innerHTML = '&#8987; TIME UP' + (correctAnswerText ? ' - ' + escapeHtml(correctAnswerText) : '');
+        btn.style.background = 'rgba(255,152,0,0.3)';
+        btn.style.color = '#ff9800';
+    } else if (isCorrect) {
+        var speedBonus = pointsEarned > 10 ? ' (+' + (pointsEarned - 10) + ' speed bonus)' : '';
+        btn.innerHTML = '&#9989; CORRECT! +' + pointsEarned + ' pts' + speedBonus;
         btn.style.background = 'rgba(0,200,83,0.3)';
         btn.style.color = '#00c853';
     } else {
-        btn.innerHTML = '&#10060; Wrong - ' + escapeHtml(question.a[question.correct]);
+        btn.innerHTML = '&#10060; Wrong' + (correctAnswerText ? ' - ' + escapeHtml(correctAnswerText) : '');
         btn.style.background = 'rgba(255,68,68,0.3)';
         btn.style.color = '#ff4444';
     }
     btn.disabled = true;
 
     currentQuizProgress++;
-    setTimeout(function() { renderQuizQuestion(); }, 1200);
+    setTimeout(function() { loadNextQuestion(); }, 1300);
 }
 
 // ================================================================
 // FINISH QUIZ
 // ================================================================
-function finishQuiz() {
+function finishQuiz(sessionResult) {
     quizActive = false;
     clearInterval(timerInterval);
     timerInterval = null;
 
-    var total = currentQuiz.length;
-    var percentage = (currentQuizScore / total) * 100;
+    var total = currentQuizTotal;
+    var percentage = total > 0 ? (currentQuizScore / total) * 100 : 0;
     var elapsed = Math.round((Date.now() - quizStartTime) / 1000);
     var minutes = Math.floor(elapsed / 60);
     var seconds = elapsed % 60;
     var timeStr = (minutes > 0 ? minutes + 'm ' : '') + seconds + 's';
 
-    // Calculate points: 10 per correct + time bonus (max 5 per question)
-    var points = 0;
-    questionTimes.forEach(function(qt) {
-        if (qt.correct) {
-            points += 10;
-            points += Math.max(0, Math.min(5, Math.floor(qt.timeRemaining / 4)));
-        }
-    });
+    var points = sessionResult && sessionResult.total_points != null ? sessionResult.total_points : totalPointsEarned;
+    if (sessionResult && sessionResult.score != null) {
+        currentQuizScore = sessionResult.score;
+        percentage = total > 0 ? (currentQuizScore / total) * 100 : 0;
+    }
 
     var cheatPenalty = cheatCount > 0;
-    if (cheatPenalty) points = Math.floor(points * 0.5);
-
-    var username = getCurrentUsername() || 'Guest';
-
-    // Save score
-    var scoreEntry = {
-        score: currentQuizScore,
-        total: total,
-        percentage: percentage,
-        points: points,
-        category: currentQuizCategory,
-        username: username,
-        date: new Date().toISOString().split('T')[0],
-        timestamp: new Date().toISOString(),
-        cheatFlags: cheatCount,
-        timeTaken: elapsed
-    };
-    saveScore(scoreEntry);
-
-    // Emoji based on score
     var emoji = cheatPenalty ? '&#9888;' : (percentage >= 80 ? '&#127942;' : percentage >= 60 ? '&#127881;' : percentage >= 40 ? '&#128077;' : '&#128218;');
-
     var cheatHtml = cheatPenalty
-        ? '<div class="cheat-penalty-box">&#9888; ' + cheatCount + ' tab-switch violation' + (cheatCount > 1 ? 's' : '') + ' detected. Points halved as penalty.</div>'
+        ? '<div class="cheat-penalty-box">&#9888; ' + cheatCount + ' tab-switch violation' + (cheatCount > 1 ? 's' : '') + ' detected.</div>'
         : '';
 
     var container = document.getElementById('quizContainer');
@@ -1340,95 +1265,133 @@ function finishQuiz() {
                 '<div class="results-detail-box"><div class="rdl">Points Earned</div><div class="rdv">+' + points + '</div></div>' +
                 '<div class="results-detail-box"><div class="rdl">Time Taken</div><div class="rdv">' + timeStr + '</div></div>' +
                 '<div class="results-detail-box"><div class="rdl">Category</div><div class="rdv" style="font-size:16px;">' + escapeHtml(currentQuizCategory) + '</div></div>' +
-                '<div class="results-detail-box"><div class="rdl">Avg Speed</div><div class="rdv" style="font-size:16px;">' + (elapsed / total).toFixed(1) + 's/Q</div></div>' +
+                '<div class="results-detail-box"><div class="rdl">Avg Speed</div><div class="rdv" style="font-size:16px;">' + (total > 0 ? (elapsed / total).toFixed(1) : '0') + 's/Q</div></div>' +
             '</div>' +
             '<div class="results-actions">' +
                 '<button class="btn-primary-action" onclick="closeQuiz()">Done</button>' +
-                '<button class="btn-secondary-action" onclick="closeQuiz(); startQuiz(\'' + escapeHtml(currentQuizCategory) + '\')">Play Again</button>' +
+                '<button class="btn-secondary-action" onclick="closeQuiz(); startQuiz(\'' + escapeHtml(currentCategorySlug) + '\')">Play Again</button>' +
+                '<button class="btn-secondary-action" onclick="closeQuiz(); switchViewDirect(\'leaderboard\')">Leaderboard</button>' +
             '</div>' +
         '</div>';
 
-    updateStats();
+    loadUserStats();
+}
+
+function switchViewDirect(view) {
+    document.querySelectorAll('.view-tab').forEach(function(t, i) {
+        t.classList.remove('active');
+        if ((view === 'play' && i === 0) || (view === 'leaderboard' && i === 1) ||
+            (view === 'history' && i === 2) || (view === 'create' && i === 3)) {
+            t.classList.add('active');
+        }
+    });
+    document.querySelectorAll('.view-panel').forEach(function(p) { p.classList.remove('active'); });
+    document.getElementById('view-' + view).classList.add('active');
+    if (view === 'leaderboard') renderLeaderboard();
+    if (view === 'history') renderHistory();
+    if (view === 'create') renderCreateView();
 }
 
 // ================================================================
-// LEADERBOARD
+// LEADERBOARD (from backend API)
 // ================================================================
-function renderLeaderboard() {
-    var scores = getScores();
+async function renderLeaderboard() {
     var container = document.getElementById('leaderboardList');
+    container.innerHTML = '<div class="empty-state"><p>Loading leaderboard...</p></div>';
 
-    if (scores.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="big-icon">&#127942;</div><p>No scores yet. Play a quiz to get on the leaderboard!</p></div>';
-        return;
+    try {
+        await api.ready;
+        var data = await api.request('/trivia/leaderboard');
+        var leaderboard = data.leaderboard || data.rankings || data || [];
+
+        if (!leaderboard.length) {
+            container.innerHTML = '<div class="empty-state"><div class="big-icon">&#127942;</div><p>No scores yet. Play a quiz to get on the leaderboard!</p></div>';
+            return;
+        }
+
+        var medals = ['\uD83E\uDD47', '\uD83E\uDD48', '\uD83E\uDD49'];
+        var html = '';
+        leaderboard.forEach(function(entry, idx) {
+            var username = entry.username || entry.user || 'Unknown';
+            var totalPoints = entry.total_points || entry.totalPoints || entry.points || 0;
+            var quizzes = entry.quizzes_played || entry.quizzesPlayed || entry.games || 0;
+            var accuracy = entry.accuracy || entry.correct_percentage || 0;
+            if (typeof accuracy === 'number' && accuracy > 0 && accuracy <= 1) accuracy = Math.round(accuracy * 100);
+
+            html += '<div class="lb-row">' +
+                '<div class="row-left">' +
+                    '<span class="icon" style="font-size:18px;width:28px;text-align:center;">' + (idx < 3 ? medals[idx] : '#' + (idx + 1)) + '</span>' +
+                    '<div><div class="info-primary">@' + escapeHtml(username) + '</div>' +
+                    '<div class="info-secondary">' + quizzes + ' quizzes' + (accuracy ? ' &middot; ' + Math.round(accuracy) + '% accuracy' : '') + '</div></div>' +
+                '</div>' +
+                '<div class="row-right"><div class="pts" style="font-size:15px;font-weight:700;">' + totalPoints + ' pts</div></div>' +
+            '</div>';
+        });
+        container.innerHTML = html;
+    } catch(e) {
+        console.error('Failed to load leaderboard:', e);
+        container.innerHTML = '<div class="empty-state"><div class="big-icon">&#9888;</div><p>Could not load leaderboard.</p></div>';
     }
-
-    // Aggregate by username
-    var userMap = {};
-    scores.forEach(function(s) {
-        var name = s.username || 'Guest';
-        if (!userMap[name]) userMap[name] = { username: name, totalCorrect: 0, totalQuestions: 0, totalPoints: 0, quizzes: 0 };
-        userMap[name].totalCorrect += (s.score || 0);
-        userMap[name].totalQuestions += (s.total || 0);
-        userMap[name].totalPoints += (s.points || 0);
-        userMap[name].quizzes++;
-    });
-
-    var leaderboard = Object.values(userMap).sort(function(a, b) { return b.totalPoints - a.totalPoints; }).slice(0, 15);
-    var medals = ['\uD83E\uDD47', '\uD83E\uDD48', '\uD83E\uDD49'];
-
-    var html = '';
-    leaderboard.forEach(function(entry, idx) {
-        var accuracy = entry.totalQuestions > 0 ? Math.round((entry.totalCorrect / entry.totalQuestions) * 100) : 0;
-        html += '<div class="lb-row">' +
-            '<div class="row-left">' +
-                '<span class="icon" style="font-size:18px;width:28px;text-align:center;">' + (idx < 3 ? medals[idx] : '#' + (idx + 1)) + '</span>' +
-                '<div><div class="info-primary">@' + escapeHtml(entry.username) + '</div>' +
-                '<div class="info-secondary">' + entry.quizzes + ' quizzes &middot; ' + accuracy + '% accuracy</div></div>' +
-            '</div>' +
-            '<div class="row-right"><div class="pts" style="font-size:15px;font-weight:700;">' + entry.totalPoints + ' pts</div></div>' +
-        '</div>';
-    });
-    container.innerHTML = html;
 }
 
 // ================================================================
-// HISTORY
+// HISTORY (from backend user stats)
 // ================================================================
-function renderHistory() {
-    var scores = getScores();
+async function renderHistory() {
     var container = document.getElementById('historyList');
+    var username = getCurrentUsername();
 
-    if (scores.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="big-icon">&#128203;</div><p>No quiz history yet. Play your first quiz!</p></div>';
+    if (!username) {
+        container.innerHTML = '<div class="empty-state"><div class="big-icon">&#128203;</div><p>Log in to see your quiz history.</p></div>';
         return;
     }
 
-    var catIcons = { NFL: "\uD83C\uDFC8", NBA: "\uD83C\uDFC0", MLB: "\u26BE", NHL: "\uD83C\uDFD2", Soccer: "\u26BD", Mixed: "\uD83C\uDFB2" };
-    var recent = scores.slice(0, 20);
+    container.innerHTML = '<div class="empty-state"><p>Loading history...</p></div>';
 
-    var html = '';
-    recent.forEach(function(s) {
-        var icon = catIcons[s.category] || "\uD83C\uDFB2";
-        var pctColor = s.percentage >= 80 ? '#00c853' : s.percentage >= 50 ? '#ff9800' : '#ff4444';
-        var dateStr = s.date || '';
-        var timeStr = s.timeTaken ? (s.timeTaken < 60 ? s.timeTaken + 's' : Math.floor(s.timeTaken / 60) + 'm ' + (s.timeTaken % 60) + 's') : '';
-        html += '<div class="history-row">' +
-            '<div class="row-left">' +
-                '<span class="icon">' + icon + '</span>' +
-                '<div><div class="info-primary">' + escapeHtml(s.category || 'Mixed') + ' Quiz</div>' +
-                '<div class="info-secondary">' + dateStr + (timeStr ? ' &middot; ' + timeStr : '') + (s.cheatFlags > 0 ? ' &middot; <span style="color:#ff4444;">' + s.cheatFlags + ' flags</span>' : '') + '</div></div>' +
-            '</div>' +
-            '<div class="row-right">' +
-                '<div class="score" style="color:' + pctColor + ';">' + s.score + '/' + s.total + '</div>' +
-                '<div class="pts">+' + (s.points || 0) + ' pts</div>' +
-            '</div></div>';
-    });
-    container.innerHTML = html;
+    try {
+        await api.ready;
+        var data = await api.request('/trivia/users/' + encodeURIComponent(username) + '/stats');
+        var sessions = data.recent_sessions || data.recentSessions || data.history || [];
+
+        if (!sessions.length) {
+            container.innerHTML = '<div class="empty-state"><div class="big-icon">&#128203;</div><p>No quiz history yet. Play your first quiz!</p></div>';
+            return;
+        }
+
+        var catIcons = { nfl: '\uD83C\uDFC8', nba: '\uD83C\uDFC0', mlb: '\u26BE', nhl: '\uD83C\uDFD2', soccer: '\u26BD', mixed: '\uD83C\uDFB2', general: '\uD83C\uDFB2' };
+        var html = '';
+        sessions.forEach(function(s) {
+            var catSlug = (s.category_slug || s.category || 'mixed').toLowerCase();
+            var icon = catIcons[catSlug] || '\uD83C\uDFB2';
+            var score = s.score || s.correct_count || 0;
+            var total = s.question_count || s.total || 10;
+            var pct = total > 0 ? (score / total) * 100 : 0;
+            var pctColor = pct >= 80 ? '#00c853' : pct >= 50 ? '#ff9800' : '#ff4444';
+            var pts = s.total_points || s.points || 0;
+            var dateStr = s.completed_at || s.created_at || '';
+            if (dateStr) { try { dateStr = new Date(dateStr).toLocaleDateString(); } catch(e) {} }
+            var timeStr = s.time_taken ? (s.time_taken < 60 ? s.time_taken + 's' : Math.floor(s.time_taken / 60) + 'm ' + (s.time_taken % 60) + 's') : '';
+
+            html += '<div class="history-row">' +
+                '<div class="row-left">' +
+                    '<span class="icon">' + icon + '</span>' +
+                    '<div><div class="info-primary">' + escapeHtml((s.category_name || catSlug).toUpperCase()) + ' Quiz</div>' +
+                    '<div class="info-secondary">' + dateStr + (timeStr ? ' &middot; ' + timeStr : '') + '</div></div>' +
+                '</div>' +
+                '<div class="row-right">' +
+                    '<div class="score" style="color:' + pctColor + ';">' + score + '/' + total + '</div>' +
+                    '<div class="pts">+' + pts + ' pts</div>' +
+                '</div></div>';
+        });
+        container.innerHTML = html;
+    } catch(e) {
+        console.error('Failed to load history:', e);
+        container.innerHTML = '<div class="empty-state"><div class="big-icon">&#9888;</div><p>Could not load quiz history.</p></div>';
+    }
 }
 
 // ================================================================
-// CREATE QUESTION VIEW
+// CREATE QUESTION VIEW (localStorage for user-submitted)
 // ================================================================
 function renderCreateView() {
     var card = document.getElementById('createQuestionCard');
@@ -1443,10 +1406,9 @@ function renderCreateView() {
         return;
     }
 
-    var username = getCurrentUsername() || 'User';
     card.innerHTML =
         '<h2>&#9998; Create a Trivia Question</h2>' +
-        '<div class="subtitle">Add your own question to the pool. It will be available in quizzes for everyone on this device.</div>' +
+        '<div class="subtitle">Submit a custom question. It will be saved locally for now.</div>' +
         '<form id="createQuestionForm" onsubmit="handleCreateQuestion(event)">' +
             '<div class="form-group">' +
                 '<label>Category</label>' +
@@ -1483,7 +1445,7 @@ function renderCreateView() {
                 '</div>' +
             '</div>' +
             '<div class="form-error" id="cqError"></div>' +
-            '<button type="submit" class="form-submit-btn">Add Question to Pool</button>' +
+            '<button type="submit" class="form-submit-btn">Add Question</button>' +
         '</form>';
 
     selectedCorrectAnswer = -1;
@@ -1496,11 +1458,8 @@ function setCorrectAnswer(idx) {
     selectedCorrectAnswer = idx;
     for (var i = 0; i < 4; i++) {
         var btn = document.getElementById('cqCorrectBtn' + i);
-        if (i === idx) {
-            btn.classList.add('selected');
-        } else {
-            btn.classList.remove('selected');
-        }
+        if (i === idx) btn.classList.add('selected');
+        else btn.classList.remove('selected');
     }
 }
 
@@ -1511,9 +1470,7 @@ function handleCreateQuestion(e) {
 
     var question = document.getElementById('cqQuestion').value.trim();
     var answers = [];
-    for (var i = 0; i < 4; i++) {
-        answers.push(document.getElementById('cqAnswer' + i).value.trim());
-    }
+    for (var i = 0; i < 4; i++) answers.push(document.getElementById('cqAnswer' + i).value.trim());
     var category = document.getElementById('cqCategory').value;
 
     if (!question) { errEl.textContent = 'Please enter a question.'; errEl.style.display = 'block'; return; }
@@ -1522,50 +1479,28 @@ function handleCreateQuestion(e) {
 
     var username = getCurrentUsername() || 'Anonymous';
     var newQ = {
-        q: question,
-        a: answers,
-        correct: selectedCorrectAnswer,
-        createdBy: username,
-        createdAt: new Date().toISOString(),
-        category: category,
-        id: 'cq_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4)
+        q: question, a: answers, correct: selectedCorrectAnswer,
+        createdBy: username, createdAt: new Date().toISOString(),
+        category: category, id: 'cq_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4)
     };
 
-    // Save to custom trivia localStorage
     var custom = [];
-    try { custom = JSON.parse(localStorage.getItem('trustmyrecord_custom_trivia') || '[]'); } catch(e) { custom = []; }
+    try { custom = JSON.parse(localStorage.getItem('trustmyrecord_custom_trivia') || '[]'); } catch(ex) { custom = []; }
     custom.unshift(newQ);
     localStorage.setItem('trustmyrecord_custom_trivia', JSON.stringify(custom));
 
-    // Inject into live pool
-    var catKey = category;
-    if (catKey !== 'Mixed' && catKey !== 'Soccer') catKey = catKey.toUpperCase();
-    if (triviaQuestions[catKey]) {
-        triviaQuestions[catKey].push({ q: question, a: answers, correct: selectedCorrectAnswer });
-    }
-    if (catKey !== 'Mixed') {
-        triviaQuestions.Mixed.push({ q: question, a: answers, correct: selectedCorrectAnswer });
-    }
-
-    // Reset form
     document.getElementById('cqQuestion').value = '';
     for (var j = 0; j < 4; j++) {
         document.getElementById('cqAnswer' + j).value = '';
         document.getElementById('cqCorrectBtn' + j).classList.remove('selected');
     }
     selectedCorrectAnswer = -1;
-
     renderCustomQuestionsList();
-    renderCategories();
 
-    // Show success feedback
     var btn = document.querySelector('.form-submit-btn');
     btn.textContent = 'Question Added!';
     btn.style.background = 'var(--success)';
-    setTimeout(function() {
-        btn.textContent = 'Add Question to Pool';
-        btn.style.background = '';
-    }, 2000);
+    setTimeout(function() { btn.textContent = 'Add Question'; btn.style.background = ''; }, 2000);
 }
 
 function renderCustomQuestionsList() {
@@ -1601,63 +1536,50 @@ function deleteCustomQuestion(idx) {
         custom.splice(idx, 1);
         localStorage.setItem('trustmyrecord_custom_trivia', JSON.stringify(custom));
         renderCustomQuestionsList();
-        // Rebuild pool
-        rebuildQuestionPool();
-        renderCategories();
     }
 }
 
-function rebuildQuestionPool() {
-    // Reset to defaults
-    var defaults = {
-        NFL: triviaQuestions.NFL.filter(function(q) { return !q._custom; }),
-        NBA: triviaQuestions.NBA.filter(function(q) { return !q._custom; }),
-        MLB: triviaQuestions.MLB.filter(function(q) { return !q._custom; }),
-        NHL: triviaQuestions.NHL.filter(function(q) { return !q._custom; }),
-        Soccer: triviaQuestions.Soccer.filter(function(q) { return !q._custom; }),
-        Mixed: triviaQuestions.Mixed.filter(function(q) { return !q._custom; })
-    };
-    // Since we can't easily track which are custom in the live pool,
-    // just reload the page data is simplest. For now, reload custom.
-    // Actually, let's just re-add custom from localStorage.
-    var custom = [];
-    try { custom = JSON.parse(localStorage.getItem('trustmyrecord_custom_trivia') || '[]'); } catch(e) {}
-    // We'll just accept that deleted questions persist in pool until page reload.
-    // This is fine for a localStorage-based system.
-}
-
 // ================================================================
-// UPDATE STATS BAR
+// UPDATE STATS BAR (from backend)
 // ================================================================
-function updateStats() {
-    var scores = getScores();
-    var totalPlayed = scores.length;
-    var totalPoints = 0;
-    var bestPct = 0;
-    var totalCorrect = 0;
-    var totalQs = 0;
+async function loadUserStats() {
+    var username = getCurrentUsername();
+    if (!username) {
+        document.getElementById('statTotalPlayed').textContent = '0';
+        document.getElementById('statBestScore').textContent = '--';
+        document.getElementById('statTotalPoints').textContent = '0';
+        document.getElementById('statAccuracy').textContent = '--';
+        return;
+    }
 
-    scores.forEach(function(s) {
-        totalPoints += (s.points || 0);
-        if ((s.percentage || 0) > bestPct) bestPct = s.percentage;
-        totalCorrect += (s.score || 0);
-        totalQs += (s.total || 0);
-    });
+    try {
+        await api.ready;
+        var data = await api.request('/trivia/users/' + encodeURIComponent(username) + '/stats');
+        var stats = data.stats || data;
 
-    var avgAcc = totalQs > 0 ? Math.round((totalCorrect / totalQs) * 100) : 0;
+        var totalPlayed = stats.quizzes_played || stats.quizzesPlayed || stats.total_sessions || 0;
+        var totalPoints = stats.total_points || stats.totalPoints || 0;
+        var bestScore = stats.best_score || stats.bestScore || stats.best_percentage || 0;
+        var accuracy = stats.accuracy || stats.correct_percentage || stats.avg_accuracy || 0;
 
-    document.getElementById('statTotalPlayed').textContent = totalPlayed;
-    document.getElementById('statBestScore').textContent = totalPlayed > 0 ? bestPct.toFixed(0) + '%' : '--';
-    document.getElementById('statTotalPoints').textContent = totalPoints;
-    document.getElementById('statAccuracy').textContent = totalPlayed > 0 ? avgAcc + '%' : '--';
+        if (typeof accuracy === 'number' && accuracy > 0 && accuracy <= 1) accuracy = Math.round(accuracy * 100);
+        if (typeof bestScore === 'number' && bestScore > 0 && bestScore <= 1) bestScore = Math.round(bestScore * 100);
+
+        document.getElementById('statTotalPlayed').textContent = totalPlayed;
+        document.getElementById('statBestScore').textContent = totalPlayed > 0 ? Math.round(bestScore) + '%' : '--';
+        document.getElementById('statTotalPoints').textContent = totalPoints;
+        document.getElementById('statAccuracy').textContent = totalPlayed > 0 ? Math.round(accuracy) + '%' : '--';
+    } catch(e) {
+        console.error('Failed to load user stats:', e);
+    }
 }
 
 // ================================================================
 // INIT
 // ================================================================
-document.addEventListener('DOMContentLoaded', function() {
-    renderCategories();
-    updateStats();
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadCategories();
+    loadUserStats();
 });
 </script>
 </body>

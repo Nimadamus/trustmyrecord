@@ -392,6 +392,31 @@ class TrustMyRecordAPI {
         });
     }
 
+    // ==================== PREMIUM ROUTES ====================
+
+    async getSubscriptionTiers() {
+        return this.request('/premium/tiers');
+    }
+
+    async getSubscriptionStatus() {
+        return this.request('/premium/status');
+    }
+
+    async upgradeSubscription(tier, billingPeriod = 'monthly') {
+        return this.request('/premium/upgrade', {
+            method: 'POST',
+            body: { tier, billing_period: billingPeriod }
+        });
+    }
+
+    async checkFeatureAccess(feature) {
+        return this.request(`/premium/check/${encodeURIComponent(feature)}`);
+    }
+
+    async getPremiumAnalytics() {
+        return this.request('/premium/analytics');
+    }
+
     // ==================== UTILITY ====================
 
     isLoggedIn() {
