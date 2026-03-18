@@ -5,10 +5,30 @@
 
 class TrustMyRecordAPI {
     constructor() {
-        this.baseUrl = CONFIG.api.baseUrl || 'http://localhost:3000/api';
+        this.baseUrl = CONFIG?.api?.baseUrl || 'http://localhost:3000/api';
         this.token = null;
         this.refreshToken = null;
+        this.backendAvailable = null; // null = not checked, true/false
         this.loadTokens();
+        this.detectBackend();
+    }
+
+    // Auto-detect which backend URL is reachable
+    async detectBackend() {
+        const urls = [this.baseUrl, ...(CONFIG?.api?.fallbackUrls || [])];
+        for (const url of urls) {
+            try {
+                const res = await fetch(url + '/health', { signal: AbortSignal.timeout(CONFIG?.api?.timeout || 5000) });
+                if (res.ok) {
+                    this.baseUrl = url;
+                    this.backendAvailable = true;
+                    console.log('[TMR API] Backend detected at:', url);
+                    return;
+                }
+            } catch (e) { /* try next */ }
+        }
+        this.backendAvailable = false;
+        console.warn('[TMR API] No backend available. Using localStorage fallback.');
     }
 
     // Token Management

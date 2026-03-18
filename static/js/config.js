@@ -1,34 +1,26 @@
-﻿// Configuration for Trust My Record
-// Replace these values with your actual API keys
+// Configuration for Trust My Record
 
 const CONFIG = {
-    // Firebase Configuration (get from Firebase Console)
-    firebase: {
-        apiKey: "YOUR_FIREBASE_API_KEY",
-        authDomain: "trustmyrecord.firebaseapp.com",
-        projectId: "trustmyrecord",
-        storageBucket: "trustmyrecord.appspot.com",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId: "YOUR_APP_ID"
-    },
-
     // ESPN API Configuration (FREE - no API key needed!)
-    // Powered by DraftKings data via ESPN's public API
     oddsApi: {
-        // No key needed - ESPN is free!
         key: null,
         baseUrl: "https://site.api.espn.com/apis/v2/scoreboard/header",
         provider: "ESPN (DraftKings data)",
-        note: "No API key required - completely free!"
     },
 
-    // API Configuration - UPDATE THIS when backend is deployed
+    // API Configuration
+    // The frontend will try these URLs in order until one responds
     api: {
+        // Production backend URL (update after deploying to Render/Railway)
         baseUrl: "https://trustmyrecord-api.onrender.com/api",
-        timeout: 10000
+        // Fallback URLs to try if primary is down
+        fallbackUrls: [
+            "http://localhost:3000/api",
+        ],
+        timeout: 8000
     },
 
-    // Feature flags for backend integration
+    // Feature flags
     features: {
         useBackendAPI: true,
         requireEmailVerification: false
@@ -52,7 +44,6 @@ const CONFIG = {
     }
 };
 
-// Export config
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = CONFIG;
 }
