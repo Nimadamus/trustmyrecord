@@ -947,7 +947,8 @@
 
         // URL param: ?user=username  (also supports legacy ?username=)
         const urlParams = new URLSearchParams(window.location.search);
-        let profileUsername = urlParams.get('user') || urlParams.get('username');
+        let profileUsername = (urlParams.get('user') || urlParams.get('username') || '').trim() || null;
+        console.log('[Profile] URL username param:', profileUsername);
 
         // ======================== INIT ========================
         async function init() {
@@ -1047,11 +1048,14 @@
                 await loadFollowing();
 
             } catch (error) {
-                console.error('[Profile] Load error:', error);
+                console.error('[Profile] Load error for username:', profileUsername, 'Error:', error);
+                const isNotFound = error.message && (error.message.includes('404') || error.message.includes('not found') || error.message.includes('Not Found'));
                 document.getElementById('profileHeader').innerHTML = `
                     <div class="error-message">
-                        <h3>User Not Found</h3>
-                        <p>Could not find user "${profileUsername}".</p>
+                        <h3>${isNotFound ? 'User Not Found' : 'Error Loading Profile'}</h3>
+                        <p>${isNotFound
+                            ? `Could not find user "${profileUsername}". Check the username and try again.`
+                            : `Failed to load profile: ${error.message}. The server may be temporarily unavailable.`}</p>
                         <a href="index.html" class="btn btn-primary" style="margin-top: 20px;">Go Home</a>
                     </div>`;
             }
