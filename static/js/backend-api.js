@@ -96,13 +96,26 @@ class TrustMyRecordAPI {
     }
 
     async handleResponse(response) {
-        const data = await response.json().catch(() => ({}));
-        
+        const text = await response.text();
+        let data = {};
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            // Non-JSON response (e.g., Render's plain "Not Found" when service is down)
+            if (!response.ok) {
+                const error = new Error(`Backend unavailable (HTTP ${response.status})`);
+                error.status = response.status;
+                error.backendDown = true;
+                throw error;
+            }
+        }
+
         if (!response.ok) {
             const error = new Error(data.error || data.message || `HTTP ${response.status}`);
             error.status = response.status;
             error.code = data.code;
             error.data = data;
+            error.backendDown = false;
             throw error;
         }
 

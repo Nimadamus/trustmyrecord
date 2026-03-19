@@ -1008,6 +1008,12 @@
         // ======================== LOAD PROFILE ========================
         async function loadProfile() {
             try {
+                // Check if backend is available before attempting profile fetch
+                if (api.backendAvailable === false) {
+                    const err = new Error('Backend unavailable');
+                    err.backendDown = true;
+                    throw err;
+                }
                 // Fetch profile from backend
                 const data = await api.getUserProfile(profileUsername);
                 // data may be { user: {...}, stats: {...} } or flat
@@ -1049,13 +1055,33 @@
 
             } catch (error) {
                 console.error('[Profile] Load error for username:', profileUsername, 'Error:', error);
-                const isNotFound = error.message && (error.message.includes('404') || error.message.includes('not found') || error.message.includes('Not Found'));
+
+                // Distinguish: backend down vs user genuinely not found
+                const isBackendDown = error.backendDown || !api.backendAvailable || error.message?.includes('Backend unavailable') || error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError');
+                const isNotFound = !isBackendDown && error.status === 404;
+
+                let title, message;
+                if (isBackendDown) {
+                    title = 'Server Unavailable';
+                    message = 'The backend server is temporarily unavailable. Please try again in a few moments. If this persists, the service may be starting up (free tier can take up to 60 seconds).';
+                } else if (isNotFound) {
+                    title = 'User Not Found';
+                    message = `Could not find user "${profileUsername}". Check the username and try again.`;
+                } else {
+                    title = 'Error Loading Profile';
+                    message = `Failed to load profile: ${error.message}`;
+                }
+
+                // Hide all profile sections so the page doesn't show empty shells
+                document.querySelectorAll('.stats-section, .content-section').forEach(el => {
+                    el.style.display = 'none';
+                });
+
                 document.getElementById('profileHeader').innerHTML = `
                     <div class="error-message">
-                        <h3>${isNotFound ? 'User Not Found' : 'Error Loading Profile'}</h3>
-                        <p>${isNotFound
-                            ? `Could not find user "${profileUsername}". Check the username and try again.`
-                            : `Failed to load profile: ${error.message}. The server may be temporarily unavailable.`}</p>
+                        <h3>${title}</h3>
+                        <p>${message}</p>
+                        ${isBackendDown ? '<p style="color: var(--neon-cyan); margin-top: 10px; font-size: 0.9em;">Tip: Refresh the page in 30-60 seconds if the server is waking up.</p>' : ''}
                         <a href="index.html" class="btn btn-primary" style="margin-top: 20px;">Go Home</a>
                     </div>`;
             }
