@@ -1077,30 +1077,62 @@
         // ======================== PICKS ========================
         async function loadPicks(reset) {
             if (reset) picksOffset = 0;
+            let picks = [];
+            let hasMore = false;
+
+            // Try backend API first
             try {
-                // Backend picks endpoint uses offset, not page
                 const data = await api.getPicks({ userId: profileUserId, limit: PICKS_PER_PAGE, offset: picksOffset });
-                const picks = data.picks || [];
-                const hasMore = data.pagination ? data.pagination.hasMore : (picks.length === PICKS_PER_PAGE);
-
-                renderPicksList(picks, reset);
-
-                // Only render recent activity on initial load
-                if (reset) {
-                    renderRecentActivity(picks.slice(0, 10));
-                }
-
-                // Show/hide load more
-                const loadMoreDiv = document.getElementById('picksLoadMore');
-                if (loadMoreDiv) {
-                    loadMoreDiv.style.display = hasMore ? 'block' : 'none';
-                }
+                picks = data.picks || [];
+                hasMore = data.pagination ? data.pagination.hasMore : (picks.length === PICKS_PER_PAGE);
             } catch (e) {
-                console.warn('[Profile] Could not load picks:', e.message);
-                if (reset) {
-                    renderPicksList([], true);
-                    renderRecentActivity([]);
+                console.warn('[Profile] Backend picks fetch failed:', e.message);
+            }
+
+            // Fallback to localStorage if backend returned nothing and viewing own profile
+            if (picks.length === 0 && isOwnProfile) {
+                try {
+                    const allPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
+                    const user = currentUser || {};
+                    const userId = user.username || user.id || 'local';
+                    const userPicks = allPicks.filter(p => p.user_id === userId);
+                    picks = userPicks.slice(picksOffset, picksOffset + PICKS_PER_PAGE);
+                    hasMore = userPicks.length > picksOffset + PICKS_PER_PAGE;
+                    console.log('[Profile] Loaded', picks.length, 'picks from localStorage fallback');
+
+                    // Also recalculate stats from localStorage picks if backend stats are empty
+                    if (profileData && Number(profileData.total_picks || 0) === 0 && userPicks.length > 0) {
+                        let wins = 0, losses = 0, pushes = 0, netUnits = 0;
+                        userPicks.forEach(p => {
+                            if (p.status === 'won') wins++;
+                            else if (p.status === 'lost') losses++;
+                            else if (p.status === 'push') pushes++;
+                            netUnits += parseFloat(p.result_units) || 0;
+                        });
+                        profileData.total_picks = userPicks.length;
+                        profileData.wins = wins;
+                        profileData.losses = losses;
+                        profileData.pushes = pushes;
+                        profileData.net_units = netUnits;
+                        profileData.win_rate = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : 0;
+                        profileData.roi = userPicks.length > 0 ? ((netUnits / userPicks.length) * 100).toFixed(1) : 0;
+                        renderStatsGrid(profileData);
+                        renderHandicappingStats(profileData);
+                    }
+                } catch (e) {
+                    console.warn('[Profile] localStorage fallback failed:', e.message);
                 }
+            }
+
+            renderPicksList(picks, reset);
+
+            if (reset) {
+                renderRecentActivity(picks.slice(0, 10));
+            }
+
+            const loadMoreDiv = document.getElementById('picksLoadMore');
+            if (loadMoreDiv) {
+                loadMoreDiv.style.display = hasMore ? 'block' : 'none';
             }
         }
 
