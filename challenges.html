@@ -1,20 +1,20 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Arena - Handicapper Challenges | Trust My Record</title>
+    <title>The Arena - Challenges, Trivia & Polls | Trust My Record</title>
 
-    <meta name="description" content="Challenge other handicappers to head-to-head betting competitions. Prove your skills for money or bragging rights in The Arena.">
+    <meta name="description" content="The Arena hub: Head-to-head challenges, bragging rights battles, sports trivia, and community polls. Prove your skills at Trust My Record.">
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://trustmyrecord.com/challenges.html">
-    <meta property="og:title" content="The Arena - Handicapper Challenges | Trust My Record">
-    <meta property="og:description" content="Head-to-head handicapper battles. Challenge anyone. Prove everything.">
+    <meta property="og:title" content="The Arena - Challenges, Trivia & Polls | Trust My Record">
+    <meta property="og:description" content="Head-to-head handicapper battles, trivia, polls. Challenge anyone. Prove everything.">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>⚔️</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>&#9876;</text></svg>">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -157,32 +157,10 @@
             border: 1px solid var(--glass-border);
         }
 
-        .nav-btn {
-            padding: 10px 24px;
-            border-radius: 25px;
-            font-weight: 700;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: none;
-            text-decoration: none;
-        }
-
-        .nav-btn.profile-btn {
-            background: rgba(0, 255, 255, 0.1);
-            border: 1px solid var(--neon-cyan);
-            color: var(--neon-cyan);
-        }
-
-        .nav-btn.profile-btn:hover {
-            background: rgba(0, 255, 255, 0.2);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
-        }
-
         /* ==================== HERO SECTION ==================== */
         .hero {
             text-align: center;
-            padding: 60px 20px 40px;
+            padding: 50px 20px 30px;
         }
 
         .hero h1 {
@@ -193,210 +171,76 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 15px;
-            text-shadow: 0 0 60px rgba(255, 107, 53, 0.5);
+            margin-bottom: 12px;
         }
 
         .hero p {
             color: var(--text-secondary);
-            font-size: 1.2rem;
-            max-width: 600px;
-            margin: 0 auto 30px;
+            font-size: 1.15rem;
+            max-width: 650px;
+            margin: 0 auto;
         }
 
-        .hero-stats {
+        /* ==================== ARENA HUB TABS ==================== */
+        .arena-tabs {
             display: flex;
             justify-content: center;
-            gap: 40px;
+            gap: 8px;
+            margin: 30px auto 40px;
             flex-wrap: wrap;
-            margin-top: 30px;
+            max-width: 900px;
         }
 
-        .hero-stat {
-            text-align: center;
-        }
-
-        .hero-stat-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2.5rem;
-            font-weight: 900;
-            color: var(--neon-cyan);
-            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-        }
-
-        .hero-stat-label {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-top: 5px;
-        }
-
-        /* ==================== CHALLENGE MODE TABS ==================== */
-        .mode-tabs {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 40px;
-            flex-wrap: wrap;
-        }
-
-        .mode-tab {
-            padding: 15px 35px;
+        .arena-tab {
+            padding: 14px 28px;
             border-radius: 30px;
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 0.95rem;
             cursor: pointer;
             transition: all 0.3s;
             border: 2px solid transparent;
             background: var(--card-bg);
             color: var(--text-secondary);
+            white-space: nowrap;
         }
 
-        .mode-tab:hover {
+        .arena-tab:hover {
             border-color: var(--glass-border);
             transform: translateY(-2px);
         }
 
-        .mode-tab.active {
+        .arena-tab.active {
             background: var(--gradient-neon);
             color: var(--dark-bg);
             box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
         }
 
-        .mode-tab.money-mode.active {
-            background: var(--gradient-gold);
-        }
-
-        .mode-tab .tab-icon {
+        .arena-tab .tab-icon {
             margin-right: 8px;
         }
 
-        /* ==================== CREATE CHALLENGE ==================== */
-        .create-challenge-section {
-            margin-bottom: 50px;
+        /* ==================== TAB PANELS ==================== */
+        .tab-panel {
+            display: none;
+            animation: fadeInUp 0.4s ease forwards;
         }
 
+        .tab-panel.active {
+            display: block;
+        }
+
+        /* ==================== SECTION STYLES ==================== */
         .section-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             color: var(--neon-gold);
             margin-bottom: 25px;
             text-align: center;
         }
 
-        .create-challenge-card {
-            background: var(--card-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 35px;
-            backdrop-filter: blur(20px);
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .challenge-form {
-            display: grid;
-            gap: 25px;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .form-group label {
-            color: var(--text-secondary);
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--glass-border);
-            border-radius: 10px;
-            padding: 14px 18px;
-            color: var(--text-primary);
-            font-family: 'Exo 2', sans-serif;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--neon-cyan);
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
-        }
-
-        .form-group select {
-            cursor: pointer;
-        }
-
-        .form-group select option {
-            background: var(--dark-bg);
-            color: var(--text-primary);
-        }
-
-        .stake-options {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .stake-btn {
-            padding: 12px 24px;
-            border-radius: 20px;
-            border: 1px solid var(--glass-border);
-            background: rgba(0, 0, 0, 0.3);
-            color: var(--text-secondary);
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .stake-btn:hover {
-            border-color: var(--neon-gold);
-            color: var(--neon-gold);
-        }
-
-        .stake-btn.selected {
-            background: var(--gradient-gold);
-            color: var(--dark-bg);
-            border-color: transparent;
-        }
-
-        .submit-challenge-btn {
-            background: var(--gradient-fire);
-            color: white;
-            border: none;
-            padding: 18px 40px;
-            border-radius: 30px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 0 30px rgba(255, 107, 53, 0.4);
-            margin-top: 10px;
-        }
-
-        .submit-challenge-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 0 50px rgba(255, 107, 53, 0.6);
-        }
-
-        /* ==================== CHALLENGES GRID ==================== */
-        .challenges-section {
-            margin-bottom: 50px;
+        .section-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
         }
 
         .section-header {
@@ -408,9 +252,36 @@
             gap: 15px;
         }
 
+        /* ==================== CREATE CHALLENGE BUTTON ==================== */
+        .create-challenge-bar {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .create-btn {
+            background: var(--gradient-fire);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            border-radius: 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 30px rgba(255, 107, 53, 0.4);
+        }
+
+        .create-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 50px rgba(255, 107, 53, 0.6);
+        }
+
+        /* ==================== FILTER TABS ==================== */
         .filter-tabs {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .filter-tab {
@@ -436,6 +307,7 @@
             color: var(--neon-cyan);
         }
 
+        /* ==================== CHALLENGES GRID ==================== */
         .challenges-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -452,6 +324,7 @@
             transition: all 0.3s;
             position: relative;
             overflow: hidden;
+            animation: fadeInUp 0.5s ease forwards;
         }
 
         .challenge-card::before {
@@ -478,6 +351,10 @@
             box-shadow: 0 10px 40px rgba(255, 215, 0, 0.2);
             border-color: var(--neon-gold);
         }
+
+        .challenge-card:nth-child(2) { animation-delay: 0.1s; }
+        .challenge-card:nth-child(3) { animation-delay: 0.2s; }
+        .challenge-card:nth-child(4) { animation-delay: 0.3s; }
 
         .challenge-header {
             display: flex;
@@ -558,16 +435,6 @@
         .detail-value.stake {
             color: var(--neon-gold);
             font-family: 'Orbitron', sans-serif;
-        }
-
-        .challenge-description {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            line-height: 1.6;
-            margin: 15px 0;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
         }
 
         .challenge-actions {
@@ -669,15 +536,6 @@
             font-weight: 900;
         }
 
-        .competitor-score.winning {
-            color: var(--neon-green);
-            text-shadow: 0 0 20px rgba(57, 255, 20, 0.5);
-        }
-
-        .competitor-score.losing {
-            color: var(--neon-red);
-        }
-
         .vs-badge {
             font-family: 'Orbitron', sans-serif;
             font-size: 1.5rem;
@@ -687,42 +545,13 @@
             padding: 0 20px;
         }
 
-        .challenge-progress {
-            margin-top: 20px;
-        }
-
-        .progress-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        .progress-bar {
-            height: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--gradient-neon);
-            border-radius: 4px;
-            transition: width 0.5s ease;
-        }
-
         /* ==================== LEADERBOARD ==================== */
-        .leaderboard-section {
-            margin-bottom: 50px;
-        }
-
         .leaderboard-card {
             background: var(--card-bg);
             border: 1px solid var(--glass-border);
             border-radius: 16px;
             overflow: hidden;
+            margin-top: 30px;
         }
 
         .leaderboard-header {
@@ -827,99 +656,226 @@
             margin-bottom: 10px;
         }
 
-        /* ==================== FOOTER ==================== */
-        footer {
-            background: rgba(0, 0, 0, 0.4);
-            border-top: 1px solid var(--glass-border);
-            padding: 30px 0;
-            margin-top: 60px;
-            text-align: center;
-        }
-
-        .footer-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        .footer-links {
-            display: flex;
+        /* ==================== MODAL ==================== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
             justify-content: center;
-            gap: 30px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+            align-items: center;
+            padding: 20px;
         }
 
-        .footer-link {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 0.9rem;
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--dark-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 35px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
             transition: color 0.3s;
         }
 
-        .footer-link:hover {
+        .modal-close:hover {
+            color: var(--neon-red);
+        }
+
+        .modal h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--neon-gold);
+            margin-bottom: 25px;
+        }
+
+        /* ==================== FORM STYLES ==================== */
+        .challenge-form {
+            display: grid;
+            gap: 25px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 14px 18px;
+            color: var(--text-primary);
+            font-family: 'Exo 2', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+        }
+
+        .form-group select {
+            cursor: pointer;
+        }
+
+        .form-group select option {
+            background: var(--dark-bg);
+            color: var(--text-primary);
+        }
+
+        .stake-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .stake-btn {
+            padding: 12px 24px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-secondary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .stake-btn:hover {
+            border-color: var(--neon-gold);
+            color: var(--neon-gold);
+        }
+
+        .stake-btn.selected {
+            background: var(--gradient-gold);
+            color: var(--dark-bg);
+            border-color: transparent;
+        }
+
+        .submit-challenge-btn {
+            background: var(--gradient-fire);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 30px rgba(255, 107, 53, 0.4);
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .submit-challenge-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 50px rgba(255, 107, 53, 0.6);
+        }
+
+        /* ==================== TRIVIA / POLLS LINK CARDS ==================== */
+        .link-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .link-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .link-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0, 255, 255, 0.2);
+            border-color: var(--neon-cyan);
+        }
+
+        .link-card-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .link-card h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
             color: var(--neon-cyan);
+            margin-bottom: 10px;
         }
 
-        .footer-copyright {
-            color: var(--text-muted);
-            font-size: 0.85rem;
+        .link-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
         }
 
-        /* ==================== RESPONSIVE ==================== */
-        @media (max-width: 768px) {
-            .header-content {
-                flex-wrap: wrap;
-                gap: 15px;
-            }
-
-            .nav-links {
-                order: 3;
-                width: 100%;
-                justify-content: center;
-            }
-
-            .challenges-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .versus-display {
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            .vs-badge {
-                padding: 10px 0;
-            }
-
-            .leaderboard-stats {
-                gap: 15px;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-            }
+        .link-card .card-cta {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 24px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.3s;
         }
 
-        /* ==================== ANIMATIONS ==================== */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .link-card .card-cta.trivia-cta {
+            background: linear-gradient(45deg, var(--neon-gold), var(--neon-orange));
+            color: var(--dark-bg);
         }
 
-        .challenge-card {
-            animation: fadeInUp 0.5s ease forwards;
+        .link-card .card-cta.polls-cta {
+            background: var(--gradient-neon);
+            color: var(--dark-bg);
         }
-
-        .challenge-card:nth-child(2) { animation-delay: 0.1s; }
-        .challenge-card:nth-child(3) { animation-delay: 0.2s; }
-        .challenge-card:nth-child(4) { animation-delay: 0.3s; }
 
         /* ==================== TRIVIA STYLES ==================== */
         .trivia-card {
@@ -1142,14 +1098,112 @@
             background: linear-gradient(90deg, var(--neon-gold), var(--neon-orange));
         }
 
-        .section-subtitle {
-            font-size: 14px;
+        /* ==================== FOOTER ==================== */
+        footer {
+            background: rgba(0, 0, 0, 0.4);
+            border-top: 1px solid var(--glass-border);
+            padding: 30px 0;
+            margin-top: 60px;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .footer-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .footer-link:hover {
+            color: var(--neon-cyan);
+        }
+
+        .footer-copyright {
             color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+
+            .nav-links {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .arena-tabs {
+                gap: 6px;
+            }
+
+            .arena-tab {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+
+            .challenges-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .link-cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .versus-display {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .vs-badge {
+                padding: 10px 0;
+            }
+
+            .leaderboard-stats {
+                gap: 15px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .modal {
+                padding: 25px;
+            }
+        }
+
+        /* ==================== ANIMATIONS ==================== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
 <body>
-        <header>
+    <header>
         <div class="header-content">
             <a href="index.html" class="logo">TRUST<span>MY</span>RECORD</a>
             <nav class="nav-links">
@@ -1166,267 +1220,284 @@
         <!-- Hero Section -->
         <section class="hero">
             <h1>THE ARENA</h1>
-            <p>Challenge other handicappers to head-to-head battles. Put your record on the line. Prove you're the best.</p>
-
-            <div class="hero-stats">
-                <div class="hero-stat">
-                    <div class="hero-stat-value" id="totalChallenges">247</div>
-                    <div class="hero-stat-label">Active Challenges</div>
-                </div>
-                <div class="hero-stat">
-                    <div class="hero-stat-value" id="totalCompetitors">1,842</div>
-                    <div class="hero-stat-label">Competitors</div>
-                </div>
-                <div class="hero-stat">
-                    <div class="hero-stat-value" id="totalPrizePool">$48,500</div>
-                    <div class="hero-stat-label">Prize Pool</div>
-                </div>
-            </div>
+            <p>Challenges, trivia, polls, and bragging rights. Everything competitive lives here.</p>
         </section>
 
-        <!-- Challenge Mode Tabs -->
-        <div class="mode-tabs">
-            <button class="mode-tab active" onclick="setMode('all')">
+        <!-- Arena Hub Tabs -->
+        <div class="arena-tabs">
+            <button class="arena-tab active" onclick="switchArenaTab('challenges')">
                 <span class="tab-icon">&#9876;</span> All Challenges
             </button>
-            <button class="mode-tab money-mode" onclick="setMode('money')">
-                <span class="tab-icon">&#128176;</span> Money Challenges
-            </button>
-            <button class="mode-tab" onclick="setMode('bragging')">
+            <button class="arena-tab" onclick="switchArenaTab('bragging')">
                 <span class="tab-icon">&#127942;</span> Bragging Rights
+            </button>
+            <button class="arena-tab" onclick="switchArenaTab('trivia')">
+                <span class="tab-icon">&#127919;</span> Trivia
+            </button>
+            <button class="arena-tab" onclick="switchArenaTab('polls')">
+                <span class="tab-icon">&#128202;</span> Polls
             </button>
         </div>
 
-        <!-- Create Challenge Section -->
-        <section class="create-challenge-section">
-            <h2 class="section-title">Create a Challenge</h2>
-            <div class="create-challenge-card">
-                <form class="challenge-form" id="challengeForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Challenge Type</label>
-                            <select id="challengeType" onchange="updateStakeVisibility()">
-                                <option value="bragging">Bragging Rights</option>
-                                <option value="money">Money Challenge</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Sport</label>
-                            <select id="challengeSport">
-                                <option value="nfl">NFL</option>
-                                <option value="nba">NBA</option>
-                                <option value="nhl">NHL</option>
-                                <option value="mlb">MLB</option>
-                                <option value="ncaaf">NCAAF</option>
-                                <option value="ncaab">NCAAB</option>
-                                <option value="mixed">Mixed Sports</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Number of Picks</label>
-                            <select id="numPicks">
-                                <option value="5">5 Picks</option>
-                                <option value="10" selected>10 Picks</option>
-                                <option value="20">20 Picks</option>
-                                <option value="50">50 Picks (Marathon)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Challenge Duration</label>
-                            <select id="duration">
-                                <option value="1day">1 Day Sprint</option>
-                                <option value="1week" selected>1 Week</option>
-                                <option value="2weeks">2 Weeks</option>
-                                <option value="1month">1 Month</option>
-                                <option value="season">Full Season</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-group" id="stakeSection" style="display: none;">
-                        <label>Stake Amount</label>
-                        <div class="stake-options">
-                            <button type="button" class="stake-btn" data-stake="25" onclick="selectStake(this)">$25</button>
-                            <button type="button" class="stake-btn" data-stake="50" onclick="selectStake(this)">$50</button>
-                            <button type="button" class="stake-btn selected" data-stake="100" onclick="selectStake(this)">$100</button>
-                            <button type="button" class="stake-btn" data-stake="250" onclick="selectStake(this)">$250</button>
-                            <button type="button" class="stake-btn" data-stake="500" onclick="selectStake(this)">$500</button>
-                            <button type="button" class="stake-btn" data-stake="custom" onclick="selectStake(this)">Custom</button>
-                        </div>
-                        <input type="number" id="customStake" placeholder="Enter custom amount" style="display: none; margin-top: 10px;">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Challenge Opponent (optional)</label>
-                        <input type="text" id="opponent" placeholder="@username or leave blank for open challenge">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Challenge Title</label>
-                        <input type="text" id="challengeTitle" placeholder="e.g., 'NFL Week 15 Showdown'" maxlength="60">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Description (optional)</label>
-                        <textarea id="challengeDesc" rows="3" placeholder="Describe your challenge rules or talk some trash..."></textarea>
-                    </div>
-
-                    <button type="submit" class="submit-challenge-btn">Create Challenge</button>
-                </form>
+        <!-- ==================== TAB 1: ALL CHALLENGES ==================== -->
+        <div class="tab-panel active" id="panel-challenges">
+            <!-- Create Challenge Button -->
+            <div class="create-challenge-bar">
+                <button class="create-btn" onclick="openCreateModal()">
+                    + Create New Challenge
+                </button>
             </div>
-        </section>
 
-        <!-- Open Challenges Section -->
-        <section class="challenges-section">
+            <!-- Sport Filters -->
             <div class="section-header">
-                <h2 class="section-title">Open Challenges</h2>
+                <h2 class="section-title" style="margin-bottom:0;">Open Challenges</h2>
                 <div class="filter-tabs">
                     <button class="filter-tab active" onclick="filterChallenges('all')">All Sports</button>
                     <button class="filter-tab" onclick="filterChallenges('nfl')">NFL</button>
                     <button class="filter-tab" onclick="filterChallenges('nba')">NBA</button>
                     <button class="filter-tab" onclick="filterChallenges('nhl')">NHL</button>
+                    <button class="filter-tab" onclick="filterChallenges('mlb')">MLB</button>
                 </div>
             </div>
 
             <div class="challenges-grid" id="openChallengesGrid">
-                <!-- Populated dynamically from GET /api/challenges -->
                 <div style="grid-column:1/-1;text-align:center;padding:40px;color:#808090;">Loading challenges...</div>
             </div>
-        </section>
 
-        <!-- Active Challenges Section -->
-        <section class="challenges-section">
-            <h2 class="section-title">Your Active Challenges</h2>
-
-            <!-- Active challenge cards inserted here dynamically -->
-
-            <div class="empty-state" id="noActiveChallenges" style="display: none;">
-                <div class="empty-state-icon">&#9876;</div>
-                <h3>No Active Challenges</h3>
-                <p>Accept a challenge above or create your own to get started!</p>
-            </div>
-        </section>
-
-        <!-- Daily Trivia Section -->
-        <section class="challenges-section">
-            <div class="section-header">
-                <h2 class="section-title">🎯 Daily Sports Trivia</h2>
-                <span class="section-subtitle" style="color: var(--text-muted); font-size: 14px;">Answer correctly to earn points!</span>
-            </div>
-
-            <div id="triviaContainer">
-                <!-- Trivia Question -->
-                <div class="trivia-card" id="triviaQuestion">
-                    <div class="trivia-header">
-                        <span class="trivia-badge">🏆 +50 Points</span>
-                        <span class="trivia-timer" id="triviaTimer">⏱️ 24:00:00</span>
-                    </div>
-                    <h3 class="trivia-question" id="triviaQuestionText">Loading today's question...</h3>
-                    <div class="trivia-options" id="triviaOptions">
-                        <!-- Options loaded by JS -->
-                    </div>
-                </div>
-
-                <!-- Trivia Results -->
-                <div class="trivia-result" id="triviaResult" style="display: none;">
-                    <div class="result-icon" id="resultIcon">✅</div>
-                    <h3 id="resultTitle">Correct!</h3>
-                    <p id="resultMessage">You earned 50 trivia points!</p>
-                    <div class="trivia-stats">
-                        <div class="stat">
-                            <span class="stat-number" id="triviaStreak">0</span>
-                            <span class="stat-label">Day Streak</span>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-number" id="triviaTotalPoints">0</span>
-                            <span class="stat-label">Total Points</span>
-                        </div>
-                    </div>
+            <!-- Your Active Challenges -->
+            <h2 class="section-title" style="margin-top:50px;">Your Active Challenges</h2>
+            <div id="activeChallengesContainer">
+                <div class="empty-state" id="noActiveChallenges">
+                    <div class="empty-state-icon">&#9876;</div>
+                    <h3>No Active Challenges</h3>
+                    <p>Accept a challenge above or create your own to get started!</p>
                 </div>
             </div>
 
-            <!-- Trivia Leaderboard -->
-            <div class="mini-leaderboard" style="margin-top: 30px;">
-                <h4 style="font-family: 'Orbitron', sans-serif; margin-bottom: 15px;">🏆 Trivia Leaders</h4>
-                <div id="triviaLeaderboard">
-                    <!-- Loaded by JS -->
-                </div>
-            </div>
-        </section>
-
-        <!-- Daily Poll Section -->
-        <section class="challenges-section">
-            <div class="section-header">
-                <h2 class="section-title">📊 Daily Poll</h2>
-                <span class="section-subtitle" style="color: var(--text-muted); font-size: 14px;">Vote and see what the community thinks!</span>
-            </div>
-
-            <div id="pollContainer">
-                <div class="poll-card" id="pollQuestion">
-                    <h3 class="poll-question" id="pollQuestionText">Loading today's poll...</h3>
-                    <div class="poll-options" id="pollOptions">
-                        <!-- Options loaded by JS -->
-                    </div>
-                    <div class="poll-meta">
-                        <span id="pollVotes">0 votes</span>
-                        <span>•</span>
-                        <span id="pollTimeLeft">Ends in 12 hours</span>
-                    </div>
-                </div>
-
-                <!-- Poll Results -->
-                <div class="poll-results" id="pollResults" style="display: none;">
-                    <h4 style="margin-bottom: 15px;">Results</h4>
-                    <div id="pollResultsBars">
-                        <!-- Bars loaded by JS -->
-                    </div>
-                    <p style="margin-top: 15px; color: var(--text-muted);">You voted: <strong id="yourVote" style="color: var(--neon-cyan);">-</strong></p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Arena Leaderboard -->
-        <section class="leaderboard-section">
-            <h2 class="section-title">Arena Champions</h2>
+            <!-- Arena Leaderboard -->
             <div class="leaderboard-card">
                 <div class="leaderboard-header">
-                    <h3>Top Challenge Winners - All Time</h3>
+                    <h3>Arena Champions - All Time</h3>
                 </div>
-                <div class="leaderboard-list">
-                    <!-- Populated dynamically from GET /api/challenges/leaderboards -->
+                <div class="leaderboard-list" id="arenaLeaderboard">
                     <div style="text-align:center;padding:40px;color:#808090;">Loading leaderboard...</div>
                 </div>
             </div>
-        </section>
+        </div>
+
+        <!-- ==================== TAB 2: BRAGGING RIGHTS ==================== -->
+        <div class="tab-panel" id="panel-bragging">
+            <div class="create-challenge-bar">
+                <button class="create-btn" onclick="openCreateModal('bragging')">
+                    + Create Bragging Rights Challenge
+                </button>
+            </div>
+
+            <h2 class="section-title">Bragging Rights Challenges</h2>
+            <p style="text-align:center;color:var(--text-secondary);margin-bottom:30px;">Free challenges, zero stakes. Pure reputation on the line.</p>
+
+            <div class="challenges-grid" id="braggingChallengesGrid">
+                <div style="grid-column:1/-1;text-align:center;padding:40px;color:#808090;">Loading bragging rights challenges...</div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 3: TRIVIA ==================== -->
+        <div class="tab-panel" id="panel-trivia">
+            <h2 class="section-title">Sports Trivia</h2>
+            <p style="text-align:center;color:var(--text-secondary);margin-bottom:30px;">Test your sports knowledge. New question every day.</p>
+
+            <div style="max-width:700px;margin:0 auto;">
+                <div id="triviaContainer">
+                    <!-- Trivia Question -->
+                    <div class="trivia-card" id="triviaQuestion">
+                        <div class="trivia-header">
+                            <span class="trivia-badge">+50 Points</span>
+                            <span class="trivia-timer" id="triviaTimer">00:00:00</span>
+                        </div>
+                        <h3 class="trivia-question" id="triviaQuestionText">Loading today's question...</h3>
+                        <div class="trivia-options" id="triviaOptions">
+                            <!-- Options loaded by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Trivia Results -->
+                    <div class="trivia-result" id="triviaResult" style="display: none;">
+                        <div class="result-icon" id="resultIcon"></div>
+                        <h3 id="resultTitle">Correct!</h3>
+                        <p id="resultMessage">You earned 50 trivia points!</p>
+                        <div class="trivia-stats">
+                            <div class="stat">
+                                <span class="stat-number" id="triviaStreak">0</span>
+                                <span class="stat-label">Day Streak</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-number" id="triviaTotalPoints">0</span>
+                                <span class="stat-label">Total Points</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trivia Leaderboard -->
+                <div class="mini-leaderboard" style="margin-top: 30px;">
+                    <h4 style="font-family: 'Orbitron', sans-serif; margin-bottom: 15px; color: var(--neon-gold);">Trivia Leaders</h4>
+                    <div id="triviaLeaderboard">
+                        <!-- Loaded by JS -->
+                    </div>
+                </div>
+
+                <!-- Link to full trivia page -->
+                <div style="text-align:center;margin-top:25px;">
+                    <a href="trivia.html" style="color:var(--neon-cyan);font-weight:600;text-decoration:none;font-size:0.95rem;">View All Trivia Games &rarr;</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 4: POLLS ==================== -->
+        <div class="tab-panel" id="panel-polls">
+            <h2 class="section-title">Community Polls</h2>
+            <p style="text-align:center;color:var(--text-secondary);margin-bottom:30px;">Vote and see what the community thinks.</p>
+
+            <div style="max-width:700px;margin:0 auto;">
+                <div id="pollContainer">
+                    <div class="poll-card" id="pollQuestion">
+                        <h3 class="poll-question" id="pollQuestionText">Loading today's poll...</h3>
+                        <div class="poll-options" id="pollOptions">
+                            <!-- Options loaded by JS -->
+                        </div>
+                        <div class="poll-meta">
+                            <span id="pollVotes">0 votes</span>
+                            <span>&bull;</span>
+                            <span id="pollTimeLeft">Ends in 12 hours</span>
+                        </div>
+                    </div>
+
+                    <!-- Poll Results -->
+                    <div class="poll-results" id="pollResults" style="display: none;">
+                        <h4 style="margin-bottom: 15px;">Results</h4>
+                        <div id="pollResultsBars">
+                            <!-- Bars loaded by JS -->
+                        </div>
+                        <p style="margin-top: 15px; color: var(--text-muted);">You voted: <strong id="yourVote" style="color: var(--neon-cyan);">-</strong></p>
+                    </div>
+                </div>
+
+                <!-- Link to full polls page -->
+                <div style="text-align:center;margin-top:25px;">
+                    <a href="polls.html" style="color:var(--neon-cyan);font-weight:600;text-decoration:none;font-size:0.95rem;">View All Polls &rarr;</a>
+                </div>
+            </div>
+        </div>
+
     </main>
+
+    <!-- ==================== CREATE CHALLENGE MODAL ==================== -->
+    <div class="modal-overlay" id="createModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+            <h2>Create a Challenge</h2>
+            <form class="challenge-form" id="challengeForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Challenge Type</label>
+                        <select id="challengeType" onchange="updateStakeVisibility()">
+                            <option value="bragging">Bragging Rights</option>
+                            <option value="money">Money Challenge</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Sport</label>
+                        <select id="challengeSport">
+                            <option value="nfl">NFL</option>
+                            <option value="nba">NBA</option>
+                            <option value="nhl">NHL</option>
+                            <option value="mlb">MLB</option>
+                            <option value="ncaaf">NCAAF</option>
+                            <option value="ncaab">NCAAB</option>
+                            <option value="mixed">Mixed Sports</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Number of Picks</label>
+                        <select id="numPicks">
+                            <option value="5">5 Picks</option>
+                            <option value="10" selected>10 Picks</option>
+                            <option value="20">20 Picks</option>
+                            <option value="50">50 Picks (Marathon)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Challenge Duration</label>
+                        <select id="duration">
+                            <option value="1day">1 Day Sprint</option>
+                            <option value="1week" selected>1 Week</option>
+                            <option value="2weeks">2 Weeks</option>
+                            <option value="1month">1 Month</option>
+                            <option value="season">Full Season</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" id="stakeSection" style="display: none;">
+                    <label>Stake Amount</label>
+                    <div class="stake-options">
+                        <button type="button" class="stake-btn" data-stake="25" onclick="selectStake(this)">$25</button>
+                        <button type="button" class="stake-btn" data-stake="50" onclick="selectStake(this)">$50</button>
+                        <button type="button" class="stake-btn selected" data-stake="100" onclick="selectStake(this)">$100</button>
+                        <button type="button" class="stake-btn" data-stake="250" onclick="selectStake(this)">$250</button>
+                        <button type="button" class="stake-btn" data-stake="500" onclick="selectStake(this)">$500</button>
+                        <button type="button" class="stake-btn" data-stake="custom" onclick="selectStake(this)">Custom</button>
+                    </div>
+                    <input type="number" id="customStake" placeholder="Enter custom amount" style="display: none; margin-top: 10px;">
+                </div>
+
+                <div class="form-group">
+                    <label>Challenge Opponent (optional)</label>
+                    <input type="text" id="opponent" placeholder="@username or leave blank for open challenge">
+                </div>
+
+                <div class="form-group">
+                    <label>Challenge Title</label>
+                    <input type="text" id="challengeTitle" placeholder="e.g., 'NFL Week 15 Showdown'" maxlength="60">
+                </div>
+
+                <div class="form-group">
+                    <label>Description (optional)</label>
+                    <textarea id="challengeDesc" rows="3" placeholder="Describe your challenge rules or talk some trash..."></textarea>
+                </div>
+
+                <button type="submit" class="submit-challenge-btn">Create Challenge</button>
+            </form>
+        </div>
+    </div>
 
     <footer>
         <div class="footer-content">
             <div class="footer-links">
                 <a href="index.html" class="footer-link">Home</a>
                 <a href="profile.html" class="footer-link" id="footerProfileLink">Profile</a>
-                <a href="index.html#forums" class="footer-link">Forums</a>
+                <a href="forum.html" class="footer-link">Forum</a>
                 <a href="challenges.html" class="footer-link">The Arena</a>
-                <a href="index.html#leaderboards" class="footer-link">Leaderboards</a>
+                <a href="activity.html" class="footer-link">Activity</a>
             </div>
             <p class="footer-copyright">2026 Trust My Record. The end of the bullshit.</p>
         </div>
     </footer>
 
     <!-- Backend API Integration -->
-    <script src="static/js/config.js?v=20260318"></script>
-    <script src="static/js/backend-api.js?v=20260318"></script>
-    <script src="static/js/notifications.js?v=20260318"></script>
+    <script src="static/js/config.js?v=20260319"></script>
+    <script src="static/js/backend-api.js?v=20260319"></script>
+    <script src="static/js/notifications.js?v=20260319"></script>
 
     <script>
         // ==================== GLOBAL STATE ====================
         let currentUser = null;
-        let allChallengesData = null; // cached response from GET /api/challenges
-        let currentMode = 'all'; // 'all', 'money', 'bragging'
+        let allChallengesData = null;
         let currentSportFilter = 'all';
+        let currentArenaTab = 'challenges';
 
         // ==================== SPORT ICONS ====================
         const SPORT_ICONS = {
@@ -1438,14 +1509,46 @@
             return SPORT_ICONS[(sport || '').toUpperCase()] || '&#127919;';
         }
 
-        // ==================== MODE / FILTER SWITCHING ====================
-        function setMode(mode) {
-            currentMode = mode;
-            document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
+        // ==================== ARENA TAB SWITCHING ====================
+        function switchArenaTab(tab) {
+            currentArenaTab = tab;
+            // Update tab buttons
+            document.querySelectorAll('.arena-tab').forEach(t => t.classList.remove('active'));
             event.currentTarget.classList.add('active');
-            renderOpenChallenges();
+            // Update panels
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('panel-' + tab).classList.add('active');
+
+            // Render the right content for the tab
+            if (tab === 'bragging') {
+                renderBraggingChallenges();
+            }
         }
 
+        // ==================== MODAL MANAGEMENT ====================
+        function openCreateModal(presetType) {
+            document.getElementById('createModal').classList.add('active');
+            if (presetType === 'bragging') {
+                document.getElementById('challengeType').value = 'bragging';
+                updateStakeVisibility();
+            }
+        }
+
+        function closeCreateModal() {
+            document.getElementById('createModal').classList.remove('active');
+        }
+
+        // Close modal on overlay click
+        document.getElementById('createModal').addEventListener('click', function(e) {
+            if (e.target === this) closeCreateModal();
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeCreateModal();
+        });
+
+        // ==================== FILTER ====================
         function filterChallenges(sport) {
             currentSportFilter = sport;
             document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
@@ -1469,19 +1572,6 @@
         function updateStakeVisibility() {
             const type = document.getElementById('challengeType').value;
             document.getElementById('stakeSection').style.display = type === 'money' ? 'block' : 'none';
-        }
-
-        // ==================== ANIMATE HERO STATS ====================
-        function animateValue(element, start, end, duration) {
-            if (!element) return;
-            const range = end - start;
-            const stepTime = Math.abs(Math.floor(duration / (range / Math.ceil(range / 50))));
-            let current = start;
-            const timer = setInterval(function() {
-                current += Math.ceil(range / 50);
-                if (current >= end) { current = end; clearInterval(timer); }
-                element.textContent = current.toLocaleString();
-            }, stepTime);
         }
 
         // ==================== DATE HELPERS ====================
@@ -1527,14 +1617,12 @@
             else if (duration === '1month') endDate.setMonth(endDate.getMonth() + 1);
             else if (duration === 'season') endDate.setMonth(endDate.getMonth() + 6);
 
-            // We need an opponent for the challenges API (direct challenge)
             if (!opponentInput) {
                 alert('Please enter an opponent username to challenge.');
                 return;
             }
 
             try {
-                // Look up opponent
                 const searchResult = await api.searchUsers(opponentInput);
                 const users = searchResult.users || [];
                 const opponent = users.find(u => u.username.toLowerCase() === opponentInput.toLowerCase()) || users[0];
@@ -1556,6 +1644,7 @@
                 alert('Challenge sent to @' + opponent.username + '! They can accept or decline.');
                 this.reset();
                 updateStakeVisibility();
+                closeCreateModal();
                 await loadAllChallenges();
 
             } catch (error) {
@@ -1570,8 +1659,7 @@
                 allChallengesData = await api.getChallenges();
                 renderOpenChallenges();
                 renderActiveChallenges();
-                renderReceivedChallenges();
-                updateHeroStats();
+                renderBraggingChallenges();
             } catch (error) {
                 console.error('Load challenges error:', error);
                 const grid = document.getElementById('openChallengesGrid');
@@ -1581,37 +1669,15 @@
             }
         }
 
-        // ==================== UPDATE HERO STATS ====================
-        function updateHeroStats() {
-            if (!allChallengesData) return;
-            const active = allChallengesData.active || [];
-            const pending = allChallengesData.pending || [];
-            const all = allChallengesData.challenges || [];
-
-            document.getElementById('totalChallenges').textContent = active.length + pending.length;
-            document.getElementById('totalCompetitors').textContent = all.length;
-            // Prize pool not directly available from API, show challenge count instead
-            const el = document.getElementById('totalPrizePool');
-            if (el) el.textContent = all.length + ' total';
-        }
-
-        // ==================== RENDER OPEN / PENDING CHALLENGES (received) ====================
+        // ==================== RENDER OPEN CHALLENGES ====================
         function renderOpenChallenges() {
             const grid = document.getElementById('openChallengesGrid');
             if (!grid || !allChallengesData) return;
 
-            // "Open Challenges" shows received pending challenges + sent pending
             let items = [
                 ...(allChallengesData.received || []).filter(c => c.status === 'pending'),
                 ...(allChallengesData.sent || []).filter(c => c.status === 'pending')
             ];
-
-            // Apply mode filter
-            if (currentMode === 'money') {
-                items = items.filter(c => c.stake_type === 'units' || c.stake_type === 'money');
-            } else if (currentMode === 'bragging') {
-                items = items.filter(c => c.stake_type === 'bragging_rights');
-            }
 
             // Apply sport filter
             if (currentSportFilter !== 'all') {
@@ -1619,7 +1685,26 @@
             }
 
             if (items.length === 0) {
-                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#808090;"><div style="font-size:48px;margin-bottom:20px;">&#9876;</div><h3 style="margin-bottom:10px;color:#fff;">No Pending Challenges</h3><p>Create a challenge above or wait for someone to challenge you!</p></div>';
+                grid.innerHTML = '<div style="grid-column:1/-1;" class="empty-state"><div class="empty-state-icon">&#9876;</div><h3>No Pending Challenges</h3><p>Create a challenge or wait for someone to challenge you!</p></div>';
+                return;
+            }
+
+            grid.innerHTML = items.map(ch => renderChallengeCard(ch)).join('');
+        }
+
+        // ==================== RENDER BRAGGING RIGHTS TAB ====================
+        function renderBraggingChallenges() {
+            const grid = document.getElementById('braggingChallengesGrid');
+            if (!grid || !allChallengesData) return;
+
+            let items = [
+                ...(allChallengesData.received || []).filter(c => c.status === 'pending' && c.stake_type === 'bragging_rights'),
+                ...(allChallengesData.sent || []).filter(c => c.status === 'pending' && c.stake_type === 'bragging_rights'),
+                ...(allChallengesData.active || []).filter(c => c.stake_type === 'bragging_rights')
+            ];
+
+            if (items.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1;" class="empty-state"><div class="empty-state-icon">&#127942;</div><h3>No Bragging Rights Challenges Yet</h3><p>Create a free challenge and put your reputation on the line!</p></div>';
                 return;
             }
 
@@ -1650,13 +1735,13 @@
                     '<div class="challenger-info">' +
                         '<img src="https://api.dicebear.com/7.x/avataaars/svg?seed=' + opponentSeed + '" alt="Avatar" class="challenger-avatar">' +
                         '<div class="challenger-details"><h4>' + opponentName + '</h4>' +
-                        '<span class="challenger-record">' + (isReceived ? 'Challenged you' : 'Awaiting response') + '</span></div>' +
+                        '<span class="challenger-record">' + (isReceived ? 'Challenged you' : (ch.status === 'active' ? 'Active' : 'Awaiting response')) + '</span></div>' +
                     '</div>' +
                     '<span class="challenge-badge ' + (isMoney ? 'money' : 'bragging') + '">' + (isMoney ? 'Units' : 'Bragging Rights') + '</span>' +
                 '</div>' +
                 '<div class="challenge-details">' +
                     '<div class="detail-row"><span class="detail-label">Sport</span><span class="detail-value">' + (ch.sport || 'Mixed') + '</span></div>' +
-                    '<div class="detail-row"><span class="detail-label">Min Picks</span><span class="detail-value">' + (ch.min_picks || 'N/A') + '</span></div>' +
+                    '<div class="detail-row"><span class="detail-label">Min Picks</span><span class="detail-value">' + (ch.min_picks || '-') + '</span></div>' +
                     '<div class="detail-row"><span class="detail-label">Duration</span><span class="detail-value">' + durationLabel(ch.start_date, ch.end_date) + '</span></div>' +
                     '<div class="detail-row"><span class="detail-label">Dates</span><span class="detail-value">' + formatDate(ch.start_date) + ' - ' + formatDate(ch.end_date) + '</span></div>' +
                 '</div>' +
@@ -1666,24 +1751,14 @@
 
         // ==================== RENDER ACTIVE CHALLENGES ====================
         function renderActiveChallenges() {
-            const container = document.querySelector('.challenges-section:nth-of-type(2)');
+            const container = document.getElementById('activeChallengesContainer');
+            const emptyState = document.getElementById('noActiveChallenges');
             if (!container || !allChallengesData) return;
 
-            // Find the section with "Your Active Challenges" title
-            const sections = document.querySelectorAll('.challenges-section');
-            let activeSection = null;
-            sections.forEach(s => {
-                const title = s.querySelector('.section-title');
-                if (title && title.textContent.includes('Active Challenges')) activeSection = s;
-            });
-            if (!activeSection) return;
-
             const active = allChallengesData.active || [];
-            const emptyState = document.getElementById('noActiveChallenges');
 
-            // Remove hardcoded active-challenge-card
-            const existingCards = activeSection.querySelectorAll('.active-challenge-card');
-            existingCards.forEach(c => c.remove());
+            // Remove old cards
+            container.querySelectorAll('.active-challenge-card').forEach(c => c.remove());
 
             if (active.length === 0) {
                 if (emptyState) emptyState.style.display = 'block';
@@ -1692,8 +1767,6 @@
 
             if (emptyState) emptyState.style.display = 'none';
 
-            // Insert active challenge cards before the empty state
-            const insertBefore = emptyState || activeSection.lastElementChild;
             active.forEach(ch => {
                 const card = document.createElement('div');
                 card.className = 'active-challenge-card';
@@ -1727,13 +1800,8 @@
                         '<div class="detail-row"><span class="detail-label">Stakes</span><span class="detail-value stake">' + (ch.stake_type === 'bragging_rights' ? 'Bragging Rights' : 'Units') + '</span></div>' +
                     '</div>';
 
-                activeSection.insertBefore(card, insertBefore);
+                container.insertBefore(card, emptyState);
             });
-        }
-
-        // ==================== RENDER RECEIVED CHALLENGES (pending) ====================
-        function renderReceivedChallenges() {
-            // Already handled in renderOpenChallenges - received pending are shown there
         }
 
         // ==================== RESPOND TO CHALLENGE ====================
@@ -1770,7 +1838,7 @@
             try {
                 const data = await api.request('/challenges/leaderboards?period=all&limit=10');
                 const entries = data.leaderboard || [];
-                const listEl = document.querySelector('.leaderboard-list');
+                const listEl = document.getElementById('arenaLeaderboard');
                 if (!listEl) return;
 
                 if (entries.length === 0) {
@@ -1802,29 +1870,15 @@
         // ==================== PROFILE LINK UPDATES ====================
         function updateProfileLinks() {
             if (currentUser) {
-                const profileLink = document.getElementById('profileLink');
                 const footerProfileLink = document.getElementById('footerProfileLink');
-                if (profileLink) profileLink.href = 'profile.html?username=' + currentUser.username;
                 if (footerProfileLink) footerProfileLink.href = 'profile.html?username=' + currentUser.username;
-            }
-        }
-
-        // ==================== LOGIN PROMPT ====================
-        function showLoginPrompt() {
-            // Show a non-blocking message in the create-challenge section
-            const form = document.getElementById('challengeForm');
-            if (form) {
-                const btn = form.querySelector('.submit-challenge-btn');
-                if (btn) btn.textContent = 'Log In to Create Challenges';
             }
         }
 
         // ==================== INITIALIZATION ====================
         document.addEventListener('DOMContentLoaded', async function() {
-            // Wait for API to detect backend
             await api.ready;
 
-            // Check if user is logged in
             if (api.isLoggedIn()) {
                 try {
                     const userData = await api.getCurrentUser();
@@ -1835,20 +1889,26 @@
             }
 
             if (!currentUser) {
-                showLoginPrompt();
+                const btn = document.querySelector('.submit-challenge-btn');
+                if (btn) btn.textContent = 'Log In to Create Challenges';
             }
 
             updateProfileLinks();
-
-            // Load challenges from backend
             await loadAllChallenges();
-
-            // Load leaderboard from backend
             await loadLeaderboard();
-
-            // Initialize Trivia and Polls (localStorage-based, kept as-is)
             initTrivia();
             initPolls();
+
+            // Check URL hash for direct tab access
+            const hash = window.location.hash.replace('#', '');
+            if (['challenges', 'bragging', 'trivia', 'polls'].includes(hash)) {
+                const tabBtn = document.querySelector('.arena-tab');
+                document.querySelectorAll('.arena-tab').forEach(t => {
+                    if (t.textContent.toLowerCase().includes(hash)) {
+                        t.click();
+                    }
+                });
+            }
         });
 
         // ==================== TRIVIA SYSTEM ====================
@@ -1909,14 +1969,6 @@
             return day % dailyTrivia.length;
         }
 
-        function getTriviaData() {
-            return JSON.parse(localStorage.getItem(TRIVIA_KEY) || '{}');
-        }
-
-        function saveTriviaData(data) {
-            localStorage.setItem(TRIVIA_KEY, JSON.stringify(data));
-        }
-
         function getTriviaPoints() {
             const points = JSON.parse(localStorage.getItem(TRIVIA_POINTS_KEY) || '{}');
             return points[currentUser?.username || 'guest'] || { total: 0, streak: 0, lastAnswered: null };
@@ -1930,7 +1982,6 @@
 
         function initTrivia() {
             const today = getTodayIndex();
-            const data = getTriviaData();
             const points = getTriviaPoints();
             const todayStr = new Date().toDateString();
 
@@ -1943,9 +1994,9 @@
             document.getElementById('triviaQuestionText').textContent = trivia.question;
 
             const optionsContainer = document.getElementById('triviaOptions');
-            optionsContainer.innerHTML = trivia.options.map((opt, idx) => `
-                <button class="trivia-option" onclick="answerTrivia(${idx})">${opt}</button>
-            `).join('');
+            optionsContainer.innerHTML = trivia.options.map(function(opt, idx) {
+                return '<button class="trivia-option" onclick="answerTrivia(' + idx + ')">' + opt + '</button>';
+            }).join('');
 
             updateTriviaLeaderboard();
             startTriviaTimer();
@@ -1963,7 +2014,7 @@
                 const hours = Math.floor(diff / (1000 * 60 * 60));
                 const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                 const secs = Math.floor((diff % (1000 * 60)) / 1000);
-                timerEl.textContent = '&#9201; ' + hours.toString().padStart(2, '0') + ':' + mins.toString().padStart(2, '0') + ':' + secs.toString().padStart(2, '0');
+                timerEl.textContent = hours.toString().padStart(2, '0') + ':' + mins.toString().padStart(2, '0') + ':' + secs.toString().padStart(2, '0');
             }
 
             update();
@@ -1976,7 +2027,7 @@
             const isCorrect = selectedIndex === trivia.correct;
 
             const buttons = document.querySelectorAll('.trivia-option');
-            buttons.forEach((btn, idx) => {
+            buttons.forEach(function(btn, idx) {
                 btn.disabled = true;
                 if (idx === trivia.correct) {
                     btn.classList.add('correct');
@@ -1986,7 +2037,6 @@
             });
 
             const points = getTriviaPoints();
-            const todayStr = new Date().toDateString();
 
             if (isCorrect) {
                 points.total += 50;
@@ -1994,18 +2044,18 @@
             } else {
                 points.streak = 0;
             }
-            points.lastAnswered = todayStr;
+            points.lastAnswered = new Date().toDateString();
 
             saveTriviaPoints(points);
 
-            setTimeout(() => {
+            setTimeout(function() {
                 showTriviaResult(isCorrect, points);
             }, 1500);
         }
 
         function showTriviaResult(isCorrect, points) {
             document.getElementById('triviaQuestion').style.display = 'none';
-            const resultEl = document.getElementById('triviaResult');
+            var resultEl = document.getElementById('triviaResult');
             resultEl.style.display = 'block';
 
             document.getElementById('resultIcon').textContent = isCorrect ? '\u2705' : '\u274C';
@@ -2020,8 +2070,8 @@
         function updateTriviaLeaderboard() {
             const allPoints = JSON.parse(localStorage.getItem(TRIVIA_POINTS_KEY) || '{}');
             const leaderboard = Object.entries(allPoints)
-                .map(([user, data]) => ({ user, total: data.total || 0 }))
-                .sort((a, b) => b.total - a.total)
+                .map(function(entry) { return { user: entry[0], total: entry[1].total || 0 }; })
+                .sort(function(a, b) { return b.total - a.total; })
                 .slice(0, 5);
 
             const container = document.getElementById('triviaLeaderboard');
@@ -2030,17 +2080,16 @@
                 return;
             }
 
-            container.innerHTML = leaderboard.map((entry, idx) => `
-                <div class="mini-leaderboard-item">
-                    <span style="width: 30px; font-weight: 700; color: ${idx < 3 ? 'var(--neon-gold)' : 'var(--text-muted)'};">${idx + 1}</span>
-                    <span style="flex: 1;">${entry.user}</span>
-                    <span style="font-family: 'Orbitron', sans-serif; color: var(--neon-cyan);">${entry.total} pts</span>
-                </div>
-            `).join('');
+            container.innerHTML = leaderboard.map(function(entry, idx) {
+                return '<div class="mini-leaderboard-item">' +
+                    '<span style="width: 30px; font-weight: 700; color: ' + (idx < 3 ? 'var(--neon-gold)' : 'var(--text-muted)') + ';">' + (idx + 1) + '</span>' +
+                    '<span style="flex: 1;">' + entry.user + '</span>' +
+                    '<span style="font-family: \'Orbitron\', sans-serif; color: var(--neon-cyan);">' + entry.total + ' pts</span>' +
+                '</div>';
+            }).join('');
         }
 
         // ==================== POLLS SYSTEM ====================
-        const POLLS_KEY = 'tmr_polls';
         const POLLS_VOTES_KEY = 'tmr_polls_votes';
 
         const dailyPolls = [
@@ -2102,21 +2151,17 @@
 
         function renderPollOptions(poll) {
             const container = document.getElementById('pollOptions');
-            container.innerHTML = poll.options.map((opt, idx) => `
-                <div class="poll-option" onclick="votePoll(${idx})">
-                    <div class="poll-option-content">
-                        <span>${opt}</span>
-                    </div>
-                </div>
-            `).join('');
+            container.innerHTML = poll.options.map(function(opt, idx) {
+                return '<div class="poll-option" onclick="votePoll(' + idx + ')"><div class="poll-option-content"><span>' + opt + '</span></div></div>';
+            }).join('');
 
             const votes = getPollVotes();
             const todayStr = new Date().toDateString();
             let totalVotes = 0;
-            Object.values(votes).forEach(userVotes => {
+            Object.values(votes).forEach(function(userVotes) {
                 if (userVotes[todayStr] !== undefined) totalVotes++;
             });
-            document.getElementById('pollVotes').textContent = `${totalVotes} votes`;
+            document.getElementById('pollVotes').textContent = totalVotes + ' votes';
         }
 
         function votePoll(optionIndex) {
@@ -2145,34 +2190,32 @@
             const counts = new Array(poll.options.length).fill(0);
             let total = 0;
 
-            Object.values(votes).forEach(userVotes => {
+            Object.values(votes).forEach(function(userVotes) {
                 if (userVotes[todayStr] !== undefined) {
                     counts[userVotes[todayStr]]++;
                     total++;
                 }
             });
 
-            const maxVotes = Math.max(...counts);
-            const winners = counts.map((c, i) => c === maxVotes ? i : -1).filter(i => i !== -1);
+            const maxVotes = Math.max.apply(null, counts);
+            const winners = counts.map(function(c, i) { return c === maxVotes ? i : -1; }).filter(function(i) { return i !== -1; });
 
             const container = document.getElementById('pollResultsBars');
-            container.innerHTML = poll.options.map((opt, idx) => {
+            container.innerHTML = poll.options.map(function(opt, idx) {
                 const count = counts[idx];
                 const percent = total > 0 ? Math.round((count / total) * 100) : 0;
-                const isWinner = winners.includes(idx);
+                const isWinner = winners.indexOf(idx) !== -1;
                 const isUserChoice = idx === userVoteIndex;
 
-                return `
-                    <div class="result-bar">
-                        <div class="result-bar-label">
-                            <span>${opt} ${isUserChoice ? '\u2713' : ''}</span>
-                            <span>${count} votes (${percent}%)</span>
-                        </div>
-                        <div class="result-bar-track">
-                            <div class="result-bar-fill ${isWinner ? 'winner' : ''}" style="width: ${percent}%"></div>
-                        </div>
-                    </div>
-                `;
+                return '<div class="result-bar">' +
+                    '<div class="result-bar-label">' +
+                        '<span>' + opt + (isUserChoice ? ' \u2713' : '') + '</span>' +
+                        '<span>' + count + ' votes (' + percent + '%)</span>' +
+                    '</div>' +
+                    '<div class="result-bar-track">' +
+                        '<div class="result-bar-fill ' + (isWinner ? 'winner' : '') + '" style="width: ' + percent + '%"></div>' +
+                    '</div>' +
+                '</div>';
             }).join('');
         }
     </script>

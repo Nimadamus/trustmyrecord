@@ -250,8 +250,10 @@ class TrustMyRecordAPI {
     // ==================== PICKS ROUTES ====================
 
     async getPicks(options = {}) {
-        const { userId, sport, status, page = 1, limit = 20 } = options;
-        let url = `/picks?page=${page}&limit=${limit}`;
+        const { userId, sport, status, page, limit = 20, offset } = options;
+        // Backend uses offset, not page. Support both for compatibility.
+        const effectiveOffset = offset != null ? offset : (page ? (page - 1) * limit : 0);
+        let url = `/picks?limit=${limit}&offset=${effectiveOffset}`;
         if (userId) url += `&userId=${userId}`;
         if (sport) url += `&sport=${sport}`;
         if (status) url += `&status=${status}`;

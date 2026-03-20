@@ -931,7 +931,7 @@
         let isOwnProfile = false;
         let isFollowingProfile = false;
         let profileUserId = null;    // DB id of the profile being viewed
-        let picksPage = 1;
+        let picksOffset = 0;
         const PICKS_PER_PAGE = 20;
 
         // URL param: ?user=username  (also supports legacy ?username=)
@@ -973,8 +973,7 @@
                     return;
                 }
 
-                isOwnProfile = currentUser && currentUser.username === profileUsername;
-                updateHeaderNav();
+                isOwnProfile = currentUser && currentUser.username.toLowerCase() === profileUsername.toLowerCase();
 
                 // 3. Load the profile from backend
                 await loadProfile();
@@ -983,14 +982,6 @@
                 console.error('[Profile] Init error:', e);
                 document.getElementById('profileHeader').innerHTML =
                     `<div class="error-message"><h3>Error</h3><p>${e.message}</p></div>`;
-            }
-        }
-
-        // ======================== HEADER NAV ========================
-        function updateHeaderNav() {
-            const profileLink = document.getElementById('profileLink');
-            if (currentUser && profileLink) {
-                profileLink.href = `profile.html?user=${currentUser.username}`;
             }
         }
 
@@ -1003,42 +994,34 @@
                     err.backendDown = true;
                     throw err;
                 }
-                // Fetch profile from backend
+                // Fetch profile from backend: GET /api/users/:username
+                // Returns { user: { id, username, display_name, bio, avatar_url, location,
+                //   favorite_teams, favorite_sports, verification_status, created_at,
+                //   total_picks, wins, losses, pushes, net_units, roi, win_rate,
+                //   current_streak, best_streak, follower_count, following_count, is_following } }
                 const data = await api.getUserProfile(profileUsername);
-                // data may be { user: {...}, stats: {...} } or flat
                 profileData = data.user || data;
                 profileUserId = profileData.id;
-                const stats = data.stats || profileData.stats || {};
-
-                // Merge stats into profileData for convenience
-                profileData.stats = stats;
 
                 console.log('[Profile] Loaded profile:', profileData.username, 'id:', profileUserId);
 
-                // Check follow status
+                // The backend returns is_following directly on the user object
                 if (currentUser && !isOwnProfile) {
-                    try {
-                        const followingData = await api.getFollowing(currentUser.id);
-                        const followingList = followingData.following || followingData || [];
-                        isFollowingProfile = followingList.some(f =>
-                            (f.id || f.following_id) === profileUserId ||
-                            (f.username) === profileData.username
-                        );
-                    } catch (e) {
-                        console.warn('[Profile] Could not check follow status:', e.message);
-                    }
+                    isFollowingProfile = !!profileData.is_following;
                 }
 
-                // Render all sections
+                // Render header and stats (stats are flat on profileData from backend)
                 renderProfileHeader(profileData);
                 renderStatsGrid(profileData);
                 renderHandicappingStats(profileData);
-                renderSportBreakdown(profileData.stats);
+
+                // Load sport breakdown from dedicated endpoint
+                await loadSportBreakdown();
 
                 // Load picks for activity + picks tab
                 await loadPicks(true);
 
-                // Load followers/following counts + lists
+                // Load followers/following lists for their tabs
                 await loadFollowers();
                 await loadFollowing();
 
@@ -1076,26 +1059,48 @@
             }
         }
 
-        // ======================== PICKS ========================
-        async function loadPicks(resetPage) {
-            if (resetPage) picksPage = 1;
+        // ======================== SPORT BREAKDOWN ========================
+        async function loadSportBreakdown() {
+            const container = document.getElementById('sportBreakdown');
+            if (!container) return;
             try {
-                const data = await api.getPicks({ userId: profileUserId, page: picksPage, limit: PICKS_PER_PAGE });
-                const picks = data.picks || data || [];
-                const totalPicks = data.total || picks.length;
+                // GET /api/users/:username/stats/sports -> { sportStats: [...] }
+                const data = await api.request(`/users/${profileUsername}/stats/sports`);
+                const sportStats = data.sportStats || [];
+                renderSportBreakdown(sportStats);
+            } catch (e) {
+                console.warn('[Profile] Could not load sport breakdown:', e.message);
+                renderSportBreakdown([]);
+            }
+        }
 
-                renderPicksList(picks, resetPage);
-                renderRecentActivity(picks.slice(0, 10));
+        // ======================== PICKS ========================
+        async function loadPicks(reset) {
+            if (reset) picksOffset = 0;
+            try {
+                // Backend picks endpoint uses offset, not page
+                const data = await api.getPicks({ userId: profileUserId, limit: PICKS_PER_PAGE, offset: picksOffset });
+                const picks = data.picks || [];
+                const hasMore = data.pagination ? data.pagination.hasMore : (picks.length === PICKS_PER_PAGE);
+
+                renderPicksList(picks, reset);
+
+                // Only render recent activity on initial load
+                if (reset) {
+                    renderRecentActivity(picks.slice(0, 10));
+                }
 
                 // Show/hide load more
                 const loadMoreDiv = document.getElementById('picksLoadMore');
                 if (loadMoreDiv) {
-                    loadMoreDiv.style.display = (picksPage * PICKS_PER_PAGE < totalPicks) ? 'block' : 'none';
+                    loadMoreDiv.style.display = hasMore ? 'block' : 'none';
                 }
             } catch (e) {
                 console.warn('[Profile] Could not load picks:', e.message);
-                renderPicksList([], true);
-                renderRecentActivity([]);
+                if (reset) {
+                    renderPicksList([], true);
+                    renderRecentActivity([]);
+                }
             }
         }
 
@@ -1115,27 +1120,36 @@
             }
 
             const html = picks.map(pick => {
-                const statusClass = pick.result === 'won' || pick.status === 'won' ? 'win' :
-                                    pick.result === 'lost' || pick.status === 'lost' ? 'loss' : '';
-                const statusText = pick.result || pick.status || 'pending';
-                const date = pick.created_at || pick.locked_at || '';
+                const statusClass = pick.status === 'won' ? 'win' :
+                                    pick.status === 'lost' ? 'loss' : '';
+                const statusText = pick.status || 'pending';
+                const date = pick.locked_at || pick.created_at || '';
                 const timeAgo = date ? getTimeAgo(new Date(date)) : '';
-                const odds = pick.odds ? `(${pick.odds > 0 ? '+' : ''}${pick.odds})` : '';
+                const odds = pick.odds_snapshot ? `(${pick.odds_snapshot > 0 ? '+' : ''}${pick.odds_snapshot})` : '';
+                const line = pick.line_snapshot ? ` ${pick.line_snapshot > 0 ? '+' : ''}${pick.line_snapshot}` : '';
+                const matchup = (pick.away_team && pick.home_team) ? `${pick.away_team} @ ${pick.home_team}` : '';
+                const sportLabel = formatSportKey(pick.sport_key) || 'Pick';
+                const marketLabel = formatMarketType(pick.market_type);
+                const selectionText = pick.selection || 'N/A';
+                const units = pick.units ? `${pick.units}u` : '';
 
                 return `
                     <div class="activity-item ${statusClass}">
                         <div class="activity-icon">&#127919;</div>
                         <div class="activity-content">
                             <div class="activity-text">
-                                <strong>${pick.pick_type || pick.sport || 'Pick'}</strong> -
-                                ${pick.selection || pick.description || 'N/A'} ${odds}
+                                <strong>${sportLabel}</strong> ${marketLabel ? '(' + marketLabel + ')' : ''} -
+                                ${selectionText}${line} ${odds} ${units}
                             </div>
-                            <div class="activity-time">${timeAgo} ${statusText === 'pending' ? '(pending)' : ''}</div>
+                            <div class="activity-time">
+                                ${matchup ? matchup + ' | ' : ''}${timeAgo}
+                                ${statusText === 'pending' ? ' (pending)' : ''}
+                            </div>
                         </div>
                         ${statusText !== 'pending' ? `
                         <div class="activity-result ${statusClass}">
                             ${statusText.toUpperCase()}
-                        </div>` : ''}
+                        </div>` : '<div class="activity-result" style="background:rgba(255,255,255,0.1);color:var(--text-muted);">PENDING</div>'}
                     </div>`;
             }).join('');
 
@@ -1156,18 +1170,19 @@
             }
 
             container.innerHTML = picks.map(pick => {
-                const statusClass = pick.result === 'won' || pick.status === 'won' ? 'win' :
-                                    pick.result === 'lost' || pick.status === 'lost' ? 'loss' : '';
-                const statusText = pick.result || pick.status || 'pending';
-                const date = pick.created_at || pick.locked_at || '';
+                const statusClass = pick.status === 'won' ? 'win' :
+                                    pick.status === 'lost' ? 'loss' : '';
+                const statusText = pick.status || 'pending';
+                const date = pick.locked_at || pick.created_at || '';
                 const timeAgo = date ? getTimeAgo(new Date(date)) : '';
+                const sportLabel = formatSportKey(pick.sport_key) || 'Pick';
 
                 return `
                     <div class="activity-item ${statusClass}">
                         <div class="activity-icon">&#128202;</div>
                         <div class="activity-content">
                             <div class="activity-text">
-                                <strong>Pick</strong> - ${pick.selection || pick.description || 'N/A'} (${statusText})
+                                <strong>${sportLabel}</strong> - ${pick.selection || 'N/A'} (${statusText})
                             </div>
                             <div class="activity-time">${timeAgo}</div>
                         </div>
@@ -1216,8 +1231,8 @@
 
             container.innerHTML = users.map(user => {
                 const username = user.username || user.display_name || 'Unknown';
-                const winRate = user.win_rate || user.winRate || 0;
-                const totalPicks = user.total_picks || user.totalPicks || 0;
+                const winRate = user.win_rate != null ? user.win_rate : 0;
+                const totalPicks = user.total_picks || 0;
                 const userId = user.id || user.follower_id || user.following_id;
 
                 let actionBtn = '';
@@ -1242,12 +1257,15 @@
             const header = document.getElementById('profileHeader');
             if (!header) return;
 
-            const joinDate = new Date(profile.created_at || profile.joinedDate || Date.now())
+            const joinDate = new Date(profile.created_at || Date.now())
                 .toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
             const displayName = profile.display_name || profile.username;
             const bio = profile.bio || 'No bio yet.';
             const location = profile.location || 'Location not set';
             const avatarLetter = (profile.username || '?').charAt(0).toUpperCase();
+            const streak = profile.current_streak || 0;
+            const streakText = streak > 0 ? `${streak}W` : streak < 0 ? `${Math.abs(streak)}L` : '0';
+            const streakColor = streak > 0 ? 'var(--neon-green)' : streak < 0 ? 'var(--neon-red)' : 'var(--text-muted)';
 
             let actionButtons = '';
             if (isOwnProfile) {
@@ -1273,6 +1291,7 @@
                     <div class="profile-meta">
                         <div class="profile-meta-item"><span>&#128197;</span><span>Joined ${joinDate}</span></div>
                         <div class="profile-meta-item"><span>&#128205;</span><span>${location}</span></div>
+                        <div class="profile-meta-item"><span style="color:${streakColor}">&#128293;</span><span style="color:${streakColor}">Streak: ${streakText}</span></div>
                     </div>
                     <div class="profile-actions">${actionButtons}</div>
                 </div>`;
@@ -1281,15 +1300,19 @@
         function renderStatsGrid(profile) {
             const grid = document.getElementById('statsGrid');
             if (!grid) return;
-            const s = profile.stats || {};
-            const wins = s.wins || s.total_wins || 0;
-            const losses = s.losses || s.total_losses || 0;
-            const pushes = s.pushes || s.total_pushes || 0;
-            const total = s.totalPicks || s.total_picks || (wins + losses + pushes);
-            const winRate = s.winRate || s.win_rate || (total > 0 ? ((wins / total) * 100).toFixed(1) : 0);
-            const roi = s.roi || 0;
-            const followerCount = s.followers_count || s.followersCount || 0;
-            const followingCount = s.following_count || s.followingCount || 0;
+
+            // Stats are flat on the profile object from backend
+            const wins = Number(profile.wins) || 0;
+            const losses = Number(profile.losses) || 0;
+            const pushes = Number(profile.pushes) || 0;
+            const total = Number(profile.total_picks) || (wins + losses + pushes);
+            const winRate = profile.win_rate != null ? Number(profile.win_rate).toFixed(1) : (total > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0');
+            const roi = profile.roi != null ? Number(profile.roi).toFixed(1) : '0.0';
+            const netUnits = profile.net_units != null ? Number(profile.net_units).toFixed(2) : '0.00';
+            const streak = profile.current_streak || 0;
+            const streakText = streak > 0 ? `${streak}W` : streak < 0 ? `${Math.abs(streak)}L` : '0';
+            const followerCount = Number(profile.follower_count) || 0;
+            const followingCount = Number(profile.following_count) || 0;
 
             grid.innerHTML = `
                 <div class="stat-card">
@@ -1309,8 +1332,18 @@
                 </div>
                 <div class="stat-card" style="--card-color: var(--neon-green);">
                     <div class="stat-icon">&#128176;</div>
+                    <div class="stat-value">${netUnits >= 0 ? '+' : ''}${netUnits}</div>
+                    <div class="stat-label">Net Units</div>
+                </div>
+                <div class="stat-card" style="--card-color: var(--neon-green);">
+                    <div class="stat-icon">&#9989;</div>
                     <div class="stat-value">${wins}-${losses}-${pushes}</div>
                     <div class="stat-label">W-L-P</div>
+                </div>
+                <div class="stat-card cyan">
+                    <div class="stat-icon">&#128293;</div>
+                    <div class="stat-value">${streakText}</div>
+                    <div class="stat-label">Streak</div>
                 </div>
                 <div class="stat-card purple">
                     <div class="stat-icon">&#128101;</div>
@@ -1327,11 +1360,13 @@
         function renderHandicappingStats(profile) {
             const container = document.getElementById('handicappingStats');
             if (!container) return;
-            const s = profile.stats || {};
-            const wins = s.wins || s.total_wins || 0;
-            const losses = s.losses || s.total_losses || 0;
-            const pushes = s.pushes || s.total_pushes || 0;
-            const roi = s.roi || 0;
+
+            // Stats are flat on profile object
+            const wins = Number(profile.wins) || 0;
+            const losses = Number(profile.losses) || 0;
+            const pushes = Number(profile.pushes) || 0;
+            const roi = profile.roi != null ? Number(profile.roi).toFixed(1) : '0.0';
+            const netUnits = profile.net_units != null ? Number(profile.net_units).toFixed(2) : '0.00';
 
             container.innerHTML = `
                 <div class="handicap-stat">
@@ -1349,18 +1384,18 @@
                 <div class="handicap-stat">
                     <div class="handicap-stat-value" style="color: var(--neon-gold);">${roi}%</div>
                     <div class="handicap-stat-label">ROI</div>
+                </div>
+                <div class="handicap-stat">
+                    <div class="handicap-stat-value" style="color: var(--neon-cyan);">${netUnits >= 0 ? '+' : ''}${netUnits}</div>
+                    <div class="handicap-stat-label">Net Units</div>
                 </div>`;
         }
 
-        function renderSportBreakdown(stats) {
+        function renderSportBreakdown(sportStats) {
             const container = document.getElementById('sportBreakdown');
             if (!container) return;
 
-            // stats.by_sport might be an object or array from the backend
-            const bySport = stats.by_sport || stats.bySport || {};
-            const sportEntries = Array.isArray(bySport) ? bySport : Object.keys(bySport);
-
-            if (!sportEntries || sportEntries.length === 0) {
+            if (!sportStats || sportStats.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">&#127944;</div>
@@ -1369,29 +1404,32 @@
                 return;
             }
 
-            const sportIcons = { NFL: '&#127944;', NBA: '&#127936;', MLB: '&#9918;', NHL: '&#127954;', Soccer: '&#9917;', MMA: '&#129354;' };
+            // Map sport_key values to display names and icons
+            const sportMeta = {
+                'americanfootball_nfl': { name: 'NFL', icon: '&#127944;' },
+                'basketball_nba': { name: 'NBA', icon: '&#127936;' },
+                'baseball_mlb': { name: 'MLB', icon: '&#9918;' },
+                'icehockey_nhl': { name: 'NHL', icon: '&#127954;' },
+                'soccer_epl': { name: 'Premier League', icon: '&#9917;' },
+                'basketball_ncaab': { name: 'NCAAB', icon: '&#127936;' },
+                'americanfootball_ncaaf': { name: 'NCAAF', icon: '&#127944;' },
+            };
 
-            // Handle array of objects or keyed object
-            const items = Array.isArray(bySport)
-                ? bySport
-                : Object.entries(bySport).map(([name, data]) => ({ sport: name, ...(typeof data === 'object' ? data : {}) }));
-
-            container.innerHTML = items.map(item => {
-                const name = item.sport || item.name || 'Other';
-                const icon = sportIcons[name] || '&#127942;';
-                const w = item.wins || 0;
-                const l = item.losses || 0;
-                const p = item.pushes || 0;
-                const t = item.total || (w + l + p);
-                const denom = t - p;
-                const wr = denom > 0 ? ((w / denom) * 100).toFixed(1) : 0;
+            container.innerHTML = sportStats.map(item => {
+                const meta = sportMeta[item.sport_key] || { name: item.sport_key, icon: '&#127942;' };
+                const w = Number(item.wins) || 0;
+                const l = Number(item.losses) || 0;
+                const p = Number(item.pushes) || 0;
+                const t = Number(item.total_picks) || (w + l + p);
+                const wr = item.win_rate != null ? Number(item.win_rate).toFixed(1) : (w + l > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0');
+                const netU = item.net_units != null ? Number(item.net_units).toFixed(2) : '0.00';
 
                 return `
                     <div class="sport-item">
-                        <div class="sport-icon">${icon}</div>
+                        <div class="sport-icon">${meta.icon}</div>
                         <div class="sport-info">
-                            <div class="sport-name">${name}</div>
-                            <div class="sport-record">${w}-${l}-${p} (${t} picks)</div>
+                            <div class="sport-name">${meta.name}</div>
+                            <div class="sport-record">${w}-${l}-${p} (${t} picks) | ${netU >= 0 ? '+' : ''}${netU}u</div>
                         </div>
                         <div class="sport-winrate">${wr}%</div>
                     </div>`;
@@ -1522,12 +1560,31 @@
 
         function getTimeAgo(date) {
             const seconds = Math.floor((new Date() - date) / 1000);
+            if (isNaN(seconds) || seconds < 0) return '';
             const intervals = { year: 31536000, month: 2592000, week: 604800, day: 86400, hour: 3600, minute: 60 };
             for (const [unit, secs] of Object.entries(intervals)) {
                 const interval = Math.floor(seconds / secs);
                 if (interval >= 1) return `${interval} ${unit}${interval > 1 ? 's' : ''} ago`;
             }
             return 'Just now';
+        }
+
+        function formatSportKey(sportKey) {
+            const map = {
+                'americanfootball_nfl': 'NFL',
+                'basketball_nba': 'NBA',
+                'baseball_mlb': 'MLB',
+                'icehockey_nhl': 'NHL',
+                'soccer_epl': 'EPL',
+                'basketball_ncaab': 'NCAAB',
+                'americanfootball_ncaaf': 'NCAAF',
+            };
+            return map[sportKey] || sportKey || 'Pick';
+        }
+
+        function formatMarketType(marketType) {
+            const map = { h2h: 'Moneyline', spreads: 'Spread', totals: 'Total' };
+            return map[marketType] || marketType || '';
         }
 
         function challengeUser(username) {
@@ -1554,7 +1611,7 @@
             const loadMoreBtn = document.getElementById('loadMorePicksBtn');
             if (loadMoreBtn) {
                 loadMoreBtn.addEventListener('click', () => {
-                    picksPage++;
+                    picksOffset += PICKS_PER_PAGE;
                     loadPicks(false);
                 });
             }
