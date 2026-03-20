@@ -681,13 +681,34 @@
     window.setBetType = function(type, silent) {
         window.TMR.selectedBetType = type;
         document.querySelectorAll('#betTypeSelector .bt-toggle-btn').forEach(function(btn) {
-            btn.classList.toggle('active', btn.dataset.type === type);
+            var isActive = btn.dataset.type === type;
+            btn.classList.toggle('active', isActive);
+            if (isActive) {
+                btn.style.background = 'var(--gradient-gold)';
+                btn.style.color = 'var(--dark-bg)';
+            } else {
+                btn.style.background = 'var(--card-bg)';
+                btn.style.color = 'var(--text-primary)';
+            }
         });
         var lineGroup = document.getElementById('lineInputGroup');
         if (lineGroup) {
             lineGroup.style.display = (type === 'ml') ? 'none' : 'block';
         }
-        if (!silent) window.updatePickSummary();
+        // Update the team selection when switching bet types
+        var pick = window.TMR.currentSelectedPick;
+        if (pick && !silent) {
+            // For over/under, set team to Over/Under
+            if (type === 'over') pick.team = 'Over';
+            else if (type === 'under') pick.team = 'Under';
+            else if (type === 'ml' || type === 'spread') {
+                // Keep original team selection if it was a team name
+                if (pick.team === 'Over' || pick.team === 'Under') {
+                    pick.team = pick.homeTeam || '';
+                }
+            }
+            window.updatePickSummary();
+        }
     };
 
     // ============ UPDATE PICK SUMMARY (live as user edits form) ============
@@ -700,6 +721,11 @@
         var line = lineInput ? lineInput.value : '';
         var odds = oddsInput ? oddsInput.value : '';
 
+        // Update summary game
+        var summaryGame = document.getElementById('summaryGame');
+        if (summaryGame) summaryGame.textContent = (pick.awayTeam || '') + ' @ ' + (pick.homeTeam || '');
+
+        // Update summary pick
         var summaryPick = document.getElementById('summaryPick');
         var displayText = pick.team || '';
         if (betType === 'spread' && line) {
@@ -712,11 +738,20 @@
         } else if (betType === 'under') {
             displayText = 'Under ' + (line || '?');
         }
-        if (odds && odds !== '') {
-            var o = parseInt(odds);
-            displayText += ' (' + (o > 0 ? '+' : '') + odds + ')';
-        }
         if (summaryPick) summaryPick.textContent = displayText;
+
+        // Update summary odds
+        var summaryOdds = document.getElementById('summaryOdds');
+        if (summaryOdds) {
+            if (odds && odds !== '' && odds !== 'Pick') {
+                var o = parseInt(odds);
+                summaryOdds.textContent = (o > 0 ? '+' : '') + odds;
+                summaryOdds.style.color = o > 0 ? 'var(--sb-odds-positive, #00c853)' : 'var(--text-primary)';
+            } else {
+                summaryOdds.textContent = 'Enter odds';
+                summaryOdds.style.color = 'var(--text-muted)';
+            }
+        }
     };
 
     window.selectGameBet = function(gameIndex, betType, team, line, odds, awayTeam, homeTeam) {
@@ -746,6 +781,12 @@
             gameId: gameId,
             game: fullGame
         };
+
+        // Update bet type toggle labels based on sport
+        var sport = window.TMR.selectedSport || '';
+        var spreadLabel = (sport === 'NHL') ? 'Puck Line' : (sport === 'MLB' ? 'Run Line' : 'Spread');
+        var spreadBtn = document.getElementById('btToggleSpread');
+        if (spreadBtn) spreadBtn.textContent = spreadLabel;
 
         // Update UI to show selection
         document.querySelectorAll('.bet-pick-btn, .total-btn, .odds-btn').forEach(function(btn) {
@@ -7976,34 +8017,42 @@
 
         <!-- Step 3: Pick Details (Confirmation) -->
         <div id="pickDetails" class="pick-step">
-            <div class="back-button" onclick="goBackToGames()">← Back to Games</div>
+            <div class="back-button" onclick="goBackToGames()">&#8592; Back to Games</div>
             <h3>Confirm Your Pick</h3>
+
+            <!-- Bet Type Toggle -->
+            <div id="betTypeSelector" style="display: flex; gap: 0; margin-bottom: 20px; border-radius: 10px; overflow: hidden; border: 2px solid var(--glass-border);">
+                <button type="button" class="bt-toggle-btn active" data-type="spread" onclick="window.setBetType('spread')" style="flex: 1; padding: 12px 16px; background: var(--gradient-gold); border: none; color: var(--dark-bg); font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s;" id="btToggleSpread">Spread</button>
+                <button type="button" class="bt-toggle-btn" data-type="ml" onclick="window.setBetType('ml')" style="flex: 1; padding: 12px 16px; background: var(--card-bg); border: none; border-left: 1px solid var(--glass-border); color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s;" id="btToggleML">Moneyline</button>
+                <button type="button" class="bt-toggle-btn" data-type="over" onclick="window.setBetType('over')" style="flex: 1; padding: 12px 16px; background: var(--card-bg); border: none; border-left: 1px solid var(--glass-border); color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s;" id="btToggleOver">Over</button>
+                <button type="button" class="bt-toggle-btn" data-type="under" onclick="window.setBetType('under')" style="flex: 1; padding: 12px 16px; background: var(--card-bg); border: none; border-left: 1px solid var(--glass-border); color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s;" id="btToggleUnder">Under</button>
+            </div>
 
             <div class="pick-summary-card">
                 <div class="summary-section">
                     <div class="summary-label">Game</div>
-                    <div class="summary-value" id="summaryGame">Lakers @ Celtics</div>
+                    <div class="summary-value" id="summaryGame">-</div>
                 </div>
                 <div class="summary-section">
                     <div class="summary-label">Your Pick</div>
-                    <div class="summary-value" id="summaryPick">Lakers +5.5</div>
+                    <div class="summary-value" id="summaryPick">-</div>
                 </div>
                 <div class="summary-section">
                     <div class="summary-label">Odds</div>
-                    <div class="summary-value" id="summaryOdds">-110</div>
+                    <div class="summary-value" id="summaryOdds">-</div>
                 </div>
             </div>
 
             <div class="pick-options">
                 <div class="option-group" id="lineInputGroup" style="display: none;">
                     <label>Line / Spread</label>
-                    <input type="text" id="pickLineInput" placeholder="e.g. -3.5, 220.5" style="width: 100%; padding: 12px 14px; background: var(--card-bg); border: 2px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 16px; font-family: 'Exo 2', sans-serif;" />
+                    <input type="text" id="pickLineInput" placeholder="e.g. -3.5, 220.5" oninput="window.updatePickSummary()" style="width: 100%; padding: 12px 14px; background: var(--card-bg); border: 2px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 16px; font-family: 'Exo 2', sans-serif;" />
                     <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px;">Enter the line from your sportsbook</p>
                 </div>
 
                 <div class="option-group">
                     <label>Odds</label>
-                    <input type="text" id="pickOddsInput" placeholder="e.g. -110, +150" value="-110" style="width: 100%; padding: 12px 14px; background: var(--card-bg); border: 2px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 16px; font-family: 'Exo 2', sans-serif;" />
+                    <input type="text" id="pickOddsInput" placeholder="e.g. -110, +150" oninput="window.updatePickSummary()" style="width: 100%; padding: 12px 14px; background: var(--card-bg); border: 2px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 16px; font-family: 'Exo 2', sans-serif;" />
                     <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px;">Enter American odds from your sportsbook</p>
                 </div>
 
@@ -8159,6 +8208,20 @@
 .sport-games {
     font-size: 0.9rem;
     color: var(--text-secondary);
+}
+
+/* Bet Type Toggle in Confirmation Step */
+#betTypeSelector {
+    background: var(--card-bg);
+}
+#betTypeSelector .bt-toggle-btn {
+    transition: all 0.2s ease;
+    font-family: 'Exo 2', 'Orbitron', sans-serif;
+    letter-spacing: 0.5px;
+}
+#betTypeSelector .bt-toggle-btn:hover:not(.active) {
+    background: rgba(0, 255, 255, 0.1) !important;
+    color: var(--neon-cyan) !important;
 }
 
 /* Bet Type Buttons */
@@ -17579,16 +17642,32 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     async function updateGameCounts() {
-        // Update the "X games today" text on sport cards
-        const sportCards = document.querySelectorAll('.sport-card');
-        sportCards.forEach(card => {
-            const sport = card.getAttribute('data-sport');
-            const gamesSpan = card.querySelector('.sport-games');
-            if (gamesSpan && sport) {
-                // For now use placeholder - will update with real API data
-                const counts = { 'NFL': 14, 'NBA': 12, 'NHL': 10, 'MLB': 15, 'NCAAF': 25, 'NCAAB': 40 };
-                gamesSpan.textContent = (counts[sport] || 0) + ' games available';
-            }
+        // Fetch real game counts from ESPN for each sport
+        var sportMap = window.TMR.sportKeyMap || {};
+        var espnPaths = window.TMR.espnPaths || {};
+        var sportCards = document.querySelectorAll('.sport-card');
+        sportCards.forEach(function(card) {
+            var sport = card.getAttribute('data-sport');
+            var gamesSpan = card.querySelector('.sport-games');
+            if (!gamesSpan || !sport) return;
+            gamesSpan.textContent = 'Checking...';
+            var sportKey = sportMap[sport];
+            var espnPath = espnPaths[sportKey];
+            if (!espnPath) { gamesSpan.textContent = 'No data'; return; }
+            var url = 'https://site.api.espn.com/apis/site/v2/sports/' + espnPath + '/scoreboard';
+            fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+                var events = data.events || [];
+                if (events.length > 0) {
+                    gamesSpan.textContent = events.length + ' game' + (events.length !== 1 ? 's' : '') + ' today';
+                    gamesSpan.style.color = 'var(--neon-cyan)';
+                } else {
+                    gamesSpan.textContent = 'No games today';
+                    gamesSpan.style.color = 'var(--text-muted)';
+                }
+            }).catch(function() {
+                gamesSpan.textContent = 'Check schedule';
+                gamesSpan.style.color = 'var(--text-muted)';
+            });
         });
     }
 
