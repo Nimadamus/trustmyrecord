@@ -4,29 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sports Trivia - TrustMyRecord</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #0f172a;
-            --bg-card: rgba(15, 23, 42, 0.8);
-            --bg-card-solid: #1e293b;
-            --glass-border: rgba(14, 165, 233, 0.15);
-            --primary: #0ea5e9;
-            --primary-dim: rgba(14, 165, 233, 0.15);
-            --primary-glow: rgba(14, 165, 233, 0.4);
-            --warning: #fbbf24;
-            --success: #00c853;
-            --danger: #ff4444;
-            --text-primary: #e2e8f0;
-            --text-muted: #64748b;
-            --text-dim: #475569;
+            --neon-cyan: #00ffff;
+            --neon-purple: #ff00ff;
+            --neon-green: #39ff14;
+            --neon-gold: #ffd700;
+            --neon-red: #ff073a;
+            --dark-bg: #0a0a0f;
+            --darker-bg: #050508;
+            --card-bg: rgba(20, 20, 35, 0.8);
+            --glass-border: rgba(0, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0c0;
+            --text-muted: #808090;
+            /* Aliases for legacy references */
+            --bg-primary: #0a0a0f;
+            --bg-card: rgba(20, 20, 35, 0.8);
+            --bg-card-solid: rgba(20, 20, 35, 0.95);
+            --primary: #00ffff;
+            --primary-dim: rgba(0, 255, 255, 0.15);
+            --primary-glow: rgba(0, 255, 255, 0.4);
+            --warning: #ffd700;
+            --success: #39ff14;
+            --danger: #ff073a;
+            --text-dim: #606070;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-primary);
+            font-family: 'Exo 2', sans-serif;
+            background: var(--dark-bg);
+            background-image:
+                radial-gradient(circle at 25% 75%, rgba(0, 255, 255, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 75% 25%, rgba(255, 215, 0, 0.06) 0%, transparent 50%);
             color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
@@ -38,64 +53,60 @@
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             background:
-                radial-gradient(ellipse at 20% 20%, rgba(14, 165, 233, 0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.04) 0%, transparent 50%);
+                radial-gradient(ellipse at 20% 20%, rgba(0, 255, 255, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(255, 0, 255, 0.04) 0%, transparent 50%);
             pointer-events: none;
             z-index: 0;
         }
 
-        /* ===== NAV BAR ===== */
-        .navbar {
+        /* ===== HEADER ===== */
+        header {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 15px 0;
             position: sticky;
             top: 0;
             z-index: 1000;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--glass-border);
-            padding: 0 24px;
-            height: 60px;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            color: var(--text-primary);
-            font-weight: 700;
-            font-size: 18px;
-        }
-        .navbar-brand .logo-icon {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, var(--primary), #6366f1);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
             font-weight: 900;
-            color: #000;
-        }
-        .navbar-links {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .navbar-links a {
-            color: var(--text-muted);
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             text-decoration: none;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
         }
-        .navbar-links a:hover, .navbar-links a.active {
-            color: var(--primary);
-            background: var(--primary-dim);
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--neon-cyan);
+        }
+
+        .nav-links a.active {
+            color: var(--neon-cyan);
         }
 
         /* ===== MAIN CONTAINER ===== */
@@ -116,7 +127,7 @@
             font-family: 'Orbitron', monospace;
             font-size: 2.4rem;
             font-weight: 800;
-            background: linear-gradient(135deg, var(--primary), #a78bfa);
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 10px;
@@ -210,7 +221,7 @@
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 3px;
-            background: linear-gradient(90deg, var(--primary), #a78bfa);
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
             opacity: 0;
             transition: opacity 0.3s;
         }
@@ -319,7 +330,7 @@
         }
         .quiz-progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--primary), #a78bfa);
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
             border-radius: 4px;
             transition: width 0.3s ease;
         }
@@ -420,7 +431,7 @@
             width: 100%;
             margin-top: 20px;
             padding: 14px;
-            background: linear-gradient(135deg, var(--primary), #0284c7);
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
             color: #000;
             border: none;
             border-radius: 12px;
@@ -479,7 +490,7 @@
             padding: 14px;
         }
         .results-detail-box .rdl { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-        .results-detail-box .rdv { font-size: 20px; font-weight: 700; color: var(--warning); }
+        .results-detail-box .rdv { font-size: 20px; font-weight: 700; color: var(--neon-gold); }
         .cheat-penalty-box {
             background: rgba(255, 68, 68, 0.08);
             border: 1px solid rgba(255, 68, 68, 0.25);
@@ -501,7 +512,7 @@
             transition: all 0.2s;
         }
         .btn-primary-action {
-            background: linear-gradient(135deg, var(--primary), #0284c7);
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
             color: #000;
         }
         .btn-secondary-action {
@@ -631,7 +642,7 @@
         .form-submit-btn {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, var(--primary), #0284c7);
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
             color: #000;
             border: none;
             border-radius: 12px;
@@ -685,7 +696,7 @@
             .quiz-container { border-radius: 16px; }
             .quiz-body { padding: 20px 16px; }
             .quiz-question-text { font-size: 17px; }
-            .navbar-links a { padding: 8px 10px; font-size: 13px; }
+            .nav-links a { padding: 8px 10px; font-size: 13px; }
             .results-detail-grid { grid-template-columns: 1fr; }
         }
     </style>

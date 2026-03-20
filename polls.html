@@ -4,108 +4,95 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prediction Polls - TrustMyRecord</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-card: rgba(30, 41, 59, 0.8);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #6c7380;
-            --primary: #0ea5e9;
-            --primary-glow: rgba(14, 165, 233, 0.3);
-            --accent-purple: #8b5cf6;
-            --accent-green: #00c853;
-            --accent-red: #ff4444;
+            --neon-cyan: #00ffff;
+            --neon-purple: #ff00ff;
+            --neon-green: #39ff14;
+            --neon-gold: #ffd700;
+            --neon-red: #ff073a;
+            --dark-bg: #0a0a0f;
+            --darker-bg: #050508;
+            --card-bg: rgba(20, 20, 35, 0.8);
+            --glass-border: rgba(0, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0c0;
+            --text-muted: #808090;
+            /* Aliases for legacy references */
+            --bg-primary: #0a0a0f;
+            --bg-secondary: rgba(20, 20, 35, 0.95);
+            --bg-card: rgba(20, 20, 35, 0.8);
+            --primary: #00ffff;
+            --primary-glow: rgba(0, 255, 255, 0.3);
+            --accent-purple: #ff00ff;
+            --accent-green: #39ff14;
+            --accent-red: #ff073a;
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-primary);
+            font-family: 'Exo 2', sans-serif;
+            background: var(--dark-bg);
+            background-image:
+                radial-gradient(circle at 25% 75%, rgba(0, 255, 255, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 75% 25%, rgba(255, 215, 0, 0.06) 0%, transparent 50%);
             color: var(--text-primary);
             min-height: 100vh;
             line-height: 1.6;
         }
 
-        /* Nav Bar */
-        .nav-bar {
-            background: rgba(15, 23, 42, 0.95);
+        /* Header */
+        header {
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--glass-border);
-            padding: 0 24px;
+            padding: 15px 0;
             position: sticky;
             top: 0;
             z-index: 1000;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            height: 64px;
         }
 
-        .nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             text-decoration: none;
-            color: var(--text-primary);
-            font-weight: 800;
-            font-size: 1.15rem;
-        }
-
-        .nav-brand-icon {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, var(--primary), var(--accent-purple));
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
         }
 
         .nav-links {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            gap: 20px;
         }
 
         .nav-links a {
             color: var(--text-secondary);
             text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 0.9rem;
             font-weight: 500;
-            transition: all 0.2s;
+            transition: color 0.3s;
         }
 
         .nav-links a:hover {
-            color: var(--text-primary);
-            background: rgba(14, 165, 233, 0.1);
+            color: var(--neon-cyan);
         }
 
         .nav-links a.active {
-            color: var(--primary);
-            background: rgba(14, 165, 233, 0.15);
-        }
-
-        .nav-user-status {
-            font-size: 0.82rem;
-            color: var(--text-muted);
-            padding: 6px 14px;
-            border-radius: 20px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid var(--glass-border);
-        }
-
-        .nav-user-status.logged-in {
-            color: var(--accent-green);
-            border-color: rgba(0, 200, 83, 0.3);
-            background: rgba(0, 200, 83, 0.08);
+            color: var(--neon-cyan);
         }
 
         /* Page Container */
@@ -122,10 +109,11 @@
         }
 
         .page-header h1 {
+            font-family: 'Orbitron', sans-serif;
             font-size: 2.2rem;
             font-weight: 800;
             margin-bottom: 8px;
-            background: linear-gradient(135deg, var(--primary), var(--accent-purple));
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -154,9 +142,10 @@
         }
 
         .stat-value {
+            font-family: 'Orbitron', sans-serif;
             font-size: 1.8rem;
             font-weight: 800;
-            color: var(--primary);
+            color: var(--neon-cyan);
             line-height: 1.2;
         }
 
@@ -200,21 +189,21 @@
         }
 
         .filter-btn:hover {
-            background: rgba(14, 165, 233, 0.1);
-            border-color: var(--primary);
-            color: var(--primary);
+            background: rgba(0, 255, 255, 0.1);
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
         }
 
         .filter-btn.active {
-            background: rgba(14, 165, 233, 0.2);
-            border-color: var(--primary);
-            color: var(--primary);
+            background: rgba(0, 255, 255, 0.2);
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
         }
 
         /* Create Poll Button */
         .create-poll-btn {
             padding: 10px 24px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
             color: white;
             border: none;
             border-radius: 10px;
@@ -230,7 +219,7 @@
 
         .create-poll-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 30px rgba(0, 255, 255, 0.4);
         }
 
         /* Polls Grid */
@@ -252,8 +241,8 @@
         }
 
         .poll-card:hover {
-            border-color: rgba(14, 165, 233, 0.3);
-            box-shadow: 0 8px 40px rgba(14, 165, 233, 0.08);
+            border-color: rgba(0, 255, 255, 0.3);
+            box-shadow: 0 8px 40px rgba(0, 255, 255, 0.08);
             transform: translateY(-2px);
         }
 
@@ -275,8 +264,8 @@
         }
 
         .poll-category-pill {
-            background: rgba(102, 126, 234, 0.2);
-            color: #667eea;
+            background: rgba(0, 255, 255, 0.2);
+            color: var(--neon-cyan);
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.75rem;
@@ -328,8 +317,8 @@
         }
 
         .vote-btn:hover {
-            background: rgba(102, 126, 234, 0.15);
-            border-color: #667eea;
+            background: rgba(0, 255, 255, 0.15);
+            border-color: var(--neon-cyan);
         }
 
         /* Result Bars */
@@ -361,7 +350,7 @@
         }
 
         .result-bar-fill.normal {
-            background: rgba(102, 126, 234, 0.1);
+            background: rgba(0, 255, 255, 0.1);
         }
 
         .result-bar-content {
@@ -459,7 +448,7 @@
 
         .empty-state button {
             padding: 12px 28px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
             color: white;
             border: none;
             border-radius: 10px;
@@ -570,7 +559,7 @@
         .submit-btn {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
             color: white;
             border: none;
             border-radius: 10px;
@@ -585,7 +574,7 @@
 
         .submit-btn:hover {
             transform: translateY(-1px);
-            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 30px rgba(0, 255, 255, 0.4);
         }
 
         /* Toast notification */
@@ -621,8 +610,9 @@
         }
 
         .toast.info {
-            background: rgba(14, 165, 233, 0.9);
-            border: 1px solid rgba(14, 165, 233, 0.5);
+            background: rgba(0, 255, 255, 0.9);
+            border: 1px solid rgba(0, 255, 255, 0.5);
+            color: #000;
         }
 
         /* Responsive */
@@ -725,7 +715,7 @@
                 <button class="filter-btn" data-cat="soccer" onclick="filterPolls('soccer', this)">&#x26BD; Soccer</button>
             </div>
             <div style="display: flex; gap: 10px;">
-                <button class="create-poll-btn" onclick="openLeaderboardModal()" style="background: linear-gradient(135deg, #0ea5e9, #06b6d4);">
+                <button class="create-poll-btn" onclick="openLeaderboardModal()" style="background: linear-gradient(135deg, var(--neon-gold), var(--neon-cyan));">
                     <span>&#x1F3C6;</span> Leaderboard
                 </button>
                 <button class="create-poll-btn" onclick="openCreatePollModal()">
@@ -803,7 +793,7 @@
                 <div id="pollCommentsList" style="max-height: 260px; overflow-y: auto; margin-bottom: 14px;"></div>
                 <form id="addCommentForm" onsubmit="submitComment(event)" style="display: flex; gap: 8px;">
                     <input type="text" id="commentInput" placeholder="Add a comment..." style="flex:1; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-primary); font-family: inherit; font-size: 0.9rem;">
-                    <button type="submit" style="padding: 10px 18px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: inherit; font-size: 0.85rem;">Post</button>
+                    <button type="submit" style="padding: 10px 18px; background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple)); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: inherit; font-size: 0.85rem;">Post</button>
                 </form>
             </div>
         </div>
