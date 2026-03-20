@@ -7995,6 +7995,18 @@
             </div>
 
             <div class="pick-options">
+                <div class="option-group" id="lineInputGroup" style="display: none;">
+                    <label>Line / Spread</label>
+                    <input type="text" id="pickLineInput" placeholder="e.g. -3.5, 220.5" style="width: 100%; padding: 12px 14px; background: var(--card-bg); border: 2px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 16px; font-family: 'Exo 2', sans-serif;" />
+                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px;">Enter the line from your sportsbook</p>
+                </div>
+
+                <div class="option-group">
+                    <label>Odds</label>
+                    <input type="text" id="pickOddsInput" placeholder="e.g. -110, +150" value="-110" style="width: 100%; padding: 12px 14px; background: var(--card-bg); border: 2px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 16px; font-family: 'Exo 2', sans-serif;" />
+                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px;">Enter American odds from your sportsbook</p>
+                </div>
+
                 <div class="option-group">
                     <label>Units</label>
                     <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
@@ -8037,11 +8049,9 @@
         <div id="picksList" class="pick-step">
             <div class="back-button" onclick="window.showPickStep('sportSelection')">&#8592; Back to Sports</div>
             <h3>Your Picks</h3>
-            <div style="display: flex; gap: 10px; margin: 15px 0; align-items: center; flex-wrap: wrap;">
-                <button onclick="window.autoGradeAll()" style="background: linear-gradient(135deg, #00c853, #009624); color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer;">&#9889; Auto-Grade Pending</button>
-                <span id="gradeStatusMsg" style="color: var(--text-muted); font-size: 14px;"></span>
+            <div style="margin: 15px 0;">
+                <p style="color: var(--text-muted); font-size: 14px;">Picks are graded automatically by the server every 15 minutes after games complete.</p>
             </div>
-            <div id="gradingLogBox" style="background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 8px; padding: 15px; margin: 10px 0; font-family: monospace; font-size: 13px; color: #0f0; max-height: 200px; overflow-y: auto; display: none;"></div>
             <div id="picksStatsBar" style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;"></div>
             <div id="picksListContainer"></div>
         </div>
@@ -17146,6 +17156,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Update summary
         document.getElementById('summaryGame').textContent = selectedGame;
+
+        // Show/hide line input based on bet type
+        const lineGroup = document.getElementById('lineInputGroup');
+        const lineInput = document.getElementById('pickLineInput');
+        const oddsInput = document.getElementById('pickOddsInput');
+        if (lineGroup) {
+            if (selectedBetType === 'spread' || selectedBetType === 'over' || selectedBetType === 'under' || selectedBetType === 'total') {
+                lineGroup.style.display = 'block';
+            } else {
+                lineGroup.style.display = 'none';
+            }
+        }
+
+        // Auto-populate odds/line from game data if available
+        if (game.odds) {
+            if (selectedBetType === 'spread' && game.odds.spread) {
+                if (lineInput) lineInput.value = game.odds.spread.home.point || '';
+                if (oddsInput) oddsInput.value = game.odds.spread.home.price || '-110';
+            } else if ((selectedBetType === 'ml' || selectedBetType === 'moneyline') && game.odds.moneyline) {
+                if (oddsInput) oddsInput.value = game.odds.moneyline.home || '-110';
+            } else if ((selectedBetType === 'over' || selectedBetType === 'total') && game.odds.totals) {
+                if (lineInput) lineInput.value = game.odds.totals.over.point || '';
+                if (oddsInput) oddsInput.value = game.odds.totals.over.price || '-110';
+            } else if (selectedBetType === 'under' && game.odds.totals) {
+                if (lineInput) lineInput.value = game.odds.totals.under.point || '';
+                if (oddsInput) oddsInput.value = game.odds.totals.under.price || '-110';
+            }
+        }
 
         // Auto-populate pick based on bet type
         updatePickSummary(game);
