@@ -9,15 +9,13 @@ const CONFIG = {
     },
 
     // API Configuration
-    // The frontend will try these URLs in order until one responds
+    // The frontend tries these URLs in order until one responds
     api: {
-        // Production backend URL (update after deploying to Render/Railway)
         baseUrl: "https://trustmyrecord-api.onrender.com/api",
-        // Fallback URLs to try if primary is down
         fallbackUrls: [
             "http://localhost:3000/api",
         ],
-        timeout: 8000
+        timeout: 5000
     },
 
     // Feature flags
