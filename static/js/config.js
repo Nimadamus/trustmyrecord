@@ -11,8 +11,9 @@ const CONFIG = {
     // API Configuration
     // The frontend tries these URLs in order until one responds
     api: {
-        baseUrl: "https://trustmyrecord-api.onrender.com/api",
+        baseUrl: "https://trustmyrecord-api.loca.lt/api",
         fallbackUrls: [
+            "https://trustmyrecord-api.onrender.com/api",
             "http://localhost:3000/api",
         ],
         timeout: 5000

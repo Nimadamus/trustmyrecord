@@ -19,12 +19,24 @@ class TrustMyRecordAPI {
         const urls = [this.baseUrl, ...(CONFIG?.api?.fallbackUrls || [])];
         for (const url of urls) {
             try {
-                const res = await fetch(url + '/health', { signal: AbortSignal.timeout(CONFIG?.api?.timeout || 5000) });
+                const headers = {};
+                // localtunnel requires bypass header to avoid interstitial page
+                if (url.includes('loca.lt')) {
+                    headers['bypass-tunnel-reminder'] = 'true';
+                }
+                const res = await fetch(url + '/health', {
+                    signal: AbortSignal.timeout(CONFIG?.api?.timeout || 5000),
+                    headers
+                });
                 if (res.ok) {
-                    this.baseUrl = url;
-                    this.backendAvailable = true;
-                    console.log('[TMR API] Backend detected at:', url);
-                    return;
+                    const data = await res.json().catch(() => null);
+                    if (data && data.status === 'ok') {
+                        this.baseUrl = url;
+                        this.backendAvailable = true;
+                        this.isLocaltunnel = url.includes('loca.lt');
+                        console.log('[TMR API] Backend detected at:', url);
+                        return;
+                    }
                 }
             } catch (e) { /* try next */ }
         }
@@ -58,6 +70,10 @@ class TrustMyRecordAPI {
         };
         if (this.token) {
             headers['Authorization'] = `Bearer ${this.token}`;
+        }
+        // localtunnel bypass header
+        if (this.isLocaltunnel) {
+            headers['bypass-tunnel-reminder'] = 'true';
         }
         return headers;
     }
