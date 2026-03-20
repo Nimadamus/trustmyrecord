@@ -845,6 +845,10 @@
                     </div>
                 </div>
 
+                <div class="card" id="advancedStats" style="display:none;">
+                    <!-- Populated by renderAdvancedStats() -->
+                </div>
+
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title cyan">🏈 By Sport</h3>
@@ -977,6 +981,11 @@
 
                 // 3. Load the profile from backend
                 await loadProfile();
+
+                // 4. Migrate localStorage picks to backend (own profile only, once per session)
+                if (isOwnProfile) {
+                    migrateLocalStoragePicks().catch(e => console.warn('[Migration] Error:', e.message));
+                }
 
             } catch (e) {
                 console.error('[Profile] Init error:', e);
@@ -1128,6 +1137,21 @@
 
             if (reset) {
                 renderRecentActivity(picks.slice(0, 10));
+
+                // For advanced stats, combine backend picks with any unsynced localStorage picks
+                let allPicksForStats = [...picks];
+                try {
+                    const lsPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
+                    const userId = (currentUser || {}).username || (currentUser || {}).id || 'local';
+                    const localUserPicks = lsPicks.filter(p => p.user_id === userId);
+                    // Add localStorage picks that aren't already in the backend set (by game_id + selection)
+                    const backendKeys = new Set(picks.map(p => `${p.game_id}|${p.selection}|${p.market_type}`));
+                    localUserPicks.forEach(p => {
+                        const key = `${p.game_id}|${p.selection}|${p.market_type}`;
+                        if (!backendKeys.has(key)) allPicksForStats.push(p);
+                    });
+                } catch (e) { /* ignore */ }
+                renderAdvancedStats(allPicksForStats);
             }
 
             const loadMoreDiv = document.getElementById('picksLoadMore');
@@ -1466,6 +1490,172 @@
                         <div class="sport-winrate">${wr}%</div>
                     </div>`;
             }).join('');
+        }
+
+        // ======================== ADVANCED STATS ========================
+        function renderAdvancedStats(picks) {
+            const container = document.getElementById('advancedStats');
+            if (!container || !picks || picks.length === 0) {
+                if (container) container.style.display = 'none';
+                return;
+            }
+            container.style.display = 'block';
+
+            const resolved = picks.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push');
+            const wins = picks.filter(p => p.status === 'won');
+            const losses = picks.filter(p => p.status === 'lost');
+            const pending = picks.filter(p => p.status === 'pending' || !p.status);
+
+            // Best Streak
+            let bestStreak = 0, currentStreak = 0;
+            resolved.forEach(p => {
+                if (p.status === 'won') {
+                    currentStreak++;
+                    if (currentStreak > bestStreak) bestStreak = currentStreak;
+                } else {
+                    currentStreak = 0;
+                }
+            });
+
+            // Avg Odds
+            const oddsArr = picks.filter(p => p.odds_snapshot != null).map(p => Number(p.odds_snapshot));
+            const avgOdds = oddsArr.length > 0 ? (oddsArr.reduce((a, b) => a + b, 0) / oddsArr.length).toFixed(0) : 'N/A';
+            const avgOddsDisplay = avgOdds !== 'N/A' ? (Number(avgOdds) > 0 ? '+' + avgOdds : avgOdds) : 'N/A';
+
+            // Units Wagered & Avg Units/Pick
+            const unitsArr = picks.filter(p => p.units != null).map(p => Number(p.units));
+            const unitsWagered = unitsArr.reduce((a, b) => a + b, 0).toFixed(1);
+            const avgUnits = unitsArr.length > 0 ? (unitsArr.reduce((a, b) => a + b, 0) / unitsArr.length).toFixed(2) : '0.00';
+
+            // Market type records
+            function marketRecord(type) {
+                const mp = resolved.filter(p => p.market_type === type);
+                const w = mp.filter(p => p.status === 'won').length;
+                const l = mp.filter(p => p.status === 'lost').length;
+                return `${w}-${l}`;
+            }
+            const mlRecord = marketRecord('h2h');
+            const spreadRecord = marketRecord('spreads');
+            const totalsRecord = marketRecord('totals');
+
+            // Best & Worst Sport (min 3 picks)
+            const sportMap = {};
+            resolved.forEach(p => {
+                const sk = p.sport_key || 'unknown';
+                if (!sportMap[sk]) sportMap[sk] = { wins: 0, losses: 0, total: 0 };
+                sportMap[sk].total++;
+                if (p.status === 'won') sportMap[sk].wins++;
+                if (p.status === 'lost') sportMap[sk].losses++;
+            });
+            let bestSport = { name: 'N/A', wr: -1 };
+            let worstSport = { name: 'N/A', wr: 101 };
+            for (const [key, val] of Object.entries(sportMap)) {
+                if (val.total < 3) continue;
+                const wr = val.wins / (val.wins + val.losses) * 100;
+                if (wr > bestSport.wr) { bestSport = { name: formatSportKey(key), wr }; }
+                if (wr < worstSport.wr) { worstSport = { name: formatSportKey(key), wr }; }
+            }
+            const bestSportDisplay = bestSport.wr >= 0 ? `${bestSport.name} (${bestSport.wr.toFixed(0)}%)` : 'N/A';
+            const worstSportDisplay = worstSport.wr <= 100 ? `${worstSport.name} (${worstSport.wr.toFixed(0)}%)` : 'N/A';
+
+            // Last 7 / 30 days
+            const now = Date.now();
+            function recentRecord(days) {
+                const cutoff = now - days * 86400000;
+                const recent = resolved.filter(p => {
+                    const d = new Date(p.locked_at || p.created_at).getTime();
+                    return d >= cutoff;
+                });
+                const w = recent.filter(p => p.status === 'won').length;
+                const l = recent.filter(p => p.status === 'lost').length;
+                return `${w}-${l}`;
+            }
+            const last7 = recentRecord(7);
+            const last30 = recentRecord(30);
+
+            const stats = [
+                { icon: '&#128293;', label: 'Best Streak', value: bestStreak + 'W', color: 'var(--neon-green)' },
+                { icon: '&#128200;', label: 'Avg Odds', value: avgOddsDisplay, color: 'var(--neon-cyan)' },
+                { icon: '&#128176;', label: 'Units Wagered', value: unitsWagered, color: 'var(--neon-gold)' },
+                { icon: '&#128202;', label: 'Avg Units/Pick', value: avgUnits, color: 'var(--neon-purple)' },
+                { icon: '&#127919;', label: 'ML Record', value: mlRecord, color: 'var(--neon-cyan)' },
+                { icon: '&#127919;', label: 'Spread Record', value: spreadRecord, color: 'var(--neon-green)' },
+                { icon: '&#127919;', label: 'Totals Record', value: totalsRecord, color: 'var(--neon-gold)' },
+                { icon: '&#11088;', label: 'Best Sport', value: bestSportDisplay, color: 'var(--neon-green)' },
+                { icon: '&#128308;', label: 'Worst Sport', value: worstSportDisplay, color: 'var(--neon-red)' },
+                { icon: '&#128197;', label: 'Last 7 Days', value: last7, color: 'var(--neon-cyan)' },
+                { icon: '&#128197;', label: 'Last 30 Days', value: last30, color: 'var(--neon-purple)' },
+                { icon: '&#9203;', label: 'Pending Picks', value: pending.length, color: 'var(--text-muted)' },
+            ];
+
+            container.innerHTML = `
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                    <div style="width:4px;height:28px;background:var(--neon-cyan);border-radius:2px;"></div>
+                    <h3 style="font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:700;color:var(--neon-cyan);margin:0;">Advanced Analytics</h3>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:15px;">
+                    ${stats.map(s => `
+                        <div style="text-align:center;padding:18px 10px;background:rgba(0,0,0,0.3);border-radius:12px;border:1px solid rgba(0,255,255,0.08);transition:all 0.3s ease;">
+                            <div style="font-size:1.5rem;margin-bottom:6px;">${s.icon}</div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:1.15rem;font-weight:700;color:${s.color};margin-bottom:4px;word-break:break-word;">${s.value}</div>
+                            <div style="color:var(--text-muted);font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;">${s.label}</div>
+                        </div>
+                    `).join('')}
+                </div>`;
+        }
+
+        // ======================== LOCALSTORAGE PICK MIGRATION ========================
+        async function migrateLocalStoragePicks() {
+            // Only run once per session
+            if (sessionStorage.getItem('tmr_picks_migrated')) return;
+            sessionStorage.setItem('tmr_picks_migrated', 'true');
+
+            if (!api.backendAvailable || !currentUser) return;
+
+            let allPicks;
+            try {
+                allPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
+            } catch (e) {
+                return;
+            }
+
+            const username = currentUser.username || currentUser.id || '';
+            const userPicks = allPicks.filter(p => p.user_id === username);
+            const unsyncedPicks = userPicks.filter(p => !p._backendSynced);
+
+            if (unsyncedPicks.length === 0) return;
+
+            let syncedCount = 0;
+            for (const pick of unsyncedPicks) {
+                try {
+                    await api.createPick({
+                        game_id: pick.game_id,
+                        market_type: pick.market_type,
+                        selection: pick.selection,
+                        line_snapshot: pick.line_snapshot,
+                        odds_snapshot: pick.odds_snapshot,
+                        units: pick.units
+                    });
+                    pick._backendSynced = true;
+                    syncedCount++;
+                } catch (e) {
+                    // Silently skip duplicates, game not found, etc.
+                    // Mark as synced anyway to avoid retrying known failures
+                    pick._backendSynced = true;
+                    console.warn('[Migration] Skipped pick:', e.message);
+                }
+            }
+
+            // Write back the updated flags to localStorage
+            try {
+                localStorage.setItem('tmr_picks', JSON.stringify(allPicks));
+            } catch (e) {
+                console.warn('[Migration] Could not update localStorage:', e.message);
+            }
+
+            if (syncedCount > 0) {
+                showToast(`Synced ${syncedCount} pick${syncedCount !== 1 ? 's' : ''} to your permanent record`, 'success');
+            }
         }
 
         // ======================== FOLLOW / UNFOLLOW ========================
