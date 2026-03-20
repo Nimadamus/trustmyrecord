@@ -4,10 +4,11 @@
  * Permanent, stable NHL market system that does NOT depend on any paid odds API.
  *
  * NHL betting rules:
- * - Puck Line is ALWAYS ±1.5 (never changes, only odds change)
- * - Moneyline: pick the winner
- * - Total: combined goals, defaults to 6 if unknown
- * - Default odds: -110 across the board when no feed available
+ * - Puck Line is ALWAYS +/- 1.5 (point never changes, only odds vary)
+ * - Puck line odds are derived from moneyline differential when real odds unavailable
+ * - Moneyline: pick the winner (real ESPN odds when available)
+ * - Total: combined goals from ESPN (defaults to 6 if unknown)
+ * - Games with no real data are flagged as estimated
  *
  * Data source: ESPN free public scoreboard API (schedule + scores only)
  */
@@ -92,8 +93,57 @@
         },
 
         /**
+         * Derive puck line odds from moneyline differential.
+         * When a team is a strong ML favorite, they're more likely to cover -1.5,
+         * so puck line odds shift accordingly.
+         * Returns {favOdds, dogOdds} for the puck line.
+         */
+        _derivePuckLineOdds: function(homeML, awayML) {
+            // If both are default -110, we can't derive anything
+            if (homeML === this.DEFAULT_ODDS && awayML === this.DEFAULT_ODDS) {
+                return { homeOdds: this.DEFAULT_ODDS, awayOdds: this.DEFAULT_ODDS };
+            }
+
+            // Convert American odds to implied probability
+            var toProb = function(odds) {
+                if (odds < 0) return Math.abs(odds) / (Math.abs(odds) + 100);
+                return 100 / (odds + 100);
+            };
+
+            var homeProb = toProb(homeML);
+            var awayProb = toProb(awayML);
+
+            // Puck line adjustment: favorites covering -1.5 is harder than just winning
+            // Typical NHL games: ~23% of wins are by exactly 1 goal
+            // So puck line favorite odds are usually worse than ML by a significant margin
+            var puckLineAdjust = 0.23; // roughly 23% of wins are by 1 goal
+
+            var homePL_prob, awayPL_prob;
+            if (homeProb > awayProb) {
+                // Home is favorite: -1.5 is harder to cover
+                homePL_prob = Math.max(0.15, homeProb - puckLineAdjust);
+                awayPL_prob = Math.min(0.85, 1 - homePL_prob);
+            } else {
+                // Away is favorite or pick'em
+                awayPL_prob = Math.max(0.15, awayProb - puckLineAdjust);
+                homePL_prob = Math.min(0.85, 1 - awayPL_prob);
+            }
+
+            // Convert probability back to American odds
+            var toAmerican = function(prob) {
+                if (prob >= 0.5) return Math.round(-100 * prob / (1 - prob));
+                return Math.round(100 * (1 - prob) / prob);
+            };
+
+            return {
+                homeOdds: toAmerican(homePL_prob),
+                awayOdds: toAmerican(awayPL_prob)
+            };
+        },
+
+        /**
          * Build a game object with CORRECT NHL market structure
-         * Puck line is ALWAYS ±1.5. Total defaults to 6. Odds default to -110.
+         * Puck line is ALWAYS +/- 1.5. Odds derived from moneyline when available.
          */
         _buildGame: function(evt, comp, homeTeam, awayTeam, homeComp, awayComp) {
             const homeRecord = homeComp.records?.[0]?.summary || '';
@@ -102,13 +152,13 @@
             // Try to extract real odds from ESPN if available
             let homeML = this.DEFAULT_ODDS;
             let awayML = this.DEFAULT_ODDS;
-            let puckLineHomeOdds = this.DEFAULT_ODDS;
-            let puckLineAwayOdds = this.DEFAULT_ODDS;
             let totalLine = this.DEFAULT_TOTAL;
             let overOdds = this.DEFAULT_ODDS;
             let underOdds = this.DEFAULT_ODDS;
+            let hasRealML = false;
+            let hasRealTotal = false;
 
-            // Parse ESPN odds if present (bonus, not required)
+            // Parse ESPN odds if present
             const oddsArray = comp.odds || [];
             for (const o of oddsArray) {
                 // Moneyline
@@ -117,16 +167,47 @@
                 if (hml && aml && parseFloat(hml) !== 0 && parseFloat(aml) !== 0) {
                     homeML = parseFloat(hml);
                     awayML = parseFloat(aml);
+                    hasRealML = true;
                 }
                 // Total (use ESPN's total if available)
                 const tl = o.total?.over?.close?.line ?? o.overUnder;
                 if (tl && parseFloat(tl) > 0) {
                     totalLine = parseFloat(tl);
+                    hasRealTotal = true;
                 }
+                // Total odds
+                const too = o.total?.over?.close?.odds;
+                const tuo = o.total?.under?.close?.odds;
+                if (too && parseFloat(too) !== 0) overOdds = parseFloat(too);
+                if (tuo && parseFloat(tuo) !== 0) underOdds = parseFloat(tuo);
+
+                // Try spread odds directly (some ESPN feeds include puck line odds)
+                const hso = o.pointSpread?.home?.close?.odds;
+                const aso = o.pointSpread?.away?.close?.odds;
+                if (hso && parseFloat(hso) !== 0) this._espnPuckLineHome = parseFloat(hso);
+                if (aso && parseFloat(aso) !== 0) this._espnPuckLineAway = parseFloat(aso);
             }
 
-            // Build the CORRECT market structure
-            // Puck Line is ALWAYS ±1.5 - this NEVER varies
+            // Derive puck line odds from moneyline if we have real ML data
+            let puckLineHomeOdds, puckLineAwayOdds;
+            if (this._espnPuckLineHome && this._espnPuckLineAway) {
+                // Use ESPN's actual puck line odds if available
+                puckLineHomeOdds = this._espnPuckLineHome;
+                puckLineAwayOdds = this._espnPuckLineAway;
+                this._espnPuckLineHome = null;
+                this._espnPuckLineAway = null;
+            } else if (hasRealML) {
+                // Derive from moneyline differential
+                const derived = this._derivePuckLineOdds(homeML, awayML);
+                puckLineHomeOdds = derived.homeOdds;
+                puckLineAwayOdds = derived.awayOdds;
+            } else {
+                puckLineHomeOdds = this.DEFAULT_ODDS;
+                puckLineAwayOdds = this.DEFAULT_ODDS;
+            }
+
+            // Build the market structure
+            // Puck Line point is ALWAYS +/- 1.5 - only the ODDS vary
             const bookmakers = [{
                 key: 'nhl_fixed',
                 title: 'NHL Markets',
@@ -166,7 +247,8 @@
                 home_record: homeRecord,
                 away_record: awayRecord,
                 bookmakers: bookmakers,
-                nhl_fixed_markets: true  // Flag: markets were generated by NHL module
+                nhl_fixed_markets: true,
+                estimatedOdds: !hasRealML  // Flag if odds are estimated vs real
             };
         },
 

@@ -116,6 +116,65 @@
         return results;
     };
 
+    // Validate odds data - detect placeholder/default patterns
+    window.TMR.validateOdds = function(game) {
+        if (!game.bookmakers || game.bookmakers.length === 0) {
+            return { valid: false, source: 'none', reason: 'No odds data available' };
+        }
+        var bk = game.bookmakers[0];
+        var markets = bk.markets || [];
+        if (markets.length === 0) {
+            return { valid: false, source: 'none', reason: 'No markets available' };
+        }
+
+        // Check if ALL odds are exactly -110 (placeholder pattern)
+        var allDefault = true;
+        var oddsValues = [];
+        markets.forEach(function(m) {
+            (m.outcomes || []).forEach(function(o) {
+                if (o.price != null) {
+                    oddsValues.push(o.price);
+                    if (o.price !== -110) allDefault = false;
+                }
+            });
+        });
+
+        // Determine source quality
+        var source = bk.key || 'unknown';
+        if (source === 'record_estimate') {
+            // Check if moneylines at least vary (estimates from records should vary)
+            var h2h = markets.find(function(m) { return m.key === 'h2h'; });
+            if (h2h && h2h.outcomes && h2h.outcomes.length === 2) {
+                var ml1 = h2h.outcomes[0].price;
+                var ml2 = h2h.outcomes[1].price;
+                if (ml1 === -110 && ml2 === -110) {
+                    return { valid: false, source: 'estimated', reason: 'Default odds only - no real data', allDefault: true };
+                }
+            }
+            return { valid: true, source: 'estimated', reason: 'Estimated from team records', allDefault: allDefault };
+        }
+        if (source === 'espn_predictor') {
+            return { valid: true, source: 'estimated', reason: 'Based on ESPN win probabilities', allDefault: allDefault };
+        }
+        if (source === 'nhl_fixed') {
+            // NHL: check if moneylines are real (not both -110)
+            var h2hNhl = markets.find(function(m) { return m.key === 'h2h'; });
+            if (h2hNhl && h2hNhl.outcomes) {
+                var nhlMl1 = h2hNhl.outcomes[0].price;
+                var nhlMl2 = h2hNhl.outcomes[1].price;
+                if (nhlMl1 !== -110 || nhlMl2 !== -110) {
+                    return { valid: true, source: 'espn', reason: 'ESPN odds', allDefault: false };
+                }
+            }
+            return { valid: true, source: 'estimated', reason: 'Default NHL odds', allDefault: allDefault };
+        }
+        // Real sportsbook odds from ESPN
+        if (!allDefault) {
+            return { valid: true, source: 'sportsbook', reason: 'Real sportsbook odds', allDefault: false };
+        }
+        return { valid: true, source: 'estimated', reason: 'Odds may be estimated', allDefault: allDefault };
+    };
+
     // Fetch games from ESPN free API and convert to Odds API format
     window.TMR.fetchGamesFromESPN = function(sportKey, callback) {
         var espnPath = window.TMR.espnPaths[sportKey];
@@ -198,12 +257,14 @@
                         tryFetch(daysOffset + 1);
                     } else {
                         // Generate estimated odds from records for any game without odds (synchronous baseline)
-                        var sf = (espnPath.indexOf('basketball') !== -1) ? 2.5 : (espnPath.indexOf('football') !== -1 ? 2.0 : 3.0);
-                        var dt = 220;
+                        var sf, dt;
                         if (espnPath.indexOf('hockey') !== -1) { dt = 6; sf = 3.5; }
-                        else if (espnPath.indexOf('basketball') !== -1 && espnPath.indexOf('college') !== -1) dt = 145;
-                        else if (espnPath.indexOf('football') !== -1 && espnPath.indexOf('college') !== -1) dt = 52;
-                        else if (espnPath.indexOf('football') !== -1) dt = 45;
+                        else if (espnPath.indexOf('baseball') !== -1) { dt = 8.5; sf = 2.0; }
+                        else if (espnPath.indexOf('basketball') !== -1 && espnPath.indexOf('college') !== -1) { dt = 145; sf = 2.5; }
+                        else if (espnPath.indexOf('basketball') !== -1) { dt = 220; sf = 2.5; }
+                        else if (espnPath.indexOf('football') !== -1 && espnPath.indexOf('college') !== -1) { dt = 52; sf = 2.0; }
+                        else if (espnPath.indexOf('football') !== -1) { dt = 45; sf = 2.0; }
+                        else { dt = 220; sf = 2.5; }
 
                         games.forEach(function(g) {
                             var hasMkts = g.bookmakers && g.bookmakers.length > 0 && g.bookmakers[0].markets && g.bookmakers[0].markets.length > 0;
@@ -274,12 +335,14 @@
         };
 
         // Sport-specific spread/total defaults
-        var spreadFactor = (espnPath.indexOf('basketball') !== -1) ? 2.5 : (espnPath.indexOf('football') !== -1 ? 2.0 : 3.0);
-        var defaultTotal = 220;
+        var spreadFactor, defaultTotal;
         if (espnPath.indexOf('hockey') !== -1) { defaultTotal = 6; spreadFactor = 3.5; }
-        else if (espnPath.indexOf('basketball') !== -1 && espnPath.indexOf('college') !== -1) defaultTotal = 145;
-        else if (espnPath.indexOf('football') !== -1 && espnPath.indexOf('college') !== -1) defaultTotal = 52;
-        else if (espnPath.indexOf('football') !== -1) defaultTotal = 45;
+        else if (espnPath.indexOf('baseball') !== -1) { defaultTotal = 8.5; spreadFactor = 2.0; }
+        else if (espnPath.indexOf('basketball') !== -1 && espnPath.indexOf('college') !== -1) { defaultTotal = 145; spreadFactor = 2.5; }
+        else if (espnPath.indexOf('basketball') !== -1) { defaultTotal = 220; spreadFactor = 2.5; }
+        else if (espnPath.indexOf('football') !== -1 && espnPath.indexOf('college') !== -1) { defaultTotal = 52; spreadFactor = 2.0; }
+        else if (espnPath.indexOf('football') !== -1) { defaultTotal = 45; spreadFactor = 2.0; }
+        else { defaultTotal = 220; spreadFactor = 2.5; }
 
         games.forEach(function(game) {
             var eventId = game.espn_event_id;
@@ -464,20 +527,31 @@
     // Core function - Select Sport and Show Games (ESPN free API, no server needed)
     // Shared game list renderer used by both generic and NHL paths
     window.TMR._renderGamesList = function(container, games, sport) {
-        var anyHasOdds = games.some(function(g) { return g.bookmakers && g.bookmakers.length > 0 && g.bookmakers[0].markets && g.bookmakers[0].markets.length > 0; });
-        var anyEstimated = games.some(function(g) { return g.estimatedOdds; });
+        // Validate each game's odds quality
+        var validationResults = games.map(function(g) { return window.TMR.validateOdds(g); });
+        var anyHasOdds = validationResults.some(function(v) { return v.valid && v.source !== 'none'; });
+        var anyEstimated = validationResults.some(function(v) { return v.source === 'estimated'; });
+        var anyReal = validationResults.some(function(v) { return v.source === 'sportsbook' || v.source === 'espn'; });
+        var allDefault = validationResults.every(function(v) { return v.allDefault || v.source === 'none'; });
         var html = '';
         if (!anyHasOdds) {
             html += '<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;color:#f59e0b;font-size:14px;"><span style="font-size:20px;">&#128203;</span> Lines not yet available. Select a game and enter your line from your sportsbook.</div>';
-        } else if (anyEstimated) {
-            html += '<div style="background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.3);border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;color:#7dd3fc;font-size:14px;"><span style="font-size:20px;">&#9889;</span> Estimated lines shown. You can edit the line and odds after selecting a pick.</div>';
+        } else if (allDefault) {
+            html += '<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;color:#fca5a5;font-size:14px;"><span style="font-size:20px;">&#9888;</span> Real odds not available yet. Showing matchups only. Enter your own line and odds from your sportsbook after selecting a pick.</div>';
+        } else if (anyEstimated && !anyReal) {
+            html += '<div style="background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.3);border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;color:#7dd3fc;font-size:14px;"><span style="font-size:20px;">&#9889;</span> Estimated lines based on team records and ESPN projections. You can edit the line and odds after selecting a pick.</div>';
+        } else if (anyEstimated && anyReal) {
+            html += '<div style="background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.3);border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;color:#7dd3fc;font-size:14px;"><span style="font-size:20px;">&#9889;</span> Some lines are estimated. Games marked with <span style="color:#22c55e;">&#9679;</span> have real sportsbook odds. You can edit any line after selecting.</div>';
         }
         var spreadLabel = (sport === 'NHL') ? 'Puck Line' : (sport === 'MLB' ? 'Run Line' : 'Spread');
         html += '<div class="market-headers"><div class="market-label">Matchup</div><div class="market-label">' + spreadLabel + '</div><div class="market-label">Moneyline</div><div class="market-label">Total</div></div>';
         games.forEach(function(game, index) {
+            var validation = validationResults[index];
             var bookmaker = game.bookmakers && game.bookmakers[0];
             var markets = bookmaker ? bookmaker.markets : [];
             var hasOdds = markets.length > 0;
+            // If all odds are default -110 with no real variation, treat as "no real odds"
+            var hasRealOdds = hasOdds && !validation.allDefault;
             var homeSpread = {point: null, price: null}, awaySpread = {point: null, price: null};
             var homeML = null, awayML = null, total = null, overPrice = null, underPrice = null;
             markets.forEach(function(m) {
@@ -500,13 +574,22 @@
             var noOddsClass = hasOdds ? '' : ' no-odds-btn';
             var esc = function(s) { return ('' + (s != null ? s : '')).replace(/'/g, "\\'"); };
             var pv = function(v) { return v != null ? '' + v : ''; };
-            var spdLine = function(p) { return hasOdds && p != null ? fmtSpread(p) : spreadLabel; };
-            var spdOdds = function(p) { return hasOdds && p != null ? fmtOdds(p) : 'Pick'; };
-            var mlDisplay = function(o) { return hasOdds && o != null ? fmtOdds(o) : 'Pick'; };
-            var totLine = function(lbl) { return hasOdds && total != null ? lbl.charAt(0) + ' ' + total : lbl; };
-            var totOdds = function(o) { return hasOdds && o != null ? fmtOdds(o) : 'Pick'; };
+            // When all odds are default placeholders, show labels instead of fake numbers
+            var showOddsValues = hasRealOdds || (hasOdds && validation.source === 'estimated' && !validation.allDefault);
+            var spdLine = function(p) { return showOddsValues && p != null ? fmtSpread(p) : spreadLabel; };
+            var spdOdds = function(p) { return showOddsValues && p != null ? fmtOdds(p) : 'Pick'; };
+            var mlDisplay = function(o) { return showOddsValues && o != null ? fmtOdds(o) : 'Pick'; };
+            var totLine = function(lbl) { return showOddsValues && total != null ? lbl.charAt(0) + ' ' + total : lbl; };
+            var totOdds = function(o) { return showOddsValues && o != null ? fmtOdds(o) : 'Pick'; };
+            // Source indicator dot
+            var sourceIndicator = '';
+            if (validation.source === 'sportsbook' || validation.source === 'espn') {
+                sourceIndicator = '<span style="color:#22c55e;font-size:8px;margin-left:6px;" title="Real sportsbook odds">&#9679;</span>';
+            } else if (validation.source === 'estimated' && !validation.allDefault) {
+                sourceIndicator = '<span style="color:#f59e0b;font-size:8px;margin-left:6px;" title="Estimated odds">&#9679;</span>';
+            }
             html += '<div class="game-row">' +
-                '<div class="game-time-header"><span class="game-time">' + gameTime + '</span></div>' +
+                '<div class="game-time-header"><span class="game-time">' + gameTime + sourceIndicator + '</span></div>' +
                 '<div class="team-row">' +
                 '<div class="team-info"><div class="team-details"><div class="team-name">' + game.away_team + '</div></div></div>' +
                 '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'spread\',\'' + esc(game.away_team) + '\',\'' + esc(pv(awaySpread.point != null ? fmtSpread(awaySpread.point) : '')) + '\',\'' + esc(pv(awaySpread.price)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + spdLine(awaySpread.point) + '</span><span class="odds-value">' + spdOdds(awaySpread.price) + '</span></button>' +
@@ -679,15 +762,21 @@
         // Populate line input
         var lineInput = document.getElementById('pickLineInput');
         if (lineInput) {
-            var cleanLine = (line && line !== 'ML' && line !== '--' && line !== '') ? line : '';
+            var cleanLine = (line && line !== 'ML' && line !== '--' && line !== '' && line !== 'Pick') ? line : '';
             lineInput.value = cleanLine;
+            if (!cleanLine && betType !== 'ml') {
+                lineInput.placeholder = 'Enter line from your book';
+            }
         }
 
-        // Populate odds input
+        // Populate odds input - leave empty if no real odds so user must enter their own
         var oddsInput = document.getElementById('pickOddsInput');
         if (oddsInput) {
-            var cleanOdds = (odds && odds !== '--' && odds !== '') ? odds : '-110';
+            var cleanOdds = (odds && odds !== '--' && odds !== '' && odds !== 'Pick') ? odds : '';
             oddsInput.value = cleanOdds;
+            if (!cleanOdds) {
+                oddsInput.placeholder = 'Enter odds (e.g. -110)';
+            }
         }
 
         // Update the summary display
@@ -735,7 +824,27 @@
 
         // Use form values, fall back to stored pick values
         var finalLine = formLine || thePick.line || '';
-        var finalOdds = formOdds || thePick.odds || '-110';
+        var finalOdds = formOdds || thePick.odds || '';
+
+        // Validate that odds are provided and valid
+        if (!finalOdds || finalOdds === '' || finalOdds === 'Pick') {
+            alert('Please enter the odds from your sportsbook before locking in your pick.');
+            if (oddsInput) oddsInput.focus();
+            return;
+        }
+        var oddsNum = parseInt(finalOdds);
+        if (isNaN(oddsNum) || (oddsNum > -100 && oddsNum < 100 && oddsNum !== 0)) {
+            alert('Invalid odds. Enter American odds like -110, +150, -200, etc.');
+            if (oddsInput) oddsInput.focus();
+            return;
+        }
+
+        // Validate line for spread/total bets
+        if ((betType === 'spread' || betType === 'over' || betType === 'under') && !finalLine && finalLine !== '0') {
+            alert('Please enter the line/total from your sportsbook.');
+            if (lineInput) lineInput.focus();
+            return;
+        }
 
         var marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals' };
         var marketType = marketTypeMap[betType] || 'h2h';
