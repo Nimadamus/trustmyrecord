@@ -29,7 +29,7 @@ class StatsEngine {
 
         const wonPicks = picks.filter(p => p.status === 'won');
         const lostPicks = picks.filter(p => p.status === 'lost');
-        const pushPicks = picks.filter(p => p.status === 'pushed');
+        const pushPicks = picks.filter(p => p.status === 'pushed' || p.status === 'push');
         const pendingPicks = picks.filter(p => p.status === 'pending');
         const gradedPicks = picks.filter(p => p.status !== 'pending');
 
@@ -140,14 +140,16 @@ class StatsEngine {
 
         graded.forEach(pick => {
             const stake = pick.stake || pick.units || 1;
-            const odds = pick.odds || pick.price || -110;
-            
-            totalRisk += stake;
+            const odds = pick.odds || pick.price || pick.odds_snapshot || -110;
+
+            // Risk depends on favorite vs underdog
+            const risk = odds < 0 ? (stake * Math.abs(odds) / 100) : stake;
+            totalRisk += risk;
 
             if (pick.status === 'won') {
-                totalReturn += stake + this.calculatePayout(stake, odds);
-            } else if (pick.status === 'pushed') {
-                totalReturn += stake; // Push = stake returned
+                totalReturn += risk + this.calculatePayout(stake, odds);
+            } else if (pick.status === 'pushed' || pick.status === 'push') {
+                totalReturn += risk; // Push = risk returned
             }
             // Loss = 0 return
         });
@@ -161,15 +163,20 @@ class StatsEngine {
      */
     calculateUnits(picks) {
         const graded = picks.filter(p => p.status !== 'pending');
-        
+
         return graded.reduce((total, pick) => {
             const stake = pick.stake || pick.units || 1;
-            const odds = pick.odds || pick.price || -110;
+            const odds = pick.odds || pick.price || pick.odds_snapshot || -110;
 
             if (pick.status === 'won') {
                 return total + this.calculatePayout(stake, odds);
             } else if (pick.status === 'lost') {
-                return total - stake;
+                // Match autograder: favorite loss = stake * |odds|/100, underdog loss = stake
+                if (odds < 0) {
+                    return total - (stake * Math.abs(odds) / 100);
+                } else {
+                    return total - stake;
+                }
             }
             // Push = no change
             return total;
@@ -178,12 +185,15 @@ class StatsEngine {
 
     /**
      * Calculate payout for a winning bet
+     * Matches autograder formula: favorites win = stake (units you're trying to win)
+     * Underdogs win = stake * odds / 100
      */
     calculatePayout(stake, odds) {
         if (odds > 0) {
             return stake * (odds / 100);
         } else {
-            return stake * (100 / Math.abs(odds));
+            // Favorite win: you win exactly your stake (units wagered = what you're trying to win)
+            return stake;
         }
     }
 
@@ -223,7 +233,7 @@ class StatsEngine {
             
             if (pick.status === 'won') bySport[sport].wins++;
             else if (pick.status === 'lost') bySport[sport].losses++;
-            else if (pick.status === 'pushed') bySport[sport].pushes++;
+            else if (pick.status === 'pushed' || pick.status === 'push') bySport[sport].pushes++;
             else if (pick.status === 'pending') bySport[sport].pending++;
         });
 
@@ -271,7 +281,7 @@ class StatsEngine {
             byType[type].total++;
             if (pick.status === 'won') byType[type].wins++;
             else if (pick.status === 'lost') byType[type].losses++;
-            else if (pick.status === 'pushed') byType[type].pushes++;
+            else if (pick.status === 'pushed' || pick.status === 'push') byType[type].pushes++;
         });
 
         // Calculate win rates
@@ -391,7 +401,7 @@ class StatsEngine {
             byMonth[monthKey].total++;
             if (pick.status === 'won') byMonth[monthKey].wins++;
             else if (pick.status === 'lost') byMonth[monthKey].losses++;
-            else if (pick.status === 'pushed') byMonth[monthKey].pushes++;
+            else if (pick.status === 'pushed' || pick.status === 'push') byMonth[monthKey].pushes++;
         });
 
         // Sort by month and calculate rates
@@ -514,7 +524,7 @@ class StatsEngine {
         const graded = picks.filter(p => p.status !== 'pending');
         if (graded.length < 10) return 0;
 
-        const winRate = graded.filter(p => p.status === 'won').length / graded.filter(p => p.status !== 'pushed').length;
+        const winRate = graded.filter(p => p.status === 'won').length / graded.filter(p => p.status !== 'pushed' && p.status !== 'push').length;
         const avgOdds = this.calculateAverageOdds(graded);
 
         if (!avgOdds) return 0;
@@ -546,7 +556,7 @@ class StatsEngine {
         const sampleScore = Math.min(graded.length / 100 * 40, 40);
 
         // 2. Win rate consistency (closer to 50-60% is more sustainable)
-        const winRate = (graded.filter(p => p.status === 'won').length / graded.filter(p => p.status !== 'pushed').length) * 100;
+        const winRate = (graded.filter(p => p.status === 'won').length / graded.filter(p => p.status !== 'pushed' && p.status !== 'push').length) * 100;
         const consistencyScore = winRate >= 45 && winRate <= 65 ? 30 : 15;
 
         // 3. Recent activity (picks in last 30 days)
