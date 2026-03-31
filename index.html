@@ -7762,7 +7762,7 @@
                                     <span class="action-icon">📊</span>
                                     <span class="action-text">My Record</span>
                                 </button>
-                                <button onclick="showGradingModal()" class="action-btn" style="background: linear-gradient(135deg, var(--neon-green), #00cc00);">
+                                <button onclick="if(typeof window.autoGradeAll==='function'){window.autoGradeAll().then(function(r){alert('Grading complete: '+(r?r.graded:0)+' picks graded')}).catch(function(){alert('Grading failed')})}" class="action-btn" style="background: linear-gradient(135deg, var(--neon-green), #00cc00);">
                                     <span class="action-icon">✅</span>
                                     <span class="action-text">Grade Picks</span>
                                 </button>
