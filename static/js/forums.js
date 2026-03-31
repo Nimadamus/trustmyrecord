@@ -31,7 +31,7 @@ class ForumsSystem {
      * Create a new thread
      */
     createThread(categoryId, title, content, tags = []) {
-        if (!auth.isLoggedIn()) {
+        if (!window.auth || !window.auth.isLoggedIn()) {
             throw new Error('Must be logged in to create threads');
         }
 
@@ -46,9 +46,9 @@ class ForumsSystem {
         const thread = {
             id: this.generateId(),
             categoryId,
-            authorId: auth.currentUser.id,
-            authorUsername: auth.currentUser.username,
-            authorAvatar: auth.currentUser.avatar,
+            authorId: window.auth.currentUser.id,
+            authorUsername: window.auth.currentUser.username,
+            authorAvatar: window.auth.currentUser.avatar,
             title,
             content,
             tags,
@@ -72,7 +72,7 @@ class ForumsSystem {
      * Add reply to thread
      */
     addReply(threadId, content, replyToId = null) {
-        if (!auth.isLoggedIn()) {
+        if (!window.auth || !window.auth.isLoggedIn()) {
             throw new Error('Must be logged in to reply');
         }
 
@@ -92,9 +92,9 @@ class ForumsSystem {
         const reply = {
             id: this.generateId(),
             threadId,
-            authorId: auth.currentUser.id,
-            authorUsername: auth.currentUser.username,
-            authorAvatar: auth.currentUser.avatar,
+            authorId: window.auth.currentUser.id,
+            authorUsername: window.auth.currentUser.username,
+            authorAvatar: window.auth.currentUser.avatar,
             content,
             replyToId, // For nested replies
             timestamp: new Date().toISOString(),
@@ -119,11 +119,11 @@ class ForumsSystem {
      * Vote on thread or reply
      */
     vote(itemType, itemId, voteType) {
-        if (!auth.isLoggedIn()) {
+        if (!window.auth || !window.auth.isLoggedIn()) {
             throw new Error('Must be logged in to vote');
         }
 
-        const voteKey = `${auth.currentUser.id}_${itemType}_${itemId}`;
+        const voteKey = `${window.auth.currentUser.id}_${itemType}_${itemId}`;
         const existingVote = this.votes.get(voteKey);
 
         // Remove existing vote if clicking same button
@@ -192,8 +192,8 @@ class ForumsSystem {
      * Get user's vote on item
      */
     getUserVote(itemType, itemId) {
-        if (!auth.isLoggedIn()) return null;
-        const voteKey = `${auth.currentUser.id}_${itemType}_${itemId}`;
+        if (!window.auth || !window.auth.isLoggedIn()) return null;
+        const voteKey = `${window.auth.currentUser.id}_${itemType}_${itemId}`;
         return this.votes.get(voteKey) || null;
     }
 

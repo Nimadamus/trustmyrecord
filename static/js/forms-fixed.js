@@ -165,11 +165,12 @@ async function handleSignup(event) {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('[TMR] DOM loaded, attaching form handlers...');
     
-    const loginForm = document.getElementById('loginForm');
-    const signupForm = document.getElementById('signupForm');
-    
+    // Try both ID formats: camelCase and hyphenated
+    const loginForm = document.getElementById('loginForm') || document.getElementById('login-form');
+    const signupForm = document.getElementById('signupForm') || document.getElementById('signup-form');
+
     if (loginForm) {
-        console.log('[TMR] Found loginForm, attaching handler...');
+        console.log('[TMR] Found login form (id=' + loginForm.id + '), attaching handler...');
         // Remove any existing handlers
         loginForm.onsubmit = null;
         // Remove all existing event listeners by cloning
@@ -177,19 +178,19 @@ document.addEventListener('DOMContentLoaded', function() {
         loginForm.parentNode.replaceChild(newLoginForm, loginForm);
         // Add our handler
         newLoginForm.addEventListener('submit', handleLogin);
-        console.log('[TMR] loginForm handler attached successfully');
+        console.log('[TMR] login form handler attached successfully');
     } else {
-        console.error('[TMR] loginForm NOT found!');
+        console.error('[TMR] login form NOT found!');
     }
-    
+
     if (signupForm) {
-        console.log('[TMR] Found signupForm, attaching handler...');
+        console.log('[TMR] Found signup form (id=' + signupForm.id + '), attaching handler...');
         const newSignupForm = signupForm.cloneNode(true);
         signupForm.parentNode.replaceChild(newSignupForm, signupForm);
         newSignupForm.addEventListener('submit', handleSignup);
-        console.log('[TMR] signupForm handler attached successfully');
+        console.log('[TMR] signup form handler attached successfully');
     } else {
-        console.log('[TMR] signupForm NOT found (may not be on this page)');
+        console.log('[TMR] signup form NOT found (may not be on this page)');
     }
 });
 

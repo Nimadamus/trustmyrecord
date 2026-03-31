@@ -412,9 +412,10 @@
             return false;
         };
     </script>
-    <script src="static/js/config.js?v=20260320p"></script>
-    <script src="static/js/backend-api.js?v=20260320p"></script>
-    <script src="static/js/auto-grader.js?v=20260320p"></script>
+    <script src="static/js/config.js?v=20260330"></script>
+    <script src="static/js/backend-api.js?v=20260330"></script>
+    <script src="static/js/auth-persistent.js?v=20260330"></script>
+    <script src="static/js/auto-grader.js?v=20260330"></script>
     <script>
     // ============================================================
     // Profile v2 - Pick Monitor Layout
@@ -521,15 +522,30 @@
     async function init() {
         try {
             await api.ready;
+            // Try backend auth first, then localStorage auth
             if (api.isLoggedIn()) {
                 try { const d = await api.getCurrentUser(); currentUser = d.user || d; } catch(e) { currentUser = null; }
+            }
+            // Fallback to localStorage auth (auth-persistent.js)
+            if (!currentUser && typeof auth !== 'undefined' && auth.isLoggedIn()) {
+                currentUser = auth.getCurrentUser();
+            }
+            // Final fallback: check tmr_current_user directly
+            if (!currentUser) {
+                try {
+                    const stored = localStorage.getItem('tmr_current_user') || localStorage.getItem('trustmyrecord_session');
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        currentUser = parsed.user || parsed;
+                    }
+                } catch(e) {}
             }
             if (!profileUsername && currentUser) profileUsername = currentUser.username;
             if (!profileUsername) {
                 document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>Not Logged In</h3><p>Please log in or specify a user.</p><a href="index.html" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
                 return;
             }
-            isOwnProfile = currentUser && currentUser.username.toLowerCase() === profileUsername.toLowerCase();
+            isOwnProfile = currentUser && currentUser.username && currentUser.username.toLowerCase() === profileUsername.toLowerCase();
             await loadProfile();
         } catch (e) {
             document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>Error</h3><p>' + e.message + '</p></div>';
@@ -539,44 +555,87 @@
     // ======================== LOAD PROFILE ========================
     async function loadProfile() {
         try {
-            if (api.backendAvailable === false) { const e = new Error('Backend unavailable'); e.backendDown = true; throw e; }
-            const data = await api.getUserProfile(profileUsername);
-            profileData = data.user || data;
-            profileUserId = profileData.id;
-            if (currentUser && !isOwnProfile) isFollowingProfile = !!profileData.is_following;
-            renderProfileHeader(profileData);
-            await loadAllPicks();
+            if (api.backendAvailable === true) {
+                const data = await api.getUserProfile(profileUsername);
+                profileData = data.user || data;
+                profileUserId = profileData.id;
+                if (currentUser && !isOwnProfile) isFollowingProfile = !!profileData.is_following;
+            } else {
+                throw new Error('Backend unavailable');
+            }
         } catch (error) {
-            const down = error.backendDown || !api.backendAvailable;
-            const nf = !down && error.status === 404;
-            document.querySelectorAll('.summary-bar, .picks-section, .analytics-section').forEach(el => el.style.display = 'none');
-            document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>' +
-                (down ? 'Server Unavailable' : nf ? 'User Not Found' : 'Error') + '</h3><p>' +
-                (down ? 'Backend is temporarily unavailable.' : nf ? 'User "' + profileUsername + '" not found.' : error.message) +
-                '</p><a href="index.html" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
+            // Fallback to localStorage for own profile
+            if (isOwnProfile && currentUser) {
+                profileData = {
+                    id: currentUser.id,
+                    username: currentUser.username,
+                    display_name: currentUser.displayName || currentUser.display_name || currentUser.username,
+                    bio: currentUser.bio || '',
+                    avatar_url: currentUser.avatar || currentUser.avatar_url || null,
+                    created_at: currentUser.joinedDate || currentUser.created_at || new Date().toISOString(),
+                    verification_status: currentUser.verified ? 'verified' : 'unverified',
+                    followers_count: (currentUser.social?.followers || []).length,
+                    following_count: (currentUser.social?.following || []).length
+                };
+                profileUserId = currentUser.id || currentUser.username;
+            } else if (!isOwnProfile) {
+                // Try to find user in localStorage users list
+                try {
+                    const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
+                    const found = users.find(u => u.username && u.username.toLowerCase() === profileUsername.toLowerCase());
+                    if (found) {
+                        profileData = {
+                            id: found.id,
+                            username: found.username,
+                            display_name: found.displayName || found.username,
+                            bio: found.bio || '',
+                            avatar_url: found.avatar || null,
+                            created_at: found.joinedDate || new Date().toISOString(),
+                            verification_status: found.verified ? 'verified' : 'unverified',
+                            followers_count: (found.social?.followers || []).length,
+                            following_count: (found.social?.following || []).length
+                        };
+                        profileUserId = found.id;
+                    }
+                } catch(e) {}
+            }
+
+            if (!profileData) {
+                document.querySelectorAll('.summary-bar, .picks-section, .analytics-section').forEach(el => el.style.display = 'none');
+                document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>User Not Found</h3><p>User "' + profileUsername + '" not found.</p><a href="index.html" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
+                return;
+            }
         }
+
+        renderProfileHeader(profileData);
+        await loadAllPicks();
     }
 
     // ======================== LOAD ALL PICKS ========================
     async function loadAllPicks() {
-        let picks = [], hasMore = true, offset = 0;
-        while (hasMore) {
-            try {
-                const data = await api.getPicks({ userId: profileUserId, limit: 100, offset });
-                const batch = data.picks || [];
-                picks = picks.concat(batch);
-                hasMore = data.pagination ? data.pagination.hasMore : (batch.length === 100);
-                offset += batch.length;
-                if (batch.length === 0) hasMore = false;
-            } catch (e) { hasMore = false; }
+        let picks = [];
+
+        // Try backend first
+        if (api.backendAvailable === true) {
+            let hasMore = true, offset = 0;
+            while (hasMore) {
+                try {
+                    const data = await api.getPicks({ userId: profileUserId, limit: 100, offset });
+                    const batch = data.picks || [];
+                    picks = picks.concat(batch);
+                    hasMore = data.pagination ? data.pagination.hasMore : (batch.length === 100);
+                    offset += batch.length;
+                    if (batch.length === 0) hasMore = false;
+                } catch (e) { hasMore = false; }
+            }
         }
 
-        // localStorage fallback for own profile
-        if (picks.length === 0 && isOwnProfile) {
+        // localStorage fallback
+        if (picks.length === 0) {
             try {
                 const all = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
-                const uid = (currentUser || {}).username || (currentUser || {}).id || 'local';
-                picks = all.filter(p => p.user_id === uid);
+                const uid = profileUsername || (currentUser || {}).username || (currentUser || {}).id || 'local';
+                picks = all.filter(p => p.user_id === uid || p.user_id === profileUserId);
             } catch(e) {}
         }
 

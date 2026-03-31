@@ -35,11 +35,15 @@ async function setupNotifications() {
 
     // Wait for API to be ready then start polling
     if (window.api) {
-        await api.ready;
-        if (api.backendAvailable && api.isLoggedIn()) {
-            await fetchNotifications();
-            _notifPollTimer = setInterval(fetchNotifications, TMR_NOTIF_POLL_INTERVAL);
-        }
+        try { await api.ready; } catch(e) {}
+    }
+    // Start polling for notifications (works with backend or localStorage)
+    const loggedIn = (window.api && api.isLoggedIn && api.isLoggedIn()) ||
+                     (window.auth && auth.isLoggedIn && auth.isLoggedIn()) ||
+                     localStorage.getItem('tmr_is_logged_in') === 'true';
+    if (loggedIn) {
+        await fetchNotifications();
+        _notifPollTimer = setInterval(fetchNotifications, TMR_NOTIF_POLL_INTERVAL);
     }
 }
 
@@ -184,12 +188,23 @@ function addNotificationDropdown() {
 }
 
 async function fetchNotifications() {
-    if (!window.api || !api.isLoggedIn() || !api.backendAvailable) return;
+    // Check if user is logged in (backend or localStorage)
+    const loggedIn = (window.api && api.isLoggedIn()) ||
+                     (window.auth && auth.isLoggedIn()) ||
+                     localStorage.getItem('tmr_is_logged_in') === 'true';
+    if (!loggedIn) return;
 
     try {
-        const data = await api.getNotifications({ limit: 20 });
-        _notifCache.notifications = data.notifications || [];
-        _notifCache.unreadCount = data.unreadCount || 0;
+        if (window.api && api.backendAvailable === true) {
+            const data = await api.getNotifications({ limit: 20 });
+            _notifCache.notifications = data.notifications || [];
+            _notifCache.unreadCount = data.unreadCount || 0;
+        } else {
+            // localStorage fallback
+            const stored = JSON.parse(localStorage.getItem('tmr_notifications') || '[]');
+            _notifCache.notifications = stored.slice(0, 20);
+            _notifCache.unreadCount = stored.filter(n => !n.is_read).length;
+        }
         updateNotifBadge(_notifCache.unreadCount);
 
         // If the dropdown is currently visible, re-render

@@ -522,18 +522,29 @@
             // Wait for backend API to be ready
             await api.ready;
 
-            // Check login
-            if (!api.isLoggedIn()) {
-                window.location.href = 'index.html?section=login';
-                return;
+            // Check login - try backend first, then localStorage
+            if (api.isLoggedIn()) {
+                try {
+                    const userData = await api.getCurrentUser();
+                    currentUser = userData.user || userData;
+                } catch (e) {
+                    currentUser = null;
+                }
             }
-
-            // Get current user from backend
-            try {
-                const userData = await api.getCurrentUser();
-                currentUser = userData.user || userData;
-            } catch (e) {
-                console.error('Failed to get current user:', e);
+            // Fallback to localStorage auth
+            if (!currentUser && typeof auth !== 'undefined' && auth.isLoggedIn()) {
+                currentUser = auth.getCurrentUser();
+            }
+            if (!currentUser) {
+                try {
+                    const stored = localStorage.getItem('tmr_current_user') || localStorage.getItem('trustmyrecord_session');
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        currentUser = parsed.user || parsed;
+                    }
+                } catch(e) {}
+            }
+            if (!currentUser) {
                 window.location.href = 'index.html?section=login';
                 return;
             }
@@ -574,20 +585,48 @@
 
         async function loadConversations() {
             try {
-                const data = await api.getConversations();
-                conversations = data.conversations || [];
+                if (api.backendAvailable === true) {
+                    const data = await api.getConversations();
+                    conversations = data.conversations || [];
+                } else {
+                    // localStorage fallback
+                    conversations = loadLocalConversations();
+                }
                 renderConversationsList();
             } catch (e) {
                 console.error('Failed to load conversations:', e);
-                const list = document.getElementById('conversationsList');
-                list.innerHTML = `
-                    <div class="empty-state" style="padding: 40px 20px;">
-                        <div style="font-size: 48px; margin-bottom: 15px;">⚠️</div>
-                        <p style="color: var(--text-muted);">Failed to load conversations</p>
-                        <p style="font-size: 13px; color: var(--text-muted); opacity: 0.7;">Please try again later</p>
-                    </div>
-                `;
+                // Try localStorage fallback
+                conversations = loadLocalConversations();
+                renderConversationsList();
             }
+        }
+
+        function loadLocalConversations() {
+            const messages = JSON.parse(localStorage.getItem('trustmyrecord_messages') || '[]');
+            const convMap = {};
+            const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
+            const myId = currentUser.id || currentUser.username;
+
+            messages.forEach(m => {
+                const otherId = m.senderId === myId ? m.recipientId : (m.recipientId === myId ? m.senderId : null);
+                if (!otherId) return;
+                if (!convMap[otherId]) {
+                    const otherUser = users.find(u => u.id === otherId || u.username === otherId);
+                    convMap[otherId] = {
+                        other_user_id: otherId,
+                        other_username: otherUser ? otherUser.username : otherId,
+                        last_message: m.content,
+                        last_message_at: m.timestamp,
+                        unread_count: 0
+                    };
+                }
+                if (new Date(m.timestamp) > new Date(convMap[otherId].last_message_at || 0)) {
+                    convMap[otherId].last_message = m.content;
+                    convMap[otherId].last_message_at = m.timestamp;
+                }
+                if (m.recipientId === myId && !m.read) convMap[otherId].unread_count++;
+            });
+            return Object.values(convMap).sort((a, b) => new Date(b.last_message_at || 0) - new Date(a.last_message_at || 0));
         }
 
         function renderConversationsList() {
@@ -654,8 +693,20 @@
 
         async function loadChatMessages(userId, scrollToBottom) {
             try {
-                const data = await api.getMessages(userId);
-                const messages = data.messages || [];
+                let messages;
+                if (api.backendAvailable === true) {
+                    const data = await api.getMessages(userId);
+                    messages = data.messages || [];
+                } else {
+                    // localStorage fallback
+                    const allMsgs = JSON.parse(localStorage.getItem('trustmyrecord_messages') || '[]');
+                    const myId = currentUser.id || currentUser.username;
+                    messages = allMsgs.filter(m =>
+                        (m.senderId === myId && m.recipientId === userId) ||
+                        (m.senderId === userId && m.recipientId === myId)
+                    ).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+                    .map(m => ({ ...m, sender_id: m.senderId, created_at: m.timestamp }));
+                }
                 renderMessages(messages);
                 if (scrollToBottom) {
                     const container = document.getElementById('chatMessages');
@@ -713,7 +764,22 @@
             sendBtn.textContent = '...';
 
             try {
-                await api.sendMessage(activeConversationUserId, content);
+                if (api.backendAvailable === true) {
+                    await api.sendMessage(activeConversationUserId, content);
+                } else {
+                    // localStorage fallback
+                    const allMsgs = JSON.parse(localStorage.getItem('trustmyrecord_messages') || '[]');
+                    allMsgs.push({
+                        id: 'msg_' + Date.now(),
+                        senderId: currentUser.id || currentUser.username,
+                        senderUsername: currentUser.username,
+                        recipientId: activeConversationUserId,
+                        content: content,
+                        timestamp: new Date().toISOString(),
+                        read: false
+                    });
+                    localStorage.setItem('trustmyrecord_messages', JSON.stringify(allMsgs));
+                }
                 input.value = '';
                 input.style.height = 'auto';
 

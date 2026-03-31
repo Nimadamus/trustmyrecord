@@ -19,14 +19,10 @@ const App = {
     },
 
     checkAuth() {
-        if (api.isLoggedIn()) {
-            api.getCurrentUser().then(user => {
-                this.currentUser = user;
-                this.updateUserUI();
-            }).catch(() => {
-                api.logout();
-                this.updateNavigation();
-            });
+        // Use auth-persistent system which has localStorage fallback
+        if (typeof auth !== 'undefined' && auth.isLoggedIn()) {
+            this.currentUser = auth.getCurrentUser();
+            this.updateUserUI();
         }
     },
 
@@ -141,78 +137,89 @@ const App = {
 
     async handleLogin(e) {
         e.preventDefault();
+        // Delegate to forms-fixed.js / auth-persistent.js handler
+        // This is a fallback in case forms-fixed.js didn't attach
         const form = e.target;
-        
         const email = form.querySelector('#loginEmail')?.value;
         const password = form.querySelector('#loginPassword')?.value;
         const rememberMe = form.querySelector('#rememberMe')?.checked;
-        
+
         if (!email || !password) {
             this.showToast('Please enter both email and password', 'error');
             return;
         }
-        
+
         const submitBtn = form.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Logging in...';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Logging in...';
+        }
 
         try {
-            await api.login({
-                email: email,
-                password: password,
-                rememberMe: rememberMe
-            });
+            // Use auth system which has localStorage fallback
+            if (typeof auth !== 'undefined' && auth.login) {
+                await auth.login(email, password, rememberMe);
+            } else {
+                throw new Error('Auth system not available');
+            }
             this.showToast('Welcome back!');
-            showSection('profile');
+            if (typeof showSection === 'function') showSection('profile');
         } catch (error) {
             this.showToast(error.message || 'Login failed', 'error');
         } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = 'Login';
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'LOGIN';
+            }
         }
     },
 
     async handleSignup(e) {
         e.preventDefault();
         const form = e.target;
-        
         const username = form.querySelector('#signupUsername')?.value;
         const email = form.querySelector('#signupEmail')?.value;
         const password = form.querySelector('#signupPassword')?.value;
-        const confirmPassword = form.querySelector('#confirm_password')?.value;
-        
+        const confirmPassword = form.querySelector('#confirmPassword')?.value;
+
         if (!username || !email || !password) {
             this.showToast('Please fill in all required fields', 'error');
             return;
         }
-        
+
         if (password !== confirmPassword) {
             this.showToast('Passwords do not match', 'error');
             return;
         }
 
         const submitBtn = form.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating account...';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating account...';
+        }
 
         try {
-            await api.register({
-                username: username,
-                email: email,
-                password: password
-            });
+            if (typeof auth !== 'undefined' && auth.register) {
+                await auth.register(username, email, password);
+            } else {
+                throw new Error('Auth system not available');
+            }
             this.showToast('Account created successfully!');
-            showSection('profile');
+            if (typeof showSection === 'function') showSection('profile');
         } catch (error) {
             this.showToast(error.message || 'Registration failed', 'error');
         } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = 'Create Account';
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'CREATE ACCOUNT';
+            }
         }
     },
 
     handleLogout() {
-        api.logout();
+        if (typeof auth !== 'undefined') {
+            auth.logout();
+        }
         this.updateNavigation();
         this.showToast('Logged out successfully');
         setTimeout(() => window.location.href = '/', 500);
@@ -224,7 +231,8 @@ const App = {
         const mobileAuthBtns = document.getElementById('mobile-auth-buttons');
         const mobileUserMenu = document.getElementById('mobile-user-menu');
 
-        if (api.isLoggedIn()) {
+        const loggedIn = (typeof auth !== 'undefined' && auth.isLoggedIn());
+        if (loggedIn) {
             authBtns?.classList.add('hidden');
             userMenu?.classList.remove('hidden');
             mobileAuthBtns?.classList.add('hidden');

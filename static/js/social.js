@@ -15,7 +15,7 @@ class SocialSystem {
         if (!query || query.length < 2) return [];
 
         query = query.toLowerCase();
-        const allUsers = auth.users;
+        const allUsers = (window.auth && window.auth.users ? window.auth.users : JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]'));
 
         return allUsers.filter(user => {
             return (
@@ -33,16 +33,16 @@ class SocialSystem {
      * Get feed of picks from followed users
      */
     getFeed(limit = 50) {
-        if (!auth.isLoggedIn()) {
+        if (!window.auth || !window.auth.isLoggedIn()) {
             return this.getGlobalFeed(limit);
         }
 
-        const following = auth.currentUser.social.following;
+        const following = window.auth.currentUser.social.following;
         const allPicks = this.loadAllPicks();
 
         // Get picks from followed users
         let feedPicks = allPicks.filter(pick =>
-            following.includes(pick.userId) || pick.userId === auth.currentUser.id
+            following.includes(pick.userId) || pick.userId === window.auth.currentUser.id
         );
 
         // Sort by timestamp
@@ -70,11 +70,11 @@ class SocialSystem {
      * Like/Unlike a pick
      */
     toggleLike(pickId) {
-        if (!auth.isLoggedIn()) {
+        if (!window.auth || !window.auth.isLoggedIn()) {
             throw new Error('Must be logged in to like picks');
         }
 
-        const likeKey = `${auth.currentUser.id}_${pickId}`;
+        const likeKey = `${window.auth.currentUser.id}_${pickId}`;
         const hasLiked = this.likes.has(likeKey);
 
         if (hasLiked) {
@@ -98,24 +98,24 @@ class SocialSystem {
      * Check if current user liked a pick
      */
     hasLiked(pickId) {
-        if (!auth.isLoggedIn()) return false;
-        return this.likes.has(`${auth.currentUser.id}_${pickId}`);
+        if (!window.auth || !window.auth.isLoggedIn()) return false;
+        return this.likes.has(`${window.auth.currentUser.id}_${pickId}`);
     }
 
     /**
      * Add comment to pick
      */
     addComment(pickId, content) {
-        if (!auth.isLoggedIn()) {
+        if (!window.auth || !window.auth.isLoggedIn()) {
             throw new Error('Must be logged in to comment');
         }
 
         const comment = {
             id: this.generateId(),
             pickId,
-            userId: auth.currentUser.id,
-            username: auth.currentUser.username,
-            avatar: auth.currentUser.avatar,
+            userId: window.auth.currentUser.id,
+            username: window.auth.currentUser.username,
+            avatar: window.auth.currentUser.avatar,
             content,
             timestamp: new Date().toISOString(),
             likes: 0
@@ -200,7 +200,8 @@ class SocialSystem {
     }
 
     loadAllPicks() {
-        const stored = localStorage.getItem('trustmyrecord_picks');
+        // Check both storage keys (tmr_picks is primary, trustmyrecord_picks is legacy)
+        const stored = localStorage.getItem('tmr_picks') || localStorage.getItem('trustmyrecord_picks');
         return stored ? JSON.parse(stored) : [];
     }
 
@@ -336,8 +337,8 @@ function showProfileModal(username) {
     const forumStats = getUserForumStats(user.id);
 
     // Build profile page dynamically
-    const isOwnProfile = auth.currentUser?.id === user.id;
-    const isFollowing = auth.currentUser?.social.following.includes(user.id);
+    const isOwnProfile = window.auth.currentUser?.id === user.id;
+    const isFollowing = window.auth.currentUser?.social.following.includes(user.id);
 
     const profileHTML = `
         <div class="profile-container">

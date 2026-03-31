@@ -159,15 +159,12 @@ class PersistentAuthSystem {
     async register(username, email, password, rememberMe = true) {
         if (!username || !email || !password) throw new Error('All fields are required');
         if (username.length < 3) throw new Error('Username must be at least 3 characters');
-        if (password.length < 8) throw new Error('Password must be at least 8 characters');
+        if (password.length < 6) throw new Error('Password must be at least 6 characters');
 
         // Try backend API first (only if backend is detected as available)
-        const backendReady = typeof CONFIG !== 'undefined' && CONFIG.features?.useBackendAPI && typeof api !== 'undefined' && api.backendAvailable !== false;
+        const backendReady = typeof CONFIG !== 'undefined' && CONFIG.features?.useBackendAPI && typeof api !== 'undefined' && api.backendAvailable === true;
         if (backendReady) {
             try {
-                // Wait for backend detection to complete if still in progress
-                if (api.backendAvailable === null) await new Promise(r => setTimeout(r, 2000));
-                if (api.backendAvailable === false) throw new Error('Backend unavailable');
                 const data = await api.register({ username, email, password });
                 const user = {
                     id: data.user?.id || this.generateUserId(),
@@ -223,11 +220,9 @@ class PersistentAuthSystem {
 
     async login(usernameOrEmail, password, rememberMe = true) {
         // Try backend API first (only if backend is detected as available)
-        const backendReady = typeof CONFIG !== 'undefined' && CONFIG.features?.useBackendAPI && typeof api !== 'undefined' && api.backendAvailable !== false;
+        const backendReady = typeof CONFIG !== 'undefined' && CONFIG.features?.useBackendAPI && typeof api !== 'undefined' && api.backendAvailable === true;
         if (backendReady) {
             try {
-                if (api.backendAvailable === null) await new Promise(r => setTimeout(r, 2000));
-                if (api.backendAvailable === false) throw new Error('Backend unavailable');
                 const data = await api.login(usernameOrEmail, password);
                 const userData = data.user || {};
                 const user = {
