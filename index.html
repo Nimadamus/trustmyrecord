@@ -845,10 +845,7 @@
             isLoggedIn = true;
         }
         if (!isLoggedIn) {
-            // Try to open login modal
-            var loginModal = document.getElementById('loginModal');
-            if (loginModal) loginModal.style.display = 'flex';
-            else alert('Please log in to submit picks.');
+            showSection('login');
             return;
         }
 
@@ -7626,10 +7623,11 @@
                     <a href="#home" class="nav-link" onclick="showSection('home')">Home</a>
                     <a href="#picks" class="nav-link" onclick="showSection('picks')">Make Picks</a>
                     <a href="#mypicks" class="nav-link" onclick="showSection('mypicks')">My Picks</a>
-                    <a href="challenges.html" class="nav-link">Arena</a>
-                    <a href="forum.html" class="nav-link">Forum</a>
-                    <a href="activity.html" class="nav-link">Activity</a>
-                    <a href="profile.html" class="nav-link profile-link">My Profile</a>
+                    <a href="#arena" class="nav-link" onclick="showSection('arena')">Arena</a>
+                    <a href="#forums" class="nav-link" onclick="showSection('forums')">Forum</a>
+                    <a href="#feed" class="nav-link" onclick="showSection('feed')">Feed</a>
+                    <a href="#leaderboards" class="nav-link" onclick="showSection('leaderboards')">Leaderboards</a>
+                    <a href="#profile" class="nav-link profile-link" onclick="showSection('profile')">My Profile</a>
                 </nav>
             </div>
 
@@ -9941,7 +9939,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <a href="forum.html" style="display: block; text-align: center; margin-top: 15px; padding: 12px; background: #00ff88; color: #000; font-weight: 600; border-radius: 8px; text-decoration: none;">Visit Forums</a>
+                                    <a href="#forums" onclick="showSection('forums')" style="display: block; text-align: center; margin-top: 15px; padding: 12px; background: #00ff88; color: #000; font-weight: 600; border-radius: 8px; text-decoration: none; cursor: pointer;">Visit Forums</a>
                                 </div>
 
                                 <!-- Recent Community Activity Card -->
@@ -15155,7 +15153,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <a href="#home" onclick="showSection('home')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Home</a>
                     <a href="#profile" onclick="showSection('profile')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Profile</a>
                     <a href="#forums" onclick="showSection('forums')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forums</a>
-                    <a href="challenges.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">The Arena</a>
+                    <a href="#arena" onclick="showSection('arena')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s; cursor: pointer;">The Arena</a>
                     <a href="#leaderboards" onclick="showSection('leaderboards')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
                 </div>
                 <p style="color: #808090; font-size: 0.85rem;">© 2026 TrustMyRecord.com - The End of the Bullshit. All rights reserved.</p>
@@ -15496,7 +15494,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             if (sectionId === 'picks') {
-                if (typeof initGameCounts === 'function') initGameCounts();
+                if (typeof updateGameCounts === 'function') updateGameCounts();
+            }
+            if (sectionId === 'forums') {
+                if (typeof renderForumCategories === 'function') renderForumCategories();
+                if (typeof showForumCategories === 'function') showForumCategories();
+            }
+            if (sectionId === 'leaderboards') {
+                if (typeof updateFeedSidebarStats === 'function') updateFeedSidebarStats();
+            }
+            if (sectionId === 'feed') {
+                if (typeof loadSocialFeed === 'function') loadSocialFeed();
+            }
+            if (sectionId === 'search') {
+                var searchInput = document.getElementById('userSearchInput');
+                if (searchInput) searchInput.focus();
             }
         }
 
@@ -18878,7 +18890,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div style="font-size: 48px; margin-bottom: 16px;">&#128274;</div>
                     <h3 style="color: #fff; margin-bottom: 10px;">Login Required</h3>
                     <p>Please log in to view your picks.</p>
-                    <button onclick="openLoginModal()" style="margin-top: 20px; background: linear-gradient(135deg, #00ffff, #0088cc); border: none; padding: 12px 24px; border-radius: 8px; color: #000; font-weight: 700; cursor: pointer;">
+                    <button onclick="showSection('login')" style="margin-top: 20px; background: linear-gradient(135deg, #00ffff, #0088cc); border: none; padding: 12px 24px; border-radius: 8px; color: #000; font-weight: 700; cursor: pointer;">
                         Log In
                     </button>
                 </div>`;
