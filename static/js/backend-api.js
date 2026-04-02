@@ -448,6 +448,55 @@ class TrustMyRecordAPI {
         return this.request('/premium/analytics');
     }
 
+    // ==================== FORUM ROUTES ====================
+
+    async getForumCategories() {
+        return this.request('/forum/categories');
+    }
+
+    async getForumThreads(options = {}) {
+        const { categoryId, page = 1, limit = 20 } = options;
+        let url = `/forum/threads?page=${page}&limit=${limit}`;
+        if (categoryId) url += `&category=${categoryId}`;
+        return this.request(url);
+    }
+
+    async getForumThread(threadId) {
+        return this.request(`/forum/threads/${threadId}`);
+    }
+
+    async createForumThread(categoryId, title, content) {
+        return this.request('/forum/threads', {
+            method: 'POST',
+            body: { category_id: categoryId, title, content }
+        });
+    }
+
+    async getThreadPosts(threadId, options = {}) {
+        const { page = 1, limit = 20 } = options;
+        return this.request(`/forum/threads/${threadId}/posts?page=${page}&limit=${limit}`);
+    }
+
+    async replyToThread(threadId, content, parentPostId = null) {
+        const body = { content };
+        if (parentPostId) body.parent_post_id = parentPostId;
+        return this.request(`/forum/threads/${threadId}/posts`, {
+            method: 'POST',
+            body
+        });
+    }
+
+    async likeForumPost(postId) {
+        return this.request(`/forum/posts/${postId}/like`, {
+            method: 'POST'
+        });
+    }
+
+    async searchForum(query, options = {}) {
+        const { limit = 20 } = options;
+        return this.request(`/forum/search?q=${encodeURIComponent(query)}&limit=${limit}`);
+    }
+
     // ==================== UTILITY ====================
 
     isLoggedIn() {

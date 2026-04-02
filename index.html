@@ -934,6 +934,32 @@
             away_score: null
         };
 
+        // Helper: show confirmation and cleanup after pick is saved
+        function showPickConfirmation() {
+            // Auto-post to social feed
+            if (typeof window.autoPostPickToFeed === 'function') {
+                try { window.autoPostPickToFeed(newPick); } catch(e) { console.warn('[TMR] Feed post failed:', e); }
+            }
+
+            // Check achievements after new pick
+            if (typeof window.checkAndAwardAchievements === 'function') {
+                try { window.checkAndAwardAchievements(); } catch(e) {}
+            }
+
+            // Show inline confirmation
+            var el1 = document.getElementById('confirmPickDetail');
+            var el2 = document.getElementById('confirmPickMeta');
+            var lockMsg = newPick._backendSynced ? 'Locked & recorded on server' : 'Saved locally';
+            var displayPick = selection + (lineSnapshot != null ? ' ' + lineSnapshot : '') + ' (' + (newPick.odds_snapshot > 0 ? '+' : '') + newPick.odds_snapshot + ')';
+            var displayMeta = thePick.awayTeam + ' @ ' + thePick.homeTeam + '  |  ' + units + 'u  |  ' + (thePick.sport || '') + '  |  ' + lockMsg;
+            if (el1) el1.textContent = displayPick;
+            if (el2) el2.textContent = displayMeta;
+
+            window.showPickStep('pickConfirmation');
+            window.TMR.currentSelectedPick = null;
+            try { document.getElementById('pickReasoning').value = ''; document.getElementById('unitsInput').value = '1'; } catch(e) {}
+        }
+
         // Save to backend API (primary) with localStorage fallback
         var pickSaved = false;
 
@@ -948,12 +974,12 @@
                     odds_snapshot: newPick.odds_snapshot,
                     units: newPick.units
                 };
-                // Use synchronous-style await via .then
                 api.createPick(backendPick).then(function(result) {
                     console.log('[TMR] Pick saved to backend:', result);
-                    // Update local pick with server ID
+                    // Update local pick with server ID and lock status
                     newPick.id = result.pick ? result.pick.id : result.id;
                     newPick._backendSynced = true;
+                    newPick.locked = true;
                     // Also save to localStorage as cache
                     var cached = [];
                     try { cached = JSON.parse(localStorage.getItem('tmr_picks') || '[]'); } catch(e) { cached = []; }
@@ -962,6 +988,8 @@
                     // Refresh picks display
                     if (typeof window.renderPicksList === 'function') window.renderPicksList();
                     if (typeof window.loadPicksHistory === 'function') window.loadPicksHistory();
+                    // Show confirmation AFTER backend confirms
+                    showPickConfirmation();
                 }).catch(function(err) {
                     console.error('[TMR] Backend save failed, using localStorage:', err);
                     // Fallback to localStorage
@@ -969,6 +997,8 @@
                     try { allPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]'); } catch(e) { allPicks = []; }
                     allPicks.unshift(newPick);
                     localStorage.setItem('tmr_picks', JSON.stringify(allPicks));
+                    // Show confirmation even on fallback
+                    showPickConfirmation();
                 });
                 pickSaved = true;
             } catch(e) {
@@ -983,29 +1013,9 @@
             allPicks.unshift(newPick);
             localStorage.setItem('tmr_picks', JSON.stringify(allPicks));
             console.log('[TMR] Pick saved to localStorage (backend unavailable):', newPick.selection);
+            // Show confirmation immediately for localStorage-only
+            showPickConfirmation();
         }
-
-        // Auto-post to social feed
-        if (typeof window.autoPostPickToFeed === 'function') {
-            try { window.autoPostPickToFeed(newPick); } catch(e) { console.warn('[TMR] Feed post failed:', e); }
-        }
-
-        // Check achievements after new pick
-        if (typeof window.checkAndAwardAchievements === 'function') {
-            try { window.checkAndAwardAchievements(); } catch(e) {}
-        }
-
-        // Show inline confirmation
-        var el1 = document.getElementById('confirmPickDetail');
-        var el2 = document.getElementById('confirmPickMeta');
-        var displayPick = selection + (lineSnapshot != null ? ' ' + lineSnapshot : '') + ' (' + (newPick.odds_snapshot > 0 ? '+' : '') + newPick.odds_snapshot + ')';
-        var displayMeta = thePick.awayTeam + ' @ ' + thePick.homeTeam + '  |  ' + units + 'u  |  ' + (thePick.sport || '');
-        if (el1) el1.textContent = displayPick;
-        if (el2) el2.textContent = displayMeta;
-
-        window.showPickStep('pickConfirmation');
-        window.TMR.currentSelectedPick = null;
-        try { document.getElementById('pickReasoning').value = ''; document.getElementById('unitsInput').value = '1'; } catch(e) {}
     };
     window.submitPickNew = window.lockInPick; // alias
 
@@ -1031,7 +1041,10 @@
         // Try backend API first (async, will re-render when data arrives)
         if (typeof api !== 'undefined' && api.backendAvailable && !window._tmrPicksLoading) {
             window._tmrPicksLoading = true;
-            api.getPicks({ limit: 50 }).then(function(result) {
+            var _user = null;
+            try { _user = window.auth && window.auth.getCurrentUser ? window.auth.getCurrentUser() : null; } catch(e) {}
+            var _uid = (_user && _user.id && !String(_user.id).startsWith('user_')) ? _user.id : null;
+            api.getPicks({ userId: _uid, limit: 50 }).then(function(result) {
                 window._tmrPicksLoading = false;
                 var backendPicks = result.picks || result || [];
                 if (backendPicks.length > 0) {
@@ -7609,7 +7622,7 @@
                 <div class="header-actions">
                     <button class="header-icon-btn" onclick="toggleNotifications()" id="notificationBtn">
                         <span class="icon">🔔</span>
-                        <span class="badge" id="notificationBadge">5</span>
+                        <span class="badge" id="notificationBadge" style="display:none;">0</span>
                     </button>
                     <button class="header-icon-btn" onclick="toggleSearch()">
                         <span class="icon">🔍</span>
@@ -17395,7 +17408,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // Try backend API first
             if (typeof api !== 'undefined' && api.backendAvailable) {
                 try {
-                    const result = await api.getPicks({ limit: 10 });
+                    const user = window.auth.getCurrentUser();
+                    const numericId = user.id && !String(user.id).startsWith('user_') ? user.id : null;
+                    const result = await api.getPicks({ userId: numericId, limit: 10 });
                     const picksList = result.picks || result || [];
                     picks = picksList.map(p => ({
                         status: p.status || 'pending',
