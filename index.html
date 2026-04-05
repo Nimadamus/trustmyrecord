@@ -2262,6 +2262,106 @@
             font-weight: 400;
         }
 
+        /* Hero CTA Group */
+        .hero-cta-group {
+            margin-top: 10px;
+            margin-bottom: 40px;
+        }
+
+        .hero-cta-primary {
+            display: inline-block;
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+            font-weight: 900;
+            color: #0a0a0f;
+            background: linear-gradient(135deg, #00ffff, #ffd700);
+            border: none;
+            padding: 20px 56px;
+            border-radius: 50px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.4), 0 0 60px rgba(255, 215, 0, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            animation: cta-pulse 2s ease-in-out infinite;
+        }
+
+        .hero-cta-primary:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.6), 0 0 80px rgba(255, 215, 0, 0.4);
+        }
+
+        @keyframes cta-pulse {
+            0%, 100% { box-shadow: 0 0 30px rgba(0, 255, 255, 0.4), 0 0 60px rgba(255, 215, 0, 0.2); }
+            50% { box-shadow: 0 0 40px rgba(0, 255, 255, 0.6), 0 0 80px rgba(255, 215, 0, 0.35); }
+        }
+
+        .hero-cta-sub {
+            margin-top: 16px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        /* Hero Journey Steps */
+        .hero-journey {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 10px;
+            padding: 24px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .journey-step {
+            text-align: center;
+        }
+
+        .journey-icon {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #00ffff;
+            margin-bottom: 6px;
+        }
+
+        .journey-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .journey-arrow {
+            font-size: 1.2rem;
+            color: rgba(255, 215, 0, 0.6);
+            margin-top: -16px;
+        }
+
+        @media (max-width: 600px) {
+            .hero-cta-primary {
+                padding: 16px 36px;
+                font-size: 1rem;
+            }
+            .hero-journey {
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+            .journey-label {
+                font-size: 0.7rem;
+            }
+            .journey-arrow {
+                display: none;
+            }
+            .journey-step {
+                flex: 1;
+                min-width: 70px;
+            }
+        }
+
         /* Hero Stats Bar */
         .hero-stats-bar {
             display: flex;
@@ -7634,7 +7734,7 @@
 
                 <nav class="main-nav">
                     <a href="#home" class="nav-link" onclick="showSection('home')">Home</a>
-                    <a href="#picks" class="nav-link" onclick="showSection('picks')">Make Picks</a>
+                    <a href="#picks" class="nav-link make-picks-nav" onclick="handleMakePicksCta()">Make Picks</a>
                     <a href="#mypicks" class="nav-link" onclick="showSection('mypicks')">My Picks</a>
                     <a href="#arena" class="nav-link" onclick="showSection('arena')">Arena</a>
                     <a href="#forums" class="nav-link" onclick="showSection('forums')">Forum</a>
@@ -7680,6 +7780,37 @@
                 <section class="hero">
                     <h1 class="reveal">THE END OF THE BULLSHIT</h1>
                     <p class="reveal">A new standard for sports betting has arrived. Built on absolute proof, radical transparency, and zero excuses.</p>
+
+                    <!-- PRIMARY CTA - Above the fold, impossible to miss -->
+                    <div class="hero-cta-group reveal">
+                        <a id="heroPrimaryCta" class="hero-cta-primary" onclick="handleMakePicksCta()">
+                            POST A PICK NOW
+                        </a>
+                        <p class="hero-cta-sub">Free forever. No credit card. Your record starts the second you sign up.</p>
+                    </div>
+
+                    <!-- HOW IT WORKS - Quick journey visualization -->
+                    <div class="hero-journey reveal">
+                        <div class="journey-step">
+                            <div class="journey-icon">01</div>
+                            <div class="journey-label">Create Account</div>
+                        </div>
+                        <div class="journey-arrow">&rarr;</div>
+                        <div class="journey-step">
+                            <div class="journey-icon">02</div>
+                            <div class="journey-label">Post Your Picks</div>
+                        </div>
+                        <div class="journey-arrow">&rarr;</div>
+                        <div class="journey-step">
+                            <div class="journey-icon">03</div>
+                            <div class="journey-label">Build Your Record</div>
+                        </div>
+                        <div class="journey-arrow">&rarr;</div>
+                        <div class="journey-step">
+                            <div class="journey-icon">04</div>
+                            <div class="journey-label">Climb Leaderboards</div>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- LOGGED-IN USER DASHBOARD - Command Center -->
@@ -7904,7 +8035,7 @@
                         <h2>The Record Starts Now.</h2>
                         <p>The era of the guru is over. The era of the record has begun. Witness the transparency from day one.</p>
                     </div>
-                    <a onclick="showSection('picks')" class="cta-button reveal">JOIN THE REVOLUTION</a>
+                    <a onclick="handleMakePicksCta()" class="cta-button reveal">START TRACKING YOUR PICKS</a>
                 </section>
             </div>
 
@@ -15239,18 +15370,71 @@ document.addEventListener('DOMContentLoaded', function() {
             if (callback) callback();
         }
 
+        // Auth-aware CTA handler: logged in -> picks, logged out -> signup with redirect
+        function handleMakePicksCta() {
+            var loggedIn = false;
+            if (window.auth && typeof window.auth.isLoggedIn === 'function') {
+                loggedIn = window.auth.isLoggedIn();
+            }
+            if (!loggedIn) {
+                try {
+                    var u = JSON.parse(localStorage.getItem('tmr_current_user') || localStorage.getItem('trustmyrecord_session') || 'null');
+                    if (u) loggedIn = true;
+                } catch(e) {}
+            }
+            if (loggedIn) {
+                showSection('picks');
+            } else {
+                // Store intent so after signup/login we redirect to picks
+                sessionStorage.setItem('tmr_post_auth_redirect', 'picks');
+                showSection('signup');
+            }
+        }
+
+        // Update hero CTA text based on login state
+        function updateHeroCta() {
+            var btn = document.getElementById('heroPrimaryCta');
+            if (!btn) return;
+            var loggedIn = false;
+            if (window.auth && typeof window.auth.isLoggedIn === 'function') {
+                loggedIn = window.auth.isLoggedIn();
+            }
+            if (!loggedIn) {
+                try {
+                    var u = JSON.parse(localStorage.getItem('tmr_current_user') || localStorage.getItem('trustmyrecord_session') || 'null');
+                    if (u) loggedIn = true;
+                } catch(e) {}
+            }
+            if (loggedIn) {
+                btn.textContent = 'MAKE A PICK';
+                var sub = btn.parentElement.querySelector('.hero-cta-sub');
+                if (sub) sub.textContent = 'Your record is live. Every pick counts.';
+            } else {
+                btn.textContent = 'POST A PICK NOW';
+                var sub = btn.parentElement.querySelector('.hero-cta-sub');
+                if (sub) sub.textContent = 'Free forever. No credit card. Your record starts the second you sign up.';
+            }
+        }
+
         function updateStatsDashboard() {
             const stats = calculateUserStats();
             const dashboard = document.getElementById('userStatsDashboard');
             if (!dashboard) return;
 
             // Check if user is logged in - ALWAYS show dashboard for logged-in users
-            const currentUser = localStorage.getItem('currentUser');
+            var currentUser = null;
+            if (window.auth && window.auth.isLoggedIn()) {
+                currentUser = window.auth.getCurrentUser();
+            }
+            if (!currentUser) {
+                try { currentUser = JSON.parse(localStorage.getItem('tmr_current_user') || localStorage.getItem('trustmyrecord_session') || 'null'); } catch(e) {}
+                if (currentUser && currentUser.user) currentUser = currentUser.user;
+            }
             if (currentUser) {
                 dashboard.style.display = 'block';
 
                 // Populate user profile info
-                const user = JSON.parse(currentUser);
+                const user = currentUser;
                 const avatarEl = document.getElementById('dashboardAvatar');
                 const usernameEl = document.getElementById('dashboardUsername');
                 const joinDateEl = document.getElementById('dashboardJoinDate');
@@ -15463,6 +15647,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update stats when showing home
             if (sectionId === 'home') {
                 if (typeof updateStatsDashboard === 'function') updateStatsDashboard();
+                if (typeof updateHeroCta === 'function') updateHeroCta();
             }
 
             // Render section-specific content
@@ -16018,6 +16203,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Load and display user stats
             updateStatsDashboard();
+            updateHeroCta();
 
             // Initialize picks page when switching to it
             const picksNavLink = document.querySelector('a[onclick*="picks"]');
@@ -18036,7 +18222,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateEl('profileTotalPoints', (user.triviaPoints || 0) + (user.pollPoints || 0));
 
         // Show/hide edit button based on if viewing own profile
-        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        var currentUser = (window.auth && window.auth.isLoggedIn()) ? window.auth.getCurrentUser() : null;
         const editBtn = document.querySelector('.edit-profile-btn');
         if (editBtn) {
             editBtn.style.display = currentUser?.id === user.id ? 'inline-block' : 'none';
@@ -18850,7 +19036,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (sectionId === 'profile') {
             // If no specific user set by showProfile(), reset and load current user
             if (!viewingUserId) {
-                const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+                var currentUser = (window.auth && window.auth.isLoggedIn()) ? window.auth.getCurrentUser() : null;
+                if (!currentUser) { try { var s = JSON.parse(localStorage.getItem('tmr_current_user') || localStorage.getItem('trustmyrecord_session') || 'null'); currentUser = s && s.user ? s.user : s; } catch(e) {} }
                 if (currentUser) {
                     // Ensure picks are loaded first, then update profile data
                     if (typeof ensureBackendPicks === 'function') ensureBackendPicks();

@@ -250,7 +250,7 @@ class AuthSystem {
             <a onclick="showSection('data')">Data Core</a>
             <a onclick="showSection('blog')">Blog</a>
             <a onclick="showSection('forums')">Forums</a>
-            <a onclick="showSection('picks')" class="make-picks-link">Make Your Picks</a>
+            <a onclick="handleMakePicksCta()" class="make-picks-link">Make Your Picks</a>
             <a onclick="showSection('app')">App</a>
             <a onclick="showSection('odds')">Live Odds</a>
             <a onclick="showSection('leaderboards')">Leaderboards</a>

@@ -274,6 +274,7 @@ class PersistentAuthSystem {
         }
         this.clearSession();
         this.updateUIForLoggedOutUser();
+        if (typeof updateHeroCta === 'function') updateHeroCta();
         if (typeof showSection === 'function') {
             try { showSection('home'); } catch(e) {}
         }

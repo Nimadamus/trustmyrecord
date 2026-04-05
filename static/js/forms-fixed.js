@@ -70,12 +70,23 @@ async function handleLogin(event) {
         const modal = document.getElementById('loginModal');
         if (modal) modal.style.display = 'none';
 
-        // Navigate to profile within SPA
-        console.log('[TMR] Navigating to profile...');
-        if (typeof window.showSection === 'function') {
-            window.showSection('profile');
+        // Check for post-auth redirect (e.g., user clicked "Post a Pick" from homepage)
+        var postAuthRedirect = sessionStorage.getItem('tmr_post_auth_redirect');
+        if (postAuthRedirect) {
+            sessionStorage.removeItem('tmr_post_auth_redirect');
+            console.log('[TMR] Post-auth redirect to:', postAuthRedirect);
+            if (typeof window.showSection === 'function') {
+                window.showSection(postAuthRedirect);
+            }
+        } else {
+            // Navigate to profile within SPA
+            console.log('[TMR] Navigating to profile...');
+            if (typeof window.showSection === 'function') {
+                window.showSection('profile');
+            }
         }
-        // Update nav UI
+        // Update hero CTA and nav UI
+        if (typeof updateHeroCta === 'function') updateHeroCta();
         if (typeof updateHeaderAuthButtons === 'function') updateHeaderAuthButtons();
         if (typeof updateProfileLink === 'function') updateProfileLink();
 
@@ -162,10 +173,21 @@ async function handleSignup(event) {
         const modal = document.getElementById('signupModal');
         if (modal) modal.style.display = 'none';
 
-        // Navigate to profile within SPA
-        if (typeof window.showSection === 'function') {
-            window.showSection('profile');
+        // Check for post-auth redirect (e.g., user clicked "Post a Pick" from homepage)
+        var postAuthRedirect = sessionStorage.getItem('tmr_post_auth_redirect');
+        if (postAuthRedirect) {
+            sessionStorage.removeItem('tmr_post_auth_redirect');
+            console.log('[TMR] Post-auth redirect to:', postAuthRedirect);
+            if (typeof window.showSection === 'function') {
+                window.showSection(postAuthRedirect);
+            }
+        } else {
+            // Navigate to profile within SPA
+            if (typeof window.showSection === 'function') {
+                window.showSection('profile');
+            }
         }
+        if (typeof updateHeroCta === 'function') updateHeroCta();
         if (typeof updateHeaderAuthButtons === 'function') updateHeaderAuthButtons();
         if (typeof updateProfileLink === 'function') updateProfileLink();
 
