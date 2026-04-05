@@ -52,6 +52,8 @@ class SocialFeedEngine {
 
         this.posts.unshift(post);
         this.save(this.POSTS_KEY, this.posts);
+        if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.postCreated({ post_type: post.type, sport: post.sport, has_tags: (tags && tags.length > 0) });
+        if (post.type === 'poll' && typeof TMRAnalytics !== 'undefined') TMRAnalytics.forumThreadCreated({ post_type: 'poll', sport: post.sport, thread_id: post.id });
         return post;
     }
 
@@ -116,6 +118,7 @@ class SocialFeedEngine {
                 createdAt: new Date().toISOString()
             });
             this.save(this.LIKES_KEY, this.likes);
+            if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.postLiked({ post_id: targetId });
             return true; // liked
         }
     }
@@ -150,6 +153,7 @@ class SocialFeedEngine {
 
         this.comments.push(comment);
         this.save(this.COMMENTS_KEY, this.comments);
+        if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.commentAdded({ post_id: postId });
         return comment;
     }
 
@@ -178,6 +182,7 @@ class SocialFeedEngine {
         post.pollOptions[optionIndex].votes++;
         post.pollVoters.push(uid);
         this.save(this.POSTS_KEY, this.posts);
+        if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.pollVoted({ poll_id: postId, sport: post.sport });
         return post;
     }
 
