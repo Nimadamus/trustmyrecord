@@ -392,15 +392,69 @@
 
     <section class="analytics-section" id="analyticsSection" style="display:none;">
         <div class="container">
-            <div class="section-header"><div class="section-title">Analytics</div></div>
+            <div class="section-header"><div class="section-title">Performance Overview</div></div>
             <div class="analytics-grid" id="analyticsGrid"></div>
-            <div style="margin-top:16px;">
+
+            <div style="margin-top:24px;">
                 <div class="section-header" style="margin-bottom:12px;"><div class="section-title">By Sport</div></div>
                 <div class="breakdown-grid" id="sportBreakdownGrid"></div>
             </div>
-            <div style="margin-top:16px;">
+
+            <div style="margin-top:24px;">
                 <div class="section-header" style="margin-bottom:12px;"><div class="section-title">By Bet Type</div></div>
                 <div class="breakdown-grid" id="betTypeGrid"></div>
+            </div>
+
+            <div style="margin-top:24px;">
+                <div class="section-header" style="margin-bottom:12px;"><div class="section-title">By Unit Size</div></div>
+                <div class="breakdown-grid" id="unitSizeGrid"></div>
+            </div>
+
+            <div style="margin-top:24px;">
+                <div class="section-header" style="margin-bottom:12px;"><div class="section-title">By Odds Range</div></div>
+                <div class="breakdown-grid" id="oddsRangeGrid"></div>
+            </div>
+
+            <div style="margin-top:24px;">
+                <div class="section-header" style="margin-bottom:12px;"><div class="section-title">Recent Form (Last 20)</div></div>
+                <div id="recentFormGrid" style="display:flex;gap:3px;flex-wrap:wrap;padding:12px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;"></div>
+            </div>
+
+            <div style="margin-top:24px;">
+                <div class="section-header" style="margin-bottom:12px;"><div class="section-title">Performance Over Time</div></div>
+                <div id="performanceTimeline" style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;padding:20px;overflow-x:auto;"></div>
+            </div>
+
+            <div style="margin-top:24px;">
+                <div class="section-header" style="margin-bottom:12px;"><div class="section-title">Pick Filters</div></div>
+                <div id="pickFilters" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+                    <select id="filterSport" onchange="applyFilters()" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:.85rem;">
+                        <option value="">All Sports</option>
+                    </select>
+                    <select id="filterType" onchange="applyFilters()" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:.85rem;">
+                        <option value="">All Bet Types</option>
+                        <option value="h2h,moneyline">Moneyline</option>
+                        <option value="spreads,spread">Spread</option>
+                        <option value="totals,total">Totals</option>
+                    </select>
+                    <select id="filterResult" onchange="applyFilters()" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:.85rem;">
+                        <option value="">All Results</option>
+                        <option value="won">Won</option>
+                        <option value="lost">Lost</option>
+                        <option value="push">Push</option>
+                        <option value="pending">Pending</option>
+                    </select>
+                    <select id="filterOdds" onchange="applyFilters()" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:.85rem;">
+                        <option value="">All Odds</option>
+                        <option value="heavy-fav">Heavy Fav (-200+)</option>
+                        <option value="fav">Favorite (-110 to -199)</option>
+                        <option value="even">Even (+100 to -109)</option>
+                        <option value="dog">Underdog (+101 to +200)</option>
+                        <option value="longshot">Longshot (+201+)</option>
+                    </select>
+                    <button onclick="clearFilters()" class="btn btn-secondary" style="padding:8px 14px;font-size:.85rem;">Clear</button>
+                </div>
+                <div id="filterResults" style="color:var(--text-muted);font-size:.85rem;margin-bottom:8px;"></div>
             </div>
         </div>
     </section>
@@ -521,16 +575,10 @@
     // ======================== INIT ========================
     async function init() {
         try {
-            await api.ready;
-            // Try backend auth first, then localStorage auth
-            if (api.isLoggedIn()) {
-                try { const d = await api.getCurrentUser(); currentUser = d.user || d; } catch(e) { currentUser = null; }
-            }
-            // Fallback to localStorage auth (auth-persistent.js)
-            if (!currentUser && typeof auth !== 'undefined' && auth.isLoggedIn()) {
+            // Immediately try localStorage auth so we can render fast
+            if (typeof auth !== 'undefined' && auth.isLoggedIn()) {
                 currentUser = auth.getCurrentUser();
             }
-            // Final fallback: check tmr_current_user directly
             if (!currentUser) {
                 try {
                     const stored = localStorage.getItem('tmr_current_user') || localStorage.getItem('trustmyrecord_session');
@@ -540,6 +588,14 @@
                     }
                 } catch(e) {}
             }
+
+            // Then check backend auth (with short timeout to not block)
+            try {
+                await Promise.race([api.ready, new Promise(r => setTimeout(r, 2000))]);
+                if (!currentUser && api.backendAvailable && api.isLoggedIn()) {
+                    try { const d = await api.getCurrentUser(); currentUser = d.user || d; } catch(e) {}
+                }
+            } catch(e) {}
             if (!profileUsername && currentUser) profileUsername = currentUser.username;
             if (!profileUsername) {
                 document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>Not Logged In</h3><p>Please log in or specify a user.</p><a href="index.html" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
@@ -791,6 +847,7 @@
             ac('Best Streak', s.bestStreak + 'W', 'positive') + ac('Worst Streak', s.worstStreak + 'L', 'negative') +
             ac('Current Streak', st, stc) + ac('Pending', '' + s.pending, '');
 
+        // By Bet Type
         const btg = document.getElementById('betTypeGrid');
         const types = [
             { name: 'Moneyline', d: s.mlRecord },
@@ -801,6 +858,181 @@
             const wr = (t.d.wins + t.d.losses) > 0 ? ((t.d.wins / (t.d.wins + t.d.losses)) * 100).toFixed(1) : '0.0';
             return bRow(t.name, t.d.wins + '-' + t.d.losses + ' (' + t.d.total + ' picks)', wr);
         }).join('') || '<div class="empty-state" style="padding:16px;">No data</div>';
+
+        // By Unit Size
+        renderUnitSizeBreakdown();
+        // By Odds Range
+        renderOddsRangeBreakdown();
+        // Recent Form
+        renderRecentForm();
+        // Performance Over Time
+        renderPerformanceTimeline();
+        // Populate filter dropdowns
+        populateFilterDropdowns();
+    }
+
+    function renderUnitSizeBreakdown() {
+        const g = document.getElementById('unitSizeGrid');
+        if (!g) return;
+        const graded = allLoadedPicks.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
+        const buckets = { '0.5-1u': { min: 0, max: 1.01 }, '1.5-2u': { min: 1.01, max: 2.01 }, '2.5-3u': { min: 2.01, max: 3.01 }, '3u+': { min: 3.01, max: 9999 } };
+        const rows = [];
+        for (const [label, range] of Object.entries(buckets)) {
+            const picks = graded.filter(p => { const u = p.units || 1; return u >= range.min && u < range.max; });
+            if (picks.length === 0) continue;
+            const w = picks.filter(p => p.status === 'won').length;
+            const l = picks.filter(p => p.status === 'lost').length;
+            const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
+            let units = 0;
+            picks.forEach(p => { units += pickPL(p); });
+            rows.push(bRowExtended(label, w + '-' + l + ' (' + picks.length + ')', wr, units));
+        }
+        g.innerHTML = rows.join('') || '<div class="empty-state" style="padding:16px;">No data</div>';
+    }
+
+    function renderOddsRangeBreakdown() {
+        const g = document.getElementById('oddsRangeGrid');
+        if (!g) return;
+        const graded = allLoadedPicks.filter(p => p.status === 'won' || p.status === 'lost');
+        const ranges = [
+            { label: 'Heavy Fav (-200+)', test: o => o <= -200 },
+            { label: 'Favorite (-110 to -199)', test: o => o >= -199 && o <= -110 },
+            { label: 'Pick/Even (-109 to +100)', test: o => o >= -109 && o <= 100 },
+            { label: 'Underdog (+101 to +200)', test: o => o >= 101 && o <= 200 },
+            { label: 'Longshot (+201+)', test: o => o >= 201 }
+        ];
+        const rows = [];
+        for (const range of ranges) {
+            const picks = graded.filter(p => { const o = p.odds_snapshot || p.odds || -110; return range.test(o); });
+            if (picks.length === 0) continue;
+            const w = picks.filter(p => p.status === 'won').length;
+            const l = picks.filter(p => p.status === 'lost').length;
+            const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
+            let units = 0;
+            picks.forEach(p => { units += pickPL(p); });
+            rows.push(bRowExtended(range.label, w + '-' + l + ' (' + picks.length + ')', wr, units));
+        }
+        g.innerHTML = rows.join('') || '<div class="empty-state" style="padding:16px;">No data</div>';
+    }
+
+    function renderRecentForm() {
+        const g = document.getElementById('recentFormGrid');
+        if (!g) return;
+        const graded = allLoadedPicks.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
+        const recent = graded.slice(0, 20);
+        if (recent.length === 0) { g.innerHTML = '<div style="color:var(--text-muted);padding:8px;">No graded picks yet</div>'; return; }
+        g.innerHTML = recent.map(p => {
+            const c = p.status === 'won' ? '#22c55e' : p.status === 'lost' ? '#ef4444' : '#6b7280';
+            const l = p.status === 'won' ? 'W' : p.status === 'lost' ? 'L' : 'P';
+            const tip = (p.selection || '') + ' ' + (p.odds_snapshot ? (p.odds_snapshot > 0 ? '+' : '') + p.odds_snapshot : '');
+            return '<div title="' + tip + '" style="width:28px;height:28px;border-radius:4px;background:' + c + ';display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;cursor:default;">' + l + '</div>';
+        }).join('');
+    }
+
+    function renderPerformanceTimeline() {
+        const el = document.getElementById('performanceTimeline');
+        if (!el) return;
+        const graded = allLoadedPicks.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
+        if (graded.length === 0) { el.innerHTML = '<div style="color:var(--text-muted);text-align:center;">No data</div>'; return; }
+
+        // Group by week
+        const chrono = [...graded].sort((a, b) => new Date(a.locked_at || a.created_at || 0) - new Date(b.locked_at || b.created_at || 0));
+        const weeks = {};
+        chrono.forEach(p => {
+            const d = new Date(p.locked_at || p.created_at || 0);
+            const weekStart = new Date(d); weekStart.setDate(d.getDate() - d.getDay());
+            const key = weekStart.toISOString().slice(0, 10);
+            if (!weeks[key]) weeks[key] = { wins: 0, losses: 0, units: 0, picks: 0 };
+            weeks[key].picks++;
+            if (p.status === 'won') weeks[key].wins++;
+            else if (p.status === 'lost') weeks[key].losses++;
+            weeks[key].units += pickPL(p);
+        });
+
+        const keys = Object.keys(weeks).sort();
+        if (keys.length === 0) { el.innerHTML = '<div style="color:var(--text-muted);text-align:center;">No data</div>'; return; }
+
+        // Build a simple bar chart
+        let runningUnits = 0;
+        const maxAbs = Math.max(...keys.map(k => { runningUnits += weeks[k].units; return Math.abs(runningUnits); }), 1);
+        runningUnits = 0;
+
+        let html = '<div style="display:flex;align-items:flex-end;gap:4px;height:120px;min-width:' + (keys.length * 36) + 'px;">';
+        keys.forEach(k => {
+            runningUnits += weeks[k].units;
+            const pct = Math.abs(runningUnits) / maxAbs * 100;
+            const c = runningUnits >= 0 ? '#22c55e' : '#ef4444';
+            const bottom = runningUnits >= 0 ? '50%' : (50 - pct / 2) + '%';
+            const dt = new Date(k);
+            const lbl = (dt.getMonth() + 1) + '/' + dt.getDate();
+            html += '<div style="flex:1;min-width:30px;position:relative;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;">' +
+                '<div title="Week of ' + k + ': ' + (runningUnits >= 0 ? '+' : '') + runningUnits.toFixed(1) + 'u (' + weeks[k].wins + 'W-' + weeks[k].losses + 'L)" style="width:100%;max-width:28px;height:' + Math.max(pct / 2, 4) + '%;background:' + c + ';border-radius:3px 3px 0 0;cursor:default;"></div>' +
+                '<div style="font-size:0.6rem;color:var(--text-muted);margin-top:4px;white-space:nowrap;">' + lbl + '</div></div>';
+        });
+        html += '</div>';
+        html += '<div style="text-align:right;margin-top:8px;color:var(--text-secondary);font-size:.8rem;">Cumulative: ' + (runningUnits >= 0 ? '+' : '') + runningUnits.toFixed(2) + 'u over ' + keys.length + ' weeks</div>';
+        el.innerHTML = html;
+    }
+
+    function bRowExtended(name, record, wr, units) {
+        const c = parseFloat(wr) >= 50 ? 'positive' : parseFloat(wr) > 0 ? 'negative' : '';
+        const uc = units >= 0 ? 'positive' : 'negative';
+        return '<div class="breakdown-row"><div style="flex:1;"><div class="breakdown-name">' + name + '</div><div class="breakdown-record">' + record + '</div></div>' +
+            '<div style="text-align:right;"><div class="breakdown-winrate ' + c + '">' + wr + '%</div>' +
+            '<div style="font-size:.8rem;color:' + (units >= 0 ? 'var(--accent-green)' : 'var(--accent-red)') + ';">' + (units >= 0 ? '+' : '') + units.toFixed(2) + 'u</div></div></div>';
+    }
+
+    function populateFilterDropdowns() {
+        const sportSelect = document.getElementById('filterSport');
+        if (!sportSelect) return;
+        const sports = new Set();
+        allLoadedPicks.forEach(p => { if (p.sport_key) sports.add(p.sport_key); });
+        let opts = '<option value="">All Sports</option>';
+        sports.forEach(sk => { opts += '<option value="' + sk + '">' + fmtSport(sk) + '</option>'; });
+        sportSelect.innerHTML = opts;
+    }
+
+    function applyFilters() {
+        const sport = document.getElementById('filterSport').value;
+        const type = document.getElementById('filterType').value;
+        const result = document.getElementById('filterResult').value;
+        const odds = document.getElementById('filterOdds').value;
+
+        let filtered = [...allLoadedPicks];
+        if (sport) filtered = filtered.filter(p => p.sport_key === sport);
+        if (type) { const types = type.split(','); filtered = filtered.filter(p => types.includes(p.market_type)); }
+        if (result) filtered = filtered.filter(p => p.status === result || (result === 'push' && p.status === 'pushed'));
+        if (odds) {
+            filtered = filtered.filter(p => {
+                const o = p.odds_snapshot || p.odds || -110;
+                if (odds === 'heavy-fav') return o <= -200;
+                if (odds === 'fav') return o >= -199 && o <= -110;
+                if (odds === 'even') return o >= -109 && o <= 100;
+                if (odds === 'dog') return o >= 101 && o <= 200;
+                if (odds === 'longshot') return o >= 201;
+                return true;
+            });
+        }
+
+        const el = document.getElementById('filterResults');
+        const graded = filtered.filter(p => p.status === 'won' || p.status === 'lost');
+        const w = graded.filter(p => p.status === 'won').length;
+        const l = graded.filter(p => p.status === 'lost').length;
+        const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
+        let units = 0;
+        graded.forEach(p => { units += pickPL(p); });
+        el.textContent = 'Showing ' + filtered.length + ' picks | ' + w + '-' + l + ' | ' + wr + '% | ' + (units >= 0 ? '+' : '') + units.toFixed(2) + 'u';
+
+        renderPicksTable(filtered);
+    }
+
+    function clearFilters() {
+        document.getElementById('filterSport').value = '';
+        document.getElementById('filterType').value = '';
+        document.getElementById('filterResult').value = '';
+        document.getElementById('filterOdds').value = '';
+        document.getElementById('filterResults').textContent = '';
+        renderPicksTable(allLoadedPicks);
     }
 
     function ac(label, value, cls) {
@@ -869,19 +1101,69 @@
         modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
         const is = 'width:100%;padding:10px 12px;border-radius:6px;border:1px solid #353a4d;background:#0f1117;color:#f0f2f5;font-family:inherit;font-size:.9rem;margin-bottom:14px;';
         const ls = 'display:block;color:#6b7280;margin-bottom:4px;font-size:.8rem;font-weight:600;';
+        const currentAvatar = profileData.avatar_url || '';
+        const avatarPreviewSrc = currentAvatar || 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="#2a2e3d"/><text x="50" y="65" font-size="40" text-anchor="middle" fill="#6b7280">?</text></svg>');
+
         modal.innerHTML = '<div style="background:#1c1f2a;border:1px solid #2a2e3d;border-radius:12px;padding:32px;max-width:480px;width:90%;max-height:80vh;overflow-y:auto;">' +
             '<h2 style="font-size:1.2rem;font-weight:700;margin-bottom:24px;">Edit Profile</h2>' +
-            '<form id="editForm"><label style="' + ls + '">Display Name</label><input id="eDN" value="' + (profileData.display_name || profileData.username || '') + '" style="' + is + '">' +
+            '<form id="editForm">' +
+            '<label style="' + ls + '">Profile Image</label>' +
+            '<div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;">' +
+            '<img id="eAvatarPreview" src="' + avatarPreviewSrc + '" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid #353a4d;background:#0f1117;">' +
+            '<div style="flex:1;">' +
+            '<input type="file" id="eAvatarFile" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;">' +
+            '<button type="button" id="eAvatarBtn" class="btn btn-secondary" style="padding:8px 16px;font-size:.8rem;margin-bottom:6px;">Upload Image</button>' +
+            '<div style="color:#6b7280;font-size:.75rem;">JPG, PNG, GIF, WebP. Max 2MB.</div>' +
+            '</div></div>' +
+            '<label style="' + ls + '">Display Name</label><input id="eDN" value="' + (profileData.display_name || profileData.username || '') + '" style="' + is + '">' +
             '<label style="' + ls + '">Bio</label><textarea id="eBio" rows="3" style="' + is + 'resize:vertical;">' + (profileData.bio || '') + '</textarea>' +
             '<label style="' + ls + '">Location</label><input id="eLoc" value="' + (profileData.location || '') + '" style="' + is + '">' +
-            '<label style="' + ls + '">Avatar URL</label><input id="eAvatar" value="' + (profileData.avatar_url || '') + '" style="' + is + '" placeholder="https://...">' +
             '<div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px;"><button type="button" class="btn btn-secondary" onclick="document.getElementById(\'editModal\').remove()">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div></form></div>';
         document.body.appendChild(modal);
         modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+        // Wire up file picker
+        let pendingAvatarData = null;
+        const fileInput = document.getElementById('eAvatarFile');
+        const preview = document.getElementById('eAvatarPreview');
+        document.getElementById('eAvatarBtn').addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) { showToast('Image must be under 2MB', 'error'); return; }
+            if (!file.type.match(/^image\/(png|jpeg|gif|webp)$/)) { showToast('Invalid image type', 'error'); return; }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                pendingAvatarData = e.target.result;
+                preview.src = pendingAvatarData;
+                showToast('Image loaded. Click Save to apply.', 'info');
+            };
+            reader.readAsDataURL(file);
+        });
+
         document.getElementById('editForm').addEventListener('submit', async e => {
             e.preventDefault();
             try {
-                await api.updateProfile({ display_name: document.getElementById('eDN').value.trim(), bio: document.getElementById('eBio').value.trim(), location: document.getElementById('eLoc').value.trim(), avatar_url: document.getElementById('eAvatar').value.trim() });
+                const updates = {
+                    display_name: document.getElementById('eDN').value.trim(),
+                    bio: document.getElementById('eBio').value.trim(),
+                    location: document.getElementById('eLoc').value.trim()
+                };
+                if (pendingAvatarData) updates.avatar_url = pendingAvatarData;
+
+                // Try backend first
+                if (api.backendAvailable === true) {
+                    try { await api.updateProfile(updates); } catch(err) { /* fall through to localStorage */ }
+                }
+                // Always update localStorage auth too
+                if (typeof auth !== 'undefined' && auth.currentUser) {
+                    const localUpdates = {};
+                    if (updates.display_name) localUpdates.displayName = updates.display_name;
+                    if (updates.bio !== undefined) localUpdates.bio = updates.bio;
+                    if (updates.location !== undefined) localUpdates.location = updates.location;
+                    if (updates.avatar_url) localUpdates.avatar = updates.avatar_url;
+                    auth.updateProfile(localUpdates);
+                }
                 showToast('Profile updated!', 'success'); modal.remove(); await loadProfile();
             } catch(err) { showToast(err.message, 'error'); }
         });

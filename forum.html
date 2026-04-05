@@ -677,6 +677,7 @@
 
 <script src="static/js/config.js"></script>
 <script src="static/js/backend-api.js"></script>
+<script src="static/js/auth-persistent.js?v=20260405"></script>
 <script src="static/js/notifications.js?v=20260318"></script>
 <script>
 // ================================================================
@@ -1003,7 +1004,7 @@ function renderThread() {
 
     // Render reply area
     var replyAreaEl = document.getElementById('replyArea');
-    if (api.isLoggedIn()) {
+    if (isUserLoggedIn()) {
         replyAreaEl.innerHTML = '<textarea id="replyText" rows="5" placeholder="Type your reply..."></textarea>' +
             '<button class="btn btn-primary" style="margin-top:10px;" onclick="submitReply()">Post Reply</button>';
     } else {
@@ -1015,7 +1016,7 @@ function renderThread() {
 // LIKE POST
 // ================================================================
 async function likePost(postId) {
-    if (!api.isLoggedIn()) {
+    if (!isUserLoggedIn()) {
         alert('Please log in to like posts.');
         return;
     }
@@ -1032,8 +1033,21 @@ async function likePost(postId) {
 // ================================================================
 // CREATE THREAD
 // ================================================================
+function isUserLoggedIn() {
+    // Check backend JWT
+    if (api.isLoggedIn()) return true;
+    // Check PersistentAuthSystem
+    if (typeof auth !== 'undefined' && auth.isLoggedIn && auth.isLoggedIn()) return true;
+    // Check localStorage session directly
+    try {
+        var s = localStorage.getItem('trustmyrecord_session');
+        if (s) { var p = JSON.parse(s); var u = p.user || p; if (u && u.username) return true; }
+    } catch(e) {}
+    return false;
+}
+
 function openNewThread() {
-    if (!api.isLoggedIn()) {
+    if (!isUserLoggedIn()) {
         alert('Please log in to create a thread.');
         return;
     }
@@ -1047,7 +1061,7 @@ function closeNewThread() {
 
 async function submitThread(e) {
     e.preventDefault();
-    if (!api.isLoggedIn()) { alert('Please log in first.'); return; }
+    if (!isUserLoggedIn()) { alert('Please log in first.'); return; }
 
     var title = document.getElementById('ntTitle').value.trim();
     var content = document.getElementById('ntContent').value.trim();
@@ -1083,7 +1097,7 @@ async function submitThread(e) {
 // SUBMIT REPLY
 // ================================================================
 async function submitReply() {
-    if (!api.isLoggedIn()) { alert('Please log in to reply.'); return; }
+    if (!isUserLoggedIn()) { alert('Please log in to reply.'); return; }
 
     var textarea = document.getElementById('replyText');
     if (!textarea) return;

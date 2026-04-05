@@ -1,5 +1,5 @@
 ﻿// Enhanced Authentication System with PERMANENT Login
-// v3.1 - Dec 8, 2025
+// v3.2 - Apr 5, 2026
 
 class PersistentAuthSystem {
     constructor() {
@@ -271,7 +271,9 @@ class PersistentAuthSystem {
         }
         this.clearSession();
         this.updateUIForLoggedOutUser();
-        if (typeof showSection === 'function') showSection('record');
+        if (typeof showSection === 'function') {
+            try { showSection('home'); } catch(e) {}
+        }
     }
 
     updateProfile(updates) {
@@ -335,7 +337,7 @@ class PersistentAuthSystem {
                     <img src="${avatar}" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--neon-cyan);">
                     <span>${username}</span>
                 </a>
-                <button onclick="auth.logout(); location.reload();" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">Logout</button>
+                <button onclick="auth.logout(); window.location.href='index.html';" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">Logout</button>
             `;
         }
     }
@@ -348,7 +350,7 @@ class PersistentAuthSystem {
             usernameLink.classList.remove('nav-username-link');
             usernameLink.classList.add('profile-link');
             usernameLink.removeAttribute('style');
-            usernameLink.setAttribute('onclick', "showSection('profile')");
+            usernameLink.setAttribute('onclick', "if(typeof showSection==='function'){showSection('profile')}else{window.location.href='profile.html'}");
             usernameLink.textContent = 'My Profile';
         }
         // Remove user button from header-actions
@@ -358,7 +360,7 @@ class PersistentAuthSystem {
         // Restore header auth buttons to Login
         const headerAuthButtons = document.getElementById('headerAuthButtons');
         if (headerAuthButtons) {
-            headerAuthButtons.innerHTML = '<button onclick="showSection(\'login\')" class="btn btn-primary" style="padding: 8px 20px; font-size: 14px;">Login</button>';
+            headerAuthButtons.innerHTML = '<button onclick="if(typeof showSection===\'function\'){showSection(\'login\')}else{window.location.href=\'index.html\'}" class="btn btn-primary" style="padding: 8px 20px; font-size: 14px;">Login</button>';
         }
     }
 

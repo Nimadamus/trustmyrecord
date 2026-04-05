@@ -137,13 +137,22 @@ class ChallengesEngine {
      * Initialize daily polls
      */
     initializePolls() {
+        // Force re-initialize if polls contain stale 2025 references
         const existing = localStorage.getItem(this.POLLS_KEY);
-        if (existing) return;
+        if (existing) {
+            try {
+                const parsed = JSON.parse(existing);
+                const hasStale = parsed.some(p => p.question && p.question.includes('2025'));
+                if (!hasStale) return;
+                // Clear stale polls so they get re-created with 2026 data
+                localStorage.removeItem(this.POLLS_KEY);
+            } catch(e) { return; }
+        }
 
         const polls = [
             {
-                question: "Who will win Super Bowl 2025?",
-                options: ["Kansas City Chiefs", "San Francisco 49ers", "Baltimore Ravens", "Philadelphia Eagles", "Buffalo Bills", "Other"]
+                question: "Who will win Super Bowl 2026?",
+                options: ["Philadelphia Eagles", "Kansas City Chiefs", "Detroit Lions", "Buffalo Bills", "Baltimore Ravens", "Other"]
             },
             {
                 question: "Best sport to bet on?",
@@ -158,8 +167,8 @@ class ChallengesEngine {
                 options: ["Fade the public", "Bet favorites", "Bet underdogs", "Martingale", "Unit betting", "Kelly Criterion"]
             },
             {
-                question: "Which NBA team wins the 2025 championship?",
-                options: ["Celtics", "Thunder", "Cavaliers", "Knicks", "Nuggets", "Clippers", "Other"]
+                question: "Which NBA team wins the 2026 championship?",
+                options: ["Thunder", "Cavaliers", "Celtics", "Knicks", "Rockets", "Timberwolves", "Other"]
             },
             {
                 question: "Most profitable betting approach?",

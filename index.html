@@ -9508,7 +9508,7 @@
             <div id="app" class="page-section">
                 <div class="coming-soon">
                     <h2>Mobile App</h2>
-                    <p>iOS and Android apps launching Q2 2025...</p>
+                    <p>iOS and Android apps launching 2026...</p>
                 </div>
             </div>
 
@@ -15455,7 +15455,7 @@ document.addEventListener('DOMContentLoaded', function() {
             navLinks.forEach(link => link.classList.remove('active'));
 
             // Add active class to clicked nav item (if it exists)
-            if (event && event.target) event.target.classList.add('active');
+            try { if (window.event && window.event.target && window.event.target.classList) window.event.target.classList.add('active'); } catch(e) {}
 
             // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });

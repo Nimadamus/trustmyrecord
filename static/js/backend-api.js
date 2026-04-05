@@ -500,7 +500,36 @@ class TrustMyRecordAPI {
     // ==================== UTILITY ====================
 
     isLoggedIn() {
-        return !!this.token;
+        // Check JWT token first
+        if (this.token) return true;
+        // Fallback: check localStorage auth session (PersistentAuthSystem)
+        try {
+            const session = localStorage.getItem('trustmyrecord_session');
+            if (session) {
+                const parsed = JSON.parse(session);
+                const user = parsed.user || parsed;
+                if (user && (user.username || user.email)) return true;
+            }
+        } catch(e) {}
+        return false;
+    }
+
+    /**
+     * Get current username from any auth source
+     */
+    getLoggedInUsername() {
+        // From JWT user (if backend available)
+        if (this._cachedUser) return this._cachedUser.username;
+        // From localStorage auth session
+        try {
+            const session = localStorage.getItem('trustmyrecord_session');
+            if (session) {
+                const parsed = JSON.parse(session);
+                const user = parsed.user || parsed;
+                return user.username || null;
+            }
+        } catch(e) {}
+        return null;
     }
 
     async checkAuth() {

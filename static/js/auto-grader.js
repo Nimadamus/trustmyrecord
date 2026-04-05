@@ -506,11 +506,11 @@ const TMR_GRADER = {
         console.log(`[TMR GrADER]   pick.home_team='${pick.home_team}', pick.away_team='${pick.away_team}'`);
         console.log(`[TMR GrADER]   pick.game_id='${pick.game_id}', espn_event_id='${pick.espn_event_id}'`);
         console.log(`[TMR GrADER]   pick.selection='${pick.selection}'`);
-        
+
         // Show ALL available score keys
-        const allKeys = Object.keys(allScores);
-        const nonEspnKeys = allKeys.filter(k => !k.startsWith('espn_'));
-        console.log(`[TMR GrADER]   Total score entries: ${allKeys.length}, Non-ESPN keys: ${nonEspnKeys.length}`);
+        const debugKeys = Object.keys(allScores);
+        const nonEspnKeys = debugKeys.filter(k => !k.startsWith('espn_'));
+        console.log(`[TMR GrADER]   Total score entries: ${debugKeys.length}, Non-ESPN keys: ${nonEspnKeys.length}`);
         console.log(`[TMR GrADER]   ALL available keys:`, nonEspnKeys);
         
         // Show what the pick's normalized keys would look like

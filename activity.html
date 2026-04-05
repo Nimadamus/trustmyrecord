@@ -674,7 +674,7 @@
 
     <script src="static/js/config.js"></script>
     <script src="static/js/backend-api.js"></script>
-    <script src="static/js/auth.js"></script>
+    <script src="static/js/auth-persistent.js"></script>
     <script src="static/js/notifications.js"></script>
     <script>
         let currentFilter = 'all';
@@ -709,7 +709,7 @@
         }
 
         function renderPickCard(item) {
-            const currentUser = auth.currentUser;
+            const currentUser = (typeof auth !== 'undefined' && auth.getCurrentUser) ? auth.getCurrentUser() : null;
             const { cls, icon } = getStatusIcon(item.status);
             const username = item.username || item.display_name || 'Unknown';
             const avatarLetter = username[0]?.toUpperCase() || '?';
@@ -748,25 +748,25 @@
                     <div class="bet-content">
                         <div class="bet-teams">
                             <div class="bet-team">
-                                <div class="team-logo">${(item.away_team || item.team_picked || '?')[0]}</div>
-                                <span>${item.away_team || ''}</span>
+                                <div class="team-logo">${item.away_team ? item.away_team[0] : (item.selection ? item.selection[0] : '?')}</div>
+                                <span>${item.away_team || item.selection || 'TBD'}</span>
                             </div>
                             <span class="vs">VS</span>
                             <div class="bet-team">
-                                <div class="team-logo">${(item.home_team || '?')[0]}</div>
-                                <span>${item.home_team || ''}</span>
+                                <div class="team-logo">${item.home_team ? item.home_team[0] : '?'}</div>
+                                <span>${item.home_team || 'TBD'}</span>
                             </div>
                         </div>
                         <div class="bet-details">
                             <div class="bet-detail">
                                 <i class="fas fa-crosshairs"></i>
-                                <span>${item.pick_type || 'pick'}: ${item.team_picked || ''} ${item.spread ? '(' + item.spread + ')' : ''}</span>
+                                <span>${item.market_type || item.pick_type || 'Pick'}: ${item.selection || item.team_picked || 'N/A'} ${item.line_snapshot ? '(' + (item.line_snapshot > 0 ? '+' : '') + item.line_snapshot + ')' : (item.spread ? '(' + item.spread + ')' : '')}</span>
                             </div>
                             <div class="bet-detail">
                                 <i class="fas fa-chart-line"></i>
-                                <span>${oddsStr}</span>
+                                <span>${item.odds_snapshot ? (item.odds_snapshot > 0 ? '+' + item.odds_snapshot : '' + item.odds_snapshot) : oddsStr}</span>
                             </div>
-                            ${item.units ? `<div class="bet-detail"><i class="fas fa-coins"></i><span>${item.units} units</span></div>` : ''}
+                            ${(item.units || item.units === 0) ? `<div class="bet-detail"><i class="fas fa-coins"></i><span>${item.units} units</span></div>` : ''}
                         </div>
                         ${outcomeHtml}
                     </div>
