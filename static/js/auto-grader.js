@@ -365,6 +365,13 @@ const TMR_GRADER = {
             let comp = evt.competitions?.[0];
             if (!comp && data.boxscore) {
                 // Alternative structure for summary endpoint
+                // CRITICAL: Must check game status before grading - do NOT grade in-progress games
+                const headerStatus = data.header?.competitions?.[0]?.status?.type || {};
+                const boxscoreComplete = headerStatus.completed === true || headerStatus.state === 'post';
+                if (!boxscoreComplete) {
+                    console.log(`[TMR Grader] Single game (boxscore path) NOT complete: state=${headerStatus.state}, completed=${headerStatus.completed}`);
+                    return null;
+                }
                 const teams = data.boxscore.teams || [];
                 const homeTeam = teams.find(t => t.homeAway === 'home') || teams[1];
                 const awayTeam = teams.find(t => t.homeAway === 'away') || teams[0];
