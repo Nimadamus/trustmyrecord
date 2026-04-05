@@ -145,6 +145,9 @@ class PersistentAuthSystem {
         localStorage.removeItem(this.sessionKey);
         localStorage.removeItem('currentUser');
         localStorage.removeItem(this.rememberKey);
+        // Clear belt-and-suspenders keys set by forms-fixed.js
+        localStorage.removeItem('tmr_is_logged_in');
+        localStorage.removeItem('tmr_current_user');
     }
 
     isRememberMe() { return localStorage.getItem(this.rememberKey) === 'true'; }
@@ -403,6 +406,49 @@ const auth = new PersistentAuthSystem();
 if (typeof window !== 'undefined') {
     window.auth = auth;
     window.PersistentAuthSystem = PersistentAuthSystem;
+
+    /**
+     * Look up team affiliations for a username.
+     * Checks: auth user object (favoriteTeam), trustMyRecordProfile (favoriteTeams[]).
+     * Returns array of { sport, name, icon } or empty array.
+     */
+    window.getUserTeamBadges = function(username) {
+        var teams = [];
+        // 1. Check auth users list for favoriteTeam field
+        var users = [];
+        try { users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]'); } catch(e) {}
+        var user = users.find(function(u) { return u.username && u.username.toLowerCase() === (username || '').toLowerCase(); });
+        if (user && user.favoriteTeam) {
+            teams.push({ sport: user.favoriteSport || '', name: user.favoriteTeam, icon: '' });
+        }
+
+        // 2. Check trustMyRecordProfile for favoriteTeams (only for current user)
+        var current = auth.getCurrentUser();
+        if (current && current.username && current.username.toLowerCase() === (username || '').toLowerCase()) {
+            try {
+                var profile = JSON.parse(localStorage.getItem('trustMyRecordProfile') || '{}');
+                if (profile.favoriteTeams && profile.favoriteTeams.length > 0) {
+                    teams = profile.favoriteTeams.slice(0, 3); // max 3 badges
+                }
+            } catch(e) {}
+        }
+
+        return teams;
+    };
+
+    /**
+     * Render team badge HTML for a username. Returns HTML string.
+     * Shows up to 3 team badges inline.
+     */
+    window.renderTeamBadges = function(username) {
+        var teams = window.getUserTeamBadges(username);
+        if (!teams || teams.length === 0) return '';
+        return teams.map(function(t) {
+            var icon = t.icon || '';
+            return '<span class="user-team-badge" style="display:inline-block;font-size:0.7rem;padding:1px 6px;margin-left:4px;border-radius:3px;background:rgba(255,215,0,0.12);color:#ffd700;font-weight:600;vertical-align:middle;white-space:nowrap;">' +
+                (icon ? icon + ' ' : '') + (t.name || '') + '</span>';
+        }).join('');
+    };
 }
 console.log('Auth System loaded');
 

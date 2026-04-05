@@ -1490,6 +1490,7 @@
     <!-- Backend API Integration -->
     <script src="static/js/config.js?v=20260319"></script>
     <script src="static/js/backend-api.js?v=20260319"></script>
+    <script src="static/js/auth-persistent.js?v=20260405"></script>
     <script src="static/js/notifications.js?v=20260319"></script>
 
     <script>
@@ -2081,9 +2082,10 @@
             }
 
             container.innerHTML = leaderboard.map(function(entry, idx) {
+                var badges = typeof renderTeamBadges === 'function' ? renderTeamBadges(entry.user) : '';
                 return '<div class="mini-leaderboard-item">' +
                     '<span style="width: 30px; font-weight: 700; color: ' + (idx < 3 ? 'var(--neon-gold)' : 'var(--text-muted)') + ';">' + (idx + 1) + '</span>' +
-                    '<span style="flex: 1;">' + entry.user + '</span>' +
+                    '<span style="flex: 1;">' + entry.user + badges + '</span>' +
                     '<span style="font-family: \'Orbitron\', sans-serif; color: var(--neon-cyan);">' + entry.total + ' pts</span>' +
                 '</div>';
             }).join('');
@@ -2183,7 +2185,9 @@
         function showPollResults(poll, userVoteIndex) {
             document.getElementById('pollQuestion').style.display = 'none';
             document.getElementById('pollResults').style.display = 'block';
-            document.getElementById('yourVote').textContent = poll.options[userVoteIndex];
+            var yourVoteEl = document.getElementById('yourVote');
+            var userBadges = typeof renderTeamBadges === 'function' ? renderTeamBadges(currentUser?.username || '') : '';
+            yourVoteEl.innerHTML = poll.options[userVoteIndex] + userBadges;
 
             const votes = getPollVotes();
             const todayStr = new Date().toDateString();

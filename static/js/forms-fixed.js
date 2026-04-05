@@ -100,9 +100,14 @@ async function handleSignup(event) {
         const email = document.getElementById('signupEmail')?.value;
         const password = document.getElementById('signupPassword')?.value;
         const confirmPassword = document.getElementById('confirmPassword')?.value;
-        
+        const favoriteTeam = document.getElementById('favoriteTeam')?.value?.trim() || '';
+        const favoriteSport = document.getElementById('favoriteSport')?.value || '';
+        const displayName = document.getElementById('displayName')?.value?.trim() || '';
+        const location = document.getElementById('location')?.value?.trim() || '';
+        const bio = document.getElementById('bio')?.value?.trim() || '';
+
         console.log('[TMR] Signup attempt for:', username, email);
-        
+
         if (!username || !email || !password) {
             alert('All fields are required');
             return;
@@ -111,13 +116,13 @@ async function handleSignup(event) {
             alert('Passwords do not match');
             return;
         }
-        
+
         if (typeof auth === 'undefined') {
             console.error('[TMR] auth object is undefined!');
             alert('Auth system not loaded. Please refresh the page.');
             return;
         }
-        
+
         console.log('[TMR] Calling auth.register...');
         let result = auth.register(username, email, password);
         // Handle both sync and async register
@@ -130,13 +135,24 @@ async function handleSignup(event) {
             throw new Error(result.error || 'Registration failed');
         }
 
+        // Save optional profile fields that register() doesn't capture
+        if (result && typeof auth.updateProfile === 'function') {
+            var profileUpdates = {};
+            if (displayName) profileUpdates.displayName = displayName;
+            if (bio) profileUpdates.bio = bio;
+            if (location) profileUpdates.location = location;
+            if (favoriteTeam) profileUpdates.favoriteTeam = favoriteTeam;
+            if (favoriteSport) profileUpdates.favoriteSport = favoriteSport;
+            if (Object.keys(profileUpdates).length > 0) {
+                try { auth.updateProfile(profileUpdates); } catch(e) { console.warn('[TMR] Profile update after signup:', e.message); }
+            }
+        }
+
         // Ensure tmr_* keys are set (belt and suspenders)
         localStorage.setItem('tmr_is_logged_in', 'true');
-        if (result && result.user) {
-            localStorage.setItem('tmr_current_user', JSON.stringify(result.user));
-        } else {
-            localStorage.setItem('tmr_current_user', JSON.stringify({ username: username, email: email }));
-        }
+        // auth.register() returns user object directly (not wrapped in {user:...})
+        var userData = (result && result.user) ? result.user : (result && result.username) ? result : { username: username, email: email };
+        localStorage.setItem('tmr_current_user', JSON.stringify(userData));
 
         alert('Account created successfully! You are now logged in.');
 

@@ -930,7 +930,7 @@
                     <div class="card-header">
                         <div class="card-avatar">${letter}</div>
                         <div class="card-meta">
-                            <div class="card-username"><a href="profile.html?user=${post.username}">${post.displayName || post.username}</a></div>
+                            <div class="card-username"><a href="profile.html?user=${post.username}">${post.displayName || post.username}</a>${typeof renderTeamBadges === 'function' ? renderTeamBadges(post.username) : ''}</div>
                             <div class="card-info">
                                 ${typeBadge}
                                 ${post.sport ? `<span class="sport-pill">${post.sport}</span>` : ''}
@@ -975,7 +975,7 @@
                     <div class="card-header">
                         <div class="card-avatar">${letter}</div>
                         <div class="card-meta">
-                            <div class="card-username"><a href="profile.html?user=${username}">${username}</a></div>
+                            <div class="card-username"><a href="profile.html?user=${username}">${username}</a>${typeof renderTeamBadges === 'function' ? renderTeamBadges(username) : ''}</div>
                             <div class="card-info">
                                 <span class="card-type-badge badge-pick"><i class="fas fa-bullseye"></i> Pick</span>
                                 <span class="sport-pill">${pick.sport_key?.split('_')[1]?.toUpperCase() || 'Sports'}</span>

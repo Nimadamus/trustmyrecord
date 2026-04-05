@@ -863,7 +863,8 @@ function renderCategories() {
             if (cat.latest_thread) {
                 var lt = cat.latest_thread;
                 var ltTitle = (lt.title || '').length > 30 ? lt.title.substring(0, 30) + '...' : (lt.title || '');
-                lastHtml = '<div class="last-post-info"><div class="last-post-title">' + escHtml(ltTitle) + '</div><div class="last-post-meta">by <strong>' + escHtml(lt.username || '') + '</strong> ' + timeAgo(lt.created_at) + '</div></div>';
+                var ltBadges = typeof renderTeamBadges === 'function' ? renderTeamBadges(lt.username || '') : '';
+                lastHtml = '<div class="last-post-info"><div class="last-post-title">' + escHtml(ltTitle) + '</div><div class="last-post-meta">by <strong>' + escHtml(lt.username || '') + '</strong>' + ltBadges + ' ' + timeAgo(lt.created_at) + '</div></div>';
             }
 
             html += '<tr onclick="showThreadsList(\'' + escHtml(cat.slug) + '\',\'' + escHtml(cat.name) + '\',' + cat.id + ')">';
@@ -917,11 +918,13 @@ function renderThreads() {
         var replyCount = parseInt(t.post_count) || parseInt(t.reply_count) || 0;
         var viewCount = parseInt(t.view_count) || 0;
 
+        var authorBadges = typeof renderTeamBadges === 'function' ? renderTeamBadges(t.username || '') : '';
+        var lastBadges = typeof renderTeamBadges === 'function' ? renderTeamBadges(lastUser) : '';
         return '<tr class="' + (t.is_pinned ? 'pinned' : '') + '" onclick="showThreadDetail(' + t.id + ')">' +
-            '<td><div>' + pinHtml + '<span class="thread-title-link">' + escHtml(t.title) + '</span></div><div class="thread-meta">by <strong>' + escHtml(t.username || '') + '</strong> ' + timeAgo(t.created_at) + '</div></td>' +
+            '<td><div>' + pinHtml + '<span class="thread-title-link">' + escHtml(t.title) + '</span></div><div class="thread-meta">by <strong>' + escHtml(t.username || '') + '</strong>' + authorBadges + ' ' + timeAgo(t.created_at) + '</div></td>' +
             '<td class="col-num">' + replyCount + '</td>' +
             '<td class="col-num">' + viewCount + '</td>' +
-            '<td class="col-last"><div class="last-post-info"><div class="last-post-meta">by <strong>' + escHtml(lastUser) + '</strong><br>' + timeAgo(lastTime) + '</div></div></td>' +
+            '<td class="col-last"><div class="last-post-info"><div class="last-post-meta">by <strong>' + escHtml(lastUser) + '</strong>' + lastBadges + '<br>' + timeAgo(lastTime) + '</div></div></td>' +
             '</tr>';
     }).join('');
 }
@@ -995,8 +998,9 @@ function renderThread() {
             likeBtn = '<button class="vote-btn" onclick="likePost(' + post.id + ')">&#x1F44D; ' + (post.like_count || 0) + '</button>';
         }
 
+        var postBadges = typeof renderTeamBadges === 'function' ? renderTeamBadges(post.username) : '';
         return '<div class="post-card' + (post.isOP ? ' op-card' : '') + '">' +
-            '<div class="post-top-bar"><span><span class="post-author-name">' + escHtml(post.username) + '</span>' + editedNote + '</span><span class="post-number">#' + (idx + 1) + ' &middot; ' + new Date(post.created_at).toLocaleString() + '</span></div>' +
+            '<div class="post-top-bar"><span><span class="post-author-name">' + escHtml(post.username) + '</span>' + postBadges + editedNote + '</span><span class="post-number">#' + (idx + 1) + ' &middot; ' + new Date(post.created_at).toLocaleString() + '</span></div>' +
             '<div class="post-body">' + bodyHtml + '</div>' +
             '<div class="post-footer-bar"><div class="vote-btns">' + likeBtn + '</div><div></div></div>' +
             '</div>';
@@ -1166,8 +1170,9 @@ async function performSearch(query) {
         body.innerHTML = results.map(function(t) {
             var catName = t.category_name || '';
             var catSlug = t.category_slug || '';
+            var srBadges = typeof renderTeamBadges === 'function' ? renderTeamBadges(t.username || '') : '';
             return '<tr onclick="currentCategorySlug=\'' + escHtml(catSlug) + '\';currentCategoryName=\'' + escHtml(catName) + '\';showThreadDetail(' + t.id + ')">' +
-                '<td><span class="tag-pill">' + escHtml(catName) + '</span><div class="thread-title-link">' + escHtml(t.title) + '</div><div class="thread-meta">by <strong>' + escHtml(t.username || '') + '</strong> ' + timeAgo(t.created_at) + '</div></td>' +
+                '<td><span class="tag-pill">' + escHtml(catName) + '</span><div class="thread-title-link">' + escHtml(t.title) + '</div><div class="thread-meta">by <strong>' + escHtml(t.username || '') + '</strong>' + srBadges + ' ' + timeAgo(t.created_at) + '</div></td>' +
                 '<td class="col-num">' + (t.reply_count || 0) + '</td>' +
                 '<td class="col-num">' + (t.view_count || 0) + '</td>' +
                 '<td class="col-last"><div class="last-post-meta">' + timeAgo(t.created_at) + '</div></td>' +
