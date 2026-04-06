@@ -15,33 +15,42 @@ class TrustMyRecordAPI {
     }
 
     // Auto-detect which backend URL is reachable
+    // Render free tier cold-starts can take 30-60s, so we retry
     async detectBackend() {
         const urls = [this.baseUrl, ...(CONFIG?.api?.fallbackUrls || [])];
-        for (const url of urls) {
-            try {
-                const headers = {};
-                // localtunnel requires bypass header to avoid interstitial page
-                if (url.includes('loca.lt')) {
-                    headers['bypass-tunnel-reminder'] = 'true';
-                }
-                const res = await fetch(url + '/health', {
-                    signal: AbortSignal.timeout(CONFIG?.api?.timeout || 5000),
-                    headers
-                });
-                if (res.ok) {
-                    const data = await res.json().catch(() => null);
-                    if (data && data.status === 'ok') {
-                        this.baseUrl = url;
-                        this.backendAvailable = true;
-                        this.isLocaltunnel = url.includes('loca.lt');
-                        console.log('[TMR API] Backend detected at:', url);
-                        return;
+        const maxAttempts = 3;
+        const attemptTimeout = 15000; // 15s per attempt (covers cold-start)
+
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            for (const url of urls) {
+                try {
+                    const headers = {};
+                    if (url.includes('loca.lt')) {
+                        headers['bypass-tunnel-reminder'] = 'true';
                     }
-                }
-            } catch (e) { /* try next */ }
+                    const res = await fetch(url + '/health', {
+                        signal: AbortSignal.timeout(attemptTimeout),
+                        headers
+                    });
+                    if (res.ok) {
+                        const data = await res.json().catch(() => null);
+                        if (data && data.status === 'ok') {
+                            this.baseUrl = url;
+                            this.backendAvailable = true;
+                            this.isLocaltunnel = url.includes('loca.lt');
+                            console.log('[TMR API] Backend detected at:', url, `(attempt ${attempt})`);
+                            return;
+                        }
+                    }
+                } catch (e) { /* try next */ }
+            }
+            if (attempt < maxAttempts) {
+                console.log(`[TMR API] Backend not ready, retrying (${attempt}/${maxAttempts})...`);
+                await new Promise(r => setTimeout(r, 2000));
+            }
         }
         this.backendAvailable = false;
-        console.warn('[TMR API] No backend available. Using localStorage fallback.');
+        console.warn('[TMR API] No backend available after retries. Using localStorage fallback.');
     }
 
     // Token Management

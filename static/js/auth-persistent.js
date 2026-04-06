@@ -164,7 +164,10 @@ class PersistentAuthSystem {
         if (username.length < 3) throw new Error('Username must be at least 3 characters');
         if (password.length < 6) throw new Error('Password must be at least 6 characters');
 
-        // Try backend API first (only if backend is detected as available)
+        // Wait for backend detection to finish before checking availability
+        if (typeof api !== 'undefined' && api.ready) {
+            try { await api.ready; } catch (e) { /* detection failed */ }
+        }
         const backendReady = typeof CONFIG !== 'undefined' && CONFIG.features?.useBackendAPI && typeof api !== 'undefined' && api.backendAvailable === true;
         if (backendReady) {
             try {
@@ -222,7 +225,10 @@ class PersistentAuthSystem {
     }
 
     async login(usernameOrEmail, password, rememberMe = true) {
-        // Try backend API first (only if backend is detected as available)
+        // Wait for backend detection to finish before checking availability
+        if (typeof api !== 'undefined' && api.ready) {
+            try { await api.ready; } catch (e) { /* detection failed */ }
+        }
         const backendReady = typeof CONFIG !== 'undefined' && CONFIG.features?.useBackendAPI && typeof api !== 'undefined' && api.backendAvailable === true;
         if (backendReady) {
             try {
