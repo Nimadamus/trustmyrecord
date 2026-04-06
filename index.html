@@ -2788,6 +2788,11 @@
             color: var(--neon-red);
         }
 
+        .pick-status.push {
+            background: rgba(107, 114, 128, 0.2);
+            color: #9ca3af;
+        }
+
         @media (max-width: 1024px) {
             .stats-grid.enhanced,
             .activity-grid {
@@ -15558,7 +15563,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let html = '';
 
             recentPicks.forEach(pick => {
-                const statusClass = pick.status === 'won' ? 'won' : pick.status === 'lost' ? 'lost' : 'pending';
+                const statusClass = pick.status === 'won' ? 'won' : pick.status === 'lost' ? 'lost' : (pick.status === 'push' || pick.status === 'pushed') ? 'push' : 'pending';
                 const statusText = (pick.status || 'pending').toUpperCase();
                 const matchup = (pick.away_team || '') + ' vs ' + (pick.home_team || '');
                 const pickDisplay = pick.selection + (pick.line_snapshot ? ' ' + pick.line_snapshot : '');

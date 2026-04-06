@@ -298,7 +298,7 @@ const TMR_GRADER = {
             console.log(`[TMR Grader]     gradeTotal() -> pending (line is NaN)`);
             return 'pending';
         }
-        if (total === line) {
+        if (Math.abs(total - line) < 0.001) {
             console.log(`[TMR Grader]     gradeTotal() -> push`);
             return 'push';
         }

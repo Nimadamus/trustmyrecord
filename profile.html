@@ -468,6 +468,124 @@
         </div>
     </section>
 
+    <!-- ==================== CAPPERMETRICS - ADVANCED ANALYTICS ==================== -->
+    <section class="analytics-section" id="capperMetricsSection" style="display:none;">
+        <div class="container">
+            <div class="section-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                <div>
+                    <div class="section-title" style="font-size:1.2rem;">CapperMetrics</div>
+                    <div style="color:var(--text-muted);font-size:.8rem;margin-top:2px;">Advanced handicapping analytics inspired by PickMonitor</div>
+                </div>
+                <div id="timePeriodSelector" style="display:flex;gap:4px;flex-wrap:wrap;">
+                    <button class="period-btn active" data-period="all" onclick="switchPeriod('all')">All Time</button>
+                    <button class="period-btn" data-period="365" onclick="switchPeriod('365')">1Y</button>
+                    <button class="period-btn" data-period="90" onclick="switchPeriod('90')">90D</button>
+                    <button class="period-btn" data-period="30" onclick="switchPeriod('30')">30D</button>
+                    <button class="period-btn" data-period="7" onclick="switchPeriod('7')">7D</button>
+                </div>
+            </div>
+
+            <!-- Core CapperMetrics Cards -->
+            <div id="capperMetricsGrid" class="analytics-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-top:16px;"></div>
+
+            <!-- Equity Curve -->
+            <div style="margin-top:24px;">
+                <div class="section-header" style="margin-bottom:12px;"><div class="section-title">Equity Curve (Cumulative P/L)</div></div>
+                <div id="equityCurve" style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;padding:20px;position:relative;overflow:hidden;"></div>
+            </div>
+
+            <!-- Day of Week Performance -->
+            <div style="margin-top:24px;">
+                <div class="section-header" style="margin-bottom:12px;"><div class="section-title">Day of Week Performance</div></div>
+                <div id="dayOfWeekGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;"></div>
+            </div>
+
+            <!-- Monthly Returns Table -->
+            <div style="margin-top:24px;">
+                <div class="section-header" style="margin-bottom:12px;"><div class="section-title">Monthly Returns</div></div>
+                <div id="monthlyReturns" style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;overflow-x:auto;"></div>
+            </div>
+
+            <!-- Enhanced Sport Breakdown with Units -->
+            <div style="margin-top:24px;">
+                <div class="section-header" style="margin-bottom:12px;"><div class="section-title">Sport Performance (Detailed)</div></div>
+                <div id="sportDetailGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;"></div>
+            </div>
+
+            <!-- Enhanced Bet Type Breakdown with Units -->
+            <div style="margin-top:24px;">
+                <div class="section-header" style="margin-bottom:12px;"><div class="section-title">Bet Type Performance (Detailed)</div></div>
+                <div id="betTypeDetailGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;"></div>
+            </div>
+        </div>
+    </section>
+
+    <style>
+        .period-btn {
+            padding:6px 14px;border-radius:6px;border:1px solid var(--border-color);
+            background:var(--bg-card);color:var(--text-secondary);font-family:inherit;
+            font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;
+        }
+        .period-btn:hover { border-color:var(--accent-blue,#3b82f6);color:var(--text-primary); }
+        .period-btn.active {
+            background:var(--accent-blue,#3b82f6);color:#fff;border-color:var(--accent-blue,#3b82f6);
+        }
+        .capper-card {
+            background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;
+            padding:16px;text-align:center;transition:border-color .2s;
+        }
+        .capper-card:hover { border-color:var(--accent-blue,#3b82f6); }
+        .capper-card .cc-label {
+            font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;
+            font-weight:600;margin-bottom:6px;
+        }
+        .capper-card .cc-value {
+            font-size:1.4rem;font-weight:800;color:var(--text-primary);
+        }
+        .capper-card .cc-sub {
+            font-size:.72rem;color:var(--text-secondary);margin-top:4px;
+        }
+        .cc-positive { color:var(--accent-green) !important; }
+        .cc-negative { color:var(--accent-red) !important; }
+        .cc-neutral { color:var(--text-secondary) !important; }
+        .cc-blue { color:var(--accent-blue,#3b82f6) !important; }
+        .cc-gold { color:#f59e0b !important; }
+
+        .dow-cell {
+            background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;
+            padding:12px 8px;text-align:center;
+        }
+        .dow-cell .dow-label { font-size:.7rem;color:var(--text-muted);font-weight:600;text-transform:uppercase; }
+        .dow-cell .dow-record { font-size:.85rem;font-weight:700;margin-top:4px; }
+        .dow-cell .dow-units { font-size:.8rem;margin-top:2px; }
+
+        .monthly-table { width:100%;border-collapse:collapse; }
+        .monthly-table th { padding:10px 12px;text-align:left;font-size:.75rem;color:var(--text-muted);
+            text-transform:uppercase;letter-spacing:1px;font-weight:600;border-bottom:1px solid var(--border-color); }
+        .monthly-table td { padding:10px 12px;font-size:.85rem;border-bottom:1px solid var(--border-color);color:var(--text-secondary); }
+        .monthly-table tr:hover td { background:var(--bg-card-hover); }
+
+        .sport-detail-card {
+            background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;padding:16px;
+        }
+        .sport-detail-card .sd-header {
+            display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;
+            padding-bottom:10px;border-bottom:1px solid var(--border-color);
+        }
+        .sport-detail-card .sd-name { font-weight:700;font-size:1rem; }
+        .sport-detail-card .sd-row {
+            display:flex;justify-content:space-between;padding:4px 0;font-size:.85rem;
+        }
+        .sport-detail-card .sd-row .sd-label { color:var(--text-muted); }
+        .sport-detail-card .sd-row .sd-val { font-weight:600; }
+
+        .eq-line { stroke:var(--accent-blue,#3b82f6);stroke-width:2.5;fill:none; }
+        .eq-area { fill:url(#eqGrad);opacity:0.3; }
+        .eq-zero { stroke:var(--border-color);stroke-width:1;stroke-dasharray:4,4; }
+        .eq-dot { fill:var(--accent-blue,#3b82f6);r:3;opacity:0; }
+        .eq-dot:hover { opacity:1;r:5; }
+    </style>
+
     <script>
         window.onerror = function(msg, url, line) {
             var el = document.getElementById('profileHeader');
@@ -479,7 +597,7 @@
     <script src="static/js/analytics.js?v=20260405"></script>
     <script src="static/js/backend-api.js?v=20260330"></script>
     <script src="static/js/auth-persistent.js?v=20260330"></script>
-    <script src="static/js/auto-grader.js?v=20260330"></script>
+    <script src="static/js/auto-grader-fixed.js?v=20260405b"></script>
     <script>
     // ============================================================
     // Profile v2 - Pick Monitor Layout
@@ -725,6 +843,7 @@
         renderSummaryBar(stats);
         renderPicksTable(picks);
         renderAnalytics(stats);
+        renderCapperMetrics(picks);
         await loadSportBreakdown();
     }
 
@@ -997,6 +1116,329 @@
         html += '</div>';
         html += '<div style="text-align:right;margin-top:8px;color:var(--text-secondary);font-size:.8rem;">Cumulative: ' + (runningUnits >= 0 ? '+' : '') + runningUnits.toFixed(2) + 'u over ' + keys.length + ' weeks</div>';
         el.innerHTML = html;
+    }
+
+    // ======================== CAPPERMETRICS - ADVANCED ANALYTICS ========================
+    let currentPeriod = 'all';
+
+    function filterByPeriod(picks, days) {
+        if (days === 'all') return picks;
+        const cutoff = Date.now() - (parseInt(days) * 24 * 60 * 60 * 1000);
+        return picks.filter(p => {
+            const d = new Date(p.locked_at || p.created_at || 0).getTime();
+            return d >= cutoff;
+        });
+    }
+
+    function switchPeriod(period) {
+        currentPeriod = period;
+        document.querySelectorAll('.period-btn').forEach(b => b.classList.toggle('active', b.dataset.period === period));
+        const filtered = filterByPeriod(allLoadedPicks, period);
+        const stats = computeUnifiedStats(filtered);
+        renderSummaryBar(stats);
+        renderAnalytics(stats);
+        renderCapperMetrics(filtered);
+    }
+
+    function computeAdvancedStats(picks) {
+        const graded = picks.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
+        const wl = graded.filter(p => p.status === 'won' || p.status === 'lost');
+        const w = wl.filter(p => p.status === 'won').length;
+        const l = wl.filter(p => p.status === 'lost').length;
+        const n = w + l;
+        if (n === 0) return null;
+
+        // Basic
+        const winRate = w / n;
+        let netUnits = 0, totalRisked = 0;
+        graded.forEach(p => { netUnits += pickPL(p); });
+        graded.forEach(p => {
+            const u = p.units || 1, o = p.odds_snapshot || p.odds || -110;
+            totalRisked += o < 0 ? (u * Math.abs(o) / 100) : u;
+        });
+        const roi = totalRisked > 0 ? (netUnits / totalRisked) * 100 : 0;
+
+        // Average Units Risked (AUR)
+        const aur = graded.length > 0 ? graded.reduce((s, p) => s + (p.units || 1), 0) / graded.length : 1;
+
+        // Effective Units (eU) - normalize all bets to 3 units
+        const eU = aur > 0 ? (netUnits / aur) * 3 : 0;
+
+        // Effective Win% (eWP) - what win% would produce this ROI at -110
+        // At -110: ROI = (WP * 1 - (1-WP) * 1.1) / ((WP * 1.1 + (1-WP) * 1) * ... )
+        // Simplified: eWP = (roi/100 + 1.1) / 2.1 roughly
+        const eWP = Math.min(100, Math.max(0, ((roi / 100 + 1.1) / 2.1) * 100));
+
+        // Average Odds per Pick (AOP)
+        const oddsArr = wl.map(p => p.odds_snapshot || p.odds || -110);
+        const aop = oddsArr.length > 0 ? Math.round(oddsArr.reduce((a, b) => a + b, 0) / oddsArr.length) : -110;
+
+        // Z-Score: measures statistical significance
+        // z = (p_hat - 0.5) / sqrt(0.5 * 0.5 / n) for simple binomial
+        // Better: use implied probability weighted
+        const impliedProbs = wl.map(p => {
+            const o = p.odds_snapshot || p.odds || -110;
+            return o < 0 ? Math.abs(o) / (Math.abs(o) + 100) : 100 / (o + 100);
+        });
+        const avgImplied = impliedProbs.reduce((a, b) => a + b, 0) / impliedProbs.length;
+        const zScore = n >= 10 ? (winRate - avgImplied) / Math.sqrt(avgImplied * (1 - avgImplied) / n) : 0;
+
+        // Confidence metric (PickMonitor-style)
+        // confidence = prob(z) * r^2 * min(500, n) / 500
+        const probZ = 1 - 0.5 * Math.exp(-0.717 * zScore - 0.416 * zScore * zScore); // approx CDF
+        const rSquared = n > 1 ? 1 - (1 / (1 + (zScore * zScore / n))) : 0;
+        const confidence = Math.max(0, Math.min(100, probZ * rSquared * Math.min(500, n) / 500 * 100));
+
+        // Projected ROI (always less than actual ROI, weighted by confidence)
+        const pROI = roi * (confidence / 100);
+
+        // Sharpe Ratio (returns / std dev of returns)
+        const returns = graded.map(p => pickPL(p));
+        const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
+        const variance = returns.reduce((s, r) => s + Math.pow(r - avgReturn, 2), 0) / returns.length;
+        const stdDev = Math.sqrt(variance);
+        const sharpe = stdDev > 0 ? (avgReturn / stdDev) : 0;
+
+        // Sortino Ratio (only downside deviation)
+        const downReturns = returns.filter(r => r < 0);
+        const downVar = downReturns.length > 0 ? downReturns.reduce((s, r) => s + r * r, 0) / downReturns.length : 0;
+        const downDev = Math.sqrt(downVar);
+        const sortino = downDev > 0 ? (avgReturn / downDev) : 0;
+
+        // Max Drawdown
+        const chrono = [...graded].sort((a, b) => new Date(a.locked_at || a.created_at || 0) - new Date(b.locked_at || b.created_at || 0));
+        let peak = 0, cumPL = 0, maxDD = 0;
+        const equityPoints = [{ x: 0, y: 0 }];
+        chrono.forEach((p, i) => {
+            cumPL += pickPL(p);
+            equityPoints.push({ x: i + 1, y: cumPL });
+            if (cumPL > peak) peak = cumPL;
+            const dd = peak - cumPL;
+            if (dd > maxDD) maxDD = dd;
+        });
+
+        // Kelly Criterion: f* = (bp - q) / b where b = decimal odds - 1, p = win rate, q = 1 - p
+        const avgDecimal = aop < 0 ? (100 / Math.abs(aop)) + 1 : (aop / 100) + 1;
+        const b = avgDecimal - 1;
+        const kelly = b > 0 ? ((b * winRate - (1 - winRate)) / b) * 100 : 0;
+
+        // Day of week stats
+        const dow = [0, 1, 2, 3, 4, 5, 6].map(day => {
+            const dayPicks = graded.filter(p => {
+                const d = new Date(p.locked_at || p.created_at || 0);
+                return d.getDay() === day;
+            });
+            const dw = dayPicks.filter(p => p.status === 'won').length;
+            const dl = dayPicks.filter(p => p.status === 'lost').length;
+            let du = 0; dayPicks.forEach(p => { du += pickPL(p); });
+            return { day, picks: dayPicks.length, wins: dw, losses: dl, units: du };
+        });
+
+        // Monthly returns
+        const months = {};
+        chrono.forEach(p => {
+            const d = new Date(p.locked_at || p.created_at || 0);
+            const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            if (!months[key]) months[key] = { wins: 0, losses: 0, pushes: 0, units: 0, picks: 0 };
+            months[key].picks++;
+            if (p.status === 'won') months[key].wins++;
+            else if (p.status === 'lost') months[key].losses++;
+            else months[key].pushes++;
+            months[key].units += pickPL(p);
+        });
+
+        // Sport breakdown with units
+        const sportMap = {};
+        graded.forEach(p => {
+            const sk = p.sport_key || 'unknown';
+            if (!sportMap[sk]) sportMap[sk] = { wins: 0, losses: 0, pushes: 0, units: 0, risked: 0, picks: 0 };
+            sportMap[sk].picks++;
+            if (p.status === 'won') sportMap[sk].wins++;
+            else if (p.status === 'lost') sportMap[sk].losses++;
+            else sportMap[sk].pushes++;
+            sportMap[sk].units += pickPL(p);
+            const u = p.units || 1, o = p.odds_snapshot || p.odds || -110;
+            sportMap[sk].risked += o < 0 ? (u * Math.abs(o) / 100) : u;
+        });
+
+        // Bet type breakdown with units
+        const typeMap = {};
+        graded.forEach(p => {
+            const mt = p.market_type || 'unknown';
+            const label = (mt === 'h2h' || mt === 'moneyline') ? 'Moneyline' : (mt === 'spreads' || mt === 'spread') ? 'Spread' : (mt === 'totals' || mt === 'total') ? 'Totals' : mt;
+            if (!typeMap[label]) typeMap[label] = { wins: 0, losses: 0, pushes: 0, units: 0, risked: 0, picks: 0 };
+            typeMap[label].picks++;
+            if (p.status === 'won') typeMap[label].wins++;
+            else if (p.status === 'lost') typeMap[label].losses++;
+            else typeMap[label].pushes++;
+            typeMap[label].units += pickPL(p);
+            const u = p.units || 1, o = p.odds_snapshot || p.odds || -110;
+            typeMap[label].risked += o < 0 ? (u * Math.abs(o) / 100) : u;
+        });
+
+        return {
+            w, l, n, winRate, netUnits, totalRisked, roi, aur, eU, eWP, aop,
+            zScore, confidence, pROI, sharpe, sortino, maxDD, kelly,
+            equityPoints, dow, months, sportMap, typeMap, graded
+        };
+    }
+
+    function renderCapperMetrics(picks) {
+        const section = document.getElementById('capperMetricsSection');
+        const adv = computeAdvancedStats(picks);
+        if (!adv) { section.style.display = 'none'; return; }
+        section.style.display = 'block';
+
+        // CapperMetrics cards
+        const grid = document.getElementById('capperMetricsGrid');
+        const fmtPct = (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+        const fmtU = (v) => (v >= 0 ? '+' : '') + v.toFixed(2);
+        const zCls = adv.zScore > 1.5 ? 'cc-positive' : adv.zScore < -1.5 ? 'cc-negative' : 'cc-neutral';
+        const confCls = adv.confidence > 30 ? 'cc-positive' : adv.confidence > 10 ? 'cc-gold' : 'cc-neutral';
+        const kellyCls = adv.kelly > 0 ? 'cc-positive' : adv.kelly < -5 ? 'cc-negative' : 'cc-neutral';
+
+        grid.innerHTML =
+            cc('Record', adv.w + '-' + adv.l, adv.n + ' graded', '') +
+            cc('Win Rate', adv.winRate.toFixed(1) + '%', 'W / (W+L)', adv.winRate >= 52 ? 'cc-positive' : adv.winRate < 48 ? 'cc-negative' : '') +
+            cc('ROI', fmtPct(adv.roi), 'Return on Investment', adv.roi > 0 ? 'cc-positive' : adv.roi < 0 ? 'cc-negative' : '') +
+            cc('Net Units', fmtU(adv.netUnits), 'Total P/L', adv.netUnits > 0 ? 'cc-positive' : adv.netUnits < 0 ? 'cc-negative' : '') +
+            cc('Eff. Units (eU)', fmtU(adv.eU), 'Normalized to 3u/pick', adv.eU > 0 ? 'cc-positive' : adv.eU < 0 ? 'cc-negative' : '') +
+            cc('Eff. Win% (eWP)', adv.eWP.toFixed(1) + '%', 'Win% equiv at -110', adv.eWP > 52 ? 'cc-positive' : adv.eWP < 48 ? 'cc-negative' : '') +
+            cc('Avg Odds (AOP)', (adv.aop > 0 ? '+' : '') + adv.aop, 'Per pick average', 'cc-blue') +
+            cc('Avg Risked (AUR)', adv.aur.toFixed(2) + 'u', 'Per pick average', '') +
+            cc('Z-Score', adv.zScore.toFixed(2), adv.zScore > 2 ? 'Strong skill signal' : adv.zScore > 1 ? 'Possible skill' : 'Inconclusive', zCls) +
+            cc('Confidence', adv.confidence.toFixed(1) + '%', 'Skill probability', confCls) +
+            cc('Projected ROI', fmtPct(adv.pROI), 'Forward-looking estimate', adv.pROI > 0 ? 'cc-positive' : 'cc-negative') +
+            cc('Sharpe Ratio', adv.sharpe.toFixed(3), adv.sharpe > 0.5 ? 'Strong' : adv.sharpe > 0.2 ? 'Moderate' : 'Weak', adv.sharpe > 0.3 ? 'cc-positive' : '') +
+            cc('Sortino Ratio', adv.sortino.toFixed(3), 'Downside-adjusted', adv.sortino > 0.5 ? 'cc-positive' : '') +
+            cc('Max Drawdown', adv.maxDD.toFixed(2) + 'u', 'Peak-to-trough loss', adv.maxDD > 10 ? 'cc-negative' : 'cc-gold') +
+            cc('Kelly %', adv.kelly.toFixed(1) + '%', 'Optimal bet sizing', kellyCls);
+
+        // Equity Curve
+        renderEquityCurve(adv.equityPoints);
+        // Day of Week
+        renderDayOfWeek(adv.dow);
+        // Monthly Returns
+        renderMonthlyReturns(adv.months);
+        // Sport Detail
+        renderDetailBreakdown('sportDetailGrid', adv.sportMap, true);
+        // Bet Type Detail
+        renderDetailBreakdown('betTypeDetailGrid', adv.typeMap, false);
+    }
+
+    function cc(label, value, sub, cls) {
+        return '<div class="capper-card"><div class="cc-label">' + label + '</div><div class="cc-value ' + cls + '">' + value + '</div><div class="cc-sub">' + sub + '</div></div>';
+    }
+
+    function renderEquityCurve(points) {
+        const el = document.getElementById('equityCurve');
+        if (!points || points.length < 2) { el.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px;">Not enough data</div>'; return; }
+
+        const W = 700, H = 200, pad = { t: 10, r: 20, b: 30, l: 50 };
+        const iw = W - pad.l - pad.r, ih = H - pad.t - pad.b;
+        const maxX = points.length - 1;
+        const ys = points.map(p => p.y);
+        const minY = Math.min(0, ...ys), maxY = Math.max(0, ...ys);
+        const rangeY = maxY - minY || 1;
+
+        const sx = (x) => pad.l + (x / maxX) * iw;
+        const sy = (y) => pad.t + ih - ((y - minY) / rangeY) * ih;
+
+        let pathD = 'M' + sx(0) + ',' + sy(0);
+        let areaD = 'M' + sx(0) + ',' + sy(0);
+        let dots = '';
+        points.forEach((p, i) => {
+            if (i > 0) pathD += ' L' + sx(i) + ',' + sy(p.y);
+            areaD += ' L' + sx(i) + ',' + sy(p.y);
+            dots += '<circle class="eq-dot" cx="' + sx(i) + '" cy="' + sy(p.y) + '" r="3"><title>Pick #' + i + ': ' + (p.y >= 0 ? '+' : '') + p.y.toFixed(2) + 'u</title></circle>';
+        });
+        areaD += ' L' + sx(maxX) + ',' + sy(0) + ' L' + sx(0) + ',' + sy(0) + ' Z';
+
+        // Zero line
+        const zeroY = sy(0);
+
+        // Y axis labels
+        const ySteps = 5;
+        let yLabels = '';
+        for (let i = 0; i <= ySteps; i++) {
+            const v = minY + (rangeY * i / ySteps);
+            const yPos = sy(v);
+            yLabels += '<text x="' + (pad.l - 8) + '" y="' + (yPos + 4) + '" text-anchor="end" fill="#6b7280" font-size="10">' + (v >= 0 ? '+' : '') + v.toFixed(1) + '</text>';
+            yLabels += '<line x1="' + pad.l + '" y1="' + yPos + '" x2="' + (W - pad.r) + '" y2="' + yPos + '" stroke="#1c1f2a" stroke-width="1"/>';
+        }
+
+        el.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;">' +
+            '<defs><linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"/><stop offset="100%" stop-color="#3b82f6" stop-opacity="0.02"/></linearGradient></defs>' +
+            yLabels +
+            '<line class="eq-zero" x1="' + pad.l + '" y1="' + zeroY + '" x2="' + (W - pad.r) + '" y2="' + zeroY + '"/>' +
+            '<path class="eq-area" d="' + areaD + '"/>' +
+            '<path class="eq-line" d="' + pathD + '"/>' +
+            dots +
+            '</svg>';
+    }
+
+    function renderDayOfWeek(dow) {
+        const el = document.getElementById('dayOfWeekGrid');
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        el.innerHTML = dow.map((d, i) => {
+            if (d.picks === 0) return '<div class="dow-cell"><div class="dow-label">' + days[i] + '</div><div class="dow-record" style="color:var(--text-muted);">--</div></div>';
+            const wr = (d.wins + d.losses) > 0 ? ((d.wins / (d.wins + d.losses)) * 100).toFixed(0) : '0';
+            const uc = d.units >= 0 ? 'cc-positive' : 'cc-negative';
+            return '<div class="dow-cell"><div class="dow-label">' + days[i] + '</div>' +
+                '<div class="dow-record">' + d.wins + '-' + d.losses + '</div>' +
+                '<div class="dow-units ' + uc + '">' + (d.units >= 0 ? '+' : '') + d.units.toFixed(1) + 'u</div>' +
+                '<div style="font-size:.7rem;color:var(--text-muted);">' + wr + '% (' + d.picks + ')</div></div>';
+        }).join('');
+    }
+
+    function renderMonthlyReturns(months) {
+        const el = document.getElementById('monthlyReturns');
+        const keys = Object.keys(months).sort().reverse();
+        if (keys.length === 0) { el.innerHTML = '<div style="color:var(--text-muted);padding:16px;text-align:center;">No data</div>'; return; }
+
+        let cumUnits = 0;
+        // Calculate cumulative from oldest to newest
+        const sortedKeys = [...keys].reverse();
+        const cumMap = {};
+        sortedKeys.forEach(k => { cumUnits += months[k].units; cumMap[k] = cumUnits; });
+
+        let rows = '';
+        keys.forEach(k => {
+            const m = months[k];
+            const wr = (m.wins + m.losses) > 0 ? ((m.wins / (m.wins + m.losses)) * 100).toFixed(1) : '0.0';
+            const uc = m.units >= 0 ? 'cc-positive' : 'cc-negative';
+            const cc2 = cumMap[k] >= 0 ? 'cc-positive' : 'cc-negative';
+            const d = new Date(k + '-01');
+            const label = d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+            rows += '<tr><td style="font-weight:600;">' + label + '</td><td>' + m.wins + '-' + m.losses + '-' + m.pushes + '</td>' +
+                '<td>' + wr + '%</td><td class="' + uc + '" style="font-weight:700;">' + (m.units >= 0 ? '+' : '') + m.units.toFixed(2) + 'u</td>' +
+                '<td class="' + cc2 + '">' + (cumMap[k] >= 0 ? '+' : '') + cumMap[k].toFixed(2) + 'u</td><td>' + m.picks + '</td></tr>';
+        });
+
+        el.innerHTML = '<table class="monthly-table"><thead><tr><th>Month</th><th>Record</th><th>Win%</th><th>Units</th><th>Cumulative</th><th>Picks</th></tr></thead><tbody>' + rows + '</tbody></table>';
+    }
+
+    function renderDetailBreakdown(containerId, dataMap, isSport) {
+        const el = document.getElementById(containerId);
+        const entries = Object.entries(dataMap).sort((a, b) => b[1].units - a[1].units);
+        if (entries.length === 0) { el.innerHTML = '<div style="color:var(--text-muted);padding:16px;">No data</div>'; return; }
+
+        el.innerHTML = entries.map(([key, d]) => {
+            const label = isSport ? fmtSport(key) : key;
+            const wr = (d.wins + d.losses) > 0 ? ((d.wins / (d.wins + d.losses)) * 100).toFixed(1) : '0.0';
+            const roi = d.risked > 0 ? ((d.units / d.risked) * 100).toFixed(1) : '0.0';
+            const uc = d.units >= 0 ? 'cc-positive' : 'cc-negative';
+            const rc = parseFloat(roi) > 0 ? 'cc-positive' : parseFloat(roi) < 0 ? 'cc-negative' : '';
+            const wrBar = Math.min(100, Math.max(0, parseFloat(wr)));
+
+            return '<div class="sport-detail-card">' +
+                '<div class="sd-header"><span class="sd-name">' + label + '</span><span class="' + uc + '" style="font-weight:800;font-size:1.1rem;">' + (d.units >= 0 ? '+' : '') + d.units.toFixed(2) + 'u</span></div>' +
+                '<div class="sd-row"><span class="sd-label">Record</span><span class="sd-val">' + d.wins + '-' + d.losses + '-' + d.pushes + '</span></div>' +
+                '<div class="sd-row"><span class="sd-label">Win Rate</span><span class="sd-val">' + wr + '%</span></div>' +
+                '<div style="height:4px;background:var(--border-color);border-radius:2px;margin:4px 0;"><div style="height:100%;width:' + wrBar + '%;background:' + (wrBar >= 52 ? 'var(--accent-green)' : wrBar < 48 ? 'var(--accent-red)' : 'var(--accent-blue,#3b82f6)') + ';border-radius:2px;"></div></div>' +
+                '<div class="sd-row"><span class="sd-label">ROI</span><span class="sd-val ' + rc + '">' + (parseFloat(roi) >= 0 ? '+' : '') + roi + '%</span></div>' +
+                '<div class="sd-row"><span class="sd-label">Total Picks</span><span class="sd-val">' + d.picks + '</span></div></div>';
+        }).join('');
     }
 
     function bRowExtended(name, record, wr, units) {
