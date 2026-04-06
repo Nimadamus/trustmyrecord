@@ -24,6 +24,14 @@ const CONFIG = {
         requireEmailVerification: false
     },
 
+    // Analytics Configuration (GA4)
+    analytics: {
+        enabled: true,
+        measurementId: 'G-V5MCVXS2HE',
+        gtmId: '',
+        debug: false
+    },
+
     // App Settings
     settings: {
         itemsPerPage: 20,

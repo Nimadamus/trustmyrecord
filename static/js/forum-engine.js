@@ -182,6 +182,9 @@ class ForumEngine {
         threads.unshift(thread);
         this.saveThreads(threads);
 
+        // Analytics
+        if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.forumThreadCreated({ thread_id: thread.id, thread_title: thread.title, sport: categoryId });
+
         // Create activity
         this.createActivity('new_thread', currentUser.username, { threadId: thread.id, categoryId });
 
@@ -380,6 +383,9 @@ class ForumEngine {
             threads[threadIndex].updatedAt = new Date().toISOString();
             this.saveThreads(threads);
         }
+
+        // Analytics
+        if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.forumReplySubmitted({ thread_id: threadId });
 
         // Notify subscribers
         this.notifySubscribers(threadId, 'new_reply', reply);

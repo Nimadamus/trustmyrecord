@@ -49,6 +49,7 @@ let currentFilteredGames = [];
  */
 function selectSport(sport) {
     console.log('selectSport() called with:', sport);
+    if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.makePickStarted({ button_location: 'sport_card', sport: sport });
     selectedSport = sport;
     document.querySelectorAll('.sport-card').forEach(card => {
         card.classList.remove('selected');
@@ -543,6 +544,9 @@ async function submitPick() {
         console.log('[TMR] Pick saved to localStorage:', pick);
         alert('Pick submitted! (Saved locally - connect to backend for permanent record)');
     }
+
+    // Analytics: track pick submission
+    if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.pickSubmitted({ sport: selectedSport, pick_type: selectedBetType, odds: oddsValue, units: selectedUnits, league: sportKey });
 
     // Update picks history display if it exists
     if (typeof loadPicksHistory === 'function') {

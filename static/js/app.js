@@ -33,8 +33,14 @@ const App = {
         document.getElementById('mobile-menu-overlay')?.addEventListener('click', this.toggleMobileMenu);
 
         // Auth modals
-        document.getElementById('login-btn')?.addEventListener('click', () => this.showModal('login-modal'));
-        document.getElementById('signup-btn')?.addEventListener('click', () => this.showModal('signup-modal'));
+        document.getElementById('login-btn')?.addEventListener('click', () => {
+            if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.loginStarted({ button_location: 'nav_bar' });
+            this.showModal('login-modal');
+        });
+        document.getElementById('signup-btn')?.addEventListener('click', () => {
+            if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.signUpStarted({ button_location: 'nav_bar' });
+            this.showModal('signup-modal');
+        });
         document.getElementById('mobile-login-btn')?.addEventListener('click', () => {
             this.toggleMobileMenu();
             this.showModal('login-modal');
@@ -267,13 +273,15 @@ const App = {
             return;
         }
 
+        if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.makePickStarted({ button_location: 'pick_form' });
+
         const form = e.target;
         const submitBtn = form.querySelector('button[type="submit"]');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Posting...';
 
         const oddsType = form.querySelector('#odds-type').value;
-        const odds = oddsType === 'american' 
+        const odds = oddsType === 'american'
             ? form.querySelector('#american-odds').value
             : form.querySelector('#decimal-odds').value;
 
@@ -291,6 +299,7 @@ const App = {
             await api.createPick(pickData);
             form.reset();
             this.showToast('Pick posted successfully!');
+            if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.pickSubmitted({ sport: pickData.sport, pick_type: pickData.pick, odds: pickData.odds, units: pickData.stake, league: pickData.league });
             this.loadFeed();
         } catch (error) {
             this.showToast(error.message || 'Failed to post pick', 'error');

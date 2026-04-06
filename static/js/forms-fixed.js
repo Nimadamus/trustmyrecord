@@ -6,7 +6,8 @@ async function handleLogin(event) {
     event.preventDefault();
     event.stopPropagation();
     console.log('[TMR] ==================== LOGIN STARTED ====================');
-    
+    if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.loginStarted({ button_location: 'login_modal' });
+
     try {
         const email = document.getElementById('loginEmail')?.value;
         const password = document.getElementById('loginPassword')?.value;
@@ -90,8 +91,9 @@ async function handleLogin(event) {
         if (typeof updateHeaderAuthButtons === 'function') updateHeaderAuthButtons();
         if (typeof updateProfileLink === 'function') updateProfileLink();
 
+        if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.loginCompleted({ username: user.username });
         console.log('[TMR] ==================== LOGIN COMPLETE ====================');
-        
+
     } catch (error) {
         console.error('[TMR] ==================== LOGIN ERROR ====================');
         console.error('[TMR] Error name:', error.name);
@@ -105,7 +107,8 @@ async function handleSignup(event) {
     event.preventDefault();
     event.stopPropagation();
     console.log('[TMR] ==================== SIGNUP STARTED ====================');
-    
+    if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.signUpStarted({ button_location: 'signup_modal' });
+
     try {
         const username = document.getElementById('signupUsername')?.value;
         const email = document.getElementById('signupEmail')?.value;
@@ -191,8 +194,9 @@ async function handleSignup(event) {
         if (typeof updateHeaderAuthButtons === 'function') updateHeaderAuthButtons();
         if (typeof updateProfileLink === 'function') updateProfileLink();
 
+        if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.signUpCompleted({ username: username, favorite_sport: favoriteSport });
         console.log('[TMR] ==================== SIGNUP COMPLETE ====================');
-        
+
     } catch (error) {
         console.error('[TMR] Signup error:', error);
         alert('Registration failed: ' + error.message);

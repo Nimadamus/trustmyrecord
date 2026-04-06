@@ -230,10 +230,13 @@ class ChallengesEngine {
         challenges.push(challenge);
         this.saveChallenges(challenges);
 
+        // Analytics
+        if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.challengeCreated({ challenge_type: type, sport: sport });
+
         // Create notification/activity
-        this.createActivity('challenge_created', currentUser.username, { 
-            challengeId: challenge.id, 
-            opponent: opponentUsername 
+        this.createActivity('challenge_created', currentUser.username, {
+            challengeId: challenge.id,
+            opponent: opponentUsername
         });
 
         return { success: true, challenge };
@@ -262,6 +265,9 @@ class ChallengesEngine {
         if (challenge.status !== 'pending') {
             return { success: false, error: 'Challenge is no longer pending' };
         }
+
+        // Analytics
+        if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.challengeAccepted({ challenge_id: challengeId });
 
         // Start the challenge
         challenge.status = 'active';

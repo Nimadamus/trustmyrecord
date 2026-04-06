@@ -168,6 +168,7 @@ class AuthSystem {
 
         this.saveUsers();
         localStorage.setItem('tmr_current_user', JSON.stringify(this.currentUser));
+        if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.profileUpdated({ fields_updated: Object.keys(updates).join(',') });
 
         return this.currentUser;
     }
