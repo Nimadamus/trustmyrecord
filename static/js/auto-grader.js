@@ -747,40 +747,44 @@ if (typeof window !== 'undefined') {
     window.TMR.runAutoGrading = TMR_GRADER.runAutoGrading.bind(TMR_GRADER);
 }
 
-// One-time fix: Revert any picks that were incorrectly graded while games were still in progress
-// This runs once per session to catch the Cardinals/Tigers Over 8 bug from April 5 2026
+// One-time fix (v2): Revert ALL picks graded on April 5 2026 back to pending
+// The boxscore completion bug graded in-progress games. Nuke all grades from today
+// and let the fixed grader re-grade them properly once games are actually final.
 (function fixIncorrectlyGradedPicks() {
+    var FIX_KEY = 'tmr_grader_fix_v2_applied';
+    if (localStorage.getItem(FIX_KEY)) return; // Only run once
     try {
         var picks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
         var fixed = 0;
-        var today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
         picks.forEach(function(p) {
-            // Find picks graded today that have suspiciously low scores (0-0, 1-0, etc.)
-            // These were graded while games were still in progress due to the boxscore bug
-            if (p.graded_at && p.graded_at.startsWith(today) && (p.status === 'lost' || p.status === 'won' || p.result === 'lost' || p.result === 'won')) {
-                var totalScore = (parseInt(p.home_score) || 0) + (parseInt(p.away_score) || 0);
-                // If total score is very low AND it was graded today, it was likely graded mid-game
-                // For over/under picks with line >= 5 and total score <= 2, this is almost certainly a bug
-                var line = parseFloat(p.line_snapshot || p.line || 0);
-                var isTotal = (p.market_type === 'total' || p.market_type === 'totals');
-                if (isTotal && line >= 5 && totalScore <= 2) {
-                    console.log('[TMR Fix] Reverting incorrectly graded pick:', p.id, p.selection, 'Score was:', p.away_score, '-', p.home_score);
-                    p.status = 'pending';
-                    p.result = 'pending';
-                    delete p.graded_at;
-                    delete p.home_score;
-                    delete p.away_score;
-                    delete p.result_units;
-                    fixed++;
-                }
+            var isGraded = (p.status === 'lost' || p.status === 'won' || p.status === 'push' ||
+                            p.result === 'lost' || p.result === 'won' || p.result === 'push');
+            if (!isGraded) return;
+            // Revert if graded today OR if scores look like an in-progress game (both low)
+            var gradedToday = p.graded_at && p.graded_at.indexOf('2026-04-05') !== -1;
+            var homeScore = parseInt(p.home_score);
+            var awayScore = parseInt(p.away_score);
+            var bothLow = (!isNaN(homeScore) && !isNaN(awayScore) && (homeScore + awayScore) <= 3);
+            // Also catch picks where scores were never set (graded without real data)
+            var noScores = (p.home_score === undefined || p.away_score === undefined || p.home_score === null || p.away_score === null);
+            if (gradedToday || bothLow || noScores) {
+                console.log('[TMR Fix v2] Reverting pick:', p.id, '| selection:', p.selection, '| was:', p.status || p.result, '| scores:', p.away_score, '-', p.home_score);
+                p.status = 'pending';
+                p.result = 'pending';
+                delete p.graded_at;
+                delete p.home_score;
+                delete p.away_score;
+                delete p.result_units;
+                fixed++;
             }
         });
         if (fixed > 0) {
             localStorage.setItem('tmr_picks', JSON.stringify(picks));
-            console.log('[TMR Fix] Reverted ' + fixed + ' incorrectly graded picks back to pending');
+            console.log('[TMR Fix v2] Reverted ' + fixed + ' picks back to pending');
         }
+        localStorage.setItem(FIX_KEY, 'true');
     } catch(e) {
-        console.error('[TMR Fix] Error fixing picks:', e);
+        console.error('[TMR Fix v2] Error:', e);
     }
 })();
 
