@@ -1,0 +1,158 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Pick Data Diagnosis</title>
+    <style>
+        body { font-family: monospace; background: #1a1a2e; color: #eee; padding: 20px; }
+        .section { background: #16213e; padding: 15px; margin: 15px 0; border-radius: 8px; }
+        .pick { background: #0f3460; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .ok { color: #4ecca3; }
+        .error { color: #e74c3c; }
+        .warn { color: #f39c12; }
+        pre { overflow-x: auto; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>🔍 TrustMyRecord Pick Data Diagnosis</h1>
+    
+    <div class="section">
+        <h2>Current User</h2>
+        <div id="userInfo"></div>
+    </div>
+    
+    <div class="section">
+        <h2>All Picks in localStorage</h2>
+        <div id="allPicks"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Profile Page Filter Logic</h2>
+        <div id="filterLogic"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Filtered Picks (what profile page sees)</h2>
+        <div id="filteredPicks"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Stats Calculation</h2>
+        <div id="statsCalc"></div>
+    </div>
+
+    <script src="static/js/auth.js"></script>
+    <script>
+        // Get current user
+        const currentUser = (typeof auth !== 'undefined' && auth.getCurrentUser) ? auth.getCurrentUser() : null;
+        const userInfo = document.getElementById('userInfo');
+        
+        if (!currentUser) {
+            userInfo.innerHTML = '<span class="error">NOT LOGGED IN - Login first to see your picks</span>';
+        } else {
+            userInfo.innerHTML = `
+                <p><strong>Username:</strong> ${currentUser.username}</p>
+                <p><strong>ID:</strong> ${currentUser.id}</p>
+                <p class="ok">Logged in ✓</p>
+            `;
+        }
+        
+        // Get all picks
+        const allPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
+        const allPicksDiv = document.getElementById('allPicks');
+        
+        if (allPicks.length === 0) {
+            allPicksDiv.innerHTML = '<span class="error">No picks found in localStorage (tmr_picks)</span>';
+        } else {
+            allPicksDiv.innerHTML = `<p class="ok">Found ${allPicks.length} total pick(s)</p>`;
+            allPicks.forEach((p, i) => {
+                const statusClass = p.status === 'won' ? 'ok' : p.status === 'lost' ? 'error' : p.status === 'pushed' ? 'warn' : '';
+                allPicksDiv.innerHTML += `
+                    <div class="pick">
+                        <strong>Pick #${i+1}</strong><br>
+                        ID: ${p.id}<br>
+                        user_id: <code>${p.user_id}</code> (type: ${typeof p.user_id})<br>
+                        status: <span class="${statusClass}">${p.status || 'undefined'}</span><br>
+                        selection: ${p.selection || p.pick || 'N/A'}<br>
+                        sport: ${p.sport_key || p.sport || 'N/A'}<br>
+                        <details><summary>Full JSON</summary><pre>${JSON.stringify(p, null, 2)}</pre></details>
+                    </div>
+                `;
+            });
+        }
+        
+        // Profile filter logic
+        const profileUsername = currentUser ? currentUser.username : 'unknown';
+        const profileUserId = currentUser ? currentUser.id : 'unknown';
+        
+        document.getElementById('filterLogic').innerHTML = `
+            <p>Profile page filters with:</p>
+            <code>p.user_id === "${profileUsername}" || p.user_id === "${profileUserId}"</code>
+            <p>These must match exactly (including type) for picks to appear.</p>
+        `;
+        
+        // Apply same filter as profile page
+        if (currentUser) {
+            const userPicks = allPicks.filter(p => p.user_id === profileUsername || p.user_id === profileUserId);
+            const filteredDiv = document.getElementById('filteredPicks');
+            
+            filteredDiv.innerHTML = `<p>Filter matched ${userPicks.length} pick(s)</p>`;
+            
+            if (userPicks.length === 0 && allPicks.length > 0) {
+                filteredDiv.innerHTML += `
+                    <p class="error"><strong>PROBLEM DETECTED:</strong></p>
+                    <p>You have ${allPicks.length} pick(s) but none match your user ID.</p>
+                    <p>Expected user_id: <code>${profileUsername}</code> or <code>${profileUserId}</code></p>
+                    <p>Pick has user_id: <code>${allPicks[0].user_id}</code></p>
+                    <button onclick="fixUserIds()">🔧 Fix user_id mismatch</button>
+                `;
+            } else {
+                userPicks.forEach((p, i) => {
+                    filteredDiv.innerHTML += `
+                        <div class="pick">
+                            Pick #${i+1}: ${p.selection || p.pick} - <strong>${p.status || 'no status'}</strong>
+                        </div>
+                    `;
+                });
+            }
+            
+            // Calculate stats
+            const stats = {
+                wins: userPicks.filter(p => p.status === 'won').length,
+                losses: userPicks.filter(p => p.status === 'lost').length,
+                pushes: userPicks.filter(p => p.status === 'pushed').length,
+                pending: userPicks.filter(p => p.status === 'pending').length,
+                other: userPicks.filter(p => !['won','lost','pushed','pending'].includes(p.status)).length
+            };
+            
+            document.getElementById('statsCalc').innerHTML = `
+                <p>Stats that profile page calculates:</p>
+                <ul>
+                    <li>Wins (status === 'won'): ${stats.wins}</li>
+                    <li>Losses (status === 'lost'): ${stats.losses}</li>
+                    <li>Pushes (status === 'pushed'): ${stats.pushes}</li>
+                    <li>Pending (status === 'pending'): ${stats.pending}</li>
+                    <li class="error">Unknown status: ${stats.other}</li>
+                </ul>
+                ${stats.other > 0 ? '<p class="error"><strong>PROBLEM:</strong> Some picks have unexpected status values!</p>' : ''}
+            `;
+        }
+        
+        function fixUserIds() {
+            if (!currentUser) return;
+            const userId = currentUser.username || currentUser.id || 'local';
+            let count = 0;
+            
+            allPicks.forEach(p => {
+                if (!p.user_id || (p.user_id !== profileUsername && p.user_id !== profileUserId)) {
+                    p.user_id = userId;
+                    count++;
+                }
+            });
+            
+            localStorage.setItem('tmr_picks', JSON.stringify(allPicks));
+            alert(`Fixed ${count} pick(s). Reload this page to verify.`);
+            location.reload();
+        }
+    </script>
+</body>
+</html>

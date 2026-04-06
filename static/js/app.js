@@ -517,7 +517,7 @@ const App = {
         if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
         if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
         if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
-        return date.toLocaleDateString();
+        return (date.getMonth()+1) + '/' + date.getDate() + '/' + String(date.getFullYear()).slice(-2);
     },
 
     formatNumber(num) {

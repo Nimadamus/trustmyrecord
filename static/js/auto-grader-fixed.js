@@ -162,7 +162,7 @@
                 return 'pending';
             }
             
-            if (homeScore === awayScore) return 'pushed';
+            if (homeScore === awayScore) return 'push';
             
             const homeWon = homeScore > awayScore;
             const selectedWon = (isHome && homeWon) || (isAway && !homeWon);
@@ -187,9 +187,9 @@
             
             console.log(`[Grader] Spread: line=${line}, margin=${margin}, isHome=${isHome}`);
             
+            if (Math.abs(margin) < 0.001) return 'push';
             if (margin > 0) return 'won';
-            if (margin < 0) return 'lost';
-            return 'pushed';
+            return 'lost';
         },
 
         // Grade a totals pick
@@ -199,15 +199,15 @@
                 console.log('[Grader] Total: No line available');
                 return 'pending';
             }
-            
+
             const total = homeScore + awayScore;
             const sel = (pick.selection || '').toLowerCase();
             const isOver = sel.includes('over');
             const isUnder = sel.includes('under');
-            
+
             console.log(`[Grader] Total: line=${line}, total=${total}, isOver=${isOver}, isUnder=${isUnder}`);
-            
-            if (total === line) return 'pushed';
+
+            if (Math.abs(total - line) < 0.001) return 'push';
             if (isOver) return total > line ? 'won' : 'lost';
             if (isUnder) return total < line ? 'won' : 'lost';
             

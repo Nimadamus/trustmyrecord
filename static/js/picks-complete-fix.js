@@ -278,7 +278,7 @@ async function loadGames() {
             } else if (hoursUntil < 48) {
                 dateStr = 'Tomorrow ' + date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
             } else {
-                dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+                dateStr = (date.getMonth()+1) + '/' + date.getDate() + '/' + String(date.getFullYear()).slice(-2) + ' ' + date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
             }
 
             // Generate odds display based on bet type

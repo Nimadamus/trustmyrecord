@@ -340,7 +340,8 @@
                 <a href="index.html" class="logo">TRUST<span>MY</span>RECORD</a>
                 <nav>
                     <a href="index.html">Home</a>
-                    <a href="challenges.html">Arena</a>
+                    <a href="challenges.html">Picks Arena</a>
+                    <a href="arena.html">Gaming Arena</a>
                     <a href="forum.html">Forum</a>
                     <a href="activity.html">Activity</a>
                     <a href="profile.html" class="active">Profile</a>
@@ -625,6 +626,19 @@
                 profileData = data.user || data;
                 profileUserId = profileData.id;
                 if (currentUser && !isOwnProfile) isFollowingProfile = !!profileData.is_following;
+                // Load favorite teams and gamer profile
+                try {
+                    const teamsData = await api.request('/gaming/teams/' + profileUsername);
+                    if (teamsData && teamsData.favorite_teams) {
+                        profileData._fav_teams = {};
+                        teamsData.favorite_teams.forEach(t => { profileData._fav_teams[t.sport] = t.team_name; });
+                    }
+                } catch(e) { profileData._fav_teams = {}; }
+                try {
+                    const gamerData = await api.request('/gaming/profile/' + profileUsername);
+                    if (gamerData && gamerData.gamer_profile) profileData._gamer = gamerData.gamer_profile;
+                    else profileData._gamer = {};
+                } catch(e) { profileData._gamer = {}; }
             } else {
                 throw new Error('Backend unavailable');
             }
@@ -718,7 +732,8 @@
     function renderProfileHeader(p) {
         const el = document.getElementById('profileHeader');
         if (!el) return;
-        const joinDate = new Date(p.created_at || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+        const _jd = new Date(p.created_at || Date.now());
+        const joinDate = (_jd.getMonth()+1) + '/' + _jd.getDate() + '/' + String(_jd.getFullYear()).slice(-2);
         const name = p.display_name || p.username;
         const letter = (p.username || '?').charAt(0).toUpperCase();
 
@@ -794,7 +809,8 @@
 
     function pickRow(p, rtMap) {
         const date = p.locked_at || p.created_at || '';
-        const dateStr = date ? new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+        const _pd = date ? new Date(date) : null;
+        const dateStr = _pd ? ((_pd.getMonth()+1) + '/' + _pd.getDate() + '/' + String(_pd.getFullYear()).slice(-2)) : '';
         const sport = fmtSport(p.sport_key);
         const sc = sport.toLowerCase().replace(/\s/g, '');
         const odds = p.odds_snapshot != null ? (p.odds_snapshot > 0 ? '+' + p.odds_snapshot : '' + p.odds_snapshot) : '';
@@ -1127,6 +1143,17 @@
             '<label style="' + ls + '">Display Name</label><input id="eDN" value="' + (profileData.display_name || profileData.username || '') + '" style="' + is + '">' +
             '<label style="' + ls + '">Bio</label><textarea id="eBio" rows="3" style="' + is + 'resize:vertical;">' + (profileData.bio || '') + '</textarea>' +
             '<label style="' + ls + '">Location</label><input id="eLoc" value="' + (profileData.location || '') + '" style="' + is + '">' +
+            '<div style="border-top:1px solid #353a4d;margin:20px 0 16px;padding-top:16px;"><h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;color:#00aeff;">Favorite Teams</h3></div>' +
+            '<label style="' + ls + '">NFL Team</label><input id="eFavNFL" value="' + ((profileData._fav_teams && profileData._fav_teams.NFL) || '') + '" placeholder="e.g. 49ers" style="' + is + '">' +
+            '<label style="' + ls + '">NBA Team</label><input id="eFavNBA" value="' + ((profileData._fav_teams && profileData._fav_teams.NBA) || '') + '" placeholder="e.g. Warriors" style="' + is + '">' +
+            '<label style="' + ls + '">MLB Team</label><input id="eFavMLB" value="' + ((profileData._fav_teams && profileData._fav_teams.MLB) || '') + '" placeholder="e.g. Giants" style="' + is + '">' +
+            '<label style="' + ls + '">NHL Team</label><input id="eFavNHL" value="' + ((profileData._fav_teams && profileData._fav_teams.NHL) || '') + '" placeholder="e.g. Sharks" style="' + is + '">' +
+            '<div style="border-top:1px solid #353a4d;margin:20px 0 16px;padding-top:16px;"><h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;color:#ffd700;">Gamer Profile</h3></div>' +
+            '<label style="' + ls + '">PSN Username</label><input id="eGamerPSN" value="' + ((profileData._gamer && profileData._gamer.psn_username) || '') + '" placeholder="Your PlayStation Network ID" style="' + is + '">' +
+            '<label style="' + ls + '">Xbox Gamertag</label><input id="eGamerXbox" value="' + ((profileData._gamer && profileData._gamer.xbox_gamertag) || '') + '" placeholder="Your Xbox Gamertag" style="' + is + '">' +
+            '<label style="' + ls + '">Preferred Console</label><select id="eGamerConsole" style="' + is + '"><option value="">Select...</option><option value="PS5"' + ((profileData._gamer && profileData._gamer.preferred_console === 'PS5') ? ' selected' : '') + '>PS5</option><option value="Xbox"' + ((profileData._gamer && profileData._gamer.preferred_console === 'Xbox') ? ' selected' : '') + '>Xbox</option><option value="PC"' + ((profileData._gamer && profileData._gamer.preferred_console === 'PC') ? ' selected' : '') + '>PC</option></select>' +
+            '<label style="' + ls + '">Favorite Game</label><input id="eGamerFavGame" value="' + ((profileData._gamer && profileData._gamer.favorite_game) || '') + '" placeholder="e.g. MLB The Show 26" style="' + is + '">' +
+            '<label style="' + ls + '">Skill Level</label><select id="eGamerSkill" style="' + is + '"><option value="">Select...</option><option value="Beginner"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Beginner') ? ' selected' : '') + '>Beginner</option><option value="Intermediate"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Intermediate') ? ' selected' : '') + '>Intermediate</option><option value="Advanced"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Advanced') ? ' selected' : '') + '>Advanced</option><option value="Elite"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Elite') ? ' selected' : '') + '>Elite</option><option value="Pro"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Pro') ? ' selected' : '') + '>Pro</option></select>' +
             '<div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px;"><button type="button" class="btn btn-secondary" onclick="document.getElementById(\'editModal\').remove()">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div></form></div>';
         document.body.appendChild(modal);
         modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
@@ -1163,6 +1190,34 @@
                 // Try backend first
                 if (api.backendAvailable === true) {
                     try { await api.updateProfile(updates); } catch(err) { /* fall through to localStorage */ }
+
+                    // Save favorite teams
+                    try {
+                        const teams = [];
+                        const nfl = document.getElementById('eFavNFL').value.trim();
+                        const nba = document.getElementById('eFavNBA').value.trim();
+                        const mlb = document.getElementById('eFavMLB').value.trim();
+                        const nhl = document.getElementById('eFavNHL').value.trim();
+                        if (nfl) teams.push({ sport: 'NFL', team_name: nfl });
+                        if (nba) teams.push({ sport: 'NBA', team_name: nba });
+                        if (mlb) teams.push({ sport: 'MLB', team_name: mlb });
+                        if (nhl) teams.push({ sport: 'NHL', team_name: nhl });
+                        if (teams.length > 0) await api.request('/gaming/teams', { method: 'PUT', body: { teams } });
+                    } catch(err) { console.warn('Failed to save teams:', err); }
+
+                    // Save gamer profile
+                    try {
+                        const gamerData = {
+                            psn_username: document.getElementById('eGamerPSN').value.trim() || null,
+                            xbox_gamertag: document.getElementById('eGamerXbox').value.trim() || null,
+                            preferred_console: document.getElementById('eGamerConsole').value || null,
+                            favorite_game: document.getElementById('eGamerFavGame').value.trim() || null,
+                            skill_tier: document.getElementById('eGamerSkill').value || null
+                        };
+                        if (Object.values(gamerData).some(v => v)) {
+                            await api.request('/gaming/profile', { method: 'PUT', body: gamerData });
+                        }
+                    } catch(err) { console.warn('Failed to save gamer profile:', err); }
                 }
                 // Always update localStorage auth too
                 if (typeof auth !== 'undefined' && auth.currentUser) {
@@ -1171,6 +1226,24 @@
                     if (updates.bio !== undefined) localUpdates.bio = updates.bio;
                     if (updates.location !== undefined) localUpdates.location = updates.location;
                     if (updates.avatar_url) localUpdates.avatar = updates.avatar_url;
+                    auth.updateProfile(localUpdates);
+                    // Store teams and gamer locally too
+                    localUpdates._fav_teams = {};
+                    const nfl = document.getElementById('eFavNFL').value.trim();
+                    const nba = document.getElementById('eFavNBA').value.trim();
+                    const mlb = document.getElementById('eFavMLB').value.trim();
+                    const nhl = document.getElementById('eFavNHL').value.trim();
+                    if (nfl) localUpdates._fav_teams.NFL = nfl;
+                    if (nba) localUpdates._fav_teams.NBA = nba;
+                    if (mlb) localUpdates._fav_teams.MLB = mlb;
+                    if (nhl) localUpdates._fav_teams.NHL = nhl;
+                    localUpdates._gamer = {
+                        psn_username: document.getElementById('eGamerPSN').value.trim(),
+                        xbox_gamertag: document.getElementById('eGamerXbox').value.trim(),
+                        preferred_console: document.getElementById('eGamerConsole').value,
+                        favorite_game: document.getElementById('eGamerFavGame').value.trim(),
+                        skill_tier: document.getElementById('eGamerSkill').value
+                    };
                     auth.updateProfile(localUpdates);
                 }
                 showToast('Profile updated!', 'success'); modal.remove(); await loadProfile();

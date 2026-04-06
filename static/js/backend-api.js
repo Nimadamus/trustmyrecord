@@ -541,6 +541,99 @@ class TrustMyRecordAPI {
             return false;
         }
     }
+    // ============================================================
+    // Gaming Arena API Methods
+    // ============================================================
+
+    async getGamingTitles() {
+        return this.request('/gaming/titles');
+    }
+
+    async getGamerProfile(username) {
+        return this.request(`/gaming/profile/${username}`);
+    }
+
+    async updateGamerProfile(data) {
+        return this.request('/gaming/profile', { method: 'PUT', body: data });
+    }
+
+    async getFavoriteTeams(username) {
+        return this.request(`/gaming/teams/${username}`);
+    }
+
+    async updateFavoriteTeams(teams) {
+        return this.request('/gaming/teams', { method: 'PUT', body: { teams } });
+    }
+
+    async getGamingChallenges(options = {}) {
+        const params = new URLSearchParams();
+        if (options.status) params.set('status', options.status);
+        if (options.game) params.set('game', options.game);
+        if (options.user) params.set('user', options.user);
+        params.set('page', options.page || 1);
+        params.set('limit', options.limit || 20);
+        return this.request(`/gaming/challenges?${params}`);
+    }
+
+    async createGamingChallenge(data) {
+        return this.request('/gaming/challenges', { method: 'POST', body: data });
+    }
+
+    async respondGamingChallenge(id, action) {
+        return this.request(`/gaming/challenges/${id}/respond`, { method: 'PUT', body: { action } });
+    }
+
+    async getGamingChallenge(id) {
+        return this.request(`/gaming/challenges/${id}`);
+    }
+
+    async cancelGamingChallenge(id) {
+        return this.request(`/gaming/challenges/${id}`, { method: 'DELETE' });
+    }
+
+    async logGamingMatch(data) {
+        return this.request('/gaming/matches', { method: 'POST', body: data });
+    }
+
+    async getGamingMatches(options = {}) {
+        const params = new URLSearchParams();
+        if (options.game) params.set('game', options.game);
+        if (options.user) params.set('user', options.user);
+        params.set('page', options.page || 1);
+        params.set('limit', options.limit || 20);
+        return this.request(`/gaming/matches?${params}`);
+    }
+
+    async getGamingMatch(id) {
+        return this.request(`/gaming/matches/${id}`);
+    }
+
+    async confirmGamingMatch(id) {
+        return this.request(`/gaming/matches/${id}/confirm`, { method: 'PUT' });
+    }
+
+    async getGamingLeaderboard(options = {}) {
+        const params = new URLSearchParams();
+        if (options.game) params.set('game', options.game);
+        params.set('sort', options.sort || 'wins');
+        params.set('limit', options.limit || 25);
+        return this.request(`/gaming/leaderboard?${params}`);
+    }
+
+    async getGamingH2H(user1, user2) {
+        return this.request(`/gaming/h2h/${user1}/${user2}`);
+    }
+
+    async getGamingStats(username) {
+        return this.request(`/gaming/stats/${username}`);
+    }
+
+    async getGamingActivity(options = {}) {
+        const params = new URLSearchParams();
+        params.set('page', options.page || 1);
+        params.set('limit', options.limit || 30);
+        return this.request(`/gaming/activity?${params}`);
+    }
 }
 
 // Create global API instance
