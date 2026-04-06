@@ -747,6 +747,43 @@ if (typeof window !== 'undefined') {
     window.TMR.runAutoGrading = TMR_GRADER.runAutoGrading.bind(TMR_GRADER);
 }
 
+// One-time fix: Revert any picks that were incorrectly graded while games were still in progress
+// This runs once per session to catch the Cardinals/Tigers Over 8 bug from April 5 2026
+(function fixIncorrectlyGradedPicks() {
+    try {
+        var picks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
+        var fixed = 0;
+        var today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        picks.forEach(function(p) {
+            // Find picks graded today that have suspiciously low scores (0-0, 1-0, etc.)
+            // These were graded while games were still in progress due to the boxscore bug
+            if (p.graded_at && p.graded_at.startsWith(today) && (p.status === 'lost' || p.status === 'won' || p.result === 'lost' || p.result === 'won')) {
+                var totalScore = (parseInt(p.home_score) || 0) + (parseInt(p.away_score) || 0);
+                // If total score is very low AND it was graded today, it was likely graded mid-game
+                // For over/under picks with line >= 5 and total score <= 2, this is almost certainly a bug
+                var line = parseFloat(p.line_snapshot || p.line || 0);
+                var isTotal = (p.market_type === 'total' || p.market_type === 'totals');
+                if (isTotal && line >= 5 && totalScore <= 2) {
+                    console.log('[TMR Fix] Reverting incorrectly graded pick:', p.id, p.selection, 'Score was:', p.away_score, '-', p.home_score);
+                    p.status = 'pending';
+                    p.result = 'pending';
+                    delete p.graded_at;
+                    delete p.home_score;
+                    delete p.away_score;
+                    delete p.result_units;
+                    fixed++;
+                }
+            }
+        });
+        if (fixed > 0) {
+            localStorage.setItem('tmr_picks', JSON.stringify(picks));
+            console.log('[TMR Fix] Reverted ' + fixed + ' incorrectly graded picks back to pending');
+        }
+    } catch(e) {
+        console.error('[TMR Fix] Error fixing picks:', e);
+    }
+})();
+
 // Auto-init if DOM ready
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof TMR_GRADER !== 'undefined') {
