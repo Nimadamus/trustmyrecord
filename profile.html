@@ -366,10 +366,14 @@
 
     <section class="picks-section">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
                 <div>
                     <div class="section-title">Pick History</div>
                     <div class="section-subtitle" id="picksCount"></div>
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn btn-secondary" onclick="exportCSV()" style="padding:6px 14px;font-size:.8rem;" title="Download pick history as CSV">Export CSV</button>
+                    <button class="btn btn-secondary" onclick="showEmbedModal()" style="padding:6px 14px;font-size:.8rem;" title="Get embeddable widget code">Embed Widget</button>
                 </div>
             </div>
             <div class="picks-table-wrapper" id="picksTableWrapper" style="display:none;">
@@ -1561,6 +1565,109 @@
 
     async function doFollow(id) { if (!currentUser) return showToast('Log in first', 'error'); try { await api.followUser(id); isFollowingProfile = true; showToast('Followed!', 'success'); renderProfileHeader(profileData); } catch(e) { showToast(e.message, 'error'); } }
     async function doUnfollow(id) { if (!currentUser) return showToast('Log in first', 'error'); try { await api.unfollowUser(id); isFollowingProfile = false; showToast('Unfollowed', 'success'); renderProfileHeader(profileData); } catch(e) { showToast(e.message, 'error'); } }
+
+    // ======================== CSV EXPORT ========================
+    function exportCSV() {
+        if (!allLoadedPicks || allLoadedPicks.length === 0) return showToast('No picks to export', 'error');
+
+        const chrono = [...allLoadedPicks].reverse();
+        let rt = 0;
+        const rows = [['Date', 'Sport', 'Matchup', 'Pick', 'Line', 'Odds', 'Units', 'Result', 'P/L', 'Running Total']];
+
+        chrono.forEach(p => {
+            const date = p.locked_at || p.created_at || '';
+            const d = date ? new Date(date).toLocaleDateString('en-US') : '';
+            const sport = fmtSport(p.sport_key);
+            const matchup = (p.away_team || '') + ' @ ' + (p.home_team || '');
+            const pick = p.selection || '';
+            const line = p.line_snapshot != null ? p.line_snapshot : '';
+            const odds = p.odds_snapshot != null ? p.odds_snapshot : '';
+            const units = p.units || 1;
+            const status = (p.status || 'pending').toUpperCase();
+            const pl = (p.status === 'won' || p.status === 'lost') ? pickPL(p).toFixed(2) : (p.status === 'push' || p.status === 'pushed') ? '0.00' : '';
+            if (p.status && p.status !== 'pending') rt += pickPL(p);
+            const running = (p.status && p.status !== 'pending') ? rt.toFixed(2) : '';
+
+            rows.push([d, sport, matchup, pick, line, odds, units, status, pl, running].map(v => {
+                const s = String(v);
+                return s.includes(',') || s.includes('"') ? '"' + s.replace(/"/g, '""') + '"' : s;
+            }));
+        });
+
+        const csv = rows.map(r => r.join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'trustmyrecord_' + (profileUsername || 'picks') + '_' + new Date().toISOString().slice(0, 10) + '.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('CSV downloaded', 'success');
+    }
+
+    // ======================== EMBEDDABLE WIDGET ========================
+    function showEmbedModal() {
+        const existing = document.getElementById('embedModal');
+        if (existing) existing.remove();
+
+        const stats = computeUnifiedStats(allLoadedPicks);
+        const adv = computeAdvancedStats(allLoadedPicks);
+        const user = profileUsername || 'user';
+        const record = stats.wins + '-' + stats.losses + '-' + stats.pushes;
+        const roi = stats.roi.toFixed(1);
+        const units = stats.netUnits.toFixed(2);
+        const wr = stats.winRate.toFixed(1);
+        const conf = adv ? adv.confidence.toFixed(0) : '0';
+        const zs = adv ? adv.zScore.toFixed(2) : '0.00';
+
+        // Build recent form string
+        const graded = allLoadedPicks.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
+        const recentForm = graded.slice(0, 10).map(p => p.status === 'won' ? 'W' : p.status === 'lost' ? 'L' : 'P').join('');
+
+        const embedCode = `<!-- TrustMyRecord Verified Record Widget -->
+<div id="tmr-widget" style="font-family:Inter,system-ui,sans-serif;background:#1c1f2a;border:1px solid #2a2e3d;border-radius:12px;padding:20px;max-width:360px;color:#f0f2f5;">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+    <div style="width:36px;height:36px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff;">${user.charAt(0).toUpperCase()}</div>
+    <div><div style="font-weight:700;font-size:15px;">@${user}</div><div style="font-size:11px;color:#6b7280;">Verified by TrustMyRecord</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-bottom:12px;">
+    <div style="background:#0f1117;border-radius:8px;padding:10px 6px;"><div style="font-size:18px;font-weight:800;">${record}</div><div style="font-size:10px;color:#6b7280;text-transform:uppercase;">Record</div></div>
+    <div style="background:#0f1117;border-radius:8px;padding:10px 6px;"><div style="font-size:18px;font-weight:800;color:${parseFloat(roi) >= 0 ? '#22c55e' : '#ef4444'};">${parseFloat(roi) >= 0 ? '+' : ''}${roi}%</div><div style="font-size:10px;color:#6b7280;text-transform:uppercase;">ROI</div></div>
+    <div style="background:#0f1117;border-radius:8px;padding:10px 6px;"><div style="font-size:18px;font-weight:800;color:${parseFloat(units) >= 0 ? '#22c55e' : '#ef4444'};">${parseFloat(units) >= 0 ? '+' : ''}${units}u</div><div style="font-size:10px;color:#6b7280;text-transform:uppercase;">Units</div></div>
+  </div>
+  <div style="display:flex;justify-content:space-between;font-size:12px;color:#9ba3b5;margin-bottom:10px;">
+    <span>Win Rate: ${wr}%</span><span>Z-Score: ${zs}</span><span>Confidence: ${conf}%</span>
+  </div>
+  <div style="display:flex;gap:3px;margin-bottom:12px;">${recentForm.split('').map(r => '<div style="flex:1;height:22px;border-radius:3px;background:' + (r === 'W' ? '#22c55e' : r === 'L' ? '#ef4444' : '#6b7280') + ';display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;">' + r + '</div>').join('')}</div>
+  <a href="https://trustmyrecord.com/profile.html?user=${user}" target="_blank" style="display:block;text-align:center;padding:8px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;border-radius:8px;text-decoration:none;font-size:12px;font-weight:600;">View Full Record on TrustMyRecord</a>
+</div>`;
+
+        const modal = document.createElement('div');
+        modal.id = 'embedModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+        modal.innerHTML = '<div style="background:#1c1f2a;border:1px solid #2a2e3d;border-radius:12px;padding:28px;max-width:600px;width:100%;max-height:85vh;overflow-y:auto;">' +
+            '<h2 style="font-size:1.15rem;font-weight:700;margin-bottom:6px;">Embed Your Verified Record</h2>' +
+            '<p style="color:var(--text-muted);font-size:.85rem;margin-bottom:20px;">Copy this HTML and paste it on your website to show your verified stats.</p>' +
+            '<div style="margin-bottom:20px;"><div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;">PREVIEW:</div>' +
+            '<div style="background:#0f1117;border-radius:8px;padding:20px;display:flex;justify-content:center;">' + embedCode + '</div></div>' +
+            '<div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;">EMBED CODE:</div>' +
+            '<textarea id="embedCodeArea" readonly style="width:100%;height:160px;padding:12px;border-radius:8px;border:1px solid var(--border-color);background:#0f1117;color:#22c55e;font-family:monospace;font-size:.75rem;resize:vertical;">' + embedCode.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea>' +
+            '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">' +
+            '<button class="btn btn-secondary" onclick="document.getElementById(\'embedModal\').remove()">Close</button>' +
+            '<button class="btn btn-primary" onclick="copyEmbedCode()">Copy Code</button></div></div>';
+        document.body.appendChild(modal);
+        modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+        // Fix the textarea to show actual HTML (not entity-escaped)
+        document.getElementById('embedCodeArea').value = embedCode;
+    }
+
+    function copyEmbedCode() {
+        const ta = document.getElementById('embedCodeArea');
+        ta.select();
+        document.execCommand('copy');
+        showToast('Embed code copied!', 'success');
+    }
 
     function openEditModal() {
         const m = document.getElementById('editModal'); if (m) m.remove();
