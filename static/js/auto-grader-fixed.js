@@ -414,7 +414,39 @@
 
     // Expose globally
     window.TMR_GRADER = TMR_GRADER;
-    
+
+    // ONE-TIME FIX: Revert any picks incorrectly graded on April 5 2026
+    // The old auto-grader.js had a bug that graded in-progress games
+    (function() {
+        var FIX_KEY = 'tmr_grader_fix_v3';
+        if (localStorage.getItem(FIX_KEY)) return;
+        try {
+            var picks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
+            var fixed = 0;
+            picks.forEach(function(p) {
+                // Revert any non-pending pick that was graded today
+                var isGraded = (p.status === 'lost' || p.status === 'won' || p.status === 'push' || p.status === 'pushed');
+                if (!isGraded) return;
+                var gradedToday = (p.graded_at && p.graded_at.indexOf('2026-04-05') !== -1);
+                if (gradedToday) {
+                    console.log('[Grader Fix] Reverting pick:', p.id, p.selection, 'was:', p.status);
+                    p.status = 'pending';
+                    p.result = 'pending';
+                    delete p.graded_at;
+                    delete p.home_score;
+                    delete p.away_score;
+                    delete p.result_units;
+                    fixed++;
+                }
+            });
+            if (fixed > 0) {
+                localStorage.setItem('tmr_picks', JSON.stringify(picks));
+                console.log('[Grader Fix] Reverted ' + fixed + ' picks back to pending');
+            }
+            localStorage.setItem(FIX_KEY, 'done');
+        } catch(e) { console.error('[Grader Fix]', e); }
+    })();
+
     // Auto-initialize when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => TMR_GRADER.init());
