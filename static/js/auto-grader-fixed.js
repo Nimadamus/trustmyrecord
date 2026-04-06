@@ -383,10 +383,91 @@
             }
         },
 
+        // Re-check all graded picks for push accuracy
+        // Fixes picks that were wrongly graded as 'lost' when they should be 'push'
+        recheckGradedPicks: async function() {
+            console.log('[Grader] ========== RECHECKING GRADED PICKS FOR PUSH FIXES ==========');
+            const picks = this.getPicks();
+
+            // First: normalize any 'pushed' status to 'push'
+            let normalized = 0;
+            for (const p of picks) {
+                if (p.status === 'pushed') { p.status = 'push'; p.result = 'push'; p.result_units = 0; normalized++; }
+            }
+            if (normalized > 0) {
+                console.log(`[Grader] Normalized ${normalized} 'pushed' -> 'push'`);
+                this.savePicks(picks);
+            }
+
+            // Only recheck picks graded in the last 48 hours that are losses
+            // (the bug was pushes being misgraded as losses)
+            const cutoff = Date.now() - 48 * 60 * 60 * 1000;
+            const graded = picks.filter(p => {
+                if (p.status !== 'lost') return false;
+                const gradedAt = p.graded_at ? new Date(p.graded_at).getTime() : 0;
+                return gradedAt > cutoff;
+            });
+            if (graded.length === 0) return;
+
+            const bySport = {};
+            for (const pick of graded) {
+                const sport = pick.sport_key || pick.sport || 'unknown';
+                if (!bySport[sport]) bySport[sport] = [];
+                bySport[sport].push(pick);
+            }
+
+            let fixed = 0;
+            for (const [sport, sportPicks] of Object.entries(bySport)) {
+                const path = this.SPORT_PATHS[sport];
+                if (!path) continue;
+
+                const dates = new Set();
+                for (const pick of sportPicks) {
+                    const d = pick.commence_time || pick.locked_at || pick.created_at;
+                    if (d) {
+                        const dt = new Date(d);
+                        if (!isNaN(dt.getTime())) dates.add(dt.toISOString().split('T')[0].replace(/-/g, ''));
+                    }
+                }
+
+                const allScores = {};
+                for (const dateStr of dates) {
+                    const scores = await this.fetchScoresForDate(path, dateStr);
+                    Object.assign(allScores, scores);
+                }
+
+                for (const pick of sportPicks) {
+                    const scores = this.findMatchingScore(pick, allScores);
+                    if (!scores || !scores.completed) continue;
+
+                    const newResult = this.gradePick(pick, scores);
+                    if (newResult.status !== pick.status) {
+                        console.log(`[Grader] REGRADE FIX: Pick ${pick.id} was '${pick.status}' -> now '${newResult.status}'`);
+                        const pickInArray = picks.find(p => p.id === pick.id);
+                        if (pickInArray) {
+                            Object.assign(pickInArray, newResult);
+                            fixed++;
+                        }
+                    }
+                }
+            }
+
+            if (fixed > 0) {
+                this.savePicks(picks);
+                this.refreshUI();
+                console.log(`[Grader] REGRADE COMPLETE: Fixed ${fixed} picks`);
+            } else {
+                console.log('[Grader] Recheck complete, no fixes needed');
+            }
+        },
+
         // Initialize the grader
         init: function() {
             console.log('[Grader] Auto-grader initialized');
-            
+
+            // Re-check existing graded picks for push accuracy first
+            this.recheckGradedPicks();
+
             // Run immediately
             this.runGrading();
             
