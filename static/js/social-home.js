@@ -7,7 +7,52 @@ let currentFilter = 'all';
 let postType = 'post';
 let backendPicks = [];
 
+// Calculate stats directly from picks array (source of truth)
+function calcLiveStats(user) {
+    try {
+        var picks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
+        var userId = user.username || user.id || '';
+        // Filter to this user's picks (or all if no user_id on picks)
+        var userPicks = picks.filter(function(p) {
+            return !p.user_id || p.user_id === userId || p.user_id === 'local';
+        });
+        var wins = 0, losses = 0, pushes = 0, pending = 0, totalUnits = 0;
+        userPicks.forEach(function(p) {
+            var st = (p.status || p.result || 'pending').toString().toLowerCase().trim();
+            if (st === 'won') { wins++; totalUnits += (p.result_units || 0); }
+            else if (st === 'lost') { losses++; totalUnits += (p.result_units || 0); }
+            else if (st === 'push' || st === 'pushed') { pushes++; }
+            else { pending++; }
+        });
+        var graded = wins + losses + pushes;
+        var winRate = graded > 0 ? (wins / graded * 100) : 0;
+        var roi = graded > 0 ? (totalUnits / graded * 100) : 0;
+        return { totalPicks: userPicks.length, wins: wins, losses: losses, pushes: pushes, pending: pending, winRate: winRate, roi: roi, totalUnits: totalUnits };
+    } catch(e) {
+        return user.stats || {};
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+    // Fix incorrectly graded picks from April 5 boxscore bug
+    (function() {
+        var fk = 'tmr_grader_fix_v3';
+        if (localStorage.getItem(fk)) return;
+        try {
+            var picks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
+            var fixed = 0;
+            picks.forEach(function(p) {
+                if (p.status !== 'lost' && p.status !== 'won' && p.status !== 'push' && p.status !== 'pushed') return;
+                if (p.graded_at && p.graded_at.indexOf('2026-04-05') !== -1) {
+                    p.status = 'pending'; p.result = 'pending';
+                    delete p.graded_at; delete p.home_score; delete p.away_score; delete p.result_units;
+                    fixed++;
+                }
+            });
+            if (fixed > 0) localStorage.setItem('tmr_picks', JSON.stringify(picks));
+            localStorage.setItem(fk, 'done');
+        } catch(e) {}
+    })();
     initAuth();
     await loadFeed();
     loadTrending();
@@ -27,7 +72,8 @@ function initAuth() {
         `;
         const sc = document.getElementById('myStatsCard');
         sc.style.display = 'block';
-        const s = user.stats || {};
+        // Calculate stats LIVE from picks array (never trust cached user.stats)
+        const s = calcLiveStats(user);
         document.getElementById('sidebarMyStats').innerHTML = `
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.85rem;color:var(--text-secondary);">
                 <div><span style="font-weight:700;color:var(--text-primary);">${s.totalPicks || 0}</span> picks</div>
