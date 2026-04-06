@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrustMyRecord - Community Feed</title>
+    <meta name="description" content="Post your sports takes, track your picks, and prove your record.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E&#128202;%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="static/css/social-home.css">
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+</head>
+<body>
+    <header>
+        <div class="header-inner">
+            <a href="index.html" class="logo">Trust<span>My</span>Record</a>
+            <nav id="mainNav">
+                <a href="index.html"><i class="fas fa-home"></i> Home</a>
+                <a href="feed.html" class="active"><i class="fas fa-stream"></i> Feed</a>
+                <a href="sportsbook.html"><i class="fas fa-basketball-ball"></i> Picks</a>
+                <a href="challenges.html"><i class="fas fa-trophy"></i> Arena</a>
+                <a href="forum.html"><i class="fas fa-comments"></i> Forum</a>
+                <a href="profile.html"><i class="fas fa-user"></i> Profile</a>
+            </nav>
+            <div class="header-actions" id="headerActions">
+                <button class="btn btn-ghost" onclick="openModal('login')">Log In</button>
+                <button class="btn btn-primary" onclick="openModal('signup')">Sign Up</button>
+            </div>
+            <button class="mobile-menu" onclick="document.getElementById('mainNav').classList.toggle('show')"><i class="fas fa-bars"></i></button>
+        </div>
+    </header>
+    <div class="page-layout">
+        <aside class="left-sidebar">
+            <div class="sidebar-nav">
+                <a href="index.html" class="sidebar-link"><i class="fas fa-home"></i> Home</a>
+                <a href="feed.html" class="sidebar-link active"><i class="fas fa-stream"></i> Feed</a>
+                <a href="sportsbook.html" class="sidebar-link"><i class="fas fa-basketball-ball"></i> Make Picks</a>
+                <a href="activity.html" class="sidebar-link"><i class="fas fa-stream"></i> Activity</a>
+                <a href="challenges.html" class="sidebar-link"><i class="fas fa-trophy"></i> Arena</a>
+                <a href="forum.html" class="sidebar-link"><i class="fas fa-comments"></i> Forum</a>
+                <a href="friends.html" class="sidebar-link"><i class="fas fa-user-friends"></i> Friends</a>
+                <a href="messages.html" class="sidebar-link"><i class="fas fa-envelope"></i> Messages</a>
+                <a href="polls.html" class="sidebar-link"><i class="fas fa-poll"></i> Polls</a>
+                <div class="sidebar-divider"></div>
+                <a href="profile.html" class="sidebar-link"><i class="fas fa-user-circle"></i> My Profile</a>
+            </div>
+            <div class="sidebar-card" id="myStatsCard" style="display:none;">
+                <div class="sidebar-card-title">Your Record</div>
+                <div id="sidebarMyStats"></div>
+            </div>
+        </aside>
+        <main class="main-feed">
+            <div class="composer-card" id="composerCard">
+                <div class="composer-top">
+                    <div class="composer-avatar" id="compAvatar">?</div>
+                    <textarea class="composer-textarea" id="compInput" placeholder="What's your take?" maxlength="500"></textarea>
+                </div>
+                <div class="poll-builder" id="pollBuilder">
+                    <div id="pollOpts">
+                        <div class="poll-row"><input class="poll-input" placeholder="Option 1" maxlength="60"><button class="poll-rm" onclick="rmPollOpt(this)"><i class="fas fa-times"></i></button></div>
+                        <div class="poll-row"><input class="poll-input" placeholder="Option 2" maxlength="60"><button class="poll-rm" onclick="rmPollOpt(this)"><i class="fas fa-times"></i></button></div>
+                    </div>
+                    <button class="poll-add" onclick="addPollOpt()">+ Add Option</button>
+                </div>
+                <div class="composer-bottom">
+                    <div class="composer-actions">
+                        <button class="composer-action" id="takeBtn" onclick="toggleType('hot-take')"><i class="fas fa-fire"></i> Hot Take</button>
+                        <button class="composer-action" id="pollBtn" onclick="toggleType('poll')"><i class="fas fa-poll"></i> Poll</button>
+                        <select class="composer-sport" id="sportPick"><option value="">Sport</option><option value="NFL">NFL</option><option value="NBA">NBA</option><option value="MLB">MLB</option><option value="NHL">NHL</option><option value="NCAAB">NCAAB</option><option value="Soccer">Soccer</option></select>
+                    </div>
+                    <button class="btn btn-primary btn-sm" id="postBtn" onclick="submitPost()" disabled>Post</button>
+                </div>
+            </div>
+            <div class="login-banner" id="loginBanner" style="display:none;">
+                <p>Join TrustMyRecord to post your takes and track your record.</p>
+                <button class="btn btn-primary" onclick="openModal('signup')">Sign Up Free</button>
+            </div>
+            <div class="feed-tabs">
+                <button class="feed-tab active" onclick="setFilter('all',this)">For You</button>
+                <button class="feed-tab" onclick="setFilter('hot-takes',this)">Hot Takes</button>
+                <button class="feed-tab" onclick="setFilter('picks',this)">Picks</button>
+                <button class="feed-tab" onclick="setFilter('polls',this)">Polls</button>
+            </div>
+            <div class="feed-list" id="feedList"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></div>
+            <div class="load-more" id="loadMore" style="display:none;"><button class="load-more-btn" onclick="loadMorePosts()">Load More</button></div>
+        </main>
+        <aside class="right-sidebar">
+            <div class="rs-card"><div class="rs-title"><i class="fas fa-fire" style="color:#ef4444;margin-right:6px;"></i>Trending</div><div id="trendingList"></div></div>
+            <div class="rs-card"><div class="rs-title"><i class="fas fa-user-plus" style="color:#3b82f6;margin-right:6px;"></i>Who to Follow</div><div id="suggestedList"></div></div>
+        </aside>
+    </div>
+    <div class="modal-overlay" id="loginModal"><div class="modal-box" style="position:relative;"><button class="modal-close" onclick="closeModals()">&times;</button><div class="modal-title">Welcome back</div><div class="modal-sub">Log in to your TrustMyRecord account</div><div class="modal-field"><label class="modal-label">Username or Email</label><input class="modal-input" id="loginUser" type="text" placeholder="Enter username or email"></div><div class="modal-field"><label class="modal-label">Password</label><input class="modal-input" id="loginPass" type="password" placeholder="Enter password"></div><div class="modal-error" id="loginError"></div><button class="modal-btn" onclick="handleLogin()">Log In</button><div class="modal-switch">Don't have an account? <a onclick="openModal('signup')">Sign up</a></div></div></div>
+    <div class="modal-overlay" id="signupModal"><div class="modal-box" style="position:relative;"><button class="modal-close" onclick="closeModals()">&times;</button><div class="modal-title">Create account</div><div class="modal-sub">Start tracking your record today</div><div class="modal-field"><label class="modal-label">Username</label><input class="modal-input" id="signupUser" type="text" placeholder="Choose a username"></div><div class="modal-field"><label class="modal-label">Email</label><input class="modal-input" id="signupEmail" type="email" placeholder="Enter your email"></div><div class="modal-field"><label class="modal-label">Password</label><input class="modal-input" id="signupPass" type="password" placeholder="Create a password"></div><div class="modal-error" id="signupError"></div><button class="modal-btn" onclick="handleSignup()">Create Account</button><div class="modal-switch">Already have an account? <a onclick="openModal('login')">Log in</a></div></div></div>
+    <script src="static/js/config.js?v=20260405"></script>
+    <script src="static/js/analytics.js?v=20260405"></script>
+    <script src="static/js/backend-api.js"></script>
+    <script src="static/js/auth-persistent.js"></script>
+    <script src="static/js/social-feed.js"></script>
+    <script src="static/js/social-home.js"></script>
+</body>
+</html>
