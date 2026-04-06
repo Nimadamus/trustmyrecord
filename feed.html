@@ -86,10 +86,11 @@
                 <button class="btn btn-primary" onclick="openModal('signup')">Sign Up Free</button>
             </div>
             <div class="feed-tabs">
-                <button class="feed-tab active" onclick="setFilter('all',this)">For You</button>
-                <button class="feed-tab" onclick="setFilter('hot-takes',this)">Hot Takes</button>
-                <button class="feed-tab" onclick="setFilter('picks',this)">Picks</button>
-                <button class="feed-tab" onclick="setFilter('polls',this)">Polls</button>
+                <button class="feed-tab active" onclick="setFilter('all',this)"><i class="fas fa-stream"></i> For You</button>
+                <button class="feed-tab" onclick="setFilter('picks',this)"><i class="fas fa-crosshairs"></i> Picks</button>
+                <button class="feed-tab" onclick="setFilter('hot-takes',this)"><i class="fas fa-fire"></i> Hot Takes</button>
+                <button class="feed-tab" onclick="setFilter('polls',this)"><i class="fas fa-poll"></i> Polls</button>
+                <button class="feed-tab" onclick="setFilter('following',this)"><i class="fas fa-user-friends"></i> Following</button>
             </div>
             <div class="feed-list" id="feedList"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></div>
             <div class="load-more" id="loadMore" style="display:none;"><button class="load-more-btn" onclick="loadMorePosts()">Load More</button></div>
@@ -101,11 +102,10 @@
     </div>
     <div class="modal-overlay" id="loginModal"><div class="modal-box" style="position:relative;"><button class="modal-close" onclick="closeModals()">&times;</button><div class="modal-title">Welcome back</div><div class="modal-sub">Log in to your TrustMyRecord account</div><div class="modal-field"><label class="modal-label">Username or Email</label><input class="modal-input" id="loginUser" type="text" placeholder="Enter username or email"></div><div class="modal-field"><label class="modal-label">Password</label><input class="modal-input" id="loginPass" type="password" placeholder="Enter password"></div><div class="modal-error" id="loginError"></div><button class="modal-btn" onclick="handleLogin()">Log In</button><div class="modal-switch">Don't have an account? <a onclick="openModal('signup')">Sign up</a></div></div></div>
     <div class="modal-overlay" id="signupModal"><div class="modal-box" style="position:relative;"><button class="modal-close" onclick="closeModals()">&times;</button><div class="modal-title">Create account</div><div class="modal-sub">Start tracking your record today</div><div class="modal-field"><label class="modal-label">Username</label><input class="modal-input" id="signupUser" type="text" placeholder="Choose a username"></div><div class="modal-field"><label class="modal-label">Email</label><input class="modal-input" id="signupEmail" type="email" placeholder="Enter your email"></div><div class="modal-field"><label class="modal-label">Password</label><input class="modal-input" id="signupPass" type="password" placeholder="Create a password"></div><div class="modal-error" id="signupError"></div><button class="modal-btn" onclick="handleSignup()">Create Account</button><div class="modal-switch">Already have an account? <a onclick="openModal('login')">Log in</a></div></div></div>
-    <script src="static/js/config.js?v=20260405"></script>
+    <script src="static/js/config.js?v=20260406"></script>
     <script src="static/js/analytics.js?v=20260405"></script>
-    <script src="static/js/backend-api.js"></script>
-    <script src="static/js/auth-persistent.js"></script>
-    <script src="static/js/social-feed.js"></script>
-    <script src="static/js/social-home.js"></script>
+    <script src="static/js/backend-api.js?v=20260406"></script>
+    <script src="static/js/auth-persistent.js?v=20260406"></script>
+    <script src="static/js/social-home.js?v=20260406"></script>
 </body>
 </html>

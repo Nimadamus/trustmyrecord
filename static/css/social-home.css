@@ -337,6 +337,32 @@ nav a i { font-size: 1rem; }
     .page-layout { grid-template-columns: 1fr 280px; }
     .left-sidebar { display: none; }
 }
+/* Notification bell */
+.notif-bell { position: relative; cursor: pointer; font-size: 1.1rem; color: var(--text-secondary); padding: 6px 10px; border-radius: 8px; transition: all 0.2s; }
+.notif-bell:hover { color: var(--text-primary); background: var(--bg-card); }
+.notif-badge { position: absolute; top: 0; right: 2px; background: var(--accent-red); color: white; font-size: 0.65rem; font-weight: 700; min-width: 16px; height: 16px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; padding: 0 4px; }
+
+/* Pick embed improvements */
+.pe-matchup { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.95rem; }
+.pe-team { color: var(--text-primary); }
+.pe-vs { color: var(--text-muted); font-size: 0.75rem; font-weight: 400; }
+.pe-details { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.pe-chip { display: inline-flex; align-items: center; gap: 5px; background: var(--bg-secondary); padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; color: var(--text-secondary); }
+.pe-chip i { font-size: 0.7rem; color: var(--text-muted); }
+.pe-status { display: inline-block; margin-top: 10px; padding: 3px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.pe-status.pending { background: var(--accent-blue-bg); color: var(--accent-blue); }
+.pe-status.won { background: var(--accent-green-bg); color: var(--accent-green); }
+.pe-status.lost { background: var(--accent-red-bg); color: var(--accent-red); }
+.pe-status.push { background: var(--accent-gold-bg); color: var(--accent-gold); }
+
+/* Activity card */
+.activity-item { border-left: 3px solid var(--border-light); }
+.activity-item .fi-avatar { display: flex; align-items: center; justify-content: center; }
+
+/* Badge colors */
+.fi-badge-pick { background: var(--accent-blue-bg); color: var(--accent-blue); }
+.fi-badge-poll { background: var(--accent-purple)20; color: var(--accent-purple); }
+
 @media (max-width: 768px) {
     .page-layout { grid-template-columns: 1fr; padding: 16px; gap: 16px; }
     .right-sidebar { display: none; }

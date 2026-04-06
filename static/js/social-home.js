@@ -1,86 +1,41 @@
 /**
- * TrustMyRecord Social Homepage
- * Feed rendering, auth modals, composer, interactions
+ * TrustMyRecord Social Feed - Backend-Powered
+ * Renders unified feed from PostgreSQL: picks, text posts, hot takes,
+ * polls, trivia wins, challenges - all real activity.
  */
 
 let currentFilter = 'all';
 let postType = 'post';
-let backendPicks = [];
-
-// Calculate stats directly from picks array (source of truth)
-function calcLiveStats(user) {
-    try {
-        var picks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
-        var userId = user.username || user.id || '';
-        // Filter to this user's picks (or all if no user_id on picks)
-        var userPicks = picks.filter(function(p) {
-            return !p.user_id || p.user_id === userId || p.user_id === 'local';
-        });
-        var wins = 0, losses = 0, pushes = 0, pending = 0, totalUnits = 0;
-        userPicks.forEach(function(p) {
-            var st = (p.status || p.result || 'pending').toString().toLowerCase().trim();
-            if (st === 'won') { wins++; totalUnits += (p.result_units || 0); }
-            else if (st === 'lost') { losses++; totalUnits += (p.result_units || 0); }
-            else if (st === 'push' || st === 'pushed') { pushes++; }
-            else { pending++; }
-        });
-        var graded = wins + losses + pushes;
-        var winRate = graded > 0 ? (wins / graded * 100) : 0;
-        var roi = graded > 0 ? (totalUnits / graded * 100) : 0;
-        return { totalPicks: userPicks.length, wins: wins, losses: losses, pushes: pushes, pending: pending, winRate: winRate, roi: roi, totalUnits: totalUnits };
-    } catch(e) {
-        return user.stats || {};
-    }
-}
+let feedOffset = 0;
+const FEED_LIMIT = 20;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Fix incorrectly graded picks from April 5 boxscore bug
-    (function() {
-        var fk = 'tmr_grader_fix_v3';
-        if (localStorage.getItem(fk)) return;
-        try {
-            var picks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
-            var fixed = 0;
-            picks.forEach(function(p) {
-                if (p.status !== 'lost' && p.status !== 'won' && p.status !== 'push' && p.status !== 'pushed') return;
-                if (p.graded_at && p.graded_at.indexOf('2026-04-05') !== -1) {
-                    p.status = 'pending'; p.result = 'pending';
-                    delete p.graded_at; delete p.home_score; delete p.away_score; delete p.result_units;
-                    fixed++;
-                }
-            });
-            if (fixed > 0) localStorage.setItem('tmr_picks', JSON.stringify(picks));
-            localStorage.setItem(fk, 'done');
-        } catch(e) {}
-    })();
-    initAuth();
+    await initAuth();
     await loadFeed();
     loadTrending();
     loadSuggested();
+    loadNotificationBadge();
 });
 
 // ==================== AUTH INIT ====================
-function initAuth() {
-    const user = socialFeed.getCurrentUser();
+async function initAuth() {
+    if (typeof api !== 'undefined' && api.ready) {
+        try { await api.ready; } catch(e) {}
+    }
+    const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
     if (user) {
         document.getElementById('loginBanner').style.display = 'none';
         document.getElementById('composerCard').style.display = 'block';
         document.getElementById('compAvatar').textContent = (user.displayName || user.username || '?')[0].toUpperCase();
         document.getElementById('headerActions').innerHTML = `
             <a href="sportsbook.html" class="btn btn-primary"><i class="fas fa-plus"></i> Make Pick</a>
+            <span class="notif-bell" id="notifBell" onclick="location.href='activity.html'" title="Notifications">
+                <i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+            </span>
             <a href="profile.html" class="btn btn-ghost"><i class="fas fa-user"></i> ${user.username}</a>
         `;
-        const sc = document.getElementById('myStatsCard');
-        sc.style.display = 'block';
-        // Calculate stats LIVE from picks array (never trust cached user.stats)
-        const s = calcLiveStats(user);
-        document.getElementById('sidebarMyStats').innerHTML = `
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.85rem;color:var(--text-secondary);">
-                <div><span style="font-weight:700;color:var(--text-primary);">${s.totalPicks || 0}</span> picks</div>
-                <div><span style="font-weight:700;color:var(--accent-green);">${(s.winRate || 0).toFixed(0)}%</span> win rate</div>
-                <div><span style="font-weight:700;color:var(--text-primary);">${s.wins || 0}-${s.losses || 0}</span> record</div>
-                <div><span style="font-weight:700;color:${(s.roi || 0) >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">${(s.roi || 0).toFixed(1)}%</span> ROI</div>
-            </div>`;
+        // Load sidebar stats from backend
+        loadSidebarStats(user);
     } else {
         document.getElementById('composerCard').style.display = 'none';
         document.getElementById('loginBanner').style.display = 'block';
@@ -88,6 +43,45 @@ function initAuth() {
     document.getElementById('compInput').addEventListener('input', e => {
         document.getElementById('postBtn').disabled = e.target.value.trim().length === 0;
     });
+}
+
+async function loadSidebarStats(user) {
+    const sc = document.getElementById('myStatsCard');
+    sc.style.display = 'block';
+    try {
+        if (api.backendAvailable) {
+            const data = await api.request(`/users/${user.username}`);
+            const u = data.user || {};
+            const wins = u.wins || 0, losses = u.losses || 0, pushes = u.pushes || 0;
+            const total = wins + losses + pushes;
+            const wr = total > 0 ? (wins / total * 100) : 0;
+            document.getElementById('sidebarMyStats').innerHTML = `
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.85rem;color:var(--text-secondary);">
+                    <div><span style="font-weight:700;color:var(--text-primary);">${u.total_picks || 0}</span> picks</div>
+                    <div><span style="font-weight:700;color:var(--accent-green);">${wr.toFixed(0)}%</span> win rate</div>
+                    <div><span style="font-weight:700;color:var(--text-primary);">${wins}-${losses}-${pushes}</span> record</div>
+                    <div><span style="font-weight:700;color:${parseFloat(u.net_units || 0) >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">${parseFloat(u.net_units || 0) >= 0 ? '+' : ''}${parseFloat(u.net_units || 0).toFixed(1)}u</span></div>
+                </div>`;
+        }
+    } catch(e) {
+        document.getElementById('sidebarMyStats').innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;">Stats loading...</div>';
+    }
+}
+
+// ==================== NOTIFICATION BADGE ====================
+async function loadNotificationBadge() {
+    try {
+        if (!api.backendAvailable) return;
+        const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
+        if (!user) return;
+        const data = await api.request('/notifications/unread-count');
+        const count = data.unreadCount || 0;
+        const badge = document.getElementById('notifBadge');
+        if (badge && count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.style.display = 'inline-flex';
+        }
+    } catch(e) {}
 }
 
 // ==================== POST TYPE TOGGLE ====================
@@ -121,250 +115,505 @@ function rmPollOpt(btn) {
 }
 
 // ==================== SUBMIT POST ====================
-function submitPost() {
+async function submitPost() {
     const content = document.getElementById('compInput').value.trim();
     if (!content) return;
     const sport = document.getElementById('sportPick').value || null;
-    let pollOptions = null;
-    if (postType === 'poll') {
-        const opts = Array.from(document.querySelectorAll('#pollOpts .poll-input')).map(i => i.value.trim()).filter(Boolean);
-        if (opts.length < 2) { alert('Need at least 2 options.'); return; }
-        pollOptions = opts.map(t => ({ text: t, votes: 0 }));
+    const btn = document.getElementById('postBtn');
+    btn.disabled = true;
+    btn.textContent = 'Posting...';
+
+    try {
+        if (postType === 'poll') {
+            const opts = Array.from(document.querySelectorAll('#pollOpts .poll-input')).map(i => i.value.trim()).filter(Boolean);
+            if (opts.length < 2) { alert('Need at least 2 options.'); btn.disabled = false; btn.textContent = 'Post'; return; }
+            if (api.backendAvailable) {
+                await api.request('/polls', {
+                    method: 'POST',
+                    body: { title: content, options: opts.map(t => ({ text: t })), sport: sport || undefined, scoring_type: 'binary', points_correct: 100 }
+                });
+            }
+        } else {
+            if (api.backendAvailable) {
+                await api.request('/feed', {
+                    method: 'POST',
+                    body: { content, post_type: postType === 'hot-take' ? 'hot_take' : 'text', sport }
+                });
+            }
+        }
+    } catch(e) {
+        alert('Failed to post: ' + (e.message || 'Unknown error'));
     }
-    socialFeed.createPost({ type: postType, content, sport, tags: sport ? [sport] : [], pollOptions });
+
     // Reset
     document.getElementById('compInput').value = '';
-    document.getElementById('postBtn').disabled = true;
+    btn.disabled = true;
+    btn.textContent = 'Post';
     document.getElementById('sportPick').value = '';
     if (postType !== 'post') toggleType(postType);
     document.getElementById('pollOpts').innerHTML = '<div class="poll-row"><input class="poll-input" placeholder="Option 1" maxlength="60"><button class="poll-rm" onclick="rmPollOpt(this)"><i class="fas fa-times"></i></button></div><div class="poll-row"><input class="poll-input" placeholder="Option 2" maxlength="60"><button class="poll-rm" onclick="rmPollOpt(this)"><i class="fas fa-times"></i></button></div>';
-    loadFeed();
+    feedOffset = 0;
+    await loadFeed();
 }
 
 // ==================== LOAD FEED ====================
 async function loadFeed() {
-    const localPosts = socialFeed.getPosts({ filter: currentFilter === 'picks' ? null : currentFilter });
-    backendPicks = [];
-    if (currentFilter === 'all' || currentFilter === 'picks') {
-        try {
-            await api.ready;
-            if (api.backendAvailable) {
-                const d = await api.request('/social/discover?limit=15&offset=0');
-                backendPicks = (d.picks || []).map(p => ({ ...p, _source: 'backend', type: 'pick-backend', createdAt: p.created_at || p.locked_at }));
-            }
-        } catch (e) { /* backend unavailable */ }
-    }
-    let items = currentFilter === 'picks' ? backendPicks : [...localPosts, ...backendPicks];
-    items.sort((a, b) => {
-        if (a.pinned && !b.pinned) return -1;
-        if (!a.pinned && b.pinned) return 1;
-        return new Date(b.createdAt) - new Date(a.createdAt);
-    });
     const c = document.getElementById('feedList');
-    if (!items.length) {
-        c.innerHTML = `<div class="empty-state"><i class="fas fa-stream"></i><h3 style="margin-bottom:6px;">No posts yet</h3><p>${socialFeed.getCurrentUser() ? 'Be the first to share a take!' : 'Sign up to start posting'}</p></div>`;
+    c.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading feed...</p></div>';
+
+    let items = [];
+
+    try {
+        if (api.backendAvailable) {
+            // Fetch unified feed
+            const filterParam = currentFilter === 'hot-takes' ? 'posts' : currentFilter;
+            const data = await api.request(`/feed?limit=${FEED_LIMIT}&offset=${feedOffset}&filter=${filterParam}`);
+            const feedItems = data.feed || [];
+
+            // Also fetch recent polls to show in feed
+            let polls = [];
+            if (currentFilter === 'all' || currentFilter === 'polls') {
+                try {
+                    const pollData = await api.request('/polls/active?limit=5');
+                    polls = (pollData.polls || []).map(p => ({
+                        item_type: 'poll',
+                        post_type: 'poll',
+                        item_id: 'poll_' + p.id,
+                        poll_id: p.id,
+                        content: p.title,
+                        description: p.description,
+                        username: p.creator_username || p.username || 'Unknown',
+                        display_name: p.creator_display_name || p.display_name || p.username || 'Unknown',
+                        avatar_url: p.avatar_url,
+                        sport: p.sport,
+                        created_at: p.created_at,
+                        options: p.options || [],
+                        total_votes: parseInt(p.total_votes) || 0,
+                        status: p.status,
+                        likes_count: 0,
+                        comments_count: 0,
+                        user_voted: p.user_vote != null,
+                        user_vote_option: p.user_vote
+                    }));
+                } catch(e) {}
+            }
+
+            // Also fetch recent notifications for activity items
+            let activityItems = [];
+            if (currentFilter === 'all') {
+                try {
+                    const notifData = await api.request('/notifications?limit=5');
+                    const notifs = (notifData.notifications || []).filter(n =>
+                        ['pick_graded', 'friend_accepted', 'achievement'].includes(n.type)
+                    );
+                    activityItems = notifs.map(n => ({
+                        item_type: 'activity',
+                        post_type: 'activity',
+                        item_id: 'notif_' + n.id,
+                        content: n.content,
+                        username: n.username || '',
+                        display_name: n.display_name || n.username || '',
+                        avatar_url: n.avatar_url,
+                        created_at: n.created_at,
+                        notif_type: n.type,
+                        likes_count: 0,
+                        comments_count: 0
+                    }));
+                } catch(e) {}
+            }
+
+            // Merge everything, dedupe polls by title
+            const seenPolls = new Set();
+            items = [...feedItems];
+
+            for (const poll of polls) {
+                if (!seenPolls.has(poll.content)) {
+                    seenPolls.add(poll.content);
+                    items.push(poll);
+                }
+            }
+
+            items.push(...activityItems);
+
+            // Sort by created_at desc
+            items.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            // Filter hot takes locally
+            if (currentFilter === 'hot-takes') {
+                items = items.filter(i => i.post_type === 'hot_take');
+            }
+        }
+    } catch(e) {
+        c.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Couldn't load feed. <a href="#" onclick="loadFeed();return false;">Retry</a></p></div>`;
         return;
     }
-    c.innerHTML = items.map(i => i._source === 'backend' ? renderPick(i) : renderPost(i)).join('');
-}
 
-// ==================== RENDER POST ====================
-function renderPost(p) {
-    const likes = socialFeed.getLikeCount(p.id);
-    const cmts = socialFeed.getCommentCount(p.id);
-    const liked = socialFeed.hasLiked(p.id);
-    const user = socialFeed.getCurrentUser();
-    const isOwn = user && (p.userId === user.id || p.userId === user.username);
-    const letter = (p.displayName || p.username || '?')[0].toUpperCase();
-    const cls = `feed-item${p.pinned ? ' pinned' : ''}${p.type === 'hot-take' ? ' hot-take' : ''}`;
-
-    let badge = '';
-    if (p.type === 'hot-take') badge = '<span class="fi-badge fi-badge-take">Hot Take</span>';
-    else if (p.type === 'poll') badge = '<span class="fi-badge fi-badge-poll">Poll</span>';
-    if (p.pinned) badge += ' <span class="fi-badge fi-badge-pinned"><i class="fas fa-thumbtack"></i> Pinned</span>';
-
-    let content = `<div class="fi-content">${esc(p.content)}</div>`;
-
-    if (p.type === 'poll' && p.pollOptions) {
-        const total = p.pollOptions.reduce((s, o) => s + o.votes, 0);
-        const voted = socialFeed.hasVotedPoll(p.id);
-        content += '<div class="poll-display">';
-        p.pollOptions.forEach((o, i) => {
-            const pct = total > 0 ? Math.round(o.votes / total * 100) : 0;
-            content += `<div class="poll-opt ${voted ? 'voted' : ''}" onclick="${voted ? '' : `votePoll('${p.id}',${i})`}">
-                ${voted ? `<div class="poll-bar" style="width:${pct}%"></div>` : ''}
-                <div class="poll-opt-inner"><span>${esc(o.text)}</span>${voted ? `<span class="poll-pct">${pct}%</span>` : ''}</div>
-            </div>`;
-        });
-        content += `<div class="poll-total">${total} vote${total !== 1 ? 's' : ''}</div></div>`;
+    if (!items.length) {
+        const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
+        c.innerHTML = `<div class="empty-state"><i class="fas fa-stream"></i><h3 style="margin-bottom:6px;">No posts yet</h3><p>${user ? 'Be the first to share a take!' : 'Sign up to start posting'}</p></div>`;
+        return;
     }
 
-    return `<div class="${cls}" id="c-${p.id}">
+    c.innerHTML = items.map(renderFeedItem).join('');
+    document.getElementById('loadMore').style.display = items.length >= FEED_LIMIT ? 'block' : 'none';
+}
+
+// ==================== RENDER FEED ITEM (UNIFIED) ====================
+function renderFeedItem(item) {
+    const type = item.item_type || 'feed_post';
+    const ptype = item.post_type || 'text';
+
+    if (type === 'pick' || ptype === 'pick_share' || ptype === 'pick') {
+        return renderPickCard(item);
+    }
+    if (type === 'poll' || ptype === 'poll') {
+        return renderPollCard(item);
+    }
+    if (type === 'activity') {
+        return renderActivityCard(item);
+    }
+    // Text post or hot take
+    return renderTextPost(item);
+}
+
+// ==================== RENDER TEXT POST ====================
+function renderTextPost(p) {
+    const letter = (p.display_name || p.username || '?')[0].toUpperCase();
+    const isHot = p.post_type === 'hot_take';
+    const liked = p.liked_by_user || false;
+
+    return `<div class="feed-item${isHot ? ' hot-take' : ''}" data-id="${p.item_id}" data-type="feed_post">
         <div class="fi-header">
-            <div class="fi-avatar">${letter}</div>
+            <div class="fi-avatar" style="${isHot ? 'background:var(--accent-red);' : ''}">${letter}</div>
             <div class="fi-meta">
                 <div class="fi-top-row">
-                    <span class="fi-name"><a href="profile.html?user=${p.username}">${p.displayName || p.username}</a></span>
+                    <span class="fi-name"><a href="profile.html?user=${p.username}">${p.display_name || p.username}</a></span>
                     <span class="fi-handle">@${p.username}</span>
                     <span class="fi-dot">&bull;</span>
-                    <span class="fi-time">${socialFeed.timeAgo(p.createdAt)}</span>
-                </div>
-                <div style="display:flex;gap:4px;margin-top:3px;">${badge} ${p.sport ? `<span class="fi-sport">${p.sport}</span>` : ''}</div>
-            </div>
-            ${isOwn ? `<button class="fi-delete" onclick="delPost('${p.id}')"><i class="fas fa-trash-alt"></i></button>` : ''}
-        </div>
-        ${content}
-        <div class="fi-actions">
-            <button class="fi-action ${liked ? 'liked' : ''}" onclick="like('${p.id}',this)"><i class="fas fa-heart"></i> ${likes}</button>
-            <button class="fi-action" onclick="togCmts('${p.id}')"><i class="fas fa-comment"></i> ${cmts}</button>
-            <button class="fi-action" onclick="share('${p.id}')"><i class="fas fa-share"></i> Share</button>
-        </div>
-        <div class="comments-section" id="cs-${p.id}">
-            <div class="cmt-input-row">
-                <input class="cmt-input" id="ci-${p.id}" placeholder="Write a comment..." onkeypress="if(event.key==='Enter')postCmt('${p.id}')">
-                <button class="cmt-submit" onclick="postCmt('${p.id}')">Post</button>
-            </div>
-            <div id="cl-${p.id}">${renderCmts(p.id)}</div>
-        </div>
-    </div>`;
-}
-
-// ==================== RENDER BACKEND PICK ====================
-function renderPick(p) {
-    const un = p.username || 'Unknown';
-    const letter = un[0].toUpperCase();
-    const odds = p.odds_snapshot > 0 ? `+${p.odds_snapshot}` : `${p.odds_snapshot}`;
-    const st = p.status || 'pending';
-    const sport = p.sport_key?.split('_')[1]?.toUpperCase() || '';
-
-    return `<div class="feed-item" id="c-pick-${p.id}">
-        <div class="fi-header">
-            <div class="fi-avatar">${letter}</div>
-            <div class="fi-meta">
-                <div class="fi-top-row">
-                    <span class="fi-name"><a href="profile.html?user=${un}">${un}</a></span>
-                    <span class="fi-handle">@${un}</span>
-                    <span class="fi-dot">&bull;</span>
-                    <span class="fi-time">${socialFeed.timeAgo(p.createdAt)}</span>
+                    <span class="fi-time">${timeAgo(p.created_at)}</span>
                 </div>
                 <div style="display:flex;gap:4px;margin-top:3px;">
-                    <span class="fi-badge fi-badge-pick">Pick</span>
-                    ${sport ? `<span class="fi-sport">${sport}</span>` : ''}
+                    ${isHot ? '<span class="fi-badge fi-badge-take"><i class="fas fa-fire"></i> Hot Take</span>' : ''}
+                    ${p.sport ? `<span class="fi-sport">${formatSport(p.sport)}</span>` : ''}
                 </div>
             </div>
         </div>
+        <div class="fi-content">${esc(p.content)}</div>
+        <div class="fi-actions">
+            <button class="fi-action ${liked ? 'liked' : ''}" onclick="likeFeedPost(${p.item_id}, this)"><i class="fas fa-heart"></i> <span>${p.likes_count || 0}</span></button>
+            <button class="fi-action" onclick="toggleComments(${p.item_id}, 'feed_post')"><i class="fas fa-comment"></i> <span>${p.comments_count || 0}</span></button>
+            <button class="fi-action" onclick="sharePost('${p.item_id}')"><i class="fas fa-share"></i></button>
+        </div>
+        <div class="comments-section" id="cs-fp-${p.item_id}"></div>
+    </div>`;
+}
+
+// ==================== RENDER PICK CARD ====================
+function renderPickCard(p) {
+    const letter = (p.display_name || p.username || '?')[0].toUpperCase();
+    const sel = p.pick_selection || p.selection || '';
+    const mkt = p.pick_market_type || p.market_type || 'pick';
+    const odds = p.pick_odds || p.odds_snapshot || 0;
+    const oddsStr = odds > 0 ? `+${odds}` : `${odds}`;
+    const line = p.pick_line || p.line_snapshot;
+    const units = p.pick_units || p.units || '';
+    const status = p.pick_status || p.status || 'pending';
+    const home = p.pick_home_team || p.home_team || '';
+    const away = p.pick_away_team || p.away_team || '';
+    const sport = p.pick_sport_key || p.sport || p.sport_key || '';
+    const liked = p.liked_by_user || false;
+    const pickId = p.pick_id || p.item_id;
+
+    const mktLabel = { h2h: 'Moneyline', spreads: 'Spread', totals: 'Total', team_totals: 'Team Total', f5_h2h: 'F5 ML', f5_totals: 'F5 Total' }[mkt] || mkt;
+    const statusClass = status === 'won' ? 'won' : status === 'lost' ? 'lost' : status === 'push' ? 'push' : 'pending';
+
+    return `<div class="feed-item" data-id="${p.item_id}" data-type="${p.item_type || 'pick'}">
+        <div class="fi-header">
+            <div class="fi-avatar" style="background:var(--accent-blue);">${letter}</div>
+            <div class="fi-meta">
+                <div class="fi-top-row">
+                    <span class="fi-name"><a href="profile.html?user=${p.username}">${p.display_name || p.username}</a></span>
+                    <span class="fi-handle">@${p.username}</span>
+                    <span class="fi-dot">&bull;</span>
+                    <span class="fi-time">${timeAgo(p.created_at)}</span>
+                </div>
+                <div style="display:flex;gap:4px;margin-top:3px;">
+                    <span class="fi-badge fi-badge-pick"><i class="fas fa-crosshairs"></i> Pick</span>
+                    ${sport ? `<span class="fi-sport">${formatSport(sport)}</span>` : ''}
+                </div>
+            </div>
+        </div>
+        ${p.content ? `<div class="fi-content" style="margin-bottom:8px;">${esc(p.content)}</div>` : ''}
         <div class="pick-embed">
             <div class="pe-matchup">
-                <div class="pe-team-icon">${(p.away_team || p.selection || '?')[0]}</div>
-                <span>${p.away_team || p.selection || 'TBD'}</span>
-                <span class="pe-vs">VS</span>
-                <div class="pe-team-icon">${(p.home_team || '?')[0]}</div>
-                <span>${p.home_team || 'TBD'}</span>
+                <span class="pe-team">${away || sel}</span>
+                <span class="pe-vs">@</span>
+                <span class="pe-team">${home}</span>
             </div>
             <div class="pe-details">
-                <span><i class="fas fa-crosshairs"></i>${p.market_type || 'Pick'}: ${p.selection || 'N/A'}</span>
-                <span><i class="fas fa-chart-line"></i>${odds}</span>
-                ${p.units ? `<span><i class="fas fa-coins"></i>${p.units}u</span>` : ''}
+                <span class="pe-chip"><i class="fas fa-crosshairs"></i> ${mktLabel}</span>
+                <span class="pe-chip"><i class="fas fa-bullseye"></i> ${sel}${line ? ' ' + (line > 0 ? '+' : '') + line : ''}</span>
+                <span class="pe-chip"><i class="fas fa-chart-line"></i> ${oddsStr}</span>
+                ${units ? `<span class="pe-chip"><i class="fas fa-coins"></i> ${units}u</span>` : ''}
             </div>
-            <span class="pe-status ${st}">${st}</span>
+            <span class="pe-status ${statusClass}">${status.toUpperCase()}</span>
         </div>
         <div class="fi-actions">
-            <button class="fi-action" onclick="like('pick-${p.id}',this)"><i class="fas fa-heart"></i> ${p.likes_count || 0}</button>
-            <button class="fi-action" onclick="togCmts('pick-${p.id}')"><i class="fas fa-comment"></i> ${p.comments_count || 0}</button>
-            <button class="fi-action" onclick="share('pick-${p.id}')"><i class="fas fa-share"></i> Share</button>
+            <button class="fi-action ${liked ? 'liked' : ''}" onclick="likePick(${pickId}, this)"><i class="fas fa-heart"></i> <span>${p.likes_count || 0}</span></button>
+            <button class="fi-action" onclick="toggleComments(${pickId}, 'pick')"><i class="fas fa-comment"></i> <span>${p.comments_count || 0}</span></button>
+            <button class="fi-action" onclick="sharePost('pick-${pickId}')"><i class="fas fa-share"></i></button>
         </div>
-        <div class="comments-section" id="cs-pick-${p.id}">
-            <div class="cmt-input-row">
-                <input class="cmt-input" id="ci-pick-${p.id}" placeholder="Write a comment..." onkeypress="if(event.key==='Enter')postCmt('pick-${p.id}')">
-                <button class="cmt-submit" onclick="postCmt('pick-${p.id}')">Post</button>
+        <div class="comments-section" id="cs-pick-${pickId}"></div>
+    </div>`;
+}
+
+// ==================== RENDER POLL CARD ====================
+function renderPollCard(p) {
+    const letter = (p.display_name || p.username || '?')[0].toUpperCase();
+    const total = p.total_votes || 0;
+    const options = p.options || [];
+
+    let optionsHtml = options.map(opt => {
+        const votes = parseInt(opt.vote_count || opt.votes || 0);
+        const pct = total > 0 ? Math.round(votes / total * 100) : 0;
+        const isVoted = p.user_voted;
+        return `<div class="poll-opt ${isVoted ? 'voted' : ''}" ${!isVoted ? `onclick="votePoll(${p.poll_id}, ${opt.id})"` : ''}>
+            ${isVoted ? `<div class="poll-bar" style="width:${pct}%"></div>` : ''}
+            <div class="poll-opt-inner"><span>${esc(opt.text || opt.option_text || '')}</span>${isVoted ? `<span class="poll-pct">${pct}%</span>` : ''}</div>
+        </div>`;
+    }).join('');
+
+    return `<div class="feed-item" data-id="${p.item_id}" data-type="poll">
+        <div class="fi-header">
+            <div class="fi-avatar" style="background:var(--accent-purple);">${letter}</div>
+            <div class="fi-meta">
+                <div class="fi-top-row">
+                    <span class="fi-name"><a href="profile.html?user=${p.username}">${p.display_name || p.username}</a></span>
+                    <span class="fi-handle">@${p.username}</span>
+                    <span class="fi-dot">&bull;</span>
+                    <span class="fi-time">${timeAgo(p.created_at)}</span>
+                </div>
+                <div style="display:flex;gap:4px;margin-top:3px;">
+                    <span class="fi-badge fi-badge-poll"><i class="fas fa-poll"></i> Poll</span>
+                    ${p.sport ? `<span class="fi-sport">${p.sport}</span>` : ''}
+                </div>
             </div>
-            <div id="cl-pick-${p.id}"></div>
+        </div>
+        <div class="fi-content" style="font-weight:600;font-size:1.05rem;">${esc(p.content)}</div>
+        ${p.description ? `<div style="color:var(--text-secondary);font-size:0.9rem;margin-top:4px;">${esc(p.description)}</div>` : ''}
+        <div class="poll-display">${optionsHtml}
+            <div class="poll-total">${total} vote${total !== 1 ? 's' : ''}</div>
         </div>
     </div>`;
 }
 
-// ==================== COMMENTS ====================
-function renderCmts(id) {
-    return socialFeed.getComments(id).map(c =>
-        `<div class="cmt-item"><div class="cmt-avatar">${(c.displayName || c.username || '?')[0].toUpperCase()}</div><div class="cmt-body"><div class="cmt-author">${c.displayName || c.username}</div><div class="cmt-text">${esc(c.content)}</div><div class="cmt-time">${socialFeed.timeAgo(c.createdAt)}</div></div></div>`
-    ).join('');
-}
+// ==================== RENDER ACTIVITY CARD ====================
+function renderActivityCard(item) {
+    const iconMap = {
+        pick_graded: { icon: 'fa-check-circle', color: 'var(--accent-green)', label: 'Pick Graded' },
+        friend_accepted: { icon: 'fa-user-check', color: 'var(--accent-blue)', label: 'New Friend' },
+        achievement: { icon: 'fa-trophy', color: 'var(--accent-gold)', label: 'Achievement' },
+    };
+    const cfg = iconMap[item.notif_type] || { icon: 'fa-bell', color: 'var(--accent-blue)', label: 'Activity' };
 
-function togCmts(id) {
-    document.getElementById(`cs-${id}`)?.classList.toggle('show');
-}
-
-function postCmt(id) {
-    if (!socialFeed.getCurrentUser()) { alert('Log in to comment.'); return; }
-    const inp = document.getElementById(`ci-${id}`);
-    if (!inp.value.trim()) return;
-    socialFeed.addComment(id, inp.value.trim());
-    inp.value = '';
-    document.getElementById(`cl-${id}`).innerHTML = renderCmts(id);
-    const card = document.getElementById(`c-${id}`);
-    if (card) {
-        const b = card.querySelectorAll('.fi-action')[1];
-        if (b) b.innerHTML = `<i class="fas fa-comment"></i> ${socialFeed.getCommentCount(id)}`;
-    }
+    return `<div class="feed-item activity-item">
+        <div class="fi-header">
+            <div class="fi-avatar" style="background:${cfg.color};font-size:0.85rem;"><i class="fas ${cfg.icon}"></i></div>
+            <div class="fi-meta">
+                <div class="fi-top-row">
+                    <span class="fi-badge" style="background:${cfg.color}20;color:${cfg.color};font-size:0.75rem;padding:2px 8px;border-radius:10px;">${cfg.label}</span>
+                    <span class="fi-dot">&bull;</span>
+                    <span class="fi-time">${timeAgo(item.created_at)}</span>
+                </div>
+            </div>
+        </div>
+        <div class="fi-content" style="color:var(--text-secondary);">${esc(item.content)}</div>
+    </div>`;
 }
 
 // ==================== INTERACTIONS ====================
-function like(id, btn) {
-    if (!socialFeed.getCurrentUser()) { alert('Log in to like.'); return; }
-    const liked = socialFeed.toggleLike(id, 'post');
-    btn.classList.toggle('liked', liked);
-    btn.innerHTML = `<i class="fas fa-heart"></i> ${socialFeed.getLikeCount(id)}`;
+async function likeFeedPost(id, btn) {
+    const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
+    if (!user) { openModal('login'); return; }
+    try {
+        const isLiked = btn.classList.contains('liked');
+        if (isLiked) {
+            await api.request(`/feed/${id}/like`, { method: 'DELETE' });
+            btn.classList.remove('liked');
+        } else {
+            await api.request(`/feed/${id}/like`, { method: 'POST' });
+            btn.classList.add('liked');
+        }
+        const data = await api.request(`/feed/${id}/like`, { method: isLiked ? 'DELETE' : 'POST' }).catch(() => null);
+        // Just toggle visually
+        const span = btn.querySelector('span');
+        if (span) {
+            let count = parseInt(span.textContent) || 0;
+            span.textContent = isLiked ? Math.max(0, count - 1) : count + 1;
+        }
+    } catch(e) {}
 }
 
-function delPost(id) {
-    if (confirm('Delete this post?')) { socialFeed.deletePost(id); loadFeed(); }
+async function likePick(id, btn) {
+    const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
+    if (!user) { openModal('login'); return; }
+    try {
+        const isLiked = btn.classList.contains('liked');
+        if (isLiked) {
+            await api.request(`/picks/${id}/like`, { method: 'DELETE' });
+            btn.classList.remove('liked');
+        } else {
+            await api.request(`/picks/${id}/like`, { method: 'POST' });
+            btn.classList.add('liked');
+        }
+        const span = btn.querySelector('span');
+        if (span) {
+            let count = parseInt(span.textContent) || 0;
+            span.textContent = isLiked ? Math.max(0, count - 1) : count + 1;
+        }
+    } catch(e) {}
 }
 
-function share(id) {
-    navigator.clipboard?.writeText(`${location.origin}/activity.html?post=${id}`);
-    alert('Link copied!');
+async function toggleComments(id, type) {
+    const elId = type === 'pick' ? `cs-pick-${id}` : `cs-fp-${id}`;
+    const el = document.getElementById(elId);
+    if (!el) return;
+
+    if (el.classList.contains('show')) {
+        el.classList.remove('show');
+        return;
+    }
+
+    el.classList.add('show');
+    el.innerHTML = '<div style="padding:12px;color:var(--text-muted);font-size:0.85rem;">Loading comments...</div>';
+
+    try {
+        const endpoint = type === 'pick' ? `/picks/${id}/comments` : `/feed/${id}/comments`;
+        const data = await api.request(endpoint);
+        const comments = data.comments || [];
+        const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
+
+        let html = '';
+        if (user) {
+            html += `<div class="cmt-input-row">
+                <input class="cmt-input" id="ci-${type}-${id}" placeholder="Write a comment..." onkeypress="if(event.key==='Enter')postComment(${id},'${type}')">
+                <button class="cmt-submit" onclick="postComment(${id},'${type}')">Post</button>
+            </div>`;
+        }
+
+        if (comments.length) {
+            html += comments.map(c => `
+                <div class="cmt-item">
+                    <div class="cmt-avatar">${(c.display_name || c.username || '?')[0].toUpperCase()}</div>
+                    <div class="cmt-body">
+                        <div class="cmt-author"><a href="profile.html?user=${c.username}">${c.display_name || c.username}</a></div>
+                        <div class="cmt-text">${esc(c.content)}</div>
+                        <div class="cmt-time">${timeAgo(c.created_at)}</div>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            html += '<div style="padding:8px 12px;color:var(--text-muted);font-size:0.85rem;">No comments yet</div>';
+        }
+
+        el.innerHTML = html;
+    } catch(e) {
+        el.innerHTML = '<div style="padding:12px;color:var(--accent-red);font-size:0.85rem;">Failed to load comments</div>';
+    }
 }
 
-function votePoll(id, i) {
-    if (!socialFeed.getCurrentUser()) { alert('Log in to vote.'); return; }
-    socialFeed.votePoll(id, i);
-    loadFeed();
+async function postComment(id, type) {
+    const input = document.getElementById(`ci-${type}-${id}`);
+    if (!input || !input.value.trim()) return;
+
+    try {
+        const endpoint = type === 'pick' ? `/picks/${id}/comment` : `/feed/${id}/comment`;
+        await api.request(endpoint, { method: 'POST', body: { content: input.value.trim() } });
+        input.value = '';
+        // Reload comments
+        const elId = type === 'pick' ? `cs-pick-${id}` : `cs-fp-${id}`;
+        const el = document.getElementById(elId);
+        if (el) el.classList.remove('show');
+        toggleComments(id, type);
+    } catch(e) {
+        alert('Failed to post comment');
+    }
 }
 
+async function votePoll(pollId, optionId) {
+    const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
+    if (!user) { openModal('login'); return; }
+    try {
+        await api.request(`/polls/${pollId}/vote`, { method: 'POST', body: { option_id: optionId } });
+        await loadFeed();
+    } catch(e) {
+        alert(e.message || 'Failed to vote');
+    }
+}
+
+function sharePost(id) {
+    navigator.clipboard?.writeText(`${location.origin}/feed.html?post=${id}`);
+    const el = event.currentTarget;
+    const orig = el.innerHTML;
+    el.innerHTML = '<i class="fas fa-check"></i> Copied!';
+    setTimeout(() => el.innerHTML = orig, 1500);
+}
+
+// ==================== FILTER TABS ====================
 function setFilter(f, btn) {
     currentFilter = f;
+    feedOffset = 0;
     document.querySelectorAll('.feed-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     loadFeed();
 }
 
-function loadMorePosts() { loadFeed(); }
-
-// ==================== SIDEBAR ====================
-function loadTrending() {
-    const tags = {};
-    socialFeed.posts.forEach(p => {
-        (p.tags || []).forEach(t => { tags[t] = (tags[t] || 0) + 1; });
-        if (p.sport && !p.tags?.includes(p.sport)) tags[p.sport] = (tags[p.sport] || 0) + 1;
-    });
-    const sorted = Object.entries(tags).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    document.getElementById('trendingList').innerHTML = sorted.length > 0
-        ? sorted.map(([t, c], i) => `<div class="rs-item"><span class="rs-rank">${i + 1}</span><span class="rs-text">${t}</span><span class="rs-count">${c} posts</span></div>`).join('')
-        : '<div style="color:var(--text-muted);font-size:0.85rem;">No trends yet</div>';
+function loadMorePosts() {
+    feedOffset += FEED_LIMIT;
+    loadFeed();
 }
 
-function loadSuggested() {
-    const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]').slice(0, 3);
+// ==================== SIDEBAR ====================
+async function loadTrending() {
+    const el = document.getElementById('trendingList');
+    try {
+        if (api.backendAvailable) {
+            const data = await api.request('/social/discover?limit=5');
+            const picks = data.picks || [];
+            if (picks.length) {
+                el.innerHTML = picks.map((p, i) => {
+                    const sport = (p.sport_key || '').split('_')[1]?.toUpperCase() || '';
+                    return `<div class="rs-item"><span class="rs-rank">${i + 1}</span><span class="rs-text">${p.selection} ${p.market_type === 'h2h' ? 'ML' : p.market_type}</span><span class="rs-count">${sport}</span></div>`;
+                }).join('');
+                return;
+            }
+        }
+    } catch(e) {}
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;">No trending picks yet</div>';
+}
+
+async function loadSuggested() {
     const el = document.getElementById('suggestedList');
-    if (!users.length) {
-        el.innerHTML = `
-            <div class="rs-user"><div class="rs-user-avatar" style="background:#22c55e;">B</div><div class="rs-user-info"><div class="rs-user-name">BetLegend</div><div class="rs-user-detail">Founder</div></div><button class="rs-follow-btn">Follow</button></div>
-            <div class="rs-user"><div class="rs-user-avatar" style="background:#3b82f6;">D</div><div class="rs-user-info"><div class="rs-user-name">Demo User</div><div class="rs-user-detail">12 picks</div></div><button class="rs-follow-btn">Follow</button></div>`;
-        return;
-    }
-    el.innerHTML = users.map(u =>
-        `<div class="rs-user"><div class="rs-user-avatar" style="background:#3b82f6;">${(u.displayName || u.username || '?')[0].toUpperCase()}</div><div class="rs-user-info"><div class="rs-user-name">${u.displayName || u.username}</div><div class="rs-user-detail">${u.stats?.totalPicks || 0} picks</div></div><button class="rs-follow-btn">Follow</button></div>`
-    ).join('');
+    try {
+        if (api.backendAvailable) {
+            const data = await api.request('/users?limit=5');
+            const users = data.users || [];
+            if (users.length) {
+                el.innerHTML = users.map(u =>
+                    `<div class="rs-user">
+                        <div class="rs-user-avatar" style="background:var(--accent-blue);">${(u.display_name || u.username || '?')[0].toUpperCase()}</div>
+                        <div class="rs-user-info">
+                            <div class="rs-user-name"><a href="profile.html?user=${u.username}" style="color:inherit;text-decoration:none;">${u.display_name || u.username}</a></div>
+                            <div class="rs-user-detail">${u.total_picks || 0} picks</div>
+                        </div>
+                        <a href="profile.html?user=${u.username}" class="rs-follow-btn">View</a>
+                    </div>`
+                ).join('');
+                return;
+            }
+        }
+    } catch(e) {}
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;">No users yet</div>';
 }
 
 // ==================== AUTH MODALS ====================
@@ -381,20 +630,22 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) closeModals(); });
 });
 
-function handleLogin() {
+async function handleLogin() {
     const user = document.getElementById('loginUser').value.trim();
     const pass = document.getElementById('loginPass').value;
     if (!user || !pass) { showErr('loginError', 'All fields required.'); return; }
     try {
         if (typeof auth !== 'undefined' && auth.login) {
-            const r = auth.login(user, pass);
-            if (r) { closeModals(); location.reload(); return; }
+            await auth.login(user, pass);
+            closeModals();
+            location.reload();
+            return;
         }
-        showErr('loginError', 'Invalid credentials.');
-    } catch (e) { showErr('loginError', e.message || 'Login failed.'); }
+        showErr('loginError', 'Login failed.');
+    } catch (e) { showErr('loginError', e.message || 'Invalid credentials.'); }
 }
 
-function handleSignup() {
+async function handleSignup() {
     const username = document.getElementById('signupUser').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
     const pass = document.getElementById('signupPass').value;
@@ -402,8 +653,10 @@ function handleSignup() {
     if (pass.length < 6) { showErr('signupError', 'Password must be 6+ characters.'); return; }
     try {
         if (typeof auth !== 'undefined' && auth.register) {
-            const r = auth.register(username, email, pass);
-            if (r) { closeModals(); location.reload(); return; }
+            await auth.register(username, email, pass);
+            closeModals();
+            location.reload();
+            return;
         }
         showErr('signupError', 'Registration failed.');
     } catch (e) { showErr('signupError', e.message || 'Signup failed.'); }
@@ -418,7 +671,30 @@ function showErr(id, msg) {
 
 // ==================== HELPERS ====================
 function esc(t) {
+    if (!t) return '';
     const d = document.createElement('div');
     d.textContent = t;
     return d.innerHTML;
+}
+
+function formatSport(key) {
+    if (!key) return '';
+    const map = {
+        'basketball_nba': 'NBA', 'icehockey_nhl': 'NHL', 'baseball_mlb': 'MLB',
+        'americanfootball_nfl': 'NFL', 'basketball_ncaab': 'NCAAB', 'americanfootball_ncaaf': 'NCAAF',
+        'NFL': 'NFL', 'NBA': 'NBA', 'MLB': 'MLB', 'NHL': 'NHL', 'NCAAB': 'NCAAB', 'Soccer': 'Soccer'
+    };
+    return map[key] || key.split('_').pop()?.toUpperCase() || key;
+}
+
+function timeAgo(dateStr) {
+    if (!dateStr) return '';
+    const now = Date.now();
+    const then = new Date(dateStr).getTime();
+    const diff = Math.floor((now - then) / 1000);
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h';
+    if (diff < 604800) return Math.floor(diff / 86400) + 'd';
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
