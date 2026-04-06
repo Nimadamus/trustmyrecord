@@ -35,45 +35,26 @@
     };
 
     // =========================================================================
-    // GA4 INITIALIZATION (gtag.js)
+    // GA4 INITIALIZATION
+    // The gtag.js script and config are loaded inline in <head> of every page.
+    // This function just confirms gtag is available for custom event tracking.
     // =========================================================================
 
     function initGA4() {
         if (!ANALYTICS_CONFIG.enabled) return;
 
-        const measurementId = ANALYTICS_CONFIG.measurementId;
-        if (!measurementId || measurementId.startsWith('G-XXXX')) {
-            console.warn('[TMR Analytics] No GA4 Measurement ID configured. Set CONFIG.analytics.measurementId in config.js');
+        // gtag should already be defined by the inline snippet in <head>
+        if (typeof window.gtag !== 'function') {
+            console.warn('[TMR Analytics] gtag not found. Make sure the GA4 snippet is in <head>.');
             return;
         }
 
-        // Load gtag.js script
-        const script = document.createElement('script');
-        script.async = true;
-        script.src = 'https://www.googletagmanager.com/gtag/js?id=' + measurementId;
-        document.head.appendChild(script);
+        // Set debug mode if configured
+        if (ANALYTICS_CONFIG.debug) {
+            window.gtag('set', { debug_mode: true });
+        }
 
-        // Initialize dataLayer and gtag
-        window.dataLayer = window.dataLayer || [];
-        window.gtag = function () { window.dataLayer.push(arguments); };
-        window.gtag('js', new Date());
-
-        // Configure GA4 with enhanced measurement
-        window.gtag('config', measurementId, {
-            send_page_view: false, // We send manually for SPA
-            debug_mode: ANALYTICS_CONFIG.debug,
-            cookie_flags: 'SameSite=None;Secure',
-            custom_map: {
-                dimension1: 'sport',
-                dimension2: 'pick_type',
-                dimension3: 'button_location',
-                dimension4: 'thread_id',
-                dimension5: 'poll_id',
-                dimension6: 'subscription_plan'
-            }
-        });
-
-        console.log('[TMR Analytics] GA4 initialized:', measurementId);
+        console.log('[TMR Analytics] GA4 connected:', ANALYTICS_CONFIG.measurementId);
     }
 
     // =========================================================================
@@ -218,7 +199,8 @@
         init: function () {
             initGA4();
             initGTM();
-            this.trackInitialPageView();
+            // Initial page_view is sent automatically by the inline gtag config in <head>.
+            // We only send manual page_views for SPA route changes (see bindSPANavigation).
             this.bindAutoTracking();
             this.setUserContext();
             console.log('[TMR Analytics] Module ready');
