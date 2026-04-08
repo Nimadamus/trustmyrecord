@@ -451,6 +451,9 @@
                         <option value="h2h,moneyline">Moneyline</option>
                         <option value="spreads,spread">Spread</option>
                         <option value="totals,total">Totals</option>
+                        <option value="team_totals">Team Totals</option>
+                        <option value="f5_h2h">First 5 ML</option>
+                        <option value="f5_totals">First 5 Totals</option>
                     </select>
                     <select id="filterResult" onchange="applyFilters()" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:.85rem;">
                         <option value="">All Results</option>
@@ -467,7 +470,20 @@
                         <option value="dog">Underdog (+101 to +200)</option>
                         <option value="longshot">Longshot (+201+)</option>
                     </select>
-                    <button onclick="clearFilters()" class="btn btn-secondary" style="padding:8px 14px;font-size:.85rem;">Clear</button>
+                    <select id="filterPeriod" onchange="applyFilters()" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:.85rem;">
+                        <option value="all">All Time</option>
+                        <option value="7">Last 7 Days</option>
+                        <option value="30">Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                        <option value="365">Last Year</option>
+                    </select>
+                    <button id="btnFavOnly" onclick="toggleQuickFilter('fav')" class="btn btn-secondary" style="padding:8px 14px;font-size:.85rem;">Favorites Only</button>
+                    <button id="btnDogOnly" onclick="toggleQuickFilter('dog')" class="btn btn-secondary" style="padding:8px 14px;font-size:.85rem;">Underdogs Only</button>
+                    <button onclick="clearFilters()" class="btn btn-secondary" style="padding:8px 14px;font-size:.85rem;">Clear All</button>
+                </div>
+                <div id="filterBanner" style="display:none;padding:10px 16px;margin-bottom:8px;background:var(--accent-blue-bg);border:1px solid rgba(59,130,246,0.3);border-radius:8px;font-size:.85rem;color:var(--text-primary);align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                    <span id="filterBannerText"></span>
+                    <button onclick="clearFilters()" style="background:none;border:1px solid var(--border-color);color:var(--text-secondary);padding:4px 12px;border-radius:4px;cursor:pointer;font-size:.8rem;font-family:inherit;">Clear All Filters</button>
                 </div>
                 <div id="filterResults" style="color:var(--text-muted);font-size:.85rem;margin-bottom:8px;"></div>
             </div>
@@ -694,7 +710,10 @@
             bestStreak, worstStreak, avgOdds, avgUnits,
             mlRecord: betTypeRecord(['h2h', 'moneyline']),
             spreadRecord: betTypeRecord(['spreads', 'spread']),
-            totalsRecord: betTypeRecord(['totals', 'total'])
+            totalsRecord: betTypeRecord(['totals', 'total']),
+            teamTotalsRecord: betTypeRecord(['team_totals']),
+            f5MlRecord: betTypeRecord(['f5_h2h']),
+            f5TotalsRecord: betTypeRecord(['f5_totals'])
         };
     }
 
@@ -984,7 +1003,7 @@
     }
 
     // ======================== ANALYTICS ========================
-    function renderAnalytics(s) {
+    function renderAnalytics(s, picksArr) {
         const section = document.getElementById('analyticsSection');
         if (s.total === 0) return;
         section.style.display = 'block';
@@ -1003,7 +1022,10 @@
         const types = [
             { name: 'Moneyline', d: s.mlRecord },
             { name: 'Spread', d: s.spreadRecord },
-            { name: 'Totals', d: s.totalsRecord }
+            { name: 'Totals', d: s.totalsRecord },
+            { name: 'Team Totals', d: s.teamTotalsRecord },
+            { name: 'First 5 ML', d: s.f5MlRecord },
+            { name: 'First 5 Totals', d: s.f5TotalsRecord }
         ];
         btg.innerHTML = types.filter(t => t.d.total > 0).map(t => {
             const wr = (t.d.wins + t.d.losses) > 0 ? ((t.d.wins / (t.d.wins + t.d.losses)) * 100).toFixed(1) : '0.0';
@@ -1011,21 +1033,22 @@
         }).join('') || '<div class="empty-state" style="padding:16px;">No data</div>';
 
         // By Unit Size
-        renderUnitSizeBreakdown();
+        renderUnitSizeBreakdown(picksArr);
         // By Odds Range
-        renderOddsRangeBreakdown();
+        renderOddsRangeBreakdown(picksArr);
         // Recent Form
-        renderRecentForm();
+        renderRecentForm(picksArr);
         // Performance Over Time
-        renderPerformanceTimeline();
+        renderPerformanceTimeline(picksArr);
         // Populate filter dropdowns
         populateFilterDropdowns();
     }
 
-    function renderUnitSizeBreakdown() {
+    function renderUnitSizeBreakdown(picksArr) {
         const g = document.getElementById('unitSizeGrid');
         if (!g) return;
-        const graded = allLoadedPicks.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
+        const src = picksArr || allLoadedPicks;
+        const graded = src.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
         const buckets = { '0.5-1u': { min: 0, max: 1.01 }, '1.5-2u': { min: 1.01, max: 2.01 }, '2.5-3u': { min: 2.01, max: 3.01 }, '3u+': { min: 3.01, max: 9999 } };
         const rows = [];
         for (const [label, range] of Object.entries(buckets)) {
@@ -1041,10 +1064,11 @@
         g.innerHTML = rows.join('') || '<div class="empty-state" style="padding:16px;">No data</div>';
     }
 
-    function renderOddsRangeBreakdown() {
+    function renderOddsRangeBreakdown(picksArr) {
         const g = document.getElementById('oddsRangeGrid');
         if (!g) return;
-        const graded = allLoadedPicks.filter(p => p.status === 'won' || p.status === 'lost');
+        const src = picksArr || allLoadedPicks;
+        const graded = src.filter(p => p.status === 'won' || p.status === 'lost');
         const ranges = [
             { label: 'Heavy Fav (-200+)', test: o => o <= -200 },
             { label: 'Favorite (-110 to -199)', test: o => o >= -199 && o <= -110 },
@@ -1066,10 +1090,11 @@
         g.innerHTML = rows.join('') || '<div class="empty-state" style="padding:16px;">No data</div>';
     }
 
-    function renderRecentForm() {
+    function renderRecentForm(picksArr) {
         const g = document.getElementById('recentFormGrid');
         if (!g) return;
-        const graded = allLoadedPicks.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
+        const src = picksArr || allLoadedPicks;
+        const graded = src.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
         const recent = graded.slice(0, 20);
         if (recent.length === 0) { g.innerHTML = '<div style="color:var(--text-muted);padding:8px;">No graded picks yet</div>'; return; }
         g.innerHTML = recent.map(p => {
@@ -1080,10 +1105,11 @@
         }).join('');
     }
 
-    function renderPerformanceTimeline() {
+    function renderPerformanceTimeline(picksArr) {
         const el = document.getElementById('performanceTimeline');
         if (!el) return;
-        const graded = allLoadedPicks.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
+        const src = picksArr || allLoadedPicks;
+        const graded = src.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
         if (graded.length === 0) { el.innerHTML = '<div style="color:var(--text-muted);text-align:center;">No data</div>'; return; }
 
         // Group by week
@@ -1140,11 +1166,10 @@
     function switchPeriod(period) {
         currentPeriod = period;
         document.querySelectorAll('.period-btn').forEach(b => b.classList.toggle('active', b.dataset.period === period));
-        const filtered = filterByPeriod(allLoadedPicks, period);
-        const stats = computeUnifiedStats(filtered);
-        renderSummaryBar(stats);
-        renderAnalytics(stats);
-        renderCapperMetrics(filtered);
+        // Sync the filter period dropdown
+        document.getElementById('filterPeriod').value = period;
+        // Apply all filters together (period + any active pick filters)
+        applyFilters();
     }
 
     function computeAdvancedStats(picks) {
@@ -1466,13 +1491,35 @@
         sportSelect.innerHTML = opts;
     }
 
-    function applyFilters() {
+    let activeQuickFilter = null; // 'fav' or 'dog' or null
+
+    function toggleQuickFilter(which) {
+        if (activeQuickFilter === which) {
+            activeQuickFilter = null;
+        } else {
+            activeQuickFilter = which;
+        }
+        document.getElementById('btnFavOnly').style.background = activeQuickFilter === 'fav' ? 'var(--accent-blue)' : '';
+        document.getElementById('btnFavOnly').style.color = activeQuickFilter === 'fav' ? '#fff' : '';
+        document.getElementById('btnDogOnly').style.background = activeQuickFilter === 'dog' ? 'var(--accent-green)' : '';
+        document.getElementById('btnDogOnly').style.color = activeQuickFilter === 'dog' ? '#fff' : '';
+        applyFilters();
+    }
+
+    function getFilteredPicks() {
         const sport = document.getElementById('filterSport').value;
         const type = document.getElementById('filterType').value;
         const result = document.getElementById('filterResult').value;
         const odds = document.getElementById('filterOdds').value;
+        const period = document.getElementById('filterPeriod').value;
 
         let filtered = [...allLoadedPicks];
+
+        // Time period filter
+        if (period && period !== 'all') {
+            filtered = filterByPeriod(filtered, period);
+        }
+
         if (sport) filtered = filtered.filter(p => p.sport_key === sport);
         if (type) { const types = type.split(','); filtered = filtered.filter(p => types.includes(p.market_type)); }
         if (result) filtered = filtered.filter(p => p.status === result || (result === 'push' && p.status === 'pushed'));
@@ -1488,6 +1535,54 @@
             });
         }
 
+        // Quick filter: favorites/underdogs
+        if (activeQuickFilter === 'fav') {
+            filtered = filtered.filter(p => { const o = p.odds_snapshot || p.odds || -110; return o < 0; });
+        } else if (activeQuickFilter === 'dog') {
+            filtered = filtered.filter(p => { const o = p.odds_snapshot || p.odds || -110; return o > 0; });
+        }
+
+        return filtered;
+    }
+
+    function applyFilters() {
+        const filtered = getFilteredPicks();
+
+        // Check if any filter is active
+        const sport = document.getElementById('filterSport').value;
+        const type = document.getElementById('filterType').value;
+        const result = document.getElementById('filterResult').value;
+        const odds = document.getElementById('filterOdds').value;
+        const period = document.getElementById('filterPeriod').value;
+        const hasFilter = sport || type || result || odds || (period && period !== 'all') || activeQuickFilter;
+
+        // Update filter banner (FIX 5)
+        const banner = document.getElementById('filterBanner');
+        if (hasFilter) {
+            const parts = [];
+            if (sport) parts.push(fmtSport(sport));
+            if (type) {
+                const typeLabels = { 'h2h,moneyline': 'Moneyline', 'spreads,spread': 'Spreads', 'totals,total': 'Totals', 'team_totals': 'Team Totals', 'f5_h2h': 'First 5 ML', 'f5_totals': 'First 5 Totals' };
+                parts.push(typeLabels[type] || type);
+            }
+            if (result) parts.push(result.charAt(0).toUpperCase() + result.slice(1));
+            if (odds) {
+                const oddsLabels = { 'heavy-fav': 'Heavy Favorites', 'fav': 'Favorites', 'even': 'Even Money', 'dog': 'Underdogs', 'longshot': 'Longshots' };
+                parts.push(oddsLabels[odds] || odds);
+            }
+            if (period && period !== 'all') {
+                const periodLabels = { '7': 'Last 7 Days', '30': 'Last 30 Days', '90': 'Last 90 Days', '365': 'Last Year' };
+                parts.push(periodLabels[period] || period);
+            }
+            if (activeQuickFilter === 'fav') parts.push('Favorites Only');
+            if (activeQuickFilter === 'dog') parts.push('Underdogs Only');
+            document.getElementById('filterBannerText').textContent = 'Showing: ' + parts.join(' | ') + ' | ' + filtered.length + ' picks';
+            banner.style.display = 'flex';
+        } else {
+            banner.style.display = 'none';
+        }
+
+        // Update filter results text
         const el = document.getElementById('filterResults');
         const graded = filtered.filter(p => p.status === 'won' || p.status === 'lost');
         const w = graded.filter(p => p.status === 'won').length;
@@ -1497,7 +1592,22 @@
         graded.forEach(p => { units += pickPL(p); });
         el.textContent = 'Showing ' + filtered.length + ' picks | ' + w + '-' + l + ' | ' + wr + '% | ' + (units >= 0 ? '+' : '') + units.toFixed(2) + 'u';
 
+        // Update picks table
         renderPicksTable(filtered);
+
+        // FIX 4: Update ALL analytics sections with filtered data
+        const stats = computeUnifiedStats(filtered);
+        renderSummaryBar(stats);
+        renderAnalytics(stats, filtered);
+        renderCapperMetrics(filtered);
+
+        // Sync time period buttons with filter dropdown
+        if (document.getElementById('filterPeriod').value !== 'all') {
+            currentPeriod = document.getElementById('filterPeriod').value;
+        } else if (!hasFilter) {
+            currentPeriod = 'all';
+        }
+        document.querySelectorAll('.period-btn').forEach(b => b.classList.toggle('active', b.dataset.period === currentPeriod));
     }
 
     function clearFilters() {
@@ -1505,8 +1615,23 @@
         document.getElementById('filterType').value = '';
         document.getElementById('filterResult').value = '';
         document.getElementById('filterOdds').value = '';
+        document.getElementById('filterPeriod').value = 'all';
+        activeQuickFilter = null;
+        document.getElementById('btnFavOnly').style.background = '';
+        document.getElementById('btnFavOnly').style.color = '';
+        document.getElementById('btnDogOnly').style.background = '';
+        document.getElementById('btnDogOnly').style.color = '';
         document.getElementById('filterResults').textContent = '';
+        document.getElementById('filterBanner').style.display = 'none';
+        currentPeriod = 'all';
+        document.querySelectorAll('.period-btn').forEach(b => b.classList.toggle('active', b.dataset.period === 'all'));
+
+        // Reset all sections to full data
+        const stats = computeUnifiedStats(allLoadedPicks);
+        renderSummaryBar(stats);
+        renderAnalytics(stats, allLoadedPicks);
         renderPicksTable(allLoadedPicks);
+        renderCapperMetrics(allLoadedPicks);
     }
 
     function ac(label, value, cls) {
