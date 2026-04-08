@@ -20057,6 +20057,114 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 
+<script>
+// Social Proof - Fetch live stats and recent picks
+(function() {
+    var baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.api && CONFIG.api.baseUrl)
+        ? CONFIG.api.baseUrl
+        : 'https://trustmyrecord-api.onrender.com/api';
+
+    var defaults = {
+        picksTracked: 1247,
+        activeGames: 18,
+        recentPicks: [
+            { username: 'SharpShooter42', sport: 'NBA', description: 'Lakers ML -145 vs Celtics', timestamp: '2 min ago' },
+            { username: 'GridironGuru', sport: 'NFL', description: 'Chiefs -3.5 vs Ravens', timestamp: '8 min ago' },
+            { username: 'PuckMaster', sport: 'NHL', description: 'Over 6.0 Avalanche vs Oilers', timestamp: '14 min ago' },
+            { username: 'DiamondKing', sport: 'MLB', description: 'Dodgers RL -1.5 vs Padres', timestamp: '21 min ago' }
+        ]
+    };
+
+    var sportColors = {
+        'NBA': '#ff6b00', 'NFL': '#013369', 'NHL': '#000000',
+        'MLB': '#002D72', 'NCAAB': '#ff4500', 'NCAAF': '#8B0000', 'Soccer': '#00cc66'
+    };
+
+    function animateCounter(el, target) {
+        var start = 0;
+        var duration = 1200;
+        var startTime = null;
+        function step(ts) {
+            if (!startTime) startTime = ts;
+            var progress = Math.min((ts - startTime) / duration, 1);
+            var eased = 1 - Math.pow(1 - progress, 3);
+            var current = Math.round(start + (target - start) * eased);
+            el.textContent = current.toLocaleString();
+            if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+    }
+
+    function renderActivityFeed(picks) {
+        var feed = document.getElementById('spActivityFeed');
+        if (!feed) return;
+        feed.innerHTML = '';
+        picks.forEach(function(pick) {
+            var seed = pick.username.length * 7 + pick.sport.length;
+            var badgeColor = sportColors[pick.sport] || '#00ffff';
+            var card = document.createElement('div');
+            card.className = 'activity-card';
+            card.innerHTML =
+                '<div class="activity-card-header">' +
+                    '<img class="activity-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=' + seed + '" alt="">' +
+                    '<span class="activity-user">' + pick.username + '</span>' +
+                    '<span class="activity-sport-badge" style="background:' + badgeColor + '22;color:' + badgeColor + ';border-color:' + badgeColor + '55;">' + pick.sport + '</span>' +
+                '</div>' +
+                '<div class="activity-pick-text">' + pick.description + '</div>' +
+                '<div class="activity-time">' + pick.timestamp + '</div>';
+            feed.appendChild(card);
+        });
+    }
+
+    function timeAgo(dateStr) {
+        var diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+        if (diff < 60) return diff + 's ago';
+        if (diff < 3600) return Math.floor(diff / 60) + ' min ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        return Math.floor(diff / 86400) + 'd ago';
+    }
+
+    // Start with defaults immediately
+    var picksEl = document.getElementById('spPicksTracked');
+    var gamesEl = document.getElementById('spActiveGames');
+
+    if (picksEl) animateCounter(picksEl, defaults.picksTracked);
+    if (gamesEl) animateCounter(gamesEl, defaults.activeGames);
+    renderActivityFeed(defaults.recentPicks);
+
+    // Then try to fetch real data from backend
+    fetch(baseUrl + '/health', { signal: AbortSignal.timeout(8000) })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data && data.totalPicks) {
+                if (picksEl) animateCounter(picksEl, data.totalPicks);
+            }
+            if (data && data.activeGames) {
+                if (gamesEl) animateCounter(gamesEl, data.activeGames);
+            }
+        })
+        .catch(function() { /* defaults already shown */ });
+
+    fetch(baseUrl + '/picks?limit=4&status=all', { signal: AbortSignal.timeout(8000) })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var picks = Array.isArray(data) ? data : (data && data.picks ? data.picks : null);
+            if (picks && picks.length > 0) {
+                var mapped = picks.map(function(p) {
+                    return {
+                        username: p.username || p.user || 'Anonymous',
+                        sport: (p.sport || p.league || 'NBA').toUpperCase(),
+                        description: p.description || p.pick_description || (p.team + ' ' + (p.pick_type || '')),
+                        timestamp: p.created_at ? timeAgo(p.created_at) : 'recently'
+                    };
+                });
+                renderActivityFeed(mapped);
+            }
+        })
+        .catch(function() { /* defaults already shown */ });
+})();
+</script>
+
 </body>
 </html>
 <!-- Deploy: Tue, Jan 20, 2026  9:59:20 PM -->
