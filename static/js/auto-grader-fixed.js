@@ -47,8 +47,7 @@
         // Fetch scores from ESPN for a specific date
         fetchScoresForDate: async function(sportPath, dateStr) {
             const url = `https://site.api.espn.com/apis/site/v2/sports/${sportPath}/scoreboard?dates=${dateStr}`;
-            console.log(`[Grader] Fetching: ${url}`);
-            
+
             try {
                 const response = await fetch(url);
                 const data = await response.json();
@@ -94,10 +93,8 @@
                     scoreMap[homeNorm + '_' + awayNorm] = scoreData;
                     scoreMap[awayNorm + '_' + homeNorm] = scoreData;
                     
-                    console.log(`[Grader] Stored: ${homeName} ${homeScore} vs ${awayName} ${awayScore}`);
                 }
-                
-                console.log(`[Grader] Found ${events.length} games for ${dateStr}`);
+
                 return scoreMap;
             } catch (e) {
                 console.error('[Grader] Fetch error:', e);
@@ -120,7 +117,6 @@
                 
                 for (const key of keysToTry) {
                     if (allScores[key]) {
-                        console.log(`[Grader] Matched by game_id: ${key}`);
                         return allScores[key];
                     }
                 }
@@ -134,11 +130,9 @@
                 const key2 = awayNorm + '_' + homeNorm;
                 
                 if (allScores[key1]) {
-                    console.log(`[Grader] Matched by team names: ${key1}`);
                     return allScores[key1];
                 }
                 if (allScores[key2]) {
-                    console.log(`[Grader] Matched by team names: ${key2}`);
                     return allScores[key2];
                 }
             }
@@ -155,10 +149,7 @@
             const isHome = sel === home || home.includes(sel) || sel.includes(home);
             const isAway = sel === away || away.includes(sel) || sel.includes(away);
             
-            console.log(`[Grader] ML: sel='${sel}', home='${home}', away='${away}', isHome=${isHome}, isAway=${isAway}`);
-            
             if (!isHome && !isAway) {
-                console.log('[Grader] ML: Could not match selection to team');
                 return 'pending';
             }
             
@@ -174,7 +165,6 @@
         gradeSpread: function(pick, homeScore, awayScore) {
             const line = parseFloat(pick.line_snapshot ?? pick.line);
             if (isNaN(line)) {
-                console.log('[Grader] Spread: No line available');
                 return 'pending';
             }
             
@@ -185,8 +175,6 @@
             const isHome = sel === home || home.includes(sel) || sel.includes(home);
             const margin = isHome ? (homeScore - awayScore + line) : (awayScore - homeScore + line);
             
-            console.log(`[Grader] Spread: line=${line}, margin=${margin}, isHome=${isHome}`);
-            
             if (Math.abs(margin) < 0.001) return 'push';
             if (margin > 0) return 'won';
             return 'lost';
@@ -196,7 +184,6 @@
         gradeTotal: function(pick, homeScore, awayScore) {
             const line = parseFloat(pick.line_snapshot ?? pick.line);
             if (isNaN(line)) {
-                console.log('[Grader] Total: No line available');
                 return 'pending';
             }
 
@@ -204,8 +191,6 @@
             const sel = (pick.selection || '').toLowerCase();
             const isOver = sel.includes('over');
             const isUnder = sel.includes('under');
-
-            console.log(`[Grader] Total: line=${line}, total=${total}, isOver=${isOver}, isUnder=${isUnder}`);
 
             if (Math.abs(total - line) < 0.001) return 'push';
             if (isOver) return total > line ? 'won' : 'lost';
@@ -253,18 +238,13 @@
 
         // Run grading for all pending picks
         runGrading: async function() {
-            console.log('[Grader] ========== STARTING GRADING ==========');
-            
             const picks = this.getPicks();
             const pending = picks.filter(p => {
                 const status = (p.status || p.result || 'pending').toString().toLowerCase().trim();
                 return status === 'pending';
             });
             
-            console.log(`[Grader] Total picks: ${picks.length}, Pending: ${pending.length}`);
-            
             if (pending.length === 0) {
-                console.log('[Grader] No pending picks');
                 return { graded: 0, total: 0 };
             }
             
@@ -282,11 +262,8 @@
             for (const [sport, sportPicks] of Object.entries(bySport)) {
                 const path = this.SPORT_PATHS[sport];
                 if (!path) {
-                    console.log(`[Grader] Unknown sport: ${sport}`);
                     continue;
                 }
-                
-                console.log(`[Grader] Processing ${sportPicks.length} picks for ${sport}`);
                 
                 // Get unique dates from picks (today + yesterday + pick dates)
                 const dates = new Set();

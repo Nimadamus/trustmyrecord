@@ -321,8 +321,6 @@ async function loadGames() {
             `;
         }).join('');
 
-        console.log(`✅ Loaded ${filteredGames.length} ${selectedSport} games with ${selectedBetType} odds`);
-
     } catch (error) {
         console.error('Error loading games:', error);
         gamesGrid.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--neon-red);">Error loading games: ${error.message}<br><br>Please check your API configuration and try again.</div>`;
@@ -491,7 +489,6 @@ async function submitPick() {
                 line_snapshot: lineValue,
                 units: selectedUnits || 1
             });
-            console.log('[TMR] Pick submitted via backend:', result);
             alert('Pick submitted and recorded on your permanent record!');
         } catch (err) {
             console.error('[TMR] Backend pick submission failed:', err);
@@ -523,7 +520,6 @@ async function submitPick() {
         const picks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
         picks.unshift(pick);
         localStorage.setItem('tmr_picks', JSON.stringify(picks));
-        console.log('[TMR] Pick saved to localStorage:', pick);
         alert('Pick submitted! (Saved locally - connect to backend for permanent record)');
     }
 
@@ -610,15 +606,6 @@ function loadPicksHistory() {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('========================================');
-    console.log('✅ PICKS-COMPLETE-FIX.JS LOADED');
-    console.log('========================================');
-    console.log('Functions exported to window:');
-    console.log('- selectSport:', typeof window.selectSport);
-    console.log('- selectBetType:', typeof window.selectBetType);
-    console.log('- loadGames:', typeof window.loadGames);
-    console.log('- updateBetTypeLabels:', typeof window.updateBetTypeLabels);
-
     if (document.getElementById('sportSelection')) {
         showStep('sport');
 
@@ -633,8 +620,6 @@ document.addEventListener('DOMContentLoaded', function() {
             loadPicksHistory();
         }
     }
-
-    console.log('Picks module initialized successfully');
 });
 
 // Export functions to window
