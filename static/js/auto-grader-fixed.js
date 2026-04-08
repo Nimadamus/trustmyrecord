@@ -428,8 +428,6 @@
 
         // Initialize the grader
         init: function() {
-            console.log('[Grader] Auto-grader initialized');
-
             // Re-check existing graded picks for push accuracy first
             this.recheckGradedPicks();
 
@@ -449,7 +447,6 @@
                 clearInterval(this.intervalId);
                 this.intervalId = null;
             }
-            console.log('[Grader] Stopped');
         },
 
         // Manual grade trigger
@@ -475,7 +472,6 @@
                 if (!isGraded) return;
                 var gradedToday = (p.graded_at && p.graded_at.indexOf('2026-04-05') !== -1);
                 if (gradedToday) {
-                    console.log('[Grader Fix] Reverting pick:', p.id, p.selection, 'was:', p.status);
                     p.status = 'pending';
                     p.result = 'pending';
                     delete p.graded_at;
@@ -487,7 +483,6 @@
             });
             if (fixed > 0) {
                 localStorage.setItem('tmr_picks', JSON.stringify(picks));
-                console.log('[Grader Fix] Reverted ' + fixed + ' picks back to pending');
             }
             localStorage.setItem(FIX_KEY, 'done');
         } catch(e) { console.error('[Grader Fix]', e); }
@@ -500,5 +495,4 @@
         TMR_GRADER.init();
     }
 
-    console.log('[Grader] Script loaded, TMR_GRADER available');
 })();
