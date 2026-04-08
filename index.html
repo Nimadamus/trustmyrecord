@@ -1506,6 +1506,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="static/css/social.css" rel="stylesheet">
     <link href="static/css/sportsbook.css" rel="stylesheet">
 
@@ -1660,7 +1661,150 @@
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
         }
 
-        @media (max-width: 900px) {
+        /* Hamburger Menu Button - hidden on desktop */
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            color: var(--neon-cyan);
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            z-index: 1001;
+        }
+        .hamburger-btn:hover {
+            background: rgba(0, 255, 255, 0.1);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        }
+
+        /* Mobile Nav Overlay */
+        .mobile-nav-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background: linear-gradient(180deg, #0a0e1a 0%, #0d1321 100%);
+            border-left: 1px solid rgba(0, 255, 255, 0.2);
+            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+        }
+        .mobile-nav-overlay.open {
+            right: 0;
+        }
+        .mobile-nav-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .mobile-nav-backdrop.open {
+            opacity: 1;
+        }
+        .mobile-nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+        }
+        .mobile-nav-header .mobile-nav-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            background: var(--gradient-gold);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .mobile-nav-close {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .mobile-nav-close:hover {
+            background: rgba(255, 0, 80, 0.15);
+            border-color: rgba(255, 0, 80, 0.5);
+            color: #ff4444;
+        }
+        .mobile-nav-links {
+            display: flex;
+            flex-direction: column;
+            padding: 12px 0;
+        }
+        .mobile-nav-links a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            padding: 14px 24px;
+            min-height: 48px;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .mobile-nav-links a:hover,
+        .mobile-nav-links a:active {
+            color: var(--neon-cyan);
+            background: rgba(0, 255, 255, 0.08);
+            border-left-color: var(--neon-cyan);
+        }
+        .mobile-nav-links a.profile-link-mobile {
+            margin: 12px 24px;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            border-radius: 12px;
+            justify-content: center;
+            padding: 14px 18px;
+        }
+        .mobile-nav-links a.profile-link-mobile:hover {
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+            border-left-color: transparent;
+        }
+
+        @media (max-width: 768px) {
+            .hamburger-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .main-nav {
+                display: none !important;
+            }
+            .mobile-nav-overlay {
+                display: block;
+            }
+            .mobile-nav-backdrop {
+                display: block;
+                pointer-events: none;
+            }
+            .mobile-nav-backdrop.open {
+                pointer-events: auto;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 900px) {
             .main-nav {
                 flex-wrap: wrap;
                 justify-content: center;
@@ -7745,6 +7889,9 @@
                         <button onclick="showSection('login')" class="btn btn-primary" style="padding: 8px 20px; font-size: 14px;">Login</button>
                         <button onclick="showSection('signup')" class="btn" style="padding: 8px 20px; font-size: 14px; background: linear-gradient(135deg, var(--neon-cyan), var(--neon-gold, #f0b840)); color: #0a0e1a; font-weight: 700; border: none; border-radius: 8px; cursor: pointer;">Sign Up</button>
                     </div>
+                    <button class="hamburger-btn" onclick="toggleMobileNav()" aria-label="Open navigation menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
                 </div>
 
                 <nav class="main-nav">
@@ -7759,6 +7906,29 @@
                     <a href="messages.html" class="nav-link">Messages</a>
                     <a href="#profile" class="nav-link profile-link" onclick="showSection('profile')">My Profile</a>
                 </nav>
+            </div>
+
+            <!-- Mobile Nav Drawer -->
+            <div class="mobile-nav-backdrop" id="mobileNavBackdrop" onclick="closeMobileNav()"></div>
+            <div class="mobile-nav-overlay" id="mobileNavOverlay">
+                <div class="mobile-nav-header">
+                    <span class="mobile-nav-title">TRUST<span style="color: var(--neon-cyan); -webkit-text-fill-color: var(--neon-cyan);">MY</span>RECORD</span>
+                    <button class="mobile-nav-close" onclick="closeMobileNav()" aria-label="Close navigation menu">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mobile-nav-links">
+                    <a href="#home" onclick="showSection('home'); closeMobileNav();">Home</a>
+                    <a href="#picks" onclick="handleMakePicksCta(); closeMobileNav();">Make Picks</a>
+                    <a href="#mypicks" onclick="showSection('mypicks'); closeMobileNav();">My Picks</a>
+                    <a href="feed.html">Feed</a>
+                    <a href="challenges.html">Picks Arena</a>
+                    <a href="arena.html">Gaming Arena</a>
+                    <a href="forum.html">Forum</a>
+                    <a href="#leaderboards" onclick="showSection('leaderboards'); closeMobileNav();">Leaderboards</a>
+                    <a href="messages.html">Messages</a>
+                    <a href="#profile" class="profile-link-mobile" onclick="showSection('profile'); closeMobileNav();">My Profile</a>
+                </div>
             </div>
 
             <!-- Notifications Dropdown -->
@@ -16681,6 +16851,22 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('[TMR] Form handlers loaded');
     </script>
     <script>
+        // Mobile Nav Toggle
+        function toggleMobileNav() {
+            var overlay = document.getElementById('mobileNavOverlay');
+            var backdrop = document.getElementById('mobileNavBackdrop');
+            overlay.classList.add('open');
+            backdrop.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeMobileNav() {
+            var overlay = document.getElementById('mobileNavOverlay');
+            var backdrop = document.getElementById('mobileNavBackdrop');
+            overlay.classList.remove('open');
+            backdrop.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
         // Notifications System
         function toggleNotifications() {
             const panel = document.getElementById('notificationsPanel');
