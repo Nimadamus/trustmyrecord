@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1200, height=630">
+    <title>TrustMyRecord OG Card</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Exo+2:wght@400;600&display=swap');
+        body {
+            width: 1200px;
+            height: 630px;
+            background: linear-gradient(135deg, #0a0a14 0%, #0f1117 40%, #12162a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        /* Subtle grid overlay */
+        body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        /* Glow orbs */
+        .glow-1 {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(0,255,255,0.12) 0%, transparent 70%);
+            top: -100px;
+            right: -50px;
+            border-radius: 50%;
+        }
+        .glow-2 {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,215,0,0.08) 0%, transparent 70%);
+            bottom: -80px;
+            left: -30px;
+            border-radius: 50%;
+        }
+        .card {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 60px;
+        }
+        /* Shield icon */
+        .shield {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 30px;
+        }
+        .site-name {
+            font-family: 'Orbitron', monospace;
+            font-size: 64px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00ffff, #ffffff, #00ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+        }
+        .tagline {
+            font-family: 'Exo 2', sans-serif;
+            font-size: 26px;
+            font-weight: 400;
+            color: #8899bb;
+            letter-spacing: 1px;
+            margin-bottom: 40px;
+        }
+        .features {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+        }
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Exo 2', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffd700;
+            letter-spacing: 0.5px;
+        }
+        .feature .dot {
+            width: 8px;
+            height: 8px;
+            background: #00ffff;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(0,255,255,0.6);
+        }
+        .border-line {
+            position: absolute;
+            inset: 20px;
+            border: 1px solid rgba(0,255,255,0.15);
+            border-radius: 16px;
+            pointer-events: none;
+        }
+        .url {
+            position: absolute;
+            bottom: 36px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-family: 'Exo 2', sans-serif;
+            font-size: 16px;
+            color: rgba(0,255,255,0.5);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="glow-1"></div>
+    <div class="glow-2"></div>
+    <div class="border-line"></div>
+    <div class="card">
+        <svg class="shield" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#00ffff"/>
+                    <stop offset="100%" style="stop-color:#0088aa"/>
+                </linearGradient>
+            </defs>
+            <path d="M32 4 L56 16 L56 34 C56 48 44 58 32 62 C20 58 8 48 8 34 L8 16 Z"
+                  fill="#0f1117" stroke="url(#sg)" stroke-width="3"/>
+            <path d="M32 10 L50 19 L50 33 C50 44 41 52 32 56 C23 52 14 44 14 33 L14 19 Z"
+                  fill="#0f1117" opacity="0.9"/>
+            <path d="M22 32 L29 39 L42 24"
+                  fill="none" stroke="#ffd700" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="site-name">TrustMyRecord</div>
+        <div class="tagline">The Future of Transparent Sports Betting</div>
+        <div class="features">
+            <div class="feature"><span class="dot"></span> Verified Records</div>
+            <div class="feature"><span class="dot"></span> Live Tracking</div>
+            <div class="feature"><span class="dot"></span> Prove Your Edge</div>
+        </div>
+    </div>
+    <div class="url">trustmyrecord.com</div>
+</body>
+</html>
