@@ -240,6 +240,15 @@
 
         /* GAMERTAG BADGE ON CHALLENGE CARDS */
         .cc-gamertag { font-size: 11px; color: var(--primary); background: var(--primary-dim); padding: 2px 8px; border-radius: 4px; margin-top: 2px; display: inline-block; }
+
+        /* MATCH VERIFICATION BADGES */
+        .match-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+        .match-badge.verified { background: rgba(0,255,136,0.15); color: var(--accent-green); border: 1px solid rgba(0,255,136,0.3); }
+        .match-badge.awaiting { background: rgba(255,215,0,0.15); color: var(--accent-gold); border: 1px solid rgba(255,215,0,0.3); }
+        .match-badge.disputed { background: rgba(255,68,68,0.15); color: var(--accent-red); border: 1px solid rgba(255,68,68,0.3); }
+        .match-badge.unverified { background: rgba(136,136,170,0.15); color: var(--text-muted); border: 1px solid rgba(136,136,170,0.3); }
+        .match-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+        .match-status-col { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 120px; }
     </style>
 </head>
 <body>
@@ -621,6 +630,28 @@
     </div>
 </div>
 
+<!-- DISPUTE MATCH MODAL -->
+<div class="modal-overlay" id="disputeMatchModal">
+    <div class="modal" style="max-width:440px;">
+        <button class="close-btn" onclick="closeModal('disputeMatchModal')">&times;</button>
+        <h2><i class="fas fa-exclamation-triangle" style="color:var(--accent-red);margin-right:8px;"></i>Dispute Match</h2>
+        <p style="color:var(--text-dim);margin-bottom:16px;font-size:14px;">Explain why you are disputing this match result. The other player will be notified.</p>
+        <form id="disputeMatchForm" onsubmit="submitDispute(event)">
+            <input type="hidden" id="disputeMatchId" value="">
+            <div class="form-group">
+                <label>Reason for Dispute</label>
+                <textarea class="form-control" id="disputeReason" rows="3" placeholder="e.g. Wrong score reported, game was never played..." required></textarea>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+                <button type="button" class="btn btn-outline btn-block" onclick="closeModal('disputeMatchModal')">Cancel</button>
+                <button type="submit" class="btn btn-danger btn-block" style="padding:12px;font-size:14px;">
+                    <i class="fas fa-flag"></i> Submit Dispute
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- SCRIPTS -->
 <script src="static/js/config.js?v=20260405"></script>
 <script src="static/js/backend-api.js?v=20260405"></script>
@@ -769,6 +800,9 @@ function renderChallenges(challenges) {
             ${canCancel ? `<div class="cc-actions">
                 <button class="btn btn-outline btn-sm" onclick="cancelChallenge(${ch.id})"><i class="fas fa-ban"></i> Cancel</button>
             </div>` : ''}
+            ${isMyChallenge && (ch.status === 'in_progress' || ch.status === 'accepted') ? `<div class="cc-actions">
+                <button class="btn btn-primary btn-sm" onclick="openLogMatchForChallenge(${ch.id}, '${ch.game_slug || ''}')"><i class="fas fa-plus"></i> Log Match Result</button>
+            </div>` : ''}
         </div>`;
     }).join('');
 
@@ -836,8 +870,42 @@ function renderMatchFeed(container, matches) {
         const p1Won = m.winner_id === m.player1_id;
         const p2Won = m.winner_id === m.player2_id;
         const gameIcon = getGameIcon(m.game_slug || m.game_sport);
+
+        // Determine verification status and actions
+        const myId = currentUser ? currentUser.id : null;
+        const isMyMatch = myId && (m.player1_id === myId || m.player2_id === myId);
+        const iReported = myId && m.reported_by === myId;
+        const isDisputed = m.is_disputed || m.status === 'disputed';
+        const isConfirmed = m.is_confirmed;
+
+        let statusBadge = '';
+        let actionButtons = '';
+
+        if (isDisputed) {
+            statusBadge = '<span class="match-badge disputed"><i class="fas fa-flag"></i> Disputed</span>';
+        } else if (isConfirmed) {
+            statusBadge = '<span class="match-badge verified"><i class="fas fa-check-circle"></i> Verified</span>';
+        } else if (isMyMatch) {
+            if (iReported) {
+                statusBadge = '<span class="match-badge awaiting"><i class="fas fa-clock"></i> Awaiting</span>';
+            } else {
+                // Opponent reported this, I need to confirm or dispute
+                statusBadge = '<span class="match-badge unverified"><i class="fas fa-question-circle"></i> Unverified</span>';
+                actionButtons = `
+                    <div class="match-actions">
+                        <button class="btn btn-success btn-sm" onclick="confirmMatch(${m.id})" title="Confirm this result"><i class="fas fa-check"></i> Confirm</button>
+                        <button class="btn btn-danger btn-sm" onclick="openDisputeMatch(${m.id})" title="Dispute this result"><i class="fas fa-flag"></i> Dispute</button>
+                    </div>`;
+            }
+        } else {
+            // Not my match, show verified/unverified
+            if (!isConfirmed) {
+                statusBadge = '<span class="match-badge unverified"><i class="fas fa-question-circle"></i> Unverified</span>';
+            }
+        }
+
         return `
-        <div class="match-item">
+        <div class="match-item" id="match-${m.id}">
             <div class="match-game-icon">${gameIcon}</div>
             <div class="match-players">
                 <div class="names">
@@ -852,7 +920,11 @@ function renderMatchFeed(container, matches) {
                 <span style="color:var(--text-muted);margin:0 4px;">-</span>
                 <span style="color:${p2Won ? 'var(--accent-green)' : 'var(--text-dim)'}">${m.player2_score}</span>
             </div>
-            <div class="match-time">${timeAgo(m.played_at)}</div>
+            <div class="match-status-col">
+                ${statusBadge}
+                ${actionButtons}
+                <div class="match-time">${timeAgo(m.played_at)}</div>
+            </div>
         </div>`;
     }).join('');
 }
@@ -1062,6 +1134,20 @@ function openLogMatch(presetGame) {
     loadActiveChallengesForDropdown();
 }
 
+function openLogMatchForChallenge(challengeId, gameSlug) {
+    openLogMatch(gameSlug || undefined);
+    // Pre-select the challenge in the dropdown after it loads
+    setTimeout(() => {
+        const sel = document.getElementById('lmChallenge');
+        for (const opt of sel.options) {
+            if (opt.value === String(challengeId)) {
+                opt.selected = true;
+                break;
+            }
+        }
+    }, 500);
+}
+
 function closeModal(id) {
     document.getElementById(id).classList.remove('open');
 }
@@ -1154,6 +1240,47 @@ async function submitMatch(e) {
         if (currentTab === 'my-stats') loadMyStats();
     } catch (err) {
         alert('Error: ' + (err.error || err.message || 'Failed to log match'));
+    }
+}
+
+// ============================================
+// MATCH CONFIRMATION / DISPUTE
+// ============================================
+async function confirmMatch(matchId) {
+    if (!currentUser) { alert('Please sign in first'); return; }
+    try {
+        await api.request(`/gaming/matches/${matchId}/confirm`, { method: 'PUT' });
+        // Refresh all match feeds
+        loadRecentMatches();
+        loadMLBHub();
+        if (currentTab === 'my-stats') loadMyStats();
+    } catch (err) {
+        alert('Failed to confirm match: ' + (err.error || err.message || 'Unknown error'));
+    }
+}
+
+function openDisputeMatch(matchId) {
+    if (!currentUser) { alert('Please sign in first'); return; }
+    document.getElementById('disputeMatchId').value = matchId;
+    document.getElementById('disputeReason').value = '';
+    document.getElementById('disputeMatchModal').classList.add('open');
+}
+
+async function submitDispute(e) {
+    e.preventDefault();
+    const matchId = document.getElementById('disputeMatchId').value;
+    const reason = document.getElementById('disputeReason').value.trim();
+    if (!matchId || !reason) return;
+
+    try {
+        await api.request(`/gaming/matches/${matchId}/dispute`, { method: 'PUT', body: { reason } });
+        closeModal('disputeMatchModal');
+        // Refresh all match feeds
+        loadRecentMatches();
+        loadMLBHub();
+        if (currentTab === 'my-stats') loadMyStats();
+    } catch (err) {
+        alert('Failed to dispute match: ' + (err.error || err.message || 'Unknown error'));
     }
 }
 

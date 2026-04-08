@@ -621,6 +621,10 @@ class TrustMyRecordAPI {
         return this.request(`/gaming/matches/${id}/confirm`, { method: 'PUT' });
     }
 
+    async disputeGamingMatch(id, reason) {
+        return this.request(`/gaming/matches/${id}/dispute`, { method: 'PUT', body: { reason } });
+    }
+
     async getGamingLeaderboard(options = {}) {
         const params = new URLSearchParams();
         if (options.game) params.set('game', options.game);
