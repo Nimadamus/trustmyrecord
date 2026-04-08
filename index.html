@@ -7865,6 +7865,227 @@
             100% { transform: translate(50px, 50px); }
         }
 
+        /* Social Proof Section */
+        .social-proof-section {
+            padding: 60px 20px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .social-proof-stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 50px;
+        }
+
+        .sp-stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 24px 32px;
+            text-align: center;
+            flex: 1;
+            min-width: 180px;
+            max-width: 260px;
+            backdrop-filter: blur(20px);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sp-stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .sp-stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .sp-stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 255, 255, 0.15);
+        }
+
+        .sp-stat-icon {
+            font-size: 1.6rem;
+            margin-bottom: 8px;
+        }
+
+        .sp-stat-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00ffff, #0088ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .sp-stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+
+        .social-proof-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .social-proof-header h2 {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(1.4rem, 3vw, 1.8rem);
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .social-proof-header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .activity-feed {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 18px;
+            margin-bottom: 40px;
+        }
+
+        .activity-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+        }
+
+        .activity-card:hover {
+            border-color: rgba(0, 255, 255, 0.4);
+            box-shadow: 0 4px 20px rgba(0, 255, 255, 0.1);
+        }
+
+        .activity-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .activity-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid var(--neon-cyan);
+        }
+
+        .activity-user {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .activity-sport-badge {
+            margin-left: auto;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: rgba(0, 255, 255, 0.15);
+            color: var(--neon-cyan);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .activity-pick-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .activity-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .social-proof-cta {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .social-proof-cta p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .sp-cta-button {
+            display: inline-block;
+            padding: 16px 48px;
+            background: linear-gradient(135deg, var(--neon-cyan), #0088ff);
+            color: #000;
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-decoration: none;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        .sp-cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .social-proof-stats-bar {
+                gap: 12px;
+            }
+            .sp-stat-card {
+                min-width: 140px;
+                padding: 18px 16px;
+            }
+            .sp-stat-value {
+                font-size: 1.6rem;
+            }
+            .activity-feed {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .social-proof-stats-bar {
+                flex-direction: column;
+                align-items: center;
+            }
+            .sp-stat-card {
+                width: 100%;
+                max-width: 100%;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -8127,6 +8348,48 @@
                                 <p class="no-picks-message">No picks yet. Make your first pick to start building your record!</p>
                             </div>
                         </div>
+                    </div>
+                </section>
+
+                <!-- Social Proof Section -->
+                <section class="social-proof-section reveal">
+                    <!-- Live Stats Bar -->
+                    <div class="social-proof-stats-bar">
+                        <div class="sp-stat-card">
+                            <div class="sp-stat-icon">📊</div>
+                            <div class="sp-stat-value" id="spPicksTracked">0</div>
+                            <div class="sp-stat-label">Picks Tracked</div>
+                        </div>
+                        <div class="sp-stat-card">
+                            <div class="sp-stat-icon">🎯</div>
+                            <div class="sp-stat-value" id="spActiveGames">0</div>
+                            <div class="sp-stat-label">Active Games</div>
+                        </div>
+                        <div class="sp-stat-card">
+                            <div class="sp-stat-icon">🏆</div>
+                            <div class="sp-stat-value">7</div>
+                            <div class="sp-stat-label">Sports Covered</div>
+                        </div>
+                        <div class="sp-stat-card">
+                            <div class="sp-stat-icon">🔒</div>
+                            <div class="sp-stat-value" style="font-size:1.4rem;">100%</div>
+                            <div class="sp-stat-label">Immutable Records</div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity Feed -->
+                    <div class="social-proof-header">
+                        <h2>Live From The <span class="highlight">Community</span></h2>
+                        <p>Real picks from real users, tracked in real time.</p>
+                    </div>
+                    <div class="activity-feed" id="spActivityFeed">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- CTA -->
+                    <div class="social-proof-cta">
+                        <p>Join the community. Track your record. Prove you're legit.</p>
+                        <a class="sp-cta-button" onclick="handleMakePicksCta()">GET STARTED FREE</a>
                     </div>
                 </section>
 
@@ -15464,17 +15727,63 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
         </main>
 
-        <footer style="background: rgba(0, 0, 0, 0.4); border-top: 1px solid rgba(0, 255, 255, 0.2); padding: 30px 0; text-align: center;">
-            <div style="max-width: 1400px; margin: 0 auto; padding: 0 20px;">
-                <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 20px; flex-wrap: wrap;">
-                    <a href="#home" onclick="showSection('home')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Home</a>
-                    <a href="#profile" onclick="showSection('profile')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Profile</a>
-                    <a href="#forums" onclick="showSection('forums')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forums</a>
-                    <a href="#arena" onclick="showSection('arena')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s; cursor: pointer;">The Arena</a>
-                    <a href="#leaderboards" onclick="showSection('leaderboards')" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
+        <footer style="background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.8) 100%); border-top: 1px solid rgba(0, 255, 255, 0.15); padding: 50px 0 0 0; margin-top: 60px;">
+            <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px;">
+                <!-- Footer Columns -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                    <!-- Brand Column -->
+                    <div>
+                        <div style="font-size: 1.3rem; font-weight: 800; color: #00ffff; margin-bottom: 10px; letter-spacing: 0.5px;">TrustMyRecord</div>
+                        <p style="color: #808090; font-size: 0.85rem; line-height: 1.6; margin: 0 0 16px 0;">The future of transparent sports betting.</p>
+                        <p style="color: #606070; font-size: 0.8rem; margin: 0;">&copy; 2026 TrustMyRecord.com</p>
+                    </div>
+                    <!-- Platform Column -->
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Platform</div>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <a href="sportsbook.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
+                            <a href="index.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
+                            <a href="arena.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Gaming Arena</a>
+                            <a href="forum.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
+                        </div>
+                    </div>
+                    <!-- Community Column -->
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Community</div>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <a href="feed.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
+                            <a href="challenges.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Challenges</a>
+                            <a href="polls.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Polls</a>
+                            <a href="trivia.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
+                        </div>
+                    </div>
+                    <!-- Legal Column -->
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Info</div>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <a href="#" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
+                            <a href="#" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
+                            <a href="#" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
+                            <a href="mailto:support@trustmyrecord.com" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Contact</a>
+                        </div>
+                    </div>
                 </div>
-                <p style="color: #808090; font-size: 0.85rem;">© 2026 TrustMyRecord.com - The End of the Bullshit. All rights reserved.</p>
+                <!-- Bottom Bar -->
+                <div style="padding: 24px 0; text-align: center;">
+                    <p style="color: #606070; font-size: 0.78rem; line-height: 1.7; margin: 0 0 8px 0;">TrustMyRecord is not a gambling site. We provide pick tracking and community features only. No real money is wagered on this platform.</p>
+                    <p style="color: #505060; font-size: 0.72rem; margin: 0;">If you or someone you know has a gambling problem, call 1-800-GAMBLER. Must be 18+ to participate. Please gamble responsibly.</p>
+                </div>
             </div>
+            <style>
+                footer a:hover { color: #00ffff !important; }
+                @media (max-width: 900px) {
+                    footer > div > div:first-child { grid-template-columns: repeat(2, 1fr) !important; gap: 30px !important; }
+                }
+                @media (max-width: 540px) {
+                    footer > div > div:first-child { grid-template-columns: 1fr !important; gap: 24px !important; }
+                    footer { padding-top: 36px !important; }
+                }
+            </style>
         </footer>
     </div>
 
