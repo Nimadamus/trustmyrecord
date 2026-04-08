@@ -7743,6 +7743,7 @@
                     </button>
                     <div id="headerAuthButtons" style="display: flex; align-items: center; gap: 10px; margin-left: 10px;">
                         <button onclick="showSection('login')" class="btn btn-primary" style="padding: 8px 20px; font-size: 14px;">Login</button>
+                        <button onclick="showSection('signup')" class="btn" style="padding: 8px 20px; font-size: 14px; background: linear-gradient(135deg, var(--neon-cyan), var(--neon-gold, #f0b840)); color: #0a0e1a; font-weight: 700; border: none; border-radius: 8px; cursor: pointer;">Sign Up</button>
                     </div>
                 </div>
 
@@ -7800,7 +7801,7 @@
                     <!-- PRIMARY CTA - Above the fold, impossible to miss -->
                     <div class="hero-cta-group reveal">
                         <a id="heroPrimaryCta" class="hero-cta-primary" onclick="handleMakePicksCta()">
-                            POST A PICK NOW
+                            GET STARTED FREE
                         </a>
                         <p class="hero-cta-sub">Free forever. No credit card. Your record starts the second you sign up.</p>
                     </div>
@@ -11058,7 +11059,7 @@
                                     <input type="checkbox" id="rememberMe" name="rememberMe" checked>
                                     <span style="color: var(--text-secondary); font-size: 14px;">Remember me</span>
                                 </label>
-                                <a onclick="alert('Password reset feature coming soon!')" style="color: var(--neon-cyan); font-size: 14px; cursor: pointer; text-decoration: none;">Forgot password?</a>
+                                <a href="reset-password.html" style="color: var(--neon-cyan); font-size: 14px; cursor: pointer; text-decoration: none;">Forgot password?</a>
                             </div>
 
                             <button type="submit" class="submit-pick" style="width: 100%; margin-top: 10px;">LOGIN</button>
@@ -11069,20 +11070,6 @@
                             <button onclick="showSection('signup')" class="submit-pick" style="background: var(--gradient-neon); width: 100%;">CREATE ACCOUNT</button>
                         </div>
 
-                        <!-- Social Login Options -->
-                        <div style="margin-top: 30px;">
-                            <div style="text-align: center; margin-bottom: 20px;">
-                                <span style="color: var(--text-muted); font-size: 14px;">Or continue with</span>
-                            </div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                                <button type="button" onclick="alert('Google login coming soon!')" style="background: rgba(255, 255, 255, 0.1); border: 1px solid var(--glass-border); color: var(--text-primary); padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
-                                    🔍 Google
-                                </button>
-                                <button type="button" onclick="alert('Twitter login coming soon!')" style="background: rgba(255, 255, 255, 0.1); border: 1px solid var(--glass-border); color: var(--text-primary); padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
-                                    🐦 Twitter
-                                </button>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -15435,7 +15422,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 var sub = btn.parentElement.querySelector('.hero-cta-sub');
                 if (sub) sub.textContent = 'Your record is live. Every pick counts.';
             } else {
-                btn.textContent = 'POST A PICK NOW';
+                btn.textContent = 'GET STARTED FREE';
                 var sub = btn.parentElement.querySelector('.hero-cta-sub');
                 if (sub) sub.textContent = 'Free forever. No credit card. Your record starts the second you sign up.';
             }
