@@ -47,6 +47,16 @@
             overflow-x: hidden;
         }
 
+        /* Loading state */
+        .tmr-loading-state { text-align: center; padding: 60px 20px; }
+        .tmr-loading-state .tmr-spinner { width: 40px; height: 40px; border: 3px solid rgba(0,255,255,0.15); border-top-color: var(--neon-cyan); border-radius: 50%; animation: tmr-spin 0.8s linear infinite; margin: 0 auto 16px; }
+        @keyframes tmr-spin { to { transform: rotate(360deg); } }
+        .tmr-loading-state p { color: var(--text-secondary); font-size: 0.95rem; margin: 8px 0; }
+        .tmr-loading-state .tmr-loading-slow { color: var(--neon-gold); display: none; }
+        .tmr-loading-state .tmr-loading-retry { display: none; }
+        .tmr-loading-state .tmr-loading-retry button { background: var(--neon-cyan); color: var(--dark-bg); border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; margin-top: 8px; }
+        .tmr-loading-state .tmr-loading-retry button:hover { opacity: 0.85; }
+
         /* Animated grid background */
         body::before {
             content: '';
@@ -691,6 +701,7 @@
 <script src="static/js/config.js"></script>
 <script src="static/js/analytics.js?v=20260405"></script>
 <script src="static/js/backend-api.js"></script>
+<script src="static/js/nav-badges.js"></script>
 <script src="static/js/auth-persistent.js?v=20260405"></script>
 <script src="static/js/notifications.js?v=20260318"></script>
 <script>
@@ -1207,15 +1218,23 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (e.target === this) closeNewThread();
     });
 
+    // Show loading state while waiting for backend
+    var catContainer = document.getElementById('categoriesContainer');
+    catContainer.innerHTML = '<div class="tmr-loading-state" id="forumLoadingState"><div class="tmr-spinner"></div><p>Loading forum...</p><p class="tmr-loading-slow" id="forumLoadingSlow">Warming up servers... this takes ~30 seconds on first visit.</p><div class="tmr-loading-retry" id="forumLoadingRetry"><p>Could not connect to servers.</p><button onclick="location.reload()">Refresh</button></div></div>';
+    var _forumSlowTimer = setTimeout(function() { var el = document.getElementById('forumLoadingSlow'); if (el) el.style.display = 'block'; }, 5000);
+    var _forumRetryTimer = setTimeout(function() { var el = document.getElementById('forumLoadingRetry'); var sl = document.getElementById('forumLoadingSlow'); if (el) el.style.display = 'block'; if (sl) sl.style.display = 'none'; }, 30000);
+
     // Wait for backend detection
     await api.ready;
+    clearTimeout(_forumSlowTimer); clearTimeout(_forumRetryTimer);
 
     if (!api.backendAvailable) {
-        // Show fallback message
-        document.getElementById('categoriesContainer').innerHTML =
-            '<div class="empty-msg" style="padding:48px 20px;">' +
-            '<div class="icon" style="font-size:2.5rem;margin-bottom:10px;opacity:0.5;">&#x1F50C;</div>' +
-            '<div style="color:var(--text-muted);font-size:0.95rem;">The forum backend is currently unavailable.<br>Please try again later.</div>' +
+        catContainer.innerHTML =
+            '<div class="tmr-loading-state">' +
+            '<div style="font-size:2.5rem;margin-bottom:12px;opacity:0.5;">&#x1F50C;</div>' +
+            '<p>Could not connect to the forum server.</p>' +
+            '<p class="tmr-loading-slow" style="display:block;">The server may be warming up. This takes ~30 seconds on first visit.</p>' +
+            '<div class="tmr-loading-retry" style="display:block;"><button onclick="location.reload()">Try Again</button></div>' +
             '</div>';
         return;
     }

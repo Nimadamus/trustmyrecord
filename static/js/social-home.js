@@ -159,7 +159,9 @@ async function submitPost() {
 // ==================== LOAD FEED ====================
 async function loadFeed() {
     const c = document.getElementById('feedList');
-    c.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading feed...</p></div>';
+    c.innerHTML = '<div class="tmr-loading-state" id="feedLoadingState"><div class="tmr-spinner"></div><p>Loading feed...</p><p class="tmr-loading-slow" id="feedLoadingSlow">Warming up servers... this takes ~30 seconds on first visit.</p><div class="tmr-loading-retry" id="feedLoadingRetry"><p>Could not connect to servers.</p><button onclick="loadFeed()">Refresh</button></div></div>';
+    const _feedSlowTimer = setTimeout(() => { const el = document.getElementById('feedLoadingSlow'); if (el) el.style.display = 'block'; }, 5000);
+    const _feedRetryTimer = setTimeout(() => { const el = document.getElementById('feedLoadingRetry'); const sl = document.getElementById('feedLoadingSlow'); if (el) el.style.display = 'block'; if (sl) sl.style.display = 'none'; }, 30000);
 
     let items = [];
 
@@ -244,9 +246,12 @@ async function loadFeed() {
             }
         }
     } catch(e) {
-        c.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Couldn't load feed. <a href="#" onclick="loadFeed();return false;">Retry</a></p></div>`;
+        clearTimeout(_feedSlowTimer); clearTimeout(_feedRetryTimer);
+        c.innerHTML = `<div class="tmr-loading-state"><i class="fas fa-exclamation-triangle" style="font-size:2rem;color:#ff073a;margin-bottom:12px;"></i><p>Could not connect to servers.</p><p class="tmr-loading-slow" style="display:block;">Warming up servers... this takes ~30 seconds on first visit.</p><div class="tmr-loading-retry" style="display:block;"><button onclick="loadFeed()">Try Again</button></div></div>`;
         return;
     }
+
+    clearTimeout(_feedSlowTimer); clearTimeout(_feedRetryTimer);
 
     if (!items.length) {
         const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
