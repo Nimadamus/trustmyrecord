@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About TrustMyRecord</title>
+    <meta name="description" content="TrustMyRecord is the social sports handicapping platform built on one principle: if your record isn't verified, it doesn't count.">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-surface: #12121a;
+            --bg-card: #1a1a2e;
+            --bg-card-hover: #222240;
+            --border: #2a2a4a;
+            --border-glow: #3a3a6a;
+            --primary: #00aeff;
+            --primary-dim: rgba(0, 174, 255, 0.15);
+            --accent-gold: #ffd700;
+            --accent-green: #00ff88;
+            --accent-red: #ff4444;
+            --accent-purple: #a855f7;
+            --text: #e8e8f0;
+            --text-dim: #8888aa;
+            --text-muted: #555577;
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Exo 2', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg-dark); color: var(--text); font-family: var(--font-body); min-height: 100vh; }
+        a { color: var(--primary); text-decoration: none; }
+        a:hover { color: var(--accent-gold); }
+
+        /* NAV */
+        .nav { background: var(--bg-surface); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; height: 60px; position: sticky; top: 0; z-index: 100; }
+        .nav-logo { font-family: var(--font-display); font-size: 18px; font-weight: 800; color: var(--primary); margin-right: 32px; letter-spacing: 1px; }
+        .nav-logo span { color: var(--accent-gold); }
+        .nav-links { display: flex; gap: 10px; flex-wrap: wrap; }
+        .nav-link { padding: 8px 16px; border-radius: 8px; color: var(--text-dim); font-weight: 500; font-size: 14px; transition: all 0.2s; }
+        .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+        .nav-link.active { color: var(--accent-gold); background: rgba(255, 215, 0, 0.1); }
+        .nav-right { margin-left: auto; display: flex; gap: 12px; align-items: center; }
+        .nav-user { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+        .nav-user:hover { background: rgba(255,255,255,0.05); }
+        .nav-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary-dim); border: 2px solid var(--primary); object-fit: cover; }
+        .nav-username { font-size: 13px; color: var(--text); font-weight: 600; }
+        .btn { padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; border: none; transition: all 0.2s; font-family: var(--font-body); }
+        .btn-primary { background: var(--primary); color: #000; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+        /* HAMBURGER */
+        .hamburger { display: none; background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; }
+        @media (max-width: 768px) {
+            .hamburger { display: block; }
+            .nav-links { position: fixed; top: 60px; left: 0; right: 0; background: var(--bg-surface); border-bottom: 1px solid var(--border); flex-direction: column; padding: 16px; z-index: 99; display: none; }
+            .nav-links.open { display: flex; }
+        }
+
+        /* HERO */
+        .about-hero { background: linear-gradient(135deg, rgba(0,174,255,0.1), rgba(255,215,0,0.06)); border-bottom: 1px solid var(--border); padding: 64px 24px; text-align: center; }
+        .about-hero h1 { font-family: var(--font-display); font-size: 36px; font-weight: 900; margin-bottom: 16px; line-height: 1.3; }
+        .about-hero h1 .gold { color: var(--accent-gold); }
+        .about-hero h1 .blue { color: var(--primary); }
+        .about-hero .tagline { color: var(--text-dim); font-size: 18px; max-width: 640px; margin: 0 auto; line-height: 1.6; }
+
+        /* CONTENT */
+        .content-wrapper { max-width: 900px; margin: 0 auto; padding: 48px 24px 80px; }
+
+        .about-section { margin-bottom: 48px; }
+        .about-section h2 { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--accent-gold); margin-bottom: 16px; letter-spacing: 0.5px; }
+        .about-section p { color: var(--text-dim); font-size: 16px; line-height: 1.8; margin-bottom: 16px; }
+        .about-section strong { color: var(--text); }
+
+        /* FEATURE GRID */
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; margin: 32px 0; }
+        .feature-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; transition: all 0.3s; }
+        .feature-card:hover { border-color: var(--border-glow); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+        .feature-icon { font-size: 28px; margin-bottom: 12px; }
+        .feature-card h3 { font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 8px; letter-spacing: 0.5px; }
+        .feature-card p { color: var(--text-dim); font-size: 14px; line-height: 1.6; margin: 0; }
+
+        /* STATS BAR */
+        .stats-bar { display: flex; justify-content: center; gap: 48px; flex-wrap: wrap; padding: 32px 0; margin: 32px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+        .stat-item { text-align: center; }
+        .stat-item .num { font-family: var(--font-display); font-size: 32px; font-weight: 800; color: var(--accent-gold); }
+        .stat-item .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+        /* CTA */
+        .cta-section { text-align: center; padding: 48px 0; }
+        .cta-section h2 { font-family: var(--font-display); font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 12px; }
+        .cta-section p { color: var(--text-dim); font-size: 16px; margin-bottom: 24px; }
+        .btn-lg { padding: 14px 32px; font-size: 16px; border-radius: 10px; font-weight: 700; letter-spacing: 0.5px; }
+        .btn-gold { background: var(--accent-gold); color: #000; }
+        .btn-gold:hover { background: #ffed4a; color: #000; transform: translateY(-1px); }
+    </style>
+</head>
+<body>
+
+<nav class="nav">
+    <a href="index.html" class="nav-logo">TRUST<span>MY</span>RECORD</a>
+    <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+    <div class="nav-links">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="sportsbook.html" class="nav-link">Sportsbook</a>
+        <a href="feed.html" class="nav-link">Feed</a>
+        <a href="challenges.html" class="nav-link">Picks Arena</a>
+        <a href="arena.html" class="nav-link">Gaming Arena</a>
+        <a href="forum.html" class="nav-link">Forum</a>
+        <a href="messages.html" class="nav-link">Messages</a>
+        <a href="profile.html" class="nav-link">My Profile</a>
+    </div>
+    <div class="nav-right">
+        <div class="nav-user" id="navUser" style="display:none;">
+            <img class="nav-avatar" id="navAvatar" src="" alt="">
+            <span class="nav-username" id="navUsername"></span>
+        </div>
+        <a href="index.html" class="btn btn-primary btn-sm" id="navLoginBtn">Sign In</a>
+    </div>
+</nav>
+
+<div class="about-hero">
+    <h1>IF YOUR RECORD ISN'T <span class="gold">VERIFIED</span>,<br>IT DOESN'T <span class="blue">COUNT</span></h1>
+    <p class="tagline">TrustMyRecord is the social sports handicapping platform where every pick is timestamped, every record is transparent, and every claim is backed by data.</p>
+</div>
+
+<div class="content-wrapper">
+
+    <div class="about-section">
+        <h2>The Problem</h2>
+        <p>Sports betting social media is full of self-proclaimed "experts" who claim unbelievable records but have zero proof. Screenshots get cropped. Losses get deleted. Records get fabricated. There is no accountability, and the people who actually know what they are doing get drowned out by the noise.</p>
+        <p>Every day, thousands of people follow handicappers who are lying about their track record. They pay for picks from people whose "85% win rate" conveniently only exists in their own bio. The entire space runs on trust, and that trust has been broken so many times that nobody believes anybody anymore.</p>
+    </div>
+
+    <div class="about-section">
+        <h2>The Solution</h2>
+        <p>TrustMyRecord fixes this with one simple rule: <strong>every pick is locked in before the game starts, and it can never be changed or deleted.</strong></p>
+        <p>When you submit a pick on TrustMyRecord, it gets timestamped and recorded permanently. When the game ends, the result is graded automatically. Your win/loss record, ROI, and performance stats are calculated in real time and displayed publicly on your profile. There is no way to hide a loss. There is no way to fake a streak. Your record is your record.</p>
+        <p>This means that when you see someone with a 62% win rate on TrustMyRecord, that number is real. It was earned pick by pick, verified against actual game results, and visible for anyone to audit.</p>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat-item"><div class="num">100%</div><div class="label">Transparent Records</div></div>
+        <div class="stat-item"><div class="num">0</div><div class="label">Deleted Picks</div></div>
+        <div class="stat-item"><div class="num">24/7</div><div class="label">Auto-Grading</div></div>
+    </div>
+
+    <div class="about-section">
+        <h2>What You Can Do</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-crosshairs" style="color: var(--primary);"></i></div>
+                <h3>Track Your Picks</h3>
+                <p>Log picks across NFL, NBA, NHL, MLB, NCAA, and soccer. Moneylines, spreads, totals, props, parlays. Every bet type supported.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-trophy" style="color: var(--accent-gold);"></i></div>
+                <h3>Climb the Leaderboard</h3>
+                <p>Compete against the community on seasonal leaderboards ranked by win rate, ROI, units profit, and consistency. Prove you belong at the top.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-users" style="color: var(--accent-green);"></i></div>
+                <h3>Build Your Following</h3>
+                <p>Follow sharp bettors, share analysis in the feed, debate in forums, and build a reputation backed by verified numbers.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-bolt" style="color: var(--accent-red);"></i></div>
+                <h3>Challenge Anyone</h3>
+                <p>Go head-to-head in the Picks Arena. Challenge friends or rivals to pick battles and settle who really knows their stuff.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-gamepad" style="color: var(--accent-purple);"></i></div>
+                <h3>Gaming Arena</h3>
+                <p>Track your video game challenge record in MLB The Show, NBA 2K, Madden, and more. Build your gamer reputation alongside your picks record.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-chart-line" style="color: var(--primary);"></i></div>
+                <h3>Deep Analytics</h3>
+                <p>Get detailed breakdowns of your performance by sport, bet type, odds range, day of week, and more. Know exactly where your edge is.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="about-section">
+        <h2>The Vision</h2>
+        <p>We are building the platform we always wished existed. A place where handicappers are judged by their actual results instead of their marketing. Where beginners can find legitimate winners to follow instead of getting scammed. Where the sports betting community can thrive on transparency instead of being poisoned by dishonesty.</p>
+        <p>TrustMyRecord is not a gambling site and never will be. No money is wagered on our platform. We are a record-keeping and community tool that brings accountability to an industry that desperately needs it. Whether you are a sharp who wants to prove your edge, a casual bettor who wants to track your progress, or someone looking for trustworthy people to follow, this is the platform for you.</p>
+    </div>
+
+    <div class="cta-section">
+        <h2>Ready to prove yourself?</h2>
+        <p>Create your free account and start building a record that speaks for itself.</p>
+        <a href="index.html" class="btn btn-gold btn-lg">Get Started</a>
+    </div>
+
+</div>
+
+<footer style="background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.8) 100%); border-top: 1px solid rgba(0, 255, 255, 0.15); padding: 50px 0 0 0; margin-top: 0;">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px;">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <div>
+                <div style="font-size: 1.3rem; font-weight: 800; color: #00ffff; margin-bottom: 10px; letter-spacing: 0.5px;">TrustMyRecord</div>
+                <p style="color: #808090; font-size: 0.85rem; line-height: 1.6; margin: 0 0 16px 0;">The future of transparent sports betting.</p>
+                <p style="color: #606070; font-size: 0.8rem; margin: 0;">&copy; 2026 TrustMyRecord.com</p>
+            </div>
+            <div>
+                <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Platform</div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <a href="sportsbook.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
+                    <a href="index.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
+                    <a href="arena.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Gaming Arena</a>
+                    <a href="forum.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
+                </div>
+            </div>
+            <div>
+                <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Community</div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <a href="feed.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
+                    <a href="challenges.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Challenges</a>
+                    <a href="polls.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Polls</a>
+                    <a href="trivia.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
+                </div>
+            </div>
+            <div>
+                <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Info</div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <a href="about.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
+                    <a href="terms.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
+                    <a href="privacy.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
+                    <a href="mailto:support@trustmyrecord.com" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Contact</a>
+                </div>
+            </div>
+        </div>
+        <div style="padding: 24px 0; text-align: center;">
+            <p style="color: #606070; font-size: 0.78rem; line-height: 1.7; margin: 0 0 8px 0;">TrustMyRecord is not a gambling site. We provide pick tracking and community features only. No real money is wagered on this platform.</p>
+            <p style="color: #505060; font-size: 0.72rem; margin: 0;">If you or someone you know has a gambling problem, call 1-800-GAMBLER. Must be 18+ to participate. Please gamble responsibly.</p>
+        </div>
+    </div>
+    <style>
+        footer a:hover { color: #00ffff !important; }
+        @media (max-width: 900px) {
+            footer > div > div:first-child { grid-template-columns: repeat(2, 1fr) !important; gap: 30px !important; }
+        }
+        @media (max-width: 540px) {
+            footer > div > div:first-child { grid-template-columns: 1fr !important; gap: 24px !important; }
+            footer { padding-top: 36px !important; }
+        }
+    </style>
+</footer>
+
+</body>
+</html>
