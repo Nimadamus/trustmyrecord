@@ -869,10 +869,17 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async function() {
+            // Show loading state while waiting for backend
+            var flContainer = document.getElementById('followingList');
+            flContainer.innerHTML = '<div class="tmr-loading-state" style="grid-column:1/-1;" id="friendsLoadingState"><div class="tmr-spinner"></div><p>Loading...</p><p class="tmr-loading-slow" id="friendsLoadingSlow">Warming up servers... this takes ~30 seconds on first visit.</p><div class="tmr-loading-retry" id="friendsLoadingRetry"><p>Could not connect to servers.</p><button onclick="location.reload()">Refresh</button></div></div>';
+            var _friendsSlowTimer = setTimeout(function() { var el = document.getElementById('friendsLoadingSlow'); if (el) el.style.display = 'block'; }, 5000);
+            var _friendsRetryTimer = setTimeout(function() { var el = document.getElementById('friendsLoadingRetry'); var sl = document.getElementById('friendsLoadingSlow'); if (el) el.style.display = 'block'; if (sl) sl.style.display = 'none'; }, 30000);
+
             await api.ready;
+            clearTimeout(_friendsSlowTimer); clearTimeout(_friendsRetryTimer);
 
             if (!api.backendAvailable) {
-                document.getElementById('followingList').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);"><i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:10px;display:block;"></i><p>Backend unavailable. Please try again later.</p></div>';
+                flContainer.innerHTML = '<div class="tmr-loading-state" style="grid-column:1/-1;"><div style="font-size:2rem;margin-bottom:12px;opacity:0.5;">&#x1F50C;</div><p>Could not connect to servers.</p><p class="tmr-loading-slow" style="display:block;">The server may be warming up. This takes ~30 seconds on first visit.</p><div class="tmr-loading-retry" style="display:block;"><button onclick="location.reload()">Try Again</button></div></div>';
                 return;
             }
 
@@ -936,9 +943,9 @@
                     <div>
                         <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Info</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="#" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
-                            <a href="#" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
-                            <a href="#" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
+                            <a href="about.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
+                            <a href="terms.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
+                            <a href="privacy.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
                             <a href="mailto:support@trustmyrecord.com" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Contact</a>
                         </div>
                     </div>
