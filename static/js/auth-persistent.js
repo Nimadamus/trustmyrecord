@@ -154,7 +154,6 @@ class PersistentAuthSystem {
     setRememberMe(value) { localStorage.setItem(this.rememberKey, value ? 'true' : 'false'); }
 
     initializeUI() {
-        console.log('[Auth] Initializing UI. Current user:', (this.currentUser ? this.currentUser.username : null) || 'none');
         if (this.currentUser) this.updateUIForLoggedInUser();
         else this.updateUIForLoggedOutUser();
     }
@@ -319,7 +318,6 @@ class PersistentAuthSystem {
     }
 
     updateUIForLoggedInUser() {
-        console.log('[Auth] Updating UI for logged in user:', (this.currentUser ? this.currentUser.username : null));
         if (!this.currentUser) return;
         
         const username = this.currentUser.username || this.currentUser.displayName || 'User';
@@ -329,7 +327,6 @@ class PersistentAuthSystem {
         // Update main navigation - modify "My Profile" link to show username
         const profileLink = document.querySelector('.profile-link');
         if (profileLink) {
-            console.log('[Auth] Found profile link, updating...');
             profileLink.href = profileUrl;
             profileLink.classList.remove('profile-link');
             profileLink.classList.add('nav-username-link');
@@ -341,7 +338,6 @@ class PersistentAuthSystem {
         // Update header auth buttons to show username + logout
         const headerAuthButtons = document.getElementById('headerAuthButtons');
         if (headerAuthButtons) {
-            console.log('[Auth] Updating header auth buttons...');
             headerAuthButtons.innerHTML = `
                 <a href="${profileUrl}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--neon-cyan); text-decoration: none; font-weight: 600;">
                     <img src="${avatar}" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--neon-cyan);">
@@ -457,12 +453,3 @@ if (typeof window !== 'undefined') {
         }).join('');
     };
 }
-console.log('Auth System loaded');
-
-
-// Debug: Log all clicks on nav-username-link
-document.addEventListener('click', function(e) {
-    if (e.target.closest('.nav-username-link')) {
-        console.log('[Debug] Username link clicked!', e.target.closest('.nav-username-link').href);
-    }
-});

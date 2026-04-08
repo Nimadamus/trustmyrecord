@@ -1,47 +1,39 @@
 ﻿// Fixed Forms Handling - Local Auth Only (No Backend)
-console.log('[TMR forms-fixed.js] Loaded successfully!');
 
 // Wrap everything in try-catch to catch any errors
 async function handleLogin(event) {
     event.preventDefault();
     event.stopPropagation();
-    console.log('[TMR] ==================== LOGIN STARTED ====================');
     if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.loginStarted({ button_location: 'login_modal' });
 
     try {
         const email = document.getElementById('loginEmail')?.value;
         const password = document.getElementById('loginPassword')?.value;
-        console.log('[TMR] Login attempt for:', email);
-        
+
         // Check if auth exists
         if (typeof auth === 'undefined') {
             console.error('[TMR] auth object is undefined!');
             alert('Auth system not loaded. Please refresh the page.');
             return;
         }
-        console.log('[TMR] auth object found');
-        
+
         // Check if auth.login is a function
         if (typeof auth.login !== 'function') {
             console.error('[TMR] auth.login is not a function!', auth);
             alert('Auth system error. Please refresh the page.');
             return;
         }
-        console.log('[TMR] auth.login is a function');
-        
+
         // Get remember me
         const rememberMeEl = document.getElementById('rememberMe');
         const rememberMe = rememberMeEl ? rememberMeEl.checked : true;
-        console.log('[TMR] Remember me:', rememberMe);
-        
+
         // Attempt login
-        console.log('[TMR] Calling auth.login...');
         let result = auth.login(email, password, rememberMe);
         // Handle both sync and async login
         if (result && typeof result.then === 'function') {
             result = await result;
         }
-        console.log('[TMR] auth.login returned:', result);
 
         // Check result format (some return {success, user}, some return user directly)
         var user = null;
@@ -61,8 +53,6 @@ async function handleLogin(event) {
         localStorage.setItem('tmr_is_logged_in', 'true');
         localStorage.setItem('tmr_current_user', JSON.stringify(user));
 
-        console.log('[TMR] Login successful for:', user.username);
-
         // Reset form
         const loginForm = document.getElementById('loginForm');
         if (loginForm) loginForm.reset();
@@ -75,13 +65,11 @@ async function handleLogin(event) {
         var postAuthRedirect = sessionStorage.getItem('tmr_post_auth_redirect');
         if (postAuthRedirect) {
             sessionStorage.removeItem('tmr_post_auth_redirect');
-            console.log('[TMR] Post-auth redirect to:', postAuthRedirect);
             if (typeof window.showSection === 'function') {
                 window.showSection(postAuthRedirect);
             }
         } else {
             // Navigate to profile within SPA
-            console.log('[TMR] Navigating to profile...');
             if (typeof window.showSection === 'function') {
                 window.showSection('profile');
             }
@@ -92,13 +80,9 @@ async function handleLogin(event) {
         if (typeof updateProfileLink === 'function') updateProfileLink();
 
         if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.loginCompleted({ username: user.username });
-        console.log('[TMR] ==================== LOGIN COMPLETE ====================');
 
     } catch (error) {
-        console.error('[TMR] ==================== LOGIN ERROR ====================');
-        console.error('[TMR] Error name:', error.name);
-        console.error('[TMR] Error message:', error.message);
-        console.error('[TMR] Error stack:', error.stack);
+        console.error('[TMR] Login error:', error.message);
         alert('Login failed: ' + error.message);
     }
 }
@@ -106,7 +90,6 @@ async function handleLogin(event) {
 async function handleSignup(event) {
     event.preventDefault();
     event.stopPropagation();
-    console.log('[TMR] ==================== SIGNUP STARTED ====================');
     if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.signUpStarted({ button_location: 'signup_modal' });
 
     try {
@@ -119,8 +102,6 @@ async function handleSignup(event) {
         const displayName = document.getElementById('displayName')?.value?.trim() || '';
         const location = document.getElementById('location')?.value?.trim() || '';
         const bio = document.getElementById('bio')?.value?.trim() || '';
-
-        console.log('[TMR] Signup attempt for:', username, email);
 
         if (!username || !email || !password) {
             alert('All fields are required');
@@ -137,13 +118,11 @@ async function handleSignup(event) {
             return;
         }
 
-        console.log('[TMR] Calling auth.register...');
         let result = auth.register(username, email, password);
         // Handle both sync and async register
         if (result && typeof result.then === 'function') {
             result = await result;
         }
-        console.log('[TMR] auth.register returned:', result);
 
         if (result && result.success === false) {
             throw new Error(result.error || 'Registration failed');
@@ -180,7 +159,6 @@ async function handleSignup(event) {
         var postAuthRedirect = sessionStorage.getItem('tmr_post_auth_redirect');
         if (postAuthRedirect) {
             sessionStorage.removeItem('tmr_post_auth_redirect');
-            console.log('[TMR] Post-auth redirect to:', postAuthRedirect);
             if (typeof window.showSection === 'function') {
                 window.showSection(postAuthRedirect);
             }
@@ -195,7 +173,6 @@ async function handleSignup(event) {
         if (typeof updateProfileLink === 'function') updateProfileLink();
 
         if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.signUpCompleted({ username: username, favorite_sport: favoriteSport });
-        console.log('[TMR] ==================== SIGNUP COMPLETE ====================');
 
     } catch (error) {
         console.error('[TMR] Signup error:', error);
@@ -205,14 +182,11 @@ async function handleSignup(event) {
 
 // Attach event listeners when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('[TMR] DOM loaded, attaching form handlers...');
-    
     // Try both ID formats: camelCase and hyphenated
     const loginForm = document.getElementById('loginForm') || document.getElementById('login-form');
     const signupForm = document.getElementById('signupForm') || document.getElementById('signup-form');
 
     if (loginForm) {
-        console.log('[TMR] Found login form (id=' + loginForm.id + '), attaching handler...');
         // Remove any existing handlers
         loginForm.onsubmit = null;
         // Remove all existing event listeners by cloning
@@ -220,20 +194,11 @@ document.addEventListener('DOMContentLoaded', function() {
         loginForm.parentNode.replaceChild(newLoginForm, loginForm);
         // Add our handler
         newLoginForm.addEventListener('submit', handleLogin);
-        console.log('[TMR] login form handler attached successfully');
-    } else {
-        console.error('[TMR] login form NOT found!');
     }
 
     if (signupForm) {
-        console.log('[TMR] Found signup form (id=' + signupForm.id + '), attaching handler...');
         const newSignupForm = signupForm.cloneNode(true);
         signupForm.parentNode.replaceChild(newSignupForm, signupForm);
         newSignupForm.addEventListener('submit', handleSignup);
-        console.log('[TMR] signup form handler attached successfully');
-    } else {
-        console.log('[TMR] signup form NOT found (may not be on this page)');
     }
 });
-
-console.log('[TMR forms-fixed.js] Script parsed successfully');

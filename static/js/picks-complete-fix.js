@@ -48,7 +48,6 @@ let currentFilteredGames = [];
  * Select a sport and update UI
  */
 function selectSport(sport) {
-    console.log('selectSport() called with:', sport);
     if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.makePickStarted({ button_location: 'sport_card', sport: sport });
     selectedSport = sport;
     document.querySelectorAll('.sport-card').forEach(card => {
@@ -57,7 +56,6 @@ function selectSport(sport) {
     event.currentTarget.classList.add('selected');
 
     // Update bet type labels based on sport
-    console.log('Calling updateBetTypeLabels for:', sport);
     updateBetTypeLabels(sport);
 
     setTimeout(() => {
@@ -111,22 +109,16 @@ function updateBetTypeLabels(sport) {
 
     const labels = betTypeLabels[sport] || betTypeLabels['NFL'];
 
-    console.log(`Updating bet type labels for ${sport}:`, labels);
-
     // Update each bet type button label
     const buttons = document.querySelectorAll('.bet-type-btn');
-    console.log(`Found ${buttons.length} bet type buttons`);
 
     buttons.forEach(btn => {
         const type = btn.getAttribute('data-type');
         const labelElement = btn.querySelector('.bet-label');
         if (labelElement && labels[type]) {
-            console.log(`Updating ${type} label to: ${labels[type]}`);
             labelElement.textContent = labels[type];
         }
     });
-
-    console.log('Bet type labels updated successfully');
 }
 
 /**
@@ -149,8 +141,6 @@ function selectBetType(betType) {
  * Load games for selected sport and bet type
  */
 async function loadGames() {
-    console.log(`Loading ${selectedSport} games for ${selectedBetType}`);
-
     const gamesGrid = document.getElementById('gamesGrid');
     if (!gamesGrid) {
         console.error('gamesGrid element not found');
@@ -176,10 +166,6 @@ async function loadGames() {
             gamesGrid.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-muted);">Invalid sport selected: ${selectedSport}</div>`;
             return;
         }
-
-        console.log(`✅ Selected Sport: ${selectedSport}`);
-        console.log(`✅ Mapped to API key: ${sportKey}`);
-        console.log(`Fetching games for ${sportKey}...`);
 
         // Wait for backend detection to complete
         if (window.api && window.api.ready) {
@@ -226,8 +212,6 @@ async function loadGames() {
             }
         }
 
-        console.log(`Received ${games?.length || 0} games`);
-
         if (!games || games.length === 0) {
             gamesGrid.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-muted);">No upcoming games available for ${selectedSport}</div>`;
             return;
@@ -250,8 +234,6 @@ async function loadGames() {
                     return false;
             }
         });
-
-        console.log(`Filtered to ${filteredGames.length} games with ${selectedBetType} odds`);
 
         if (filteredGames.length === 0) {
             gamesGrid.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-muted);">No games available with ${selectedBetType} odds for ${selectedSport}<br><br>Try selecting a different bet type.</div>`;
