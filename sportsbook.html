@@ -602,6 +602,40 @@
                 '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + esc(game.home_team) + '\',\'ML\',\'' + esc(pv(homeML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (homeML > 0 ? 'positive' : '') + '">' + mlDisplay(homeML) + '</span></button>' +
                 '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'under\',\'Under\',\'' + esc(pv(total)) + '\',\'' + esc(pv(underPrice)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + totLine('Under') + '</span><span class="odds-value">' + totOdds(underPrice) + '</span></button>' +
                 '</div></div>';
+            // More Markets expandable section
+            var teamTotal = total != null ? (Math.round(total / 2 * 2) / 2) : null; // round to nearest 0.5
+            if (teamTotal === null && total != null) teamTotal = Math.round(total / 2);
+            var ttDisplay = teamTotal != null ? teamTotal : '?';
+            var isMLB = (sport && (sport.toLowerCase().indexOf('baseball') !== -1 || sport === 'MLB'));
+            var f5Total = total != null ? (Math.round(total * 0.55 * 2) / 2) : null; // 55% of game total, rounded to 0.5
+            var f5Display = f5Total != null ? f5Total : '?';
+            html += '<div style="text-align:center;margin:-4px 0 8px 0;"><button onclick="(function(el){var p=el.parentElement.nextElementSibling;if(p){p.style.display=p.style.display===\'none\'?\'block\':\'none\';el.textContent=p.style.display===\'none\'?\'More Markets \\u25BC\':\'Less Markets \\u25B2\'}})(this)" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--text-muted,#888);padding:6px 18px;border-radius:6px;cursor:pointer;font-size:12px;transition:all 0.2s;">More Markets &#9660;</button></div>';
+            html += '<div style="display:none;padding:8px 12px 12px;border-top:1px solid rgba(255,255,255,0.06);">';
+            // Team Totals
+            html += '<div style="margin-bottom:10px;"><div style="color:var(--text-muted,#aaa);font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600;">Team Totals</div>';
+            html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span style="min-width:90px;font-size:13px;color:var(--text-primary,#eee);font-weight:500;">' + game.away_team.split(' ').pop() + '</span>';
+            html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'teamover\',\'' + esc(game.away_team) + '\',\'' + esc(pv(ttDisplay)) + '\',\'-110\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">O ' + ttDisplay + '</span><span class="odds-value">-110</span></button>';
+            html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'teamunder\',\'' + esc(game.away_team) + '\',\'' + esc(pv(ttDisplay)) + '\',\'-110\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">U ' + ttDisplay + '</span><span class="odds-value">-110</span></button>';
+            html += '</div>';
+            html += '<div style="display:flex;align-items:center;gap:8px;"><span style="min-width:90px;font-size:13px;color:var(--text-primary,#eee);font-weight:500;">' + game.home_team.split(' ').pop() + '</span>';
+            html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'teamover\',\'' + esc(game.home_team) + '\',\'' + esc(pv(ttDisplay)) + '\',\'-110\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">O ' + ttDisplay + '</span><span class="odds-value">-110</span></button>';
+            html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'teamunder\',\'' + esc(game.home_team) + '\',\'' + esc(pv(ttDisplay)) + '\',\'-110\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">U ' + ttDisplay + '</span><span class="odds-value">-110</span></button>';
+            html += '</div></div>';
+            // F5 markets for MLB only
+            if (isMLB) {
+                html += '<div style="margin-top:10px;"><div style="color:var(--text-muted,#aaa);font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600;">First 5 Innings</div>';
+                // F5 Moneyline
+                html += '<div style="display:flex;gap:8px;margin-bottom:4px;">';
+                html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'f5ml\',\'' + esc(game.away_team) + '\',\'F5 ML\',\'' + esc(pv(awayML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + game.away_team.split(' ').pop() + ' F5</span><span class="odds-value">' + fmtOdds(awayML) + '</span></button>';
+                html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'f5ml\',\'' + esc(game.home_team) + '\',\'F5 ML\',\'' + esc(pv(homeML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + game.home_team.split(' ').pop() + ' F5</span><span class="odds-value">' + fmtOdds(homeML) + '</span></button>';
+                html += '</div>';
+                // F5 Over/Under
+                html += '<div style="display:flex;gap:8px;">';
+                html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'f5over\',\'Over\',\'' + esc(pv(f5Display)) + '\',\'-110\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">F5 O ' + f5Display + '</span><span class="odds-value">-110</span></button>';
+                html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'f5under\',\'Under\',\'' + esc(pv(f5Display)) + '\',\'-110\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">F5 U ' + f5Display + '</span><span class="odds-value">-110</span></button>';
+                html += '</div></div>';
+            }
+            html += '</div>'; // close more-markets container
         });
         container.innerHTML = html;
     };
@@ -680,7 +714,7 @@
 
     window.setBetType = function(type, silent) {
         window.TMR.selectedBetType = type;
-        document.querySelectorAll('#betTypeSelector .bt-toggle-btn').forEach(function(btn) {
+        document.querySelectorAll('#betTypeSelector .bt-toggle-btn, #betTypeSelector2 .bt-toggle-btn').forEach(function(btn) {
             var isActive = btn.dataset.type === type;
             btn.classList.toggle('active', isActive);
             if (isActive) {
@@ -693,15 +727,17 @@
         });
         var lineGroup = document.getElementById('lineInputGroup');
         if (lineGroup) {
-            lineGroup.style.display = (type === 'ml') ? 'none' : 'block';
+            lineGroup.style.display = (type === 'ml' || type === 'f5ml') ? 'none' : 'block';
         }
         // Update the team selection when switching bet types
         var pick = window.TMR.currentSelectedPick;
         if (pick && !silent) {
-            // For over/under, set team to Over/Under
-            if (type === 'over') pick.team = 'Over';
-            else if (type === 'under') pick.team = 'Under';
-            else if (type === 'ml' || type === 'spread') {
+            // For over/under variants, set team to Over/Under
+            if (type === 'over' || type === 'f5over') pick.team = 'Over';
+            else if (type === 'under' || type === 'f5under') pick.team = 'Under';
+            else if (type === 'teamover') pick.team = pick.team || pick.homeTeam || '';
+            else if (type === 'teamunder') pick.team = pick.team || pick.homeTeam || '';
+            else if (type === 'ml' || type === 'spread' || type === 'f5ml') {
                 // Keep original team selection if it was a team name
                 if (pick.team === 'Over' || pick.team === 'Under') {
                     pick.team = pick.homeTeam || '';
@@ -737,6 +773,16 @@
             displayText = 'Over ' + (line || '?');
         } else if (betType === 'under') {
             displayText = 'Under ' + (line || '?');
+        } else if (betType === 'teamover') {
+            displayText = (pick.team || '?') + ' Over ' + (line || '?');
+        } else if (betType === 'teamunder') {
+            displayText = (pick.team || '?') + ' Under ' + (line || '?');
+        } else if (betType === 'f5ml') {
+            displayText += ' F5 ML';
+        } else if (betType === 'f5over') {
+            displayText = 'F5 Over ' + (line || '?');
+        } else if (betType === 'f5under') {
+            displayText = 'F5 Under ' + (line || '?');
         }
         if (summaryPick) summaryPick.textContent = displayText;
 
@@ -877,29 +923,36 @@
             return;
         }
 
-        // Validate line for spread/total bets
-        if ((betType === 'spread' || betType === 'over' || betType === 'under') && !finalLine && finalLine !== '0') {
+        // Validate line for spread/total bets (including team totals and F5 totals)
+        var needsLine = ['spread', 'over', 'under', 'teamover', 'teamunder', 'f5over', 'f5under'];
+        if (needsLine.indexOf(betType) !== -1 && !finalLine && finalLine !== '0') {
             alert('Please enter the line/total from your sportsbook.');
             if (lineInput) lineInput.focus();
             return;
         }
 
-        var marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals' };
+        var marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals' };
         var marketType = marketTypeMap[betType] || 'h2h';
 
         // Determine selection name
         var selection;
-        if (betType === 'over') {
+        if (betType === 'over' || betType === 'f5over') {
             selection = 'Over';
-        } else if (betType === 'under') {
+        } else if (betType === 'under' || betType === 'f5under') {
             selection = 'Under';
+        } else if (betType === 'teamover') {
+            selection = (thePick.team || '') + ' Over';
+        } else if (betType === 'teamunder') {
+            selection = (thePick.team || '') + ' Under';
+        } else if (betType === 'f5ml') {
+            selection = thePick.team || thePick.pick || '';
         } else {
             selection = thePick.team || thePick.pick || '';
         }
 
-        // Determine line snapshot (spread number or total number, null for ML)
+        // Determine line snapshot (spread number or total number, null for ML/F5ML)
         var lineSnapshot = null;
-        if (betType === 'spread' || betType === 'over' || betType === 'under') {
+        if (betType === 'spread' || betType === 'over' || betType === 'under' || betType === 'teamover' || betType === 'teamunder' || betType === 'f5over' || betType === 'f5under') {
             lineSnapshot = parseFloat(finalLine) || null;
         }
 
@@ -8173,11 +8226,18 @@
             <h3>Confirm Your Pick</h3>
 
             <!-- Bet Type Toggle -->
-            <div id="betTypeSelector" style="display: flex; gap: 0; margin-bottom: 20px; border-radius: 10px; overflow: hidden; border: 2px solid var(--glass-border);">
+            <div id="betTypeSelector" style="display: flex; gap: 0; margin-bottom: 4px; border-radius: 10px; overflow: hidden; border: 2px solid var(--glass-border);">
                 <button type="button" class="bt-toggle-btn active" data-type="spread" onclick="window.setBetType('spread')" style="flex: 1; padding: 12px 16px; background: var(--gradient-gold); border: none; color: var(--dark-bg); font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s;" id="btToggleSpread">Spread</button>
                 <button type="button" class="bt-toggle-btn" data-type="ml" onclick="window.setBetType('ml')" style="flex: 1; padding: 12px 16px; background: var(--card-bg); border: none; border-left: 1px solid var(--glass-border); color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s;" id="btToggleML">Moneyline</button>
                 <button type="button" class="bt-toggle-btn" data-type="over" onclick="window.setBetType('over')" style="flex: 1; padding: 12px 16px; background: var(--card-bg); border: none; border-left: 1px solid var(--glass-border); color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s;" id="btToggleOver">Over</button>
                 <button type="button" class="bt-toggle-btn" data-type="under" onclick="window.setBetType('under')" style="flex: 1; padding: 12px 16px; background: var(--card-bg); border: none; border-left: 1px solid var(--glass-border); color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s;" id="btToggleUnder">Under</button>
+            </div>
+            <div id="betTypeSelector2" style="display: flex; gap: 0; margin-bottom: 20px; border-radius: 10px; overflow: hidden; border: 2px solid var(--glass-border);">
+                <button type="button" class="bt-toggle-btn" data-type="teamover" onclick="window.setBetType('teamover')" style="flex: 1; padding: 10px 8px; background: var(--card-bg); border: none; color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 12px; transition: all 0.2s;" id="btToggleTeamOver">TT Over</button>
+                <button type="button" class="bt-toggle-btn" data-type="teamunder" onclick="window.setBetType('teamunder')" style="flex: 1; padding: 10px 8px; background: var(--card-bg); border: none; border-left: 1px solid var(--glass-border); color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 12px; transition: all 0.2s;" id="btToggleTeamUnder">TT Under</button>
+                <button type="button" class="bt-toggle-btn" data-type="f5ml" onclick="window.setBetType('f5ml')" style="flex: 1; padding: 10px 8px; background: var(--card-bg); border: none; border-left: 1px solid var(--glass-border); color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 12px; transition: all 0.2s;" id="btToggleF5ML">F5 ML</button>
+                <button type="button" class="bt-toggle-btn" data-type="f5over" onclick="window.setBetType('f5over')" style="flex: 1; padding: 10px 8px; background: var(--card-bg); border: none; border-left: 1px solid var(--glass-border); color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 12px; transition: all 0.2s;" id="btToggleF5Over">F5 Over</button>
+                <button type="button" class="bt-toggle-btn" data-type="f5under" onclick="window.setBetType('f5under')" style="flex: 1; padding: 10px 8px; background: var(--card-bg); border: none; border-left: 1px solid var(--glass-border); color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 12px; transition: all 0.2s;" id="btToggleF5Under">F5 Under</button>
             </div>
 
             <div class="pick-summary-card">
@@ -17057,6 +17117,30 @@ document.addEventListener('DOMContentLoaded', function() {
             const gameTime = new Date(game.commence_time);
             const timeStr = gameTime.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
+            // Compute team total line (game total / 2, rounded to nearest 0.5)
+            const ttLine = total !== '--' ? Math.round(parseFloat(total) / 2 * 2) / 2 : '?';
+
+            // Build F5 HTML for MLB games only
+            const selSport = window.TMR && window.TMR.selectedSport;
+            const isMLBGame = selSport === 'MLB' || (game.sport_key && game.sport_key.indexOf('baseball') !== -1);
+            let f5Html = '';
+            if (isMLBGame) {
+                const f5t = total !== '--' ? (Math.round(parseFloat(total) * 0.55 * 2) / 2) : '?';
+                const escAway = game.away_team.replace(/'/g, "\\'");
+                const escHome = game.home_team.replace(/'/g, "\\'");
+                const awayShort = game.away_team.split(' ').pop();
+                const homeShort = game.home_team.split(' ').pop();
+                f5Html = `<div class="market-section"><div class="market-title">First 5 Innings</div>
+                    <div style="display:flex;gap:10px;margin-bottom:8px;">
+                        <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5ml', '${escAway}', 'F5 ML', '${awayML}', '${escAway}', '${escHome}')"><span class="line">${awayShort} F5</span><span class="odds">${awayML}</span></button>
+                        <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5ml', '${escHome}', 'F5 ML', '${homeML}', '${escAway}', '${escHome}')"><span class="line">${homeShort} F5</span><span class="odds">${homeML}</span></button>
+                    </div>
+                    <div style="display:flex;gap:10px;">
+                        <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5over', 'Over', '${f5t}', '-110', '${escAway}', '${escHome}')"><span class="line">F5 O ${f5t}</span><span class="odds">-110</span></button>
+                        <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5under', 'Under', '${f5t}', '-110', '${escAway}', '${escHome}')"><span class="line">F5 U ${f5t}</span><span class="odds">-110</span></button>
+                    </div></div>`;
+            }
+
             html += `
             <div class="game-card-new" data-game-index="${index}">
                 <div class="game-card-header">
@@ -17126,32 +17210,29 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="team-totals-grid" style="display: grid; gap: 10px;">
                             <div class="team-total-row" style="display: flex; align-items: center; gap: 10px;">
                                 <span class="team-name" style="min-width: 100px; font-weight: 600;">${game.away_team.split(' ').pop()}</span>
-                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'teamtotal', '${game.away_team} Over', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')">
-                                    <span class="line">O ${Math.round(total/2)}</span>
+                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'teamover', '${game.away_team.replace(/'/g, "\\'")}', '${ttLine}', '-110', '${game.away_team.replace(/'/g, "\\'")}', '${game.home_team.replace(/'/g, "\\'")}')">
+                                    <span class="line">O ${ttLine}</span>
                                     <span class="odds">-110</span>
                                 </button>
-                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'teamtotal', '${game.away_team} Under', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')">
-                                    <span class="line">U ${Math.round(total/2)}</span>
+                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'teamunder', '${game.away_team.replace(/'/g, "\\'")}', '${ttLine}', '-110', '${game.away_team.replace(/'/g, "\\'")}', '${game.home_team.replace(/'/g, "\\'")}')">
+                                    <span class="line">U ${ttLine}</span>
                                     <span class="odds">-110</span>
                                 </button>
                             </div>
                             <div class="team-total-row" style="display: flex; align-items: center; gap: 10px;">
                                 <span class="team-name" style="min-width: 100px; font-weight: 600;">${game.home_team.split(' ').pop()}</span>
-                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'teamtotal', '${game.home_team} Over', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')">
-                                    <span class="line">O ${Math.round(total/2)}</span>
+                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'teamover', '${game.home_team.replace(/'/g, "\\'")}', '${ttLine}', '-110', '${game.away_team.replace(/'/g, "\\'")}', '${game.home_team.replace(/'/g, "\\'")}')">
+                                    <span class="line">O ${ttLine}</span>
                                     <span class="odds">-110</span>
                                 </button>
-                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'teamtotal', '${game.home_team} Under', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')">
-                                    <span class="line">U ${Math.round(total/2)}</span>
+                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'teamunder', '${game.home_team.replace(/'/g, "\\'")}', '${ttLine}', '-110', '${game.away_team.replace(/'/g, "\\'")}', '${game.home_team.replace(/'/g, "\\'")}')">
+                                    <span class="line">U ${ttLine}</span>
                                     <span class="odds">-110</span>
                                 </button>
                             </div>
                         </div>
                     </div>
-                    <div class="market-section">
-                        <div class="market-title">Player Props & Alt Lines</div>
-                        <p style="color: var(--text-muted); font-size: 0.9rem;">Coming soon</p>
-                    </div>
+                    ${f5Html}
                 </div>
             </div>
             `;
@@ -17531,7 +17612,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Save to localStorage
         if (window.auth && window.auth.isLoggedIn()) {
-            const marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', total: 'totals' };
+            const marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', total: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals' };
             const marketType = marketTypeMap[pick.betType] || 'h2h';
             const selection = extractSelection(pick.pick, pick.betType, pick.game);
             const units = Math.max(0.5, Math.min(10, parseFloat(pick.units) || 1));
