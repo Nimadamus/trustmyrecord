@@ -220,6 +220,25 @@
             .nav-links { position: fixed; top: 60px; left: 0; right: 0; background: var(--bg-surface); border-bottom: 1px solid var(--border); flex-direction: column; padding: 16px; z-index: 99; }
             .nav-links.open { display: flex; }
         }
+
+        /* GAMER PROFILE CARD */
+        .gamer-profile-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; position: relative; }
+        .gamer-profile-card .gp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .gamer-profile-card .gp-header h3 { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--accent-gold); display: flex; align-items: center; gap: 8px; }
+        .gp-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+        .gp-field { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 10px; }
+        .gp-field .gp-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 18px; flex-shrink: 0; }
+        .gp-field .gp-icon.psn { background: rgba(0, 55, 145, 0.25); color: #4da6ff; }
+        .gp-field .gp-icon.xbox { background: rgba(16, 124, 16, 0.25); color: #00cc66; }
+        .gp-field .gp-icon.steam { background: rgba(102, 102, 153, 0.25); color: #a0a0cc; }
+        .gp-field .gp-icon.console { background: rgba(168, 85, 247, 0.25); color: var(--accent-purple); }
+        .gp-field .gp-info { flex: 1; min-width: 0; }
+        .gp-field .gp-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .gp-field .gp-value { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .gp-field .gp-value.empty { color: var(--text-muted); font-style: italic; font-weight: 400; }
+
+        /* GAMERTAG BADGE ON CHALLENGE CARDS */
+        .cc-gamertag { font-size: 11px; color: var(--primary); background: var(--primary-dim); padding: 2px 8px; border-radius: 4px; margin-top: 2px; display: inline-block; }
     </style>
 </head>
 <body>
@@ -261,7 +280,7 @@
 
 <!-- TABS -->
 <div class="tabs">
-    <div class="tab active" data-tab="challenges" onclick="switchTab('challenges')"><i class="fas fa-swords" style="margin-right:6px;"></i>Challenges</div>
+    <div class="tab active" data-tab="challenges" onclick="switchTab('challenges')"><i class="fas fa-gamepad" style="margin-right:6px;"></i>Challenges</div>
     <div class="tab" data-tab="matches" onclick="switchTab('matches')"><i class="fas fa-gamepad" style="margin-right:6px;"></i>Recent Matches</div>
     <div class="tab" data-tab="leaderboard" onclick="switchTab('leaderboard')"><i class="fas fa-trophy" style="margin-right:6px;"></i>Leaderboard</div>
     <div class="tab" data-tab="mlb-the-show" onclick="switchTab('mlb-the-show')"><i class="fas fa-baseball" style="margin-right:6px;"></i>MLB The Show</div>
@@ -359,6 +378,45 @@
                 <div class="section-header">
                     <h2>My Gaming Stats</h2>
                 </div>
+
+                <!-- GAMER PROFILE CARD -->
+                <div class="gamer-profile-card" id="gamerProfileCard">
+                    <div class="gp-header">
+                        <h3><i class="fas fa-id-card"></i> My Gamer Profile</h3>
+                        <button class="btn btn-outline btn-sm" onclick="openEditProfile()"><i class="fas fa-pen"></i> Edit</button>
+                    </div>
+                    <div class="gp-fields" id="gamerProfileFields">
+                        <div class="gp-field">
+                            <div class="gp-icon psn"><i class="fab fa-playstation"></i></div>
+                            <div class="gp-info">
+                                <div class="gp-label">PSN Username</div>
+                                <div class="gp-value empty" id="gpPSN">Not set</div>
+                            </div>
+                        </div>
+                        <div class="gp-field">
+                            <div class="gp-icon xbox"><i class="fab fa-xbox"></i></div>
+                            <div class="gp-info">
+                                <div class="gp-label">Xbox Gamertag</div>
+                                <div class="gp-value empty" id="gpXbox">Not set</div>
+                            </div>
+                        </div>
+                        <div class="gp-field">
+                            <div class="gp-icon steam"><i class="fab fa-steam"></i></div>
+                            <div class="gp-info">
+                                <div class="gp-label">Steam Username</div>
+                                <div class="gp-value empty" id="gpSteam">Not set</div>
+                            </div>
+                        </div>
+                        <div class="gp-field">
+                            <div class="gp-icon console"><i class="fas fa-gamepad"></i></div>
+                            <div class="gp-info">
+                                <div class="gp-label">Preferred Console</div>
+                                <div class="gp-value empty" id="gpConsole">Not set</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="stats-grid" id="myStatsGrid"></div>
                 <h3 style="font-family:var(--font-display);margin:16px 0;color:var(--text-dim);">Stats by Game</h3>
                 <div id="myGameStats"></div>
@@ -373,7 +431,7 @@
 <div class="modal-overlay" id="createChallengeModal">
     <div class="modal">
         <button class="close-btn" onclick="closeModal('createChallengeModal')">&times;</button>
-        <h2><i class="fas fa-swords" style="color:var(--accent-gold);margin-right:8px;"></i>Issue Challenge</h2>
+        <h2><i class="fas fa-gamepad" style="color:var(--accent-gold);margin-right:8px;"></i>Issue Challenge</h2>
         <form id="createChallengeForm" onsubmit="submitChallenge(event)">
             <div class="form-group">
                 <label>Game</label>
@@ -524,6 +582,45 @@
     </div>
 </div>
 
+<!-- EDIT GAMER PROFILE MODAL -->
+<div class="modal-overlay" id="editProfileModal">
+    <div class="modal">
+        <button class="close-btn" onclick="closeModal('editProfileModal')">&times;</button>
+        <h2><i class="fas fa-id-card" style="color:var(--accent-gold);margin-right:8px;"></i>Edit Gamer Profile</h2>
+        <form id="editProfileForm" onsubmit="submitProfile(event)">
+            <div class="form-group">
+                <label><i class="fab fa-playstation" style="color:#4da6ff;margin-right:4px;"></i> PSN Username</label>
+                <input class="form-control" id="epPSN" placeholder="Your PSN ID" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label><i class="fab fa-xbox" style="color:#00cc66;margin-right:4px;"></i> Xbox Gamertag</label>
+                <input class="form-control" id="epXbox" placeholder="Your Xbox Gamertag" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label><i class="fab fa-steam" style="color:#a0a0cc;margin-right:4px;"></i> Steam Username</label>
+                <input class="form-control" id="epSteam" placeholder="Your Steam username" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label><i class="fab fa-nintendo-switch" style="color:#e60012;margin-right:4px;"></i> Nintendo Friend Code</label>
+                <input class="form-control" id="epNintendo" placeholder="SW-XXXX-XXXX-XXXX" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-gamepad" style="color:var(--accent-purple);margin-right:4px;"></i> Preferred Console</label>
+                <select class="form-control" id="epConsole">
+                    <option value="">Select...</option>
+                    <option value="PS5">PS5</option>
+                    <option value="Xbox">Xbox Series X|S</option>
+                    <option value="PC">PC</option>
+                    <option value="Nintendo Switch">Nintendo Switch</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-gold btn-block" style="margin-top:8px;padding:12px;font-size:15px;" id="epSaveBtn">
+                <i class="fas fa-save"></i> Save Profile
+            </button>
+        </form>
+    </div>
+</div>
+
 <!-- SCRIPTS -->
 <script src="static/js/config.js?v=20260405"></script>
 <script src="static/js/backend-api.js?v=20260405"></script>
@@ -638,6 +735,7 @@ function renderChallenges(challenges) {
                     <div class="cc-player-info">
                         <div class="cc-player-name">${ch.challenger_display || ch.challenger_username || 'Challenger'}</div>
                         <div class="cc-player-tag">${ch.platform || ''}</div>
+                        <div class="cc-gamertag-slot" data-username="${ch.challenger_username || ''}" data-platform="${ch.platform || ''}"></div>
                     </div>
                 </div>
                 <div class="cc-vs">VS</div>
@@ -647,6 +745,7 @@ function renderChallenges(challenges) {
                            <div class="cc-player-info">
                                <div class="cc-player-name">${ch.challenged_display || ch.challenged_username}</div>
                                <div class="cc-player-tag">${ch.platform || ''}</div>
+                               <div class="cc-gamertag-slot" data-username="${ch.challenged_username}" data-platform="${ch.platform || ''}"></div>
                            </div>`
                         : `<div style="color:var(--accent-green);font-weight:700;">OPEN</div>`
                     }
@@ -672,6 +771,26 @@ function renderChallenges(challenges) {
             </div>` : ''}
         </div>`;
     }).join('');
+
+    // Async load gamertags into challenge cards
+    loadGamertagsForChallengeCards();
+}
+
+async function loadGamertagsForChallengeCards() {
+    const slots = document.querySelectorAll('.cc-gamertag-slot');
+    const seen = new Set();
+    for (const slot of slots) {
+        const username = slot.dataset.username;
+        const platform = slot.dataset.platform;
+        if (!username || seen.has(username + platform)) continue;
+        seen.add(username + platform);
+        getGamertagForUser(username, platform).then(tag => {
+            if (!tag) return;
+            document.querySelectorAll(`.cc-gamertag-slot[data-username="${username}"]`).forEach(s => {
+                s.innerHTML = getGamertagBadge(tag);
+            });
+        });
+    }
 }
 
 async function respondChallenge(id, action) {
@@ -856,6 +975,9 @@ async function loadMyStats() {
     }
     document.getElementById('myStatsLogin').style.display = 'none';
     document.getElementById('myStatsData').style.display = 'block';
+
+    // Load gamer profile
+    loadGamerProfile();
 
     try {
         let data;
@@ -1065,6 +1187,133 @@ function getGameIcon(slug) {
 function getSampleChallenges() {
     // Placeholder data for when backend is offline
     return [];
+}
+
+// ============================================
+// GAMER PROFILE
+// ============================================
+let cachedGamerProfiles = {};
+
+async function loadGamerProfile() {
+    if (!currentUser) return;
+    try {
+        if (api && api.backendAvailable) {
+            const data = await api.getGamerProfile(currentUser.username);
+            if (data && data.profile) {
+                updateProfileCard(data.profile);
+                cachedGamerProfiles[currentUser.username] = data.profile;
+            }
+        }
+    } catch (e) {
+        console.error('Failed to load gamer profile:', e);
+    }
+}
+
+function updateProfileCard(profile) {
+    const psnEl = document.getElementById('gpPSN');
+    const xboxEl = document.getElementById('gpXbox');
+    const steamEl = document.getElementById('gpSteam');
+    const consoleEl = document.getElementById('gpConsole');
+
+    if (profile.psn_username) {
+        psnEl.textContent = profile.psn_username;
+        psnEl.classList.remove('empty');
+    } else {
+        psnEl.textContent = 'Not set';
+        psnEl.classList.add('empty');
+    }
+
+    if (profile.xbox_gamertag) {
+        xboxEl.textContent = profile.xbox_gamertag;
+        xboxEl.classList.remove('empty');
+    } else {
+        xboxEl.textContent = 'Not set';
+        xboxEl.classList.add('empty');
+    }
+
+    if (profile.steam_username) {
+        steamEl.textContent = profile.steam_username;
+        steamEl.classList.remove('empty');
+    } else {
+        steamEl.textContent = 'Not set';
+        steamEl.classList.add('empty');
+    }
+
+    if (profile.preferred_console) {
+        consoleEl.textContent = profile.preferred_console;
+        consoleEl.classList.remove('empty');
+    } else {
+        consoleEl.textContent = 'Not set';
+        consoleEl.classList.add('empty');
+    }
+}
+
+function openEditProfile() {
+    if (!currentUser) { alert('Please sign in first'); return; }
+    const profile = cachedGamerProfiles[currentUser.username] || {};
+    document.getElementById('epPSN').value = profile.psn_username || '';
+    document.getElementById('epXbox').value = profile.xbox_gamertag || '';
+    document.getElementById('epSteam').value = profile.steam_username || '';
+    document.getElementById('epNintendo').value = profile.nintendo_fc || '';
+    document.getElementById('epConsole').value = profile.preferred_console || '';
+    document.getElementById('editProfileModal').classList.add('open');
+}
+
+async function submitProfile(e) {
+    e.preventDefault();
+    const btn = document.getElementById('epSaveBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px;"></div> Saving...';
+
+    const data = {
+        psn_username: document.getElementById('epPSN').value.trim() || null,
+        xbox_gamertag: document.getElementById('epXbox').value.trim() || null,
+        steam_username: document.getElementById('epSteam').value.trim() || null,
+        nintendo_fc: document.getElementById('epNintendo').value.trim() || null,
+        preferred_console: document.getElementById('epConsole').value || null,
+    };
+
+    try {
+        await api.updateGamerProfile(data);
+        cachedGamerProfiles[currentUser.username] = { ...(cachedGamerProfiles[currentUser.username] || {}), ...data };
+        updateProfileCard(cachedGamerProfiles[currentUser.username]);
+        closeModal('editProfileModal');
+    } catch (err) {
+        alert('Error saving profile: ' + (err.error || err.message || 'Failed'));
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Save Profile';
+    }
+}
+
+async function getGamertagForUser(username, platform) {
+    if (!username || !api || !api.backendAvailable) return null;
+    if (cachedGamerProfiles[username]) {
+        return extractGamertagByPlatform(cachedGamerProfiles[username], platform);
+    }
+    try {
+        const data = await api.getGamerProfile(username);
+        if (data && data.profile) {
+            cachedGamerProfiles[username] = data.profile;
+            return extractGamertagByPlatform(data.profile, platform);
+        }
+    } catch (e) { /* no profile */ }
+    return null;
+}
+
+function extractGamertagByPlatform(profile, platform) {
+    if (!profile || !platform) return null;
+    const p = platform.toLowerCase();
+    if (p.includes('ps')) return profile.psn_username;
+    if (p.includes('xbox')) return profile.xbox_gamertag;
+    if (p.includes('pc') || p.includes('steam')) return profile.steam_username;
+    if (p.includes('nintendo') || p.includes('switch')) return profile.nintendo_fc;
+    return profile.psn_username || profile.xbox_gamertag || profile.steam_username || null;
+}
+
+function getGamertagBadge(gamertag) {
+    if (!gamertag) return '';
+    return `<div class="cc-gamertag"><i class="fas fa-user-tag" style="margin-right:3px;"></i>${gamertag}</div>`;
 }
 
 // Close modals on overlay click
