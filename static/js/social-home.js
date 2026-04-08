@@ -29,7 +29,7 @@ async function initAuth() {
         document.getElementById('compAvatar').textContent = (user.displayName || user.username || '?')[0].toUpperCase();
         document.getElementById('headerActions').innerHTML = `
             <a href="sportsbook.html" class="btn btn-primary"><i class="fas fa-plus"></i> Make Pick</a>
-            <span class="notif-bell" id="notifBell" onclick="location.href='activity.html'" title="Notifications">
+            <span class="notif-bell" id="notifBell" onclick="location.href='feed.html'" title="Notifications">
                 <i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge" style="display:none;">0</span>
             </span>
             <a href="profile.html" class="btn btn-ghost"><i class="fas fa-user"></i> ${user.username}</a>

@@ -14,7 +14,7 @@
     <meta property="og:description" content="Head-to-head handicapper battles, trivia, polls. Challenge anyone. Prove everything.">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>&#9876;</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1222,7 +1222,6 @@
                 <a href="challenges.html" class="nav-link active">Picks Arena</a>
                 <a href="arena.html" class="nav-link">Gaming Arena</a>
                 <a href="forum.html" class="nav-link">Forum</a>
-                <a href="activity.html" class="nav-link">Activity</a>
                 <a href="messages.html" class="nav-link">Messages</a>
                 <a href="profile.html" class="nav-link">My Profile</a>
             </nav>
@@ -1243,12 +1242,6 @@
             </button>
             <button class="arena-tab" onclick="switchArenaTab('bragging')">
                 <span class="tab-icon">&#127942;</span> Bragging Rights
-            </button>
-            <button class="arena-tab" onclick="switchArenaTab('trivia')">
-                <span class="tab-icon">&#127919;</span> Trivia
-            </button>
-            <button class="arena-tab" onclick="switchArenaTab('polls')">
-                <span class="tab-icon">&#128202;</span> Polls
             </button>
         </div>
 
@@ -1314,91 +1307,22 @@
             </div>
         </div>
 
-        <!-- ==================== TAB 3: TRIVIA ==================== -->
-        <div class="tab-panel" id="panel-trivia">
-            <h2 class="section-title">Sports Trivia</h2>
-            <p style="text-align:center;color:var(--text-secondary);margin-bottom:30px;">Test your sports knowledge. New question every day.</p>
-
-            <div style="max-width:700px;margin:0 auto;">
-                <div id="triviaContainer">
-                    <!-- Trivia Question -->
-                    <div class="trivia-card" id="triviaQuestion">
-                        <div class="trivia-header">
-                            <span class="trivia-badge">+50 Points</span>
-                            <span class="trivia-timer" id="triviaTimer">00:00:00</span>
-                        </div>
-                        <h3 class="trivia-question" id="triviaQuestionText">Loading today's question...</h3>
-                        <div class="trivia-options" id="triviaOptions">
-                            <!-- Options loaded by JS -->
-                        </div>
-                    </div>
-
-                    <!-- Trivia Results -->
-                    <div class="trivia-result" id="triviaResult" style="display: none;">
-                        <div class="result-icon" id="resultIcon"></div>
-                        <h3 id="resultTitle">Correct!</h3>
-                        <p id="resultMessage">You earned 50 trivia points!</p>
-                        <div class="trivia-stats">
-                            <div class="stat">
-                                <span class="stat-number" id="triviaStreak">0</span>
-                                <span class="stat-label">Day Streak</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-number" id="triviaTotalPoints">0</span>
-                                <span class="stat-label">Total Points</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Trivia Leaderboard -->
-                <div class="mini-leaderboard" style="margin-top: 30px;">
-                    <h4 style="font-family: 'Orbitron', sans-serif; margin-bottom: 15px; color: var(--neon-gold);">Trivia Leaders</h4>
-                    <div id="triviaLeaderboard">
-                        <!-- Loaded by JS -->
-                    </div>
-                </div>
-
-                <!-- Link to full trivia page -->
-                <div style="text-align:center;margin-top:25px;">
-                    <a href="trivia.html" style="color:var(--neon-cyan);font-weight:600;text-decoration:none;font-size:0.95rem;">View All Trivia Games &rarr;</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- ==================== TAB 4: POLLS ==================== -->
-        <div class="tab-panel" id="panel-polls">
-            <h2 class="section-title">Community Polls</h2>
-            <p style="text-align:center;color:var(--text-secondary);margin-bottom:30px;">Vote and see what the community thinks.</p>
-
-            <div style="max-width:700px;margin:0 auto;">
-                <div id="pollContainer">
-                    <div class="poll-card" id="pollQuestion">
-                        <h3 class="poll-question" id="pollQuestionText">Loading today's poll...</h3>
-                        <div class="poll-options" id="pollOptions">
-                            <!-- Options loaded by JS -->
-                        </div>
-                        <div class="poll-meta">
-                            <span id="pollVotes">0 votes</span>
-                            <span>&bull;</span>
-                            <span id="pollTimeLeft">Ends in 12 hours</span>
-                        </div>
-                    </div>
-
-                    <!-- Poll Results -->
-                    <div class="poll-results" id="pollResults" style="display: none;">
-                        <h4 style="margin-bottom: 15px;">Results</h4>
-                        <div id="pollResultsBars">
-                            <!-- Bars loaded by JS -->
-                        </div>
-                        <p style="margin-top: 15px; color: var(--text-muted);">You voted: <strong id="yourVote" style="color: var(--neon-cyan);">-</strong></p>
-                    </div>
-                </div>
-
-                <!-- Link to full polls page -->
-                <div style="text-align:center;margin-top:25px;">
-                    <a href="polls.html" style="color:var(--neon-cyan);font-weight:600;text-decoration:none;font-size:0.95rem;">View All Polls &rarr;</a>
-                </div>
+        <!-- ==================== MORE ARENA FEATURES ==================== -->
+        <div style="margin-top: 60px;">
+            <h2 class="section-title">More Arena Features</h2>
+            <div class="link-cards-grid" style="max-width: 700px; margin: 20px auto 0;">
+                <a href="trivia.html" class="link-card">
+                    <div class="link-card-icon">&#127919;</div>
+                    <h3>Sports Trivia</h3>
+                    <p>Test your sports knowledge with daily questions, earn points, and climb the leaderboard.</p>
+                    <span class="card-cta trivia-cta">Play Trivia &rarr;</span>
+                </a>
+                <a href="polls.html" class="link-card">
+                    <div class="link-card-icon">&#128202;</div>
+                    <h3>Community Polls</h3>
+                    <p>Vote on hot sports topics and see what the community thinks.</p>
+                    <span class="card-cta polls-cta">Vote Now &rarr;</span>
+                </a>
             </div>
         </div>
 
@@ -1494,7 +1418,6 @@
                 <a href="profile.html" class="footer-link" id="footerProfileLink">Profile</a>
                 <a href="forum.html" class="footer-link">Forum</a>
                 <a href="challenges.html" class="footer-link">The Arena</a>
-                <a href="activity.html" class="footer-link">Activity</a>
             </div>
             <p class="footer-copyright">2026 Trust My Record. The end of the bullshit.</p>
         </div>
