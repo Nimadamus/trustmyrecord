@@ -305,11 +305,8 @@
                     Object.assign(allScores, scores);
                 }
                 
-                console.log(`[Grader] Score map has ${Object.keys(allScores).length} entries for ${sport}`);
-
                 // Grade each pick
                 for (const pick of sportPicks) {
-                    console.log(`[Grader] Attempting to grade pick ${pick.id}: game_id=${pick.game_id}, home=${pick.home_team}, away=${pick.away_team}, sport=${pick.sport_key}, market=${pick.market_type}`);
                     const scores = this.findMatchingScore(pick, allScores);
 
                     if (!scores) {
@@ -318,7 +315,6 @@
                     }
                     
                     if (!scores.completed) {
-                        console.log(`[Grader] Game not completed for pick ${pick.id}`);
                         continue;
                     }
                     
@@ -328,7 +324,6 @@
                     const pickInArray = picks.find(p => p.id === pick.id);
                     if (pickInArray) {
                         Object.assign(pickInArray, gradeResult);
-                        console.log(`[Grader] Graded ${pick.id}: ${gradeResult.status} (${gradeResult.result_units > 0 ? '+' : ''}${gradeResult.result_units}u)`);
                         graded++;
                     }
                 }
@@ -340,7 +335,6 @@
             // Refresh UI
             this.refreshUI();
             
-            console.log(`[Grader] ========== GRADING COMPLETE: ${graded} picks graded ==========`);
             return { graded, total: pending.length };
         },
 
@@ -363,7 +357,6 @@
         // Re-check all graded picks for push accuracy
         // Fixes picks that were wrongly graded as 'lost' when they should be 'push'
         recheckGradedPicks: async function() {
-            console.log('[Grader] ========== RECHECKING GRADED PICKS FOR PUSH FIXES ==========');
             const picks = this.getPicks();
 
             // First: normalize any 'pushed' status to 'push'
@@ -372,7 +365,6 @@
                 if (p.status === 'pushed') { p.status = 'push'; p.result = 'push'; p.result_units = 0; normalized++; }
             }
             if (normalized > 0) {
-                console.log(`[Grader] Normalized ${normalized} 'pushed' -> 'push'`);
                 this.savePicks(picks);
             }
 
@@ -419,7 +411,6 @@
 
                     const newResult = this.gradePick(pick, scores);
                     if (newResult.status !== pick.status) {
-                        console.log(`[Grader] REGRADE FIX: Pick ${pick.id} was '${pick.status}' -> now '${newResult.status}'`);
                         const pickInArray = picks.find(p => p.id === pick.id);
                         if (pickInArray) {
                             Object.assign(pickInArray, newResult);
@@ -432,9 +423,6 @@
             if (fixed > 0) {
                 this.savePicks(picks);
                 this.refreshUI();
-                console.log(`[Grader] REGRADE COMPLETE: Fixed ${fixed} picks`);
-            } else {
-                console.log('[Grader] Recheck complete, no fixes needed');
             }
         },
 
