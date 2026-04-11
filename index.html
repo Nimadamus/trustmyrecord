@@ -19735,9 +19735,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Merge backend picks (if any) with local picks, preferring backend
         // entries when ids collide. Local-only picks (offline drafts) still appear.
-        let allUserPicks = [];
-        try { allUserPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]'); } catch(e) { allUserPicks = []; }
-        allUserPicks = allUserPicks.filter(p => p.user_id === userId);
+        // Permissive user_id match: picks may have been saved with username,
+        // numeric id, string id, or 'local' depending on auth state at save time.
+        const userMatchKeys = [];
+        if (user.username) userMatchKeys.push(String(user.username));
+        if (user.id != null) {
+            userMatchKeys.push(String(user.id));
+            if (typeof user.id === 'number') userMatchKeys.push(user.id);
+        }
+        if (user.email) userMatchKeys.push(String(user.email));
+        userMatchKeys.push('local');
+        const matchSet = new Set(userMatchKeys.map(function(k) { return String(k).toLowerCase(); }));
+        let rawLocalPicks = [];
+        try { rawLocalPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]'); } catch(e) { rawLocalPicks = []; }
+        let allUserPicks = rawLocalPicks.filter(function(p) {
+            if (p.user_id == null || p.user_id === '') return true;
+            return matchSet.has(String(p.user_id).toLowerCase());
+        });
+        try {
+            console.log('[TMR MyPicks] user=', user.username || user.id,
+                'localStorage tmr_picks total=', rawLocalPicks.length,
+                'after user filter=', allUserPicks.length,
+                'match keys=', userMatchKeys);
+            if (rawLocalPicks.length > 0 && allUserPicks.length === 0) {
+                console.warn('[TMR MyPicks] Picks exist in localStorage but none matched current user. Sample user_id values:',
+                    rawLocalPicks.slice(0, 5).map(function(p) { return p.user_id; }));
+            }
+        } catch(e) {}
         if (window._tmrBackendPicks && window._tmrBackendPicks.length > 0) {
             const seen = {};
             const merged = [];
@@ -19775,7 +19799,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const title = tab === 'pending' ? 'No Pending Picks' : 'No Graded Picks';
             const msg = tab === 'pending' ? 'Make a pick to get started!' : 'Your graded picks will appear here.';
             const btn = tab === 'pending' ? '<button onclick="showSection(\'picks\')" style="margin-top: 20px; background: linear-gradient(135deg, #00c853, #00a648); border: none; padding: 12px 24px; border-radius: 8px; color: #000; font-weight: 700; cursor: pointer;">Make a Pick</button>' : '';
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #6c7380;"><div style="font-size: 48px; margin-bottom: 16px;">' + emoji + '</div><h3 style="color: #fff; margin-bottom: 10px;">' + title + '</h3><p>' + msg + '</p>' + btn + '</div>';
+            // Diagnostic: if localStorage has picks but none matched the current user,
+            // surface the mismatch on-screen so we don't need DevTools to investigate.
+            let diag = '';
+            if (rawLocalPicks && rawLocalPicks.length > 0 && allUserPicks.length === 0) {
+                const sampleIds = Array.from(new Set(rawLocalPicks.map(function(p) { return String(p.user_id); }))).slice(0, 5);
+                diag = '<div style="margin-top:24px;padding:14px;background:#1a1d24;border:1px solid #ff9800;border-radius:8px;color:#ffb74d;font-size:12px;text-align:left;max-width:520px;margin-left:auto;margin-right:auto;">'
+                    + '<strong style="color:#ff9800;">Diagnostic:</strong> ' + rawLocalPicks.length + ' pick(s) found in local storage, but none matched your current account.<br>'
+                    + 'Stored user_id values: <code style="color:#fff;">' + sampleIds.join(', ') + '</code><br>'
+                    + 'Current match keys: <code style="color:#fff;">' + userMatchKeys.join(', ') + '</code><br>'
+                    + '<button onclick="window._tmrReclaimPicks && window._tmrReclaimPicks()" style="margin-top:10px;background:#ff9800;border:none;padding:8px 14px;border-radius:6px;color:#000;font-weight:700;cursor:pointer;">Reclaim these picks for ' + (user.username || user.id) + '</button>'
+                    + '</div>';
+            }
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #6c7380;"><div style="font-size: 48px; margin-bottom: 16px;">' + emoji + '</div><h3 style="color: #fff; margin-bottom: 10px;">' + title + '</h3><p>' + msg + '</p>' + btn + diag + '</div>';
             return;
         }
 
@@ -19883,6 +19919,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.loadMyPicks = loadMyPicks;
     window.switchPicksTab = switchPicksTab;
+
+    // One-shot recovery: re-tag every pick in localStorage with the current
+    // user's username. Used when picks were saved under an older/guest id and
+    // now don't match the logged-in account.
+    window._tmrReclaimPicks = function() {
+        try {
+            if (!window.auth || !window.auth.isLoggedIn()) {
+                alert('Log in first.');
+                return;
+            }
+            const u = window.auth.getCurrentUser();
+            const newId = u.username || u.id || 'local';
+            let picks = [];
+            try { picks = JSON.parse(localStorage.getItem('tmr_picks') || '[]'); } catch(e) {}
+            let changed = 0;
+            picks.forEach(function(p) {
+                if (p.user_id !== newId) { p.user_id = newId; changed++; }
+            });
+            localStorage.setItem('tmr_picks', JSON.stringify(picks));
+            alert('Reclaimed ' + changed + ' pick(s) for ' + newId + '.');
+            if (typeof loadMyPicks === 'function') loadMyPicks(window.currentPicksTab || 'pending');
+        } catch (e) {
+            console.error('[TMR] Reclaim failed:', e);
+            alert('Reclaim failed: ' + e.message);
+        }
+    };
 
     </script>
 
