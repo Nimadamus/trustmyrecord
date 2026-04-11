@@ -16196,6 +16196,41 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
+        // SPA deep-link routing: resolve the target section from ?p= (set by 404.html)
+        // and/or the URL hash, then activate it on page load. Without this, visiting
+        // /mypicks#mypicks lands on the default home section and the My Picks list
+        // never renders. Runs once on DOMContentLoaded.
+        (function initSpaDeepLinkRouting() {
+            function resolveTargetSection() {
+                try {
+                    var params = new URLSearchParams(window.location.search || '');
+                    var p = (params.get('p') || '').toLowerCase();
+                    if (p) {
+                        // 404.html encodes the original path here (e.g. "mypicks" or "mypicks/")
+                        p = p.replace(/\/+$/, '').split('/')[0];
+                        if (p) return p;
+                    }
+                } catch (e) {}
+                var h = (window.location.hash || '').replace(/^#/, '').toLowerCase();
+                if (h) return h.split('?')[0];
+                return null;
+            }
+            function activate() {
+                var target = resolveTargetSection();
+                if (!target) return;
+                if (!document.getElementById(target)) return;
+                if (typeof showSection === 'function') {
+                    showSection(target);
+                }
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', activate);
+            } else {
+                activate();
+            }
+            window.addEventListener('hashchange', activate);
+        })();
+
 
         // Profile Tab Functions
         function showProfileTab(tabId) {
@@ -19678,14 +19713,43 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Read picks from localStorage
-        let allUserPicks = [];
-        try { allUserPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]'); } catch(e) { allUserPicks = []; }
-
-        // Filter to current user
+        // Kick off a backend fetch on first load so picks that only live on the
+        // server (e.g. new browser, cleared storage) still show up. Cached result
+        // is reused on subsequent calls; a successful fetch re-renders this view.
         const user = window.auth.getCurrentUser();
         const userId = user.username || user.id || 'local';
+        const numericUserId = (user && user.id && !String(user.id).startsWith('user_')) ? user.id : null;
+        if (typeof api !== 'undefined' && api.backendAvailable && !window._tmrMyPicksLoading && !window._tmrBackendPicks) {
+            window._tmrMyPicksLoading = true;
+            api.getPicks({ userId: numericUserId, limit: 100 }).then(function(result) {
+                window._tmrMyPicksLoading = false;
+                var backendPicks = (result && result.picks) ? result.picks : (Array.isArray(result) ? result : []);
+                window._tmrBackendPicks = backendPicks;
+                // Re-render once backend data arrives
+                loadMyPicks(window.currentPicksTab || tab);
+            }).catch(function(err) {
+                window._tmrMyPicksLoading = false;
+                console.warn('[TMR] My Picks backend fetch failed:', err);
+            });
+        }
+
+        // Merge backend picks (if any) with local picks, preferring backend
+        // entries when ids collide. Local-only picks (offline drafts) still appear.
+        let allUserPicks = [];
+        try { allUserPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]'); } catch(e) { allUserPicks = []; }
         allUserPicks = allUserPicks.filter(p => p.user_id === userId);
+        if (window._tmrBackendPicks && window._tmrBackendPicks.length > 0) {
+            const seen = {};
+            const merged = [];
+            window._tmrBackendPicks.forEach(function(p) {
+                if (p.id != null) seen[p.id] = true;
+                merged.push(p);
+            });
+            allUserPicks.forEach(function(p) {
+                if (p.id == null || !seen[p.id]) merged.push(p);
+            });
+            allUserPicks = merged;
+        }
 
         // Filter by tab
         let picks = allUserPicks;
