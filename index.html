@@ -525,6 +525,19 @@
     };
 
     // Core function - Select Sport and Show Games (ESPN free API, no server needed)
+    window.TMR.setGameMarketScope = function(index, scope) {
+        var gameRow = document.querySelector('.game-row-group[data-game-index="' + index + '"]');
+        if (!gameRow) return;
+        gameRow.querySelectorAll('.game-scope-tab').forEach(function(tab) {
+            tab.classList.toggle('active', tab.dataset.scope === scope);
+            tab.style.background = tab.dataset.scope === scope ? 'var(--gradient-gold)' : 'var(--card-bg)';
+            tab.style.color = tab.dataset.scope === scope ? 'var(--dark-bg)' : 'var(--text-primary)';
+        });
+        gameRow.querySelectorAll('.game-market-scope').forEach(function(panel) {
+            panel.style.display = panel.dataset.scope === scope ? 'block' : 'none';
+        });
+    };
+
     // Shared game list renderer used by both generic and NHL paths
     window.TMR._renderGamesList = function(container, games, sport) {
         // Validate each game's odds quality
@@ -554,6 +567,8 @@
             var hasRealOdds = hasOdds && !validation.allDefault;
             var homeSpread = {point: null, price: null}, awaySpread = {point: null, price: null};
             var homeML = null, awayML = null, total = null, overPrice = null, underPrice = null;
+            var f5HomeSpread = {point: null, price: null}, f5AwaySpread = {point: null, price: null};
+            var f5HomeML = null, f5AwayML = null, f5Total = null, f5OverPrice = null, f5UnderPrice = null;
             markets.forEach(function(m) {
                 if (m.key === 'spreads') m.outcomes.forEach(function(o) {
                     if (o.name === game.home_team) homeSpread = {point: o.point, price: o.price};
@@ -566,6 +581,18 @@
                 if (m.key === 'totals') m.outcomes.forEach(function(o) {
                     if (o.name === 'Over') { total = o.point; overPrice = o.price; }
                     else underPrice = o.price;
+                });
+                if (m.key === 'f5_spreads') m.outcomes.forEach(function(o) {
+                    if (o.name === game.home_team) f5HomeSpread = {point: o.point, price: o.price};
+                    else f5AwaySpread = {point: o.point, price: o.price};
+                });
+                if (m.key === 'f5_h2h') m.outcomes.forEach(function(o) {
+                    if (o.name === game.home_team) f5HomeML = o.price;
+                    else f5AwayML = o.price;
+                });
+                if (m.key === 'f5_totals') m.outcomes.forEach(function(o) {
+                    if (o.name === 'Over') { f5Total = o.point; f5OverPrice = o.price; }
+                    else f5UnderPrice = o.price;
                 });
             });
             var gameTime = new Date(game.commence_time).toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'});
@@ -582,8 +609,34 @@
             var totLine = function(lbl) { return showOddsValues && total != null ? lbl.charAt(0) + ' ' + total : lbl; };
             var totOdds = function(o) { return showOddsValues && o != null ? fmtOdds(o) : 'Pick'; };
             var isMLB = sport === 'MLB';
-            var f5Total = total != null ? (Math.round(total * 0.55 * 2) / 2) : null;
-            var f5Display = f5Total != null ? f5Total : '?';
+            if (f5Total == null && total != null) f5Total = Math.round(total * 0.55 * 2) / 2;
+            if (f5HomeML == null) f5HomeML = homeML;
+            if (f5AwayML == null) f5AwayML = awayML;
+            if (f5HomeSpread.point == null && f5AwaySpread.point == null) {
+                f5AwaySpread = { point: 0.5, price: -118 };
+                f5HomeSpread = { point: -0.5, price: -102 };
+            }
+            if (f5OverPrice == null) f5OverPrice = -110;
+            if (f5UnderPrice == null) f5UnderPrice = -110;
+            var f5Line = function(lbl) { return showOddsValues && f5Total != null ? lbl.charAt(0) + ' ' + f5Total : lbl; };
+            var renderRows = function(scopePrefix, awaySpreadObj, homeSpreadObj, awayMlValue, homeMlValue, totalValue, overValue, underValue, totalLineFn) {
+                var awaySpreadType = scopePrefix === 'f5' ? 'f5spread' : 'spread';
+                var awayMlType = scopePrefix === 'f5' ? 'f5ml' : 'ml';
+                var overType = scopePrefix === 'f5' ? 'f5over' : 'over';
+                var underType = scopePrefix === 'f5' ? 'f5under' : 'under';
+                return '<div class="team-row">' +
+                    '<div class="team-info"><div class="team-details"><div class="team-name">' + game.away_team + '</div></div></div>' +
+                    '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'' + awaySpreadType + '\',\'' + esc(game.away_team) + '\',\'' + esc(pv(awaySpreadObj.point != null ? fmtSpread(awaySpreadObj.point) : '')) + '\',\'' + esc(pv(awaySpreadObj.price)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + spdLine(awaySpreadObj.point) + '</span><span class="odds-value">' + spdOdds(awaySpreadObj.price) + '</span></button>' +
+                    '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'' + awayMlType + '\',\'' + esc(game.away_team) + '\',\'' + esc(scopePrefix === 'f5' ? 'F5 ML' : 'ML') + '\',\'' + esc(pv(awayMlValue)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (awayMlValue > 0 ? 'positive' : '') + '">' + mlDisplay(awayMlValue) + '</span></button>' +
+                    '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'' + overType + '\',\'Over\',\'' + esc(pv(totalValue)) + '\',\'' + esc(pv(overValue)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + totalLineFn('Over') + '</span><span class="odds-value">' + totOdds(overValue) + '</span></button>' +
+                    '</div>' +
+                    '<div class="team-row">' +
+                    '<div class="team-info"><div class="team-details"><div class="team-name">' + game.home_team + '</div></div></div>' +
+                    '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'' + awaySpreadType + '\',\'' + esc(game.home_team) + '\',\'' + esc(pv(homeSpreadObj.point != null ? fmtSpread(homeSpreadObj.point) : '')) + '\',\'' + esc(pv(homeSpreadObj.price)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + spdLine(homeSpreadObj.point) + '</span><span class="odds-value">' + spdOdds(homeSpreadObj.price) + '</span></button>' +
+                    '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'' + awayMlType + '\',\'' + esc(game.home_team) + '\',\'' + esc(scopePrefix === 'f5' ? 'F5 ML' : 'ML') + '\',\'' + esc(pv(homeMlValue)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (homeMlValue > 0 ? 'positive' : '') + '">' + mlDisplay(homeMlValue) + '</span></button>' +
+                    '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'' + underType + '\',\'Under\',\'' + esc(pv(totalValue)) + '\',\'' + esc(pv(underValue)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + totalLineFn('Under') + '</span><span class="odds-value">' + totOdds(underValue) + '</span></button>' +
+                    '</div>';
+            };
             // Source indicator dot
             var sourceIndicator = '';
             if (validation.source === 'sportsbook' || validation.source === 'espn') {
@@ -591,37 +644,23 @@
             } else if (validation.source === 'estimated' && !validation.allDefault) {
                 sourceIndicator = '<span style="color:#f59e0b;font-size:8px;margin-left:6px;" title="Estimated odds">&#9679;</span>';
             }
-            html += '<div class="game-row">' +
-                '<div class="game-time-header"><span class="game-time">' + gameTime + sourceIndicator + '</span></div>' +
-                '<div class="team-row">' +
-                '<div class="team-info"><div class="team-details"><div class="team-name">' + game.away_team + '</div></div></div>' +
-                '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'spread\',\'' + esc(game.away_team) + '\',\'' + esc(pv(awaySpread.point != null ? fmtSpread(awaySpread.point) : '')) + '\',\'' + esc(pv(awaySpread.price)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + spdLine(awaySpread.point) + '</span><span class="odds-value">' + spdOdds(awaySpread.price) + '</span></button>' +
-                '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + esc(game.away_team) + '\',\'ML\',\'' + esc(pv(awayML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (awayML > 0 ? 'positive' : '') + '">' + mlDisplay(awayML) + '</span></button>' +
-                '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'over\',\'Over\',\'' + esc(pv(total)) + '\',\'' + esc(pv(overPrice)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + totLine('Over') + '</span><span class="odds-value">' + totOdds(overPrice) + '</span></button>' +
-                '</div>' +
-                '<div class="team-row">' +
-                '<div class="team-info"><div class="team-details"><div class="team-name">' + game.home_team + '</div></div></div>' +
-                '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'spread\',\'' + esc(game.home_team) + '\',\'' + esc(pv(homeSpread.point != null ? fmtSpread(homeSpread.point) : '')) + '\',\'' + esc(pv(homeSpread.price)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + spdLine(homeSpread.point) + '</span><span class="odds-value">' + spdOdds(homeSpread.price) + '</span></button>' +
-                '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + esc(game.home_team) + '\',\'ML\',\'' + esc(pv(homeML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (homeML > 0 ? 'positive' : '') + '">' + mlDisplay(homeML) + '</span></button>' +
-                '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'under\',\'Under\',\'' + esc(pv(total)) + '\',\'' + esc(pv(underPrice)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + totLine('Under') + '</span><span class="odds-value">' + totOdds(underPrice) + '</span></button>' +
-                '</div></div>';
+            html += '<div class="game-row game-row-group" data-game-index="' + index + '">' +
+                '<div class="game-time-header"><span class="game-time">' + gameTime + sourceIndicator + '</span></div>';
             if (isMLB) {
-                html += '<div style="margin:-8px 0 14px 0;padding:0 10px 12px 10px;border-top:1px solid rgba(255,255,255,0.06);">' +
-                    '<div style="color:var(--text-muted,#aaa);font-size:11px;text-transform:uppercase;letter-spacing:1px;margin:10px 0 8px;font-weight:600;">First 5 Innings</div>' +
-                    '<div style="display:flex;gap:8px;margin-bottom:6px;">' +
-                    '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'f5spread\',\'' + esc(game.away_team) + '\',\'+0.5\',\'-118\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + game.away_team.split(' ').pop() + ' +0.5</span><span class="odds-value">-118</span></button>' +
-                    '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'f5spread\',\'' + esc(game.home_team) + '\',\'-0.5\',\'-102\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + game.home_team.split(' ').pop() + ' -0.5</span><span class="odds-value">-102</span></button>' +
-                    '</div>' +
-                    '<div style="display:flex;gap:8px;margin-bottom:6px;">' +
-                    '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'f5ml\',\'' + esc(game.away_team) + '\',\'F5 ML\',\'' + esc(pv(awayML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + game.away_team.split(' ').pop() + ' F5</span><span class="odds-value">' + mlDisplay(awayML) + '</span></button>' +
-                    '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'f5ml\',\'' + esc(game.home_team) + '\',\'F5 ML\',\'' + esc(pv(homeML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + game.home_team.split(' ').pop() + ' F5</span><span class="odds-value">' + mlDisplay(homeML) + '</span></button>' +
-                    '</div>' +
-                    '<div style="display:flex;gap:8px;">' +
-                    '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'f5over\',\'Over\',\'' + esc(pv(f5Display)) + '\',\'-110\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">F5 O ' + f5Display + '</span><span class="odds-value">-110</span></button>' +
-                    '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'f5under\',\'Under\',\'' + esc(pv(f5Display)) + '\',\'-110\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">F5 U ' + f5Display + '</span><span class="odds-value">-110</span></button>' +
-                    '</div>' +
+                html += '<div style="display:flex;gap:0;margin:6px 10px 12px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);">' +
+                    '<button type="button" class="game-scope-tab active" data-scope="full" onclick="window.TMR.setGameMarketScope(' + index + ',\'full\')" style="flex:1;padding:9px 12px;background:var(--gradient-gold);border:none;color:var(--dark-bg);font-size:12px;font-weight:700;cursor:pointer;">Full Game</button>' +
+                    '<button type="button" class="game-scope-tab" data-scope="f5" onclick="window.TMR.setGameMarketScope(' + index + ',\'f5\')" style="flex:1;padding:9px 12px;background:var(--card-bg);border:none;border-left:1px solid rgba(255,255,255,0.08);color:var(--text-primary);font-size:12px;font-weight:700;cursor:pointer;">5 Innings</button>' +
                     '</div>';
             }
+            html += '<div class="game-market-scope" data-scope="full">' +
+                renderRows('full', awaySpread, homeSpread, awayML, homeML, total, overPrice, underPrice, totLine) +
+                '</div>';
+            if (isMLB) {
+                html += '<div class="game-market-scope" data-scope="f5" style="display:none;">' +
+                    renderRows('f5', f5AwaySpread, f5HomeSpread, f5AwayML, f5HomeML, f5Total, f5OverPrice, f5UnderPrice, f5Line) +
+                    '</div>';
+            }
+            html += '</div>';
         });
         container.innerHTML = html;
     };
@@ -5875,12 +5914,12 @@
         /* IMPORTANT: These styles are locked and must not be overridden */
         .market-headers {
             display: grid !important;
-            grid-template-columns: 1fr 110px 110px 130px !important;
-            gap: 10px !important;
-            padding: 14px 18px !important;
+            grid-template-columns: 1fr 130px 130px 150px !important;
+            gap: 12px !important;
+            padding: 16px 20px !important;
             background: #121418 !important;
             border-bottom: 1px solid #2d3340 !important;
-            border-radius: 8px 8px 0 0 !important;
+            border-radius: 10px 10px 0 0 !important;
             margin-bottom: 0 !important;
             position: sticky !important;
             top: 0 !important;
@@ -5890,10 +5929,10 @@
         .market-headers .market-label {
             color: #8b9ab0 !important;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-            font-size: 12px !important;
+            font-size: 13px !important;
             font-weight: 700 !important;
             text-transform: uppercase !important;
-            letter-spacing: 0.5px !important;
+            letter-spacing: 0.8px !important;
             text-align: center !important;
         }
 
@@ -5906,8 +5945,8 @@
             border: 1px solid #2d3340 !important;
             border-top: none !important;
             padding: 0 !important;
-            margin-bottom: 8px !important;
-            border-radius: 0 0 8px 8px !important;
+            margin-bottom: 12px !important;
+            border-radius: 0 0 10px 10px !important;
         }
 
         .game-row:hover {
@@ -5916,23 +5955,23 @@
 
         .game-row .game-time-header {
             background: #121418 !important;
-            padding: 8px 16px !important;
+            padding: 10px 18px !important;
             border-bottom: 1px solid #2d3340 !important;
         }
 
         .game-row .game-time {
             color: #6c7380 !important;
-            font-size: 12px !important;
-            font-weight: 500 !important;
+            font-size: 13px !important;
+            font-weight: 600 !important;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         }
 
         .game-row .team-row {
             display: grid !important;
-            grid-template-columns: 1fr 110px 110px 130px !important;
-            gap: 10px !important;
+            grid-template-columns: 1fr 130px 130px 150px !important;
+            gap: 12px !important;
             align-items: center !important;
-            padding: 12px 18px !important;
+            padding: 14px 20px !important;
             border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
         }
 
@@ -5943,13 +5982,13 @@
         .game-row .team-info {
             display: flex !important;
             align-items: center !important;
-            gap: 10px !important;
+            gap: 12px !important;
         }
 
         .game-row .team-name {
             color: #ffffff !important;
-            font-size: 16px !important;
-            font-weight: 600 !important;
+            font-size: 18px !important;
+            font-weight: 700 !important;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         }
 
@@ -5961,11 +6000,11 @@
             justify-content: center !important;
             background: #2a2f38 !important;
             border: 1px solid #3d4250 !important;
-            border-radius: 4px !important;
-            padding: 10px 8px !important;
+            border-radius: 6px !important;
+            padding: 12px 10px !important;
             cursor: pointer !important;
             transition: all 0.15s ease !important;
-            min-height: 58px !important;
+            min-height: 68px !important;
             width: 100% !important;
         }
 
@@ -5982,18 +6021,24 @@
         /* DraftKings Style: Spread/Line is BIG, odds are small below - LARGER */
         .game-row .odds-btn .odds-line {
             color: #ffffff !important;
-            font-size: 17px !important;
+            font-size: 18px !important;
             font-weight: 700 !important;
-            margin-bottom: 3px !important;
+            margin-bottom: 4px !important;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
             line-height: 1.2 !important;
         }
 
         .game-row .odds-btn .odds-value {
             color: #a0a8b8 !important;
-            font-size: 13px !important;
-            font-weight: 500 !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        }
+
+        .game-scope-tab {
+            min-height: 46px !important;
+            font-size: 13px !important;
+            letter-spacing: 0.3px !important;
         }
 
         .game-row .odds-btn .odds-value.positive {
@@ -6034,28 +6079,28 @@
         /* Responsive DraftKings-style Sportsbook */
         @media (max-width: 768px) {
             .market-headers {
-                grid-template-columns: 1fr 80px 80px 95px !important;
-                padding: 10px 12px !important;
-                gap: 6px !important;
+                grid-template-columns: 1fr 92px 92px 108px !important;
+                padding: 12px 14px !important;
+                gap: 8px !important;
             }
 
             .market-headers .market-label {
-                font-size: 10px !important;
+                font-size: 11px !important;
             }
 
             .game-row .team-row {
-                grid-template-columns: 1fr 80px 80px 95px !important;
-                padding: 8px 12px !important;
-                gap: 6px !important;
+                grid-template-columns: 1fr 92px 92px 108px !important;
+                padding: 10px 14px !important;
+                gap: 8px !important;
             }
 
             .game-row .team-name {
-                font-size: 13px !important;
+                font-size: 15px !important;
             }
 
             .game-row .odds-btn {
-                padding: 6px 4px !important;
-                min-height: 46px !important;
+                padding: 8px 6px !important;
+                min-height: 54px !important;
             }
 
             .game-row .odds-btn .odds-line {
@@ -6063,7 +6108,12 @@
             }
 
             .game-row .odds-btn .odds-value {
-                font-size: 10px !important;
+                font-size: 11px !important;
+            }
+
+            .game-scope-tab {
+                min-height: 42px !important;
+                font-size: 12px !important;
             }
         }
 
