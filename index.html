@@ -715,18 +715,25 @@
             });
         };
 
-        // Prefer backend odds feed for all sports when available.
+        // Prefer normalized backend market board first, then raw odds feed.
         if (typeof api !== 'undefined' && api && api.ready) {
             Promise.resolve(api.ready).catch(function() {}).then(function() {
                 if (typeof api.request !== 'function' || !api.backendAvailable) {
                     throw new Error('Backend unavailable');
                 }
-                return api.request('/games/odds/' + encodeURIComponent(sportKey));
+                return api.request('/games/board/' + encodeURIComponent(sportKey)).then(function(response) {
+                    if (response && Array.isArray(response.games)) {
+                        return response.games;
+                    }
+                    throw new Error('Invalid backend board response');
+                }).catch(function() {
+                    return api.request('/games/odds/' + encodeURIComponent(sportKey));
+                });
             }).then(function(games) {
                 if (!Array.isArray(games)) {
-                    throw new Error('Invalid backend odds response');
+                    throw new Error('Invalid backend games response');
                 }
-                console.log('[TMR] Loaded backend odds feed for', sport, games.length);
+                console.log('[TMR] Loaded backend games feed for', sport, games.length);
                 window.TMR.currentGames = games;
                 var badge = document.getElementById('gamesCountBadge');
                 if (badge) badge.textContent = games.length + ' game' + (games.length !== 1 ? 's' : '');
@@ -736,7 +743,7 @@
                 }
                 window.TMR._renderGamesList(container, games, sport);
             }).catch(function(err) {
-                console.warn('[TMR] Backend odds feed unavailable, falling back:', err && err.message ? err.message : err);
+                console.warn('[TMR] Backend games feed unavailable, falling back:', err && err.message ? err.message : err);
                 loadEspnFallback();
             });
             return;
