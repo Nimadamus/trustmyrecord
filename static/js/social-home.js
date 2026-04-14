@@ -34,8 +34,6 @@ function formatMarketLabel(marketType) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    injectFeedVisualUpgrade();
-    injectFeedHero();
     await initAuth();
     await loadFeed();
     loadTrending();
@@ -79,62 +77,6 @@ async function initAuth() {
     document.getElementById('compInput').addEventListener('input', e => {
         document.getElementById('postBtn').disabled = e.target.value.trim().length === 0;
     });
-}
-
-function injectFeedVisualUpgrade() {
-    if (document.getElementById('tmr-feed-upgrade-style')) return;
-
-    const style = document.createElement('style');
-    style.id = 'tmr-feed-upgrade-style';
-    style.textContent = [
-        'body{background:radial-gradient(circle at top, rgba(14,165,233,0.12), transparent 20%),linear-gradient(180deg, #07111b, #0a0f17 22%, #0b1220 100%);}',
-        '.page-layout{position:relative;}',
-        '.main-feed,.left-sidebar,.right-sidebar{position:relative;z-index:1;}',
-        '.composer-card,.rs-card,.sidebar-card,.feed-item,.login-banner{border:1px solid rgba(255,255,255,0.08)!important;background:linear-gradient(180deg, rgba(16,23,34,0.95), rgba(11,17,27,0.92))!important;box-shadow:0 24px 60px rgba(0,0,0,0.24);}',
-        '.composer-card{overflow:hidden;}',
-        '.composer-card::before,.rs-card::before,.sidebar-card::before{content:"";display:block;height:1px;background:linear-gradient(90deg, transparent, rgba(125,211,252,0.7), transparent);}',
-        '.feed-tabs{padding:6px;border:1px solid rgba(255,255,255,0.08);border-radius:18px;background:rgba(8,13,22,0.78);backdrop-filter:blur(10px);}',
-        '.feed-tab{border-radius:14px!important;transition:all .18s ease;}',
-        '.feed-tab.active{background:linear-gradient(135deg, #06b6d4, #22c55e)!important;color:#04111c!important;box-shadow:0 12px 26px rgba(6,182,212,0.24);}',
-        '.feed-item{border-radius:22px!important;overflow:hidden;}',
-        '.fi-avatar,.composer-avatar{box-shadow:0 10px 24px rgba(0,0,0,0.22);}',
-        '.fi-content{font-size:1.02rem;line-height:1.7;}',
-        '.fi-actions{border-top:1px solid rgba(255,255,255,0.06);padding-top:14px;}',
-        '.load-more-btn,.btn-primary{box-shadow:0 14px 30px rgba(34,197,94,0.18);}',
-        '@media (max-width: 900px){.page-layout{padding-top:12px;}}'
-    ].join('');
-    document.head.appendChild(style);
-}
-
-function injectFeedHero() {
-    const mainFeed = document.querySelector('.main-feed');
-    const composerCard = document.getElementById('composerCard');
-    if (!mainFeed || !composerCard || document.getElementById('tmrFeedHero')) return;
-
-    const hero = document.createElement('section');
-    hero.id = 'tmrFeedHero';
-    hero.style.cssText = [
-        'margin-bottom:18px',
-        'padding:24px 24px 20px',
-        'border-radius:24px',
-        'border:1px solid rgba(255,255,255,0.08)',
-        'background:radial-gradient(circle at top right, rgba(34,197,94,0.18), transparent 28%),radial-gradient(circle at top left, rgba(6,182,212,0.18), transparent 24%),linear-gradient(160deg, rgba(15,23,42,0.96), rgba(9,14,22,0.96))',
-        'box-shadow:0 28px 70px rgba(0,0,0,0.28)'
-    ].join(';');
-    hero.innerHTML = [
-        '<div style="display:flex;justify-content:space-between;gap:18px;align-items:flex-start;flex-wrap:wrap;">',
-        '<div style="max-width:640px;">',
-        '<div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#7dd3fc;font-weight:800;margin-bottom:10px;">Live Feed</div>',
-        '<h1 style="margin:0 0 10px 0;font-size:clamp(2rem,4vw,3.4rem);line-height:0.95;color:#f8fafc;">The timeline for real cappers.</h1>',
-        '<p style="margin:0;color:#b8c4d6;line-height:1.7;font-size:1rem;">See picks, hot takes, polls, and grading activity in one stream built around proof instead of noise.</p>',
-        '</div>',
-        '<div style="display:grid;gap:10px;min-width:250px;flex:1 1 260px;">',
-        '<div style="padding:12px 14px;border-radius:16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);"><div style="font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#86efac;font-weight:700;">Signal</div><div style="margin-top:4px;font-weight:700;color:#f8fafc;">Picks, grades, and conversation in one place</div></div>',
-        '<div style="padding:12px 14px;border-radius:16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);"><div style="font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#fcd34d;font-weight:700;">Use it</div><div style="margin-top:4px;font-weight:700;color:#f8fafc;">Post a take, tail a capper, or challenge a record</div></div>',
-        '</div>',
-        '</div>'
-    ].join('');
-    mainFeed.insertBefore(hero, composerCard);
 }
 
 async function loadSidebarStats(user) {
@@ -346,6 +288,7 @@ async function loadFeed() {
     clearTimeout(_feedSlowTimer); clearTimeout(_feedRetryTimer);
 
     if (!items.length) {
+        updateHeroCounts(0);
         const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
         const message = currentFilter === 'following'
             ? 'No posts from followed accounts yet.'
@@ -354,8 +297,25 @@ async function loadFeed() {
         return;
     }
 
+    updateHeroCounts(items.length);
     c.innerHTML = items.map(renderFeedItem).join('');
     document.getElementById('loadMore').style.display = items.length >= FEED_LIMIT ? 'block' : 'none';
+}
+
+function updateHeroCounts(visibleCount) {
+    const visibleEl = document.getElementById('heroVisibleCount');
+    const filterEl = document.getElementById('heroFilterLabel');
+    if (visibleEl) visibleEl.textContent = String(visibleCount || 0);
+    if (filterEl) {
+        const labels = {
+            all: 'For You',
+            picks: 'Picks',
+            'hot-takes': 'Hot Takes',
+            polls: 'Polls',
+            following: 'Following'
+        };
+        filterEl.textContent = labels[currentFilter] || 'For You';
+    }
 }
 
 // ==================== RENDER FEED ITEM (UNIFIED) ====================
@@ -679,12 +639,14 @@ function loadMorePosts() {
 // ==================== SIDEBAR ====================
 async function loadTrending() {
     const el = document.getElementById('trendingList');
+    const heroTrending = document.getElementById('heroTrendingCount');
     if (!el) return;
     try {
         if (api.backendAvailable) {
             const data = await api.request('/social/discover?limit=5');
             const picks = data.picks || [];
             if (picks.length) {
+                if (heroTrending) heroTrending.textContent = String(picks.length);
                 setRailCardVisibility('trendingList', true);
                 el.innerHTML = picks.map((p, i) => {
                     const sport = (p.sport_key || '').split('_')[1]?.toUpperCase() || '';
@@ -694,18 +656,21 @@ async function loadTrending() {
             }
         }
     } catch(e) {}
+    if (heroTrending) heroTrending.textContent = '0';
     el.innerHTML = '';
     setRailCardVisibility('trendingList', false);
 }
 
 async function loadSuggested() {
     const el = document.getElementById('suggestedList');
+    const heroSuggested = document.getElementById('heroSuggestedCount');
     if (!el) return;
     try {
         if (api.backendAvailable) {
             const data = await api.request('/users?limit=5');
             const users = (data.users || []).filter(u => !viewerUser || String(u.id) !== String(viewerUser.id));
             if (users.length) {
+                if (heroSuggested) heroSuggested.textContent = String(users.length);
                 setRailCardVisibility('suggestedList', true);
                 el.innerHTML = users.map(u => {
                     const isFollowing = followingUserIds.has(String(u.id));
@@ -727,6 +692,7 @@ async function loadSuggested() {
             }
         }
     } catch(e) {}
+    if (heroSuggested) heroSuggested.textContent = '0';
     el.innerHTML = '';
     setRailCardVisibility('suggestedList', false);
 }
