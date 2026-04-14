@@ -106,12 +106,20 @@
 
     async function waitForApi() {
         if (!window.api) return null;
+        if (typeof window.api.loadTokens === 'function') {
+            try { window.api.loadTokens(); } catch (error) {}
+        }
         if (window.api.ready) {
             try { await window.api.ready; } catch (error) {}
         }
         if (!window.api.backendAvailable && typeof window.api.detectBackend === 'function') {
             try {
                 await window.api.detectBackend();
+            } catch (error) {}
+        }
+        if (!window.api.token && window.api.refreshToken && typeof window.api.refreshAccessToken === 'function') {
+            try {
+                await window.api.refreshAccessToken();
             } catch (error) {}
         }
         if (!window.api.backendAvailable) {
@@ -179,7 +187,18 @@
                     signal: AbortSignal.timeout(timeoutMs)
                 });
                 if (!response.ok) {
-                    const message = await response.text().catch(function() { return ''; });
+                    const rawMessage = await response.text().catch(function() { return ''; });
+                    let message = rawMessage;
+                    try {
+                        const parsed = JSON.parse(rawMessage || '{}');
+                        if (parsed) {
+                            message = parsed.error || parsed.message;
+                            if (!message && Array.isArray(parsed.errors) && parsed.errors.length) {
+                                const first = parsed.errors[0] || {};
+                                message = first.msg || first.message;
+                            }
+                        }
+                    } catch (error) {}
                     throw new Error(message || ('HTTP ' + response.status + ' from ' + base));
                 }
                 return await response.json();
@@ -976,6 +995,10 @@
             return;
         }
 
+        if (window.api && typeof window.api.loadTokens === 'function') {
+            try { window.api.loadTokens(); } catch (error) {}
+        }
+
         try {
             const api = await getApiClientOrFallback();
             const response = await api.createPick({
@@ -1111,9 +1134,9 @@
         window.tmrSportsbookRefresh = refreshCurrentSport;
         lockFunction(window, 'selectSportAndShowGames', selectSportAndShowGames);
         lockFunction(window, 'submitPick', lockInPick);
+        lockFunction(window, 'lockInPick', lockInPick);
         window.selectGameBet = function() {};
         window.updatePickSummary = updatePickSummary;
-        window.lockInPick = lockInPick;
         lockFunction(window, 'loadGamesWithAllBets', loadGamesWithAllBetsOverride);
         lockFunction(window, 'loadMyPicks', loadMyPicks);
         lockFunction(window, 'loadMyRecordPage', loadMyRecordPage);
