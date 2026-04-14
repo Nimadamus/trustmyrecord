@@ -647,27 +647,9 @@
         var sportKey = window.TMR.sportKeyMap[sport];
         if (!sportKey) { container.innerHTML = '<div class="no-games-message"><h4>Unknown sport</h4></div>'; return; }
 
-        // NHL: Use dedicated market module for correct puck lines (±1.5 always)
-        if (sport === 'NHL' && window.NHL_MARKETS) {
-            console.log('[TMR] Using NHL_MARKETS module for correct puck lines');
-            window.NHL_MARKETS.fetchGames().then(function(games) {
-                window.TMR.currentGames = games;
-                var badge = document.getElementById('gamesCountBadge');
-                if (badge) badge.textContent = games.length + ' game' + (games.length !== 1 ? 's' : '');
-                if (games.length === 0) {
-                    container.innerHTML = '<div class="no-games"><div class="no-games-icon">📅</div><h3>No NHL Games Available</h3><p>Check back later for upcoming matchups</p></div>';
-                    return;
-                }
-                window.TMR._renderGamesList(container, games, sport);
-            }).catch(function(err) {
-                console.error('[TMR] NHL_MARKETS error:', err);
-                container.innerHTML = '<div class="no-games-message"><h4>Error loading NHL games</h4><p>' + err.message + '</p></div>';
-            });
-            return;
-        }
-
-        console.log('[TMR] Calling ESPN for ' + sportKey);
-        window.TMR.fetchGamesFromESPN(sportKey, function(games, daysOffset) {
+        var loadEspnFallback = function() {
+            console.log('[TMR] Calling ESPN for ' + sportKey);
+            window.TMR.fetchGamesFromESPN(sportKey, function(games, daysOffset) {
             if (games === null) {
                 console.error('[TMR] ESPN ERROR:', daysOffset);
                 container.innerHTML = '<div class="no-games-message"><h4>Error loading games</h4><p>' + (daysOffset?.message || 'Unknown error') + '</p></div>';
@@ -691,7 +673,37 @@
                 return;
             }
             window.TMR._renderGamesList(container, games, sport);
-        });
+            });
+        };
+
+        // Prefer backend odds feed for all sports when available.
+        if (typeof api !== 'undefined' && api && api.ready) {
+            Promise.resolve(api.ready).catch(function() {}).then(function() {
+                if (typeof api.request !== 'function' || !api.backendAvailable) {
+                    throw new Error('Backend unavailable');
+                }
+                return api.request('/games/odds/' + encodeURIComponent(sportKey));
+            }).then(function(games) {
+                if (!Array.isArray(games)) {
+                    throw new Error('Invalid backend odds response');
+                }
+                console.log('[TMR] Loaded backend odds feed for', sport, games.length);
+                window.TMR.currentGames = games;
+                var badge = document.getElementById('gamesCountBadge');
+                if (badge) badge.textContent = games.length + ' game' + (games.length !== 1 ? 's' : '');
+                if (games.length === 0) {
+                    container.innerHTML = '<div class="no-games"><div class="no-games-icon">📅</div><h3>No Games Available</h3><p>Check back later for upcoming matchups</p></div>';
+                    return;
+                }
+                window.TMR._renderGamesList(container, games, sport);
+            }).catch(function(err) {
+                console.warn('[TMR] Backend odds feed unavailable, falling back:', err && err.message ? err.message : err);
+                loadEspnFallback();
+            });
+            return;
+        }
+
+        loadEspnFallback();
     };
 
     // Core function - Select Game Bet (when user clicks an odds button)
@@ -17418,7 +17430,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="static/js/forums.js?v=20251208c"></script>
     <!-- forms.js REMOVED - forms-fixed.js handles login/signup -->
     <script src="static/js/navigation.js?v=20251208c"></script>
-    <script src="static/js/sportsbook-production-fix.js?v=20260413b"></script>
+    <script src="static/js/sportsbook-production-fix.js?v=20260413c"></script>
     <script src="static/js/effects.js?v=20251208c"></script>
 
     <script src="static/js/app.js?v=20260122"></script>

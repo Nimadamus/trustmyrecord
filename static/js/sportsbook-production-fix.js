@@ -689,6 +689,13 @@
     }
 
     function boot() {
+        const pathname = String(window.location && window.location.pathname || '').toLowerCase();
+        const isHomepage = pathname === '/' || pathname.endsWith('/index.html') || pathname === '/index';
+        if (isHomepage) {
+            console.log('[TMR] sportsbook-production-fix skipped on homepage');
+            return;
+        }
+
         injectStyles();
         ensureMetadataFields();
         disableLegacyFeed();
