@@ -555,6 +555,52 @@
         }
     };
 
+    window.TMR.fetchBackendGamesDirect = function(sportKey) {
+        var bases = [];
+        if (typeof CONFIG !== 'undefined' && CONFIG && CONFIG.api) {
+            if (CONFIG.api.baseUrl) bases.push(CONFIG.api.baseUrl);
+            if (Array.isArray(CONFIG.api.fallbackUrls)) {
+                CONFIG.api.fallbackUrls.forEach(function(url) { if (url) bases.push(url); });
+            }
+        }
+        bases.push('https://trustmyrecord-api.onrender.com/api');
+        bases = bases.filter(function(base, index, arr) { return base && arr.indexOf(base) === index; });
+
+        var tryBase = function(baseIndex) {
+            if (baseIndex >= bases.length) {
+                return Promise.reject(new Error('No backend feeds available'));
+            }
+            var base = String(bases[baseIndex]).replace(/\/$/, '');
+            var headers = {};
+            if (base.indexOf('loca.lt') !== -1) headers['bypass-tunnel-reminder'] = 'true';
+
+            var readJson = function(path) {
+                return fetch(base + path, {
+                    headers: headers,
+                    signal: AbortSignal.timeout(20000)
+                }).then(function(response) {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.json();
+                });
+            };
+
+            return readJson('/games/board/' + encodeURIComponent(sportKey)).then(function(payload) {
+                if (payload && Array.isArray(payload.games)) return payload.games;
+                throw new Error('Invalid board payload');
+            }).catch(function() {
+                return readJson('/games/odds/' + encodeURIComponent(sportKey)).then(function(payload) {
+                    if (Array.isArray(payload)) return payload;
+                    if (payload && Array.isArray(payload.games)) return payload.games;
+                    throw new Error('Invalid odds payload');
+                });
+            }).catch(function() {
+                return tryBase(baseIndex + 1);
+            });
+        };
+
+        return tryBase(0);
+    };
+
     // Shared game list renderer used by both generic and NHL paths
     window.TMR._renderGamesList = function(container, games, sport) {
         // Validate each game's odds quality
@@ -732,41 +778,23 @@
             });
         };
 
-        // Prefer normalized backend market board first, then raw odds feed.
-        if (typeof api !== 'undefined' && api && api.ready) {
-            Promise.resolve(api.ready).catch(function() {}).then(function() {
-                if (typeof api.request !== 'function' || !api.backendAvailable) {
-                    throw new Error('Backend unavailable');
-                }
-                return api.request('/games/board/' + encodeURIComponent(sportKey)).then(function(response) {
-                    if (response && Array.isArray(response.games)) {
-                        return response.games;
-                    }
-                    throw new Error('Invalid backend board response');
-                }).catch(function() {
-                    return api.request('/games/odds/' + encodeURIComponent(sportKey));
-                });
-            }).then(function(games) {
-                if (!Array.isArray(games)) {
-                    throw new Error('Invalid backend games response');
-                }
-                console.log('[TMR] Loaded backend games feed for', sport, games.length);
-                window.TMR.currentGames = games;
-                var badge = document.getElementById('gamesCountBadge');
-                if (badge) badge.textContent = games.length + ' game' + (games.length !== 1 ? 's' : '');
-                if (games.length === 0) {
-                    container.innerHTML = '<div class="no-games"><div class="no-games-icon">📅</div><h3>No Games Available</h3><p>Check back later for upcoming matchups</p></div>';
-                    return;
-                }
-                window.TMR.renderGamesSafely(container, games, sport);
-            }).catch(function(err) {
-                console.warn('[TMR] Backend games feed unavailable, falling back:', err && err.message ? err.message : err);
-                loadEspnFallback();
-            });
-            return;
-        }
-
-        loadEspnFallback();
+        window.TMR.fetchBackendGamesDirect(sportKey).then(function(games) {
+            if (!Array.isArray(games)) {
+                throw new Error('Invalid backend games response');
+            }
+            console.log('[TMR] Loaded backend games feed for', sport, games.length);
+            window.TMR.currentGames = games;
+            var badge = document.getElementById('gamesCountBadge');
+            if (badge) badge.textContent = games.length + ' game' + (games.length !== 1 ? 's' : '');
+            if (games.length === 0) {
+                container.innerHTML = '<div class="no-games"><div class="no-games-icon">📅</div><h3>No Games Available</h3><p>Check back later for upcoming matchups</p></div>';
+                return;
+            }
+            window.TMR.renderGamesSafely(container, games, sport);
+        }).catch(function(err) {
+            console.warn('[TMR] Direct backend games feed unavailable, falling back:', err && err.message ? err.message : err);
+            loadEspnFallback();
+        });
     };
 
     // Core function - Select Game Bet (when user clicks an odds button)
