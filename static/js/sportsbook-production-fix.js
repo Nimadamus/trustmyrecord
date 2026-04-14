@@ -328,6 +328,10 @@
             const h2h = markets.find(function(market) { return market.key === 'h2h'; }) || null;
             const spreads = markets.find(function(market) { return market.key === 'spreads'; }) || null;
             const totals = markets.find(function(market) { return market.key === 'totals'; }) || null;
+            const teamTotals = markets.find(function(market) { return market.key === 'team_totals'; }) || null;
+            const f5H2h = markets.find(function(market) { return market.key === 'f5_h2h'; }) || null;
+            const f5Spreads = markets.find(function(market) { return market.key === 'f5_spreads'; }) || null;
+            const f5Totals = markets.find(function(market) { return market.key === 'f5_totals'; }) || null;
             const awayMl = h2h && h2h.outcomes ? h2h.outcomes.find(function(outcome) { return outcome.name === game.away_team; }) : null;
             const homeMl = h2h && h2h.outcomes ? h2h.outcomes.find(function(outcome) { return outcome.name === game.home_team; }) : null;
             const awaySpread = spreads && spreads.outcomes ? spreads.outcomes.find(function(outcome) { return outcome.name === game.away_team; }) : null;
@@ -355,6 +359,50 @@
                 });
             }
 
+            if (teamTotals && Array.isArray(teamTotals.outcomes) && teamTotals.outcomes.length) {
+                marketGroups.push({
+                    key: 'team_totals',
+                    label: 'Team Totals',
+                    items: teamTotals.outcomes.map(function(outcome) {
+                        return createFallbackOption(
+                            game,
+                            index,
+                            'Team Totals',
+                            'team_totals',
+                            outcome.name,
+                            outcome.point != null ? (outcome.name + ' ' + outcome.point) : outcome.name,
+                            outcome.price,
+                            outcome.point != null ? outcome.point : null,
+                            bookmaker ? bookmaker.title : 'Sportsbook feed'
+                        );
+                    })
+                });
+            }
+
+            if (sportKey === 'baseball_mlb' && f5H2h && f5Spreads && f5Totals) {
+                const f5AwayMl = f5H2h.outcomes ? f5H2h.outcomes.find(function(outcome) { return outcome.name === game.away_team; }) : null;
+                const f5HomeMl = f5H2h.outcomes ? f5H2h.outcomes.find(function(outcome) { return outcome.name === game.home_team; }) : null;
+                const f5AwaySpread = f5Spreads.outcomes ? f5Spreads.outcomes.find(function(outcome) { return outcome.name === game.away_team; }) : null;
+                const f5HomeSpread = f5Spreads.outcomes ? f5Spreads.outcomes.find(function(outcome) { return outcome.name === game.home_team; }) : null;
+                const f5Over = f5Totals.outcomes ? f5Totals.outcomes.find(function(outcome) { return outcome.name === 'Over'; }) : null;
+                const f5Under = f5Totals.outcomes ? f5Totals.outcomes.find(function(outcome) { return outcome.name === 'Under'; }) : null;
+                const first5Items = [];
+                if (f5AwaySpread) first5Items.push(createFallbackOption(game, index, 'First 5', 'f5_spreads', game.away_team, game.away_team + ' ' + (f5AwaySpread.point > 0 ? '+' : '') + f5AwaySpread.point, f5AwaySpread.price, f5AwaySpread.point, bookmaker ? bookmaker.title : 'Sportsbook feed'));
+                if (f5HomeSpread) first5Items.push(createFallbackOption(game, index, 'First 5', 'f5_spreads', game.home_team, game.home_team + ' ' + (f5HomeSpread.point > 0 ? '+' : '') + f5HomeSpread.point, f5HomeSpread.price, f5HomeSpread.point, bookmaker ? bookmaker.title : 'Sportsbook feed'));
+                if (f5AwayMl) first5Items.push(createFallbackOption(game, index, 'First 5', 'f5_h2h', game.away_team, game.away_team + ' F5 ML', f5AwayMl.price, null, bookmaker ? bookmaker.title : 'Sportsbook feed'));
+                if (f5HomeMl) first5Items.push(createFallbackOption(game, index, 'First 5', 'f5_h2h', game.home_team, game.home_team + ' F5 ML', f5HomeMl.price, null, bookmaker ? bookmaker.title : 'Sportsbook feed'));
+                if (f5Over) first5Items.push(createFallbackOption(game, index, 'First 5', 'f5_totals', 'Over', 'F5 Over ' + f5Over.point, f5Over.price, f5Over.point, bookmaker ? bookmaker.title : 'Sportsbook feed'));
+                if (f5Under) first5Items.push(createFallbackOption(game, index, 'First 5', 'f5_totals', 'Under', 'F5 Under ' + f5Under.point, f5Under.price, f5Under.point, bookmaker ? bookmaker.title : 'Sportsbook feed'));
+                if (first5Items.length) {
+                    marketGroups.push({
+                        key: 'first_5',
+                        label: 'First 5',
+                        items: first5Items
+                    });
+                }
+            }
+
+            /*
             if (sportKey === 'baseball_mlb' && awayMl && homeMl && over && under) {
                 const f5Total = Math.round(Number(over.point) * 0.55 * 2) / 2;
                 marketGroups.push({
@@ -370,6 +418,7 @@
                     ]
                 });
             }
+            */
 
             return Object.assign({}, game, {
                 updated_at: game.updated_at || game.commence_time,

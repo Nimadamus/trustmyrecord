@@ -632,6 +632,7 @@
             var homeML = null, awayML = null, total = null, overPrice = null, underPrice = null;
             var f5HomeSpread = {point: null, price: null}, f5AwaySpread = {point: null, price: null};
             var f5HomeML = null, f5AwayML = null, f5Total = null, f5OverPrice = null, f5UnderPrice = null;
+            var teamTotals = [];
             markets.forEach(function(m) {
                 if (m.key === 'spreads') m.outcomes.forEach(function(o) {
                     if (o.name === game.home_team) homeSpread = {point: o.point, price: o.price};
@@ -657,6 +658,9 @@
                     if (o.name === 'Over') { f5Total = o.point; f5OverPrice = o.price; }
                     else f5UnderPrice = o.price;
                 });
+                if (m.key === 'team_totals' && Array.isArray(m.outcomes)) {
+                    teamTotals = m.outcomes.slice();
+                }
             });
             var gameTime = new Date(game.commence_time).toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'});
             var fmtSpread = function(p) { return p == null ? '' : (p > 0 ? '+' + p : '' + p); };
@@ -672,15 +676,9 @@
             var totLine = function(lbl) { return showOddsValues && total != null ? lbl.charAt(0) + ' ' + total : lbl; };
             var totOdds = function(o) { return showOddsValues && o != null ? fmtOdds(o) : 'Pick'; };
             var isMLB = sport === 'MLB';
-            if (f5Total == null && total != null) f5Total = Math.round(total * 0.55 * 2) / 2;
-            if (f5HomeML == null) f5HomeML = homeML;
-            if (f5AwayML == null) f5AwayML = awayML;
-            if (f5HomeSpread.point == null && f5AwaySpread.point == null) {
-                f5AwaySpread = { point: 0.5, price: -118 };
-                f5HomeSpread = { point: -0.5, price: -102 };
-            }
-            if (f5OverPrice == null) f5OverPrice = -110;
-            if (f5UnderPrice == null) f5UnderPrice = -110;
+            var hasFirst5Markets = f5HomeML != null && f5AwayML != null &&
+                f5HomeSpread.point != null && f5AwaySpread.point != null &&
+                f5Total != null && f5OverPrice != null && f5UnderPrice != null;
             var f5Line = function(lbl) { return showOddsValues && f5Total != null ? lbl.charAt(0) + ' ' + f5Total : lbl; };
             var renderRows = function(scopePrefix, awaySpreadObj, homeSpreadObj, awayMlValue, homeMlValue, totalValue, overValue, underValue, totalLineFn) {
                 var awaySpreadType = scopePrefix === 'f5' ? 'f5spread' : 'spread';
@@ -709,7 +707,7 @@
             }
             html += '<div class="game-row game-row-group" data-game-index="' + index + '">' +
                 '<div class="game-time-header"><span class="game-time">' + gameTime + sourceIndicator + '</span></div>';
-            if (isMLB) {
+            if (isMLB && hasFirst5Markets) {
                 html += '<div style="display:flex;gap:0;margin:6px 10px 12px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);">' +
                     '<button type="button" class="game-scope-tab active" data-scope="full" onclick="window.TMR.setGameMarketScope(' + index + ',\'full\')" style="flex:1;padding:9px 12px;background:var(--gradient-gold);border:none;color:var(--dark-bg);font-size:12px;font-weight:700;cursor:pointer;">Full Game</button>' +
                     '<button type="button" class="game-scope-tab" data-scope="f5" onclick="window.TMR.setGameMarketScope(' + index + ',\'f5\')" style="flex:1;padding:9px 12px;background:var(--card-bg);border:none;border-left:1px solid rgba(255,255,255,0.08);color:var(--text-primary);font-size:12px;font-weight:700;cursor:pointer;">5 Innings</button>' +
@@ -718,7 +716,7 @@
             html += '<div class="game-market-scope" data-scope="full">' +
                 renderRows('full', awaySpread, homeSpread, awayML, homeML, total, overPrice, underPrice, totLine) +
                 '</div>';
-            if (isMLB) {
+            if (isMLB && hasFirst5Markets) {
                 html += '<div class="game-market-scope" data-scope="f5" style="display:none;">' +
                     renderRows('f5', f5AwaySpread, f5HomeSpread, f5AwayML, f5HomeML, f5Total, f5OverPrice, f5UnderPrice, f5Line) +
                     '</div>';
