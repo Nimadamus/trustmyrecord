@@ -538,6 +538,23 @@
         });
     };
 
+    window.TMR.renderGamesSafely = function(container, games, sport) {
+        try {
+            window.TMR._renderGamesList(container, games, sport);
+        } catch (error) {
+            console.error('[TMR] Primary games renderer failed:', error);
+            try {
+                if (typeof window.renderGamesWithAllBets === 'function') {
+                    window.renderGamesWithAllBets(games);
+                    return;
+                }
+            } catch (fallbackError) {
+                console.error('[TMR] Legacy games renderer failed:', fallbackError);
+            }
+            container.innerHTML = '<div class="no-games-message"><h4>Unable to display games</h4><p>Please refresh and try again.</p></div>';
+        }
+    };
+
     // Shared game list renderer used by both generic and NHL paths
     window.TMR._renderGamesList = function(container, games, sport) {
         // Validate each game's odds quality
@@ -711,7 +728,7 @@
                 container.innerHTML = '<div class="no-games"><div class="no-games-icon">📅</div><h3>No Games Available</h3><p>Check back later for upcoming matchups</p></div>';
                 return;
             }
-            window.TMR._renderGamesList(container, games, sport);
+            window.TMR.renderGamesSafely(container, games, sport);
             });
         };
 
@@ -741,7 +758,7 @@
                     container.innerHTML = '<div class="no-games"><div class="no-games-icon">📅</div><h3>No Games Available</h3><p>Check back later for upcoming matchups</p></div>';
                     return;
                 }
-                window.TMR._renderGamesList(container, games, sport);
+                window.TMR.renderGamesSafely(container, games, sport);
             }).catch(function(err) {
                 console.warn('[TMR] Backend games feed unavailable, falling back:', err && err.message ? err.message : err);
                 loadEspnFallback();
