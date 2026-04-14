@@ -12,46 +12,53 @@
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #0f1117;
-            --bg-secondary: #161920;
-            --bg-card: #1c1f2a;
-            --bg-card-hover: #222636;
-            --border-color: #2a2e3d;
-            --border-light: #353a4d;
-            --text-primary: #f0f2f5;
-            --text-secondary: #9ba3b5;
-            --text-muted: #6b7280;
+            --bg-primary: #08111e;
+            --bg-secondary: #101b2d;
+            --bg-card: rgba(11, 23, 42, 0.86);
+            --bg-card-hover: rgba(18, 35, 63, 0.92);
+            --bg-card-strong: #0f213b;
+            --border-color: rgba(150, 179, 214, 0.16);
+            --border-light: rgba(162, 189, 221, 0.26);
+            --text-primary: #eef4ff;
+            --text-secondary: #b8c7dd;
+            --text-muted: #7f93b0;
             --accent-green: #22c55e;
             --accent-green-bg: rgba(34, 197, 94, 0.12);
             --accent-red: #ef4444;
             --accent-red-bg: rgba(239, 68, 68, 0.12);
-            --accent-blue: #3b82f6;
-            --accent-blue-bg: rgba(59, 130, 246, 0.12);
-            --accent-gold: #f59e0b;
+            --accent-blue: #58a6ff;
+            --accent-blue-bg: rgba(88, 166, 255, 0.14);
+            --accent-gold: #f5c96a;
             --accent-gray: #6b7280;
             --accent-gray-bg: rgba(107, 114, 128, 0.15);
+            --shadow-soft: 0 24px 60px rgba(3, 10, 21, 0.34);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
             line-height: 1.5;
+            background-image:
+                radial-gradient(circle at top left, rgba(88, 166, 255, 0.16), transparent 28%),
+                radial-gradient(circle at top right, rgba(34, 197, 94, 0.12), transparent 20%),
+                linear-gradient(180deg, #09111f 0%, #0a1423 35%, #08111e 100%);
         }
 
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+        .container { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
 
         /* ==================== HEADER ==================== */
         header {
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
+            background: rgba(8, 16, 28, 0.82);
+            border-bottom: 1px solid rgba(150, 179, 214, 0.12);
+            backdrop-filter: blur(18px);
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -61,15 +68,17 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            height: 56px;
+            min-height: 72px;
+            gap: 20px;
         }
 
         .logo {
-            font-size: 1.25rem;
-            font-weight: 900;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 700;
             color: var(--text-primary);
             text-decoration: none;
-            letter-spacing: -0.5px;
+            letter-spacing: -0.04em;
         }
         .logo span { color: var(--accent-blue); }
 
@@ -79,123 +88,202 @@
             color: var(--text-secondary);
             text-decoration: none;
             font-weight: 500;
-            font-size: 0.875rem;
-            padding: 8px 14px;
-            border-radius: 6px;
+            font-size: 0.9rem;
+            padding: 10px 14px;
+            border-radius: 999px;
             transition: all 0.2s;
         }
-        nav a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
-        nav a.active { color: var(--text-primary); background: rgba(59, 130, 246, 0.15); }
+        nav a:hover {
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.05);
+        }
+        nav a.active {
+            color: var(--text-primary);
+            background: rgba(88, 166, 255, 0.16);
+            box-shadow: inset 0 0 0 1px rgba(88, 166, 255, 0.18);
+        }
 
         /* ==================== PROFILE HEADER ==================== */
         .profile-header-section {
-            padding: 32px 0 24px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 36px 0 18px;
         }
 
         .profile-header {
             display: flex;
             gap: 24px;
             align-items: center;
+            padding: 34px;
+            border: 1px solid var(--border-color);
+            border-radius: 28px;
+            background:
+                linear-gradient(135deg, rgba(88, 166, 255, 0.16), rgba(8, 17, 30, 0) 42%),
+                linear-gradient(180deg, rgba(17, 32, 56, 0.92), rgba(10, 18, 33, 0.92));
+            box-shadow: var(--shadow-soft);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-header::before {
+            content: '';
+            position: absolute;
+            inset: auto -10% -55% 45%;
+            height: 220px;
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.22), transparent 68%);
+            pointer-events: none;
         }
 
         .profile-avatar {
-            width: 72px;
-            height: 72px;
+            width: 92px;
+            height: 92px;
             border-radius: 50%;
-            background: var(--accent-blue);
+            background: linear-gradient(135deg, #58a6ff, #1d4ed8);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.75rem;
+            font-size: 2rem;
             font-weight: 800;
             color: #fff;
             flex-shrink: 0;
+            box-shadow: 0 18px 40px rgba(6, 18, 34, 0.32);
+            border: 3px solid rgba(255,255,255,0.08);
         }
 
         .profile-info { flex: 1; }
-        .profile-name { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 2px; }
-        .profile-handle { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 8px; }
-        .profile-bio { color: var(--text-secondary); font-size: 0.9rem; max-width: 500px; }
-        .profile-meta { display: flex; gap: 20px; margin-top: 10px; flex-wrap: wrap; }
-        .profile-meta-item { color: var(--text-muted); font-size: 0.8rem; }
+        .profile-name {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(1.8rem, 3vw, 2.5rem);
+            font-weight: 700;
+            letter-spacing: -0.05em;
+            margin-bottom: 4px;
+        }
+        .profile-handle {
+            color: #93a9c7;
+            font-size: 0.94rem;
+            margin-bottom: 12px;
+        }
+        .profile-bio {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            max-width: 640px;
+        }
+        .profile-meta {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .profile-meta-item {
+            color: #d7e4f7;
+            font-size: 0.82rem;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(172, 196, 226, 0.14);
+            background: rgba(9, 20, 36, 0.55);
+        }
 
         .profile-actions { display: flex; gap: 10px; margin-top: 12px; }
         .btn {
-            padding: 8px 20px;
+            padding: 10px 18px;
             border: none;
-            border-radius: 6px;
+            border-radius: 999px;
             font-family: inherit;
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: 0.88rem;
             cursor: pointer;
             transition: all 0.2s;
         }
-        .btn-primary { background: var(--accent-blue); color: #fff; }
-        .btn-primary:hover { background: #2563eb; }
-        .btn-secondary { background: transparent; border: 1px solid var(--border-light); color: var(--text-secondary); }
-        .btn-secondary:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+        .btn-primary {
+            background: linear-gradient(135deg, #58a6ff, #2f6feb);
+            color: #fff;
+            box-shadow: 0 14px 30px rgba(34, 98, 198, 0.3);
+        }
+        .btn-primary:hover { transform: translateY(-1px); }
+        .btn-secondary {
+            background: rgba(12, 22, 38, 0.72);
+            border: 1px solid var(--border-light);
+            color: var(--text-secondary);
+        }
+        .btn-secondary:hover {
+            border-color: rgba(200, 218, 240, 0.3);
+            color: var(--text-primary);
+            background: rgba(18, 32, 55, 0.88);
+        }
 
         /* ==================== SUMMARY BAR ==================== */
-        .summary-bar { padding: 24px 0; border-bottom: 1px solid var(--border-color); }
+        .summary-bar { padding: 8px 0 26px; }
 
-        .summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; }
+        .summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
 
         .summary-stat {
-            text-align: center;
-            padding: 16px 12px;
+            text-align: left;
+            padding: 18px 18px 16px;
             position: relative;
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            background: linear-gradient(180deg, rgba(12, 24, 43, 0.92), rgba(10, 18, 33, 0.92));
+            box-shadow: 0 16px 34px rgba(3, 10, 21, 0.16);
         }
 
-        .summary-stat:not(:last-child)::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 20%;
-            height: 60%;
-            width: 1px;
-            background: var(--border-color);
+        .summary-stat-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.85rem;
+            font-weight: 700;
+            letter-spacing: -0.06em;
+            margin-bottom: 4px;
         }
-
-        .summary-stat-value { font-size: 1.75rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 4px; }
-        .summary-stat-label { color: var(--text-muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .summary-stat-label {
+            color: var(--text-muted);
+            font-size: 0.74rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
 
         .positive { color: var(--accent-green); }
         .negative { color: var(--accent-red); }
         .neutral { color: var(--text-primary); }
 
         /* ==================== PICKS TABLE ==================== */
-        .picks-section { padding: 24px 0; }
+        .picks-section { padding: 0 0 24px; }
 
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .section-title { font-size: 1rem; font-weight: 700; }
-        .section-subtitle { color: var(--text-muted); font-size: 0.8rem; }
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.04rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+        }
+        .section-subtitle { color: var(--text-muted); font-size: 0.84rem; }
 
         .picks-table-wrapper {
-            background: var(--bg-card);
+            background: linear-gradient(180deg, rgba(11, 23, 42, 0.96), rgba(9, 18, 33, 0.96));
             border: 1px solid var(--border-color);
-            border-radius: 10px;
+            border-radius: 22px;
             overflow: hidden;
+            box-shadow: var(--shadow-soft);
         }
 
         .picks-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 
-        .picks-table thead { background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); }
+        .picks-table thead {
+            background: rgba(16, 27, 45, 0.92);
+            border-bottom: 1px solid var(--border-color);
+        }
 
         .picks-table th {
-            padding: 12px 16px;
+            padding: 14px 18px;
             text-align: left;
             font-weight: 600;
             font-size: 0.75rem;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.12em;
             white-space: nowrap;
         }
 
         .picks-table td {
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 16px 18px;
+            border-bottom: 1px solid rgba(150, 179, 214, 0.1);
             white-space: nowrap;
         }
 
@@ -204,11 +292,11 @@
 
         .pick-sport {
             display: inline-block;
-            padding: 3px 8px;
-            border-radius: 4px;
+            padding: 4px 10px;
+            border-radius: 999px;
             font-size: 0.7rem;
             font-weight: 700;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.08em;
             text-transform: uppercase;
         }
         .pick-sport.nfl { background: rgba(34,197,94,0.12); color: #4ade80; }
@@ -221,8 +309,8 @@
 
         .result-badge {
             display: inline-block;
-            padding: 3px 10px;
-            border-radius: 4px;
+            padding: 4px 10px;
+            border-radius: 999px;
             font-size: 0.75rem;
             font-weight: 700;
             text-transform: uppercase;
@@ -236,7 +324,7 @@
         .profit-cell.negative { color: var(--accent-red); font-weight: 600; }
         .profit-cell.zero { color: var(--text-muted); }
 
-        .load-more-row { text-align: center; padding: 16px; }
+        .load-more-row { text-align: center; padding: 18px; }
 
         /* ==================== ANALYTICS SECTION ==================== */
         .analytics-section { padding: 24px 0 48px; }
@@ -244,14 +332,15 @@
         .analytics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
+            gap: 14px;
         }
 
         .analytics-card {
-            background: var(--bg-card);
+            background: linear-gradient(180deg, rgba(11, 23, 42, 0.94), rgba(9, 18, 33, 0.94));
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 20px;
+            border-radius: 18px;
+            padding: 20px 18px;
+            box-shadow: 0 16px 34px rgba(3, 10, 21, 0.16);
         }
 
         .analytics-card-label {
@@ -259,11 +348,16 @@
             font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.12em;
             margin-bottom: 8px;
         }
 
-        .analytics-card-value { font-size: 1.25rem; font-weight: 700; }
+        .analytics-card-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+        }
 
         .breakdown-grid { display: grid; gap: 8px; }
 
@@ -271,15 +365,55 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 14px;
-            background: var(--bg-card);
+            padding: 12px 16px;
+            background: linear-gradient(180deg, rgba(11, 23, 42, 0.92), rgba(9, 18, 33, 0.92));
             border: 1px solid var(--border-color);
-            border-radius: 6px;
+            border-radius: 14px;
         }
 
         .breakdown-name { font-weight: 600; font-size: 0.85rem; }
         .breakdown-record { color: var(--text-secondary); font-size: 0.8rem; }
         .breakdown-winrate { font-weight: 700; font-size: 0.9rem; }
+
+        #recentFormGrid,
+        #performanceTimeline,
+        #equityCurve,
+        #monthlyReturns,
+        #dayOfWeekGrid,
+        #sportDetailGrid,
+        #betTypeDetailGrid,
+        #pickFilters {
+            background: transparent;
+        }
+
+        #recentFormGrid,
+        #performanceTimeline,
+        #equityCurve,
+        #monthlyReturns {
+            background: linear-gradient(180deg, rgba(11, 23, 42, 0.94), rgba(9, 18, 33, 0.94)) !important;
+            border-radius: 18px !important;
+            box-shadow: 0 16px 34px rgba(3, 10, 21, 0.16);
+        }
+
+        #pickFilters {
+            padding: 18px;
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            background: linear-gradient(180deg, rgba(11, 23, 42, 0.94), rgba(9, 18, 33, 0.94));
+            box-shadow: 0 16px 34px rgba(3, 10, 21, 0.16);
+        }
+
+        select,
+        #filterBanner button {
+            outline: none;
+        }
+
+        select {
+            min-height: 42px;
+            border-radius: 12px !important;
+            border: 1px solid var(--border-light) !important;
+            background: rgba(7, 17, 31, 0.88) !important;
+        }
 
         /* ==================== LOADING / ERROR ==================== */
         .loading { text-align: center; padding: 60px 20px; color: var(--text-muted); }
@@ -305,23 +439,96 @@
 
         .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
 
+        .site-footer {
+            margin-top: 48px;
+            border-top: 1px solid rgba(150, 179, 214, 0.14);
+            background: linear-gradient(180deg, rgba(6, 12, 22, 0.92), rgba(5, 10, 18, 0.98));
+        }
+
+        .site-footer-inner {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 34px 24px 24px;
+            display: grid;
+            grid-template-columns: minmax(260px, 1.4fr) 2fr;
+            gap: 28px;
+        }
+
+        .site-footer-brand {
+            max-width: 360px;
+        }
+
+        .site-footer-logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            margin-bottom: 10px;
+        }
+
+        .site-footer-logo span { color: var(--accent-blue); }
+
+        .site-footer-brand p {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+        }
+
+        .site-footer-links {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(120px, 1fr));
+            gap: 24px;
+        }
+
+        .site-footer-links h4 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.92rem;
+            margin-bottom: 12px;
+        }
+
+        .site-footer-links a {
+            display: block;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .site-footer-links a:hover { color: var(--text-primary); }
+
+        .site-footer-bottom {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 18px 24px 28px;
+            border-top: 1px solid rgba(150, 179, 214, 0.12);
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: 0.8rem;
+        }
+
         /* ==================== RESPONSIVE ==================== */
         @media (max-width: 768px) {
             .profile-header { flex-direction: column; text-align: center; }
             .profile-meta { justify-content: center; }
             .profile-actions { justify-content: center; }
             .summary-grid { grid-template-columns: repeat(3, 1fr); }
-            .summary-stat:nth-child(3)::after { display: none; }
             .picks-table-wrapper { overflow-x: auto; }
             .picks-table { min-width: 700px; }
             nav { display: none; }
             .analytics-grid { grid-template-columns: repeat(2, 1fr); }
+            .site-footer-inner { grid-template-columns: 1fr; }
+            .site-footer-links { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
         }
 
         @media (max-width: 480px) {
             .summary-grid { grid-template-columns: repeat(2, 1fr); }
-            .summary-stat::after { display: none !important; }
             .analytics-grid { grid-template-columns: 1fr; }
+            .container { padding: 0 16px; }
+            .profile-header { padding: 24px 20px; border-radius: 22px; }
+            .site-footer-links { grid-template-columns: 1fr; }
+            .site-footer-bottom { flex-direction: column; }
         }
     </style>
     <!-- Google tag (gtag.js) -->
@@ -452,8 +659,11 @@
                         <option value="spreads,spread">Spread</option>
                         <option value="totals,total">Totals</option>
                         <option value="team_totals">Team Totals</option>
-                        <option value="f5_h2h">First 5 ML</option>
-                        <option value="f5_totals">First 5 Totals</option>
+                        <option value="f5_h2h,f5_spreads,f5_totals">First 5</option>
+                        <option value="first_half_spreads,first_half_totals">First Half</option>
+                        <option value="second_half_spreads,second_half_totals">Second Half</option>
+                        <option value="period_1_h2h,period_1_totals">1st Period</option>
+                        <option value="alt_spreads,alt_totals">Alt Lines</option>
                     </select>
                     <select id="filterResult" onchange="applyFilters()" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:.85rem;">
                         <option value="">All Results</option>
@@ -617,9 +827,9 @@
     </script>
     <script src="static/js/config.js?v=20260330"></script>
     <script src="static/js/analytics.js?v=20260405"></script>
-    <script src="static/js/backend-api.js?v=20260330"></script>
+    <script src="static/js/backend-api.js?v=20260414c"></script>
     <script src="static/js/nav-badges.js"></script>
-    <script src="static/js/auth-persistent.js?v=20260330"></script>
+    <script src="static/js/auth-persistent.js?v=20260414c"></script>
     <script src="static/js/auto-grader-fixed.js?v=20260405b"></script>
     <script>
     // ============================================================
@@ -634,12 +844,47 @@
     let profileUserId = null;
     let allLoadedPicks = [];
     let picksOffset = 0;
+    let latestAdvancedStats = null;
     const PICKS_PER_PAGE = 50;
+    const MARKET_TYPE_GROUPS = [
+        { key: 'moneyline', label: 'Moneyline', types: ['h2h', 'moneyline'] },
+        { key: 'spreads', label: 'Spread', types: ['spreads', 'spread'] },
+        { key: 'totals', label: 'Totals', types: ['totals', 'total'] },
+        { key: 'team_totals', label: 'Team Totals', types: ['team_totals'] },
+        { key: 'first5', label: 'First 5', types: ['f5_h2h', 'f5_spreads', 'f5_totals'] },
+        { key: 'first_half', label: 'First Half', types: ['first_half_spreads', 'first_half_totals'] },
+        { key: 'second_half', label: 'Second Half', types: ['second_half_spreads', 'second_half_totals'] },
+        { key: 'period_1', label: '1st Period', types: ['period_1_h2h', 'period_1_totals'] },
+        { key: 'alt_lines', label: 'Alt Lines', types: ['alt_spreads', 'alt_totals'] }
+    ];
 
     const urlParams = new URLSearchParams(window.location.search);
     let profileUsername = (urlParams.get('user') || urlParams.get('username') || '').trim() || null;
 
     // ======================== UNIFIED STATS ========================
+    function getMarketTypeGroup(marketType) {
+        return MARKET_TYPE_GROUPS.find(group => group.types.includes(marketType)) || null;
+    }
+
+    function buildMarketTypeBreakdown(picks) {
+        const graded = (picks || []).filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
+        return MARKET_TYPE_GROUPS.map(group => {
+            const groupPicks = graded.filter(p => group.types.includes(p.market_type));
+            const wins = groupPicks.filter(p => p.status === 'won').length;
+            const losses = groupPicks.filter(p => p.status === 'lost').length;
+            const pushes = groupPicks.filter(p => p.status === 'push' || p.status === 'pushed').length;
+            return {
+                key: group.key,
+                label: group.label,
+                wins,
+                losses,
+                pushes,
+                total: groupPicks.length,
+                netUnits: groupPicks.reduce((sum, pick) => sum + pickPL(pick), 0)
+            };
+        }).filter(group => group.total > 0);
+    }
+
     function computeUnifiedStats(picks) {
         const graded = picks.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
         const wins = graded.filter(p => p.status === 'won');
@@ -698,22 +943,13 @@
         const unitsArr = picks.filter(p => p.units != null).map(p => Number(p.units));
         const avgUnits = unitsArr.length > 0 ? (unitsArr.reduce((a, b) => a + b, 0) / unitsArr.length) : 0;
 
-        // By bet type
-        function betTypeRecord(types) {
-            const mp = graded.filter(p => types.includes(p.market_type));
-            return { wins: mp.filter(p => p.status === 'won').length, losses: mp.filter(p => p.status === 'lost').length, total: mp.length };
-        }
+        const marketTypeRecords = buildMarketTypeBreakdown(graded);
 
         return {
             wins: w, losses: l, pushes: pu, pending: pending.length,
             total, winRate, netUnits, roi, currentStreak,
             bestStreak, worstStreak, avgOdds, avgUnits,
-            mlRecord: betTypeRecord(['h2h', 'moneyline']),
-            spreadRecord: betTypeRecord(['spreads', 'spread']),
-            totalsRecord: betTypeRecord(['totals', 'total']),
-            teamTotalsRecord: betTypeRecord(['team_totals']),
-            f5MlRecord: betTypeRecord(['f5_h2h']),
-            f5TotalsRecord: betTypeRecord(['f5_totals'])
+            marketTypeRecords
         };
     }
 
@@ -729,32 +965,27 @@
     // ======================== INIT ========================
     async function init() {
         try {
-            // Immediately try localStorage auth so we can render fast
+            // Wait for backend detection to finish
+            if (typeof api !== 'undefined' && api.ready) {
+                try { await api.ready; } catch (e) { /* detection failed */ }
+            }
+
+            if (!api || !api.backendAvailable) {
+                throw new Error('Server connection unavailable. Please refresh or try again later.');
+            }
+
+            // Get current user from auth system
             if (typeof auth !== 'undefined' && auth.isLoggedIn()) {
                 currentUser = auth.getCurrentUser();
             }
-            if (!currentUser) {
-                try {
-                    const stored = localStorage.getItem('tmr_current_user') || localStorage.getItem('trustmyrecord_session');
-                    if (stored) {
-                        const parsed = JSON.parse(stored);
-                        currentUser = parsed.user || parsed;
-                    }
-                } catch(e) {}
-            }
 
-            // Then check backend auth (with short timeout to not block)
-            try {
-                await Promise.race([api.ready, new Promise(r => setTimeout(r, 2000))]);
-                if (!currentUser && api.backendAvailable && api.isLoggedIn()) {
-                    try { const d = await api.getCurrentUser(); currentUser = d.user || d; } catch(e) {}
-                }
-            } catch(e) {}
             if (!profileUsername && currentUser) profileUsername = currentUser.username;
+            
             if (!profileUsername) {
                 document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>Not Logged In</h3><p>Please log in or specify a user.</p><a href="index.html" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
                 return;
             }
+            
             isOwnProfile = currentUser && currentUser.username && currentUser.username.toLowerCase() === profileUsername.toLowerCase();
             await loadProfile();
         } catch (e) {
@@ -765,69 +996,41 @@
     // ======================== LOAD PROFILE ========================
     async function loadProfile() {
         try {
-            if (api.backendAvailable === true) {
-                const data = await api.getUserProfile(profileUsername);
-                profileData = data.user || data;
-                profileUserId = profileData.id;
-                if (currentUser && !isOwnProfile) isFollowingProfile = !!profileData.is_following;
-                // Load favorite teams and gamer profile
-                try {
-                    const teamsData = await api.request('/gaming/teams/' + profileUsername);
-                    if (teamsData && teamsData.favorite_teams) {
-                        profileData._fav_teams = {};
-                        teamsData.favorite_teams.forEach(t => { profileData._fav_teams[t.sport] = t.team_name; });
-                    }
-                } catch(e) { profileData._fav_teams = {}; }
-                try {
-                    const gamerData = await api.request('/gaming/profile/' + profileUsername);
-                    if (gamerData && gamerData.gamer_profile) profileData._gamer = gamerData.gamer_profile;
-                    else profileData._gamer = {};
-                } catch(e) { profileData._gamer = {}; }
-            } else {
-                throw new Error('Backend unavailable');
-            }
-        } catch (error) {
-            // Fallback to localStorage for own profile
-            if (isOwnProfile && currentUser) {
-                profileData = {
-                    id: currentUser.id,
-                    username: currentUser.username,
-                    display_name: currentUser.displayName || currentUser.display_name || currentUser.username,
-                    bio: currentUser.bio || '',
-                    avatar_url: currentUser.avatar || currentUser.avatar_url || null,
-                    created_at: currentUser.joinedDate || currentUser.created_at || new Date().toISOString(),
-                    verification_status: currentUser.verified ? 'verified' : 'unverified',
-                    followers_count: (currentUser.social?.followers || []).length,
-                    following_count: (currentUser.social?.following || []).length
-                };
-                profileUserId = currentUser.id || currentUser.username;
-            } else if (!isOwnProfile) {
-                // Try to find user in localStorage users list
-                try {
-                    const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
-                    const found = users.find(u => u.username && u.username.toLowerCase() === profileUsername.toLowerCase());
-                    if (found) {
-                        profileData = {
-                            id: found.id,
-                            username: found.username,
-                            display_name: found.displayName || found.username,
-                            bio: found.bio || '',
-                            avatar_url: found.avatar || null,
-                            created_at: found.joinedDate || new Date().toISOString(),
-                            verification_status: found.verified ? 'verified' : 'unverified',
-                            followers_count: (found.social?.followers || []).length,
-                            following_count: (found.social?.following || []).length
-                        };
-                        profileUserId = found.id;
-                    }
-                } catch(e) {}
+            if (api.backendAvailable !== true) {
+                throw new Error('Server connection unavailable.');
             }
 
-            if (!profileData) {
-                document.querySelectorAll('.summary-bar, .picks-section, .analytics-section').forEach(el => el.style.display = 'none');
-                document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>User Not Found</h3><p>User "' + profileUsername + '" not found.</p><a href="index.html" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
-                return;
+            const data = await api.getUserProfile(profileUsername);
+            profileData = data.user || data;
+            profileUserId = profileData.id;
+            
+            if (currentUser && !isOwnProfile) {
+                isFollowingProfile = !!profileData.is_following;
             }
+
+            // Load favorite teams and gamer profile from backend
+            try {
+                const teamsData = await api.request('/gaming/teams/' + profileUsername);
+                if (teamsData && teamsData.favorite_teams) {
+                    profileData._fav_teams = {};
+                    teamsData.favorite_teams.forEach(t => { profileData._fav_teams[t.sport] = t.team_name; });
+                }
+            } catch(e) { profileData._fav_teams = {}; }
+            
+            try {
+                const gamerData = await api.request('/gaming/profile/' + profileUsername);
+                if (gamerData && gamerData.gamer_profile) profileData._gamer = gamerData.gamer_profile;
+                else profileData._gamer = {};
+            } catch(e) { profileData._gamer = {}; }
+
+            if (!profileData) {
+                throw new Error('User not found.');
+            }
+        } catch (error) {
+            console.error('[Profile] Profile load failed:', error);
+            document.querySelectorAll('.summary-bar, .picks-section, .analytics-section').forEach(el => el.style.display = 'none');
+            document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>User Not Found</h3><p>User "' + profileUsername + '" not found or could not be loaded.</p><a href="index.html" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
+            return;
         }
 
         renderProfileHeader(profileData);
@@ -838,7 +1041,7 @@
     async function loadAllPicks() {
         let picks = [];
 
-        // Try backend first
+        // Backend is mandatory for production
         if (api.backendAvailable === true) {
             let hasMore = true, offset = 0;
             while (hasMore) {
@@ -851,15 +1054,8 @@
                     if (batch.length === 0) hasMore = false;
                 } catch (e) { hasMore = false; }
             }
-        }
-
-        // localStorage fallback
-        if (picks.length === 0) {
-            try {
-                const all = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
-                const uid = profileUsername || (currentUser || {}).username || (currentUser || {}).id || 'local';
-                picks = all.filter(p => p.user_id === uid || p.user_id === profileUserId);
-            } catch(e) {}
+        } else {
+            console.error('[Profile] API unavailable for picks loading.');
         }
 
         picks.sort((a, b) => new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0));
@@ -870,7 +1066,7 @@
         renderPicksTable(picks);
         renderAnalytics(stats);
         renderCapperMetrics(picks);
-        await loadSportBreakdown();
+        await refreshAdvancedBreakdowns();
     }
 
     // ======================== RENDER PROFILE HEADER ========================
@@ -884,7 +1080,10 @@
 
         let actions = '';
         if (isOwnProfile) {
-            actions = '<div class="profile-actions"><button class="btn btn-secondary" onclick="openEditModal()">Edit Profile</button></div>';
+            actions = '<div class="profile-actions">' +
+                '<button class="btn btn-secondary" onclick="openEditModal()">Edit Profile</button>' +
+                '<button class="btn btn-secondary" onclick="resetProfileRecord()" style="border-color:rgba(239,68,68,0.45);color:#fca5a5;">Reset Record</button>' +
+                '</div>';
         } else if (currentUser) {
             const ft = isFollowingProfile ? 'Unfollow' : 'Follow';
             const fc = isFollowingProfile ? 'btn-secondary' : 'btn-primary';
@@ -901,13 +1100,33 @@
             '<div class="profile-meta">' +
             '<span class="profile-meta-item">Joined ' + joinDate + '</span>' +
             (p.location ? '<span class="profile-meta-item">' + p.location + '</span>' : '') +
-            '<span class="profile-meta-item">' + (Number(p.follower_count) || 0) + ' followers</span>' +
-            '<span class="profile-meta-item">' + (Number(p.following_count) || 0) + ' following</span>' +
+            '<button type="button" class="profile-meta-item" style="background:none;border:none;padding:0;cursor:pointer;" onclick="openSocialList(\'followers\')">' + (Number(p.follower_count) || 0) + ' followers</button>' +
+            '<button type="button" class="profile-meta-item" style="background:none;border:none;padding:0;cursor:pointer;" onclick="openSocialList(\'following\')">' + (Number(p.following_count) || 0) + ' following</button>' +
             '</div>' + actions + '</div>';
+    }
+
+    async function resetProfileRecord() {
+        if (!isOwnProfile) return;
+        const confirmed = window.confirm('Reset your visible Trust My Record history to 0-0-0 and hide all earlier picks from your public record?');
+        if (!confirmed) return;
+
+        try {
+            await api.request('/users/profile/reset-record', { method: 'POST' });
+            allLoadedPicks = [];
+            latestAdvancedStats = null;
+            showToast('Your record has been reset.', 'success');
+            await loadProfile();
+        } catch (error) {
+            console.error('[Profile] Reset record failed:', error);
+            showToast(error.message || 'Failed to reset record.', 'error');
+        }
     }
 
     // ======================== SUMMARY BAR ========================
     function renderSummaryBar(s) {
+        if (latestAdvancedStats && latestAdvancedStats.summary) {
+            return renderSummaryBarFromAdvanced(latestAdvancedStats.summary, s);
+        }
         document.getElementById('summaryBar').style.display = 'block';
         const nc = s.netUnits > 0 ? 'positive' : s.netUnits < 0 ? 'negative' : 'neutral';
         const rc = s.roi > 0 ? 'positive' : s.roi < 0 ? 'negative' : 'neutral';
@@ -917,6 +1136,25 @@
             '<div class="summary-stat"><div class="summary-stat-value ' + nc + '">' + (s.netUnits >= 0 ? '+' : '') + s.netUnits.toFixed(2) + 'u</div><div class="summary-stat-label">Net Units</div></div>' +
             '<div class="summary-stat"><div class="summary-stat-value neutral">' + s.winRate.toFixed(1) + '%</div><div class="summary-stat-label">Win Rate</div></div>' +
             '<div class="summary-stat"><div class="summary-stat-value neutral">' + s.total + '</div><div class="summary-stat-label">Total Picks</div></div>';
+    }
+
+    function renderSummaryBarFromAdvanced(summary, fallbackStats) {
+        document.getElementById('summaryBar').style.display = 'block';
+        const wins = Number(summary.wins || 0);
+        const losses = Number(summary.losses || 0);
+        const pushes = Number(summary.pushes || 0);
+        const roi = Number(summary.roi || 0);
+        const netUnits = Number(summary.net_units || 0);
+        const winRate = Number(summary.win_rate || 0);
+        const total = Number(summary.total_picks || 0);
+        const nc = netUnits > 0 ? 'positive' : netUnits < 0 ? 'negative' : 'neutral';
+        const rc = roi > 0 ? 'positive' : roi < 0 ? 'negative' : 'neutral';
+        document.getElementById('summaryGrid').innerHTML =
+            '<div class="summary-stat"><div class="summary-stat-value neutral">' + wins + '-' + losses + '-' + pushes + '</div><div class="summary-stat-label">Record</div></div>' +
+            '<div class="summary-stat"><div class="summary-stat-value ' + rc + '">' + (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%</div><div class="summary-stat-label">ROI</div></div>' +
+            '<div class="summary-stat"><div class="summary-stat-value ' + nc + '">' + (netUnits >= 0 ? '+' : '') + netUnits.toFixed(2) + 'u</div><div class="summary-stat-label">Net Units</div></div>' +
+            '<div class="summary-stat"><div class="summary-stat-value neutral">' + winRate.toFixed(1) + '%</div><div class="summary-stat-label">Win Rate</div></div>' +
+            '<div class="summary-stat"><div class="summary-stat-value neutral">' + total + '</div><div class="summary-stat-label">Total Picks</div></div>';
     }
 
     // ======================== PICKS TABLE ========================
@@ -1008,28 +1246,25 @@
         if (s.total === 0) return;
         section.style.display = 'block';
 
-        const ao = s.avgOdds != null ? (s.avgOdds > 0 ? '+' + s.avgOdds : '' + s.avgOdds) : 'N/A';
+        const summary = latestAdvancedStats && latestAdvancedStats.summary ? latestAdvancedStats.summary : null;
+        const avgOddsValue = summary ? Number(summary.avg_odds || 0) : s.avgOdds;
+        const avgUnitsValue = summary ? Number(summary.avg_units || 0) : s.avgUnits;
+        const pendingValue = summary ? Number(summary.pending_picks || 0) : s.pending;
+        const ao = avgOddsValue != null ? (avgOddsValue > 0 ? '+' + avgOddsValue : '' + avgOddsValue) : 'N/A';
         const st = s.currentStreak > 0 ? s.currentStreak + 'W' : s.currentStreak < 0 ? Math.abs(s.currentStreak) + 'L' : '0';
         const stc = s.currentStreak > 0 ? 'positive' : s.currentStreak < 0 ? 'negative' : '';
 
         document.getElementById('analyticsGrid').innerHTML =
-            ac('Average Odds', ao, '') + ac('Avg Units / Pick', s.avgUnits.toFixed(2) + 'u', '') +
+            ac('Average Odds', ao, '') + ac('Avg Units / Pick', avgUnitsValue.toFixed(2) + 'u', '') +
             ac('Best Streak', s.bestStreak + 'W', 'positive') + ac('Worst Streak', s.worstStreak + 'L', 'negative') +
-            ac('Current Streak', st, stc) + ac('Pending', '' + s.pending, '');
+            ac('Current Streak', st, stc) + ac('Pending', '' + pendingValue, '');
 
         // By Bet Type
         const btg = document.getElementById('betTypeGrid');
-        const types = [
-            { name: 'Moneyline', d: s.mlRecord },
-            { name: 'Spread', d: s.spreadRecord },
-            { name: 'Totals', d: s.totalsRecord },
-            { name: 'Team Totals', d: s.teamTotalsRecord },
-            { name: 'First 5 ML', d: s.f5MlRecord },
-            { name: 'First 5 Totals', d: s.f5TotalsRecord }
-        ];
-        btg.innerHTML = types.filter(t => t.d.total > 0).map(t => {
-            const wr = (t.d.wins + t.d.losses) > 0 ? ((t.d.wins / (t.d.wins + t.d.losses)) * 100).toFixed(1) : '0.0';
-            return bRow(t.name, t.d.wins + '-' + t.d.losses + ' (' + t.d.total + ' picks)', wr);
+        const types = Array.isArray(s.marketTypeRecords) ? s.marketTypeRecords : [];
+        btg.innerHTML = types.map(t => {
+            const wr = (t.wins + t.losses) > 0 ? ((t.wins / (t.wins + t.losses)) * 100).toFixed(1) : '0.0';
+            return bRowExtended(t.label, t.wins + '-' + t.losses + '-' + t.pushes + ' (' + t.total + ' picks)', wr, t.netUnits);
         }).join('') || '<div class="empty-state" style="padding:16px;">No data</div>';
 
         // By Unit Size
@@ -1297,7 +1532,8 @@
         const typeMap = {};
         graded.forEach(p => {
             const mt = p.market_type || 'unknown';
-            const label = (mt === 'h2h' || mt === 'moneyline') ? 'Moneyline' : (mt === 'spreads' || mt === 'spread') ? 'Spread' : (mt === 'totals' || mt === 'total') ? 'Totals' : mt;
+            const group = getMarketTypeGroup(mt);
+            const label = group ? group.label : marketTypeLabel(mt);
             if (!typeMap[label]) typeMap[label] = { wins: 0, losses: 0, pushes: 0, units: 0, risked: 0, picks: 0 };
             typeMap[label].picks++;
             if (p.status === 'won') typeMap[label].wins++;
@@ -1491,6 +1727,106 @@
         sportSelect.innerHTML = opts;
     }
 
+    function getAdvancedStatsFilters() {
+        const oddsMap = {
+            'heavy-fav': 'heavy_favorite',
+            'fav': 'favorite',
+            'even': 'even',
+            'dog': 'underdog',
+            'longshot': 'big_underdog'
+        };
+        return {
+            sport: document.getElementById('filterSport').value || '',
+            market_type: document.getElementById('filterType').value || '',
+            result: document.getElementById('filterResult').value || '',
+            odds_bucket: oddsMap[document.getElementById('filterOdds').value] || '',
+            period_days: document.getElementById('filterPeriod').value || 'all'
+        };
+    }
+
+    function marketTypeLabel(value) {
+        return {
+            h2h: 'Moneyline',
+            moneyline: 'Moneyline',
+            first5: 'First 5',
+            spreads: 'Spread',
+            spread: 'Spread',
+            totals: 'Totals',
+            total: 'Totals',
+            team_totals: 'Team Totals',
+            first_half: 'First Half',
+            second_half: 'Second Half',
+            period_1: '1st Period',
+            alt_lines: 'Alt Lines',
+            f5_h2h: 'First 5 ML',
+            f5_spreads: 'First 5 Spread',
+            f5_totals: 'First 5 Totals',
+            first_half_spreads: 'First Half Spread',
+            first_half_totals: 'First Half Totals',
+            second_half_spreads: 'Second Half Spread',
+            second_half_totals: 'Second Half Totals',
+            period_1_h2h: '1st Period ML',
+            period_1_totals: '1st Period Totals',
+            alt_spreads: 'Alt Spreads',
+            alt_totals: 'Alt Totals'
+        }[value] || value || 'Bet Type';
+    }
+
+    function oddsBucketLabel(value) {
+        return {
+            heavy_favorite: 'Heavy Fav (-200+)',
+            favorite: 'Favorite (-110 to -199)',
+            even: 'Even / Pickem (-109 to +110)',
+            underdog: 'Underdog (+111 to +200)',
+            big_underdog: 'Longshot (+201+)'
+        }[value] || value || 'Odds Range';
+    }
+
+    function filterTypeLabel(value) {
+        const labels = {
+            'h2h,moneyline': 'Moneyline',
+            'spreads,spread': 'Spreads',
+            'totals,total': 'Totals',
+            'team_totals': 'Team Totals',
+            'f5_h2h,f5_spreads,f5_totals': 'First 5',
+            'first_half_spreads,first_half_totals': 'First Half',
+            'second_half_spreads,second_half_totals': 'Second Half',
+            'period_1_h2h,period_1_totals': '1st Period',
+            'alt_spreads,alt_totals': 'Alt Lines'
+        };
+        return labels[value] || value;
+    }
+
+    async function refreshAdvancedBreakdowns() {
+        if (!profileUsername || !api || api.backendAvailable !== true) {
+            await loadSportBreakdown();
+            renderBetTypeBreakdownFromPicks();
+            renderOddsRangeBreakdown();
+            renderRecentForm();
+            return;
+        }
+
+        try {
+            const data = await api.getUserAdvancedStats(profileUsername, getAdvancedStatsFilters());
+            latestAdvancedStats = data;
+            const filtered = getFilteredPicks();
+            const stats = computeUnifiedStats(filtered);
+            renderSummaryBar(stats);
+            renderAnalytics(stats, filtered);
+            renderSportGrid(data.bySport || []);
+            renderMarketGrid(data.byMarket || []);
+            renderOddsBucketGrid(data.byOddsBucket || []);
+            renderRecentFormFromAdvanced(data.recentForm || []);
+        } catch (error) {
+            console.error('[Profile] Advanced stats refresh failed:', error);
+            latestAdvancedStats = null;
+            await loadSportBreakdown();
+            renderBetTypeBreakdownFromPicks();
+            renderOddsRangeBreakdown();
+            renderRecentForm();
+        }
+    }
+
     let activeQuickFilter = null; // 'fav' or 'dog' or null
 
     function toggleQuickFilter(which) {
@@ -1562,8 +1898,7 @@
             const parts = [];
             if (sport) parts.push(fmtSport(sport));
             if (type) {
-                const typeLabels = { 'h2h,moneyline': 'Moneyline', 'spreads,spread': 'Spreads', 'totals,total': 'Totals', 'team_totals': 'Team Totals', 'f5_h2h': 'First 5 ML', 'f5_totals': 'First 5 Totals' };
-                parts.push(typeLabels[type] || type);
+                parts.push(filterTypeLabel(type));
             }
             if (result) parts.push(result.charAt(0).toUpperCase() + result.slice(1));
             if (odds) {
@@ -1600,6 +1935,7 @@
         renderSummaryBar(stats);
         renderAnalytics(stats, filtered);
         renderCapperMetrics(filtered);
+        refreshAdvancedBreakdowns();
 
         // Sync time period buttons with filter dropdown
         if (document.getElementById('filterPeriod').value !== 'all') {
@@ -1632,6 +1968,7 @@
         renderAnalytics(stats, allLoadedPicks);
         renderPicksTable(allLoadedPicks);
         renderCapperMetrics(allLoadedPicks);
+        refreshAdvancedBreakdowns();
     }
 
     function ac(label, value, cls) {
@@ -1665,6 +2002,60 @@
         }
     }
 
+    function renderMarketGrid(stats) {
+        const g = document.getElementById('betTypeGrid');
+        if (!g) return;
+        if (!stats || stats.length === 0) { g.innerHTML = '<div class="empty-state" style="padding:16px;">No data</div>'; return; }
+        g.innerHTML = stats.map(i => {
+            const w = Number(i.wins) || 0, l = Number(i.losses) || 0, p = Number(i.pushes) || 0;
+            const t = Number(i.total_picks) || (w + l + p);
+            const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
+            const units = Number(i.net_units) || 0;
+            return bRowExtended(marketTypeLabel(i.market_type), w + '-' + l + '-' + p + ' (' + t + ' picks)', wr, units);
+        }).join('');
+    }
+
+    function renderBetTypeBreakdownFromPicks(picksArr) {
+        const groups = buildMarketTypeBreakdown(picksArr || getFilteredPicks()).map(group => ({
+            market_type: group.key,
+            wins: group.wins,
+            losses: group.losses,
+            pushes: group.pushes,
+            total_picks: group.total,
+            net_units: group.netUnits
+        }));
+        renderMarketGrid(groups);
+    }
+
+    function renderOddsBucketGrid(stats) {
+        const g = document.getElementById('oddsRangeGrid');
+        if (!g) return;
+        if (!stats || stats.length === 0) { g.innerHTML = '<div class="empty-state" style="padding:16px;">No data</div>'; return; }
+        g.innerHTML = stats.map(i => {
+            const w = Number(i.wins) || 0, l = Number(i.losses) || 0, p = Number(i.pushes) || 0;
+            const t = Number(i.total_picks) || (w + l + p);
+            const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
+            const units = Number(i.net_units) || 0;
+            return bRowExtended(oddsBucketLabel(i.odds_bucket), w + '-' + l + '-' + p + ' (' + t + ')', wr, units);
+        }).join('');
+    }
+
+    function renderRecentFormFromAdvanced(rows) {
+        const g = document.getElementById('recentFormGrid');
+        if (!g) return;
+        if (!rows || rows.length === 0) {
+            g.innerHTML = '<div style="color:var(--text-muted);padding:8px;">No graded picks yet</div>';
+            return;
+        }
+        g.innerHTML = rows.map(p => {
+            const status = p.status === 'pushed' ? 'push' : p.status;
+            const c = status === 'won' ? '#22c55e' : status === 'lost' ? '#ef4444' : '#6b7280';
+            const l = status === 'won' ? 'W' : status === 'lost' ? 'L' : 'P';
+            const tip = marketTypeLabel(p.market_type) + ': ' + (p.selection || '') + ' ' + (p.odds_snapshot ? (p.odds_snapshot > 0 ? '+' : '') + p.odds_snapshot : '');
+            return '<div title="' + tip + '" style="width:28px;height:28px;border-radius:4px;background:' + c + ';display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;cursor:default;">' + l + '</div>';
+        }).join('');
+    }
+
     function renderSportGrid(stats) {
         const g = document.getElementById('sportBreakdownGrid');
         if (!stats || stats.length === 0) { g.innerHTML = '<div class="empty-state" style="padding:16px;">No data</div>'; return; }
@@ -1691,8 +2082,85 @@
         setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, 3000);
     }
 
-    async function doFollow(id) { if (!currentUser) return showToast('Log in first', 'error'); try { await api.followUser(id); isFollowingProfile = true; showToast('Followed!', 'success'); renderProfileHeader(profileData); } catch(e) { showToast(e.message, 'error'); } }
-    async function doUnfollow(id) { if (!currentUser) return showToast('Log in first', 'error'); try { await api.unfollowUser(id); isFollowingProfile = false; showToast('Unfollowed', 'success'); renderProfileHeader(profileData); } catch(e) { showToast(e.message, 'error'); } }
+    async function doFollow(id) {
+        if (!currentUser) return showToast('Log in first', 'error');
+        try {
+            await api.followUser(id);
+            isFollowingProfile = true;
+            profileData.follower_count = Number(profileData.follower_count || 0) + 1;
+            showToast('Followed!', 'success');
+            renderProfileHeader(profileData);
+        } catch(e) { showToast(e.message, 'error'); }
+    }
+    async function doUnfollow(id) {
+        if (!currentUser) return showToast('Log in first', 'error');
+        try {
+            await api.unfollowUser(id);
+            isFollowingProfile = false;
+            profileData.follower_count = Math.max(0, Number(profileData.follower_count || 0) - 1);
+            showToast('Unfollowed', 'success');
+            renderProfileHeader(profileData);
+        } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    async function openSocialList(type) {
+        if (!profileUserId) return;
+
+        const existing = document.getElementById('socialListModal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'socialListModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+        modal.innerHTML =
+            '<div style="background:#1c1f2a;border:1px solid #2a2e3d;border-radius:12px;max-width:520px;width:100%;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;">' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #2a2e3d;">' +
+            '<h3 style="font-size:1rem;font-weight:700;margin:0;">' + (type === 'followers' ? 'Followers' : 'Following') + '</h3>' +
+            '<button type="button" onclick="closeSocialList()" style="background:none;border:none;color:#9ba3b5;font-size:24px;cursor:pointer;line-height:1;">&times;</button>' +
+            '</div>' +
+            '<div id="socialListBody" style="padding:16px;overflow:auto;color:#9ba3b5;">Loading...</div>' +
+            '</div>';
+
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeSocialList();
+        });
+        document.body.appendChild(modal);
+
+        const body = document.getElementById('socialListBody');
+
+        try {
+            const data = type === 'followers'
+                ? await api.getFollowers(profileUserId, { limit: 100, offset: 0 })
+                : await api.getFollowing(profileUserId, { limit: 100, offset: 0 });
+            const users = data[type] || [];
+
+            if (!users.length) {
+                body.innerHTML = '<div style="padding:12px 4px;color:#6b7280;">No ' + type + ' yet.</div>';
+                return;
+            }
+
+            body.innerHTML = users.map(function(user) {
+                const label = user.display_name || user.username || 'User';
+                return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 4px;border-bottom:1px solid #2a2e3d;">' +
+                    '<div style="display:flex;align-items:center;gap:12px;min-width:0;">' +
+                    '<div style="width:40px;height:40px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">' + label.charAt(0).toUpperCase() + '</div>' +
+                    '<div style="min-width:0;">' +
+                    '<div style="font-weight:700;color:#f0f2f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + label + '</div>' +
+                    '<div style="font-size:.8rem;color:#6b7280;">@' + (user.username || '') + '</div>' +
+                    '</div>' +
+                    '</div>' +
+                    '<a href="profile.html?user=' + encodeURIComponent(user.username || '') + '" class="btn btn-secondary" style="text-decoration:none;">View</a>' +
+                    '</div>';
+            }).join('');
+        } catch (error) {
+            body.innerHTML = '<div style="padding:12px 4px;color:#ef4444;">Failed to load ' + type + '.</div>';
+        }
+    }
+
+    function closeSocialList() {
+        const modal = document.getElementById('socialListModal');
+        if (modal) modal.remove();
+    }
 
     // ======================== CSV EXPORT ========================
     function exportCSV() {
@@ -1936,65 +2404,40 @@
     init();
     </script>
 
-        <footer style="background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.8) 100%); border-top: 1px solid rgba(0, 255, 255, 0.15); padding: 50px 0 0 0; margin-top: 60px;">
-            <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px;">
-                <!-- Footer Columns -->
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.08);">
-                    <!-- Brand Column -->
-                    <div>
-                        <div style="font-size: 1.3rem; font-weight: 800; color: #00ffff; margin-bottom: 10px; letter-spacing: 0.5px;">TrustMyRecord</div>
-                        <p style="color: #808090; font-size: 0.85rem; line-height: 1.6; margin: 0 0 16px 0;">The future of transparent sports betting.</p>
-                        <p style="color: #606070; font-size: 0.8rem; margin: 0;">&copy; 2026 TrustMyRecord.com</p>
-                    </div>
-                    <!-- Platform Column -->
-                    <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Platform</div>
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="sportsbook.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
-                            <a href="index.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
-                            <a href="arena.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Gaming Arena</a>
-                            <a href="forum.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
-                        </div>
-                    </div>
-                    <!-- Community Column -->
-                    <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Community</div>
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="feed.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
-                            <a href="challenges.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Challenges</a>
-                            <a href="polls.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Polls</a>
-                            <a href="trivia.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
-                        </div>
-                    </div>
-                    <!-- Legal Column -->
-                    <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Info</div>
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="about.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
-                            <a href="terms.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
-                            <a href="privacy.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
-                            <a href="mailto:support@trustmyrecord.com" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Contact</a>
-                        </div>
-                    </div>
+        <footer class="site-footer">
+            <div class="site-footer-inner">
+                <div class="site-footer-brand">
+                    <div class="site-footer-logo">Trust<span>My</span>Record</div>
+                    <p>Verified records, cleaner profiles, and a platform that should feel consistent everywhere instead of page to page.</p>
                 </div>
-                <!-- Bottom Bar -->
-                <div style="padding: 24px 0; text-align: center;">
-                    <p style="color: #606070; font-size: 0.78rem; line-height: 1.7; margin: 0 0 8px 0;">TrustMyRecord is not a gambling site. We provide pick tracking and community features only. No real money is wagered on this platform.</p>
-                    <p style="color: #505060; font-size: 0.72rem; margin: 0;">If you or someone you know has a gambling problem, call 1-800-GAMBLER. Must be 18+ to participate. Please gamble responsibly.</p>
+                <div class="site-footer-links">
+                    <div>
+                        <h4>Platform</h4>
+                        <a href="index.html">Home</a>
+                        <a href="sportsbook.html">Sportsbook</a>
+                        <a href="profile.html">Profile</a>
+                    </div>
+                    <div>
+                        <h4>Community</h4>
+                        <a href="feed.html">Feed</a>
+                        <a href="forum.html">Forum</a>
+                        <a href="messages.html">Messages</a>
+                    </div>
+                    <div>
+                        <h4>Info</h4>
+                        <a href="about.html">About</a>
+                        <a href="terms.html">Terms</a>
+                        <a href="privacy.html">Privacy</a>
+                    </div>
                 </div>
             </div>
-            <style>
-                footer a:hover { color: #00ffff !important; }
-                @media (max-width: 900px) {
-                    footer > div > div:first-child { grid-template-columns: repeat(2, 1fr) !important; gap: 30px !important; }
-                }
-                @media (max-width: 540px) {
-                    footer > div > div:first-child { grid-template-columns: 1fr !important; gap: 24px !important; }
-                    footer { padding-top: 36px !important; }
-                }
-            </style>
+            <div class="site-footer-bottom">
+                <p>TrustMyRecord is not a gambling site. We provide tracking and community features only.</p>
+                <p>If you or someone you know has a gambling problem, call 1-800-GAMBLER.</p>
+            </div>
         </footer>
 
 
+    <script src="static/js/platform-production-fix.js?v=20260414"></script>
 </body>
 </html>
