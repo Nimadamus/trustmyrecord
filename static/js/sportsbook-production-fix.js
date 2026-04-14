@@ -93,6 +93,11 @@
         if (window.api.ready) {
             try { await window.api.ready; } catch (error) {}
         }
+        if (!window.api.backendAvailable && typeof window.api.detectBackend === 'function') {
+            try {
+                await window.api.detectBackend();
+            } catch (error) {}
+        }
         if (!window.api.backendAvailable) {
             throw new Error('Backend unavailable');
         }
