@@ -110,6 +110,19 @@
             <p class="verify-message">Verifying your email...</p>
         </div>
 
+        <div id="check-email-state" class="hidden">
+            <div class="verify-icon">📧</div>
+            <h1 class="verify-title">Check Your Email</h1>
+            <div class="verify-success" id="check-email-message">
+                We created your account. Open the verification email we sent and click the link to activate it.
+            </div>
+            <p class="verify-message">
+                Once verified, you will be logged in automatically and can start posting picks immediately.
+            </p>
+            <button onclick="resendEmail()" class="btn-primary">Resend Verification Email</button>
+            <a href="index.html" class="btn-secondary">Go Home</a>
+        </div>
+
         <div id="success-state" class="hidden">
             <div class="verify-icon">✅</div>
             <h1 class="verify-title">Email Verified!</h1>
@@ -142,22 +155,42 @@
 
     <script src="static/js/config.js"></script>
     <script src="static/js/analytics.js?v=20260405"></script>
-    <script src="static/js/backend-api.js"></script>
+    <script src="static/js/backend-api.js?v=20260414c"></script>
     <script>
-        const api = new BackendAPI();
+        const apiClient = window.api;
         let userEmail = '';
+
+        async function ensureApiReady() {
+            if (!apiClient) {
+                throw new Error('Verification service is unavailable right now.');
+            }
+
+            if (apiClient.ready) {
+                try {
+                    await apiClient.ready;
+                } catch (error) {}
+            }
+
+            return apiClient;
+        }
 
         async function verifyEmail() {
             const urlParams = new URLSearchParams(window.location.search);
             const token = urlParams.get('token');
+            userEmail = urlParams.get('email') || '';
 
             if (!token) {
-                showError('No verification token provided.');
+                if (userEmail) {
+                    showCheckEmail(userEmail);
+                } else {
+                    showError('No verification token provided.');
+                }
                 return;
             }
 
             try {
-                const data = await api.verifyEmail(token);
+                const api = await ensureApiReady();
+                await api.verifyEmail(token);
                 showSuccess();
             } catch (error) {
                 console.error('Verification error:', error);
@@ -168,12 +201,22 @@
         function showSuccess() {
             document.getElementById('loading-state').classList.add('hidden');
             document.getElementById('success-state').classList.remove('hidden');
+            setTimeout(function() {
+                window.location.href = 'index.html';
+            }, 1800);
         }
 
         function showError(message) {
             document.getElementById('loading-state').classList.add('hidden');
             document.getElementById('error-message').textContent = message;
             document.getElementById('error-state').classList.remove('hidden');
+        }
+
+        function showCheckEmail(email) {
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('check-email-state').classList.remove('hidden');
+            document.getElementById('check-email-message').textContent =
+                'We created your account and sent a verification link to ' + email + '.';
         }
 
         async function resendEmail() {
@@ -183,6 +226,7 @@
             }
 
             try {
+                const api = await ensureApiReady();
                 await api.resendVerification(userEmail);
                 document.getElementById('error-state').classList.add('hidden');
                 document.getElementById('resend-state').classList.remove('hidden');
