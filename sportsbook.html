@@ -14,6 +14,7 @@
         'NBA': 'basketball_nba',
         'NHL': 'icehockey_nhl',
         'MLB': 'baseball_mlb',
+        'Soccer': 'soccer_epl',
         'NCAAF': 'americanfootball_ncaaf',
         'NCAAB': 'basketball_ncaab'
     };
@@ -24,6 +25,7 @@
         'basketball_nba': 'basketball/nba',
         'icehockey_nhl': 'hockey/nhl',
         'baseball_mlb': 'baseball/mlb',
+        'soccer_epl': 'soccer/eng.1',
         'americanfootball_ncaaf': 'football/college-football',
         'basketball_ncaab': 'basketball/mens-college-basketball'
     };
@@ -661,7 +663,7 @@
         var card = document.querySelector('.sport-card[data-sport="' + sport + '"]');
         if (card) card.classList.add('selected');
 
-        var icons = { 'NBA': '🏀', 'NFL': '🏈', 'NHL': '🏒', 'MLB': '⚾', 'NCAAF': '🎓', 'NCAAB': '🏫' };
+        var icons = { 'NBA': '🏀', 'NFL': '🏈', 'NHL': '🏒', 'MLB': '⚾', 'Soccer': '⚽', 'NCAAF': '🎓', 'NCAAB': '🏫' };
         var titleEl = document.getElementById('selectedSportTitle');
         if (titleEl) titleEl.textContent = (icons[sport] || '') + ' ' + sport + ' Games';
 
@@ -1016,7 +1018,7 @@
         }
 
         // Build pick object
-        var sportKeyMap = { 'NFL': 'americanfootball_nfl', 'NBA': 'basketball_nba', 'NHL': 'icehockey_nhl', 'MLB': 'baseball_mlb', 'NCAAF': 'americanfootball_ncaaf', 'NCAAB': 'basketball_ncaab' };
+        var sportKeyMap = { 'NFL': 'americanfootball_nfl', 'NBA': 'basketball_nba', 'NHL': 'icehockey_nhl', 'MLB': 'baseball_mlb', 'Soccer': 'soccer_epl', 'NCAAF': 'americanfootball_ncaaf', 'NCAAB': 'basketball_ncaab' };
         var user = null;
         try { user = window.auth && window.auth.getCurrentUser ? window.auth.getCurrentUser() : null; } catch(e) {}
         if (!user) {
@@ -1209,7 +1211,7 @@
             statsBar.innerHTML = s;
         }
 
-        var sportDisplayMap = { 'basketball_nba': 'NBA', 'americanfootball_nfl': 'NFL', 'icehockey_nhl': 'NHL', 'baseball_mlb': 'MLB', 'americanfootball_ncaaf': 'NCAAF', 'basketball_ncaab': 'NCAAB' };
+        var sportDisplayMap = { 'basketball_nba': 'NBA', 'americanfootball_nfl': 'NFL', 'icehockey_nhl': 'NHL', 'baseball_mlb': 'MLB', 'soccer_epl': 'Soccer', 'americanfootball_ncaaf': 'NCAAF', 'basketball_ncaab': 'NCAAB' };
 
         var html = '';
         picks.forEach(function(p) {
@@ -8259,6 +8261,11 @@
                     <div class="sport-icon">⚾</div>
                     <div class="sport-name">MLB</div>
                     <div class="sport-games" id="mlb-game-count">Loading...</div>
+                </div>
+                <div class="sport-card" data-sport="Soccer" onclick="window.selectSportAndShowGames('Soccer')" style="cursor:pointer;">
+                    <div class="sport-icon">⚽</div>
+                    <div class="sport-name">Soccer</div>
+                    <div class="sport-games" id="soccer-game-count">Loading...</div>
                 </div>
             </div>
             <div style="margin-top: 25px;">
@@ -16848,7 +16855,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- External Scripts -->
     <script src="static/js/config.js?v=20260317"></script>
     <script src="static/js/analytics.js?v=20260405"></script>
-    <script src="static/js/backend-api.js?v=20260317"></script>
+    <script src="static/js/backend-api.js?v=20260414b"></script>
     <script src="static/js/auth-persistent.js?v=20260317"></script>
     <script>
         // Backend API integration active
@@ -16988,7 +16995,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="static/js/forums.js?v=20251208c"></script>
     <!-- forms.js REMOVED - forms-fixed.js handles login/signup -->
     <script src="static/js/navigation.js?v=20251208c"></script>
-    <script src="static/js/sportsbook-production-fix.js?v=20260414a"></script>
+    <script src="static/js/sportsbook-production-fix.js?v=20260414l"></script>
     <script src="static/js/effects.js?v=20251208c"></script>
 
     <script src="static/js/app.js?v=20260122"></script>
@@ -17042,6 +17049,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'NBA': 'basketball_nba',
         'NHL': 'icehockey_nhl',
         'MLB': 'baseball_mlb',
+        'Soccer': 'soccer_epl',
         'NCAAF': 'americanfootball_ncaaf',
         'NCAAB': 'basketball_ncaab'
     };
@@ -17670,6 +17678,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function submitPick() {
+        if (window.lockInPick && typeof window.lockInPick === 'function') {
+            return window.lockInPick();
+        }
         if (!selectedSport || !selectedBetType || !selectedGame) {
             alert('Please complete all selections before submitting.');
             return;
@@ -17703,7 +17714,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const marketType = marketTypeMap[pick.betType] || 'h2h';
             const selection = extractSelection(pick.pick, pick.betType, pick.game);
             const units = Math.max(0.5, Math.min(10, parseFloat(pick.units) || 1));
-            const sportKeyMap = { 'NFL': 'americanfootball_nfl', 'NBA': 'basketball_nba', 'NHL': 'icehockey_nhl', 'MLB': 'baseball_mlb', 'NCAAF': 'americanfootball_ncaaf', 'NCAAB': 'basketball_ncaab' };
+            const sportKeyMap = { 'NFL': 'americanfootball_nfl', 'NBA': 'basketball_nba', 'NHL': 'icehockey_nhl', 'MLB': 'baseball_mlb', 'Soccer': 'soccer_epl', 'NCAAF': 'americanfootball_ncaaf', 'NCAAB': 'basketball_ncaab' };
             const user = window.auth.getCurrentUser();
 
             const newPick = {
@@ -18540,8 +18551,10 @@ document.addEventListener('DOMContentLoaded', function() {
             f5_h2h: 'First 5 ML',
             f5_spreads: 'First 5 Spread',
             f5_totals: 'First 5 Total',
+            first_half_h2h: 'First Half ML',
             first_half_spreads: 'First Half Spread',
             first_half_totals: 'First Half Total',
+            second_half_h2h: 'Second Half ML',
             second_half_spreads: 'Second Half Spread',
             second_half_totals: 'Second Half Total',
             period_1_h2h: '1st Period ML',
@@ -19326,7 +19339,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const sportDisplayMap = {
         'basketball_nba': 'NBA', 'americanfootball_nfl': 'NFL', 'icehockey_nhl': 'NHL',
-        'baseball_mlb': 'MLB', 'americanfootball_ncaaf': 'NCAAF', 'basketball_ncaab': 'NCAAB'
+        'baseball_mlb': 'MLB', 'soccer_epl': 'Soccer', 'americanfootball_ncaaf': 'NCAAF', 'basketball_ncaab': 'NCAAB'
     };
 
     function loadMyPicks(tab = 'pending') {

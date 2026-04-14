@@ -50,7 +50,7 @@ class TrustMyRecordAPI {
             }
         }
         this.backendAvailable = false;
-        console.warn('[TMR API] No backend available after retries. Using localStorage fallback.');
+        console.warn('[TMR API] No backend available after retries.');
     }
 
     // Token Management
@@ -61,14 +61,23 @@ class TrustMyRecordAPI {
 
     saveTokens(token, refreshToken) {
         this.token = token;
-        this.refreshToken = refreshToken;
-        localStorage.setItem('trustmyrecord_token', token);
-        localStorage.setItem('trustmyrecord_refresh_token', refreshToken);
+        this.refreshToken = refreshToken || null;
+        if (token) {
+            localStorage.setItem('trustmyrecord_token', token);
+        } else {
+            localStorage.removeItem('trustmyrecord_token');
+        }
+        if (refreshToken) {
+            localStorage.setItem('trustmyrecord_refresh_token', refreshToken);
+        } else {
+            localStorage.removeItem('trustmyrecord_refresh_token');
+        }
     }
 
     clearTokens() {
         this.token = null;
         this.refreshToken = null;
+        this._cachedUser = null;
         localStorage.removeItem('trustmyrecord_token');
         localStorage.removeItem('trustmyrecord_refresh_token');
     }
@@ -136,7 +145,12 @@ class TrustMyRecordAPI {
         }
 
         if (!response.ok) {
-            const error = new Error(data.error || data.message || `HTTP ${response.status}`);
+            let message = data.error || data.message;
+            if (!message && Array.isArray(data.errors) && data.errors.length > 0) {
+                const first = data.errors[0];
+                message = first.msg || first.message || 'Request validation failed';
+            }
+            const error = new Error(message || `HTTP ${response.status}`);
             error.status = response.status;
             error.code = data.code;
             error.data = data;
@@ -157,7 +171,7 @@ class TrustMyRecordAPI {
 
             if (response.ok) {
                 const data = await response.json();
-                this.saveTokens(data.accessToken, data.refreshToken || this.refreshToken);
+                this.saveTokens(data.accessToken || data.access_token, data.refreshToken || data.refresh_token || this.refreshToken);
                 return true;
             }
         } catch (error) {
@@ -180,8 +194,13 @@ class TrustMyRecordAPI {
         const tokens = data.tokens || data;
         const user = data.user || data;
         
-        if (tokens.accessToken) {
-            this.saveTokens(tokens.accessToken, tokens.refreshToken);
+        const accessToken = tokens.accessToken || tokens.access_token;
+        const refreshToken = tokens.refreshToken || tokens.refresh_token;
+        if (accessToken) {
+            this.saveTokens(accessToken, refreshToken);
+        }
+        if (user && typeof user === 'object') {
+            this._cachedUser = user;
         }
         
         return { user, tokens };
@@ -193,8 +212,13 @@ class TrustMyRecordAPI {
             body: userData
         });
         // If tokens returned (no email verification required), save them
-        if (data.accessToken) {
-            this.saveTokens(data.accessToken, data.refreshToken);
+        const accessToken = data.accessToken || data.access_token;
+        const refreshToken = data.refreshToken || data.refresh_token;
+        if (accessToken) {
+            this.saveTokens(accessToken, refreshToken);
+        }
+        if (data.user && typeof data.user === 'object') {
+            this._cachedUser = data.user;
         }
         return data;
     }
@@ -208,15 +232,26 @@ class TrustMyRecordAPI {
     }
 
     async getCurrentUser() {
-        return this.request('/auth/me');
+        const data = await this.request('/auth/me');
+        const user = data?.user || data;
+        if (user && typeof user === 'object') {
+            this._cachedUser = user;
+        }
+        return data;
     }
 
     async verifyEmail(token) {
         const data = await this.request(`/auth/verify-email?token=${encodeURIComponent(token)}`);
         
         // Auto-login after verification if tokens provided
-        if (data.tokens?.accessToken) {
-            this.saveTokens(data.tokens.accessToken, data.tokens.refreshToken);
+        const tokenPayload = data.tokens || data;
+        const accessToken = tokenPayload?.accessToken || tokenPayload?.access_token;
+        const refreshToken = tokenPayload?.refreshToken || tokenPayload?.refresh_token;
+        if (accessToken) {
+            this.saveTokens(accessToken, refreshToken);
+        }
+        if (data.user && typeof data.user === 'object') {
+            this._cachedUser = data.user;
         }
         
         return data;
@@ -239,7 +274,7 @@ class TrustMyRecordAPI {
     async resetPassword(token, newPassword) {
         return this.request('/auth/reset-password', {
             method: 'POST',
-            body: { token, newPassword }
+            body: { token, password: newPassword }
         });
     }
 
@@ -261,8 +296,11 @@ class TrustMyRecordAPI {
         return this.request(`/users?query=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`);
     }
 
-    async getLeaderboard(options = {}) {
-        const { sport, sortBy = 'roi', limit = 50 } = options;
+    async getLeaderboard(options = {}, legacyOptions = {}) {
+        const normalizedOptions = typeof options === 'string'
+            ? { ...legacyOptions, sortBy: options }
+            : (options || {});
+        const { sport, sortBy = 'roi', limit = 50 } = normalizedOptions;
         let url = `/users/leaderboard?sortBy=${sortBy}&limit=${limit}`;
         if (sport) url += `&sport=${sport}`;
         return this.request(url);
@@ -270,6 +308,17 @@ class TrustMyRecordAPI {
 
     async getUserStats(userId) {
         return this.request(`/users/${userId}/stats`);
+    }
+
+    async getUserAdvancedStats(username, filters = {}) {
+        const params = new URLSearchParams();
+        Object.entries(filters || {}).forEach(([key, value]) => {
+            if (value != null && value !== '' && value !== 'all') {
+                params.append(key, value);
+            }
+        });
+        const query = params.toString();
+        return this.request(`/users/${encodeURIComponent(username)}/stats/advanced${query ? `?${query}` : ''}`);
     }
 
     // ==================== PICKS ROUTES ====================
@@ -282,7 +331,20 @@ class TrustMyRecordAPI {
         if (userId) url += `&userId=${userId}`;
         if (sport) url += `&sport=${sport}`;
         if (status) url += `&status=${status}`;
-        return this.request(url);
+        const data = await this.request(url);
+        const picks = Array.isArray(data?.picks) ? data.picks : [];
+
+        // Preserve array-style callers from older pages while keeping metadata access.
+        picks.picks = picks;
+        if (data && typeof data === 'object') {
+            Object.keys(data).forEach((key) => {
+                if (key !== 'picks') {
+                    picks[key] = data[key];
+                }
+            });
+        }
+
+        return picks;
     }
 
     async createPick(pickData) {
@@ -319,6 +381,10 @@ class TrustMyRecordAPI {
         if (date) params.push(`date=${date}`);
         if (status) params.push(`status=${status}`);
         return this.request(url + params.join('&'));
+    }
+
+    async getMarketBoard(sportKey) {
+        return this.request(`/games/board/${encodeURIComponent(sportKey)}`);
     }
 
     async getGame(gameId) {
@@ -651,6 +717,9 @@ class TrustMyRecordAPI {
 
 // Create global API instance
 const api = new TrustMyRecordAPI();
+if (typeof window !== 'undefined') {
+    window.api = api;
+}
 
 // Export for module systems
 if (typeof module !== 'undefined' && module.exports) {

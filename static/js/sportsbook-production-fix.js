@@ -6,6 +6,7 @@
         NBA: 'basketball_nba',
         MLB: 'baseball_mlb',
         NHL: 'icehockey_nhl',
+        Soccer: 'soccer_epl',
         NCAAB: 'basketball_ncaab',
         NCAAF: 'americanfootball_ncaaf'
     };
@@ -28,7 +29,8 @@
         selectedOption: null,
         currentUserPicks: []
     };
-    const BOARD_CACHE_TTL_MS = 45000;
+    const BOARD_CACHE_TTL_MS = 15000;
+    const LIVE_REFRESH_MS = 20000;
     const boardCache = new Map();
     const boardRequests = new Map();
     let latestBoardRequestId = 0;
@@ -41,8 +43,10 @@
         f5_h2h: 'First 5 ML',
         f5_spreads: 'First 5 Spread',
         f5_totals: 'First 5 Total',
+        first_half_h2h: 'First Half ML',
         first_half_spreads: 'First Half Spread',
         first_half_totals: 'First Half Total',
+        second_half_h2h: 'Second Half ML',
         second_half_spreads: 'Second Half Spread',
         second_half_totals: 'Second Half Total',
         period_1_h2h: '1st Period ML',
@@ -92,8 +96,16 @@
         return null;
     }
 
+    function getStoredAuthToken() {
+        try {
+            return localStorage.getItem('trustmyrecord_token') || '';
+        } catch (error) {
+            return '';
+        }
+    }
+
     async function waitForApi() {
-        if (!window.api) throw new Error('Backend API client is not loaded');
+        if (!window.api) return null;
         if (window.api.ready) {
             try { await window.api.ready; } catch (error) {}
         }
@@ -103,7 +115,7 @@
             } catch (error) {}
         }
         if (!window.api.backendAvailable) {
-            throw new Error('Backend unavailable');
+            return null;
         }
         return window.api;
     }
@@ -140,6 +152,9 @@
     async function directApiRequest(endpoint, options) {
         const settings = options || {};
         const timeoutMs = Number(settings.timeoutMs) || 8000;
+        const method = settings.method || 'GET';
+        const body = settings.body;
+        const requireAuth = settings.auth === true;
         let lastError = null;
         for (const base of getDirectApiBases()) {
             try {
@@ -147,12 +162,25 @@
                 if (String(base).includes('loca.lt')) {
                     headers['bypass-tunnel-reminder'] = 'true';
                 }
+                if (body != null) {
+                    headers['Content-Type'] = 'application/json';
+                }
+                if (requireAuth) {
+                    const token = getStoredAuthToken();
+                    if (!token) {
+                        throw new Error('You need to log in again before submitting a pick.');
+                    }
+                    headers['Authorization'] = 'Bearer ' + token;
+                }
                 const response = await fetch(String(base).replace(/\/$/, '') + endpoint, {
+                    method: method,
                     headers: headers,
+                    body: body != null ? JSON.stringify(body) : undefined,
                     signal: AbortSignal.timeout(timeoutMs)
                 });
                 if (!response.ok) {
-                    throw new Error('HTTP ' + response.status + ' from ' + base);
+                    const message = await response.text().catch(function() { return ''; });
+                    throw new Error(message || ('HTTP ' + response.status + ' from ' + base));
                 }
                 return await response.json();
             } catch (error) {
@@ -160,6 +188,35 @@
             }
         }
         throw lastError || new Error('Direct API request failed');
+    }
+
+    async function getApiClientOrFallback() {
+        const liveApi = await waitForApi();
+        if (liveApi) return liveApi;
+
+        return {
+            createPick: function(pickData) {
+                return directApiRequest('/picks', {
+                    method: 'POST',
+                    body: pickData,
+                    auth: true,
+                    timeoutMs: 15000
+                });
+            },
+            getPicks: function(params) {
+                const search = new URLSearchParams();
+                if (params && params.userId != null) search.set('userId', params.userId);
+                if (params && params.limit != null) search.set('limit', params.limit);
+                if (params && params.offset != null) search.set('offset', params.offset);
+                if (params && params.sport) search.set('sport', params.sport);
+                if (params && params.status) search.set('status', params.status);
+                const suffix = search.toString() ? ('?' + search.toString()) : '';
+                return directApiRequest('/picks' + suffix, {
+                    auth: true,
+                    timeoutMs: 15000
+                });
+            }
+        };
     }
 
     function getCachedBoard(sportKey) {
@@ -250,7 +307,7 @@
             return [];
         }
 
-        const api = await waitForApi();
+        const api = await getApiClientOrFallback();
         const response = await api.getPicks({ userId: user.id, limit: 100 });
         const picks = (response.picks || []).map(normalizePick).sort(function(a, b) {
             return new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0);
@@ -700,7 +757,7 @@
             });
 
             const orderedGroups = (game.market_groups || []).slice().sort(function(a, b) {
-                const order = { full_game: 1, spread: 2, total: 3, team_totals: 4, first_5: 5 };
+                const order = { full_game: 1, spread: 2, total: 3, team_totals: 4, first_half: 5, second_half: 6, period_1: 7, first_5: 8, alt_spreads: 9, alt_totals: 10 };
                 return (order[a && a.key] || 99) - (order[b && b.key] || 99);
             });
 
@@ -920,7 +977,7 @@
         }
 
         try {
-            const api = await waitForApi();
+            const api = await getApiClientOrFallback();
             const response = await api.createPick({
                 game_id: option.game_id,
                 sport_key: option.sport_key,
@@ -1004,6 +1061,14 @@
         }
     }
 
+    function startLiveRefreshLoop() {
+        if (window.__tmrSportsbookRefreshTimer) return;
+        window.__tmrSportsbookRefreshTimer = window.setInterval(function() {
+            if (document.hidden || !state.selectedSport) return;
+            refreshCurrentSport().catch(function() {});
+        }, LIVE_REFRESH_MS);
+    }
+
     function calculateUserStatsById(userId) {
         const user = getCurrentUser();
         const picks = state.currentUserPicks || [];
@@ -1045,6 +1110,7 @@
         window.tmrSelectOption = selectOption;
         window.tmrSportsbookRefresh = refreshCurrentSport;
         lockFunction(window, 'selectSportAndShowGames', selectSportAndShowGames);
+        lockFunction(window, 'submitPick', lockInPick);
         window.selectGameBet = function() {};
         window.updatePickSummary = updatePickSummary;
         window.lockInPick = lockInPick;
@@ -1060,6 +1126,7 @@
                 if (typeof callback === 'function') callback();
             });
         };
+        startLiveRefreshLoop();
 
         const originalShowSection = window.showSection;
         if (typeof originalShowSection === 'function' && !window.__tmrProdShowSectionWrapped) {
