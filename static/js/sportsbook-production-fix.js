@@ -104,6 +104,46 @@
         return window.api;
     }
 
+    function getDirectApiBases() {
+        const bases = [];
+        if (window.api && window.api.baseUrl) bases.push(window.api.baseUrl);
+        if (window.CONFIG && CONFIG.api) {
+            if (CONFIG.api.baseUrl) bases.push(CONFIG.api.baseUrl);
+            if (Array.isArray(CONFIG.api.fallbackUrls)) {
+                CONFIG.api.fallbackUrls.forEach(function(url) {
+                    if (url) bases.push(url);
+                });
+            }
+        }
+        bases.push('https://trustmyrecord-api.onrender.com/api');
+        return bases.filter(function(base, index, arr) {
+            return base && arr.indexOf(base) === index;
+        });
+    }
+
+    async function directApiRequest(endpoint) {
+        let lastError = null;
+        for (const base of getDirectApiBases()) {
+            try {
+                const headers = {};
+                if (String(base).includes('loca.lt')) {
+                    headers['bypass-tunnel-reminder'] = 'true';
+                }
+                const response = await fetch(String(base).replace(/\/$/, '') + endpoint, {
+                    headers: headers,
+                    signal: AbortSignal.timeout(20000)
+                });
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status + ' from ' + base);
+                }
+                return await response.json();
+            } catch (error) {
+                lastError = error;
+            }
+        }
+        throw lastError || new Error('Direct API request failed');
+    }
+
     async function fetchCurrentUserPicks() {
         const user = getCurrentUser();
         if (!user) {
@@ -464,18 +504,32 @@
             renderBoard(response.summary || null, state.currentBoard);
         } catch (error) {
             try {
-                const api = await waitForApi();
-                const fallbackGames = await api.request('/games/odds/' + encodeURIComponent(sportKey));
+                const directBoard = await directApiRequest('/games/board/' + encodeURIComponent(sportKey));
+                state.currentBoard = directBoard.games || [];
+                if (badge) badge.textContent = state.currentBoard.length + ' game' + (state.currentBoard.length === 1 ? '' : 's');
+                renderBoard(directBoard.summary || null, state.currentBoard);
+                return;
+            } catch (directBoardError) {
+                try {
+                    let fallbackGames = null;
+                    try {
+                        const api = await waitForApi();
+                        fallbackGames = await api.request('/games/odds/' + encodeURIComponent(sportKey));
+                    } catch (apiFallbackError) {}
+                    if (!Array.isArray(fallbackGames)) {
+                        fallbackGames = await directApiRequest('/games/odds/' + encodeURIComponent(sportKey));
+                    }
                 state.currentBoard = buildFallbackBoardGames(fallbackGames || [], sportKey);
                 if (badge) badge.textContent = state.currentBoard.length + ' game' + (state.currentBoard.length === 1 ? '' : 's');
                 renderBoard({
                     severity: 'warning',
                     message: 'Live fallback markets loaded while the advanced market board is unavailable.'
                 }, state.currentBoard);
-            } catch (fallbackError) {
-                if (container) {
-                    container.innerHTML = '<div class="tmr-empty-state">Unable to load markets right now. ' +
-                        '<div style="margin-top:12px;"><button class="tmr-board-button" onclick="window.tmrSportsbookRefresh()">Retry</button></div></div>';
+                } catch (fallbackError) {
+                    if (container) {
+                        container.innerHTML = '<div class="tmr-empty-state">Unable to load markets right now. ' +
+                            '<div style="margin-top:12px;"><button class="tmr-board-button" onclick="window.tmrSportsbookRefresh()">Retry</button></div></div>';
+                    }
                 }
             }
         }
