@@ -1061,13 +1061,13 @@
         }
 
         // Validate line for spread/total bets
-        if ((betType === 'spread' || betType === 'over' || betType === 'under' || betType === 'f5spread' || betType === 'f5over' || betType === 'f5under') && !finalLine && finalLine !== '0') {
+        if ((betType === 'spread' || betType === 'over' || betType === 'under' || betType === 'team_totals' || betType === 'f5spread' || betType === 'f5over' || betType === 'f5under') && !finalLine && finalLine !== '0') {
             alert('Please enter the line/total from your sportsbook.');
             if (lineInput) lineInput.focus();
             return;
         }
 
-        var marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals' };
+        var marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', team_totals: 'team_totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals' };
         var marketType = marketTypeMap[betType] || 'h2h';
 
         // Determine selection name
@@ -17544,7 +17544,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="static/js/forums.js?v=20251208c"></script>
     <!-- forms.js REMOVED - forms-fixed.js handles login/signup -->
     <script src="static/js/navigation.js?v=20251208c"></script>
-    <script src="static/js/sportsbook-production-fix.js?v=20260414e"></script>
+    <script src="static/js/sportsbook-production-fix.js?v=20260414f"></script>
     <script src="static/js/effects.js?v=20251208c"></script>
 
     <script src="static/js/app.js?v=20260122"></script>
@@ -17786,6 +17786,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
+            const toProb = function(odds) {
+                const numeric = parseFloat(odds);
+                if (!isFinite(numeric) || numeric === 0) return null;
+                return numeric > 0 ? 100 / (numeric + 100) : Math.abs(numeric) / (Math.abs(numeric) + 100);
+            };
+            const roundHalf = function(value) {
+                return Math.round(parseFloat(value || 0) * 2) / 2;
+            };
+            const clamp = function(value, min, max) {
+                return Math.min(max, Math.max(min, value));
+            };
+
             if (selectedSport === 'MLB') {
                 if (f5HomeML === '--') f5HomeML = homeML;
                 if (f5AwayML === '--') f5AwayML = awayML;
@@ -17796,6 +17808,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (f5Total === '--' && total !== '--') f5Total = Math.round(parseFloat(total) * 0.55 * 2) / 2;
                 if (f5OverOdds === '' || f5OverOdds == null) f5OverOdds = '-110';
                 if (f5UnderOdds === '' || f5UnderOdds == null) f5UnderOdds = '-110';
+            }
+
+            let awayTeamTotal = '--', homeTeamTotal = '--';
+            if (selectedSport === 'MLB' && total !== '--' && awayML !== '--' && homeML !== '--') {
+                const awayProbRaw = toProb(awayML);
+                const homeProbRaw = toProb(homeML);
+                if (awayProbRaw != null && homeProbRaw != null && (awayProbRaw + homeProbRaw) > 0) {
+                    const homeProb = homeProbRaw / (awayProbRaw + homeProbRaw);
+                    const totalNum = parseFloat(total);
+                    const homeShare = clamp(0.5 + ((homeProb - 0.5) * 0.72), 0.36, 0.64);
+                    homeTeamTotal = roundHalf(clamp(totalNum * homeShare, 2.5, totalNum - 2.5));
+                    awayTeamTotal = roundHalf(clamp(totalNum - homeTeamTotal, 2.5, totalNum - 2.5));
+                }
             }
 
             const gameTime = new Date(game.commence_time);
@@ -17868,16 +17893,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div id="expandedMarkets${index}" class="expanded-markets">
                     <div class="market-section">
                         <div class="market-title">Team Totals</div>
+                        <p style="color: var(--text-muted); font-size: 0.82rem; margin: 0 0 12px;">Estimated from full-game total and moneyline.</p>
                         <div class="team-totals-grid" style="display: grid; gap: 10px;">
                             <div class="team-total-row" style="display: flex; align-items: center; gap: 10px;">
                                 <span class="team-name" style="min-width: 100px; font-weight: 600;">${game.away_team.split(' ').pop()}</span>
-                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'teamtotal', '${game.away_team} Over', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')"><span class="line">O ${Math.round(total/2)}</span><span class="odds">-110</span></button>
-                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'teamtotal', '${game.away_team} Under', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')"><span class="line">U ${Math.round(total/2)}</span><span class="odds">-110</span></button>
+                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'team_totals', '${game.away_team} Over', '${awayTeamTotal}', '-110', '${game.away_team}', '${game.home_team}')"><span class="line">O ${awayTeamTotal}</span><span class="odds">-110</span></button>
+                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'team_totals', '${game.away_team} Under', '${awayTeamTotal}', '-110', '${game.away_team}', '${game.home_team}')"><span class="line">U ${awayTeamTotal}</span><span class="odds">-110</span></button>
                             </div>
                             <div class="team-total-row" style="display: flex; align-items: center; gap: 10px;">
                                 <span class="team-name" style="min-width: 100px; font-weight: 600;">${game.home_team.split(' ').pop()}</span>
-                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'teamtotal', '${game.home_team} Over', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')"><span class="line">O ${Math.round(total/2)}</span><span class="odds">-110</span></button>
-                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'teamtotal', '${game.home_team} Under', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')"><span class="line">U ${Math.round(total/2)}</span><span class="odds">-110</span></button>
+                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'team_totals', '${game.home_team} Over', '${homeTeamTotal}', '-110', '${game.away_team}', '${game.home_team}')"><span class="line">O ${homeTeamTotal}</span><span class="odds">-110</span></button>
+                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'team_totals', '${game.home_team} Under', '${homeTeamTotal}', '-110', '${game.away_team}', '${game.home_team}')"><span class="line">U ${homeTeamTotal}</span><span class="odds">-110</span></button>
                             </div>
                         </div>
                     </div>
@@ -18225,10 +18251,18 @@ document.addEventListener('DOMContentLoaded', function() {
         // Remove odds like (-110) or -180
         let sel = summaryPick.replace(/\s*[\(\)]?[-+]?\d+\.?\d*[\(\)]?/g, '').trim();
         // For totals, look for "Over" or "Under" in the string
-        if (betType === 'over' || betType === 'under' || betType === 'total' || betType === 'f5over' || betType === 'f5under') {
+        if (betType === 'over' || betType === 'under' || betType === 'total' || betType === 'f5over' || betType === 'f5under' || betType === 'team_totals') {
             const lower = summaryPick.toLowerCase();
             if (lower.indexOf('over') !== -1) return 'Over';
             if (lower.indexOf('under') !== -1) return 'Under';
+        }
+        if (game && betType === 'team_totals') {
+            if (summaryPick.indexOf(game.away_team) !== -1) {
+                return game.away_team + (summaryPick.toLowerCase().indexOf('under') !== -1 ? ' Under' : ' Over');
+            }
+            if (summaryPick.indexOf(game.home_team) !== -1) {
+                return game.home_team + (summaryPick.toLowerCase().indexOf('under') !== -1 ? ' Under' : ' Over');
+            }
         }
         if (game && (betType === 'ml' || betType === 'spread' || betType === 'f5ml' || betType === 'f5spread')) {
             if (summaryPick.indexOf(game.away_team) !== -1) return game.away_team;
@@ -18267,7 +18301,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Save to localStorage
         if (window.auth && window.auth.isLoggedIn()) {
-            const marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', total: 'totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals' };
+            const marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', total: 'totals', team_totals: 'team_totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals' };
             const marketType = marketTypeMap[pick.betType] || 'h2h';
             const selection = extractSelection(pick.pick, pick.betType, pick.game);
             const units = Math.max(0.5, Math.min(10, parseFloat(pick.units) || 1));

@@ -299,6 +299,76 @@
         return numeric > 0 ? '+' + numeric : String(numeric);
     }
 
+    function americanToProbability(odds) {
+        const numeric = Number(odds);
+        if (!Number.isFinite(numeric) || numeric === 0) return null;
+        if (numeric > 0) return 100 / (numeric + 100);
+        return Math.abs(numeric) / (Math.abs(numeric) + 100);
+    }
+
+    function probabilityToAmerican(probability) {
+        const clamped = Math.min(0.95, Math.max(0.05, Number(probability) || 0.5));
+        if (clamped >= 0.5) return Math.round((-100 * clamped) / (1 - clamped));
+        return Math.round((100 * (1 - clamped)) / clamped);
+    }
+
+    function roundToHalf(value) {
+        return Math.round(Number(value) * 2) / 2;
+    }
+
+    function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+    }
+
+    function normalizeProbabilities(a, b) {
+        const first = americanToProbability(a);
+        const second = americanToProbability(b);
+        if (first == null || second == null) return null;
+        const total = first + second;
+        if (!total) return null;
+        return {
+            first: first / total,
+            second: second / total
+        };
+    }
+
+    function deriveMlbMarketEstimates(game, fullGameGroup, totalGroup) {
+        if (!game || game.sport_key !== 'baseball_mlb' || !fullGameGroup || !totalGroup) return null;
+        const awayMl = (fullGameGroup.items || []).find(function(item) { return item.selection === game.away_team; }) || null;
+        const homeMl = (fullGameGroup.items || []).find(function(item) { return item.selection === game.home_team; }) || null;
+        const over = (totalGroup.items || []).find(function(item) { return String(item.selection).toLowerCase() === 'over'; }) || null;
+        const under = (totalGroup.items || []).find(function(item) { return String(item.selection).toLowerCase() === 'under'; }) || null;
+
+        if (!awayMl || !homeMl || !over || !under || over.line == null) return null;
+
+        const normalized = normalizeProbabilities(awayMl.odds, homeMl.odds);
+        if (!normalized) return null;
+
+        const fullGameTotal = Number(over.line);
+        const homeShare = clamp(0.5 + ((normalized.second - 0.5) * 0.72), 0.36, 0.64);
+        const awayShare = 1 - homeShare;
+        const homeTeamTotal = roundToHalf(clamp(fullGameTotal * homeShare, 2.5, fullGameTotal - 2.5));
+        const awayTeamTotal = roundToHalf(clamp(fullGameTotal - homeTeamTotal, 2.5, fullGameTotal - 2.5));
+        const first5HomeProb = clamp(0.5 + ((normalized.second - 0.5) * 0.82), 0.08, 0.92);
+        const first5AwayProb = 1 - first5HomeProb;
+        const first5Total = roundToHalf(clamp(fullGameTotal * 0.54, 3.0, 6.5));
+
+        return {
+            awayMl: awayMl,
+            homeMl: homeMl,
+            over: over,
+            under: under,
+            fullGameTotal: fullGameTotal,
+            awayTeamTotal: awayTeamTotal,
+            homeTeamTotal: homeTeamTotal,
+            first5Total: first5Total,
+            first5AwayMl: probabilityToAmerican(first5AwayProb),
+            first5HomeMl: probabilityToAmerican(first5HomeProb),
+            first5AwaySpreadOdds: first5AwayProb >= 0.5 ? -102 : -118,
+            first5HomeSpreadOdds: first5HomeProb >= 0.5 ? -102 : -118
+        };
+    }
+
     function createFallbackOption(game, index, groupLabel, marketType, selection, selectionLabel, odds, line, detailLabel) {
         return {
             id: 'fallback-' + index + '-' + marketType + '-' + String(selection).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
@@ -446,60 +516,61 @@
         const hasFirst5 = existingGroups.some(function(group) {
             return group && group.key === 'first_5' && Array.isArray(group.items) && group.items.length;
         });
-        if (hasFirst5) return game;
-
         const fullGameGroup = existingGroups.find(function(group) { return group && group.key === 'full_game'; }) || null;
         const spreadGroup = existingGroups.find(function(group) { return group && group.key === 'spread'; }) || null;
         const totalGroup = existingGroups.find(function(group) { return group && group.key === 'total'; }) || null;
+        const hasTeamTotals = existingGroups.some(function(group) {
+            return group && group.key === 'team_totals' && Array.isArray(group.items) && group.items.length;
+        });
+        const estimates = deriveMlbMarketEstimates(game, fullGameGroup, totalGroup);
+        if (!estimates) return game;
 
-        const awayMl = fullGameGroup && Array.isArray(fullGameGroup.items)
-            ? fullGameGroup.items.find(function(item) { return item.selection === game.away_team; })
-            : null;
-        const homeMl = fullGameGroup && Array.isArray(fullGameGroup.items)
-            ? fullGameGroup.items.find(function(item) { return item.selection === game.home_team; })
-            : null;
-        const over = totalGroup && Array.isArray(totalGroup.items)
-            ? totalGroup.items.find(function(item) { return String(item.selection).toLowerCase() === 'over'; })
-            : null;
-        const under = totalGroup && Array.isArray(totalGroup.items)
-            ? totalGroup.items.find(function(item) { return String(item.selection).toLowerCase() === 'under'; })
-            : null;
+        const bookTitle = estimates.awayMl.book_title || estimates.homeMl.book_title || estimates.over.book_title || 'Derived from full-game lines';
+        const sourceUpdatedAt = game.updated_at || estimates.awayMl.source_updated_at || estimates.over.source_updated_at || null;
 
-        if (!awayMl || !homeMl || !over || !under || over.line == null) {
-            return game;
+        if (!hasTeamTotals) {
+            const teamTotalItems = [
+                createFallbackOption(game, game.id, 'Team Totals', 'team_totals', game.away_team + ' Over', game.away_team + ' Over ' + estimates.awayTeamTotal, -110, estimates.awayTeamTotal, 'Estimated from full-game lines'),
+                createFallbackOption(game, game.id, 'Team Totals', 'team_totals', game.away_team + ' Under', game.away_team + ' Under ' + estimates.awayTeamTotal, -110, estimates.awayTeamTotal, 'Estimated from full-game lines'),
+                createFallbackOption(game, game.id, 'Team Totals', 'team_totals', game.home_team + ' Over', game.home_team + ' Over ' + estimates.homeTeamTotal, -110, estimates.homeTeamTotal, 'Estimated from full-game lines'),
+                createFallbackOption(game, game.id, 'Team Totals', 'team_totals', game.home_team + ' Under', game.home_team + ' Under ' + estimates.homeTeamTotal, -110, estimates.homeTeamTotal, 'Estimated from full-game lines')
+            ];
+            teamTotalItems.forEach(function(item) {
+                item.book_title = bookTitle;
+                item.book_key = estimates.awayMl.book_key || estimates.homeMl.book_key || estimates.over.book_key || '';
+                item.source = 'derived';
+                item.source_label = 'Estimated from full-game lines';
+                item.source_updated_at = sourceUpdatedAt;
+            });
+            existingGroups.push({
+                key: 'team_totals',
+                label: 'Team Totals',
+                items: teamTotalItems
+            });
         }
 
-        const first5Total = Math.round(Number(over.line) * 0.55 * 2) / 2;
-        const first5Items = [];
-        const bookTitle = awayMl.book_title || homeMl.book_title || over.book_title || 'Derived from full-game lines';
-        const sourceUpdatedAt = game.updated_at || awayMl.source_updated_at || over.source_updated_at || null;
-        const spreadItems = spreadGroup && Array.isArray(spreadGroup.items) ? spreadGroup.items : [];
-        const awaySpread = spreadItems.find(function(item) { return item.selection === game.away_team; }) || null;
-        const homeSpread = spreadItems.find(function(item) { return item.selection === game.home_team; }) || null;
-
-        if (awaySpread || homeSpread) {
-            first5Items.push(createFallbackOption(game, game.id, 'First 5', 'f5_spreads', game.away_team, game.away_team + ' +0.5', -118, 0.5, 'Derived first 5 run line'));
-            first5Items.push(createFallbackOption(game, game.id, 'First 5', 'f5_spreads', game.home_team, game.home_team + ' -0.5', -102, -0.5, 'Derived first 5 run line'));
+        if (!hasFirst5) {
+            const first5Items = [
+                createFallbackOption(game, game.id, 'First 5', 'f5_spreads', game.away_team, game.away_team + ' +0.5', estimates.first5AwaySpreadOdds, 0.5, 'Estimated from full-game lines'),
+                createFallbackOption(game, game.id, 'First 5', 'f5_spreads', game.home_team, game.home_team + ' -0.5', estimates.first5HomeSpreadOdds, -0.5, 'Estimated from full-game lines'),
+                createFallbackOption(game, game.id, 'First 5', 'f5_h2h', game.away_team, game.away_team + ' F5 ML', estimates.first5AwayMl, null, 'Estimated from full-game lines'),
+                createFallbackOption(game, game.id, 'First 5', 'f5_h2h', game.home_team, game.home_team + ' F5 ML', estimates.first5HomeMl, null, 'Estimated from full-game lines'),
+                createFallbackOption(game, game.id, 'First 5', 'f5_totals', 'Over', 'F5 Over ' + estimates.first5Total, -110, estimates.first5Total, 'Estimated from full-game lines'),
+                createFallbackOption(game, game.id, 'First 5', 'f5_totals', 'Under', 'F5 Under ' + estimates.first5Total, -110, estimates.first5Total, 'Estimated from full-game lines')
+            ];
+            first5Items.forEach(function(item) {
+                item.book_title = bookTitle;
+                item.book_key = estimates.awayMl.book_key || estimates.homeMl.book_key || estimates.over.book_key || '';
+                item.source = 'derived';
+                item.source_label = 'Estimated from full-game lines';
+                item.source_updated_at = sourceUpdatedAt;
+            });
+            existingGroups.push({
+                key: 'first_5',
+                label: 'First 5',
+                items: first5Items
+            });
         }
-
-        first5Items.push(createFallbackOption(game, game.id, 'First 5', 'f5_h2h', game.away_team, game.away_team + ' F5 ML', awayMl.odds, null, 'Derived first 5 moneyline'));
-        first5Items.push(createFallbackOption(game, game.id, 'First 5', 'f5_h2h', game.home_team, game.home_team + ' F5 ML', homeMl.odds, null, 'Derived first 5 moneyline'));
-        first5Items.push(createFallbackOption(game, game.id, 'First 5', 'f5_totals', 'Over', 'F5 Over ' + first5Total, -110, first5Total, 'Derived first 5 total'));
-        first5Items.push(createFallbackOption(game, game.id, 'First 5', 'f5_totals', 'Under', 'F5 Under ' + first5Total, -110, first5Total, 'Derived first 5 total'));
-
-        first5Items.forEach(function(item) {
-            item.book_title = bookTitle;
-            item.book_key = awayMl.book_key || homeMl.book_key || over.book_key || '';
-            item.source = 'derived';
-            item.source_label = item.source_label || 'Derived from full-game lines';
-            item.source_updated_at = sourceUpdatedAt;
-        });
-
-        existingGroups.push({
-            key: 'first_5',
-            label: 'First 5',
-            items: first5Items
-        });
 
         return Object.assign({}, game, {
             market_groups: existingGroups
@@ -545,13 +616,23 @@
                 return group && group.key === 'first_5' && group.items && group.items.length;
             });
 
-            (game.market_groups || []).forEach(function(group) {
+            const orderedGroups = (game.market_groups || []).slice().sort(function(a, b) {
+                const order = { full_game: 1, spread: 2, total: 3, team_totals: 4, first_5: 5 };
+                return (order[a && a.key] || 99) - (order[b && b.key] || 99);
+            });
+
+            orderedGroups.forEach(function(group) {
+                const groupItems = group.items || [];
+                const derivedOnly = groupItems.length > 0 && groupItems.every(function(option) { return option && option.source === 'derived'; });
                 const buttons = (group.items || []).map(function(option) {
                     state.currentOptions.set(option.id, Object.assign({ game: game }, option));
+                    const detailLabel = option && option.source === 'derived'
+                        ? (option.source_label || 'Estimated from full-game lines') + (option.book_title ? ' | ' + option.book_title : '')
+                        : (option.book_title || option.source_label || option.group_label);
                     return '<button class="tmr-option-btn" id="option-' + option.id + '" onclick="window.tmrSelectOption(\'' + option.id + '\')">' +
                         '<div class="tmr-option-main">' +
                         '<div class="tmr-option-market">' + escapeHtml(option.selection_label) + '</div>' +
-                        '<div class="tmr-option-detail">' + escapeHtml(option.book_title || option.source_label || option.group_label) + '</div>' +
+                        '<div class="tmr-option-detail">' + escapeHtml(detailLabel) + '</div>' +
                         '</div>' +
                         '<div class="tmr-option-odds">' + escapeHtml(option.odds_display || 'Manual') + '</div>' +
                         '</button>';
@@ -559,7 +640,7 @@
 
                 if (buttons) {
                     groupsHtml += '<div class="tmr-group" data-scope="' + getGroupScope(group) + '">' +
-                        '<div class="tmr-group-title">' + escapeHtml(group.label) + '</div>' +
+                        '<div class="tmr-group-title">' + escapeHtml(group.label + (derivedOnly ? ' (Estimated)' : '')) + '</div>' +
                         '<div class="tmr-option-grid">' + buttons + '</div>' +
                         '</div>';
                 }
