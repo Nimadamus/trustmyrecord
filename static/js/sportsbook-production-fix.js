@@ -430,7 +430,7 @@
         };
     }
 
-    function deriveMlbMarketEstimates(game, fullGameGroup, totalGroup) {
+    function deriveMlbFirst5Fallback(game, fullGameGroup, totalGroup) {
         if (!game || game.sport_key !== 'baseball_mlb' || !fullGameGroup || !totalGroup) return null;
         const awayMl = (fullGameGroup.items || []).find(function(item) { return item.selection === game.away_team; }) || null;
         const homeMl = (fullGameGroup.items || []).find(function(item) { return item.selection === game.home_team; }) || null;
@@ -443,10 +443,6 @@
         if (!normalized) return null;
 
         const fullGameTotal = Number(over.line);
-        const homeShare = clamp(0.5 + ((normalized.second - 0.5) * 0.72), 0.36, 0.64);
-        const awayShare = 1 - homeShare;
-        const homeTeamTotal = roundToHalf(clamp(fullGameTotal * homeShare, 2.5, fullGameTotal - 2.5));
-        const awayTeamTotal = roundToHalf(clamp(fullGameTotal - homeTeamTotal, 2.5, fullGameTotal - 2.5));
         const first5HomeProb = clamp(0.5 + ((normalized.second - 0.5) * 0.82), 0.08, 0.92);
         const first5AwayProb = 1 - first5HomeProb;
         const first5Total = roundToHalf(clamp(fullGameTotal * 0.54, 3.0, 6.5));
@@ -456,9 +452,6 @@
             homeMl: homeMl,
             over: over,
             under: under,
-            fullGameTotal: fullGameTotal,
-            awayTeamTotal: awayTeamTotal,
-            homeTeamTotal: homeTeamTotal,
             first5Total: first5Total,
             first5AwayMl: probabilityToAmerican(first5AwayProb),
             first5HomeMl: probabilityToAmerican(first5HomeProb),
@@ -615,37 +608,12 @@
             return group && group.key === 'first_5' && Array.isArray(group.items) && group.items.length;
         });
         const fullGameGroup = existingGroups.find(function(group) { return group && group.key === 'full_game'; }) || null;
-        const spreadGroup = existingGroups.find(function(group) { return group && group.key === 'spread'; }) || null;
         const totalGroup = existingGroups.find(function(group) { return group && group.key === 'total'; }) || null;
-        const hasTeamTotals = existingGroups.some(function(group) {
-            return group && group.key === 'team_totals' && Array.isArray(group.items) && group.items.length;
-        });
-        const estimates = deriveMlbMarketEstimates(game, fullGameGroup, totalGroup);
+        const estimates = deriveMlbFirst5Fallback(game, fullGameGroup, totalGroup);
         if (!estimates) return game;
 
         const bookTitle = estimates.awayMl.book_title || estimates.homeMl.book_title || estimates.over.book_title || 'Derived from full-game lines';
         const sourceUpdatedAt = game.updated_at || estimates.awayMl.source_updated_at || estimates.over.source_updated_at || null;
-
-        if (!hasTeamTotals) {
-            const teamTotalItems = [
-                createFallbackOption(game, game.id, 'Team Totals', 'team_totals', game.away_team + ' Over', game.away_team + ' Over ' + estimates.awayTeamTotal, -110, estimates.awayTeamTotal, 'Estimated from full-game lines'),
-                createFallbackOption(game, game.id, 'Team Totals', 'team_totals', game.away_team + ' Under', game.away_team + ' Under ' + estimates.awayTeamTotal, -110, estimates.awayTeamTotal, 'Estimated from full-game lines'),
-                createFallbackOption(game, game.id, 'Team Totals', 'team_totals', game.home_team + ' Over', game.home_team + ' Over ' + estimates.homeTeamTotal, -110, estimates.homeTeamTotal, 'Estimated from full-game lines'),
-                createFallbackOption(game, game.id, 'Team Totals', 'team_totals', game.home_team + ' Under', game.home_team + ' Under ' + estimates.homeTeamTotal, -110, estimates.homeTeamTotal, 'Estimated from full-game lines')
-            ];
-            teamTotalItems.forEach(function(item) {
-                item.book_title = bookTitle;
-                item.book_key = estimates.awayMl.book_key || estimates.homeMl.book_key || estimates.over.book_key || '';
-                item.source = 'derived';
-                item.source_label = 'Estimated from full-game lines';
-                item.source_updated_at = sourceUpdatedAt;
-            });
-            existingGroups.push({
-                key: 'team_totals',
-                label: 'Team Totals',
-                items: teamTotalItems
-            });
-        }
 
         if (!hasFirst5) {
             const first5Items = [

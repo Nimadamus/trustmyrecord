@@ -17544,7 +17544,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="static/js/forums.js?v=20251208c"></script>
     <!-- forms.js REMOVED - forms-fixed.js handles login/signup -->
     <script src="static/js/navigation.js?v=20251208c"></script>
-    <script src="static/js/sportsbook-production-fix.js?v=20260414g"></script>
+    <script src="static/js/sportsbook-production-fix.js?v=20260414h"></script>
     <script src="static/js/effects.js?v=20251208c"></script>
 
     <script src="static/js/app.js?v=20260122"></script>
@@ -17810,19 +17810,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (f5UnderOdds === '' || f5UnderOdds == null) f5UnderOdds = '-110';
             }
 
-            let awayTeamTotal = '--', homeTeamTotal = '--';
-            if (selectedSport === 'MLB' && total !== '--' && awayML !== '--' && homeML !== '--') {
-                const awayProbRaw = toProb(awayML);
-                const homeProbRaw = toProb(homeML);
-                if (awayProbRaw != null && homeProbRaw != null && (awayProbRaw + homeProbRaw) > 0) {
-                    const homeProb = homeProbRaw / (awayProbRaw + homeProbRaw);
-                    const totalNum = parseFloat(total);
-                    const homeShare = clamp(0.5 + ((homeProb - 0.5) * 0.72), 0.36, 0.64);
-                    homeTeamTotal = roundHalf(clamp(totalNum * homeShare, 2.5, totalNum - 2.5));
-                    awayTeamTotal = roundHalf(clamp(totalNum - homeTeamTotal, 2.5, totalNum - 2.5));
-                }
-            }
-
             const gameTime = new Date(game.commence_time);
             const timeStr = gameTime.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
             const mlbTabs = selectedSport === 'MLB' ? `
@@ -17891,22 +17878,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     <span>▼</span>
                 </button>
                 <div id="expandedMarkets${index}" class="expanded-markets">
-                    <div class="market-section">
-                        <div class="market-title">Team Totals</div>
-                        <p style="color: var(--text-muted); font-size: 0.82rem; margin: 0 0 12px;">Estimated from full-game total and moneyline.</p>
-                        <div class="team-totals-grid" style="display: grid; gap: 10px;">
-                            <div class="team-total-row" style="display: flex; align-items: center; gap: 10px;">
-                                <span class="team-name" style="min-width: 100px; font-weight: 600;">${game.away_team.split(' ').pop()}</span>
-                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'team_totals', '${game.away_team} Over', '${awayTeamTotal}', '-110', '${game.away_team}', '${game.home_team}')"><span class="line">O ${awayTeamTotal}</span><span class="odds">-110</span></button>
-                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'team_totals', '${game.away_team} Under', '${awayTeamTotal}', '-110', '${game.away_team}', '${game.home_team}')"><span class="line">U ${awayTeamTotal}</span><span class="odds">-110</span></button>
-                            </div>
-                            <div class="team-total-row" style="display: flex; align-items: center; gap: 10px;">
-                                <span class="team-name" style="min-width: 100px; font-weight: 600;">${game.home_team.split(' ').pop()}</span>
-                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'team_totals', '${game.home_team} Over', '${homeTeamTotal}', '-110', '${game.away_team}', '${game.home_team}')"><span class="line">O ${homeTeamTotal}</span><span class="odds">-110</span></button>
-                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'team_totals', '${game.home_team} Under', '${homeTeamTotal}', '-110', '${game.away_team}', '${game.home_team}')"><span class="line">U ${homeTeamTotal}</span><span class="odds">-110</span></button>
-                            </div>
-                        </div>
-                    </div>
                     <div class="market-section">
                         <div class="market-title">Player Props & Alt Lines</div>
                         <p style="color: var(--text-muted); font-size: 0.9rem;">Coming soon</p>
