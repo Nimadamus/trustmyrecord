@@ -17583,6 +17583,11 @@ document.addEventListener('DOMContentLoaded', function() {
     async function loadGamesWithAllBets() {
         console.log('[TMR] loadGamesWithAllBets called, selectedSport:', selectedSport);
 
+        if (selectedSport && typeof window.selectSportAndShowGames === 'function') {
+            console.log('[TMR] loadGamesWithAllBets delegating to selectSportAndShowGames');
+            return window.selectSportAndShowGames(selectedSport);
+        }
+
         const container = document.getElementById('gamesListContainer');
         const countBadge = document.getElementById('gamesCountBadge');
 
