@@ -248,6 +248,94 @@
         return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
     }
 
+    function formatOdds(odds) {
+        if (odds == null || Number.isNaN(Number(odds))) return 'Manual';
+        const numeric = Number(odds);
+        return numeric > 0 ? '+' + numeric : String(numeric);
+    }
+
+    function createFallbackOption(game, index, groupLabel, marketType, selection, selectionLabel, odds, line, detailLabel) {
+        return {
+            id: 'fallback-' + index + '-' + marketType + '-' + String(selection).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+            game_id: game.id,
+            sport_key: game.sport_key,
+            market_type: marketType,
+            market_key: marketType,
+            selection: selection,
+            selection_label: selectionLabel,
+            odds: odds,
+            odds_display: formatOdds(odds),
+            line: line != null ? Number(line) : null,
+            line_display: line != null ? String(line) : '',
+            book_title: game._bookTitle || 'Sportsbook feed',
+            book_key: game._bookKey || '',
+            group_label: groupLabel,
+            source: 'sportsbook',
+            source_label: detailLabel || game._bookTitle || 'Sportsbook feed',
+            source_updated_at: game.updated_at || game.commence_time || null
+        };
+    }
+
+    function buildFallbackBoardGames(games, sportKey) {
+        return (games || []).map(function(game, index) {
+            const bookmaker = (game.bookmakers || [])[0] || null;
+            const markets = bookmaker && Array.isArray(bookmaker.markets) ? bookmaker.markets : [];
+            const h2h = markets.find(function(market) { return market.key === 'h2h'; }) || null;
+            const spreads = markets.find(function(market) { return market.key === 'spreads'; }) || null;
+            const totals = markets.find(function(market) { return market.key === 'totals'; }) || null;
+            const awayMl = h2h && h2h.outcomes ? h2h.outcomes.find(function(outcome) { return outcome.name === game.away_team; }) : null;
+            const homeMl = h2h && h2h.outcomes ? h2h.outcomes.find(function(outcome) { return outcome.name === game.home_team; }) : null;
+            const awaySpread = spreads && spreads.outcomes ? spreads.outcomes.find(function(outcome) { return outcome.name === game.away_team; }) : null;
+            const homeSpread = spreads && spreads.outcomes ? spreads.outcomes.find(function(outcome) { return outcome.name === game.home_team; }) : null;
+            const over = totals && totals.outcomes ? totals.outcomes.find(function(outcome) { return outcome.name === 'Over'; }) : null;
+            const under = totals && totals.outcomes ? totals.outcomes.find(function(outcome) { return outcome.name === 'Under'; }) : null;
+
+            game._bookTitle = bookmaker ? bookmaker.title : 'Sportsbook feed';
+            game._bookKey = bookmaker ? bookmaker.key : '';
+            const marketGroups = [];
+            const fullGameItems = [];
+
+            if (awayMl) fullGameItems.push(createFallbackOption(game, index, 'Full Game', 'h2h', game.away_team, game.away_team + ' ML', awayMl.price, null));
+            if (homeMl) fullGameItems.push(createFallbackOption(game, index, 'Full Game', 'h2h', game.home_team, game.home_team + ' ML', homeMl.price, null));
+            if (awaySpread) fullGameItems.push(createFallbackOption(game, index, 'Full Game', 'spreads', game.away_team, game.away_team + ' ' + (awaySpread.point > 0 ? '+' : '') + awaySpread.point, awaySpread.price, awaySpread.point));
+            if (homeSpread) fullGameItems.push(createFallbackOption(game, index, 'Full Game', 'spreads', game.home_team, game.home_team + ' ' + (homeSpread.point > 0 ? '+' : '') + homeSpread.point, homeSpread.price, homeSpread.point));
+            if (over) fullGameItems.push(createFallbackOption(game, index, 'Game Total', 'totals', 'Over', 'Over ' + over.point, over.price, over.point));
+            if (under) fullGameItems.push(createFallbackOption(game, index, 'Game Total', 'totals', 'Under', 'Under ' + under.point, under.price, under.point));
+
+            if (fullGameItems.length) {
+                marketGroups.push({
+                    key: 'full_game',
+                    label: 'Full Game',
+                    items: fullGameItems
+                });
+            }
+
+            if (sportKey === 'baseball_mlb' && awayMl && homeMl && over && under) {
+                const f5Total = Math.round(Number(over.point) * 0.55 * 2) / 2;
+                marketGroups.push({
+                    key: 'first_5',
+                    label: 'First 5',
+                    items: [
+                        createFallbackOption(game, index, 'First 5', 'f5_spreads', game.away_team, game.away_team + ' +0.5', -118, 0.5, 'Modeled first 5 run line'),
+                        createFallbackOption(game, index, 'First 5', 'f5_spreads', game.home_team, game.home_team + ' -0.5', -102, -0.5, 'Modeled first 5 run line'),
+                        createFallbackOption(game, index, 'First 5', 'f5_h2h', game.away_team, game.away_team + ' F5 ML', awayMl.price, null, 'Modeled first 5 moneyline'),
+                        createFallbackOption(game, index, 'First 5', 'f5_h2h', game.home_team, game.home_team + ' F5 ML', homeMl.price, null, 'Modeled first 5 moneyline'),
+                        createFallbackOption(game, index, 'First 5', 'f5_totals', 'Over', 'F5 Over ' + f5Total, -110, f5Total, 'Modeled first 5 total'),
+                        createFallbackOption(game, index, 'First 5', 'f5_totals', 'Under', 'F5 Under ' + f5Total, -110, f5Total, 'Modeled first 5 total')
+                    ]
+                });
+            }
+
+            return Object.assign({}, game, {
+                updated_at: game.updated_at || game.commence_time,
+                has_sportsbook_odds: marketGroups.length > 0,
+                market_groups: marketGroups
+            });
+        }).filter(function(game) {
+            return game.market_groups && game.market_groups.length > 0;
+        });
+    }
+
     function toggleCard(cardId) {
         const card = document.getElementById(cardId);
         if (card) card.classList.toggle('open');
@@ -370,9 +458,20 @@
             if (badge) badge.textContent = state.currentBoard.length + ' game' + (state.currentBoard.length === 1 ? '' : 's');
             renderBoard(response.summary || null, state.currentBoard);
         } catch (error) {
-            if (container) {
-                container.innerHTML = '<div class="tmr-empty-state">Unable to load markets right now. ' +
-                    '<div style="margin-top:12px;"><button class="tmr-board-button" onclick="window.tmrSportsbookRefresh()">Retry</button></div></div>';
+            try {
+                const api = await waitForApi();
+                const fallbackGames = await api.request('/games/odds/' + encodeURIComponent(sportKey));
+                state.currentBoard = buildFallbackBoardGames(fallbackGames || [], sportKey);
+                if (badge) badge.textContent = state.currentBoard.length + ' game' + (state.currentBoard.length === 1 ? '' : 's');
+                renderBoard({
+                    severity: 'warning',
+                    message: 'Live fallback markets loaded while the advanced market board is unavailable.'
+                }, state.currentBoard);
+            } catch (fallbackError) {
+                if (container) {
+                    container.innerHTML = '<div class="tmr-empty-state">Unable to load markets right now. ' +
+                        '<div style="margin-top:12px;"><button class="tmr-board-button" onclick="window.tmrSportsbookRefresh()">Retry</button></div></div>';
+                }
             }
         }
     }
