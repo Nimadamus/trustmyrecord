@@ -28,6 +28,10 @@
         selectedOption: null,
         currentUserPicks: []
     };
+    const BOARD_CACHE_TTL_MS = 45000;
+    const boardCache = new Map();
+    const boardRequests = new Map();
+    let latestBoardRequestId = 0;
 
     const MARKET_LABELS = {
         h2h: 'Moneyline',
@@ -118,10 +122,24 @@
         bases.push('https://trustmyrecord-api.onrender.com/api');
         return bases.filter(function(base, index, arr) {
             return base && arr.indexOf(base) === index;
+        }).sort(function(a, b) {
+            return rankApiBase(a) - rankApiBase(b);
         });
     }
 
-    async function directApiRequest(endpoint) {
+    function rankApiBase(base) {
+        const value = String(base || '').toLowerCase();
+        if (!value) return 99;
+        if (value.indexOf('trustmyrecord-api.onrender.com') !== -1) return 0;
+        if (value.indexOf('localhost') !== -1 || value.indexOf('127.0.0.1') !== -1) return 3;
+        if (value.indexOf('loca.lt') !== -1) return 2;
+        if (value.indexOf('https://') === 0) return 1;
+        return 4;
+    }
+
+    async function directApiRequest(endpoint, options) {
+        const settings = options || {};
+        const timeoutMs = Number(settings.timeoutMs) || 8000;
         let lastError = null;
         for (const base of getDirectApiBases()) {
             try {
@@ -131,7 +149,7 @@
                 }
                 const response = await fetch(String(base).replace(/\/$/, '') + endpoint, {
                     headers: headers,
-                    signal: AbortSignal.timeout(20000)
+                    signal: AbortSignal.timeout(timeoutMs)
                 });
                 if (!response.ok) {
                     throw new Error('HTTP ' + response.status + ' from ' + base);
@@ -142,6 +160,86 @@
             }
         }
         throw lastError || new Error('Direct API request failed');
+    }
+
+    function getCachedBoard(sportKey) {
+        const cached = boardCache.get(sportKey);
+        if (!cached) return null;
+        if ((Date.now() - cached.timestamp) > BOARD_CACHE_TTL_MS) {
+            boardCache.delete(sportKey);
+            return null;
+        }
+        return cached.data;
+    }
+
+    function setCachedBoard(sportKey, data) {
+        if (!sportKey || !data) return;
+        boardCache.set(sportKey, {
+            data: data,
+            timestamp: Date.now()
+        });
+    }
+
+    async function fetchMarketBoardFast(sportKey, forceRefresh) {
+        if (!sportKey) throw new Error('Missing sport key');
+        if (!forceRefresh) {
+            const cached = getCachedBoard(sportKey);
+            if (cached) return cached;
+        }
+        if (boardRequests.has(sportKey)) {
+            return boardRequests.get(sportKey);
+        }
+
+        const request = (async function() {
+            try {
+                const directBoard = await directApiRequest('/games/board/' + encodeURIComponent(sportKey), { timeoutMs: 8000 });
+                setCachedBoard(sportKey, directBoard);
+                return directBoard;
+            } catch (directError) {
+                const api = await waitForApi();
+                const response = await api.getMarketBoard(sportKey);
+                setCachedBoard(sportKey, response);
+                return response;
+            } finally {
+                boardRequests.delete(sportKey);
+            }
+        })();
+
+        boardRequests.set(sportKey, request);
+        return request;
+    }
+
+    function updateBoardBadge(badge, totalGames) {
+        if (!badge) return;
+        badge.textContent = totalGames + ' game' + (totalGames === 1 ? '' : 's');
+    }
+
+    function renderBoardIfCurrent(requestId, sport, badge, response) {
+        if (requestId !== latestBoardRequestId || state.selectedSport !== sport) return false;
+        state.currentBoard = response.games || [];
+        updateBoardBadge(badge, state.currentBoard.length);
+        renderBoard(response.summary || null, state.currentBoard);
+        return true;
+    }
+
+    function prefetchSportBoard(sport) {
+        const sportKey = SPORT_KEY_MAP[sport];
+        if (!sportKey || getCachedBoard(sportKey) || boardRequests.has(sportKey)) return;
+        fetchMarketBoardFast(sportKey, false).catch(function() {});
+    }
+
+    function wireSportPrefetch() {
+        document.querySelectorAll('.sport-card[data-sport]').forEach(function(card) {
+            if (card.dataset.prefetchBound === 'true') return;
+            const sport = card.dataset.sport;
+            const triggerPrefetch = function() {
+                prefetchSportBoard(sport);
+            };
+            card.addEventListener('mouseenter', triggerPrefetch, { passive: true });
+            card.addEventListener('focus', triggerPrefetch, { passive: true });
+            card.addEventListener('touchstart', triggerPrefetch, { passive: true });
+            card.dataset.prefetchBound = 'true';
+        });
     }
 
     async function fetchCurrentUserPicks() {
@@ -682,6 +780,7 @@
     }
 
     async function selectSportAndShowGames(sport) {
+        const requestId = ++latestBoardRequestId;
         state.selectedSport = sport;
         window.TMR = window.TMR || {};
         window.TMR.selectedSport = sport;
@@ -689,45 +788,44 @@
         const container = document.getElementById('gamesListContainer');
         const title = document.getElementById('selectedSportTitle');
         const badge = document.getElementById('gamesCountBadge');
+        const cachedBoard = getCachedBoard(sportKey);
 
         if (title) title.textContent = sport + ' Markets';
-        if (container) container.innerHTML = '<div class="tmr-empty-state">Loading live markets...</div>';
+        if (container && !cachedBoard) {
+            container.innerHTML = '<div class="tmr-empty-state">Loading live markets...</div>';
+        }
         if (typeof window.showPickStep === 'function') window.showPickStep('gamesListSection');
 
+        if (cachedBoard) {
+            renderBoardIfCurrent(requestId, sport, badge, cachedBoard);
+        }
+
         try {
-            const api = await waitForApi();
-            const response = await api.getMarketBoard(sportKey);
-            state.currentBoard = response.games || [];
-            if (badge) badge.textContent = state.currentBoard.length + ' game' + (state.currentBoard.length === 1 ? '' : 's');
-            renderBoard(response.summary || null, state.currentBoard);
+            const response = await fetchMarketBoardFast(sportKey, false);
+            renderBoardIfCurrent(requestId, sport, badge, response);
         } catch (error) {
             try {
-                const directBoard = await directApiRequest('/games/board/' + encodeURIComponent(sportKey));
-                state.currentBoard = directBoard.games || [];
-                if (badge) badge.textContent = state.currentBoard.length + ' game' + (state.currentBoard.length === 1 ? '' : 's');
-                renderBoard(directBoard.summary || null, state.currentBoard);
-                return;
-            } catch (directBoardError) {
+                let fallbackGames = null;
                 try {
-                    let fallbackGames = null;
-                    try {
-                        const api = await waitForApi();
-                        fallbackGames = await api.request('/games/odds/' + encodeURIComponent(sportKey));
-                    } catch (apiFallbackError) {}
-                    if (!Array.isArray(fallbackGames)) {
-                        fallbackGames = await directApiRequest('/games/odds/' + encodeURIComponent(sportKey));
-                    }
+                    fallbackGames = await directApiRequest('/games/odds/' + encodeURIComponent(sportKey), { timeoutMs: 8000 });
+                } catch (directOddsError) {}
+                if (!Array.isArray(fallbackGames)) {
+                    const api = await waitForApi();
+                    fallbackGames = await api.request('/games/odds/' + encodeURIComponent(sportKey));
+                }
+                if (requestId !== latestBoardRequestId || state.selectedSport !== sport) return;
                 state.currentBoard = buildFallbackBoardGames(fallbackGames || [], sportKey);
-                if (badge) badge.textContent = state.currentBoard.length + ' game' + (state.currentBoard.length === 1 ? '' : 's');
+                updateBoardBadge(badge, state.currentBoard.length);
                 renderBoard({
                     severity: 'warning',
                     message: 'Live fallback markets loaded while the advanced market board is unavailable.'
                 }, state.currentBoard);
-                } catch (fallbackError) {
-                    if (container) {
-                        container.innerHTML = '<div class="tmr-empty-state">Unable to load markets right now. ' +
-                            '<div style="margin-top:12px;"><button class="tmr-board-button" onclick="window.tmrSportsbookRefresh()">Retry</button></div></div>';
-                    }
+                return;
+            } catch (fallbackError) {
+                if (requestId !== latestBoardRequestId || state.selectedSport !== sport) return;
+                if (container && !cachedBoard) {
+                    container.innerHTML = '<div class="tmr-empty-state">Unable to load markets right now. ' +
+                        '<div style="margin-top:12px;"><button class="tmr-board-button" onclick="window.tmrSportsbookRefresh()">Retry</button></div></div>';
                 }
             }
         }
@@ -954,6 +1052,7 @@
         injectStyles();
         ensureMetadataFields();
         disableLegacyFeed();
+        wireSportPrefetch();
 
         window.tmrToggleCard = toggleCard;
         window.tmrSetCardScope = setCardScope;
@@ -990,6 +1089,9 @@
         }
 
         fetchCurrentUserPicks().then(syncRecordWidgets).catch(function() {});
+        setTimeout(function() {
+            prefetchSportBoard('MLB');
+        }, 1200);
     }
 
     document.addEventListener('DOMContentLoaded', boot);
