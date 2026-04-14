@@ -14,6 +14,22 @@ class TrustMyRecordAPI {
         this.ready = this.detectBackend();
     }
 
+    getCandidateBaseUrls(preferredUrl) {
+        const urls = [];
+        const pushUrl = (value) => {
+            if (value && !urls.includes(value)) urls.push(value);
+        };
+
+        pushUrl(preferredUrl);
+        pushUrl(this.baseUrl);
+        pushUrl(CONFIG?.api?.baseUrl);
+
+        const fallbackUrls = CONFIG?.api?.fallbackUrls || [];
+        fallbackUrls.forEach(pushUrl);
+
+        return urls;
+    }
+
     // Auto-detect which backend URL is reachable
     // Render free tier cold-starts can take 30-60s, so we retry
     async detectBackend() {
@@ -98,35 +114,57 @@ class TrustMyRecordAPI {
 
     // HTTP Request Helper
     async request(endpoint, options = {}) {
-        const url = `${this.baseUrl}${endpoint}`;
-        const config = {
-            headers: this.getAuthHeaders(),
-            ...options
-        };
+        const candidateUrls = this.getCandidateBaseUrls();
+        let lastError = null;
 
-        if (config.body && typeof config.body === 'object') {
-            config.body = JSON.stringify(config.body);
-        }
-
-        try {
-            const response = await fetch(url, config);
-            
-            // Handle token expiration
-            if (response.status === 401 && this.refreshToken) {
-                const refreshed = await this.refreshAccessToken();
-                if (refreshed) {
-                    // Retry request with new token
-                    config.headers['Authorization'] = `Bearer ${this.token}`;
-                    const retryResponse = await fetch(url, config);
-                    return this.handleResponse(retryResponse);
+        for (const baseUrl of candidateUrls) {
+            const url = `${baseUrl}${endpoint}`;
+            const config = {
+                ...options,
+                headers: {
+                    ...this.getAuthHeaders(),
+                    ...(options.headers || {})
                 }
+            };
+
+            if (config.body && typeof config.body === 'object') {
+                config.body = JSON.stringify(config.body);
             }
 
-            return this.handleResponse(response);
-        } catch (error) {
-            console.error('API Request Error:', error);
-            throw error;
+            try {
+                let response = await fetch(url, config);
+
+                // Handle token expiration
+                if (response.status === 401 && this.refreshToken) {
+                    const refreshed = await this.refreshAccessToken(baseUrl);
+                    if (refreshed) {
+                        response = await fetch(url, {
+                            ...config,
+                            headers: {
+                                ...config.headers,
+                                Authorization: `Bearer ${this.token}`
+                            }
+                        });
+                    }
+                }
+
+                const data = await this.handleResponse(response);
+                this.baseUrl = baseUrl;
+                this.backendAvailable = true;
+                this.isLocaltunnel = baseUrl.includes('loca.lt');
+                return data;
+            } catch (error) {
+                lastError = error;
+                const isRetryable = !error || error.backendDown || error.name === 'TypeError';
+                if (!isRetryable) {
+                    throw error;
+                }
+            }
         }
+
+        this.backendAvailable = false;
+        console.error('API Request Error:', lastError);
+        throw lastError || new Error('Backend unavailable');
     }
 
     async handleResponse(response) {
@@ -161,9 +199,10 @@ class TrustMyRecordAPI {
         return data;
     }
 
-    async refreshAccessToken() {
+    async refreshAccessToken(baseUrlOverride) {
         try {
-            const response = await fetch(`${this.baseUrl}/auth/refresh`, {
+            const refreshBaseUrl = baseUrlOverride || this.baseUrl;
+            const response = await fetch(`${refreshBaseUrl}/auth/refresh`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ refreshToken: this.refreshToken })
@@ -171,6 +210,8 @@ class TrustMyRecordAPI {
 
             if (response.ok) {
                 const data = await response.json();
+                this.baseUrl = refreshBaseUrl;
+                this.backendAvailable = true;
                 this.saveTokens(data.accessToken || data.access_token, data.refreshToken || data.refresh_token || this.refreshToken);
                 return true;
             }

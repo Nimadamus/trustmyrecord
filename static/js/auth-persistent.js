@@ -161,115 +161,104 @@ class PersistentAuthSystem {
     async register(username, email, password, rememberMe = true) {
         if (!username || !email || !password) throw new Error('All fields are required');
         if (username.length < 3) throw new Error('Username must be at least 3 characters');
-        if (password.length < 6) throw new Error('Password must be at least 6 characters');
+        if (!/^[a-zA-Z0-9_]+$/.test(username)) throw new Error('Username can only contain letters, numbers, and underscores');
+        if (password.length < 8) throw new Error('Password must be at least 8 characters');
 
-        // Wait for backend detection to finish before checking availability
+        // Wait for backend detection to finish
         if (typeof api !== 'undefined' && api.ready) {
             try { await api.ready; } catch (e) { /* detection failed */ }
         }
-        const backendReady = typeof CONFIG !== 'undefined' && CONFIG.features?.useBackendAPI && typeof api !== 'undefined' && api.backendAvailable === true;
-        if (backendReady) {
-            try {
-                const data = await api.register({ username, email, password });
-                const user = {
-                    id: data.user?.id || this.generateUserId(),
-                    username: data.user?.username || username,
-                    email: data.user?.email || email,
-                    displayName: data.user?.displayName || username,
-                    avatar: this.getDefaultAvatar(username),
-                    bio: '',
-                    joinedDate: new Date().toISOString(),
-                    verified: data.user?.emailVerified || false,
-                    stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
-                    social: { followers: [], following: [], reputation: 0, badges: ['newbie'] },
-                    isPremium: false,
-                    backendUser: true
-                };
-                this.currentUser = user;
-                this.setRememberMe(rememberMe);
-                this.persistSession();
-                this.updateUIForLoggedInUser();
-                return user;
-            } catch (err) {
-                console.error('[Auth] Backend register failed:', err.message);
-                throw err;
-            }
+
+        const backendReady = typeof CONFIG !== 'undefined'
+            && CONFIG.features?.useBackendAPI
+            && typeof api !== 'undefined'
+            && typeof api.register === 'function';
+        
+        if (!backendReady) {
+            throw new Error('Server connection unavailable. Please try again later.');
         }
 
-        // Fallback to localStorage
-        if (this.users.find(u => u.username.toLowerCase() === username.toLowerCase())) throw new Error('Username already taken');
-        if (this.users.find(u => u.email.toLowerCase() === email.toLowerCase())) throw new Error('Email already registered');
+        try {
+            const data = await api.register({ username, email, password });
+            const userData = data.user || {};
 
-        const user = {
-            id: this.generateUserId(),
-            username, email,
-            passwordHash: this.hashPassword(password),
-            displayName: username,
-            avatar: this.getDefaultAvatar(username),
-            bio: '',
-            joinedDate: new Date().toISOString(),
-            verified: false,
-            stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
-            social: { followers: [], following: [], reputation: 0, badges: ['newbie'] },
-            isPremium: false
-        };
+            // Email verification flow: account exists, but session should not be created yet.
+            if (!data.accessToken && data.nextStep === 'CHECK_EMAIL') {
+                return {
+                    pendingVerification: true,
+                    nextStep: data.nextStep,
+                    email: userData.email || email,
+                    username: userData.username || username,
+                    message: data.message || 'Account created. Please check your email to verify your account.'
+                };
+            }
 
-        this.users.push(user);
-        this.saveUsers();
-        this.currentUser = user;
-        this.setRememberMe(rememberMe);
-        this.persistSession();
-        this.updateUIForLoggedInUser();
-        return user;
+            const user = {
+                id: userData.id || this.generateUserId(),
+                username: userData.username || username,
+                email: userData.email || email,
+                displayName: userData.displayName || username,
+                avatar: userData.avatarUrl || this.getDefaultAvatar(username),
+                bio: userData.bio || '',
+                joinedDate: userData.created_at || new Date().toISOString(),
+                verified: userData.emailVerified || false,
+                stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
+                social: { followers: [], following: [], reputation: 0, badges: [] },
+                isPremium: false,
+                backendUser: true
+            };
+            this.currentUser = user;
+            this.setRememberMe(rememberMe);
+            this.persistSession();
+            this.updateUIForLoggedInUser();
+            return user;
+        } catch (err) {
+            console.error('[Auth] Backend register failed:', err.message);
+            throw err;
+        }
     }
 
     async login(usernameOrEmail, password, rememberMe = true) {
-        // Wait for backend detection to finish before checking availability
+        // Wait for backend detection to finish
         if (typeof api !== 'undefined' && api.ready) {
             try { await api.ready; } catch (e) { /* detection failed */ }
         }
-        const backendReady = typeof CONFIG !== 'undefined' && CONFIG.features?.useBackendAPI && typeof api !== 'undefined' && api.backendAvailable === true;
-        if (backendReady) {
-            try {
-                const data = await api.login(usernameOrEmail, password);
-                const userData = data.user || {};
-                const user = {
-                    id: userData.id || this.generateUserId(),
-                    username: userData.username || usernameOrEmail,
-                    email: userData.email || '',
-                    displayName: userData.displayName || userData.username || usernameOrEmail,
-                    avatar: userData.avatarUrl || this.getDefaultAvatar(userData.username || usernameOrEmail),
-                    bio: userData.bio || '',
-                    joinedDate: userData.created_at || new Date().toISOString(),
-                    verified: userData.emailVerified || false,
-                    stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
-                    social: { followers: [], following: [], reputation: 0, badges: [] },
-                    isPremium: false,
-                    backendUser: true
-                };
-                this.currentUser = user;
-                this.setRememberMe(rememberMe);
-                this.persistSession();
-                this.updateUIForLoggedInUser();
-                return user;
-            } catch (err) {
-                console.error('[Auth] Backend login failed:', err.message);
-                throw err;
-            }
+
+        const backendReady = typeof CONFIG !== 'undefined'
+            && CONFIG.features?.useBackendAPI
+            && typeof api !== 'undefined'
+            && typeof api.login === 'function';
+        
+        if (!backendReady) {
+            throw new Error('Server connection unavailable. Please try again later.');
         }
 
-        // Fallback to localStorage
-        const user = this.users.find(u =>
-            u.username.toLowerCase() === usernameOrEmail.toLowerCase() ||
-            u.email.toLowerCase() === usernameOrEmail.toLowerCase()
-        );
-        if (!user) throw new Error('User not found');
-        if (user.passwordHash !== this.hashPassword(password)) throw new Error('Invalid password');
-        this.currentUser = user;
-        this.setRememberMe(rememberMe);
-        this.persistSession();
-        this.updateUIForLoggedInUser();
-        return user;
+        try {
+            const data = await api.login(usernameOrEmail, password);
+            const userData = data.user || {};
+            const user = {
+                id: userData.id || this.generateUserId(),
+                username: userData.username || usernameOrEmail,
+                email: userData.email || '',
+                displayName: userData.displayName || userData.username || usernameOrEmail,
+                avatar: userData.avatarUrl || this.getDefaultAvatar(userData.username || usernameOrEmail),
+                bio: userData.bio || '',
+                joinedDate: userData.created_at || new Date().toISOString(),
+                verified: userData.emailVerified || false,
+                stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
+                social: { followers: [], following: [], reputation: 0, badges: [] },
+                isPremium: false,
+                backendUser: true
+            };
+            this.currentUser = user;
+            this.setRememberMe(rememberMe);
+            this.persistSession();
+            this.updateUIForLoggedInUser();
+            return user;
+        } catch (err) {
+            console.error('[Auth] Backend login failed:', err.message);
+            throw err;
+        }
     }
 
     async logout() {
@@ -285,10 +274,40 @@ class PersistentAuthSystem {
         }
     }
 
-    updateProfile(updates) {
+    async updateProfile(updates) {
         if (!this.currentUser) throw new Error('Not logged in');
+
+        if (this.currentUser.backendUser && typeof api !== 'undefined' && api.backendAvailable === true) {
+            const payload = {};
+            if (updates.displayName != null) payload.display_name = updates.displayName;
+            if (updates.bio != null) payload.bio = updates.bio;
+            if (updates.location != null) payload.location = updates.location;
+            if (updates.avatarUrl != null) payload.avatar_url = updates.avatarUrl;
+            if (updates.favoriteTeam) payload.favorite_teams = [updates.favoriteTeam];
+            if (updates.favoriteSport) payload.favorite_sports = [updates.favoriteSport];
+
+            const result = await api.updateProfile(payload);
+            const userData = result.user || {};
+            this.currentUser = {
+                ...this.currentUser,
+                displayName: userData.display_name || this.currentUser.displayName,
+                bio: userData.bio ?? this.currentUser.bio,
+                location: userData.location ?? this.currentUser.location,
+                avatar: userData.avatar_url || this.currentUser.avatar
+            };
+            this.persistSession();
+            return this.currentUser;
+        }
+
         const userIndex = this.users.findIndex(u => u.id === this.currentUser.id);
-        if (userIndex === -1) throw new Error('User not found');
+        if (userIndex === -1) {
+            // Backend-authenticated users are not guaranteed to exist in the legacy local user store.
+            // Keep session state aligned without forcing a local-only account shadow record.
+            this.currentUser = { ...this.currentUser, ...updates };
+            this.persistSession();
+            return this.currentUser;
+        }
+
         this.users[userIndex] = { ...this.users[userIndex], ...updates };
         this.currentUser = this.users[userIndex];
         this.saveUsers();
