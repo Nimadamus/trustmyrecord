@@ -540,17 +540,13 @@
 
     window.TMR.renderGamesSafely = function(container, games, sport) {
         try {
+            if (typeof window.renderGamesWithAllBets === 'function') {
+                window.renderGamesWithAllBets(games);
+                return;
+            }
             window.TMR._renderGamesList(container, games, sport);
         } catch (error) {
-            console.error('[TMR] Primary games renderer failed:', error);
-            try {
-                if (typeof window.renderGamesWithAllBets === 'function') {
-                    window.renderGamesWithAllBets(games);
-                    return;
-                }
-            } catch (fallbackError) {
-                console.error('[TMR] Legacy games renderer failed:', fallbackError);
-            }
+            console.error('[TMR] Games renderer failed:', error);
             container.innerHTML = '<div class="no-games-message"><h4>Unable to display games</h4><p>Please refresh and try again.</p></div>';
         }
     };
