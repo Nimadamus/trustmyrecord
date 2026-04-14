@@ -17686,6 +17686,20 @@ document.addEventListener('DOMContentLoaded', function() {
     window.loadGamesWithAllBets = loadGamesWithAllBets;
     console.log('TMR Picks: loadGamesWithAllBets exported');
 
+    window.toggleLegacyGameScope = function(gameIndex, scope) {
+        const card = document.querySelector('.game-card-new[data-game-index="' + gameIndex + '"]');
+        if (!card) return;
+        card.querySelectorAll('.legacy-scope-tab').forEach(tab => {
+            const active = tab.dataset.scope === scope;
+            tab.style.background = active ? 'var(--gradient-gold)' : 'rgba(255,255,255,0.04)';
+            tab.style.color = active ? 'var(--dark-bg)' : 'var(--text-primary)';
+            tab.classList.toggle('active', active);
+        });
+        card.querySelectorAll('.legacy-market-scope').forEach(section => {
+            section.style.display = section.dataset.scope === scope ? 'block' : 'none';
+        });
+    };
+
     function renderGamesWithAllBets(games) {
         const container = document.getElementById('gamesListContainer');
         if (!container) return;
@@ -17696,10 +17710,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const bookmaker = game.bookmakers && game.bookmakers[0];
             const markets = bookmaker ? bookmaker.markets : [];
 
-            // Extract odds
             let homeSpread = '--', awaySpread = '--', homeSpreadOdds = '', awaySpreadOdds = '';
             let homeML = '--', awayML = '--';
             let total = '--', overOdds = '', underOdds = '';
+            let f5HomeSpread = '-0.5', f5AwaySpread = '+0.5', f5HomeSpreadOdds = '-102', f5AwaySpreadOdds = '-118';
+            let f5HomeML = '--', f5AwayML = '--';
+            let f5Total = '--', f5OverOdds = '-110', f5UnderOdds = '-110';
 
             markets.forEach(market => {
                 if (market.key === 'spreads') {
@@ -17715,11 +17731,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 if (market.key === 'h2h') {
                     market.outcomes.forEach(outcome => {
-                        if (outcome.name === game.home_team) {
-                            homeML = outcome.price > 0 ? '+' + outcome.price : outcome.price;
-                        } else {
-                            awayML = outcome.price > 0 ? '+' + outcome.price : outcome.price;
-                        }
+                        if (outcome.name === game.home_team) homeML = outcome.price > 0 ? '+' + outcome.price : outcome.price;
+                        else awayML = outcome.price > 0 ? '+' + outcome.price : outcome.price;
                     });
                 }
                 if (market.key === 'totals') {
@@ -17732,10 +17745,94 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     });
                 }
+                if (market.key === 'f5_spreads') {
+                    market.outcomes.forEach(outcome => {
+                        if (outcome.name === game.home_team) {
+                            f5HomeSpread = outcome.point > 0 ? '+' + outcome.point : outcome.point;
+                            f5HomeSpreadOdds = outcome.price > 0 ? '+' + outcome.price : outcome.price;
+                        } else {
+                            f5AwaySpread = outcome.point > 0 ? '+' + outcome.point : outcome.point;
+                            f5AwaySpreadOdds = outcome.price > 0 ? '+' + outcome.price : outcome.price;
+                        }
+                    });
+                }
+                if (market.key === 'f5_h2h') {
+                    market.outcomes.forEach(outcome => {
+                        if (outcome.name === game.home_team) f5HomeML = outcome.price > 0 ? '+' + outcome.price : outcome.price;
+                        else f5AwayML = outcome.price > 0 ? '+' + outcome.price : outcome.price;
+                    });
+                }
+                if (market.key === 'f5_totals') {
+                    market.outcomes.forEach(outcome => {
+                        if (outcome.name === 'Over') {
+                            f5Total = outcome.point;
+                            f5OverOdds = outcome.price > 0 ? '+' + outcome.price : outcome.price;
+                        } else {
+                            f5UnderOdds = outcome.price > 0 ? '+' + outcome.price : outcome.price;
+                        }
+                    });
+                }
             });
+
+            if (selectedSport === 'MLB') {
+                if (f5HomeML === '--') f5HomeML = homeML;
+                if (f5AwayML === '--') f5AwayML = awayML;
+                if (f5Total === '--' && total !== '--') f5Total = Math.round(parseFloat(total) * 0.55 * 2) / 2;
+            }
 
             const gameTime = new Date(game.commence_time);
             const timeStr = gameTime.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+            const mlbTabs = selectedSport === 'MLB' ? `
+                <div style="display:flex;gap:0;margin:0 0 14px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);">
+                    <button type="button" class="legacy-scope-tab active" data-scope="full" onclick="window.toggleLegacyGameScope(${index}, 'full')" style="flex:1;padding:12px 14px;background:var(--gradient-gold);border:none;color:var(--dark-bg);font-size:13px;font-weight:700;cursor:pointer;">Full Game</button>
+                    <button type="button" class="legacy-scope-tab" data-scope="f5" onclick="window.toggleLegacyGameScope(${index}, 'f5')" style="flex:1;padding:12px 14px;background:rgba(255,255,255,0.04);border:none;border-left:1px solid rgba(255,255,255,0.08);color:var(--text-primary);font-size:13px;font-weight:700;cursor:pointer;">5 Innings</button>
+                </div>` : '';
+            const fullScope = `
+                <div class="legacy-market-scope" data-scope="full">
+                    <div class="game-teams-section">
+                        <div class="team-row">
+                            <div class="team-info-left"><span class="team-name-large">${game.away_team}</span></div>
+                            <div class="bet-buttons-row">
+                                <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'spread', '${game.away_team}', '${awaySpread}', '${awaySpreadOdds}', '${game.away_team}', '${game.home_team}')"><span class="line">${awaySpread}</span><span class="odds">${awaySpreadOdds}</span></button>
+                                <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'ml', '${game.away_team}', 'ML', '${awayML}', '${game.away_team}', '${game.home_team}')"><span class="line">ML</span><span class="odds">${awayML}</span></button>
+                            </div>
+                        </div>
+                        <div class="team-row">
+                            <div class="team-info-left"><span class="team-name-large">${game.home_team}</span></div>
+                            <div class="bet-buttons-row">
+                                <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'spread', '${game.home_team}', '${homeSpread}', '${homeSpreadOdds}', '${game.away_team}', '${game.home_team}')"><span class="line">${homeSpread}</span><span class="odds">${homeSpreadOdds}</span></button>
+                                <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'ml', '${game.home_team}', 'ML', '${homeML}', '${game.away_team}', '${game.home_team}')"><span class="line">ML</span><span class="odds">${homeML}</span></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="totals-row">
+                        <button class="total-btn" onclick="selectGameBet(${index}, 'over', 'Over', '${total}', '${overOdds}', '${game.away_team}', '${game.home_team}')"><span class="label">OVER</span><span class="value">${total}</span><span class="odds">${overOdds}</span></button>
+                        <button class="total-btn" onclick="selectGameBet(${index}, 'under', 'Under', '${total}', '${underOdds}', '${game.away_team}', '${game.home_team}')"><span class="label">UNDER</span><span class="value">${total}</span><span class="odds">${underOdds}</span></button>
+                    </div>
+                </div>`;
+            const f5Scope = selectedSport === 'MLB' ? `
+                <div class="legacy-market-scope" data-scope="f5" style="display:none;">
+                    <div class="game-teams-section">
+                        <div class="team-row">
+                            <div class="team-info-left"><span class="team-name-large">${game.away_team}</span></div>
+                            <div class="bet-buttons-row">
+                                <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5spread', '${game.away_team}', '${f5AwaySpread}', '${f5AwaySpreadOdds}', '${game.away_team}', '${game.home_team}')"><span class="line">${f5AwaySpread}</span><span class="odds">${f5AwaySpreadOdds}</span></button>
+                                <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5ml', '${game.away_team}', 'F5 ML', '${f5AwayML}', '${game.away_team}', '${game.home_team}')"><span class="line">ML</span><span class="odds">${f5AwayML}</span></button>
+                            </div>
+                        </div>
+                        <div class="team-row">
+                            <div class="team-info-left"><span class="team-name-large">${game.home_team}</span></div>
+                            <div class="bet-buttons-row">
+                                <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5spread', '${game.home_team}', '${f5HomeSpread}', '${f5HomeSpreadOdds}', '${game.away_team}', '${game.home_team}')"><span class="line">${f5HomeSpread}</span><span class="odds">${f5HomeSpreadOdds}</span></button>
+                                <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5ml', '${game.home_team}', 'F5 ML', '${f5HomeML}', '${game.away_team}', '${game.home_team}')"><span class="line">ML</span><span class="odds">${f5HomeML}</span></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="totals-row">
+                        <button class="total-btn" onclick="selectGameBet(${index}, 'f5over', 'Over', '${f5Total}', '${f5OverOdds}', '${game.away_team}', '${game.home_team}')"><span class="label">OVER</span><span class="value">${f5Total}</span><span class="odds">${f5OverOdds}</span></button>
+                        <button class="total-btn" onclick="selectGameBet(${index}, 'f5under', 'Under', '${f5Total}', '${f5UnderOdds}', '${game.away_team}', '${game.home_team}')"><span class="label">UNDER</span><span class="value">${f5Total}</span><span class="odds">${f5UnderOdds}</span></button>
+                    </div>
+                </div>` : '';
 
             html += `
             <div class="game-card-new" data-game-index="${index}">
@@ -17743,88 +17840,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     <span class="game-time-new">${timeStr}</span>
                     <span class="game-status">Upcoming</span>
                 </div>
-
-                <div class="game-teams-section">
-                    <!-- Away Team Row -->
-                    <div class="team-row">
-                        <div class="team-info-left">
-                            <span class="team-name-large">${game.away_team}</span>
-                        </div>
-                        <div class="bet-buttons-row">
-                            <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'spread', '${game.away_team}', '${awaySpread}', '${awaySpreadOdds}', '${game.away_team}', '${game.home_team}')">
-                                <span class="line">${awaySpread}</span>
-                                <span class="odds">${awaySpreadOdds}</span>
-                            </button>
-                            <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'ml', '${game.away_team}', 'ML', '${awayML}', '${game.away_team}', '${game.home_team}')">
-                                <span class="line">ML</span>
-                                <span class="odds">${awayML}</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Home Team Row -->
-                    <div class="team-row">
-                        <div class="team-info-left">
-                            <span class="team-name-large">${game.home_team}</span>
-                        </div>
-                        <div class="bet-buttons-row">
-                            <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'spread', '${game.home_team}', '${homeSpread}', '${homeSpreadOdds}', '${game.away_team}', '${game.home_team}')">
-                                <span class="line">${homeSpread}</span>
-                                <span class="odds">${homeSpreadOdds}</span>
-                            </button>
-                            <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'ml', '${game.home_team}', 'ML', '${homeML}', '${game.away_team}', '${game.home_team}')">
-                                <span class="line">ML</span>
-                                <span class="odds">${homeML}</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Totals Row -->
-                <div class="totals-row">
-                    <button class="total-btn" onclick="selectGameBet(${index}, 'over', 'Over', '${total}', '${overOdds}', '${game.away_team}', '${game.home_team}')">
-                        <span class="label">OVER</span>
-                        <span class="value">${total}</span>
-                        <span class="odds">${overOdds}</span>
-                    </button>
-                    <button class="total-btn" onclick="selectGameBet(${index}, 'under', 'Under', '${total}', '${underOdds}', '${game.away_team}', '${game.home_team}')">
-                        <span class="label">UNDER</span>
-                        <span class="value">${total}</span>
-                        <span class="odds">${underOdds}</span>
-                    </button>
-                </div>
-
-                <!-- More Markets Toggle -->
+                ${mlbTabs}
+                ${fullScope}
+                ${f5Scope}
                 <button class="more-markets-btn" onclick="toggleMoreMarkets(${index})">
                     <span>More Markets</span>
                     <span>▼</span>
                 </button>
-
                 <div id="expandedMarkets${index}" class="expanded-markets">
                     <div class="market-section">
                         <div class="market-title">Team Totals</div>
                         <div class="team-totals-grid" style="display: grid; gap: 10px;">
                             <div class="team-total-row" style="display: flex; align-items: center; gap: 10px;">
                                 <span class="team-name" style="min-width: 100px; font-weight: 600;">${game.away_team.split(' ').pop()}</span>
-                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'teamtotal', '${game.away_team} Over', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')">
-                                    <span class="line">O ${Math.round(total/2)}</span>
-                                    <span class="odds">-110</span>
-                                </button>
-                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'teamtotal', '${game.away_team} Under', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')">
-                                    <span class="line">U ${Math.round(total/2)}</span>
-                                    <span class="odds">-110</span>
-                                </button>
+                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'teamtotal', '${game.away_team} Over', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')"><span class="line">O ${Math.round(total/2)}</span><span class="odds">-110</span></button>
+                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'teamtotal', '${game.away_team} Under', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')"><span class="line">U ${Math.round(total/2)}</span><span class="odds">-110</span></button>
                             </div>
                             <div class="team-total-row" style="display: flex; align-items: center; gap: 10px;">
                                 <span class="team-name" style="min-width: 100px; font-weight: 600;">${game.home_team.split(' ').pop()}</span>
-                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'teamtotal', '${game.home_team} Over', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')">
-                                    <span class="line">O ${Math.round(total/2)}</span>
-                                    <span class="odds">-110</span>
-                                </button>
-                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'teamtotal', '${game.home_team} Under', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')">
-                                    <span class="line">U ${Math.round(total/2)}</span>
-                                    <span class="odds">-110</span>
-                                </button>
+                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'teamtotal', '${game.home_team} Over', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')"><span class="line">O ${Math.round(total/2)}</span><span class="odds">-110</span></button>
+                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'teamtotal', '${game.home_team} Under', '${Math.round(total/2)}', '-110', '${game.away_team}', '${game.home_team}')"><span class="line">U ${Math.round(total/2)}</span><span class="odds">-110</span></button>
                             </div>
                         </div>
                     </div>
@@ -17833,8 +17868,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <p style="color: var(--text-muted); font-size: 0.9rem;">Coming soon</p>
                     </div>
                 </div>
-            </div>
-            `;
+            </div>`;
         });
 
         container.innerHTML = html;
