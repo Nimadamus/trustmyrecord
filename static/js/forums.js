@@ -358,52 +358,78 @@ class ForumsSystem {
      * Load/Save helpers
      */
     loadThreads() {
-        const stored = localStorage.getItem('trustmyrecord_threads');
-        if (stored) return JSON.parse(stored);
+        this.clearLegacyForumStorage();
         return [];
     }
 
     saveThreads() {
-        localStorage.setItem('trustmyrecord_threads', JSON.stringify(this.threads));
+        this.clearLegacyForumStorage();
     }
 
     loadReplies() {
-        const stored = localStorage.getItem('trustmyrecord_replies');
-        if (stored) return JSON.parse(stored);
+        this.clearLegacyForumStorage();
         return [];
     }
 
     saveReplies() {
-        localStorage.setItem('trustmyrecord_replies', JSON.stringify(this.replies));
+        this.clearLegacyForumStorage();
     }
 
     loadVotes() {
-        const stored = localStorage.getItem('trustmyrecord_forum_votes');
-        if (!stored) return new Map();
-
-        const obj = JSON.parse(stored);
-        return new Map(Object.entries(obj));
+        this.clearLegacyForumStorage();
+        return new Map();
     }
 
     saveVotes() {
-        const obj = Object.fromEntries(this.votes);
-        localStorage.setItem('trustmyrecord_forum_votes', JSON.stringify(obj));
+        this.clearLegacyForumStorage();
     }
 
     generateId() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
     }
+
+    clearLegacyForumStorage() {
+        const keys = [
+            'trustmyrecord_threads',
+            'trustmyrecord_replies',
+            'trustmyrecord_forum_votes',
+            'forum_threads',
+            'forum_replies',
+            'forum_votes',
+            'tmr_forum_seeded',
+            'tmr_forum_version'
+        ];
+
+        keys.forEach((key) => {
+            try {
+                localStorage.removeItem(key);
+            } catch (error) {
+                // Ignore storage access failures and keep the legacy forum empty.
+            }
+        });
+    }
 }
 
-// Clear old forum data if categories changed (v2 = new categories with groups)
+// Purge any legacy browser-seeded forum content on every load.
 (function() {
-    const FORUM_VERSION = 'v3_no_fake_data';
-    if (localStorage.getItem('tmr_forum_version') !== FORUM_VERSION) {
-        localStorage.removeItem('trustmyrecord_threads');
-        localStorage.removeItem('trustmyrecord_replies');
-        localStorage.removeItem('trustmyrecord_forum_votes');
-        localStorage.setItem('tmr_forum_version', FORUM_VERSION);
-    }
+    const keys = [
+        'trustmyrecord_threads',
+        'trustmyrecord_replies',
+        'trustmyrecord_forum_votes',
+        'forum_threads',
+        'forum_replies',
+        'forum_votes',
+        'tmr_forum_seeded',
+        'tmr_forum_version'
+    ];
+
+    keys.forEach((key) => {
+        try {
+            localStorage.removeItem(key);
+        } catch (error) {
+            // Ignore storage access failures.
+        }
+    });
 })();
 
 // Initialize forums system

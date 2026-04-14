@@ -116,9 +116,48 @@
 
         /* ========== CONTAINER ========== */
         .forum-wrap {
-            max-width: 1200px;
+            max-width: 1240px;
             margin: 0 auto;
-            padding: 18px 16px 48px;
+            padding: 12px 12px 36px;
+        }
+
+        .forum-utility-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 7px 10px;
+            margin-bottom: 8px;
+            background: #e7edf6;
+            border: 1px solid var(--forum-border);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .forum-utility-status {
+            color: #4d5f79;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .forum-utility-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .forum-utility-bar a,
+        .forum-utility-bar button {
+            color: var(--forum-link);
+            text-decoration: none;
+            background: none;
+            border: none;
+            padding: 0;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .forum-utility-bar a:hover,
+        .forum-utility-bar button:hover {
+            text-decoration: underline;
         }
 
         /* ========== BREADCRUMB ========== */
@@ -146,38 +185,52 @@
         .forum-banner {
             background: linear-gradient(180deg, #fff 0%, #f0f4fa 100%);
             border: 1px solid var(--forum-border);
-            padding: 18px 20px;
-            margin-bottom: 14px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
         }
         .forum-banner h1 {
             font-family: Georgia, "Times New Roman", serif;
-            font-size: 26px;
+            font-size: 23px;
             font-weight: 700;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             color: #23334c;
         }
         .forum-banner h1 span { color: var(--forum-accent); }
-        .forum-banner p { color: var(--text-muted); font-size: 13px; }
+        .forum-banner p { color: var(--text-muted); font-size: 12px; }
+        .forum-banner-subline {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #d7e0ec;
+            font-size: 11px;
+            color: #5a6c85;
+        }
 
         /* ========== STATS BAR ========== */
         .stats-bar {
             display: flex;
-            gap: 28px;
-            margin-bottom: 14px;
-            padding: 10px 14px;
+            gap: 18px;
+            margin-bottom: 10px;
+            padding: 8px 10px;
             background: var(--forum-panel);
             border: 1px solid var(--forum-border);
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-muted);
+            justify-content: space-between;
+            flex-wrap: wrap;
         }
         .stats-bar strong { color: var(--forum-accent); }
+        .stats-label {
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 10px;
+        }
 
         /* ========== SEARCH BAR ========== */
         .search-row {
             display: flex;
             gap: 12px;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
         }
         .search-row input {
             flex: 1;
@@ -198,15 +251,26 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 8px 12px;
-            background: linear-gradient(180deg, #6f86ad 0%, var(--forum-blue) 100%);
+            justify-content: space-between;
+            padding: 7px 10px;
+            background: linear-gradient(180deg, #6780a8 0%, #4c6999 100%);
             border: 1px solid var(--forum-border-strong);
-            margin-top: 16px;
+            margin-top: 12px;
             font-weight: 700;
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.08em;
             color: #fff;
+        }
+        .group-header-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .group-header-meta {
+            font-size: 10px;
+            opacity: 0.9;
+            letter-spacing: 0.04em;
         }
 
         /* ========== CATEGORY TABLE ========== */
@@ -220,8 +284,8 @@
         }
         .cat-table thead th {
             text-align: left;
-            padding: 8px 12px;
-            font-size: 11px;
+            padding: 6px 10px;
+            font-size: 10px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: #44556d;
@@ -229,7 +293,7 @@
             border-bottom: 1px solid var(--forum-border);
         }
         .cat-table thead th.col-num { text-align: center; width: 80px; }
-        .cat-table thead th.col-last { width: 240px; }
+        .cat-table thead th.col-last { width: 260px; }
 
         .cat-table tbody tr {
             border-bottom: 1px solid #d8e0ec;
@@ -239,8 +303,8 @@
         .cat-table tbody tr:nth-child(even) { background: #f8fafd; }
         .cat-table tbody tr:hover { background: #eef3fb; }
 
-        .cat-table td { padding: 10px 12px; vertical-align: middle; }
-        .cat-table td.col-num { text-align: center; color: var(--text-muted); font-size: 12px; }
+        .cat-table td { padding: 9px 10px; vertical-align: middle; }
+        .cat-table td.col-num { text-align: center; color: var(--text-muted); font-size: 11px; }
 
         .cat-info { display: flex; align-items: center; gap: 14px; }
         .cat-icon {
@@ -255,7 +319,7 @@
             border-radius: 4px;
             flex-shrink: 0;
         }
-        .cat-name { font-weight: 700; font-size: 13px; color: var(--forum-link); }
+        .cat-name { font-weight: 700; font-size: 12px; color: var(--forum-link); }
         .cat-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
         .last-post-info { font-size: 11px; line-height: 1.45; }
@@ -268,20 +332,35 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             gap: 12px;
             flex-wrap: wrap;
-            background: #eef3fb;
+            background: #edf2f9;
             border: 1px solid var(--forum-border);
-            padding: 10px 12px;
+            padding: 7px 10px;
+            font-size: 11px;
+        }
+        .toolbar-left,
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .toolbar-label {
+            color: #536781;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-size: 10px;
         }
         .toolbar select {
             background: #fff;
             border: 1px solid var(--forum-border);
             border-radius: 2px;
             color: var(--text-primary);
-            padding: 7px 10px;
-            font-size: 12px;
+            padding: 5px 8px;
+            font-size: 11px;
             outline: none;
         }
 
@@ -290,10 +369,10 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 7px 12px;
+            padding: 5px 10px;
             border: 1px solid var(--forum-border-strong);
             border-radius: 2px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
@@ -308,7 +387,7 @@
             color: var(--forum-link);
         }
         .btn-outline:hover { border-color: var(--forum-blue-dark); color: var(--forum-link-hover); }
-        .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+        .btn-sm { padding: 4px 9px; font-size: 11px; }
 
         /* ========== THREAD TABLE ========== */
         .thread-table {
@@ -319,8 +398,8 @@
         }
         .thread-table thead th {
             text-align: left;
-            padding: 8px 12px;
-            font-size: 11px;
+            padding: 6px 10px;
+            font-size: 10px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: #44556d;
@@ -328,7 +407,7 @@
             border-bottom: 1px solid var(--forum-border);
         }
         .thread-table thead th.col-num { text-align: center; width: 70px; }
-        .thread-table thead th.col-last { width: 220px; }
+        .thread-table thead th.col-last { width: 240px; }
 
         .thread-table tbody tr {
             border-bottom: 1px solid #d8e0ec;
@@ -339,11 +418,29 @@
         .thread-table tbody tr:hover { background: #eef3fb; }
         .thread-table tbody tr.pinned { background: #fffce9; }
 
-        .thread-table td { padding: 10px 12px; vertical-align: middle; }
-        .thread-table td.col-num { text-align: center; color: var(--text-muted); font-size: 12px; }
+        .thread-table td { padding: 8px 10px; vertical-align: middle; }
+        .thread-table td.col-num { text-align: center; color: var(--text-muted); font-size: 11px; }
 
-        .thread-title-link { font-weight: 700; font-size: 13px; color: var(--forum-link); }
+        .thread-title-link { font-weight: 700; font-size: 12px; color: var(--forum-link); }
         .thread-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+        .thread-title-line {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .thread-prefix {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border: 1px solid #c7d1e0;
+            background: #f6f8fb;
+            color: #425472;
+            font-size: 10px;
+            font-weight: 700;
+        }
         .pin-badge {
             display: inline-block;
             font-size: 10px;
@@ -370,7 +467,7 @@
         .post-shell {
             border: 1px solid var(--forum-border);
             background: #fff;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .post-shell.op-card {
             border-color: var(--forum-border-strong);
@@ -380,7 +477,7 @@
             justify-content: space-between;
             align-items: center;
             gap: 12px;
-            padding: 8px 12px;
+            padding: 6px 10px;
             background: linear-gradient(180deg, #edf2f9 0%, #dfe7f2 100%);
             border-bottom: 1px solid var(--forum-border);
             font-size: 11px;
@@ -390,13 +487,13 @@
         .post-number { color: var(--text-muted); font-size: 11px; }
         .post-layout {
             display: grid;
-            grid-template-columns: 190px minmax(0, 1fr);
+            grid-template-columns: 165px minmax(0, 1fr);
             align-items: stretch;
         }
         .post-user-pane {
             background: #f5f7fb;
             border-right: 1px solid var(--forum-border);
-            padding: 14px 12px;
+            padding: 10px 10px;
         }
         .post-user-name {
             font-size: 13px;
@@ -406,19 +503,13 @@
             word-break: break-word;
         }
         .post-user-avatar {
-            width: 84px;
-            height: 84px;
+            width: 72px;
+            height: 72px;
             border-radius: 3px;
             border: 1px solid var(--forum-border);
             object-fit: cover;
             background: #fff;
             display: block;
-            margin-bottom: 10px;
-        }
-        .post-user-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
             margin-bottom: 10px;
         }
         .post-user-stats {
@@ -434,17 +525,17 @@
             min-width: 0;
         }
         .post-body {
-            padding: 14px 16px 18px;
-            line-height: 1.58;
-            font-size: 13px;
+            padding: 12px 14px 16px;
+            line-height: 1.52;
+            font-size: 12px;
             color: var(--text-secondary);
             white-space: pre-wrap;
             word-wrap: break-word;
         }
         .post-body h2 {
-            font-size: 18px;
+            font-size: 16px;
             color: #243753;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             font-family: Georgia, "Times New Roman", serif;
         }
 
@@ -475,12 +566,12 @@
         .reply-box {
             background: #fff;
             border: 1px solid var(--forum-border);
-            padding: 16px;
-            margin-top: 16px;
+            padding: 12px;
+            margin-top: 12px;
         }
         .reply-box h3 {
-            font-size: 14px;
-            margin-bottom: 12px;
+            font-size: 13px;
+            margin-bottom: 10px;
             color: #23334c;
         }
         .reply-box textarea {
@@ -582,6 +673,61 @@
         }
         .empty-msg .icon { font-size: 2.5rem; margin-bottom: 10px; opacity: 0.5; }
 
+        .forum-bottom-panel {
+            margin-top: 12px;
+            border: 1px solid var(--forum-border);
+            background: #fff;
+        }
+        .forum-bottom-head {
+            padding: 7px 10px;
+            background: linear-gradient(180deg, #6780a8 0%, #4c6999 100%);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .forum-bottom-body {
+            padding: 10px;
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+        .forum-bottom-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+        .forum-bottom-box {
+            border: 1px solid #d8e0ec;
+            background: #f7f9fc;
+            padding: 8px 9px;
+        }
+        .forum-bottom-box strong {
+            display: block;
+            color: #304866;
+            font-size: 11px;
+            margin-bottom: 2px;
+        }
+        .forum-jump-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-top: 10px;
+            padding: 8px 10px;
+            border: 1px solid var(--forum-border);
+            background: #edf2f9;
+            font-size: 11px;
+        }
+        .forum-jump-row select {
+            min-width: 220px;
+            background: #fff;
+            border: 1px solid var(--forum-border);
+            padding: 5px 8px;
+            font-size: 11px;
+        }
+
         /* ========== RESPONSIVE ========== */
         @media (max-width: 768px) {
             .cat-table thead th.col-num,
@@ -597,10 +743,13 @@
             .forum-banner h1 { font-size: 1.3rem; }
             .stats-bar { flex-wrap: wrap; gap: 14px; }
             .toolbar { flex-direction: column; align-items: stretch; }
+            .toolbar-left,
+            .toolbar-right { width: 100%; justify-content: space-between; }
             .post-top-bar { flex-wrap: wrap; gap: 4px; }
             .post-layout { grid-template-columns: 1fr; }
             .post-user-pane { border-right: none; border-bottom: 1px solid var(--forum-border); }
             .post-user-avatar { width: 64px; height: 64px; }
+            .forum-bottom-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
     </style>
     <!-- Google tag (gtag.js) -->
@@ -634,6 +783,14 @@
 <!-- MAIN WRAP -->
 <div class="forum-wrap">
 
+    <div class="forum-utility-bar">
+        <div class="forum-utility-actions">
+            <button type="button" onclick="showCategories()">Forum Home</button>
+            <a href="index.html">Site Home</a>
+        </div>
+        <div class="forum-utility-status">Live Data Only</div>
+    </div>
+
     <!-- BREADCRUMB -->
     <div class="breadcrumb" id="breadcrumb">
         <a onclick="showCategories()">Forums</a>
@@ -642,13 +799,16 @@
     <!-- ================= CATEGORIES VIEW ================= -->
     <div id="viewCategories">
         <div class="forum-banner">
-            <h1>Community <span>Forums</span></h1>
-            <p>Join the conversation. Your record speaks for you.</p>
+            <h1>TrustMyRecord <span>Forums</span></h1>
+            <p>Sports betting discussion in a classic message-board layout.</p>
+            <div class="forum-banner-subline">Welcome to the TrustMyRecord Forums. Browse categories, open threads, and follow the latest posts without padded demo accounts or seeded filler content.</div>
         </div>
 
         <div class="stats-bar">
-            <div><strong id="statThreads">0</strong> Threads</div>
-            <div><strong id="statPosts">0</strong> Posts</div>
+            <div><strong id="statThreads">0</strong> <span class="stats-label">threads</span></div>
+            <div><strong id="statPosts">0</strong> <span class="stats-label">posts</span></div>
+            <div><strong id="statUsers">0</strong> <span class="stats-label">active posters</span></div>
+            <div><strong id="statOnline">0</strong> <span class="stats-label">online now</span></div>
         </div>
 
         <div class="search-row">
@@ -661,18 +821,24 @@
     <!-- ================= THREADS VIEW ================= -->
     <div id="viewThreads" style="display:none;">
         <div class="toolbar">
-            <button class="btn btn-primary" onclick="openNewThread()">+ New Thread</button>
-            <select id="sortSelect" onchange="renderThreads()">
-                <option value="activity">Last Activity</option>
-                <option value="newest">Newest First</option>
-                <option value="popular">Most Popular</option>
-                <option value="replies">Most Replies</option>
-            </select>
+            <div class="toolbar-left">
+                <button class="btn btn-primary" onclick="openNewThread()">Post New Thread</button>
+                <button class="btn btn-outline" onclick="showCategories()">Forum Index</button>
+            </div>
+            <div class="toolbar-right">
+                <span class="toolbar-label">Display Options</span>
+                <select id="sortSelect" onchange="renderThreads()">
+                    <option value="activity">Last Activity</option>
+                    <option value="newest">Newest First</option>
+                    <option value="popular">Most Popular</option>
+                    <option value="replies">Most Replies</option>
+                </select>
+            </div>
         </div>
         <table class="thread-table">
             <thead>
                 <tr>
-                    <th>Thread / Starter</th>
+                    <th>Title / Thread Starter</th>
                     <th class="col-num">Replies</th>
                     <th class="col-num">Views</th>
                     <th class="col-last">Last Post</th>
@@ -685,8 +851,12 @@
     <!-- ================= THREAD DETAIL VIEW ================= -->
     <div id="viewThread" style="display:none;">
         <div class="toolbar">
-            <button class="btn btn-outline btn-sm" onclick="goBackToThreads()">Back to Threads</button>
-            <button class="btn btn-primary btn-sm" onclick="scrollToReply()">Reply</button>
+            <div class="toolbar-left">
+                <button class="btn btn-outline btn-sm" onclick="goBackToThreads()">Back to Forum</button>
+            </div>
+            <div class="toolbar-right">
+                <button class="btn btn-primary btn-sm" onclick="scrollToReply()">Reply</button>
+            </div>
         </div>
         <div id="postsContainer"></div>
 
@@ -698,6 +868,26 @@
     </div>
 
 </div><!-- /forum-wrap -->
+
+<div class="forum-wrap" style="padding-top:0;">
+    <div class="forum-jump-row">
+        <div>Forum Jump</div>
+        <select id="forumJumpSelect" onchange="handleForumJump(this.value)">
+            <option value="">Select a forum</option>
+        </select>
+    </div>
+    <div class="forum-bottom-panel">
+        <div class="forum-bottom-head">Forum Statistics</div>
+        <div class="forum-bottom-body">
+            <div class="forum-bottom-grid">
+                <div class="forum-bottom-box"><strong>Total Threads</strong><span id="bottomStatThreads">0</span></div>
+                <div class="forum-bottom-box"><strong>Total Posts</strong><span id="bottomStatPosts">0</span></div>
+                <div class="forum-bottom-box"><strong>Active Posters</strong><span id="bottomStatUsers">0</span></div>
+                <div class="forum-bottom-box"><strong>Users Online</strong><span id="bottomStatOnline">0</span></div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- NEW THREAD MODAL -->
 <div class="modal-overlay" id="newThreadModal">
@@ -712,10 +902,6 @@
             <div class="form-group">
                 <label>Message</label>
                 <textarea id="ntContent" rows="8" placeholder="Write your post..." required minlength="10"></textarea>
-            </div>
-            <div class="form-group">
-                <label>Tags (comma-separated, optional)</label>
-                <input type="text" id="ntTags" placeholder="e.g. nfl, strategy, picks">
             </div>
             <button type="submit" class="btn btn-primary" style="width:100%;margin-top:6px;">Post Thread</button>
         </form>
@@ -889,6 +1075,7 @@ async function loadCategories() {
     try {
         var data = await api.request('/forum/categories');
         categories = data.categories || [];
+        updateForumJump();
         renderCategories();
 
         // Also load stats
@@ -896,6 +1083,12 @@ async function loadCategories() {
             var stats = await api.request('/forum/stats');
             document.getElementById('statThreads').textContent = stats.total_threads || 0;
             document.getElementById('statPosts').textContent = stats.total_posts || 0;
+            document.getElementById('statUsers').textContent = stats.active_users || 0;
+            document.getElementById('statOnline').textContent = stats.users_online || 0;
+            document.getElementById('bottomStatThreads').textContent = stats.total_threads || 0;
+            document.getElementById('bottomStatPosts').textContent = stats.total_posts || 0;
+            document.getElementById('bottomStatUsers').textContent = stats.active_users || 0;
+            document.getElementById('bottomStatOnline').textContent = stats.users_online || 0;
         } catch (e) {
             // Stats are optional, don't break the page
         }
@@ -927,7 +1120,7 @@ function renderCategories() {
     var html = '';
     groupOrder.forEach(function(groupName) {
         var groupIcon = groupName.toUpperCase().indexOf('SPORT') !== -1 ? '&#x1F3C6;' : '&#x1F4AC;';
-        html += '<div class="group-header"><span>' + groupIcon + '</span> ' + escHtml(groupName.toUpperCase()) + '</div>';
+        html += '<div class="group-header"><div class="group-header-title"><span>' + groupIcon + '</span> ' + escHtml(groupName.toUpperCase()) + '</div><div class="group-header-meta">Forum / Threads / Posts / Last Post</div></div>';
         html += '<table class="cat-table"><thead><tr><th>Forum</th><th class="col-num">Threads</th><th class="col-num">Posts</th><th class="col-last">Last Post</th></tr></thead><tbody>';
 
         groups[groupName].forEach(function(cat) {
@@ -954,6 +1147,25 @@ function renderCategories() {
     });
 
     container.innerHTML = html;
+}
+
+function updateForumJump() {
+    var select = document.getElementById('forumJumpSelect');
+    if (!select) return;
+
+    var options = ['<option value="">Select a forum</option>'];
+    categories.forEach(function(cat) {
+        options.push('<option value="' + escHtml(String(cat.slug || '')) + '">' + escHtml(cat.name || 'Forum') + '</option>');
+    });
+    select.innerHTML = options.join('');
+}
+
+function handleForumJump(slug) {
+    if (!slug) return;
+    currentCategorySlug = slug;
+    var cat = categories.find(function(item) { return item.slug === slug; });
+    currentCategoryName = cat ? cat.name : 'Forum';
+    showThreadsList(slug, currentCategoryName, cat ? cat.id : null);
 }
 
 // ================================================================
@@ -992,9 +1204,10 @@ function renderThreads() {
         var pinHtml = t.is_pinned ? '<span class="pin-badge">PINNED</span>' : '';
         var replyCount = parseInt(t.post_count) || parseInt(t.reply_count) || 0;
         var viewCount = parseInt(t.view_count) || 0;
+        var prefix = t.is_pinned ? '!' : 'T';
 
         return '<tr class="' + (t.is_pinned ? 'pinned' : '') + '" onclick="showThreadDetail(' + t.id + ')">' +
-            '<td><div>' + pinHtml + '<span class="thread-title-link">' + escHtml(t.title) + '</span></div><div class="thread-meta">by <strong>' + escHtml(t.username || '') + '</strong> ' + timeAgo(t.created_at) + '</div></td>' +
+            '<td><div class="thread-title-line"><span class="thread-prefix">' + prefix + '</span>' + pinHtml + '<span class="thread-title-link">' + escHtml(t.title) + '</span></div><div class="thread-meta">Started by <strong>' + escHtml(t.username || '') + '</strong>, ' + timeAgo(t.created_at) + '</div></td>' +
             '<td class="col-num">' + replyCount + '</td>' +
             '<td class="col-num">' + viewCount + '</td>' +
             '<td class="col-last"><div class="last-post-info"><div class="last-post-meta">by <strong>' + escHtml(lastUser) + '</strong><br>' + timeAgo(lastTime) + '</div></div></td>' +
@@ -1254,9 +1467,8 @@ async function performSearch(query) {
         body.innerHTML = results.map(function(t) {
             var catName = t.category_name || '';
             var catSlug = t.category_slug || '';
-            var srBadges = typeof renderTeamBadges === 'function' ? renderTeamBadges(t.username || '') : '';
             return '<tr onclick="currentCategorySlug=\'' + escHtml(catSlug) + '\';currentCategoryName=\'' + escHtml(catName) + '\';showThreadDetail(' + t.id + ')">' +
-                '<td><span class="tag-pill">' + escHtml(catName) + '</span><div class="thread-title-link">' + escHtml(t.title) + '</div><div class="thread-meta">by <strong>' + escHtml(t.username || '') + '</strong>' + srBadges + ' ' + timeAgo(t.created_at) + '</div></td>' +
+                '<td><span class="tag-pill">' + escHtml(catName) + '</span><div class="thread-title-link">' + escHtml(t.title) + '</div><div class="thread-meta">Started by <strong>' + escHtml(t.username || '') + '</strong> ' + timeAgo(t.created_at) + '</div></td>' +
                 '<td class="col-num">' + (t.reply_count || 0) + '</td>' +
                 '<td class="col-num">' + (t.view_count || 0) + '</td>' +
                 '<td class="col-last"><div class="last-post-meta">' + timeAgo(t.created_at) + '</div></td>' +
@@ -1319,66 +1531,5 @@ document.addEventListener('DOMContentLoaded', async function() {
     showCategories();
 });
 </script>
-
-        <footer style="background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.8) 100%); border-top: 1px solid rgba(0, 255, 255, 0.15); padding: 50px 0 0 0; margin-top: 60px;">
-            <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px;">
-                <!-- Footer Columns -->
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.08);">
-                    <!-- Brand Column -->
-                    <div>
-                        <div style="font-size: 1.3rem; font-weight: 800; color: #00ffff; margin-bottom: 10px; letter-spacing: 0.5px;">TrustMyRecord</div>
-                        <p style="color: #808090; font-size: 0.85rem; line-height: 1.6; margin: 0 0 16px 0;">The future of transparent sports betting.</p>
-                        <p style="color: #606070; font-size: 0.8rem; margin: 0;">&copy; 2026 TrustMyRecord.com</p>
-                    </div>
-                    <!-- Platform Column -->
-                    <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Platform</div>
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="sportsbook.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
-                            <a href="index.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
-                            <a href="arena.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Gaming Arena</a>
-                            <a href="forum.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
-                        </div>
-                    </div>
-                    <!-- Community Column -->
-                    <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Community</div>
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="feed.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
-                            <a href="challenges.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Challenges</a>
-                            <a href="polls.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Polls</a>
-                            <a href="trivia.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
-                        </div>
-                    </div>
-                    <!-- Legal Column -->
-                    <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Info</div>
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="about.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
-                            <a href="terms.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
-                            <a href="privacy.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
-                            <a href="mailto:support@trustmyrecord.com" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Contact</a>
-                        </div>
-                    </div>
-                </div>
-                <!-- Bottom Bar -->
-                <div style="padding: 24px 0; text-align: center;">
-                    <p style="color: #606070; font-size: 0.78rem; line-height: 1.7; margin: 0 0 8px 0;">TrustMyRecord is not a gambling site. We provide pick tracking and community features only. No real money is wagered on this platform.</p>
-                    <p style="color: #505060; font-size: 0.72rem; margin: 0;">If you or someone you know has a gambling problem, call 1-800-GAMBLER. Must be 18+ to participate. Please gamble responsibly.</p>
-                </div>
-            </div>
-            <style>
-                footer a:hover { color: #00ffff !important; }
-                @media (max-width: 900px) {
-                    footer > div > div:first-child { grid-template-columns: repeat(2, 1fr) !important; gap: 30px !important; }
-                }
-                @media (max-width: 540px) {
-                    footer > div > div:first-child { grid-template-columns: 1fr !important; gap: 24px !important; }
-                    footer { padding-top: 36px !important; }
-                }
-            </style>
-        </footer>
-
-
 </body>
 </html>
