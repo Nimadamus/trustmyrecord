@@ -609,6 +609,14 @@
             var isMLB = (sport && (sport.toLowerCase().indexOf('baseball') !== -1 || sport === 'MLB'));
             var f5Total = total != null ? (Math.round(total * 0.55 * 2) / 2) : null; // 55% of game total, rounded to 0.5
             var f5Display = f5Total != null ? f5Total : '?';
+            var first5Group = Array.isArray(game.market_groups) ? game.market_groups.find(function(group) { return group && group.key === 'first_5'; }) : null;
+            var first5Items = first5Group && Array.isArray(first5Group.items) ? first5Group.items : [];
+            var awayF5Spread = first5Items.find(function(item) { return item && item.market_type === 'f5_spreads' && item.selection === game.away_team; }) || null;
+            var homeF5Spread = first5Items.find(function(item) { return item && item.market_type === 'f5_spreads' && item.selection === game.home_team; }) || null;
+            var awayF5Line = awayF5Spread && awayF5Spread.line != null ? awayF5Spread.line : 0.5;
+            var homeF5Line = homeF5Spread && homeF5Spread.line != null ? homeF5Spread.line : -0.5;
+            var awayF5Odds = awayF5Spread && awayF5Spread.odds != null ? awayF5Spread.odds : -118;
+            var homeF5Odds = homeF5Spread && homeF5Spread.odds != null ? homeF5Spread.odds : -102;
             html += '<div style="text-align:center;margin:-4px 0 8px 0;"><button onclick="(function(el){var p=el.parentElement.nextElementSibling;if(p){p.style.display=p.style.display===\'none\'?\'block\':\'none\';el.textContent=p.style.display===\'none\'?\'More Markets \\u25BC\':\'Less Markets \\u25B2\'}})(this)" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--text-muted,#888);padding:6px 18px;border-radius:6px;cursor:pointer;font-size:12px;transition:all 0.2s;">More Markets &#9660;</button></div>';
             html += '<div style="display:none;padding:8px 12px 12px;border-top:1px solid rgba(255,255,255,0.06);">';
             // Team Totals
@@ -624,6 +632,11 @@
             // F5 markets for MLB only
             if (isMLB) {
                 html += '<div style="margin-top:10px;"><div style="color:var(--text-muted,#aaa);font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600;">First 5 Innings</div>';
+                // F5 Run Line
+                html += '<div style="display:flex;gap:8px;margin-bottom:4px;">';
+                html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'f5spread\',\'' + esc(game.away_team) + '\',\'' + esc(pv(awayF5Line)) + '\',\'' + esc(pv(awayF5Odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + game.away_team.split(' ').pop() + ' ' + fmtSpread(awayF5Line) + '</span><span class="odds-value">' + fmtOdds(awayF5Odds) + '</span></button>';
+                html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'f5spread\',\'' + esc(game.home_team) + '\',\'' + esc(pv(homeF5Line)) + '\',\'' + esc(pv(homeF5Odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + game.home_team.split(' ').pop() + ' ' + fmtSpread(homeF5Line) + '</span><span class="odds-value">' + fmtOdds(homeF5Odds) + '</span></button>';
+                html += '</div>';
                 // F5 Moneyline
                 html += '<div style="display:flex;gap:8px;margin-bottom:4px;">';
                 html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'f5ml\',\'' + esc(game.away_team) + '\',\'F5 ML\',\'' + esc(pv(awayML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + game.away_team.split(' ').pop() + ' F5</span><span class="odds-value">' + fmtOdds(awayML) + '</span></button>';
@@ -711,10 +724,47 @@
     // Core function - Select Game Bet (when user clicks an odds button)
     // ============ BET TYPE TOGGLE ============
     window.TMR.selectedBetType = 'spread';
+    window.TMR.selectedBetScope = 'full';
+
+    window.setBetScope = function(scope, silent) {
+        window.TMR.selectedBetScope = scope;
+        document.querySelectorAll('#betScopeSelector .bt-scope-btn').forEach(function(btn) {
+            var isActive = btn.dataset.scope === scope;
+            btn.classList.toggle('active', isActive);
+            btn.style.background = isActive ? 'var(--gradient-gold)' : 'var(--card-bg)';
+            btn.style.color = isActive ? 'var(--dark-bg)' : 'var(--text-primary)';
+        });
+
+        var fullRow = document.getElementById('betTypeSelector2');
+        var f5Row = document.getElementById('betTypeSelectorF5');
+        if (fullRow) fullRow.style.display = scope === 'f5' ? 'none' : 'flex';
+        if (f5Row) f5Row.style.display = scope === 'f5' ? 'flex' : 'none';
+
+        if (!silent) {
+            if (scope === 'f5') {
+                var currentType = window.TMR.selectedBetType;
+                if (['f5spread', 'f5ml', 'f5over', 'f5under'].indexOf(currentType) === -1) {
+                    window.setBetType('f5spread');
+                    return;
+                }
+            } else {
+                var currentFullType = window.TMR.selectedBetType;
+                if (['spread', 'ml', 'over', 'under', 'teamover', 'teamunder'].indexOf(currentFullType) === -1) {
+                    window.setBetType('spread');
+                    return;
+                }
+            }
+        }
+    };
 
     window.setBetType = function(type, silent) {
         window.TMR.selectedBetType = type;
-        document.querySelectorAll('#betTypeSelector .bt-toggle-btn, #betTypeSelector2 .bt-toggle-btn').forEach(function(btn) {
+        if (['f5spread', 'f5ml', 'f5over', 'f5under'].indexOf(type) !== -1) {
+            window.setBetScope('f5', true);
+        } else {
+            window.setBetScope('full', true);
+        }
+        document.querySelectorAll('#betTypeSelector .bt-toggle-btn, #betTypeSelector2 .bt-toggle-btn, #betTypeSelectorF5 .bt-toggle-btn').forEach(function(btn) {
             var isActive = btn.dataset.type === type;
             btn.classList.toggle('active', isActive);
             if (isActive) {
@@ -737,7 +787,7 @@
             else if (type === 'under' || type === 'f5under') pick.team = 'Under';
             else if (type === 'teamover') pick.team = pick.team || pick.homeTeam || '';
             else if (type === 'teamunder') pick.team = pick.team || pick.homeTeam || '';
-            else if (type === 'ml' || type === 'spread' || type === 'f5ml') {
+            else if (type === 'ml' || type === 'spread' || type === 'f5ml' || type === 'f5spread') {
                 // Keep original team selection if it was a team name
                 if (pick.team === 'Over' || pick.team === 'Under') {
                     pick.team = pick.homeTeam || '';
@@ -767,6 +817,9 @@
         if (betType === 'spread' && line) {
             var num = parseFloat(line);
             displayText += ' ' + (num > 0 ? '+' : '') + line;
+        } else if (betType === 'f5spread' && line) {
+            var f5Num = parseFloat(line);
+            displayText += ' ' + (f5Num > 0 ? '+' : '') + line + ' F5';
         } else if (betType === 'ml') {
             displayText += ' ML';
         } else if (betType === 'over') {
@@ -833,6 +886,12 @@
         var spreadLabel = (sport === 'NHL') ? 'Puck Line' : (sport === 'MLB' ? 'Run Line' : 'Spread');
         var spreadBtn = document.getElementById('btToggleSpread');
         if (spreadBtn) spreadBtn.textContent = spreadLabel;
+        var f5SpreadBtn = document.getElementById('btToggleF5Spread');
+        if (f5SpreadBtn) f5SpreadBtn.textContent = sport === 'MLB' ? 'F5 Run Line' : 'F5 Spread';
+        var betScopeSelector = document.getElementById('betScopeSelector');
+        if (betScopeSelector) {
+            betScopeSelector.style.display = sport === 'MLB' ? 'flex' : 'none';
+        }
 
         // Update UI to show selection
         document.querySelectorAll('.bet-pick-btn, .total-btn, .odds-btn').forEach(function(btn) {
@@ -924,14 +983,14 @@
         }
 
         // Validate line for spread/total bets (including team totals and F5 totals)
-        var needsLine = ['spread', 'over', 'under', 'teamover', 'teamunder', 'f5over', 'f5under'];
+        var needsLine = ['spread', 'over', 'under', 'teamover', 'teamunder', 'f5spread', 'f5over', 'f5under'];
         if (needsLine.indexOf(betType) !== -1 && !finalLine && finalLine !== '0') {
             alert('Please enter the line/total from your sportsbook.');
             if (lineInput) lineInput.focus();
             return;
         }
 
-        var marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals' };
+        var marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals' };
         var marketType = marketTypeMap[betType] || 'h2h';
 
         // Determine selection name
@@ -944,7 +1003,7 @@
             selection = (thePick.team || '') + ' Over';
         } else if (betType === 'teamunder') {
             selection = (thePick.team || '') + ' Under';
-        } else if (betType === 'f5ml') {
+        } else if (betType === 'f5ml' || betType === 'f5spread') {
             selection = thePick.team || thePick.pick || '';
         } else {
             selection = thePick.team || thePick.pick || '';
@@ -952,7 +1011,7 @@
 
         // Determine line snapshot (spread number or total number, null for ML/F5ML)
         var lineSnapshot = null;
-        if (betType === 'spread' || betType === 'over' || betType === 'under' || betType === 'teamover' || betType === 'teamunder' || betType === 'f5over' || betType === 'f5under') {
+        if (betType === 'spread' || betType === 'over' || betType === 'under' || betType === 'teamover' || betType === 'teamunder' || betType === 'f5spread' || betType === 'f5over' || betType === 'f5under') {
             lineSnapshot = parseFloat(finalLine) || null;
         }
 
@@ -7810,7 +7869,7 @@
             <!-- Notifications Dropdown -->
             <div id="notificationsPanel" class="notifications-panel" style="display: none;">
                 <div class="notifications-header">
-                    <h3>Notifications <span class="unread-count" id="unreadCount">12</span></h3>
+                    <h3>Notifications <span class="unread-count" id="unreadCount">0</span></h3>
                     <button class="mark-read-btn" onclick="markAllRead()">✓ Mark all read</button>
                 </div>
 
@@ -7832,7 +7891,7 @@
                 </div>
 
                 <div class="notifications-footer">
-                    <a onclick="showSection('notifications')">View all notifications →</a>
+                    <a href="notifications.html">View all notifications →</a>
                 </div>
             </div>
         </header>
@@ -8225,6 +8284,11 @@
             <div class="back-button" onclick="goBackToGames()">&#8592; Back to Games</div>
             <h3>Confirm Your Pick</h3>
 
+            <div id="betScopeSelector" style="display: none; gap: 0; margin-bottom: 12px; border-radius: 10px; overflow: hidden; border: 2px solid var(--glass-border);">
+                <button type="button" class="bt-scope-btn active" data-scope="full" onclick="window.setBetScope('full')" style="flex: 1; padding: 10px 14px; background: var(--gradient-gold); border: none; color: var(--dark-bg); font-weight: 700; cursor: pointer; font-size: 13px; transition: all 0.2s;" id="btScopeFull">Full Game</button>
+                <button type="button" class="bt-scope-btn" data-scope="f5" onclick="window.setBetScope('f5')" style="flex: 1; padding: 10px 14px; background: var(--card-bg); border: none; border-left: 1px solid var(--glass-border); color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 13px; transition: all 0.2s;" id="btScopeF5">5 Innings</button>
+            </div>
+
             <!-- Bet Type Toggle -->
             <div id="betTypeSelector" style="display: flex; gap: 0; margin-bottom: 4px; border-radius: 10px; overflow: hidden; border: 2px solid var(--glass-border);">
                 <button type="button" class="bt-toggle-btn active" data-type="spread" onclick="window.setBetType('spread')" style="flex: 1; padding: 12px 16px; background: var(--gradient-gold); border: none; color: var(--dark-bg); font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s;" id="btToggleSpread">Spread</button>
@@ -8235,6 +8299,9 @@
             <div id="betTypeSelector2" style="display: flex; gap: 0; margin-bottom: 20px; border-radius: 10px; overflow: hidden; border: 2px solid var(--glass-border);">
                 <button type="button" class="bt-toggle-btn" data-type="teamover" onclick="window.setBetType('teamover')" style="flex: 1; padding: 10px 8px; background: var(--card-bg); border: none; color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 12px; transition: all 0.2s;" id="btToggleTeamOver">TT Over</button>
                 <button type="button" class="bt-toggle-btn" data-type="teamunder" onclick="window.setBetType('teamunder')" style="flex: 1; padding: 10px 8px; background: var(--card-bg); border: none; border-left: 1px solid var(--glass-border); color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 12px; transition: all 0.2s;" id="btToggleTeamUnder">TT Under</button>
+            </div>
+            <div id="betTypeSelectorF5" style="display: none; gap: 0; margin-bottom: 20px; border-radius: 10px; overflow: hidden; border: 2px solid var(--glass-border);">
+                <button type="button" class="bt-toggle-btn" data-type="f5spread" onclick="window.setBetType('f5spread')" style="flex: 1; padding: 10px 8px; background: var(--card-bg); border: none; color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 12px; transition: all 0.2s;" id="btToggleF5Spread">F5 Run Line</button>
                 <button type="button" class="bt-toggle-btn" data-type="f5ml" onclick="window.setBetType('f5ml')" style="flex: 1; padding: 10px 8px; background: var(--card-bg); border: none; border-left: 1px solid var(--glass-border); color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 12px; transition: all 0.2s;" id="btToggleF5ML">F5 ML</button>
                 <button type="button" class="bt-toggle-btn" data-type="f5over" onclick="window.setBetType('f5over')" style="flex: 1; padding: 10px 8px; background: var(--card-bg); border: none; border-left: 1px solid var(--glass-border); color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 12px; transition: all 0.2s;" id="btToggleF5Over">F5 Over</button>
                 <button type="button" class="bt-toggle-btn" data-type="f5under" onclick="window.setBetType('f5under')" style="flex: 1; padding: 10px 8px; background: var(--card-bg); border: none; border-left: 1px solid var(--glass-border); color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 12px; transition: all 0.2s;" id="btToggleF5Under">F5 Under</button>
@@ -15604,8 +15671,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const picks = window._cachedBackendPicks || [];
                 const wins = picks.filter(p => p.status === 'won').length;
                 const losses = picks.filter(p => p.status === 'lost').length;
+                const pushes = picks.filter(p => p.status === 'push' || p.status === 'pushed').length;
                 const pending = picks.filter(p => p.status === 'pending').length;
-                picksBreakdownEl.textContent = `${wins}W - ${losses}L - ${pending}P`;
+                picksBreakdownEl.textContent = `${wins}W - ${losses}L - ${pushes}P`;
+                if (pending > 0) picksBreakdownEl.textContent += ` | ${pending} Pending`;
             }
 
             if (roiDisplayEl) {
@@ -16104,6 +16173,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const line = pick.line_snapshot || '';
                 const odds = pick.odds_snapshot || pick.odds || -110;
                 const units = pick.units || 1;
+                const marketLabel = formatMarketTypeLabel(pick.market_type || pick.pickType || pick.betType);
                 const dateStr = new Date(pick.locked_at || pick.timestamp || Date.now()).toLocaleDateString();
                 const resultUnits = pick.result_units;
                 const statusBg = status === 'won' ? 'rgba(0,200,83,0.2)' : status === 'lost' ? 'rgba(255,68,68,0.2)' : 'rgba(255,152,0,0.2)';
@@ -16116,7 +16186,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     '</div>' +
                     '<div class="user-post-pick">' +
                     '<div class="user-post-pick-team">' + matchup + '</div>' +
-                    '<div class="user-post-pick-details">' + selection + ' ' + line + ' (' + odds + ') - ' + units + 'u' + unitsDisplay + '</div>' +
+                    '<div class="user-post-pick-details">' + marketLabel + ' • ' + selection + ' ' + line + ' (' + odds + ') - ' + units + 'u' + unitsDisplay + '</div>' +
                     '</div></div>';
             }).join('');
         }
@@ -16918,6 +16988,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="static/js/forums.js?v=20251208c"></script>
     <!-- forms.js REMOVED - forms-fixed.js handles login/signup -->
     <script src="static/js/navigation.js?v=20251208c"></script>
+    <script src="static/js/sportsbook-production-fix.js?v=20260413"></script>
     <script src="static/js/effects.js?v=20251208c"></script>
 
     <script src="static/js/app.js?v=20260122"></script>
@@ -17126,11 +17197,23 @@ document.addEventListener('DOMContentLoaded', function() {
             let f5Html = '';
             if (isMLBGame) {
                 const f5t = total !== '--' ? (Math.round(parseFloat(total) * 0.55 * 2) / 2) : '?';
+                const first5Group = Array.isArray(game.market_groups) ? game.market_groups.find(group => group && group.key === 'first_5') : null;
+                const first5Items = first5Group && Array.isArray(first5Group.items) ? first5Group.items : [];
+                const awayF5Spread = first5Items.find(item => item && item.market_type === 'f5_spreads' && item.selection === game.away_team) || null;
+                const homeF5Spread = first5Items.find(item => item && item.market_type === 'f5_spreads' && item.selection === game.home_team) || null;
+                const awayF5Line = awayF5Spread && awayF5Spread.line != null ? awayF5Spread.line : 0.5;
+                const homeF5Line = homeF5Spread && homeF5Spread.line != null ? homeF5Spread.line : -0.5;
+                const awayF5Odds = awayF5Spread && awayF5Spread.odds != null ? awayF5Spread.odds : -118;
+                const homeF5Odds = homeF5Spread && homeF5Spread.odds != null ? homeF5Spread.odds : -102;
                 const escAway = game.away_team.replace(/'/g, "\\'");
                 const escHome = game.home_team.replace(/'/g, "\\'");
                 const awayShort = game.away_team.split(' ').pop();
                 const homeShort = game.home_team.split(' ').pop();
                 f5Html = `<div class="market-section"><div class="market-title">First 5 Innings</div>
+                    <div style="display:flex;gap:10px;margin-bottom:8px;">
+                        <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5spread', '${escAway}', '${awayF5Line}', '${awayF5Odds}', '${escAway}', '${escHome}')"><span class="line">${awayShort} ${awayF5Line > 0 ? '+' : ''}${awayF5Line}</span><span class="odds">${awayF5Odds > 0 ? '+' : ''}${awayF5Odds}</span></button>
+                        <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5spread', '${escHome}', '${homeF5Line}', '${homeF5Odds}', '${escAway}', '${escHome}')"><span class="line">${homeShort} ${homeF5Line > 0 ? '+' : ''}${homeF5Line}</span><span class="odds">${homeF5Odds > 0 ? '+' : ''}${homeF5Odds}</span></button>
+                    </div>
                     <div style="display:flex;gap:10px;margin-bottom:8px;">
                         <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5ml', '${escAway}', 'F5 ML', '${awayML}', '${escAway}', '${escHome}')"><span class="line">${awayShort} F5</span><span class="odds">${awayML}</span></button>
                         <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5ml', '${escHome}', 'F5 ML', '${homeML}', '${escAway}', '${escHome}')"><span class="line">${homeShort} F5</span><span class="odds">${homeML}</span></button>
@@ -17574,10 +17657,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Remove odds like (-110) or -180
         let sel = summaryPick.replace(/\s*[\(\)]?[-+]?\d+\.?\d*[\(\)]?/g, '').trim();
         // For totals, look for "Over" or "Under" in the string
-        if (betType === 'over' || betType === 'under' || betType === 'total') {
+        if (betType === 'over' || betType === 'under' || betType === 'total' || betType === 'f5over' || betType === 'f5under') {
             const lower = summaryPick.toLowerCase();
-            if (lower.indexOf('over') !== -1) return 'over';
-            if (lower.indexOf('under') !== -1) return 'under';
+            if (lower.indexOf('over') !== -1) return 'Over';
+            if (lower.indexOf('under') !== -1) return 'Under';
+        }
+        if (game && (betType === 'ml' || betType === 'spread' || betType === 'f5ml' || betType === 'f5spread')) {
+            if (summaryPick.indexOf(game.away_team) !== -1) return game.away_team;
+            if (summaryPick.indexOf(game.home_team) !== -1) return game.home_team;
         }
         return sel;
     }
@@ -17612,7 +17699,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Save to localStorage
         if (window.auth && window.auth.isLoggedIn()) {
-            const marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', total: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals' };
+            const marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', total: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals' };
             const marketType = marketTypeMap[pick.betType] || 'h2h';
             const selection = extractSelection(pick.pick, pick.betType, pick.game);
             const units = Math.max(0.5, Math.min(10, parseFloat(pick.units) || 1));
@@ -18441,6 +18528,29 @@ document.addEventListener('DOMContentLoaded', function() {
     /**
      * Load recent activity for profile
      */
+    function formatMarketTypeLabel(marketType) {
+        return ({
+            h2h: 'Moneyline',
+            moneyline: 'Moneyline',
+            spreads: 'Spread',
+            spread: 'Spread',
+            totals: 'Game Total',
+            total: 'Game Total',
+            team_totals: 'Team Total',
+            f5_h2h: 'First 5 ML',
+            f5_spreads: 'First 5 Spread',
+            f5_totals: 'First 5 Total',
+            first_half_spreads: 'First Half Spread',
+            first_half_totals: 'First Half Total',
+            second_half_spreads: 'Second Half Spread',
+            second_half_totals: 'Second Half Total',
+            period_1_h2h: '1st Period ML',
+            period_1_totals: '1st Period Total',
+            alt_spreads: 'Alt Spread',
+            alt_totals: 'Alt Total'
+        })[marketType] || String(marketType || 'Pick').replace(/_/g, ' ');
+    }
+
     async function loadUserRecentActivity(userId) {
         const container = document.getElementById('profileRecentActivity');
         if (!container) return;
@@ -18465,11 +18575,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const matchup = (pick.away_team || '') + ' vs ' + (pick.home_team || '');
             const pickDisplay = pick.selection + (pick.line_snapshot ? ' ' + pick.line_snapshot : '');
             const odds = pick.odds_snapshot || -110;
+            const marketLabel = formatMarketTypeLabel(pick.market_type);
             return `
                 <div class="activity-item ${pick.status}">
                     <span class="activity-icon">${icon}</span>
                     <div class="activity-details">
                         <div class="activity-text">${pick.status.toUpperCase()}: ${matchup}</div>
+                        <div class="activity-meta">${marketLabel} • ${pickDisplay}</div>
                         <div class="activity-meta">${date} • ${pick.units || 1}u @ ${odds > 0 ? '+' : ''}${odds}</div>
                     </div>
                 </div>
@@ -19340,14 +19452,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const graded = picks.filter(p => p.status && p.status !== 'pending');
         const wins = graded.filter(p => p.status === 'won').length;
         const losses = graded.filter(p => p.status === 'lost').length;
+        const pushes = graded.filter(p => p.status === 'push' || p.status === 'pushed').length;
         const totalUnits = graded.reduce((sum, p) => sum + (parseFloat(p.result_units) || 0), 0);
-        const winRate = graded.length > 0 ? ((wins / graded.length) * 100).toFixed(1) : 0;
+        const winRate = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : 0;
 
         const recordEl = document.getElementById('myStatsRecord');
         const winRateEl = document.getElementById('myStatsWinRate');
         const unitsEl = document.getElementById('myStatsUnits');
 
-        if (recordEl) recordEl.textContent = wins + '-' + losses;
+        if (recordEl) recordEl.textContent = wins + '-' + losses + '-' + pushes;
         if (winRateEl) winRateEl.textContent = winRate + '%';
         if (unitsEl) {
             unitsEl.textContent = (totalUnits >= 0 ? '+' : '') + totalUnits.toFixed(2);
@@ -19616,6 +19729,7 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 
+    <script src="static/js/platform-production-fix.js?v=20260413"></script>
 </body>
 </html>
 <!-- Deploy: Tue, Jan 20, 2026  9:59:20 PM -->

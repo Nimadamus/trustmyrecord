@@ -1,0 +1,630 @@
+(function() {
+    'use strict';
+
+    const SPORT_KEY_MAP = {
+        NFL: 'americanfootball_nfl',
+        NBA: 'basketball_nba',
+        MLB: 'baseball_mlb',
+        NHL: 'icehockey_nhl',
+        NCAAB: 'basketball_ncaab',
+        NCAAF: 'americanfootball_ncaaf'
+    };
+
+    const STATUS_MAP = {
+        win: 'won',
+        won: 'won',
+        loss: 'lost',
+        lost: 'lost',
+        push: 'push',
+        pushed: 'push',
+        pending: 'pending',
+        void: 'void'
+    };
+
+    const state = {
+        selectedSport: null,
+        currentBoard: [],
+        currentOptions: new Map(),
+        selectedOption: null,
+        currentUserPicks: []
+    };
+
+    const MARKET_LABELS = {
+        h2h: 'Moneyline',
+        spreads: 'Spread',
+        totals: 'Game Total',
+        team_totals: 'Team Total',
+        f5_h2h: 'First 5 ML',
+        f5_spreads: 'First 5 Spread',
+        f5_totals: 'First 5 Total',
+        first_half_spreads: 'First Half Spread',
+        first_half_totals: 'First Half Total',
+        second_half_spreads: 'Second Half Spread',
+        second_half_totals: 'Second Half Total',
+        period_1_h2h: '1st Period ML',
+        period_1_totals: '1st Period Total',
+        alt_spreads: 'Alt Spread',
+        alt_totals: 'Alt Total'
+    };
+
+    function lockFunction(target, key, value) {
+        if (!target) return;
+        try {
+            Object.defineProperty(target, key, {
+                configurable: true,
+                enumerable: true,
+                get: function() {
+                    return value;
+                },
+                set: function() {}
+            });
+        } catch (error) {
+            target[key] = value;
+        }
+    }
+
+    function normalizeStatus(rawStatus, rawResult) {
+        const normalized = STATUS_MAP[String(rawStatus || rawResult || 'pending').toLowerCase()];
+        return normalized || 'pending';
+    }
+
+    function getMarketLabel(marketType) {
+        return MARKET_LABELS[marketType] || String(marketType || 'Pick').replace(/_/g, ' ');
+    }
+
+    function normalizePick(pick) {
+        return Object.assign({}, pick, {
+            status: normalizeStatus(pick.status, pick.result),
+            odds_snapshot: pick.odds_snapshot != null ? pick.odds_snapshot : pick.odds,
+            line_snapshot: pick.line_snapshot != null ? pick.line_snapshot : pick.line,
+            units: pick.units != null ? parseFloat(pick.units) : 1
+        });
+    }
+
+    function getCurrentUser() {
+        if (window.auth && typeof window.auth.getCurrentUser === 'function' && window.auth.isLoggedIn()) {
+            return window.auth.getCurrentUser();
+        }
+        return null;
+    }
+
+    async function waitForApi() {
+        if (!window.api) throw new Error('Backend API client is not loaded');
+        if (window.api.ready) {
+            try { await window.api.ready; } catch (error) {}
+        }
+        if (!window.api.backendAvailable) {
+            throw new Error('Backend unavailable');
+        }
+        return window.api;
+    }
+
+    async function fetchCurrentUserPicks() {
+        const user = getCurrentUser();
+        if (!user) {
+            state.currentUserPicks = [];
+            window._cachedBackendPicks = [];
+            return [];
+        }
+
+        const api = await waitForApi();
+        const response = await api.getPicks({ userId: user.id, limit: 100 });
+        const picks = (response.picks || []).map(normalizePick).sort(function(a, b) {
+            return new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0);
+        });
+        state.currentUserPicks = picks;
+        window._cachedBackendPicks = picks;
+        return picks;
+    }
+
+    function getRecordStats(picks) {
+        const normalized = (picks || []).map(normalizePick);
+        const wins = normalized.filter(function(pick) { return pick.status === 'won'; }).length;
+        const losses = normalized.filter(function(pick) { return pick.status === 'lost'; }).length;
+        const pushes = normalized.filter(function(pick) { return pick.status === 'push'; }).length;
+        const pending = normalized.filter(function(pick) { return pick.status === 'pending'; }).length;
+        const graded = wins + losses + pushes;
+        const totalUnits = normalized.reduce(function(sum, pick) {
+            return sum + (pick.status === 'pending' ? 0 : (parseFloat(pick.result_units) || 0));
+        }, 0);
+        const risked = normalized.reduce(function(sum, pick) {
+            return sum + (pick.status === 'pending' ? 0 : (parseFloat(pick.units) || 0));
+        }, 0);
+
+        return {
+            wins: wins,
+            losses: losses,
+            pushes: pushes,
+            pending: pending,
+            graded: graded,
+            record: wins + '-' + losses + '-' + pushes,
+            winRate: (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0',
+            totalUnits: totalUnits,
+            roi: risked > 0 ? ((totalUnits / risked) * 100).toFixed(1) : '0.0'
+        };
+    }
+
+    function updateText(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+    }
+
+    function syncRecordWidgets(picks) {
+        const stats = getRecordStats(picks);
+        updateText('advRecordDisplay', stats.record);
+        updateText('profileRecord', stats.record);
+        updateText('myStatsRecord', stats.record);
+        updateText('myStatsWinRate', stats.winRate + '%');
+        updateText('pendingCount', String(stats.pending));
+        updateText('myStatsPending', String(stats.pending));
+        updateText('advWinRate', stats.winRate + '%');
+
+        const unitsEl = document.getElementById('myStatsUnits');
+        if (unitsEl) {
+            unitsEl.textContent = (stats.totalUnits >= 0 ? '+' : '') + stats.totalUnits.toFixed(2);
+            unitsEl.style.color = stats.totalUnits >= 0 ? '#00c853' : '#ff5252';
+        }
+    }
+
+    function ensureMetadataFields() {
+        const details = document.querySelector('#pickDetails .pick-options');
+        if (!details) return;
+
+        if (!document.getElementById('pickMarketInput')) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'option-group';
+            wrapper.innerHTML =
+                '<label>Market</label>' +
+                '<input type="text" id="pickMarketInput" readonly style="width: 100%; padding: 12px 14px; background: var(--card-bg); border: 2px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 16px; font-family: \'Exo 2\', sans-serif;" />';
+            details.insertBefore(wrapper, details.firstChild);
+        }
+
+        if (!document.getElementById('pickBookInput')) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'option-group';
+            wrapper.innerHTML =
+                '<label>Sportsbook</label>' +
+                '<input type="text" id="pickBookInput" placeholder="DraftKings" style="width: 100%; padding: 12px 14px; background: var(--card-bg); border: 2px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 16px; font-family: \'Exo 2\', sans-serif;" />';
+            details.appendChild(wrapper);
+        }
+
+        if (!document.getElementById('pickTimestampInput')) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'option-group';
+            wrapper.innerHTML =
+                '<label>Line Timestamp</label>' +
+                '<input type="text" id="pickTimestampInput" readonly style="width: 100%; padding: 12px 14px; background: var(--card-bg); border: 2px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 16px; font-family: \'Exo 2\', sans-serif;" />';
+            details.appendChild(wrapper);
+        }
+    }
+
+    function injectStyles() {
+        if (document.getElementById('tmr-prod-fix-style')) return;
+        const style = document.createElement('style');
+        style.id = 'tmr-prod-fix-style';
+        style.textContent = [
+            '.tmr-board-banner{margin:0 0 18px;padding:14px 16px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);font-size:14px;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;}',
+            '.tmr-board-banner.warning{background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.35);color:#fbbf24;}',
+            '.tmr-board-banner.info{background:rgba(14,165,233,0.12);border-color:rgba(14,165,233,0.35);color:#7dd3fc;}',
+            '.tmr-board-banner.success{background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.35);color:#86efac;}',
+            '.tmr-board-actions{display:flex;gap:10px;align-items:center;}',
+            '.tmr-board-button{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;}',
+            '.tmr-market-card{background:rgba(18,21,28,0.9);border:1px solid rgba(255,255,255,0.08);border-radius:18px;margin-bottom:16px;overflow:hidden;}',
+            '.tmr-market-head{display:flex;justify-content:space-between;gap:16px;padding:18px 20px;align-items:center;cursor:pointer;}',
+            '.tmr-market-matchup{font-size:20px;font-weight:700;color:#fff;}',
+            '.tmr-market-meta{display:flex;gap:10px;flex-wrap:wrap;color:#a0a8b8;font-size:12px;margin-top:6px;}',
+            '.tmr-market-chip{padding:4px 8px;border-radius:999px;background:rgba(255,255,255,0.06);}',
+            '.tmr-market-chip.real{background:rgba(34,197,94,0.15);color:#86efac;}',
+            '.tmr-market-chip.fallback{background:rgba(245,158,11,0.15);color:#fbbf24;}',
+            '.tmr-market-body{padding:0 20px 20px;display:none;}',
+            '.tmr-market-card.open .tmr-market-body{display:block;}',
+            '.tmr-scope-tabs{display:flex;gap:0;margin-top:16px;border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;background:rgba(255,255,255,0.03);}',
+            '.tmr-scope-tab{flex:1;padding:10px 12px;background:transparent;border:none;color:#a0a8b8;font-weight:700;cursor:pointer;transition:background .15s ease,color .15s ease;}',
+            '.tmr-scope-tab + .tmr-scope-tab{border-left:1px solid rgba(255,255,255,0.08);}',
+            '.tmr-scope-tab.active{background:#fbbf24;color:#111827;}',
+            '.tmr-group{margin-top:16px;}',
+            '.tmr-group[data-scope="f5"]{display:none;}',
+            '.tmr-market-card[data-scope="f5"] .tmr-group[data-scope="full"]{display:none;}',
+            '.tmr-market-card[data-scope="f5"] .tmr-group[data-scope="f5"]{display:block;}',
+            '.tmr-group-title{font-size:12px;text-transform:uppercase;letter-spacing:0.12em;color:#7dd3fc;margin:0 0 10px;font-weight:700;}',
+            '.tmr-option-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;}',
+            '.tmr-option-btn{background:#161b23;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;text-align:left;color:#fff;cursor:pointer;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;}',
+            '.tmr-option-btn:hover{transform:translateY(-1px);border-color:rgba(0,255,255,0.45);box-shadow:0 0 0 1px rgba(0,255,255,0.16) inset;}',
+            '.tmr-option-btn.active{border-color:#00ffff;box-shadow:0 0 0 1px rgba(0,255,255,0.25) inset;}',
+            '.tmr-option-main{display:flex;flex-direction:column;gap:5px;}',
+            '.tmr-option-market{font-size:15px;font-weight:700;}',
+            '.tmr-option-detail{font-size:12px;color:#8b95a7;}',
+            '.tmr-option-odds{font-size:18px;font-weight:800;white-space:nowrap;}',
+            '.tmr-empty-state{padding:36px 18px;text-align:center;color:#8b95a7;}',
+            '@media (max-width: 700px){.tmr-market-head{padding:16px;}.tmr-market-body{padding:0 16px 16px;}.tmr-option-grid{grid-template-columns:1fr;}.tmr-market-matchup{font-size:17px;}}'
+        ].join('');
+        document.head.appendChild(style);
+    }
+
+    function formatTimestamp(value) {
+        if (!value) return 'Unavailable';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return 'Unavailable';
+        return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    }
+
+    function toggleCard(cardId) {
+        const card = document.getElementById(cardId);
+        if (card) card.classList.toggle('open');
+    }
+
+    function getGroupScope(group) {
+        return group && group.key === 'first_5' ? 'f5' : 'full';
+    }
+
+    function setCardScope(cardId, scope) {
+        const card = document.getElementById(cardId);
+        if (!card) return;
+        card.dataset.scope = scope;
+        card.querySelectorAll('.tmr-scope-tab').forEach(function(button) {
+            button.classList.toggle('active', button.dataset.scope === scope);
+        });
+    }
+
+    function renderBoard(summary, games) {
+        const container = document.getElementById('gamesListContainer');
+        if (!container) return;
+
+        state.currentOptions.clear();
+        const bannerClass = summary && summary.severity ? summary.severity : 'info';
+        let html = '';
+
+        if (summary) {
+            html += '<div class="tmr-board-banner ' + bannerClass + '">' +
+                '<div>' + summary.message + '</div>' +
+                '<div class="tmr-board-actions"><button class="tmr-board-button" onclick="window.tmrSportsbookRefresh()">Retry Feed</button></div>' +
+                '</div>';
+        }
+
+        if (!games || games.length === 0) {
+            container.innerHTML = html + '<div class="tmr-empty-state">No upcoming games are available for this sport right now.</div>';
+            return;
+        }
+
+        html += games.map(function(game, index) {
+            const cardId = 'tmr-market-card-' + index;
+            const sourceClass = game.has_sportsbook_odds ? 'real' : 'fallback';
+            const sourceText = game.has_sportsbook_odds ? 'Sportsbook feed' : 'Fallback pricing';
+            let groupsHtml = '';
+            const hasFirst5 = (game.market_groups || []).some(function(group) {
+                return group && group.key === 'first_5' && group.items && group.items.length;
+            });
+
+            (game.market_groups || []).forEach(function(group) {
+                const buttons = (group.items || []).map(function(option) {
+                    state.currentOptions.set(option.id, Object.assign({ game: game }, option));
+                    return '<button class="tmr-option-btn" id="option-' + option.id + '" onclick="window.tmrSelectOption(\'' + option.id + '\')">' +
+                        '<div class="tmr-option-main">' +
+                        '<div class="tmr-option-market">' + escapeHtml(option.selection_label) + '</div>' +
+                        '<div class="tmr-option-detail">' + escapeHtml(option.book_title || option.source_label || option.group_label) + '</div>' +
+                        '</div>' +
+                        '<div class="tmr-option-odds">' + escapeHtml(option.odds_display || 'Manual') + '</div>' +
+                        '</button>';
+                }).join('');
+
+                if (buttons) {
+                    groupsHtml += '<div class="tmr-group" data-scope="' + getGroupScope(group) + '">' +
+                        '<div class="tmr-group-title">' + escapeHtml(group.label) + '</div>' +
+                        '<div class="tmr-option-grid">' + buttons + '</div>' +
+                        '</div>';
+                }
+            });
+
+            const scopeTabsHtml = hasFirst5
+                ? '<div class="tmr-scope-tabs">' +
+                    '<button class="tmr-scope-tab active" data-scope="full" onclick="event.stopPropagation(); window.tmrSetCardScope(\'' + cardId + '\', \'full\')">Full Game</button>' +
+                    '<button class="tmr-scope-tab" data-scope="f5" onclick="event.stopPropagation(); window.tmrSetCardScope(\'' + cardId + '\', \'f5\')">5 Innings</button>' +
+                  '</div>'
+                : '';
+
+            return '<div class="tmr-market-card' + (index === 0 ? ' open' : '') + '" id="' + cardId + '" data-scope="full">' +
+                '<div class="tmr-market-head" onclick="window.tmrToggleCard(\'' + cardId + '\')">' +
+                '<div>' +
+                '<div class="tmr-market-matchup">' + escapeHtml(game.away_team) + ' @ ' + escapeHtml(game.home_team) + '</div>' +
+                '<div class="tmr-market-meta">' +
+                '<span class="tmr-market-chip">' + escapeHtml(new Date(game.commence_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + '</span>' +
+                '<span class="tmr-market-chip ' + sourceClass + '">' + sourceText + '</span>' +
+                '<span class="tmr-market-chip">Updated ' + escapeHtml(formatTimestamp(game.updated_at)) + '</span>' +
+                '</div>' +
+                '</div>' +
+                '<div style="color:#8b95a7;font-size:13px;">' + (game.market_groups || []).length + ' market sections</div>' +
+                '</div>' +
+                '<div class="tmr-market-body">' + scopeTabsHtml + groupsHtml + '</div>' +
+                '</div>';
+        }).join('');
+
+        container.innerHTML = html;
+    }
+
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    async function selectSportAndShowGames(sport) {
+        state.selectedSport = sport;
+        window.TMR = window.TMR || {};
+        window.TMR.selectedSport = sport;
+        const sportKey = SPORT_KEY_MAP[sport];
+        const container = document.getElementById('gamesListContainer');
+        const title = document.getElementById('selectedSportTitle');
+        const badge = document.getElementById('gamesCountBadge');
+
+        if (title) title.textContent = sport + ' Markets';
+        if (container) container.innerHTML = '<div class="tmr-empty-state">Loading live markets...</div>';
+        if (typeof window.showPickStep === 'function') window.showPickStep('gamesListSection');
+
+        try {
+            const api = await waitForApi();
+            const response = await api.getMarketBoard(sportKey);
+            state.currentBoard = response.games || [];
+            if (badge) badge.textContent = state.currentBoard.length + ' game' + (state.currentBoard.length === 1 ? '' : 's');
+            renderBoard(response.summary || null, state.currentBoard);
+        } catch (error) {
+            if (container) {
+                container.innerHTML = '<div class="tmr-empty-state">Unable to load markets right now. ' +
+                    '<div style="margin-top:12px;"><button class="tmr-board-button" onclick="window.tmrSportsbookRefresh()">Retry</button></div></div>';
+            }
+        }
+    }
+
+    function disableLegacyFeed() {
+        const message = 'Legacy estimated odds feed disabled. Use /api/games/board instead.';
+        window.TMR = window.TMR || {};
+        lockFunction(window.TMR, 'fetchGamesFromESPN', function(sportKey, callback) {
+            if (typeof callback === 'function') {
+                callback([], new Error(message));
+            }
+        });
+        lockFunction(window.TMR, 'fetchOddsFromSummary', function(games, espnPath, callback) {
+            if (typeof callback === 'function') {
+                callback(Array.isArray(games) ? games : []);
+            }
+        });
+    }
+
+    async function loadGamesWithAllBetsOverride() {
+        const sport = state.selectedSport || (window.TMR && window.TMR.selectedSport) || null;
+        const container = document.getElementById('gamesListContainer');
+
+        if (!sport) {
+            if (container) {
+                container.innerHTML = '<div class="tmr-empty-state">Choose a sport to load live sportsbook markets.</div>';
+            }
+            return;
+        }
+
+        return selectSportAndShowGames(sport);
+    }
+
+    function selectOption(optionId) {
+        const option = state.currentOptions.get(optionId);
+        if (!option) return;
+
+        state.selectedOption = option;
+        document.querySelectorAll('.tmr-option-btn.active').forEach(function(button) {
+            button.classList.remove('active');
+        });
+        const active = document.getElementById('option-' + option.id);
+        if (active) active.classList.add('active');
+
+        ensureMetadataFields();
+
+        updateText('summaryGame', option.game.away_team + ' @ ' + option.game.home_team);
+        updateText('summaryPick', option.selection_label);
+        updateText('summaryOdds', option.odds_display || 'Manual');
+
+        const lineInput = document.getElementById('pickLineInput');
+        const oddsInput = document.getElementById('pickOddsInput');
+        const marketInput = document.getElementById('pickMarketInput');
+        const bookInput = document.getElementById('pickBookInput');
+        const timestampInput = document.getElementById('pickTimestampInput');
+        const lineGroup = document.getElementById('lineInputGroup');
+
+        if (lineGroup) lineGroup.style.display = option.line != null ? 'block' : 'none';
+        if (lineInput) lineInput.value = option.line_display || '';
+        if (oddsInput) oddsInput.value = option.odds != null ? option.odds : '';
+        if (marketInput) marketInput.value = option.group_label + ' / ' + getMarketLabel(option.market_type);
+        if (bookInput) bookInput.value = option.book_title || '';
+        if (timestampInput) timestampInput.value = formatTimestamp(option.source_updated_at);
+
+        if (typeof window.showPickStep === 'function') window.showPickStep('pickDetails');
+    }
+
+    function updatePickSummary() {
+        if (!state.selectedOption) return;
+        const lineInput = document.getElementById('pickLineInput');
+        const oddsInput = document.getElementById('pickOddsInput');
+        const lineValue = lineInput ? lineInput.value.trim() : '';
+        const oddsValue = oddsInput ? oddsInput.value.trim() : '';
+        updateText('summaryPick', state.selectedOption.selection + (lineValue ? ' ' + lineValue : ''));
+        updateText('summaryOdds', oddsValue || 'Manual');
+    }
+
+    async function lockInPick() {
+        const option = state.selectedOption;
+        if (!option) {
+            alert('Select a market before submitting a pick.');
+            return;
+        }
+
+        const user = getCurrentUser();
+        if (!user) {
+            alert('Please log in to submit a pick.');
+            if (typeof window.showSection === 'function') window.showSection('login');
+            return;
+        }
+
+        const oddsInput = document.getElementById('pickOddsInput');
+        const lineInput = document.getElementById('pickLineInput');
+        const unitsInput = document.getElementById('unitsInput');
+        const bookInput = document.getElementById('pickBookInput');
+        const reasoningInput = document.getElementById('pickReasoning');
+
+        const oddsValue = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
+        const lineValue = lineInput && lineInput.value !== '' ? parseFloat(lineInput.value) : null;
+        const unitsValue = unitsInput ? parseFloat(unitsInput.value || '1') : 1;
+
+        if (Number.isNaN(oddsValue) || (oddsValue > -100 && oddsValue < 100)) {
+            alert('Enter valid American odds like -110 or +150.');
+            return;
+        }
+
+        try {
+            const api = await waitForApi();
+            const response = await api.createPick({
+                game_id: option.game_id,
+                sport_key: option.sport_key,
+                market_type: option.market_type,
+                selection: option.selection,
+                line_snapshot: lineValue,
+                odds_snapshot: oddsValue,
+                units: unitsValue,
+                book_title: bookInput ? bookInput.value.trim() : option.book_title,
+                book_key: option.book_key,
+                market_key: option.market_key,
+                market_label: option.group_label,
+                source_type: option.source,
+                source_updated_at: option.source_updated_at,
+                reasoning: reasoningInput ? reasoningInput.value.trim() : ''
+            });
+
+            await fetchCurrentUserPicks();
+            syncRecordWidgets(state.currentUserPicks);
+            updateText('confirmPickDetail', option.selection_label + ' (' + (oddsValue > 0 ? '+' : '') + oddsValue + ')');
+            updateText('confirmPickMeta', (option.game.away_team + ' @ ' + option.game.home_team) + ' | Status: pending');
+            if (typeof window.showPickStep === 'function') window.showPickStep('pickConfirmation');
+        } catch (error) {
+            alert('Pick submission failed: ' + (error.message || 'Unknown error'));
+        }
+    }
+
+    function renderPickCard(pick) {
+        const status = normalizeStatus(pick.status, pick.result);
+        const statusColor = status === 'won' ? '#00c853' : status === 'lost' ? '#ff5252' : status === 'push' ? '#94a3b8' : '#f59e0b';
+        const recordText = pick.selection + (pick.line_snapshot != null ? ' ' + pick.line_snapshot : '');
+        const marketText = getMarketLabel(pick.market_type);
+        const dateText = new Date(pick.locked_at || pick.created_at || Date.now()).toLocaleString('en-US', {
+            month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+        });
+        return '<div style="background:#22262e;border-radius:12px;padding:16px;margin-bottom:12px;border-left:4px solid ' + statusColor + ';">' +
+            '<div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;">' +
+            '<div>' +
+            '<div style="font-size:18px;font-weight:700;color:#fff;">' + escapeHtml(recordText) + '</div>' +
+            '<div style="font-size:13px;color:#94a3b8;margin-top:4px;">' + escapeHtml((pick.away_team || '') + ' @ ' + (pick.home_team || '')) + '</div>' +
+            '<div style="font-size:12px;color:#6c7380;margin-top:6px;">' + escapeHtml(marketText) + ' | ' + escapeHtml(dateText) + '</div>' +
+            '</div>' +
+            '<div style="text-align:right;">' +
+            '<div style="font-size:16px;font-weight:700;color:#fff;">' + (pick.odds_snapshot > 0 ? '+' : '') + escapeHtml(pick.odds_snapshot) + '</div>' +
+            '<div style="font-size:12px;color:' + statusColor + ';text-transform:uppercase;font-weight:700;margin-top:4px;">' + escapeHtml(status) + '</div>' +
+            '</div>' +
+            '</div>' +
+            '</div>';
+    }
+
+    async function loadMyPicks(tab) {
+        const container = document.getElementById('myPicksList');
+        if (!container) return;
+
+        try {
+            const picks = await fetchCurrentUserPicks();
+            syncRecordWidgets(picks);
+
+            let filtered = picks;
+            if (tab === 'pending') filtered = picks.filter(function(pick) { return pick.status === 'pending'; });
+            if (tab === 'graded') filtered = picks.filter(function(pick) { return pick.status !== 'pending'; });
+
+            container.innerHTML = filtered.length
+                ? filtered.map(renderPickCard).join('')
+                : '<div class="tmr-empty-state">No ' + (tab || 'current') + ' picks found.</div>';
+        } catch (error) {
+            container.innerHTML = '<div class="tmr-empty-state">Unable to load picks from the backend.</div>';
+        }
+    }
+
+    async function loadMyRecordPage() {
+        try {
+            const picks = await fetchCurrentUserPicks();
+            syncRecordWidgets(picks);
+        } catch (error) {}
+    }
+
+    async function refreshCurrentSport() {
+        if (state.selectedSport) {
+            await selectSportAndShowGames(state.selectedSport);
+        }
+    }
+
+    function calculateUserStatsById(userId) {
+        const user = getCurrentUser();
+        const picks = state.currentUserPicks || [];
+        if (user && String(user.id) !== String(userId) && String(user.username) !== String(userId)) {
+            return getRecordStats([]);
+        }
+        const stats = getRecordStats(picks);
+        return {
+            totalPicks: picks.length,
+            wins: stats.wins,
+            losses: stats.losses,
+            pushes: stats.pushes,
+            record: stats.record,
+            winRate: stats.winRate,
+            units: stats.totalUnits,
+            roi: stats.roi,
+            currentStreak: '-'
+        };
+    }
+
+    function boot() {
+        injectStyles();
+        ensureMetadataFields();
+        disableLegacyFeed();
+
+        window.tmrToggleCard = toggleCard;
+        window.tmrSetCardScope = setCardScope;
+        window.tmrSelectOption = selectOption;
+        window.tmrSportsbookRefresh = refreshCurrentSport;
+        lockFunction(window, 'selectSportAndShowGames', selectSportAndShowGames);
+        window.selectGameBet = function() {};
+        window.updatePickSummary = updatePickSummary;
+        window.lockInPick = lockInPick;
+        lockFunction(window, 'loadGamesWithAllBets', loadGamesWithAllBetsOverride);
+        lockFunction(window, 'loadMyPicks', loadMyPicks);
+        lockFunction(window, 'loadMyRecordPage', loadMyRecordPage);
+        lockFunction(window, 'calculateUserStatsById', calculateUserStatsById);
+        window.ensureBackendPicks = function(callback) {
+            fetchCurrentUserPicks().then(function(picks) {
+                syncRecordWidgets(picks);
+                if (typeof callback === 'function') callback();
+            }).catch(function() {
+                if (typeof callback === 'function') callback();
+            });
+        };
+
+        const originalShowSection = window.showSection;
+        if (typeof originalShowSection === 'function' && !window.__tmrProdShowSectionWrapped) {
+            window.__tmrProdShowSectionWrapped = true;
+            window.showSection = function(sectionId) {
+                originalShowSection(sectionId);
+                if (sectionId === 'mypicks') {
+                    loadMyPicks(window.currentPicksTab || 'pending');
+                } else if (sectionId === 'my-record' || sectionId === 'profile') {
+                    loadMyRecordPage();
+                }
+            };
+        }
+
+        fetchCurrentUserPicks().then(syncRecordWidgets).catch(function() {});
+    }
+
+    document.addEventListener('DOMContentLoaded', boot);
+})();
