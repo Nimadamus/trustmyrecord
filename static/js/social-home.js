@@ -8,8 +8,34 @@ let currentFilter = 'all';
 let postType = 'post';
 let feedOffset = 0;
 const FEED_LIMIT = 20;
+let viewerUser = null;
+let followingUserIds = new Set();
+
+function formatMarketLabel(marketType) {
+    return {
+        h2h: 'Moneyline',
+        spreads: 'Spread',
+        totals: 'Game Total',
+        team_totals: 'Team Total',
+        f5_h2h: 'First 5 ML',
+        f5_spreads: 'First 5 Spread',
+        f5_totals: 'First 5 Total',
+        first_half_h2h: 'First Half ML',
+        first_half_spreads: 'First Half Spread',
+        first_half_totals: 'First Half Total',
+        second_half_h2h: 'Second Half ML',
+        second_half_spreads: 'Second Half Spread',
+        second_half_totals: 'Second Half Total',
+        period_1_h2h: '1st Period ML',
+        period_1_totals: '1st Period Total',
+        alt_spreads: 'Alt Spread',
+        alt_totals: 'Alt Total'
+    }[marketType] || String(marketType || 'pick').replace(/_/g, ' ');
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
+    injectFeedVisualUpgrade();
+    injectFeedHero();
     await initAuth();
     await loadFeed();
     loadTrending();
@@ -17,25 +43,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadNotificationBadge();
 });
 
+function setRailCardVisibility(contentId, visible) {
+    const content = document.getElementById(contentId);
+    if (!content) return;
+    const card = content.closest('.rs-card');
+    if (!card) return;
+    card.style.display = visible ? '' : 'none';
+}
+
 // ==================== AUTH INIT ====================
 async function initAuth() {
     if (typeof api !== 'undefined' && api.ready) {
         try { await api.ready; } catch(e) {}
     }
     const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    viewerUser = user;
     if (user) {
         document.getElementById('loginBanner').style.display = 'none';
         document.getElementById('composerCard').style.display = 'block';
         document.getElementById('compAvatar').textContent = (user.displayName || user.username || '?')[0].toUpperCase();
         document.getElementById('headerActions').innerHTML = `
             <a href="sportsbook.html" class="btn btn-primary"><i class="fas fa-plus"></i> Make Pick</a>
-            <span class="notif-bell" id="notifBell" onclick="location.href='feed.html'" title="Notifications">
+            <span class="notif-bell" id="notifBell" onclick="location.href='notifications.html'" title="Notifications">
                 <i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge" style="display:none;">0</span>
             </span>
             <a href="profile.html" class="btn btn-ghost"><i class="fas fa-user"></i> ${user.username}</a>
         `;
         // Load sidebar stats from backend
         loadSidebarStats(user);
+        await hydrateFollowingState();
     } else {
         document.getElementById('composerCard').style.display = 'none';
         document.getElementById('loginBanner').style.display = 'block';
@@ -43,6 +79,62 @@ async function initAuth() {
     document.getElementById('compInput').addEventListener('input', e => {
         document.getElementById('postBtn').disabled = e.target.value.trim().length === 0;
     });
+}
+
+function injectFeedVisualUpgrade() {
+    if (document.getElementById('tmr-feed-upgrade-style')) return;
+
+    const style = document.createElement('style');
+    style.id = 'tmr-feed-upgrade-style';
+    style.textContent = [
+        'body{background:radial-gradient(circle at top, rgba(14,165,233,0.12), transparent 20%),linear-gradient(180deg, #07111b, #0a0f17 22%, #0b1220 100%);}',
+        '.page-layout{position:relative;}',
+        '.main-feed,.left-sidebar,.right-sidebar{position:relative;z-index:1;}',
+        '.composer-card,.rs-card,.sidebar-card,.feed-item,.login-banner{border:1px solid rgba(255,255,255,0.08)!important;background:linear-gradient(180deg, rgba(16,23,34,0.95), rgba(11,17,27,0.92))!important;box-shadow:0 24px 60px rgba(0,0,0,0.24);}',
+        '.composer-card{overflow:hidden;}',
+        '.composer-card::before,.rs-card::before,.sidebar-card::before{content:"";display:block;height:1px;background:linear-gradient(90deg, transparent, rgba(125,211,252,0.7), transparent);}',
+        '.feed-tabs{padding:6px;border:1px solid rgba(255,255,255,0.08);border-radius:18px;background:rgba(8,13,22,0.78);backdrop-filter:blur(10px);}',
+        '.feed-tab{border-radius:14px!important;transition:all .18s ease;}',
+        '.feed-tab.active{background:linear-gradient(135deg, #06b6d4, #22c55e)!important;color:#04111c!important;box-shadow:0 12px 26px rgba(6,182,212,0.24);}',
+        '.feed-item{border-radius:22px!important;overflow:hidden;}',
+        '.fi-avatar,.composer-avatar{box-shadow:0 10px 24px rgba(0,0,0,0.22);}',
+        '.fi-content{font-size:1.02rem;line-height:1.7;}',
+        '.fi-actions{border-top:1px solid rgba(255,255,255,0.06);padding-top:14px;}',
+        '.load-more-btn,.btn-primary{box-shadow:0 14px 30px rgba(34,197,94,0.18);}',
+        '@media (max-width: 900px){.page-layout{padding-top:12px;}}'
+    ].join('');
+    document.head.appendChild(style);
+}
+
+function injectFeedHero() {
+    const mainFeed = document.querySelector('.main-feed');
+    const composerCard = document.getElementById('composerCard');
+    if (!mainFeed || !composerCard || document.getElementById('tmrFeedHero')) return;
+
+    const hero = document.createElement('section');
+    hero.id = 'tmrFeedHero';
+    hero.style.cssText = [
+        'margin-bottom:18px',
+        'padding:24px 24px 20px',
+        'border-radius:24px',
+        'border:1px solid rgba(255,255,255,0.08)',
+        'background:radial-gradient(circle at top right, rgba(34,197,94,0.18), transparent 28%),radial-gradient(circle at top left, rgba(6,182,212,0.18), transparent 24%),linear-gradient(160deg, rgba(15,23,42,0.96), rgba(9,14,22,0.96))',
+        'box-shadow:0 28px 70px rgba(0,0,0,0.28)'
+    ].join(';');
+    hero.innerHTML = [
+        '<div style="display:flex;justify-content:space-between;gap:18px;align-items:flex-start;flex-wrap:wrap;">',
+        '<div style="max-width:640px;">',
+        '<div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#7dd3fc;font-weight:800;margin-bottom:10px;">Live Feed</div>',
+        '<h1 style="margin:0 0 10px 0;font-size:clamp(2rem,4vw,3.4rem);line-height:0.95;color:#f8fafc;">The timeline for real cappers.</h1>',
+        '<p style="margin:0;color:#b8c4d6;line-height:1.7;font-size:1rem;">See picks, hot takes, polls, and grading activity in one stream built around proof instead of noise.</p>',
+        '</div>',
+        '<div style="display:grid;gap:10px;min-width:250px;flex:1 1 260px;">',
+        '<div style="padding:12px 14px;border-radius:16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);"><div style="font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#86efac;font-weight:700;">Signal</div><div style="margin-top:4px;font-weight:700;color:#f8fafc;">Picks, grades, and conversation in one place</div></div>',
+        '<div style="padding:12px 14px;border-radius:16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);"><div style="font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#fcd34d;font-weight:700;">Use it</div><div style="margin-top:4px;font-weight:700;color:#f8fafc;">Post a take, tail a capper, or challenge a record</div></div>',
+        '</div>',
+        '</div>'
+    ].join('');
+    mainFeed.insertBefore(hero, composerCard);
 }
 
 async function loadSidebarStats(user) {
@@ -75,7 +167,7 @@ async function loadNotificationBadge() {
         const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
         if (!user) return;
         const data = await api.request('/notifications/unread-count');
-        const count = data.unreadCount || 0;
+        const count = Number(data.unreadCount ?? data.unread_count ?? 0);
         const badge = document.getElementById('notifBadge');
         if (badge && count > 0) {
             badge.textContent = count > 99 ? '99+' : count;
@@ -255,7 +347,10 @@ async function loadFeed() {
 
     if (!items.length) {
         const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
-        c.innerHTML = `<div class="empty-state"><i class="fas fa-stream"></i><h3 style="margin-bottom:6px;">No posts yet</h3><p>${user ? 'Be the first to share a take!' : 'Sign up to start posting'}</p></div>`;
+        const message = currentFilter === 'following'
+            ? 'No posts from followed accounts yet.'
+            : (user ? 'Nothing has been posted here yet.' : 'Sign in to view and post feed activity.');
+        c.innerHTML = `<div class="empty-state"><i class="fas fa-stream"></i><h3 style="margin-bottom:6px;">Feed is empty</h3><p>${message}</p></div>`;
         return;
     }
 
@@ -328,8 +423,7 @@ function renderPickCard(p) {
     const sport = p.pick_sport_key || p.sport || p.sport_key || '';
     const liked = p.liked_by_user || false;
     const pickId = p.pick_id || p.item_id;
-
-    const mktLabel = { h2h: 'Moneyline', spreads: 'Spread', totals: 'Total', team_totals: 'Team Total', f5_h2h: 'F5 ML', f5_totals: 'F5 Total' }[mkt] || mkt;
+    const mktLabel = formatMarketLabel(mkt);
     const statusClass = status === 'won' ? 'won' : status === 'lost' ? 'lost' : status === 'push' ? 'push' : 'pending';
 
     return `<div class="feed-item" data-id="${p.item_id}" data-type="${p.item_type || 'pick'}">
@@ -442,19 +536,22 @@ async function likeFeedPost(id, btn) {
     if (!user) { openModal('login'); return; }
     try {
         const isLiked = btn.classList.contains('liked');
+        let data = null;
         if (isLiked) {
-            await api.request(`/feed/${id}/like`, { method: 'DELETE' });
+            data = await api.request(`/feed/${id}/like`, { method: 'DELETE' });
             btn.classList.remove('liked');
         } else {
-            await api.request(`/feed/${id}/like`, { method: 'POST' });
+            data = await api.request(`/feed/${id}/like`, { method: 'POST' });
             btn.classList.add('liked');
         }
-        const data = await api.request(`/feed/${id}/like`, { method: isLiked ? 'DELETE' : 'POST' }).catch(() => null);
-        // Just toggle visually
         const span = btn.querySelector('span');
         if (span) {
-            let count = parseInt(span.textContent) || 0;
-            span.textContent = isLiked ? Math.max(0, count - 1) : count + 1;
+            if (data && typeof data.likes_count === 'number') {
+                span.textContent = data.likes_count;
+            } else {
+                let count = parseInt(span.textContent) || 0;
+                span.textContent = isLiked ? Math.max(0, count - 1) : count + 1;
+            }
         }
     } catch(e) {}
 }
@@ -535,6 +632,7 @@ async function postComment(id, type) {
         const endpoint = type === 'pick' ? `/picks/${id}/comment` : `/feed/${id}/comment`;
         await api.request(endpoint, { method: 'POST', body: { content: input.value.trim() } });
         input.value = '';
+        bumpCommentCount(id, type);
         // Reload comments
         const elId = type === 'pick' ? `cs-pick-${id}` : `cs-fp-${id}`;
         const el = document.getElementById(elId);
@@ -581,44 +679,126 @@ function loadMorePosts() {
 // ==================== SIDEBAR ====================
 async function loadTrending() {
     const el = document.getElementById('trendingList');
+    if (!el) return;
     try {
         if (api.backendAvailable) {
             const data = await api.request('/social/discover?limit=5');
             const picks = data.picks || [];
             if (picks.length) {
+                setRailCardVisibility('trendingList', true);
                 el.innerHTML = picks.map((p, i) => {
                     const sport = (p.sport_key || '').split('_')[1]?.toUpperCase() || '';
-                    return `<div class="rs-item"><span class="rs-rank">${i + 1}</span><span class="rs-text">${p.selection} ${p.market_type === 'h2h' ? 'ML' : p.market_type}</span><span class="rs-count">${sport}</span></div>`;
+                    return `<div class="rs-item"><span class="rs-rank">${i + 1}</span><span class="rs-text">${p.selection} ${formatMarketLabel(p.market_type)}</span><span class="rs-count">${sport}</span></div>`;
                 }).join('');
                 return;
             }
         }
     } catch(e) {}
-    el.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;">No trending picks yet</div>';
+    el.innerHTML = '';
+    setRailCardVisibility('trendingList', false);
 }
 
 async function loadSuggested() {
     const el = document.getElementById('suggestedList');
+    if (!el) return;
     try {
         if (api.backendAvailable) {
             const data = await api.request('/users?limit=5');
-            const users = data.users || [];
+            const users = (data.users || []).filter(u => !viewerUser || String(u.id) !== String(viewerUser.id));
             if (users.length) {
-                el.innerHTML = users.map(u =>
+                setRailCardVisibility('suggestedList', true);
+                el.innerHTML = users.map(u => {
+                    const isFollowing = followingUserIds.has(String(u.id));
+                    const buttonHtml = viewerUser
+                        ? `<button class="rs-follow-btn ${isFollowing ? 'is-following' : ''}" onclick="toggleFollowFromFeed('${u.id}', this)">${isFollowing ? 'Following' : 'Follow'}</button>`
+                        : `<a href="profile.html?user=${u.username}" class="rs-follow-btn">View</a>`;
+                    return (
                     `<div class="rs-user">
                         <div class="rs-user-avatar" style="background:var(--accent-blue);">${(u.display_name || u.username || '?')[0].toUpperCase()}</div>
                         <div class="rs-user-info">
                             <div class="rs-user-name"><a href="profile.html?user=${u.username}" style="color:inherit;text-decoration:none;">${u.display_name || u.username}</a></div>
-                            <div class="rs-user-detail">${u.total_picks || 0} picks</div>
+                            <div class="rs-user-detail">${u.total_picks || 0} picks${u.roi != null ? ` • ${Number(u.roi).toFixed(1)}% ROI` : ''}</div>
                         </div>
-                        <a href="profile.html?user=${u.username}" class="rs-follow-btn">View</a>
+                        ${buttonHtml}
                     </div>`
-                ).join('');
+                    );
+                }).join('');
                 return;
             }
         }
     } catch(e) {}
-    el.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;">No users yet</div>';
+    el.innerHTML = '';
+    setRailCardVisibility('suggestedList', false);
+}
+
+async function hydrateFollowingState() {
+    if (!viewerUser || !api.backendAvailable) return;
+    try {
+        const userId = viewerUser.id || (await fetchCurrentViewerId());
+        if (!userId) return;
+        const data = await api.getFollowing(userId, { limit: 100, offset: 0 });
+        followingUserIds = new Set((data.following || []).map(u => String(u.id)));
+        if (!viewerUser.id) viewerUser.id = userId;
+    } catch (e) {
+        followingUserIds = new Set();
+    }
+}
+
+async function fetchCurrentViewerId() {
+    try {
+        const data = await api.getCurrentUser();
+        const user = data.user || data;
+        if (viewerUser && user?.id) viewerUser.id = user.id;
+        return user?.id || null;
+    } catch (e) {
+        return null;
+    }
+}
+
+async function toggleFollowFromFeed(userId, btn) {
+    if (!viewerUser) {
+        openModal('login');
+        return;
+    }
+
+    const normalizedId = String(userId);
+    const isFollowing = followingUserIds.has(normalizedId);
+    const originalText = btn.textContent;
+    btn.disabled = true;
+
+    try {
+        if (isFollowing) {
+            await api.unfollowUser(userId);
+            followingUserIds.delete(normalizedId);
+            btn.textContent = 'Follow';
+            btn.classList.remove('is-following');
+        } else {
+            await api.followUser(userId);
+            followingUserIds.add(normalizedId);
+            btn.textContent = 'Following';
+            btn.classList.add('is-following');
+        }
+
+        if (currentFilter === 'following') {
+            feedOffset = 0;
+            await loadFeed();
+        }
+    } catch (e) {
+        btn.textContent = originalText;
+        alert(e.message || 'Failed to update follow state');
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+function bumpCommentCount(id, type) {
+    const selector = type === 'pick'
+        ? `.feed-item[data-type="pick"] [onclick="toggleComments(${id}, 'pick')"] span, .feed-item[data-type="pick"] [onclick="toggleComments(${id},'pick')"] span`
+        : `.feed-item[data-type="feed_post"] [onclick="toggleComments(${id}, 'feed_post')"] span, .feed-item[data-type="feed_post"] [onclick="toggleComments(${id},'feed_post')"] span`;
+    const target = document.querySelector(selector);
+    if (!target) return;
+    const count = parseInt(target.textContent, 10) || 0;
+    target.textContent = count + 1;
 }
 
 // ==================== AUTH MODALS ====================
@@ -647,7 +827,17 @@ async function handleLogin() {
             return;
         }
         showErr('loginError', 'Login failed.');
-    } catch (e) { showErr('loginError', e.message || 'Invalid credentials.'); }
+    } catch (e) {
+        if (e && e.code === 'EMAIL_NOT_VERIFIED') {
+            const email = e.data?.email || '';
+            showErr('loginError', e.message || 'Please verify your email before logging in.');
+            setTimeout(() => {
+                location.href = 'verify-email.html' + (email ? ('?email=' + encodeURIComponent(email)) : '');
+            }, 900);
+            return;
+        }
+        showErr('loginError', e.message || 'Invalid credentials.');
+    }
 }
 
 async function handleSignup() {
@@ -655,10 +845,16 @@ async function handleSignup() {
     const email = document.getElementById('signupEmail').value.trim();
     const pass = document.getElementById('signupPass').value;
     if (!username || !email || !pass) { showErr('signupError', 'All fields required.'); return; }
-    if (pass.length < 6) { showErr('signupError', 'Password must be 6+ characters.'); return; }
+    if (pass.length < 8) { showErr('signupError', 'Password must be 8+ characters.'); return; }
     try {
         if (typeof auth !== 'undefined' && auth.register) {
-            await auth.register(username, email, pass);
+            const result = await auth.register(username, email, pass);
+            if (result && result.pendingVerification) {
+                closeModals();
+                alert(result.message || 'Account created. Check your email to verify your account.');
+                location.href = 'verify-email.html?email=' + encodeURIComponent(result.email || email);
+                return;
+            }
             closeModals();
             location.reload();
             return;
