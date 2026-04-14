@@ -789,11 +789,6 @@ function formatJoinedDate(iso) {
     }
 }
 
-function getForumAvatar(name, avatarUrl) {
-    if (avatarUrl) return avatarUrl;
-    return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name || 'User') + '&background=dbe4f1&color=2c466d&size=128&bold=true';
-}
-
 function escHtml(str) {
     if (!str) return '';
     var div = document.createElement('div');
@@ -944,8 +939,7 @@ function renderCategories() {
             if (cat.latest_thread) {
                 var lt = cat.latest_thread;
                 var ltTitle = (lt.title || '').length > 30 ? lt.title.substring(0, 30) + '...' : (lt.title || '');
-                var ltBadges = typeof renderTeamBadges === 'function' ? renderTeamBadges(lt.username || '') : '';
-                lastHtml = '<div class="last-post-info"><div class="last-post-title">' + escHtml(ltTitle) + '</div><div class="last-post-meta">by <strong>' + escHtml(lt.username || '') + '</strong>' + ltBadges + ' ' + timeAgo(lt.created_at) + '</div></div>';
+                lastHtml = '<div class="last-post-info"><div class="last-post-title">' + escHtml(ltTitle) + '</div><div class="last-post-meta">by <strong>' + escHtml(lt.username || '') + '</strong> ' + timeAgo(lt.created_at) + '</div></div>';
             }
 
             html += '<tr onclick="showThreadsList(\'' + escHtml(cat.slug) + '\',\'' + escHtml(cat.name) + '\',' + cat.id + ')">';
@@ -999,13 +993,11 @@ function renderThreads() {
         var replyCount = parseInt(t.post_count) || parseInt(t.reply_count) || 0;
         var viewCount = parseInt(t.view_count) || 0;
 
-        var authorBadges = typeof renderTeamBadges === 'function' ? renderTeamBadges(t.username || '') : '';
-        var lastBadges = typeof renderTeamBadges === 'function' ? renderTeamBadges(lastUser) : '';
         return '<tr class="' + (t.is_pinned ? 'pinned' : '') + '" onclick="showThreadDetail(' + t.id + ')">' +
-            '<td><div>' + pinHtml + '<span class="thread-title-link">' + escHtml(t.title) + '</span></div><div class="thread-meta">by <strong>' + escHtml(t.username || '') + '</strong>' + authorBadges + ' ' + timeAgo(t.created_at) + '</div></td>' +
+            '<td><div>' + pinHtml + '<span class="thread-title-link">' + escHtml(t.title) + '</span></div><div class="thread-meta">by <strong>' + escHtml(t.username || '') + '</strong> ' + timeAgo(t.created_at) + '</div></td>' +
             '<td class="col-num">' + replyCount + '</td>' +
             '<td class="col-num">' + viewCount + '</td>' +
-            '<td class="col-last"><div class="last-post-info"><div class="last-post-meta">by <strong>' + escHtml(lastUser) + '</strong>' + lastBadges + '<br>' + timeAgo(lastTime) + '</div></div></td>' +
+            '<td class="col-last"><div class="last-post-info"><div class="last-post-meta">by <strong>' + escHtml(lastUser) + '</strong><br>' + timeAgo(lastTime) + '</div></div></td>' +
             '</tr>';
     }).join('');
 }
@@ -1073,10 +1065,9 @@ function renderThread() {
     container.innerHTML = allPosts.map(function(post, idx) {
         var bodyHtml = post.isOP ? '<h2>' + escHtml(post.title) + '</h2>' + escHtml(post.content) : escHtml(post.content);
         var editedNote = post.is_edited ? ' <span style="color:var(--text-muted);font-size:0.75rem;">(edited)</span>' : '';
-        var postCount = parseInt(post.user_post_count) || (post.isOP ? 1 : 0);
-        var picksCount = parseInt(post.user_picks) || 0;
-        var avatarSrc = getForumAvatar(post.username, post.avatar_url);
-        var postBadges = typeof renderTeamBadges === 'function' ? renderTeamBadges(post.username) : '';
+        var avatarHtml = post.avatar_url
+            ? '<img class="post-user-avatar" src="' + escHtml(post.avatar_url) + '" alt="' + escHtml(post.username) + '">'
+            : '';
 
         var likeBtn = '';
         if (!post.isOP) {
@@ -1088,9 +1079,8 @@ function renderThread() {
             '<div class="post-layout">' +
             '<aside class="post-user-pane">' +
             '<div class="post-user-name">' + escHtml(post.username) + '</div>' +
-            '<img class="post-user-avatar" src="' + escHtml(avatarSrc) + '" alt="' + escHtml(post.username) + '">' +
-            '<div class="post-user-badges">' + postBadges + '</div>' +
-            '<div class="post-user-stats"><div><strong>Posts:</strong> ' + postCount + '</div><div><strong>Picks:</strong> ' + picksCount + '</div><div><strong>Joined:</strong> ' + formatJoinedDate(post.user_joined) + '</div></div>' +
+            avatarHtml +
+            '<div class="post-user-stats"><div><strong>Joined:</strong> ' + formatJoinedDate(post.user_joined) + '</div></div>' +
             '</aside>' +
             '<div class="post-main-pane">' +
             '<div class="post-body">' + bodyHtml + '</div>' +
