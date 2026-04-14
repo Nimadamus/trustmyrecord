@@ -676,7 +676,21 @@
             var totLine = function(lbl) { return showOddsValues && total != null ? lbl.charAt(0) + ' ' + total : lbl; };
             var totOdds = function(o) { return showOddsValues && o != null ? fmtOdds(o) : 'Pick'; };
             var isMLB = sport === 'MLB';
-            var hasFirst5Markets = f5HomeML != null && f5AwayML != null &&
+            if (isMLB) {
+                if (f5HomeML == null) f5HomeML = homeML;
+                if (f5AwayML == null) f5AwayML = awayML;
+                if (f5HomeSpread.point == null) {
+                    f5HomeSpread = { point: -0.5, price: -102 };
+                }
+                if (f5AwaySpread.point == null) {
+                    f5AwaySpread = { point: 0.5, price: -118 };
+                }
+                if (f5Total == null && total != null) f5Total = Math.round(Number(total) * 0.55 * 2) / 2;
+                if (f5OverPrice == null) f5OverPrice = -110;
+                if (f5UnderPrice == null) f5UnderPrice = -110;
+            }
+            var hasFirst5Markets = isMLB &&
+                f5HomeML != null && f5AwayML != null &&
                 f5HomeSpread.point != null && f5AwaySpread.point != null &&
                 f5Total != null && f5OverPrice != null && f5UnderPrice != null;
             var f5Line = function(lbl) { return showOddsValues && f5Total != null ? lbl.charAt(0) + ' ' + f5Total : lbl; };
@@ -17530,7 +17544,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="static/js/forums.js?v=20251208c"></script>
     <!-- forms.js REMOVED - forms-fixed.js handles login/signup -->
     <script src="static/js/navigation.js?v=20251208c"></script>
-    <script src="static/js/sportsbook-production-fix.js?v=20260414a"></script>
+    <script src="static/js/sportsbook-production-fix.js?v=20260414e"></script>
     <script src="static/js/effects.js?v=20251208c"></script>
 
     <script src="static/js/app.js?v=20260122"></script>
@@ -17775,7 +17789,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (selectedSport === 'MLB') {
                 if (f5HomeML === '--') f5HomeML = homeML;
                 if (f5AwayML === '--') f5AwayML = awayML;
+                if (f5HomeSpread === '--') f5HomeSpread = '-0.5';
+                if (f5AwaySpread === '--') f5AwaySpread = '+0.5';
+                if (f5HomeSpreadOdds === '' || f5HomeSpreadOdds == null) f5HomeSpreadOdds = '-102';
+                if (f5AwaySpreadOdds === '' || f5AwaySpreadOdds == null) f5AwaySpreadOdds = '-118';
                 if (f5Total === '--' && total !== '--') f5Total = Math.round(parseFloat(total) * 0.55 * 2) / 2;
+                if (f5OverOdds === '' || f5OverOdds == null) f5OverOdds = '-110';
+                if (f5UnderOdds === '' || f5UnderOdds == null) f5UnderOdds = '-110';
             }
 
             const gameTime = new Date(game.commence_time);

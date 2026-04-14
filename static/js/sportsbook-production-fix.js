@@ -379,13 +379,13 @@
                 });
             }
 
-            if (sportKey === 'baseball_mlb' && f5H2h && f5Spreads && f5Totals) {
-                const f5AwayMl = f5H2h.outcomes ? f5H2h.outcomes.find(function(outcome) { return outcome.name === game.away_team; }) : null;
-                const f5HomeMl = f5H2h.outcomes ? f5H2h.outcomes.find(function(outcome) { return outcome.name === game.home_team; }) : null;
-                const f5AwaySpread = f5Spreads.outcomes ? f5Spreads.outcomes.find(function(outcome) { return outcome.name === game.away_team; }) : null;
-                const f5HomeSpread = f5Spreads.outcomes ? f5Spreads.outcomes.find(function(outcome) { return outcome.name === game.home_team; }) : null;
-                const f5Over = f5Totals.outcomes ? f5Totals.outcomes.find(function(outcome) { return outcome.name === 'Over'; }) : null;
-                const f5Under = f5Totals.outcomes ? f5Totals.outcomes.find(function(outcome) { return outcome.name === 'Under'; }) : null;
+            if (sportKey === 'baseball_mlb' && (f5H2h || f5Spreads || f5Totals)) {
+                const f5AwayMl = f5H2h && f5H2h.outcomes ? f5H2h.outcomes.find(function(outcome) { return outcome.name === game.away_team; }) : null;
+                const f5HomeMl = f5H2h && f5H2h.outcomes ? f5H2h.outcomes.find(function(outcome) { return outcome.name === game.home_team; }) : null;
+                const f5AwaySpread = f5Spreads && f5Spreads.outcomes ? f5Spreads.outcomes.find(function(outcome) { return outcome.name === game.away_team; }) : null;
+                const f5HomeSpread = f5Spreads && f5Spreads.outcomes ? f5Spreads.outcomes.find(function(outcome) { return outcome.name === game.home_team; }) : null;
+                const f5Over = f5Totals && f5Totals.outcomes ? f5Totals.outcomes.find(function(outcome) { return outcome.name === 'Over'; }) : null;
+                const f5Under = f5Totals && f5Totals.outcomes ? f5Totals.outcomes.find(function(outcome) { return outcome.name === 'Under'; }) : null;
                 const first5Items = [];
                 if (f5AwaySpread) first5Items.push(createFallbackOption(game, index, 'First 5', 'f5_spreads', game.away_team, game.away_team + ' ' + (f5AwaySpread.point > 0 ? '+' : '') + f5AwaySpread.point, f5AwaySpread.price, f5AwaySpread.point, bookmaker ? bookmaker.title : 'Sportsbook feed'));
                 if (f5HomeSpread) first5Items.push(createFallbackOption(game, index, 'First 5', 'f5_spreads', game.home_team, game.home_team + ' ' + (f5HomeSpread.point > 0 ? '+' : '') + f5HomeSpread.point, f5HomeSpread.price, f5HomeSpread.point, bookmaker ? bookmaker.title : 'Sportsbook feed'));
@@ -439,6 +439,73 @@
         return group && group.key === 'first_5' ? 'f5' : 'full';
     }
 
+    function ensureDerivedFirst5Group(game) {
+        if (!game || game.sport_key !== 'baseball_mlb') return game;
+
+        const existingGroups = Array.isArray(game.market_groups) ? game.market_groups.slice() : [];
+        const hasFirst5 = existingGroups.some(function(group) {
+            return group && group.key === 'first_5' && Array.isArray(group.items) && group.items.length;
+        });
+        if (hasFirst5) return game;
+
+        const fullGameGroup = existingGroups.find(function(group) { return group && group.key === 'full_game'; }) || null;
+        const spreadGroup = existingGroups.find(function(group) { return group && group.key === 'spread'; }) || null;
+        const totalGroup = existingGroups.find(function(group) { return group && group.key === 'total'; }) || null;
+
+        const awayMl = fullGameGroup && Array.isArray(fullGameGroup.items)
+            ? fullGameGroup.items.find(function(item) { return item.selection === game.away_team; })
+            : null;
+        const homeMl = fullGameGroup && Array.isArray(fullGameGroup.items)
+            ? fullGameGroup.items.find(function(item) { return item.selection === game.home_team; })
+            : null;
+        const over = totalGroup && Array.isArray(totalGroup.items)
+            ? totalGroup.items.find(function(item) { return String(item.selection).toLowerCase() === 'over'; })
+            : null;
+        const under = totalGroup && Array.isArray(totalGroup.items)
+            ? totalGroup.items.find(function(item) { return String(item.selection).toLowerCase() === 'under'; })
+            : null;
+
+        if (!awayMl || !homeMl || !over || !under || over.line == null) {
+            return game;
+        }
+
+        const first5Total = Math.round(Number(over.line) * 0.55 * 2) / 2;
+        const first5Items = [];
+        const bookTitle = awayMl.book_title || homeMl.book_title || over.book_title || 'Derived from full-game lines';
+        const sourceUpdatedAt = game.updated_at || awayMl.source_updated_at || over.source_updated_at || null;
+        const spreadItems = spreadGroup && Array.isArray(spreadGroup.items) ? spreadGroup.items : [];
+        const awaySpread = spreadItems.find(function(item) { return item.selection === game.away_team; }) || null;
+        const homeSpread = spreadItems.find(function(item) { return item.selection === game.home_team; }) || null;
+
+        if (awaySpread || homeSpread) {
+            first5Items.push(createFallbackOption(game, game.id, 'First 5', 'f5_spreads', game.away_team, game.away_team + ' +0.5', -118, 0.5, 'Derived first 5 run line'));
+            first5Items.push(createFallbackOption(game, game.id, 'First 5', 'f5_spreads', game.home_team, game.home_team + ' -0.5', -102, -0.5, 'Derived first 5 run line'));
+        }
+
+        first5Items.push(createFallbackOption(game, game.id, 'First 5', 'f5_h2h', game.away_team, game.away_team + ' F5 ML', awayMl.odds, null, 'Derived first 5 moneyline'));
+        first5Items.push(createFallbackOption(game, game.id, 'First 5', 'f5_h2h', game.home_team, game.home_team + ' F5 ML', homeMl.odds, null, 'Derived first 5 moneyline'));
+        first5Items.push(createFallbackOption(game, game.id, 'First 5', 'f5_totals', 'Over', 'F5 Over ' + first5Total, -110, first5Total, 'Derived first 5 total'));
+        first5Items.push(createFallbackOption(game, game.id, 'First 5', 'f5_totals', 'Under', 'F5 Under ' + first5Total, -110, first5Total, 'Derived first 5 total'));
+
+        first5Items.forEach(function(item) {
+            item.book_title = bookTitle;
+            item.book_key = awayMl.book_key || homeMl.book_key || over.book_key || '';
+            item.source = 'derived';
+            item.source_label = item.source_label || 'Derived from full-game lines';
+            item.source_updated_at = sourceUpdatedAt;
+        });
+
+        existingGroups.push({
+            key: 'first_5',
+            label: 'First 5',
+            items: first5Items
+        });
+
+        return Object.assign({}, game, {
+            market_groups: existingGroups
+        });
+    }
+
     function setCardScope(cardId, scope) {
         const card = document.getElementById(cardId);
         if (!card) return;
@@ -468,7 +535,8 @@
             return;
         }
 
-        html += games.map(function(game, index) {
+        html += games.map(function(rawGame, index) {
+            const game = ensureDerivedFirst5Group(rawGame);
             const cardId = 'tmr-market-card-' + index;
             const sourceClass = game.has_sportsbook_odds ? 'real' : 'fallback';
             const sourceText = game.has_sportsbook_odds ? 'Sportsbook feed' : 'Fallback pricing';
@@ -792,10 +860,13 @@
     }
 
     function boot() {
-        const pathname = String(window.location && window.location.pathname || '').toLowerCase();
-        const isHomepage = pathname === '/' || pathname.endsWith('/index.html') || pathname === '/index';
-        if (isHomepage) {
-            console.log('[TMR] sportsbook-production-fix skipped on homepage');
+        const hasPicksUi = !!(
+            document.getElementById('gamesListContainer') &&
+            document.getElementById('selectedSportTitle') &&
+            document.getElementById('myPicksList')
+        );
+        if (!hasPicksUi) {
+            console.log('[TMR] sportsbook-production-fix skipped; picks UI not present');
             return;
         }
 
