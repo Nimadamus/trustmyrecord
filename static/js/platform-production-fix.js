@@ -14,6 +14,107 @@
         return STATUS_MAP[String(status || '').toLowerCase()] || String(status || '').toLowerCase();
     }
 
+    function normalizeRecordPick(pick) {
+        const normalized = { ...(pick || {}) };
+        normalized.status = normalizeStatus(normalized.status);
+        normalized.units = Number(normalized.units || normalized.stake || 1);
+        normalized.odds_value = Number(normalized.odds_snapshot || normalized.odds || normalized.price || -110);
+        normalized.result_units_value = normalized.result_units != null && !Number.isNaN(Number(normalized.result_units))
+            ? Number(normalized.result_units)
+            : null;
+        return normalized;
+    }
+
+    function calculatePickUnits(normalizedPick) {
+        if (normalizedPick.result_units_value != null) return normalizedPick.result_units_value;
+        if (normalizedPick.status === 'won') {
+            return normalizedPick.odds_value < 0 ? normalizedPick.units : (normalizedPick.units * normalizedPick.odds_value / 100);
+        }
+        if (normalizedPick.status === 'lost') {
+            return normalizedPick.odds_value < 0 ? -(normalizedPick.units * Math.abs(normalizedPick.odds_value) / 100) : -normalizedPick.units;
+        }
+        return 0;
+    }
+
+    function computeCanonicalRecordStats(picks) {
+        const normalized = Array.isArray(picks) ? picks.map(normalizeRecordPick) : [];
+        const graded = normalized.filter(function(pick) {
+            return pick.status === 'won' || pick.status === 'lost' || pick.status === 'push';
+        });
+        const wins = graded.filter(function(pick) { return pick.status === 'won'; }).length;
+        const losses = graded.filter(function(pick) { return pick.status === 'lost'; }).length;
+        const pushes = graded.filter(function(pick) { return pick.status === 'push'; }).length;
+        const pending = normalized.filter(function(pick) { return !pick.status || pick.status === 'pending'; }).length;
+        const totalUnits = graded.reduce(function(sum, pick) {
+            return sum + calculatePickUnits(pick);
+        }, 0);
+        const risked = graded.reduce(function(sum, pick) {
+            return sum + (Number.isFinite(pick.units) ? pick.units : 0);
+        }, 0);
+        const sorted = graded.slice().sort(function(a, b) {
+            return new Date(a.locked_at || a.created_at || 0) - new Date(b.locked_at || b.created_at || 0);
+        });
+
+        let bestWin = 0;
+        let worstLoss = 0;
+        let tempWin = 0;
+        let tempLoss = 0;
+        sorted.forEach(function(pick) {
+            if (pick.status === 'won') {
+                tempWin += 1;
+                tempLoss = 0;
+                bestWin = Math.max(bestWin, tempWin);
+            } else if (pick.status === 'lost') {
+                tempLoss += 1;
+                tempWin = 0;
+                worstLoss = Math.max(worstLoss, tempLoss);
+            } else {
+                tempWin = 0;
+                tempLoss = 0;
+            }
+        });
+
+        const recent = sorted.slice().reverse();
+        let currentStreak = 0;
+        let currentType = '';
+        for (const pick of recent) {
+            if (pick.status === 'push') continue;
+            if (!currentType) {
+                currentType = pick.status;
+                currentStreak = 1;
+            } else if (pick.status === currentType) {
+                currentStreak += 1;
+            } else {
+                break;
+            }
+        }
+
+        const oddsSamples = normalized
+            .map(function(pick) { return Number(pick.odds_snapshot || pick.odds || pick.price); })
+            .filter(Number.isFinite);
+        const unitSamples = normalized
+            .map(function(pick) { return Number(pick.units || pick.stake); })
+            .filter(Number.isFinite);
+
+        return {
+            wins: wins,
+            losses: losses,
+            pushes: pushes,
+            pending: pending,
+            graded: graded.length,
+            total: normalized.length,
+            record: wins + '-' + losses + '-' + pushes,
+            winRate: (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0',
+            totalUnits: totalUnits,
+            roi: risked > 0 ? ((totalUnits / risked) * 100).toFixed(1) : '0.0',
+            currentStreak: currentType === 'won' ? currentStreak : currentType === 'lost' ? -currentStreak : 0,
+            bestStreak: bestWin,
+            worstStreak: worstLoss,
+            avgOdds: oddsSamples.length ? Math.round(oddsSamples.reduce(function(a, b) { return a + b; }, 0) / oddsSamples.length) : null,
+            avgUnits: unitSamples.length ? (unitSamples.reduce(function(a, b) { return a + b; }, 0) / unitSamples.length) : 0
+        };
+    }
+
     function formatMarketLabel(marketType) {
         return {
             h2h: 'Moneyline',
@@ -242,9 +343,11 @@
     window.TMR_PLATFORM_FIX = {
         loadCanonicalLeaderboard,
         loadCanonicalProfilePicks,
-        runPlatformFixes
+        runPlatformFixes,
+        computeCanonicalRecordStats
     };
 
+    window.computeCanonicalRecordStats = computeCanonicalRecordStats;
     window.loadDynamicLeaderboards = loadCanonicalLeaderboard;
     window.loadUserPendingPicks = async function() {
         const loaded = await loadCanonicalProfilePicks();

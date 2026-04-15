@@ -64,11 +64,11 @@
             padding: 0 24px;
         }
         .header-inner {
-            height: 78px;
-            display: flex;
+            min-height: 78px;
+            display: grid;
+            grid-template-columns: auto minmax(760px, 1fr);
             align-items: center;
-            justify-content: space-between;
-            gap: 16px;
+            gap: 24px;
         }
         .logo {
             color: var(--text-primary);
@@ -81,16 +81,19 @@
         .logo span { color: var(--accent-gold); }
         nav {
             display: flex;
-            gap: 18px;
+            width: 100%;
+            gap: 28px;
             flex-wrap: wrap;
+            justify-content: space-evenly;
         }
         nav a {
             color: var(--text-secondary);
             text-decoration: none;
-            font-size: .98rem;
+            font-size: 1.08rem;
             font-weight: 700;
-            padding: 8px 0;
+            padding: 14px 8px;
             border-radius: 0;
+            text-align: center;
         }
         nav a.active, nav a:hover {
             background: transparent;
@@ -115,7 +118,7 @@
         .hero-image {
             background:
                 linear-gradient(130deg, rgba(16,35,56,0.16), rgba(16,35,56,0.74)),
-                url('https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
+                url('https://images.unsplash.com/photo-1547347298-4074fc3086f0?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
         }
         .eyebrow {
             display: inline-flex;

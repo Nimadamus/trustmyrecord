@@ -485,10 +485,10 @@
 
         .header-content {
             display: grid;
-            grid-template-columns: auto 1fr auto;
+            grid-template-columns: auto minmax(760px, 1fr) auto;
             grid-template-areas: "logo nav actions";
             align-items: center;
-            gap: 18px;
+            gap: 24px;
             min-height: 78px;
             max-width: 1440px;
             margin: 0 auto;
@@ -509,18 +509,21 @@
         .nav-links {
             grid-area: nav;
             display: flex;
-            gap: 18px;
+            width: 100%;
+            gap: 28px;
             align-items: center;
+            justify-content: space-evenly;
             flex-wrap: wrap;
         }
 
         .nav-links a {
             color: #516276;
             font-weight: 700;
-            font-size: 0.98rem;
-            padding: 8px 0;
+            font-size: 1.08rem;
+            padding: 14px 8px;
             border: none;
             background: transparent;
+            text-align: center;
         }
 
         .nav-links a:hover,

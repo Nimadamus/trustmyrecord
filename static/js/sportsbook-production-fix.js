@@ -337,6 +337,9 @@
     }
 
     function getRecordStats(picks) {
+        if (typeof window.computeCanonicalRecordStats === 'function') {
+            return window.computeCanonicalRecordStats(picks);
+        }
         const normalized = (picks || []).map(normalizePick);
         const wins = normalized.filter(function(pick) { return pick.status === 'won'; }).length;
         const losses = normalized.filter(function(pick) { return pick.status === 'lost'; }).length;

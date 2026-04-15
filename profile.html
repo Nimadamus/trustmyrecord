@@ -85,11 +85,11 @@
         }
 
         .header-content {
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: auto minmax(760px, 1fr);
             align-items: center;
             min-height: 78px;
-            gap: 20px;
+            gap: 24px;
         }
 
         .logo {
@@ -102,16 +102,17 @@
         }
         .logo span { color: #f58220; }
 
-        nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        nav { display: flex; width: 100%; gap: 28px; align-items: center; justify-content: space-evenly; flex-wrap: wrap; }
 
         nav a {
             color: var(--text-secondary);
             text-decoration: none;
             font-weight: 700;
-            font-size: 0.98rem;
-            padding: 8px 0;
+            font-size: 1.08rem;
+            padding: 14px 8px;
             border-radius: 0;
             transition: all 0.2s;
+            text-align: center;
         }
         nav a:hover {
             color: #f58220;
@@ -912,6 +913,27 @@
     }
 
     function computeUnifiedStats(picks) {
+        if (typeof window.computeCanonicalRecordStats === 'function') {
+            const base = window.computeCanonicalRecordStats(picks);
+            return {
+                wins: base.wins,
+                losses: base.losses,
+                pushes: base.pushes,
+                pending: base.pending,
+                total: base.total,
+                winRate: Number(base.winRate || 0),
+                netUnits: Number(base.totalUnits || 0),
+                roi: Number(base.roi || 0),
+                currentStreak: base.currentStreak,
+                bestStreak: base.bestStreak,
+                worstStreak: base.worstStreak,
+                avgOdds: base.avgOdds,
+                avgUnits: base.avgUnits,
+                marketTypeRecords: buildMarketTypeBreakdown((picks || []).filter(function(pick) {
+                    return ['won', 'lost', 'push', 'pushed'].indexOf(String(pick.status || '').toLowerCase()) !== -1;
+                }))
+            };
+        }
         const graded = picks.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
         const wins = graded.filter(p => p.status === 'won');
         const losses = graded.filter(p => p.status === 'lost');
@@ -2463,7 +2485,7 @@
         </footer>
 
 
-    <script src="static/js/platform-production-fix.js?v=20260414d"></script>
+    <script src="static/js/platform-production-fix.js?v=20260414e"></script>
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  8:02:00 PM -->
