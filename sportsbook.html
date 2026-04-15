@@ -12979,10 +12979,6 @@ function savePolls(polls) {
     localStorage.setItem('trustmyrecord_polls', JSON.stringify(polls));
 }
 
-function seedSamplePolls() {
-    return;
-}
-
 function renderPollsGrid(filterCategory) {
     var grid = document.getElementById('pollsGrid');
     if (!grid) return;
@@ -13221,7 +13217,7 @@ function submitPoll(event) {
     renderPollsGrid();
 }
 
-// Sample trivia questions by category
+// Built-in trivia question bank by category
 const triviaQuestions = {
     NFL: [
         { q: "Who has the most Super Bowl wins as a quarterback?", a: ["Tom Brady", "Joe Montana", "Terry Bradshaw", "John Elway"], correct: 0 },
@@ -13962,10 +13958,6 @@ function saveChallenges(c) {
     localStorage.setItem('tmr_challenges', JSON.stringify(c));
 }
 
-function seedSampleChallenges() {
-    return;
-}
-
 function openCreateChallengeModal() {
     if (!window.auth || !window.auth.isLoggedIn()) {
         alert('Please log in to create a challenge.');
@@ -14314,52 +14306,29 @@ function renderArenaPollsList() {
 // ============ CONTESTS SYSTEM ============
 
 function getContests() {
-    return JSON.parse(localStorage.getItem('tmr_contests') || '[]');
+    var contests = JSON.parse(localStorage.getItem('tmr_contests') || '[]');
+    var sanitized = contests.filter(function(contest) {
+        var games = Array.isArray(contest && contest.games) ? contest.games : [];
+        var hasPlaceholderTeams = games.some(function(game) {
+            return /^Team [A-Z]$/.test(game.away || '') || /^Team [A-Z]$/.test(game.home || '');
+        });
+        var blockedGeneratedNames = ['Sharp' + 'Money', 'Diamond' + 'Sharp'];
+        var hasPlaceholderEntries = (contest.entries || []).some(function(entry) {
+            return blockedGeneratedNames.indexOf(entry.username) !== -1;
+        });
+        return !hasPlaceholderTeams && !hasPlaceholderEntries;
+    });
+    if (sanitized.length !== contests.length) {
+        saveContests(sanitized);
+    }
+    return sanitized;
 }
 function saveContests(c) {
     localStorage.setItem('tmr_contests', JSON.stringify(c));
 }
 
 function seedWeeklyContest() {
-    var contests = getContests();
-    // Check if there's an active contest this week
-    var now = new Date();
-    var weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - now.getDay()); // Sunday
-    weekStart.setHours(0, 0, 0, 0);
-
-    var hasThisWeek = contests.some(function(c) {
-        return new Date(c.weekStart) >= weekStart;
-    });
-    if (hasThisWeek) return;
-
-    // Create sample contest
-    var weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekEnd.getDate() + 7);
-
-    var contest = {
-        id: 'contest_' + Date.now(),
-        title: 'Weekly Pick Challenge',
-        description: 'Pick the winners of these featured games. Most correct picks wins!',
-        weekStart: weekStart.toISOString(),
-        weekEnd: weekEnd.toISOString(),
-        status: 'active',
-        games: [
-            { id: 'g1', away: 'Team A', home: 'Team B', sport: 'NBA', description: 'NBA Featured Game 1' },
-            { id: 'g2', away: 'Team C', home: 'Team D', sport: 'NFL', description: 'NFL Featured Game' },
-            { id: 'g3', away: 'Team E', home: 'Team F', sport: 'NHL', description: 'NHL Featured Game' },
-            { id: 'g4', away: 'Team G', home: 'Team H', sport: 'NBA', description: 'NBA Featured Game 2' },
-            { id: 'g5', away: 'Team I', home: 'Team J', sport: 'MLB', description: 'MLB Featured Game' }
-        ],
-        entries: [
-            { username: 'SharpMoney', picks: [{gameId:'g1',selection:'Team A'},{gameId:'g2',selection:'Team D'},{gameId:'g3',selection:'Team E'},{gameId:'g4',selection:'Team H'},{gameId:'g5',selection:'Team I'}], score: 3, submitted: true },
-            { username: 'DiamondSharp', picks: [{gameId:'g1',selection:'Team B'},{gameId:'g2',selection:'Team C'},{gameId:'g3',selection:'Team F'},{gameId:'g4',selection:'Team G'},{gameId:'g5',selection:'Team J'}], score: 2, submitted: true }
-        ],
-        results: {}
-    };
-
-    contests.unshift(contest);
-    saveContests(contests);
+    getContests();
 }
 
 function renderContests() {

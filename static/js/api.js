@@ -1172,11 +1172,11 @@ class TrustMyRecordAPI {
         this.setLocal('tmr_forums', defaultForums);
         
         // No seeded threads or posts - all data comes from real user activity
-        const sampleThreads = [];
-        const samplePosts = [];
+        const emptyThreads = [];
+        const emptyPosts = [];
 
-        this.setLocal('tmr_threads', sampleThreads);
-        this.setLocal('tmr_posts', samplePosts);
+        this.setLocal('tmr_threads', emptyThreads);
+        this.setLocal('tmr_posts', emptyPosts);
     }
     
     async getForumCategories() {
