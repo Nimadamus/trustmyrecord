@@ -11,17 +11,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #0f1117;
-            --bg-secondary: #161920;
-            --bg-card: #1c1f2a;
-            --border-color: #2a2e3d;
-            --text-primary: #f0f2f5;
-            --text-secondary: #9ba3b5;
-            --text-muted: #6b7280;
-            --accent-blue: #3b82f6;
+            --bg-primary: #f3f5f8;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --border-color: #d8dde6;
+            --text-primary: #162231;
+            --text-secondary: #637389;
+            --text-muted: #637389;
+            --accent-blue: #1f7ae0;
             --accent-green: #22c55e;
             --accent-red: #ef4444;
-            --accent-gold: #f59e0b;
+            --accent-gold: #f58220;
         }
 
         * { box-sizing: border-box; }
@@ -31,20 +31,40 @@
             background: var(--bg-primary);
             color: var(--text-primary);
         }
+        .notifications-top-strip,
+        header,
+        .page {
+            max-width: 1440px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .notifications-top-strip {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            overflow-x: auto;
+            white-space: nowrap;
+            background: #102338;
+            color: #ffffff;
+            padding: 10px 24px;
+            font-size: 0.9rem;
+            scrollbar-width: none;
+        }
+        .notifications-top-strip::-webkit-scrollbar { display: none; }
         header {
             background: var(--bg-secondary);
             border-bottom: 1px solid var(--border-color);
-            position: sticky;
-            top: 0;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+            position: static;
             z-index: 100;
         }
         .header-inner, .page {
-            max-width: 1080px;
+            max-width: 1440px;
             margin: 0 auto;
             padding: 0 24px;
         }
         .header-inner {
-            height: 58px;
+            height: 78px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -53,50 +73,76 @@
         .logo {
             color: var(--text-primary);
             text-decoration: none;
-            font-weight: 900;
-            font-size: 1.25rem;
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 1.58rem;
+            letter-spacing: -0.03em;
         }
-        .logo span { color: var(--accent-blue); }
+        .logo span { color: var(--accent-gold); }
         nav {
             display: flex;
-            gap: 10px;
+            gap: 18px;
             flex-wrap: wrap;
         }
         nav a {
             color: var(--text-secondary);
             text-decoration: none;
-            font-size: .9rem;
-            padding: 8px 12px;
-            border-radius: 8px;
+            font-size: .98rem;
+            font-weight: 700;
+            padding: 8px 0;
+            border-radius: 0;
         }
         nav a.active, nav a:hover {
-            background: rgba(59, 130, 246, 0.15);
-            color: var(--text-primary);
+            background: transparent;
+            color: var(--accent-gold);
         }
         .page {
-            padding-top: 28px;
+            padding-top: 22px;
             padding-bottom: 48px;
         }
         .hero {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 16px;
+            display: grid;
+            grid-template-columns: 1.08fr 0.92fr;
+            gap: 18px;
             margin-bottom: 20px;
-            flex-wrap: wrap;
+            border-radius: 18px;
+            border: 1px solid #d8dde6;
+            background: linear-gradient(135deg, #102338 0%, #163451 100%);
+            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
+            overflow: hidden;
+        }
+        .hero-copy { padding: 28px; }
+        .hero-image {
+            background:
+                linear-gradient(130deg, rgba(16,35,56,0.16), rgba(16,35,56,0.74)),
+                url('https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
+        }
+        .eyebrow {
+            display: inline-flex;
+            padding: 7px 11px;
+            margin-bottom: 14px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.1);
+            color: #ffffff;
+            font-size: 0.74rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
         }
         .hero h1 {
             margin: 0 0 6px;
-            font-size: 1.9rem;
-            letter-spacing: -0.03em;
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 2.4rem;
+            letter-spacing: -0.05em;
+            color: #ffffff;
         }
         .hero p {
             margin: 0;
-            color: var(--text-secondary);
+            color: rgba(255,255,255,0.82);
         }
         .btn {
             border: 1px solid var(--border-color);
-            background: transparent;
+            background: #ffffff;
             color: var(--text-primary);
             border-radius: 10px;
             padding: 10px 16px;
@@ -104,8 +150,8 @@
             cursor: pointer;
         }
         .btn.primary {
-            background: var(--accent-blue);
-            border-color: var(--accent-blue);
+            background: var(--accent-gold);
+            border-color: var(--accent-gold);
             color: white;
         }
         .filters {
@@ -124,15 +170,16 @@
             cursor: pointer;
         }
         .filter.active {
-            color: white;
+            color: var(--accent-blue);
             border-color: var(--accent-blue);
-            background: rgba(59, 130, 246, 0.2);
+            background: rgba(31, 122, 224, 0.1);
         }
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 14px;
             overflow: hidden;
+            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
         }
         .list-empty, .list-loading {
             padding: 40px 24px;
@@ -149,7 +196,7 @@
         }
         .notif:last-child { border-bottom: none; }
         .notif.unread { background: rgba(59, 130, 246, 0.08); }
-        .notif:hover { background: rgba(255,255,255,0.03); }
+        .notif:hover { background: #f8fafc; }
         .notif-icon {
             width: 42px;
             height: 42px;
@@ -187,20 +234,31 @@
             .header-inner, .page { padding-left: 16px; padding-right: 16px; }
             nav { display: none; }
             .hero h1 { font-size: 1.5rem; }
+            .hero { grid-template-columns: 1fr; }
+            .hero-image { min-height: 180px; }
         }
     </style>
 </head>
 <body>
+    <div class="notifications-top-strip">
+        <strong>Today:</strong>
+        <span>Likes and replies</span>
+        <span>Follow and friend activity</span>
+        <span>Challenge updates</span>
+        <span>Account alerts</span>
+    </div>
     <header>
         <div class="header-inner">
             <a href="index.html" class="logo">Trust<span>My</span>Record</a>
             <nav>
-                <a href="index.html">Home</a>
-                <a href="sportsbook.html">Sportsbook</a>
-                <a href="feed.html">Feed</a>
-                <a href="challenges.html">Challenges</a>
+                <a href="sportsbook.html">Odds</a>
+                <a href="sportsbook.html">Scores &amp; Matchups</a>
+                <a href="feed.html">News</a>
+                <a href="index.html">Picks</a>
+                <a href="index.html#leaderboards">Handicappers</a>
                 <a href="forum.html">Forum</a>
-                <a href="profile.html">Profile</a>
+                <a href="messages.html">Messages</a>
+                <a href="profile.html">My Account</a>
                 <a href="notifications.html" class="active">Notifications</a>
             </nav>
         </div>
@@ -208,11 +266,15 @@
 
     <main class="page">
         <section class="hero">
-            <div>
+            <div class="hero-copy">
+                <div class="eyebrow">Reference-Led Direction</div>
                 <h1>Notifications</h1>
-                <p>Track follows, likes, comments, challenge activity, and account updates.</p>
+                <p>Track follows, likes, comments, challenge activity, and account updates without dropping back into an older product shell.</p>
             </div>
-            <button id="markAllBtn" class="btn primary" type="button">Mark All Read</button>
+            <div class="hero-copy" style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;">
+                <div></div>
+                <button id="markAllBtn" class="btn primary" type="button">Mark All Read</button>
+            </div>
         </section>
 
         <section class="filters">
