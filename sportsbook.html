@@ -14765,8 +14765,10 @@ function closeTeamSelector() {
 }
 
 function filterTeamsBySport(sport) {
-    document.querySelectorAll('.sport-filter-tab').forEach(t => t.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    document.querySelectorAll('.sport-filter-tab').forEach(t => {
+        const label = t.textContent.trim().toLowerCase();
+        t.classList.toggle('active', sport === 'all' ? label === 'all' : label === sport);
+    });
     renderTeamSelector(sport);
 }
 
@@ -15107,8 +15109,15 @@ function likePost(postId) {
 
 function filterFeed(type) {
     // Update active tab
-    document.querySelectorAll('.feed-tab').forEach(tab => tab.classList.remove('active'));
-    event.target.classList.add('active');
+    document.querySelectorAll('.feed-tab').forEach(tab => {
+        const label = tab.textContent.toLowerCase();
+        tab.classList.toggle('active',
+            (type === 'all' && label.includes('all')) ||
+            (type === 'picks' && label.includes('picks')) ||
+            (type === 'following' && label.includes('following')) ||
+            (type === 'trending' && label.includes('trending'))
+        );
+    });
 
     // Filter logic would go here
     loadSocialFeed();
@@ -15135,18 +15144,23 @@ function formatTimeAgo(timestamp) {
 // FOLLOWING SYSTEM
 function followUser(username) {
     let following = JSON.parse(localStorage.getItem('trustMyRecordFollowing') || '[]');
+    const activeButton = document.activeElement && document.activeElement.tagName === 'BUTTON' ? document.activeElement : null;
 
     if (following.includes(username)) {
         following = following.filter(u => u !== username);
         localStorage.setItem('trustMyRecordFollowing', JSON.stringify(following));
-        event.target.textContent = 'Follow';
-        event.target.classList.remove('following');
+        if (activeButton) {
+            activeButton.textContent = 'Follow';
+            activeButton.classList.remove('following');
+        }
         alert(`Unfollowed @${username}`);
     } else {
         following.push(username);
         localStorage.setItem('trustMyRecordFollowing', JSON.stringify(following));
-        event.target.textContent = 'Following';
-        event.target.classList.add('following');
+        if (activeButton) {
+            activeButton.textContent = 'Following';
+            activeButton.classList.add('following');
+        }
         alert(`✅ Now following @${username}`);
     }
 
@@ -15163,7 +15177,16 @@ function switchLeaderboard(type) {
 
     // Show selected panel
     document.getElementById(`${type}Leaderboard`).classList.add('active');
-    event.target.classList.add('active');
+    document.querySelectorAll('.lb-tab').forEach(tab => {
+        const label = tab.textContent.toLowerCase();
+        tab.classList.toggle('active',
+            (type === 'points' && label.includes('points')) ||
+            (type === 'picks' && label.includes('picks')) ||
+            (type === 'trivia' && label.includes('trivia')) ||
+            (type === 'polls' && label.includes('poll')) ||
+            (type === 'units' && label.includes('units'))
+        );
+    });
 }
 
 // Update sidebar stats when viewing feed
@@ -15195,7 +15218,14 @@ function switchGroupsTab(tab) {
     };
 
     document.getElementById(panels[tab]).classList.add('active');
-    event.currentTarget.classList.add('active');
+    document.querySelectorAll('.groups-tab').forEach(tabBtn => {
+        const label = tabBtn.textContent.toLowerCase();
+        tabBtn.classList.toggle('active',
+            (tab === 'discover' && label.includes('discover')) ||
+            (tab === 'mygroups' && label.includes('my groups')) ||
+            (tab === 'syndicates' && label.includes('syndicates'))
+        );
+    });
 }
 
 function openCreateGroupModal() {
@@ -15223,7 +15253,15 @@ function switchMarketTab(tab) {
     };
 
     document.getElementById(panels[tab]).classList.add('active');
-    event.currentTarget.classList.add('active');
+    document.querySelectorAll('.market-tab').forEach(tabBtn => {
+        const label = tabBtn.textContent.toLowerCase();
+        tabBtn.classList.toggle('active',
+            (tab === 'picks' && label.includes('picks')) ||
+            (tab === 'strategies' && label.includes('strategies')) ||
+            (tab === 'tools' && label.includes('tools')) ||
+            (tab === 'data' && label.includes('data'))
+        );
+    });
 }
 
 function openSellModal() {
@@ -15245,8 +15283,10 @@ function filterLiveGames(sport) {
     const buttons = document.querySelectorAll('.live-filter-btn');
 
     // Update active button
-    buttons.forEach(btn => btn.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    buttons.forEach(btn => {
+        const label = btn.textContent.toLowerCase();
+        btn.classList.toggle('active', sport === 'all' ? label.includes('all') : label.includes(sport));
+    });
 
     // Filter cards
     cards.forEach(card => {
@@ -15771,8 +15811,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectedTab.classList.add('active');
             }
 
-            // Add active to clicked tab
-            event.target.classList.add('active');
+            // Add active to matching tab without relying on the implicit global event.
+            tabs.forEach(tab => {
+                const label = tab.textContent.toLowerCase();
+                tab.classList.toggle('active',
+                    (tabId === 'overview' && label.includes('overview')) ||
+                    (tabId === 'community' && label.includes('community')) ||
+                    (tabId === 'picks' && label.includes('picks')) ||
+                    (tabId === 'posts' && label.includes('posts')) ||
+                    (tabId === 'friends' && label.includes('friends'))
+                );
+            });
 
             // Load data for specific tabs
             if (tabId === 'friends') {
@@ -15963,8 +16012,9 @@ document.addEventListener('DOMContentLoaded', function() {
         function showFriendsSubtab(subtab) {
             // Toggle subtab buttons
             const subtabs = document.querySelectorAll('.friends-subtab');
-            subtabs.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            subtabs.forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase().includes(subtab));
+            });
 
             // Toggle lists
             const followingList = document.getElementById('friendsFollowingList');
@@ -16003,11 +16053,23 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
+        function viewUserProfile(username) {
+            if (!username) return;
+            window.location.href = 'profile.html?user=' + encodeURIComponent(username);
+        }
+
         // Filter picks in pick history
         function filterPicks(filter) {
             const buttons = document.querySelectorAll('#profilePicksTab .posts-filter-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            buttons.forEach(btn => {
+                const label = btn.textContent.toLowerCase();
+                btn.classList.toggle('active',
+                    (filter === 'all' && label.includes('all')) ||
+                    (filter === 'won' && label.includes('won')) ||
+                    (filter === 'lost' && label.includes('lost')) ||
+                    (filter === 'pending' && label.includes('pending'))
+                );
+            });
 
             // Get picks from localStorage and filter
             const picks = JSON.parse(localStorage.getItem('pickHistory') || '[]');
@@ -16069,8 +16131,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // Filter posts
         function filterPosts(filter) {
             const buttons = document.querySelectorAll('#profilePostsTab .posts-filter-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            buttons.forEach(btn => {
+                const label = btn.textContent.toLowerCase();
+                btn.classList.toggle('active',
+                    (filter === 'all' && label.includes('all')) ||
+                    (filter === 'picks' && label.includes('picks')) ||
+                    (filter === 'trivia' && label.includes('trivia')) ||
+                    (filter === 'polls' && label.includes('polls'))
+                );
+            });
 
             // Filter logic would go here
             loadUserPosts(filter);
@@ -16306,9 +16375,13 @@ document.addEventListener('DOMContentLoaded', function() {
         function switchFeedTab(tabName) {
             // Update active tab
             document.querySelectorAll('.feed-tab').forEach(tab => {
-                tab.classList.remove('active');
+                const label = tab.textContent.toLowerCase();
+                tab.classList.toggle('active',
+                    (tabName === 'following' && label.includes('following')) ||
+                    (tabName === 'global' && label.includes('global')) ||
+                    (tabName === 'trending' && label.includes('trending'))
+                );
             });
-            event.target.classList.add('active');
 
             // Load appropriate feed
             loadFeed(tabName);
@@ -16355,13 +16428,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 const isNowFollowing = auth.toggleFollow(userId);
 
                 // Update button state
-                const btn = event.target;
+                const btn = document.activeElement && document.activeElement.tagName === 'BUTTON' ? document.activeElement : null;
                 if (isNowFollowing) {
-                    btn.classList.add('following');
-                    btn.textContent = 'Unfollow';
+                    if (btn) {
+                        btn.classList.add('following');
+                        btn.textContent = 'Unfollow';
+                    }
                 } else {
-                    btn.classList.remove('following');
-                    btn.textContent = 'Follow';
+                    if (btn) {
+                        btn.classList.remove('following');
+                        btn.textContent = 'Follow';
+                    }
                 }
             } catch (error) {
                 alert('Error: ' + error.message);
@@ -16380,16 +16457,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 const isLiked = social.toggleLike(pickId);
 
                 // Update UI
-                const btn = event.target;
+                const btn = document.activeElement && document.activeElement.tagName === 'BUTTON' ? document.activeElement : null;
                 const likeCount = social.getLikeCount(pickId);
 
-                if (isLiked) {
-                    btn.classList.add('liked');
-                } else {
-                    btn.classList.remove('liked');
-                }
+                if (btn) {
+                    if (isLiked) {
+                        btn.classList.add('liked');
+                    } else {
+                        btn.classList.remove('liked');
+                    }
 
-                btn.innerHTML = `❤️ ${likeCount}`;
+                    btn.innerHTML = `❤️ ${likeCount}`;
+                }
             } catch (error) {
                 alert('Error: ' + error.message);
             }
@@ -16742,8 +16821,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const buttons = document.querySelectorAll('.notif-filter-btn');
 
             // Update active button
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+            buttons.forEach(btn => {
+                const label = btn.textContent.toLowerCase();
+                btn.classList.toggle('active', type === 'all' ? label.includes('all') : label.includes(type));
+            });
 
             // Filter notifications
             items.forEach(item => {

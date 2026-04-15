@@ -514,69 +514,6 @@
         return numeric > 0 ? '+' + numeric : String(numeric);
     }
 
-    function americanToProbability(odds) {
-        const numeric = Number(odds);
-        if (!Number.isFinite(numeric) || numeric === 0) return null;
-        if (numeric > 0) return 100 / (numeric + 100);
-        return Math.abs(numeric) / (Math.abs(numeric) + 100);
-    }
-
-    function probabilityToAmerican(probability) {
-        const clamped = Math.min(0.95, Math.max(0.05, Number(probability) || 0.5));
-        if (clamped >= 0.5) return Math.round((-100 * clamped) / (1 - clamped));
-        return Math.round((100 * (1 - clamped)) / clamped);
-    }
-
-    function roundToHalf(value) {
-        return Math.round(Number(value) * 2) / 2;
-    }
-
-    function clamp(value, min, max) {
-        return Math.min(max, Math.max(min, value));
-    }
-
-    function normalizeProbabilities(a, b) {
-        const first = americanToProbability(a);
-        const second = americanToProbability(b);
-        if (first == null || second == null) return null;
-        const total = first + second;
-        if (!total) return null;
-        return {
-            first: first / total,
-            second: second / total
-        };
-    }
-
-    function deriveMlbFirst5Fallback(game, fullGameGroup, totalGroup) {
-        if (!game || game.sport_key !== 'baseball_mlb' || !fullGameGroup || !totalGroup) return null;
-        const awayMl = (fullGameGroup.items || []).find(function(item) { return item.selection === game.away_team; }) || null;
-        const homeMl = (fullGameGroup.items || []).find(function(item) { return item.selection === game.home_team; }) || null;
-        const over = (totalGroup.items || []).find(function(item) { return String(item.selection).toLowerCase() === 'over'; }) || null;
-        const under = (totalGroup.items || []).find(function(item) { return String(item.selection).toLowerCase() === 'under'; }) || null;
-
-        if (!awayMl || !homeMl || !over || !under || over.line == null) return null;
-
-        const normalized = normalizeProbabilities(awayMl.odds, homeMl.odds);
-        if (!normalized) return null;
-
-        const fullGameTotal = Number(over.line);
-        const first5HomeProb = clamp(0.5 + ((normalized.second - 0.5) * 0.82), 0.08, 0.92);
-        const first5AwayProb = 1 - first5HomeProb;
-        const first5Total = roundToHalf(clamp(fullGameTotal * 0.54, 3.0, 6.5));
-
-        return {
-            awayMl: awayMl,
-            homeMl: homeMl,
-            over: over,
-            under: under,
-            first5Total: first5Total,
-            first5AwayMl: probabilityToAmerican(first5AwayProb),
-            first5HomeMl: probabilityToAmerican(first5HomeProb),
-            first5AwaySpreadOdds: first5AwayProb >= 0.5 ? -102 : -118,
-            first5HomeSpreadOdds: first5HomeProb >= 0.5 ? -102 : -118
-        };
-    }
-
     function createFallbackOption(game, index, groupLabel, marketType, selection, selectionLabel, odds, line, detailLabel) {
         return {
             id: 'fallback-' + index + '-' + marketType + '-' + String(selection).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
@@ -697,10 +634,6 @@
 
     function getGroupScope(group) {
         return group && group.key === 'first_5' ? 'f5' : 'full';
-    }
-
-    function ensureDerivedFirst5Group(game) {
-        return game;
     }
 
     function setCardScope(cardId, scope) {

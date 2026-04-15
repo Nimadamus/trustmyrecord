@@ -1243,8 +1243,13 @@
         function switchArenaTab(tab) {
             currentArenaTab = tab;
             // Update tab buttons
-            document.querySelectorAll('.arena-tab').forEach(t => t.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+            document.querySelectorAll('.arena-tab').forEach(t => {
+                const label = t.textContent.toLowerCase();
+                t.classList.toggle('active',
+                    (tab === 'challenges' && label.includes('all challenges')) ||
+                    (tab === 'bragging' && label.includes('bragging'))
+                );
+            });
             // Update panels
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
             document.getElementById('panel-' + tab).classList.add('active');
@@ -1281,8 +1286,10 @@
         // ==================== FILTER ====================
         function filterChallenges(sport) {
             currentSportFilter = sport;
-            document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                const label = tab.textContent.trim().toLowerCase();
+                tab.classList.toggle('active', sport === 'all' ? label.includes('all') : label === sport);
+            });
             renderOpenChallenges();
         }
 
