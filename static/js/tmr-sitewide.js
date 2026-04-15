@@ -20,7 +20,15 @@
         "trivia.html": ["Trivia", "Sports knowledge games, custom questions, and scored fan status."],
         "profile.html": ["Verified Records", "Public profile history, pick ledger, advanced splits, and credibility markers."],
         "forum.html": ["Forum", "Long-form sports discussion and community threads."],
-        "about.html": ["Our Creed", "Why TrustMyRecord exists: no edits, no deletions, no record resets."]
+        "about.html": ["Our Creed", "Why TrustMyRecord exists: no edits, no deletions, no record resets."],
+        "friends.html": ["Friends", "Find rivals, follow records, and keep the sports social graph tied to public performance."],
+        "messages.html": ["Messages", "Direct conversations for matchups, picks, rivalries, and follow-up receipts."],
+        "notifications.html": ["Notifications", "Account alerts, social activity, pick updates, and platform signals in one place."],
+        "premium.html": ["Premium", "Advanced record tools and platform upgrades without changing the public record standard."],
+        "terms.html": ["Terms", "The rules for using TrustMyRecord as a social sports record platform."],
+        "privacy.html": ["Privacy", "How TrustMyRecord handles account, profile, and platform data."],
+        "reset-password.html": ["Reset Password", "Recover account access without leaving the TrustMyRecord product shell."],
+        "verify-email.html": ["Verify Email", "Confirm account ownership before using record and social features."]
     };
 
     const currentFile = (location.pathname.split("/").pop() || "index.html").toLowerCase();
