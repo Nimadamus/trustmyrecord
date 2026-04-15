@@ -8,8 +8,18 @@ class PersistentAuthSystem {
         this.sessionKey = 'trustmyrecord_session';
         this.usersKey = 'trustmyrecord_users';
         this.rememberKey = 'trustmyrecord_remember';
+        this.pruneSeedUsers();
         this.ensureDefaultUsers();
         this.init();
+    }
+
+    pruneSeedUsers() {
+        const removableUsernames = new Set(['demo', 'testuser']);
+        const filteredUsers = this.users.filter(user => !removableUsernames.has(String(user && user.username).toLowerCase()));
+        if (filteredUsers.length !== this.users.length) {
+            this.users = filteredUsers;
+            this.saveUsers();
+        }
     }
 
     ensureDefaultUsers() {
@@ -44,42 +54,6 @@ class PersistentAuthSystem {
                 verified: true,
                 stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
                 social: { followers: [], following: [], reputation: 0, badges: ['founder', 'verified'] },
-                isPremium: true
-            });
-            this.saveUsers();
-        }
-
-        if (!this.users.find(u => u.username === 'demo')) {
-            this.users.push({
-                id: 'user_demo',
-                username: 'demo',
-                email: 'demo@trustmyrecord.com',
-                passwordHash: this.hashPassword('demo123'),
-                displayName: 'Demo User',
-                avatar: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%230ea5e9%22/><text x=%2250%22 y=%2265%22 font-size=%2250%22 text-anchor=%22middle%22 fill=%22white%22>D</text></svg>',
-                bio: 'Test Account',
-                joinedDate: '2025-11-01',
-                verified: false,
-                stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
-                social: { followers: [], following: [], reputation: 0, badges: ['newbie'] },
-                isPremium: false
-            });
-            this.saveUsers();
-        }
-
-        if (!this.users.find(u => u.username === 'testuser')) {
-            this.users.push({
-                id: 'user_testuser',
-                username: 'testuser',
-                email: 'test@example.com',
-                passwordHash: this.hashPassword('password123'),
-                displayName: 'Test User',
-                avatar: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23f59e0b%22/><text x=%2250%22 y=%2265%22 font-size=%2250%22 text-anchor=%22middle%22 fill=%22white%22>T</text></svg>',
-                bio: 'Test Account for Development',
-                joinedDate: new Date().toISOString(),
-                verified: true,
-                stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
-                social: { followers: [], following: [], reputation: 0, badges: ['tester'] },
                 isPremium: true
             });
             this.saveUsers();

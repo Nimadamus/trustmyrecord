@@ -12,7 +12,7 @@ class SocialFeedEngine {
         this.posts = this.load(this.POSTS_KEY, []);
         this.likes = this.load(this.LIKES_KEY, []);
         this.comments = this.load(this.COMMENTS_KEY, []);
-        this.ensureSeedData();
+        this.pruneSeedData();
     }
 
     // ==================== STORAGE ====================
@@ -227,113 +227,23 @@ class SocialFeedEngine {
 
     // ==================== SEED DATA ====================
 
-    ensureSeedData() {
-        if (this.posts.length > 0) return;
+    pruneSeedData() {
+        const isSeedPost = (post) => post && typeof post.id === 'string' && post.id.indexOf('seed_') === 0;
+        const isSeedLike = (like) => like && typeof like.targetId === 'string' && like.targetId.indexOf('seed_') === 0;
+        const isSeedComment = (comment) => comment && ((typeof comment.id === 'string' && comment.id.indexOf('scmt_') === 0) || (typeof comment.postId === 'string' && comment.postId.indexOf('seed_') === 0));
 
-        const seedPosts = [
-            {
-                id: 'seed_1',
-                userId: 'user_betlegend',
-                username: 'BetLegend',
-                displayName: 'BetLegend',
-                avatar: null,
-                type: 'hot-take',
-                content: 'The Thunder are winning it all this year. OKC repeats. Book it.',
-                sport: 'NBA',
-                tags: ['NBA', 'Thunder', 'Finals'],
-                pollOptions: null,
-                pollVoters: [],
-                createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-                pinned: false
-            },
-            {
-                id: 'seed_2',
-                userId: 'user_betlegend',
-                username: 'BetLegend',
-                displayName: 'BetLegend',
-                avatar: null,
-                type: 'poll',
-                content: 'Who wins the AL East in 2026?',
-                sport: 'MLB',
-                tags: ['MLB', 'AL East'],
-                pollOptions: [
-                    { text: 'Yankees', votes: 3 },
-                    { text: 'Orioles', votes: 5 },
-                    { text: 'Blue Jays', votes: 2 },
-                    { text: 'Red Sox', votes: 1 }
-                ],
-                pollVoters: ['seed_voter_1', 'seed_voter_2', 'seed_voter_3', 'seed_voter_4', 'seed_voter_5', 'seed_voter_6', 'seed_voter_7', 'seed_voter_8', 'seed_voter_9', 'seed_voter_10', 'seed_voter_11'],
-                createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-                pinned: false
-            },
-            {
-                id: 'seed_3',
-                userId: 'user_demo',
-                username: 'demo',
-                displayName: 'Demo User',
-                avatar: null,
-                type: 'post',
-                content: 'Just went 4-1 on NBA last night. The under on Pacers/Hornets was free money. Back at it tonight with some NHL plays.',
-                sport: 'NBA',
-                tags: ['NBA', 'Winning'],
-                pollOptions: null,
-                pollVoters: [],
-                createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-                pinned: false
-            },
-            {
-                id: 'seed_4',
-                userId: 'user_demo',
-                username: 'demo',
-                displayName: 'Demo User',
-                avatar: null,
-                type: 'hot-take',
-                content: 'Sasaki is going to be the best pitcher in baseball by the All-Star break. The Dodgers rotation is unfair.',
-                sport: 'MLB',
-                tags: ['MLB', 'Dodgers', 'Sasaki'],
-                pollOptions: null,
-                pollVoters: [],
-                createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-                pinned: false
-            },
-            {
-                id: 'seed_5',
-                userId: 'user_admin_default',
-                username: 'admin',
-                displayName: 'Admin',
-                avatar: null,
-                type: 'post',
-                content: 'Welcome to TrustMyRecord! Post your takes, track your picks, and prove you know your stuff. Your record speaks for itself.',
-                sport: null,
-                tags: ['Welcome'],
-                pollOptions: null,
-                pollVoters: [],
-                createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-                pinned: true
-            }
-        ];
+        const nextPosts = this.posts.filter(post => !isSeedPost(post));
+        const nextLikes = this.likes.filter(like => !isSeedLike(like) && String(like.userId || '').toLowerCase() !== 'user_demo');
+        const nextComments = this.comments.filter(comment => !isSeedComment(comment) && String(comment.userId || '').toLowerCase() !== 'user_demo');
 
-        // Add seed likes
-        const seedLikes = [
-            { targetId: 'seed_1', targetType: 'post', userId: 'user_demo', username: 'demo', createdAt: new Date().toISOString() },
-            { targetId: 'seed_1', targetType: 'post', userId: 'user_admin_default', username: 'admin', createdAt: new Date().toISOString() },
-            { targetId: 'seed_3', targetType: 'post', userId: 'user_betlegend', username: 'BetLegend', createdAt: new Date().toISOString() },
-            { targetId: 'seed_5', targetType: 'post', userId: 'user_betlegend', username: 'BetLegend', createdAt: new Date().toISOString() },
-            { targetId: 'seed_5', targetType: 'post', userId: 'user_demo', username: 'demo', createdAt: new Date().toISOString() },
-        ];
-
-        // Add seed comments
-        const seedComments = [
-            { id: 'scmt_1', postId: 'seed_1', userId: 'user_demo', username: 'demo', displayName: 'Demo User', avatar: null, content: 'SGA is a monster. Hard to argue with this take.', createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString() },
-            { id: 'scmt_2', postId: 'seed_3', userId: 'user_betlegend', username: 'BetLegend', displayName: 'BetLegend', avatar: null, content: 'Nice run! What NHL plays are you looking at?', createdAt: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString() },
-        ];
-
-        this.posts = seedPosts;
-        this.likes = seedLikes;
-        this.comments = seedComments;
-        this.save(this.POSTS_KEY, this.posts);
-        this.save(this.LIKES_KEY, this.likes);
-        this.save(this.COMMENTS_KEY, this.comments);
+        if (nextPosts.length !== this.posts.length || nextLikes.length !== this.likes.length || nextComments.length !== this.comments.length) {
+            this.posts = nextPosts;
+            this.likes = nextLikes;
+            this.comments = nextComments;
+            this.save(this.POSTS_KEY, this.posts);
+            this.save(this.LIKES_KEY, this.likes);
+            this.save(this.COMMENTS_KEY, this.comments);
+        }
     }
 }
 
