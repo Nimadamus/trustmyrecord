@@ -942,6 +942,8 @@
             const toUser = urlParams.get('to');
             if (toUser) {
                 await startConversationWithUser(toUser);
+            } else if (urlParams.get('compose') === '1') {
+                openNewMessageModal();
             }
 
             // Auto-resize textarea
