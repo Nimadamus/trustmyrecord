@@ -1370,7 +1370,7 @@
         await api.ready;
         clearTimeout(_pollsSlowTimer); clearTimeout(_pollsRetryTimer);
 
-        if (!api.backendAvailable) {
+        if (!api || typeof api.request !== 'function') {
             pollsGrid.innerHTML =
                 '<div class="tmr-loading-state"><div style="font-size:2.5rem;margin-bottom:12px;opacity:0.5;">&#x1F50C;</div><p>Could not connect to the polls server.</p><p class="tmr-loading-slow" style="display:block;">The server may be warming up. This takes ~30 seconds on first visit.</p><div class="tmr-loading-retry" style="display:block;"><button onclick="location.reload()">Try Again</button></div></div>';
             return;

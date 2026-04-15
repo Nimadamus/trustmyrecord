@@ -122,10 +122,10 @@
                 await window.api.refreshAccessToken();
             } catch (error) {}
         }
-        if (!window.api.backendAvailable) {
-            return null;
+        if (window.api.baseUrl || typeof window.api.createPick === 'function' || typeof window.api.getMarketBoard === 'function') {
+            return window.api;
         }
-        return window.api;
+        return null;
     }
 
     function getDirectApiBases() {
