@@ -880,9 +880,9 @@
     <!-- Scripts -->
     <script src="static/js/config.js?v=20260318"></script>
     <script src="static/js/analytics.js?v=20260405"></script>
-    <script src="static/js/backend-api.js?v=20260318"></script>
+    <script src="static/js/backend-api.js?v=20260414"></script>
     <script src="static/js/nav-badges.js"></script>
-    <script src="static/js/notifications.js?v=20260318"></script>
+    <script src="static/js/notifications.js?v=20260414"></script>
     <script>
         // State
         let billingPeriod = 'monthly';
@@ -892,6 +892,7 @@
         // Initialize after API is ready
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('[Premium] Initializing...');
+            handleStripeReturn();
 
             // Wait for backend detection
             if (window.api) {
@@ -1140,20 +1141,26 @@
             const btn = document.querySelector(`.pricing-card[data-tier="${tier}"] .upgrade-btn`);
             if (btn) {
                 btn.disabled = true;
-                btn.textContent = 'Processing...';
+                btn.textContent = 'Redirecting...';
             }
 
             try {
                 const result = await api.upgradeSubscription(tier, billingPeriod);
-                showToast(result.message || 'Upgrade successful!', 'success');
-
-                // Reload status after short delay
-                setTimeout(async () => {
-                    await loadSubscriptionStatus();
-                    if (currentStatus && (currentStatus.tier === 'pro' || currentStatus.tier === 'elite')) {
-                        await loadPremiumAnalytics();
-                    }
-                }, 1000);
+                
+                const checkoutUrl = result.checkout_url || result.checkoutUrl || result.url;
+                if (checkoutUrl) {
+                    // Redirect to Stripe checkout
+                    window.location.href = checkoutUrl;
+                } else {
+                    // Success message for free/simulated upgrade
+                    showToast(result.message || 'Upgrade successful!', 'success');
+                    setTimeout(async () => {
+                        await loadSubscriptionStatus();
+                        if (currentStatus && (currentStatus.tier === 'pro' || currentStatus.tier === 'elite')) {
+                            await loadPremiumAnalytics();
+                        }
+                    }, 1000);
+                }
 
             } catch (err) {
                 showToast(err.message || 'Upgrade failed', 'error');
@@ -1161,6 +1168,19 @@
                     btn.disabled = false;
                     btn.textContent = `Upgrade to ${tier.charAt(0).toUpperCase() + tier.slice(1)}`;
                 }
+            }
+        }
+
+        function handleStripeReturn() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const status = urlParams.get('status') || urlParams.get('checkout');
+
+            if (status === 'success') {
+                showToast('Payment successful! Your account is being upgraded.', 'success');
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else if (status === 'cancel' || status === 'canceled') {
+                showToast('Payment cancelled.', 'info');
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
 

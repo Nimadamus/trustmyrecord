@@ -1,4 +1,5 @@
-﻿// Fixed Forms Handling - Local Auth Only (No Backend)
+﻿// Fixed Forms Handling - Backend API Integration
+// v2.0 - Apr 12, 2026
 
 // Wrap everything in try-catch to catch any errors
 async function handleLogin(event) {
@@ -17,41 +18,12 @@ async function handleLogin(event) {
             return;
         }
 
-        // Check if auth.login is a function
-        if (typeof auth.login !== 'function') {
-            console.error('[TMR] auth.login is not a function!', auth);
-            alert('Auth system error. Please refresh the page.');
-            return;
-        }
-
         // Get remember me
         const rememberMeEl = document.getElementById('rememberMe');
         const rememberMe = rememberMeEl ? rememberMeEl.checked : true;
 
-        // Attempt login
-        let result = auth.login(email, password, rememberMe);
-        // Handle both sync and async login
-        if (result && typeof result.then === 'function') {
-            result = await result;
-        }
-
-        // Check result format (some return {success, user}, some return user directly)
-        var user = null;
-        if (result && result.success === false) {
-            throw new Error(result.error || 'Invalid credentials');
-        } else if (result && result.user) {
-            user = result.user;
-        } else if (result && result.username) {
-            user = result;
-        }
-
-        if (!user) {
-            throw new Error('Login returned no user');
-        }
-
-        // Ensure tmr_* keys are set (belt and suspenders)
-        localStorage.setItem('tmr_is_logged_in', 'true');
-        localStorage.setItem('tmr_current_user', JSON.stringify(user));
+        // Attempt login via backend-aware auth system
+        const user = await auth.login(email, password, rememberMe);
 
         // Reset form
         const loginForm = document.getElementById('loginForm');
@@ -61,7 +33,7 @@ async function handleLogin(event) {
         const modal = document.getElementById('loginModal');
         if (modal) modal.style.display = 'none';
 
-        // Check for post-auth redirect (e.g., user clicked "Post a Pick" from homepage)
+        // Check for post-auth redirect
         var postAuthRedirect = sessionStorage.getItem('tmr_post_auth_redirect');
         if (postAuthRedirect) {
             sessionStorage.removeItem('tmr_post_auth_redirect');
@@ -69,12 +41,13 @@ async function handleLogin(event) {
                 window.showSection(postAuthRedirect);
             }
         } else {
-            // Navigate to profile within SPA
+            // Navigate to profile
             if (typeof window.showSection === 'function') {
                 window.showSection('profile');
             }
         }
-        // Update hero CTA and nav UI
+        
+        // Update UI
         if (typeof updateHeroCta === 'function') updateHeroCta();
         if (typeof updateHeaderAuthButtons === 'function') updateHeaderAuthButtons();
         if (typeof updateProfileLink === 'function') updateProfileLink();
@@ -83,8 +56,51 @@ async function handleLogin(event) {
 
     } catch (error) {
         console.error('[TMR] Login error:', error.message);
+        if (error && error.code === 'EMAIL_NOT_VERIFIED') {
+            const email = error.data?.email || '';
+            const message = error.message || 'Please verify your email before logging in.';
+            alert(message);
+            window.location.href = 'verify-email.html' + (email ? ('?email=' + encodeURIComponent(email)) : '');
+            return;
+        }
         alert('Login failed: ' + error.message);
     }
+}
+
+function setSubmitState(form, isBusy, buttonText) {
+    if (!form) return;
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (!submitButton) return;
+    if (!submitButton.dataset.originalText) {
+        submitButton.dataset.originalText = submitButton.textContent;
+    }
+    submitButton.disabled = !!isBusy;
+    submitButton.textContent = isBusy ? buttonText : submitButton.dataset.originalText;
+}
+
+function validateSignupInput(username, email, password, confirmPassword) {
+    const cleanUsername = String(username || '').trim();
+    const cleanEmail = String(email || '').trim();
+
+    if (!cleanUsername || !cleanEmail || !password) {
+        return 'All required fields must be filled out.';
+    }
+    if (cleanUsername.length < 3) {
+        return 'Username must be at least 3 characters.';
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(cleanUsername)) {
+        return 'Username can only use letters, numbers, and underscores.';
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+        return 'Enter a valid email address.';
+    }
+    if (String(password).length < 8) {
+        return 'Password must be at least 8 characters.';
+    }
+    if (confirmPassword != null && confirmPassword !== '' && password !== confirmPassword) {
+        return 'Passwords do not match.';
+    }
+    return '';
 }
 
 async function handleSignup(event) {
@@ -92,64 +108,64 @@ async function handleSignup(event) {
     event.stopPropagation();
     if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.signUpStarted({ button_location: 'signup_modal' });
 
+    const signupForm = document.getElementById('signupForm') || document.getElementById('signup-form');
+
     try {
-        const username = document.getElementById('signupUsername')?.value;
-        const email = document.getElementById('signupEmail')?.value;
-        const password = document.getElementById('signupPassword')?.value;
-        const confirmPassword = document.getElementById('confirmPassword')?.value;
+        const username = document.getElementById('signupUsername')?.value?.trim() || '';
+        const email = document.getElementById('signupEmail')?.value?.trim() || '';
+        const password = document.getElementById('signupPassword')?.value || '';
+        const confirmPassword = document.getElementById('confirmPassword')?.value || '';
+        
+        // Optional profile fields
         const favoriteTeam = document.getElementById('favoriteTeam')?.value?.trim() || '';
         const favoriteSport = document.getElementById('favoriteSport')?.value || '';
         const displayName = document.getElementById('displayName')?.value?.trim() || '';
         const location = document.getElementById('location')?.value?.trim() || '';
         const bio = document.getElementById('bio')?.value?.trim() || '';
 
-        if (!username || !email || !password) {
-            alert('All fields are required');
-            return;
-        }
-        if (password !== confirmPassword) {
-            alert('Passwords do not match');
+        const validationError = validateSignupInput(username, email, password, confirmPassword);
+        if (validationError) {
+            alert(validationError);
             return;
         }
 
         if (typeof auth === 'undefined') {
-            console.error('[TMR] auth object is undefined!');
-            alert('Auth system not loaded. Please refresh the page.');
+            alert('Auth system not loaded. Please refresh.');
             return;
         }
 
-        let result = auth.register(username, email, password);
-        // Handle both sync and async register
-        if (result && typeof result.then === 'function') {
-            result = await result;
+        setSubmitState(signupForm, true, 'Creating Account...');
+
+        // Register via backend-aware auth system
+        const user = await auth.register(username, email, password);
+
+        if (user && user.pendingVerification) {
+            if (signupForm) signupForm.reset();
+
+            const modal = document.getElementById('signupModal');
+            if (modal) modal.style.display = 'none';
+
+            alert(user.message || ('Account created. Check ' + user.email + ' to verify your account.'));
+            window.location.href = 'verify-email.html?email=' + encodeURIComponent(user.email || email);
+            return;
         }
 
-        if (result && result.success === false) {
-            throw new Error(result.error || 'Registration failed');
-        }
-
-        // Save optional profile fields that register() doesn't capture
-        if (result && typeof auth.updateProfile === 'function') {
-            var profileUpdates = {};
+        // Update optional profile fields via backend if possible
+        if (typeof auth.updateProfile === 'function') {
+            const profileUpdates = {};
             if (displayName) profileUpdates.displayName = displayName;
             if (bio) profileUpdates.bio = bio;
             if (location) profileUpdates.location = location;
             if (favoriteTeam) profileUpdates.favoriteTeam = favoriteTeam;
             if (favoriteSport) profileUpdates.favoriteSport = favoriteSport;
+            
             if (Object.keys(profileUpdates).length > 0) {
-                try { auth.updateProfile(profileUpdates); } catch(e) { console.warn('[TMR] Profile update after signup:', e.message); }
+                try { await auth.updateProfile(profileUpdates); } catch(e) { console.warn('[TMR] Profile update after signup:', e.message); }
             }
         }
 
-        // Ensure tmr_* keys are set (belt and suspenders)
-        localStorage.setItem('tmr_is_logged_in', 'true');
-        // auth.register() returns user object directly (not wrapped in {user:...})
-        var userData = (result && result.user) ? result.user : (result && result.username) ? result : { username: username, email: email };
-        localStorage.setItem('tmr_current_user', JSON.stringify(userData));
-
         alert('Account created successfully! You are now logged in.');
 
-        const signupForm = document.getElementById('signupForm');
         if (signupForm) signupForm.reset();
 
         const modal = document.getElementById('signupModal');
@@ -177,6 +193,8 @@ async function handleSignup(event) {
     } catch (error) {
         console.error('[TMR] Signup error:', error);
         alert('Registration failed: ' + error.message);
+    } finally {
+        setSubmitState(signupForm, false, 'Creating Account...');
     }
 }
 
