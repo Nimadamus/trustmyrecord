@@ -412,7 +412,7 @@
         };
     </script>
     <script src="static/js/config.js?v=20260320p"></script>
-    <script src="static/js/backend-api.js?v=20260320p"></script>
+    <script src="static/js/backend-api.js?v=20260414c"></script>
     <script src="static/js/auto-grader.js?v=20260320p"></script>
     <script>
     // ============================================================
@@ -538,7 +538,11 @@
     // ======================== LOAD PROFILE ========================
     async function loadProfile() {
         try {
-            if (api.backendAvailable === false) { const e = new Error('Backend unavailable'); e.backendDown = true; throw e; }
+            if (!api || typeof api.getUserProfile !== 'function') {
+                const e = new Error('Profile service unavailable');
+                e.backendDown = true;
+                throw e;
+            }
             const data = await api.getUserProfile(profileUsername);
             profileData = data.user || data;
             profileUserId = profileData.id;
@@ -546,7 +550,7 @@
             renderProfileHeader(profileData);
             await loadAllPicks();
         } catch (error) {
-            const down = error.backendDown || !api.backendAvailable;
+            const down = !!error.backendDown || !api || typeof api.getUserProfile !== 'function';
             const nf = !down && error.status === 404;
             document.querySelectorAll('.summary-bar, .picks-section, .analytics-section').forEach(el => el.style.display = 'none');
             document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>' +

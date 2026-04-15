@@ -15,19 +15,19 @@ let _notifCache = { notifications: [], unreadCount: 0 };
 })();
 
 async function setupNotifications() {
-    // Ensure the dropdown exists
+    // Ensure a notifications container exists
     addNotificationDropdown();
 
     // Bind bell click
-    const bell = document.getElementById('notificationsBtn');
-    if (bell) {
+    const bell = getNotificationTrigger();
+    if (bell && !bell.getAttribute('onclick')) {
         bell.addEventListener('click', toggleNotificationsDropdown);
     }
 
     // Close dropdown on outside click
     document.addEventListener('click', function(e) {
-        const dropdown = document.getElementById('notificationsDropdown');
-        const bellBtn = document.getElementById('notificationsBtn');
+        const dropdown = getNotificationsContainer();
+        const bellBtn = getNotificationTrigger();
         if (dropdown && bellBtn && !dropdown.contains(e.target) && !bellBtn.contains(e.target)) {
             dropdown.style.display = 'none';
         }
@@ -47,7 +47,26 @@ async function setupNotifications() {
     }
 }
 
+function getNotificationTrigger() {
+    return document.getElementById('notificationsBtn') || document.getElementById('notificationBtn');
+}
+
+function getNotificationsContainer() {
+    return document.getElementById('notificationsDropdown') || document.getElementById('notificationsPanel');
+}
+
+function getNotificationsListElement() {
+    return document.getElementById('notificationsList');
+}
+
+function getUnreadCountElement() {
+    return document.getElementById('unreadCount');
+}
+
 function addNotificationDropdown() {
+    // Reuse the legacy notifications panel when it exists.
+    if (document.getElementById('notificationsPanel')) return;
+
     // Only add the dropdown container if it doesn't exist yet
     if (document.getElementById('notificationsDropdown')) return;
 
@@ -188,23 +207,17 @@ function addNotificationDropdown() {
 }
 
 async function fetchNotifications() {
-    // Check if user is logged in (backend or localStorage)
-    const loggedIn = (window.api && api.isLoggedIn()) ||
-                     (window.auth && auth.isLoggedIn()) ||
-                     localStorage.getItem('tmr_is_logged_in') === 'true';
-    if (!loggedIn) return;
+    // Backend API is mandatory
+    if (!window.api || typeof api.getNotifications !== 'function') return;
+    
+    // Check if user is logged in via API
+    if (!api.isLoggedIn()) return;
 
     try {
-        if (window.api && api.backendAvailable === true) {
-            const data = await api.getNotifications({ limit: 20 });
-            _notifCache.notifications = data.notifications || [];
-            _notifCache.unreadCount = data.unreadCount || 0;
-        } else {
-            // localStorage fallback
-            const stored = JSON.parse(localStorage.getItem('tmr_notifications') || '[]');
-            _notifCache.notifications = stored.slice(0, 20);
-            _notifCache.unreadCount = stored.filter(n => !n.is_read).length;
-        }
+        const data = await api.getNotifications({ limit: 20 });
+        _notifCache.notifications = data.notifications || [];
+        _notifCache.unreadCount = Number(data.unreadCount ?? data.unread_count ?? 0);
+        
         updateNotifBadge(_notifCache.unreadCount);
 
         // If the dropdown is currently visible, re-render
@@ -218,20 +231,32 @@ async function fetchNotifications() {
 }
 
 function updateNotifBadge(count) {
-    const badge = document.getElementById('notifBadge');
-    if (!badge) return;
-    if (count > 0) {
-        badge.textContent = count > 99 ? '99+' : count;
-        badge.style.display = 'inline';
-    } else {
-        badge.style.display = 'none';
+    const badges = [
+        document.getElementById('notifBadge'),
+        document.getElementById('notificationBadge')
+    ].filter(Boolean);
+    const unreadCount = getUnreadCountElement();
+
+    badges.forEach(function(badge) {
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.style.display = badge.id === 'notifBadge' ? 'inline' : 'block';
+        } else {
+            badge.style.display = 'none';
+            badge.textContent = '0';
+        }
+    });
+
+    if (unreadCount) {
+        unreadCount.textContent = count > 99 ? '99+' : String(count || 0);
     }
 }
 
 function toggleNotificationsDropdown(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    const dropdown = document.getElementById('notificationsDropdown');
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+
+    const dropdown = getNotificationsContainer();
     if (!dropdown) return;
 
     if (dropdown.style.display === 'block') {
@@ -245,7 +270,7 @@ function toggleNotificationsDropdown(e) {
 }
 
 function renderNotificationsList(notifications) {
-    const list = document.getElementById('notificationsList');
+    const list = getNotificationsListElement();
     if (!list) return;
 
     if (!notifications || notifications.length === 0) {
@@ -260,7 +285,7 @@ function renderNotificationsList(notifications) {
         const timeStr = timeAgo(n.created_at);
 
         return `
-            <div class="notification-item ${isRead ? '' : 'unread'}" onclick="handleNotifClick('${n.id}', '${n.type}')">
+            <div class="notification-item ${isRead ? '' : 'unread'}" data-type="${getLegacyFilterType(n.type)}" onclick="handleNotifClick('${n.id}', '${n.type}')">
                 <div class="notification-icon ${iconClass}">
                     <i class="fas ${iconChar}"></i>
                 </div>
@@ -272,6 +297,14 @@ function renderNotificationsList(notifications) {
             </div>
         `;
     }).join('');
+}
+
+function getLegacyFilterType(type) {
+    const normalized = String(type || '').toLowerCase();
+    if (['friend_request', 'friend_accept', 'follow', 'mention', 'like', 'comment'].includes(normalized)) return 'social';
+    if (['challenge_invite', 'challenge_result', 'challenge', 'system'].includes(normalized)) return 'alerts';
+    if (['pick_won', 'pick_lost', 'bet_won', 'bet_lost', 'pick_graded'].includes(normalized)) return 'picks';
+    return 'all';
 }
 
 function getNotifIconClass(type) {
@@ -369,8 +402,22 @@ function timeAgo(timestamp) {
 
 function escapeHtml(str) {
     const div = document.createElement('div');
-    div.textContent = str;
+    div.textContent = str || '';
     return div.innerHTML;
+}
+
+function filterNotifications(type) {
+    const items = document.querySelectorAll('#notificationsList .notification-item');
+    const buttons = document.querySelectorAll('.notif-filter-btn');
+
+    buttons.forEach(function(btn) {
+        btn.classList.toggle('active', btn.textContent.trim().toLowerCase() === type);
+    });
+
+    items.forEach(function(item) {
+        const itemType = item.dataset.type || 'all';
+        item.style.display = (type === 'all' || itemType === type) ? 'flex' : 'none';
+    });
 }
 
 // Global access for legacy compatibility
@@ -381,3 +428,7 @@ window.TMR.notify = function(to, message, type) {
     console.log('[Notifications] TMR.notify called (server-side only):', { to, message, type });
 };
 window.TMR.refreshNotifications = fetchNotifications;
+window.toggleNotifications = toggleNotificationsDropdown;
+window.markAllRead = markAllNotificationsRead;
+window.markAllNotificationsRead = markAllNotificationsRead;
+window.filterNotifications = filterNotifications;
