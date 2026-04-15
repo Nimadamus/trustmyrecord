@@ -442,6 +442,335 @@
                 z-index: 50;
             }
         }
+
+        /* ========================================
+           PORTAL MESSAGES OVERRIDE
+           ======================================== */
+        body {
+            background: #f3f5f8;
+            color: #162231;
+        }
+
+        .messages-top-strip,
+        header,
+        footer {
+            margin-left: -20px;
+            margin-right: -20px;
+        }
+
+        .messages-top-strip {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            overflow-x: auto;
+            white-space: nowrap;
+            background: #102338;
+            color: #ffffff;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            scrollbar-width: none;
+        }
+
+        .messages-top-strip::-webkit-scrollbar {
+            display: none;
+        }
+
+        header {
+            background: #ffffff;
+            border-bottom: 1px solid #d8dde6;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+            border-radius: 0;
+            padding: 0;
+        }
+
+        .header-content {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            grid-template-areas: "logo nav actions";
+            align-items: center;
+            gap: 18px;
+            min-height: 78px;
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo {
+            grid-area: logo;
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 1.58rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #102338;
+            background: none;
+            -webkit-text-fill-color: initial;
+        }
+
+        .nav-links {
+            grid-area: nav;
+            display: flex;
+            gap: 18px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #516276;
+            font-weight: 700;
+            font-size: 0.98rem;
+            padding: 8px 0;
+            border: none;
+            background: transparent;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #f58220;
+        }
+
+        .messages-shell-actions {
+            grid-area: actions;
+            justify-self: end;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .shell-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 11px 16px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-decoration: none;
+            border: 1px solid #d8dde6;
+            background: #ffffff;
+            color: #162231;
+        }
+
+        .shell-btn.primary {
+            background: #f58220;
+            border-color: #f58220;
+            color: #ffffff;
+        }
+
+        .messages-hero {
+            max-width: 1440px;
+            margin: 22px auto 18px;
+            padding: 0 20px;
+        }
+
+        .messages-hero-card {
+            background: linear-gradient(135deg, #102338 0%, #163451 100%);
+            color: #ffffff;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
+            display: grid;
+            grid-template-columns: 1.08fr 0.92fr;
+            min-height: 280px;
+        }
+
+        .messages-hero-copy {
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .messages-eyebrow {
+            display: inline-flex;
+            width: fit-content;
+            padding: 7px 11px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.1);
+            color: #ffffff;
+            font-size: 0.74rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 14px;
+        }
+
+        .messages-hero-copy h1 {
+            margin: 0 0 12px;
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            line-height: 0.96;
+            letter-spacing: -0.04em;
+        }
+
+        .messages-hero-copy p {
+            margin: 0;
+            color: rgba(255,255,255,0.82);
+            font-size: 1rem;
+            line-height: 1.7;
+            max-width: 620px;
+        }
+
+        .messages-hero-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .messages-hero-stat {
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.08);
+        }
+
+        .messages-hero-stat strong {
+            display: block;
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+
+        .messages-hero-stat span {
+            color: rgba(255,255,255,0.78);
+            font-size: 0.8rem;
+        }
+
+        .messages-hero-image {
+            background:
+                linear-gradient(130deg, rgba(16,35,56,0.16), rgba(16,35,56,0.74)),
+                url('https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
+        }
+
+        .messages-wrapper {
+            max-width: 1440px;
+            margin: 0 auto 28px;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+            height: calc(100vh - 220px);
+        }
+
+        .conversations-sidebar,
+        .chat-area {
+            background: #ffffff;
+            border: 1px solid #d8dde6;
+            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
+        }
+
+        .sidebar-header,
+        .chat-header,
+        .chat-input-area {
+            border-color: #d8dde6;
+        }
+
+        .sidebar-header h2 {
+            font-family: 'Barlow', 'Inter', sans-serif;
+            color: #162231;
+            font-size: 1.25rem;
+        }
+
+        .new-message-btn,
+        .send-btn,
+        .modal-btn.primary {
+            background: #f58220;
+            color: #ffffff;
+            border: none;
+            box-shadow: none;
+        }
+
+        .conversation-item:hover {
+            background: #f8fafc;
+        }
+
+        .conversation-item.active {
+            background: #eef4fb;
+            border: 1px solid #c4d6ef;
+        }
+
+        .conversation-avatar,
+        .chat-header-avatar {
+            background: linear-gradient(135deg, #1f7ae0, #102338);
+            color: #ffffff;
+        }
+
+        .conversation-name,
+        .chat-header-info h3,
+        .message.received {
+            color: #162231;
+        }
+
+        .conversation-preview,
+        .conversation-time,
+        .chat-header-info p,
+        .empty-state p {
+            color: #637389;
+        }
+
+        .unread-badge {
+            background: #1f7ae0;
+            color: #ffffff;
+        }
+
+        .message.received {
+            background: #f8fafc;
+            border: 1px solid #d8dde6;
+        }
+
+        .message.sent {
+            background: linear-gradient(135deg, #f58220, #d66f17);
+            color: #ffffff;
+        }
+
+        .chat-input,
+        .modal-input {
+            background: #ffffff;
+            border: 1px solid #d8dde6;
+            color: #162231;
+        }
+
+        .modal {
+            background: #ffffff;
+            border: 1px solid #d8dde6;
+            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.16);
+        }
+
+        .modal h3,
+        .empty-state h3 {
+            color: #162231;
+            font-family: 'Barlow', 'Inter', sans-serif;
+        }
+
+        footer {
+            background: #ffffff !important;
+            border-top: 1px solid #d8dde6 !important;
+            margin-top: 40px !important;
+            padding-top: 0 !important;
+        }
+
+        footer a:hover {
+            color: #1f7ae0 !important;
+        }
+
+        @media (max-width: 1200px) {
+            .header-content {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "logo"
+                    "actions"
+                    "nav";
+                justify-items: start;
+                padding-top: 16px;
+                padding-bottom: 16px;
+            }
+
+            .messages-shell-actions {
+                justify-self: start;
+            }
+
+            .messages-hero-card {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
@@ -453,27 +782,63 @@
     </script>
 </head>
 <body>
+    <div class="messages-top-strip">
+        <strong>Today:</strong>
+        <span>Private conversations</span>
+        <span>Verified user profiles</span>
+        <span>Pick discussion and follow-up</span>
+        <span>Forum and feed crossover</span>
+    </div>
         <header>
         <div class="header-content">
-            <a href="index.html" class="logo">TRUST<span>MY</span>RECORD</a>
+            <a href="index.html" class="logo">TRUST<span style="color:#f58220;">MY</span>RECORD</a>
             <nav class="nav-links">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="sportsbook.html" class="nav-link">Sportsbook</a>
-                <a href="feed.html" class="nav-link">Feed</a>
-                <a href="challenges.html" class="nav-link">Picks Arena</a>
-                <a href="arena.html" class="nav-link">Gaming Arena</a>
+                <a href="sportsbook.html" class="nav-link">Odds</a>
+                <a href="sportsbook.html" class="nav-link">Scores &amp; Matchups</a>
+                <a href="feed.html" class="nav-link">News</a>
+                <a href="index.html" class="nav-link">Picks</a>
+                <a href="index.html#leaderboards" class="nav-link">Handicappers</a>
                 <a href="forum.html" class="nav-link">Forum</a>
                 <a href="messages.html" class="nav-link active">Messages</a>
-                <a href="profile.html" class="nav-link">My Profile</a>
+                <a href="profile.html" class="nav-link">My Account</a>
             </nav>
+            <div class="messages-shell-actions">
+                <a href="index.html?section=login" class="shell-btn">Log In</a>
+                <a href="index.html?section=signup" class="shell-btn primary">Join Free</a>
+            </div>
         </div>
     </header>
+
+    <section class="messages-hero">
+        <div class="messages-hero-card">
+            <div class="messages-hero-copy">
+                <div class="messages-eyebrow">Reference-Led Direction</div>
+                <h1>Private messages that feel like part of the same sportsbook portal.</h1>
+                <p>Direct messages should support the betting workflow, not look like a separate app. Talk through matchups, follow up on picks, and keep the community layer tied to the rest of TrustMyRecord.</p>
+                <div class="messages-hero-stats">
+                    <div class="messages-hero-stat">
+                        <strong>Inbox</strong>
+                        <span>Conversations and replies</span>
+                    </div>
+                    <div class="messages-hero-stat">
+                        <strong>Profiles</strong>
+                        <span>Direct access to verified users</span>
+                    </div>
+                    <div class="messages-hero-stat">
+                        <strong>Flow</strong>
+                        <span>Feed, forum, and picks stay connected</span>
+                    </div>
+                </div>
+            </div>
+            <div class="messages-hero-image"></div>
+        </div>
+    </section>
 
     <div class="messages-wrapper">
         <!-- Conversations Sidebar -->
         <div class="conversations-sidebar">
             <div class="sidebar-header">
-                <h2>💬 Messages</h2>
+                <h2>Messages</h2>
                 <button class="new-message-btn" onclick="openNewMessageModal()">+ New</button>
             </div>
             <div class="conversations-list" id="conversationsList">
@@ -944,55 +1309,55 @@
         init();
     </script>
 
-        <footer style="background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.8) 100%); border-top: 1px solid rgba(0, 255, 255, 0.15); padding: 50px 0 0 0; margin-top: 60px;">
-            <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px;">
+        <footer style="background: #ffffff; border-top: 1px solid #d8dde6; padding: 0; margin-top: 60px;">
+            <div style="max-width: 1440px; margin: 0 auto; padding: 22px 24px 0;">
                 <!-- Footer Columns -->
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding-bottom: 28px; border-bottom: 1px solid #d8dde6;">
                     <!-- Brand Column -->
                     <div>
-                        <div style="font-size: 1.3rem; font-weight: 800; color: #00ffff; margin-bottom: 10px; letter-spacing: 0.5px;">TrustMyRecord</div>
-                        <p style="color: #808090; font-size: 0.85rem; line-height: 1.6; margin: 0 0 16px 0;">The future of transparent sports betting.</p>
-                        <p style="color: #606070; font-size: 0.8rem; margin: 0;">&copy; 2026 TrustMyRecord.com</p>
+                        <div style="font-size: 1.3rem; font-weight: 800; color: #162231; margin-bottom: 10px; letter-spacing: 0;">Trust<span style='color:#f58220;'>My</span>Record</div>
+                        <p style="color: #637389; font-size: 0.85rem; line-height: 1.6; margin: 0 0 16px 0;">Transparent sports betting records, sharper social tools, and a cleaner portal-style product shell.</p>
+                        <p style="color: #637389; font-size: 0.8rem; margin: 0;">&copy; 2026 TrustMyRecord.com</p>
                     </div>
                     <!-- Platform Column -->
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Platform</div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: #162231; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Platform</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="sportsbook.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
-                            <a href="index.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
-                            <a href="arena.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Gaming Arena</a>
-                            <a href="forum.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
+                            <a href="sportsbook.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
+                            <a href="index.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
+                            <a href="arena.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Gaming Arena</a>
+                            <a href="forum.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
                         </div>
                     </div>
                     <!-- Community Column -->
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Community</div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: #162231; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Community</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="feed.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
-                            <a href="challenges.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Challenges</a>
-                            <a href="polls.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Polls</a>
-                            <a href="trivia.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
+                            <a href="feed.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
+                            <a href="challenges.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Challenges</a>
+                            <a href="polls.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Polls</a>
+                            <a href="trivia.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
                         </div>
                     </div>
                     <!-- Legal Column -->
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Info</div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: #162231; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Info</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="about.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
-                            <a href="terms.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
-                            <a href="privacy.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
-                            <a href="mailto:support@trustmyrecord.com" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Contact</a>
+                            <a href="about.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
+                            <a href="terms.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
+                            <a href="privacy.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
+                            <a href="mailto:support@trustmyrecord.com" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Contact</a>
                         </div>
                     </div>
                 </div>
                 <!-- Bottom Bar -->
                 <div style="padding: 24px 0; text-align: center;">
-                    <p style="color: #606070; font-size: 0.78rem; line-height: 1.7; margin: 0 0 8px 0;">TrustMyRecord is not a gambling site. We provide pick tracking and community features only. No real money is wagered on this platform.</p>
-                    <p style="color: #505060; font-size: 0.72rem; margin: 0;">If you or someone you know has a gambling problem, call 1-800-GAMBLER. Must be 18+ to participate. Please gamble responsibly.</p>
+                    <p style="color: #637389; font-size: 0.78rem; line-height: 1.7; margin: 0 0 8px 0;">TrustMyRecord is not a gambling site. We provide pick tracking and community features only. No real money is wagered on this platform.</p>
+                    <p style="color: #637389; font-size: 0.72rem; margin: 0;">If you or someone you know has a gambling problem, call 1-800-GAMBLER. Must be 18+ to participate. Please gamble responsibly.</p>
                 </div>
             </div>
             <style>
-                footer a:hover { color: #00ffff !important; }
+                footer a:hover { color: #1f7ae0 !important; }
                 @media (max-width: 900px) {
                     footer > div > div:first-child { grid-template-columns: repeat(2, 1fr) !important; gap: 30px !important; }
                 }
@@ -1006,3 +1371,4 @@
 
 </body>
 </html>
+<!-- Deploy: Tue, Apr 14, 2026  7:47:00 PM -->
