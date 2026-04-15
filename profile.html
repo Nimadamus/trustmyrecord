@@ -12,55 +12,75 @@
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #08111e;
-            --bg-secondary: #101b2d;
-            --bg-card: rgba(11, 23, 42, 0.86);
-            --bg-card-hover: rgba(18, 35, 63, 0.92);
-            --bg-card-strong: #0f213b;
-            --border-color: rgba(150, 179, 214, 0.16);
-            --border-light: rgba(162, 189, 221, 0.26);
-            --text-primary: #eef4ff;
-            --text-secondary: #b8c7dd;
-            --text-muted: #7f93b0;
+            --bg-primary: #f3f5f8;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f8fafc;
+            --bg-card-strong: #ffffff;
+            --border-color: #d8dde6;
+            --border-light: #c4d6ef;
+            --text-primary: #162231;
+            --text-secondary: #637389;
+            --text-muted: #637389;
             --accent-green: #22c55e;
             --accent-green-bg: rgba(34, 197, 94, 0.12);
             --accent-red: #ef4444;
             --accent-red-bg: rgba(239, 68, 68, 0.12);
-            --accent-blue: #58a6ff;
-            --accent-blue-bg: rgba(88, 166, 255, 0.14);
-            --accent-gold: #f5c96a;
+            --accent-blue: #1f7ae0;
+            --accent-blue-bg: rgba(31, 122, 224, 0.12);
+            --accent-gold: #f58220;
             --accent-gray: #6b7280;
             --accent-gray-bg: rgba(107, 114, 128, 0.15);
-            --shadow-soft: 0 24px 60px rgba(3, 10, 21, 0.34);
+            --shadow-soft: 0 18px 48px rgba(18, 32, 49, 0.08);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
 
         body {
-            font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
             line-height: 1.5;
-            background-image:
-                radial-gradient(circle at top left, rgba(88, 166, 255, 0.16), transparent 28%),
-                radial-gradient(circle at top right, rgba(34, 197, 94, 0.12), transparent 20%),
-                linear-gradient(180deg, #09111f 0%, #0a1423 35%, #08111e 100%);
+            background-image: none;
         }
 
-        .container { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+        .container { max-width: 1440px; margin: 0 auto; padding: 0 20px; }
+
+        .profile-top-strip,
+        header,
+        .container,
+        footer.site-footer {
+            max-width: 1440px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .profile-top-strip {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            overflow-x: auto;
+            white-space: nowrap;
+            background: #102338;
+            color: #ffffff;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            scrollbar-width: none;
+        }
+
+        .profile-top-strip::-webkit-scrollbar { display: none; }
 
         /* ==================== HEADER ==================== */
         header {
-            background: rgba(8, 16, 28, 0.82);
-            border-bottom: 1px solid rgba(150, 179, 214, 0.12);
-            backdrop-filter: blur(18px);
-            position: sticky;
-            top: 0;
+            background: #ffffff;
+            border-bottom: 1px solid #d8dde6;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+            position: static;
             z-index: 1000;
         }
 
@@ -68,39 +88,39 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            min-height: 72px;
+            min-height: 78px;
             gap: 20px;
         }
 
         .logo {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.35rem;
-            font-weight: 700;
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 1.58rem;
+            font-weight: 800;
             color: var(--text-primary);
             text-decoration: none;
-            letter-spacing: -0.04em;
+            letter-spacing: -0.03em;
         }
-        .logo span { color: var(--accent-blue); }
+        .logo span { color: #f58220; }
 
         nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
         nav a {
             color: var(--text-secondary);
             text-decoration: none;
-            font-weight: 500;
-            font-size: 0.9rem;
-            padding: 10px 14px;
-            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.98rem;
+            padding: 8px 0;
+            border-radius: 0;
             transition: all 0.2s;
         }
         nav a:hover {
-            color: var(--text-primary);
-            background: rgba(255,255,255,0.05);
+            color: #f58220;
+            background: transparent;
         }
         nav a.active {
-            color: var(--text-primary);
-            background: rgba(88, 166, 255, 0.16);
-            box-shadow: inset 0 0 0 1px rgba(88, 166, 255, 0.18);
+            color: #f58220;
+            background: transparent;
+            box-shadow: none;
         }
 
         /* ==================== PROFILE HEADER ==================== */
@@ -114,10 +134,8 @@
             align-items: center;
             padding: 34px;
             border: 1px solid var(--border-color);
-            border-radius: 28px;
-            background:
-                linear-gradient(135deg, rgba(88, 166, 255, 0.16), rgba(8, 17, 30, 0) 42%),
-                linear-gradient(180deg, rgba(17, 32, 56, 0.92), rgba(10, 18, 33, 0.92));
+            border-radius: 18px;
+            background: linear-gradient(135deg, #102338 0%, #163451 100%);
             box-shadow: var(--shadow-soft);
             position: relative;
             overflow: hidden;
@@ -150,19 +168,20 @@
 
         .profile-info { flex: 1; }
         .profile-name {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: 'Barlow', 'Inter', sans-serif;
             font-size: clamp(1.8rem, 3vw, 2.5rem);
-            font-weight: 700;
+            font-weight: 800;
             letter-spacing: -0.05em;
             margin-bottom: 4px;
+            color: #ffffff;
         }
         .profile-handle {
-            color: #93a9c7;
+            color: rgba(255,255,255,0.72);
             font-size: 0.94rem;
             margin-bottom: 12px;
         }
         .profile-bio {
-            color: var(--text-secondary);
+            color: rgba(255,255,255,0.82);
             font-size: 1rem;
             max-width: 640px;
         }
@@ -193,9 +212,9 @@
             transition: all 0.2s;
         }
         .btn-primary {
-            background: linear-gradient(135deg, #58a6ff, #2f6feb);
+            background: #f58220;
             color: #fff;
-            box-shadow: 0 14px 30px rgba(34, 98, 198, 0.3);
+            box-shadow: none;
         }
         .btn-primary:hover { transform: translateY(-1px); }
         .btn-secondary {
@@ -220,14 +239,14 @@
             position: relative;
             border: 1px solid var(--border-color);
             border-radius: 18px;
-            background: linear-gradient(180deg, rgba(12, 24, 43, 0.92), rgba(10, 18, 33, 0.92));
-            box-shadow: 0 16px 34px rgba(3, 10, 21, 0.16);
+            background: #ffffff;
+            box-shadow: var(--shadow-soft);
         }
 
         .summary-stat-value {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: 'Barlow', 'Inter', sans-serif;
             font-size: 1.85rem;
-            font-weight: 700;
+            font-weight: 800;
             letter-spacing: -0.06em;
             margin-bottom: 4px;
         }
@@ -248,15 +267,15 @@
 
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .section-title {
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: 'Barlow', 'Inter', sans-serif;
             font-size: 1.04rem;
-            font-weight: 700;
+            font-weight: 800;
             letter-spacing: -0.03em;
         }
         .section-subtitle { color: var(--text-muted); font-size: 0.84rem; }
 
         .picks-table-wrapper {
-            background: linear-gradient(180deg, rgba(11, 23, 42, 0.96), rgba(9, 18, 33, 0.96));
+            background: #ffffff;
             border: 1px solid var(--border-color);
             border-radius: 22px;
             overflow: hidden;
@@ -266,7 +285,7 @@
         .picks-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 
         .picks-table thead {
-            background: rgba(16, 27, 45, 0.92);
+            background: #f8fafc;
             border-bottom: 1px solid var(--border-color);
         }
 
@@ -541,19 +560,26 @@
     </script>
 </head>
 <body>
+    <div class="profile-top-strip">
+        <strong>Today:</strong>
+        <span>Verified records</span>
+        <span>Public profile accountability</span>
+        <span>Tracked picks and analytics</span>
+        <span>Cleaner account presentation</span>
+    </div>
     <header>
         <div class="container">
             <div class="header-content">
                 <a href="index.html" class="logo">TRUST<span>MY</span>RECORD</a>
                 <nav class="nav-links">
-                    <a href="index.html" class="nav-link">Home</a>
-                    <a href="sportsbook.html" class="nav-link">Sportsbook</a>
-                    <a href="feed.html" class="nav-link">Feed</a>
-                    <a href="challenges.html" class="nav-link">Picks Arena</a>
-                    <a href="arena.html" class="nav-link">Gaming Arena</a>
+                    <a href="sportsbook.html" class="nav-link">Odds</a>
+                    <a href="sportsbook.html" class="nav-link">Scores &amp; Matchups</a>
+                    <a href="feed.html" class="nav-link">News</a>
+                    <a href="index.html" class="nav-link">Picks</a>
+                    <a href="index.html#leaderboards" class="nav-link">Handicappers</a>
                     <a href="forum.html" class="nav-link">Forum</a>
                     <a href="messages.html" class="nav-link">Messages</a>
-                    <a href="profile.html" class="nav-link active">My Profile</a>
+                    <a href="profile.html" class="nav-link active">My Account</a>
                 </nav>
             </div>
         </div>
@@ -2437,6 +2463,7 @@
         </footer>
 
 
-    <script src="static/js/platform-production-fix.js?v=20260414"></script>
+    <script src="static/js/platform-production-fix.js?v=20260414d"></script>
 </body>
 </html>
+<!-- Deploy: Tue, Apr 14, 2026  8:02:00 PM -->
