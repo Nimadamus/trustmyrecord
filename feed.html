@@ -8,18 +8,174 @@
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="static/css/social-home.css?v=20260414c">
     <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f3f5f8;
+            color: #162231;
+        }
+        .messages-top-strip,
+        header,
+        .page-layout,
+        footer.site-footer {
+            max-width: 1440px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .messages-top-strip {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            overflow-x: auto;
+            white-space: nowrap;
+            background: #102338;
+            color: #ffffff;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            scrollbar-width: none;
+        }
+        .messages-top-strip::-webkit-scrollbar { display: none; }
+        header {
+            position: static;
+            background: #ffffff;
+            border-bottom: 1px solid #d8dde6;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+            backdrop-filter: none;
+        }
+        header::after { display: none; }
+        .header-inner {
+            max-width: 1440px;
+            padding: 0 20px;
+            height: 78px;
+        }
+        .logo {
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 1.58rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #102338;
+            text-transform: none;
+        }
+        .logo span { color: #f58220; }
+        nav a {
+            color: #516276;
+            font-weight: 700;
+            font-size: 0.98rem;
+            padding: 8px 0;
+            border-radius: 0;
+            background: transparent;
+        }
+        nav a:hover {
+            color: #f58220;
+            background: transparent;
+        }
+        nav a.active {
+            color: #f58220;
+            background: transparent;
+            box-shadow: none;
+        }
+        nav a i { display: none; }
+        .btn-primary {
+            background: #f58220;
+            color: #ffffff;
+            box-shadow: none;
+        }
+        .btn-ghost {
+            background: #ffffff;
+            color: #162231;
+            border: 1px solid #d8dde6;
+        }
+        .page-layout {
+            padding: 22px 20px 40px;
+            grid-template-columns: 240px minmax(0, 1fr) 300px;
+            gap: 20px;
+        }
+        .feed-hero {
+            border-radius: 18px;
+            border: 1px solid #d8dde6;
+            background: linear-gradient(135deg, #102338 0%, #163451 100%);
+            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
+        }
+        .eyebrow {
+            color: #ffffff;
+            border: none;
+            background: rgba(255,255,255,0.1);
+        }
+        .feed-hero h1 {
+            font-family: 'Barlow', 'Inter', sans-serif;
+            max-width: 10ch;
+            letter-spacing: -0.05em;
+        }
+        .feed-hero p,
+        .hero-stat-sub {
+            color: rgba(255,255,255,0.82);
+        }
+        .hero-stat-card {
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.08);
+        }
+        .hero-stat-label { color: rgba(255,255,255,0.65); }
+        .hero-stat-card strong { color: #ffffff; font-family: 'Barlow', 'Inter', sans-serif; }
+        .left-sidebar,
+        .right-sidebar { top: 22px; }
+        .sidebar-nav,
+        .sidebar-card,
+        .composer-card,
+        .rs-card {
+            background: #ffffff;
+            border: 1px solid #d8dde6;
+            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
+            backdrop-filter: none;
+        }
+        .sidebar-link,
+        .sidebar-card-title,
+        .rs-title,
+        .composer-action,
+        .feed-tab {
+            color: #516276;
+        }
+        .sidebar-link:hover,
+        .composer-action:hover,
+        .feed-tab:hover {
+            color: #1f7ae0;
+            background: #eef4fb;
+        }
+        .sidebar-link.active,
+        .feed-tab.active {
+            color: #1f7ae0;
+            background: #eaf3fe;
+            box-shadow: none;
+        }
+        .composer-avatar {
+            background: linear-gradient(135deg, #1f7ae0, #102338);
+            color: #ffffff;
+        }
+        .composer-textarea,
+        .poll-input,
+        .composer-sport {
+            background: #ffffff;
+            border: 1px solid #d8dde6;
+            color: #162231;
+        }
+        .site-footer {
+            background: #ffffff;
+            border-top: 1px solid #d8dde6;
+        }
+        .site-footer-logo,
+        .site-footer h4 {
+            font-family: 'Barlow', 'Inter', sans-serif;
+        }
         .tmr-loading-state { text-align: center; padding: 60px 20px; }
-        .tmr-loading-state .tmr-spinner { width: 40px; height: 40px; border: 3px solid rgba(0,255,255,0.15); border-top-color: #00ffff; border-radius: 50%; animation: tmr-spin 0.8s linear infinite; margin: 0 auto 16px; }
+        .tmr-loading-state .tmr-spinner { width: 40px; height: 40px; border: 3px solid rgba(31,122,224,0.15); border-top-color: #1f7ae0; border-radius: 50%; animation: tmr-spin 0.8s linear infinite; margin: 0 auto 16px; }
         @keyframes tmr-spin { to { transform: rotate(360deg); } }
-        .tmr-loading-state p { color: #b0b0c0; font-size: 0.95rem; margin: 8px 0; }
-        .tmr-loading-state .tmr-loading-slow { color: #ffd700; display: none; }
+        .tmr-loading-state p { color: #637389; font-size: 0.95rem; margin: 8px 0; }
+        .tmr-loading-state .tmr-loading-slow { color: #f58220; display: none; }
         .tmr-loading-state .tmr-loading-retry { display: none; }
-        .tmr-loading-state .tmr-loading-retry button { background: #00ffff; color: #0a0a0f; border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; margin-top: 8px; }
-        .tmr-loading-state .tmr-loading-retry button:hover { background: #00cccc; }
+        .tmr-loading-state .tmr-loading-retry button { background: #1f7ae0; color: #ffffff; border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; margin-top: 8px; }
+        .tmr-loading-state .tmr-loading-retry button:hover { background: #1767bd; }
     </style>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
@@ -31,22 +187,29 @@
     </script>
 </head>
 <body>
+    <div class="messages-top-strip">
+        <strong>Today:</strong>
+        <span>Verified user posts</span>
+        <span>Pick discussion and grading</span>
+        <span>Forum and feed crossover</span>
+        <span>Community timelines with receipts</span>
+    </div>
     <header>
         <div class="header-inner">
             <a href="index.html" class="logo">Trust<span>My</span>Record</a>
             <nav id="mainNav">
-                <a href="index.html"><i class="fas fa-home"></i> Home</a>
-                <a href="sportsbook.html"><i class="fas fa-basketball-ball"></i> Sportsbook</a>
-                <a href="feed.html" class="active"><i class="fas fa-stream"></i> Feed</a>
-                <a href="challenges.html"><i class="fas fa-trophy"></i> Picks Arena</a>
-                <a href="arena.html"><i class="fas fa-gamepad"></i> Gaming Arena</a>
-                <a href="forum.html"><i class="fas fa-comments"></i> Forum</a>
-                <a href="messages.html"><i class="fas fa-envelope"></i> Messages</a>
-                <a href="profile.html"><i class="fas fa-user"></i> My Profile</a>
+                <a href="sportsbook.html">Odds</a>
+                <a href="sportsbook.html">Scores &amp; Matchups</a>
+                <a href="feed.html" class="active">News</a>
+                <a href="index.html">Picks</a>
+                <a href="index.html#leaderboards">Handicappers</a>
+                <a href="forum.html">Forum</a>
+                <a href="messages.html">Messages</a>
+                <a href="profile.html">My Account</a>
             </nav>
             <div class="header-actions" id="headerActions">
                 <button class="btn btn-ghost" onclick="openModal('login')">Log In</button>
-                <button class="btn btn-primary" onclick="openModal('signup')">Sign Up</button>
+                <button class="btn btn-primary" onclick="openModal('signup')">Join Free</button>
             </div>
             <button class="mobile-menu" onclick="document.getElementById('mainNav').classList.toggle('show')"><i class="fas fa-bars"></i></button>
         </div>
@@ -75,11 +238,11 @@
         <main class="main-feed">
             <section class="feed-hero">
                 <div class="feed-hero-copy">
-                    <div class="eyebrow">Social Layer</div>
+                    <div class="eyebrow">Reference-Led Direction</div>
                     <h1>The clean timeline for bettors with receipts.</h1>
-                    <p>Posts, picks, polls, grading, and profile activity should feel like one sharp product. This feed is the standard for how the community side of TrustMyRecord should look.</p>
+                    <p>Posts, picks, polls, grading, and profile activity should feel like one sharp product. This feed should read like the community and editorial layer of the same sportsbook portal.</p>
                     <div class="feed-hero-actions">
-                        <a href="sportsbook.html" class="btn btn-primary"><i class="fas fa-plus"></i> Make a Pick</a>
+                        <a href="sportsbook.html" class="btn btn-primary"><i class="fas fa-plus"></i> Open Board</a>
                         <a href="forum.html" class="btn btn-ghost"><i class="fas fa-comments"></i> Open Forum</a>
                     </div>
                 </div>
@@ -153,7 +316,7 @@
     <script src="static/js/backend-api.js?v=20260414c"></script>
     <script src="static/js/nav-badges.js"></script>
 <script src="static/js/auth-persistent.js?v=20260414e"></script>
-    <script src="static/js/social-home.js?v=20260414c"></script>
+    <script src="static/js/social-home.js?v=20260414d"></script>
     <footer class="site-footer">
         <div class="site-footer-inner">
             <div class="site-footer-brand">
@@ -189,3 +352,4 @@
 
 </body>
 </html>
+<!-- Deploy: Tue, Apr 14, 2026  7:54:00 PM -->
