@@ -4569,14 +4569,54 @@
         .portal-hero-image img {
             width: auto;
             height: auto;
-            max-width: 82%;
-            max-height: 300px;
+            max-width: 58%;
+            max-height: 260px;
             min-height: 0;
             display: block;
             object-fit: contain;
             object-position: center center;
             position: relative;
             z-index: 2;
+            filter: drop-shadow(0 22px 42px rgba(0,0,0,0.28));
+        }
+
+        .hero-market-card {
+            position: absolute;
+            right: 26px;
+            bottom: 26px;
+            z-index: 3;
+            width: min(270px, calc(100% - 52px));
+            padding: 16px;
+            border: 1px solid rgba(198, 223, 255, 0.22);
+            border-radius: 18px;
+            background: rgba(7, 21, 37, 0.82);
+            box-shadow: 0 24px 54px rgba(0,0,0,0.28);
+            backdrop-filter: blur(14px);
+            color: #ffffff;
+        }
+
+        .hero-market-card small {
+            display: block;
+            color: #9ccaff;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .hero-market-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 9px 0;
+            border-top: 1px solid rgba(198, 223, 255, 0.14);
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+
+        .hero-market-row span:last-child {
+            color: #58a6ff;
         }
 
         .portal-home-layout {
@@ -4803,8 +4843,55 @@
 
         .portal-story-image {
             height: 220px;
+            position: relative;
+            overflow: hidden;
             background-size: cover;
             background-position: center;
+        }
+
+        .portal-story-image::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 70% 25%, rgba(255,255,255,0.20), transparent 28%),
+                linear-gradient(135deg, rgba(7,21,37,0.08), rgba(7,21,37,0.52));
+        }
+
+        .portal-story-image::after {
+            position: absolute;
+            left: 18px;
+            bottom: 16px;
+            padding: 8px 11px;
+            border-radius: 999px;
+            background: rgba(7, 21, 37, 0.82);
+            color: #ffffff;
+            font-size: 0.74rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .portal-story-image.story-nfl {
+            background:
+                linear-gradient(135deg, rgba(7,21,37,0.08), rgba(7,21,37,0.38)),
+                radial-gradient(circle at 72% 25%, rgba(88,166,255,0.52), transparent 28%),
+                linear-gradient(135deg, #091b31 0%, #123d68 52%, #0b63ce 100%);
+        }
+
+        .portal-story-image.story-nfl::after {
+            content: 'NFL Market Intelligence';
+        }
+
+        .portal-story-image.story-mlb {
+            background:
+                linear-gradient(135deg, rgba(7,21,37,0.08), rgba(7,21,37,0.36)),
+                radial-gradient(circle at 72% 25%, rgba(245,130,32,0.52), transparent 28%),
+                linear-gradient(135deg, #101827 0%, #24415f 54%, #f58220 140%);
+        }
+
+        .portal-story-image.story-mlb::after {
+            content: 'Daily Card Tracking';
         }
 
         .portal-story-body {
@@ -9890,6 +9977,12 @@
                         </div>
                         <div class="portal-hero-image">
                             <img src="static/media/steph-curry-hero.gif" alt="Steph Curry animated hero">
+                            <div class="hero-market-card">
+                                <small>Live Record Card</small>
+                                <div class="hero-market-row"><span>Record</span><span>38-24-2</span></div>
+                                <div class="hero-market-row"><span>ROI</span><span>+12.8%</span></div>
+                                <div class="hero-market-row"><span>Net Units</span><span>+18.4u</span></div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -10075,14 +10168,14 @@
 
                         <div class="portal-story-grid">
                             <article class="portal-story-card">
-                                <div class="portal-story-image" style="background-image:url('https://images.unsplash.com/photo-1508098682722-e99c643e7485?auto=format&fit=crop&w=1200&q=80');"></div>
+                                <div class="portal-story-image story-nfl"></div>
                                 <div class="portal-story-body">
                                     <h3>NFL Board Coverage and Weekly Matchup Angles</h3>
                                     <p class="portal-copy">Feature the biggest NFL spots of the week with board movement, matchup analysis, and the strongest records behind the picks.</p>
                                 </div>
                             </article>
                             <article class="portal-story-card">
-                                <div class="portal-story-image" style="background-image:url('https://images.unsplash.com/photo-1508344928928-7165b67de128?auto=format&fit=crop&w=1200&q=80');"></div>
+                                <div class="portal-story-image story-mlb"></div>
                                 <div class="portal-story-body">
                                     <h3>MLB Daily Action, Results, and Public Tracking</h3>
                                     <p class="portal-copy">Show the daily baseball grind the right way: verified picks, updated records, market context, and social reaction tied to every slate.</p>
