@@ -600,7 +600,7 @@
 
         async function loadConversations() {
             try {
-                if (api.backendAvailable === true) {
+                if (api && typeof api.getConversations === 'function') {
                     const data = await api.getConversations();
                     conversations = data.conversations || [];
                 } else {
@@ -709,7 +709,7 @@
         async function loadChatMessages(userId, scrollToBottom) {
             try {
                 let messages;
-                if (api.backendAvailable === true) {
+                if (api && typeof api.getMessages === 'function') {
                     const data = await api.getMessages(userId);
                     messages = data.messages || [];
                 } else {
@@ -779,7 +779,7 @@
             sendBtn.textContent = '...';
 
             try {
-                if (api.backendAvailable === true) {
+                if (api && typeof api.sendMessage === 'function') {
                     await api.sendMessage(activeConversationUserId, content);
                 } else {
                     // localStorage fallback

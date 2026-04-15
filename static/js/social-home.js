@@ -83,7 +83,7 @@ async function loadSidebarStats(user) {
     const sc = document.getElementById('myStatsCard');
     sc.style.display = 'block';
     try {
-        if (api.backendAvailable) {
+        if (api && typeof api.request === 'function') {
             const data = await api.request(`/users/${user.username}`);
             const u = data.user || {};
             const wins = u.wins || 0, losses = u.losses || 0, pushes = u.pushes || 0;
@@ -105,7 +105,7 @@ async function loadSidebarStats(user) {
 // ==================== NOTIFICATION BADGE ====================
 async function loadNotificationBadge() {
     try {
-        if (!api.backendAvailable) return;
+        if (!api || typeof api.request !== 'function') return;
         const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
         if (!user) return;
         const data = await api.request('/notifications/unread-count');
@@ -161,14 +161,14 @@ async function submitPost() {
         if (postType === 'poll') {
             const opts = Array.from(document.querySelectorAll('#pollOpts .poll-input')).map(i => i.value.trim()).filter(Boolean);
             if (opts.length < 2) { alert('Need at least 2 options.'); btn.disabled = false; btn.textContent = 'Post'; return; }
-            if (api.backendAvailable) {
+            if (api && typeof api.request === 'function') {
                 await api.request('/polls', {
                     method: 'POST',
                     body: { title: content, options: opts.map(t => ({ text: t })), sport: sport || undefined, scoring_type: 'binary', points_correct: 100 }
                 });
             }
         } else {
-            if (api.backendAvailable) {
+            if (api && typeof api.request === 'function') {
                 await api.request('/feed', {
                     method: 'POST',
                     body: { content, post_type: postType === 'hot-take' ? 'hot_take' : 'text', sport }
@@ -200,7 +200,7 @@ async function loadFeed() {
     let items = [];
 
     try {
-        if (api.backendAvailable) {
+        if (api && typeof api.request === 'function') {
             // Fetch unified feed
             const filterParam = currentFilter === 'hot-takes' ? 'posts' : currentFilter;
             const data = await api.request(`/feed?limit=${FEED_LIMIT}&offset=${feedOffset}&filter=${filterParam}`);
@@ -642,7 +642,7 @@ async function loadTrending() {
     const heroTrending = document.getElementById('heroTrendingCount');
     if (!el) return;
     try {
-        if (api.backendAvailable) {
+        if (api && typeof api.request === 'function') {
             const data = await api.request('/social/discover?limit=5');
             const picks = data.picks || [];
             if (picks.length) {
@@ -666,7 +666,7 @@ async function loadSuggested() {
     const heroSuggested = document.getElementById('heroSuggestedCount');
     if (!el) return;
     try {
-        if (api.backendAvailable) {
+        if (api && typeof api.request === 'function') {
             const data = await api.request('/users?limit=5');
             const users = (data.users || []).filter(u => !viewerUser || String(u.id) !== String(viewerUser.id));
             if (users.length) {
@@ -698,7 +698,7 @@ async function loadSuggested() {
 }
 
 async function hydrateFollowingState() {
-    if (!viewerUser || !api.backendAvailable) return;
+    if (!viewerUser || !api || typeof api.getFollowing !== 'function') return;
     try {
         const userId = viewerUser.id || (await fetchCurrentViewerId());
         if (!userId) return;
