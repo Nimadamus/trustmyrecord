@@ -4542,11 +4542,28 @@
         }
 
         .portal-hero-image {
+            position: relative;
             min-height: 410px;
-            background:
-                linear-gradient(130deg, rgba(16,35,56,0.16), rgba(16,35,56,0.74)),
-                url('static/media/steph-curry-hero.gif') center/cover no-repeat;
             background-color: #102338;
+            overflow: hidden;
+        }
+
+        .portal-hero-image::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(130deg, rgba(16,35,56,0.12), rgba(16,35,56,0.68));
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .portal-hero-image img {
+            width: 100%;
+            height: 100%;
+            min-height: 410px;
+            display: block;
+            object-fit: cover;
+            object-position: center center;
         }
 
         .portal-home-layout {
@@ -9863,7 +9880,9 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="portal-hero-image"></div>
+                        <div class="portal-hero-image">
+                            <img src="static/media/steph-curry-hero.gif" alt="Steph Curry animated hero">
+                        </div>
                     </div>
                 </section>
 
