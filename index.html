@@ -4845,6 +4845,10 @@
             height: 220px;
             position: relative;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 22px;
             background-size: cover;
             background-position: center;
         }
@@ -4853,6 +4857,7 @@
             content: '';
             position: absolute;
             inset: 0;
+            z-index: 0;
             background:
                 radial-gradient(circle at 70% 25%, rgba(255,255,255,0.20), transparent 28%),
                 linear-gradient(135deg, rgba(7,21,37,0.08), rgba(7,21,37,0.52));
@@ -4870,6 +4875,81 @@
             font-weight: 900;
             letter-spacing: 0.1em;
             text-transform: uppercase;
+            z-index: 3;
+        }
+
+        .story-visual-card {
+            position: relative;
+            z-index: 2;
+            width: min(92%, 360px);
+            border: 1px solid rgba(217, 236, 255, 0.24);
+            border-radius: 18px;
+            background: rgba(7, 21, 37, 0.72);
+            box-shadow: 0 24px 58px rgba(0,0,0,0.28);
+            color: #ffffff;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+        }
+
+        .story-visual-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 13px 15px;
+            border-bottom: 1px solid rgba(217, 236, 255, 0.16);
+            font-size: 0.78rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #9ccaff;
+        }
+
+        .story-visual-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            padding: 15px;
+        }
+
+        .story-visual-stat {
+            border-radius: 13px;
+            background: rgba(255,255,255,0.08);
+            padding: 12px 10px;
+            text-align: center;
+        }
+
+        .story-visual-stat strong {
+            display: block;
+            font-size: 1.05rem;
+            margin-bottom: 4px;
+        }
+
+        .story-visual-stat span {
+            display: block;
+            color: rgba(255,255,255,0.70);
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .story-visual-lines {
+            padding: 0 15px 16px;
+        }
+
+        .story-visual-line {
+            height: 8px;
+            border-radius: 999px;
+            margin-top: 8px;
+            background: linear-gradient(90deg, rgba(88,166,255,0.95), rgba(255,255,255,0.28));
+        }
+
+        .story-visual-line:nth-child(2) {
+            width: 78%;
+        }
+
+        .story-visual-line:nth-child(3) {
+            width: 54%;
         }
 
         .portal-story-image.story-nfl {
@@ -10168,14 +10248,42 @@
 
                         <div class="portal-story-grid">
                             <article class="portal-story-card">
-                                <div class="portal-story-image story-nfl"></div>
+                                <div class="portal-story-image story-nfl">
+                                    <div class="story-visual-card">
+                                        <div class="story-visual-top"><span>Sharp Board</span><span>NFL</span></div>
+                                        <div class="story-visual-grid">
+                                            <div class="story-visual-stat"><strong>61%</strong><span>Win</span></div>
+                                            <div class="story-visual-stat"><strong>+14.2u</strong><span>Units</span></div>
+                                            <div class="story-visual-stat"><strong>+9.8%</strong><span>ROI</span></div>
+                                        </div>
+                                        <div class="story-visual-lines">
+                                            <div class="story-visual-line"></div>
+                                            <div class="story-visual-line"></div>
+                                            <div class="story-visual-line"></div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="portal-story-body">
                                     <h3>NFL Board Coverage and Weekly Matchup Angles</h3>
                                     <p class="portal-copy">Feature the biggest NFL spots of the week with board movement, matchup analysis, and the strongest records behind the picks.</p>
                                 </div>
                             </article>
                             <article class="portal-story-card">
-                                <div class="portal-story-image story-mlb"></div>
+                                <div class="portal-story-image story-mlb">
+                                    <div class="story-visual-card">
+                                        <div class="story-visual-top"><span>Daily Card</span><span>MLB</span></div>
+                                        <div class="story-visual-grid">
+                                            <div class="story-visual-stat"><strong>F5</strong><span>Market</span></div>
+                                            <div class="story-visual-stat"><strong>O 7.5</strong><span>Total</span></div>
+                                            <div class="story-visual-stat"><strong>-108</strong><span>Odds</span></div>
+                                        </div>
+                                        <div class="story-visual-lines">
+                                            <div class="story-visual-line"></div>
+                                            <div class="story-visual-line"></div>
+                                            <div class="story-visual-line"></div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="portal-story-body">
                                     <h3>MLB Daily Action, Results, and Public Tracking</h3>
                                     <p class="portal-copy">Show the daily baseball grind the right way: verified picks, updated records, market context, and social reaction tied to every slate.</p>
