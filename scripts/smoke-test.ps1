@@ -12,7 +12,7 @@ function Add-Failure {
 
 $htmlFiles = Get-ChildItem $Root -Filter *.html
 
-$forbiddenPattern = 'index\.html#leaderboards|href="index\.html"[^>]*>Picks|showSection\(''leaderboard''\)|volleyball|cycling|bicycle|bike'
+$forbiddenPattern = 'index\.html#leaderboards|href="index\.html"[^>]*>Picks|href="#(?:picks|leaderboards|profile)"|showSection\(''leaderboard''\)|volleyball|cycling|bicycle|bike'
 $estimatedPattern = 'Estimated lines|Some lines are estimated|Generated odds|Pre-generated odds|Estimated from full-game|Modeled first 5|Fallback pricing|title="Estimated odds"|deriveMlbFirst5Fallback'
 
 foreach ($file in $htmlFiles) {
