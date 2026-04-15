@@ -4294,20 +4294,20 @@
         }
 
         header {
-            background: linear-gradient(180deg, #ffffff 0%, #eef3ea 100%);
-            border-bottom: 1px solid #cfd8cf;
+            background: #ffffff;
+            border-bottom: 1px solid #d8e1ec;
             border-radius: 0;
-            box-shadow: 0 10px 32px rgba(16, 35, 26, 0.08);
+            box-shadow: 0 10px 30px rgba(16, 35, 56, 0.07);
         }
 
         .header-content {
             display: grid;
-            grid-template-columns: auto minmax(760px, 1fr) auto;
+            grid-template-columns: minmax(230px, auto) minmax(520px, 1fr) minmax(190px, auto);
             grid-template-areas: "logo nav actions";
             align-items: center;
-            min-height: 118px;
-            gap: 30px;
-            padding: 0 28px;
+            min-height: 92px;
+            gap: 24px;
+            padding: 0 32px;
         }
 
         .header-content > div:first-child {
@@ -4322,43 +4322,45 @@
         }
 
         .logo {
-            font-family: 'Bebas Neue', 'Barlow', sans-serif;
-            font-size: 2.9rem;
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 2.15rem;
             font-weight: 900;
-            letter-spacing: 0.03em;
-            color: #08110a;
+            letter-spacing: -0.04em;
+            color: #071525;
             text-shadow: none;
             line-height: 1;
+            white-space: nowrap;
         }
 
         .main-nav {
             grid-area: nav;
             display: flex;
             width: 100%;
-            gap: 34px;
+            gap: 6px;
             flex-wrap: wrap;
-            justify-content: space-evenly;
+            justify-content: center;
             align-items: center;
         }
 
         .nav-link {
-            color: #0b0b0b;
-            font-family: 'Bebas Neue', 'Barlow', sans-serif;
-            font-weight: 900;
-            font-size: 2.2rem;
+            color: #304457;
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 1.04rem;
             text-transform: none;
-            letter-spacing: 0.02em;
-            padding: 28px 12px;
+            letter-spacing: -0.01em;
+            padding: 12px 13px;
             border: none;
             background: transparent;
             box-shadow: none;
-            border-radius: 0;
+            border-radius: 999px;
             text-align: center;
-            line-height: 1;
+            line-height: 1.1;
         }
 
         .nav-link:hover {
-            color: #0f8f3a;
+            color: #0b63ce;
+            background: #eef6ff;
             text-shadow: none;
             transform: none;
         }
@@ -4400,25 +4402,30 @@
 
         .portal-sports-nav {
             margin: 0;
-            padding: 0 20px;
-            border-bottom: 1px solid #d4ddd2;
-            color: #0f1c11;
-            background: linear-gradient(180deg, #f3f7ef 0%, #edf3e9 100%);
+            padding: 0 32px;
+            border-bottom: 1px solid #d8e1ec;
+            border-top: 1px solid #eef3f8;
+            color: #304457;
+            background: #f8fafc;
             font-family: 'Barlow', 'Inter', sans-serif;
-            font-size: 1.12rem;
+            font-size: 1rem;
             font-weight: 800;
-            min-height: 62px;
-            gap: 28px;
+            min-height: 60px;
+            gap: 10px;
+            justify-content: center;
         }
 
         .portal-sports-nav span {
-            padding-bottom: 18px;
+            display: inline-flex;
+            align-items: center;
+            min-height: 60px;
+            padding: 0 16px;
             border-bottom: 2px solid transparent;
         }
 
         .portal-sports-nav span.active {
-            color: #0f8f3a;
-            border-bottom-color: #0f8f3a;
+            color: #0b63ce;
+            border-bottom-color: #0b63ce;
         }
 
         #home.page-section {
@@ -4427,52 +4434,56 @@
 
         .hero.portal-hero {
             padding: 0;
-            background: linear-gradient(135deg, #07130b 0%, #0f2617 45%, #15331f 100%);
+            background: linear-gradient(135deg, #071525 0%, #102f55 52%, #164a80 100%);
             border: none;
-            border-radius: 22px;
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 34px 84px rgba(7, 19, 11, 0.26);
+            box-shadow: 0 28px 72px rgba(7, 21, 37, 0.20);
         }
 
         .portal-hero-grid {
             display: grid;
-            grid-template-columns: 1.02fr 0.98fr;
-            min-height: 410px;
+            grid-template-columns: 1.15fr 0.85fr;
+            min-height: 340px;
         }
 
         .portal-hero-copy {
-            padding: 48px 42px;
-            background: linear-gradient(135deg, #07130b 0%, #0f2617 45%, #15331f 100%);
+            padding: 40px 44px;
+            background: linear-gradient(135deg, #071525 0%, #102f55 52%, #164a80 100%);
             color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .portal-hero-copy h1 {
             font-family: 'Bebas Neue', 'Barlow', sans-serif;
-            font-size: clamp(3.9rem, 8vw, 6.2rem);
-            line-height: 0.9;
-            margin: 0 0 18px;
+            font-size: clamp(3rem, 5.8vw, 4.75rem);
+            line-height: 0.94;
+            margin: 0 0 14px;
             text-transform: none;
             letter-spacing: 0.01em;
             color: #ffffff;
+            max-width: 780px;
         }
 
         .portal-hero-copy p {
-            color: rgba(255,255,255,0.82);
-            max-width: 720px;
+            color: rgba(255,255,255,0.84);
+            max-width: 650px;
             margin: 0;
-            font-size: 1.18rem;
+            font-size: 1.04rem;
             font-weight: 600;
-            line-height: 1.7;
+            line-height: 1.62;
         }
 
         .portal-eyebrow {
             display: inline-flex;
             padding: 10px 14px;
-            margin-bottom: 18px;
+            margin-bottom: 14px;
             border-radius: 999px;
-            background: rgba(57, 199, 92, 0.16);
-            color: #d4ffdf;
-            font-size: 0.9rem;
+            background: rgba(86, 174, 255, 0.16);
+            color: #d9ecff;
+            font-size: 0.78rem;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.08em;
@@ -4536,9 +4547,14 @@
 
         .portal-hero-image {
             position: relative;
-            min-height: 410px;
-            background-color: #102338;
+            min-height: 340px;
+            background:
+                radial-gradient(circle at 55% 45%, rgba(86, 174, 255, 0.22), transparent 44%),
+                linear-gradient(135deg, #0b2038, #071525);
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .portal-hero-image::before {
@@ -4551,12 +4567,16 @@
         }
 
         .portal-hero-image img {
-            width: 100%;
-            height: 100%;
-            min-height: 410px;
+            width: auto;
+            height: auto;
+            max-width: 82%;
+            max-height: 300px;
+            min-height: 0;
             display: block;
-            object-fit: cover;
+            object-fit: contain;
             object-position: center center;
+            position: relative;
+            z-index: 2;
         }
 
         .portal-home-layout {
@@ -4864,15 +4884,20 @@
                 grid-template-columns: 1fr;
                 grid-template-areas:
                     "logo"
-                    "actions"
-                    "nav";
-                justify-items: start;
+                    "nav"
+                    "actions";
+                justify-items: center;
                 padding-top: 16px;
                 padding-bottom: 16px;
+                gap: 14px;
             }
 
             .header-actions {
-                justify-self: start;
+                justify-self: center;
+            }
+
+            .main-nav {
+                justify-content: center;
             }
         }
 
@@ -9742,7 +9767,7 @@
         <header>
             <div class="header-content">
                     <div style="display: flex; align-items: center; gap: 20px;">
-                        <div class="logo" onclick="showSection('home')">TRUST<span style="color: #23c552; text-shadow: 0 0 18px rgba(35,197,82,0.22);">MY</span>RECORD</div>
+                        <div class="logo" onclick="showSection('home')">TRUST<span style="color: #0b63ce; text-shadow: none;">MY</span>RECORD</div>
                     </div>
 
 
@@ -9777,7 +9802,7 @@
             <div class="mobile-nav-backdrop" id="mobileNavBackdrop" onclick="closeMobileNav()"></div>
             <div class="mobile-nav-overlay" id="mobileNavOverlay">
                 <div class="mobile-nav-header">
-                    <span class="mobile-nav-title">TRUST<span style="color: #f58220; -webkit-text-fill-color: #f58220;">MY</span>RECORD</span>
+                    <span class="mobile-nav-title">TRUST<span style="color: #0b63ce; -webkit-text-fill-color: #0b63ce;">MY</span>RECORD</span>
                     <button class="mobile-nav-close" onclick="closeMobileNav()" aria-label="Close navigation menu">
                         <i class="fas fa-times"></i>
                     </button>

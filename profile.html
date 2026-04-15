@@ -263,6 +263,61 @@
         .negative { color: var(--accent-red); }
         .neutral { color: var(--text-primary); }
 
+        .profile-workspace-section {
+            padding: 4px 0 22px;
+        }
+
+        .workspace-nav-card,
+        .stats-table-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 22px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .workspace-nav-card {
+            padding: 22px 24px;
+        }
+
+        .workspace-nav-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .workspace-tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .workspace-tab {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 0 18px;
+            border-radius: 999px;
+            border: 1px solid var(--border-color);
+            background: #f8fafc;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.86rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .workspace-tab.active,
+        .workspace-tab:hover {
+            background: #102338;
+            border-color: #102338;
+            color: #ffffff;
+        }
+
         /* ==================== PICKS TABLE ==================== */
         .picks-section { padding: 0 0 24px; }
 
@@ -380,6 +435,67 @@
         }
 
         .breakdown-grid { display: grid; gap: 8px; }
+
+        .stats-table-card {
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .stats-table-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(150, 179, 214, 0.12);
+            flex-wrap: wrap;
+        }
+
+        .stats-table-note {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .stats-summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.84rem;
+        }
+
+        .stats-summary-table thead {
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stats-summary-table th,
+        .stats-summary-table td {
+            padding: 14px 18px;
+            text-align: left;
+            border-bottom: 1px solid rgba(150, 179, 214, 0.1);
+            vertical-align: top;
+        }
+
+        .stats-summary-table th {
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .stats-summary-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .stats-metric-label {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stats-metric-context {
+            color: var(--text-secondary);
+        }
 
         .breakdown-row {
             display: flex;
@@ -534,8 +650,10 @@
             .profile-meta { justify-content: center; }
             .profile-actions { justify-content: center; }
             .summary-grid { grid-template-columns: repeat(3, 1fr); }
+            .workspace-nav-head { align-items: flex-start; }
             .picks-table-wrapper { overflow-x: auto; }
             .picks-table { min-width: 700px; }
+            .stats-summary-table { min-width: 720px; }
             nav { display: none; }
             .analytics-grid { grid-template-columns: repeat(2, 1fr); }
             .site-footer-inner { grid-template-columns: 1fr; }
@@ -600,6 +718,24 @@
         </div>
     </section>
 
+    <section class="profile-workspace-section">
+        <div class="container">
+            <div class="workspace-nav-card">
+                <div class="workspace-nav-head">
+                    <div>
+                        <div class="section-title">Profile Workspace</div>
+                        <div class="section-subtitle">Clean performance tracking, full pick filters, and direct tabs into community products.</div>
+                    </div>
+                    <div class="workspace-tabs">
+                        <a class="workspace-tab active" id="profilePerformanceTab" href="profile.html">Performance</a>
+                        <a class="workspace-tab" id="profileTriviaTab" href="trivia.html">Trivia</a>
+                        <a class="workspace-tab" id="profilePollsTab" href="polls.html">Polls</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section class="picks-section">
         <div class="container">
             <div class="section-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
@@ -641,6 +777,25 @@
 
     <section class="analytics-section" id="analyticsSection" style="display:none;">
         <div class="container">
+            <div class="stats-table-card">
+                <div class="stats-table-head">
+                    <div class="section-title">Advanced Performance Table</div>
+                    <div class="stats-table-note">Pick Monitor style summary with live filters applied to every metric below.</div>
+                </div>
+                <div class="picks-table-wrapper" style="border:none;border-radius:0;box-shadow:none;background:transparent;">
+                    <table class="stats-summary-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                                <th>Context</th>
+                            </tr>
+                        </thead>
+                        <tbody id="advancedStatsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
             <div class="section-header"><div class="section-title">Performance Overview</div></div>
             <div class="analytics-grid" id="analyticsGrid"></div>
 
@@ -706,6 +861,13 @@
                         <option value="even">Even (+100 to -109)</option>
                         <option value="dog">Underdog (+101 to +200)</option>
                         <option value="longshot">Longshot (+201+)</option>
+                    </select>
+                    <select id="filterUnits" onchange="applyFilters()" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:.85rem;">
+                        <option value="">All Unit Sizes</option>
+                        <option value="0-1">0.5u to 1u</option>
+                        <option value="1.5-2">1.5u to 2u</option>
+                        <option value="2.5-3">2.5u to 3u</option>
+                        <option value="3plus">3u and up</option>
                     </select>
                     <select id="filterPeriod" onchange="applyFilters()" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:.85rem;">
                         <option value="all">All Time</option>
@@ -1149,11 +1311,23 @@
             '<button type="button" class="profile-meta-item" style="background:none;border:none;padding:0;cursor:pointer;" onclick="openSocialList(\'followers\')">' + (Number(p.follower_count) || 0) + ' followers</button>' +
             '<button type="button" class="profile-meta-item" style="background:none;border:none;padding:0;cursor:pointer;" onclick="openSocialList(\'following\')">' + (Number(p.following_count) || 0) + ' following</button>' +
             '</div>' + actions + '</div>';
+
+        updateWorkspaceLinks(p.username);
+    }
+
+    function updateWorkspaceLinks(username) {
+        const safeUser = encodeURIComponent(username || profileUsername || '');
+        const performanceTab = document.getElementById('profilePerformanceTab');
+        const triviaTab = document.getElementById('profileTriviaTab');
+        const pollsTab = document.getElementById('profilePollsTab');
+        if (performanceTab) performanceTab.href = 'profile.html' + (safeUser ? ('?user=' + safeUser) : '');
+        if (triviaTab) triviaTab.href = 'trivia.html' + (safeUser ? ('?user=' + safeUser) : '');
+        if (pollsTab) pollsTab.href = 'polls.html' + (safeUser ? ('?user=' + safeUser) : '');
     }
 
     // ======================== SUMMARY BAR ========================
     function renderSummaryBar(s) {
-        if (latestAdvancedStats && latestAdvancedStats.summary) {
+        if (latestAdvancedStats && latestAdvancedStats.summary && !hasLocalOnlyFiltersActive()) {
             return renderSummaryBarFromAdvanced(latestAdvancedStats.summary, s);
         }
         document.getElementById('summaryBar').style.display = 'block';
@@ -1275,7 +1449,9 @@
         if (s.total === 0) return;
         section.style.display = 'block';
 
-        const summary = latestAdvancedStats && latestAdvancedStats.summary ? latestAdvancedStats.summary : null;
+        const summary = latestAdvancedStats && latestAdvancedStats.summary && !hasLocalOnlyFiltersActive()
+            ? latestAdvancedStats.summary
+            : null;
         const avgOddsValue = summary ? Number(summary.avg_odds || 0) : s.avgOdds;
         const avgUnitsValue = summary ? Number(summary.avg_units || 0) : s.avgUnits;
         const pendingValue = summary ? Number(summary.pending_picks || 0) : s.pending;
@@ -1287,6 +1463,8 @@
             ac('Average Odds', ao, '') + ac('Avg Units / Pick', avgUnitsValue.toFixed(2) + 'u', '') +
             ac('Best Streak', s.bestStreak + 'W', 'positive') + ac('Worst Streak', s.worstStreak + 'L', 'negative') +
             ac('Current Streak', st, stc) + ac('Pending', '' + pendingValue, '');
+
+        renderAdvancedStatsTable(s, picksArr);
 
         // By Bet Type
         const btg = document.getElementById('betTypeGrid');
@@ -1306,6 +1484,59 @@
         renderPerformanceTimeline(picksArr);
         // Populate filter dropdowns
         populateFilterDropdowns();
+    }
+
+    function renderAdvancedStatsTable(s, picksArr) {
+        const body = document.getElementById('advancedStatsTableBody');
+        if (!body) return;
+
+        const source = picksArr || allLoadedPicks;
+        const adv = computeAdvancedStats(source);
+        const summary = latestAdvancedStats && latestAdvancedStats.summary && !hasLocalOnlyFiltersActive()
+            ? latestAdvancedStats.summary
+            : null;
+        const avgOddsValue = summary ? Number(summary.avg_odds || 0) : s.avgOdds;
+        const avgUnitsValue = summary ? Number(summary.avg_units || 0) : s.avgUnits;
+        const pendingValue = summary ? Number(summary.pending_picks || 0) : s.pending;
+        const record = summary
+            ? [Number(summary.wins || 0), Number(summary.losses || 0), Number(summary.pushes || 0)].join('-')
+            : [s.wins, s.losses, s.pushes].join('-');
+        const currentStreak = s.currentStreak > 0 ? s.currentStreak + 'W' : s.currentStreak < 0 ? Math.abs(s.currentStreak) + 'L' : '0';
+        const rows = [
+            ['Record', record, 'Wins-Losses-Pushes after filters'],
+            ['ROI', (s.roi >= 0 ? '+' : '') + s.roi.toFixed(1) + '%', 'Return on risked units'],
+            ['Net Units', (s.netUnits >= 0 ? '+' : '') + s.netUnits.toFixed(2) + 'u', 'Total profit/loss'],
+            ['Win Rate', s.winRate.toFixed(1) + '%', 'Wins divided by decisions'],
+            ['Total Picks', String(s.total), 'All picks matching current filters'],
+            ['Pending Picks', String(pendingValue), 'Open picks not graded yet'],
+            ['Average Odds', avgOddsValue != null ? (avgOddsValue > 0 ? '+' : '') + avgOddsValue : 'N/A', 'Average American price'],
+            ['Average Units', avgUnitsValue.toFixed(2) + 'u', 'Average risk per pick'],
+            ['Current Streak', currentStreak, 'Current graded streak'],
+            ['Best Streak', s.bestStreak + 'W', 'Longest winning streak'],
+            ['Worst Streak', s.worstStreak + 'L', 'Longest losing streak']
+        ];
+
+        if (adv) {
+            rows.push(
+                ['Effective Units', (adv.eU >= 0 ? '+' : '') + adv.eU.toFixed(2), 'Normalized to 3u sizing'],
+                ['Effective Win %', adv.eWP.toFixed(1) + '%', 'Equivalent win rate at -110'],
+                ['Z-Score', adv.zScore.toFixed(2), 'Signal strength versus implied probability'],
+                ['Confidence', adv.confidence.toFixed(1) + '%', 'Confidence in edge estimate'],
+                ['Projected ROI', (adv.pROI >= 0 ? '+' : '') + adv.pROI.toFixed(1) + '%', 'Confidence-weighted projection'],
+                ['Sharpe Ratio', adv.sharpe.toFixed(3), 'Return relative to variance'],
+                ['Sortino Ratio', adv.sortino.toFixed(3), 'Downside-adjusted return'],
+                ['Max Drawdown', adv.maxDD.toFixed(2) + 'u', 'Largest peak-to-trough slide'],
+                ['Kelly %', adv.kelly.toFixed(1) + '%', 'Suggested sizing baseline']
+            );
+        }
+
+        body.innerHTML = rows.map(function(row) {
+            return '<tr>' +
+                '<td class="stats-metric-label">' + row[0] + '</td>' +
+                '<td>' + row[1] + '</td>' +
+                '<td class="stats-metric-context">' + row[2] + '</td>' +
+                '</tr>';
+        }).join('');
     }
 
     function renderUnitSizeBreakdown(picksArr) {
@@ -1773,6 +2004,11 @@
         };
     }
 
+    function hasLocalOnlyFiltersActive() {
+        const units = document.getElementById('filterUnits');
+        return !!((units && units.value) || activeQuickFilter);
+    }
+
     function marketTypeLabel(value) {
         return {
             h2h: 'Moneyline',
@@ -1835,6 +2071,15 @@
             return;
         }
 
+        if (hasLocalOnlyFiltersActive()) {
+            latestAdvancedStats = null;
+            renderSportGridFromPicks(getFilteredPicks());
+            renderBetTypeBreakdownFromPicks();
+            renderOddsRangeBreakdown();
+            renderRecentForm();
+            return;
+        }
+
         try {
             const data = await api.getUserAdvancedStats(profileUsername, getAdvancedStatsFilters());
             latestAdvancedStats = data;
@@ -1876,6 +2121,7 @@
         const type = document.getElementById('filterType').value;
         const result = document.getElementById('filterResult').value;
         const odds = document.getElementById('filterOdds').value;
+        const units = document.getElementById('filterUnits').value;
         const period = document.getElementById('filterPeriod').value;
 
         let filtered = [...allLoadedPicks];
@@ -1899,6 +2145,16 @@
                 return true;
             });
         }
+        if (units) {
+            filtered = filtered.filter(p => {
+                const u = Number(p.units || 0);
+                if (units === '0-1') return u > 0 && u <= 1;
+                if (units === '1.5-2') return u >= 1.5 && u <= 2;
+                if (units === '2.5-3') return u >= 2.5 && u <= 3;
+                if (units === '3plus') return u >= 3;
+                return true;
+            });
+        }
 
         // Quick filter: favorites/underdogs
         if (activeQuickFilter === 'fav') {
@@ -1918,8 +2174,9 @@
         const type = document.getElementById('filterType').value;
         const result = document.getElementById('filterResult').value;
         const odds = document.getElementById('filterOdds').value;
+        const units = document.getElementById('filterUnits').value;
         const period = document.getElementById('filterPeriod').value;
-        const hasFilter = sport || type || result || odds || (period && period !== 'all') || activeQuickFilter;
+        const hasFilter = sport || type || result || odds || units || (period && period !== 'all') || activeQuickFilter;
 
         // Update filter banner (FIX 5)
         const banner = document.getElementById('filterBanner');
@@ -1933,6 +2190,10 @@
             if (odds) {
                 const oddsLabels = { 'heavy-fav': 'Heavy Favorites', 'fav': 'Favorites', 'even': 'Even Money', 'dog': 'Underdogs', 'longshot': 'Longshots' };
                 parts.push(oddsLabels[odds] || odds);
+            }
+            if (units) {
+                const unitLabels = { '0-1': '0.5u to 1u', '1.5-2': '1.5u to 2u', '2.5-3': '2.5u to 3u', '3plus': '3u and up' };
+                parts.push(unitLabels[units] || units);
             }
             if (period && period !== 'all') {
                 const periodLabels = { '7': 'Last 7 Days', '30': 'Last 30 Days', '90': 'Last 90 Days', '365': 'Last Year' };
@@ -1980,6 +2241,7 @@
         document.getElementById('filterType').value = '';
         document.getElementById('filterResult').value = '';
         document.getElementById('filterOdds').value = '';
+        document.getElementById('filterUnits').value = '';
         document.getElementById('filterPeriod').value = 'all';
         activeQuickFilter = null;
         document.getElementById('btnFavOnly').style.background = '';
@@ -2029,6 +2291,19 @@
             });
             renderSportGrid(Object.values(sm));
         }
+    }
+
+    function renderSportGridFromPicks(picksArr) {
+        const sm = {};
+        (picksArr || []).forEach(function(p) {
+            const sk = p.sport_key || 'unknown';
+            if (!sm[sk]) sm[sk] = { sport_key: sk, wins: 0, losses: 0, pushes: 0, total_picks: 0 };
+            sm[sk].total_picks++;
+            if (p.status === 'won') sm[sk].wins++;
+            else if (p.status === 'lost') sm[sk].losses++;
+            else if (p.status === 'push' || p.status === 'pushed') sm[sk].pushes++;
+        });
+        renderSportGrid(Object.values(sm));
     }
 
     function renderMarketGrid(stats) {
@@ -2235,63 +2510,47 @@
         const existing = document.getElementById('embedModal');
         if (existing) existing.remove();
 
-        const stats = computeUnifiedStats(allLoadedPicks);
-        const adv = computeAdvancedStats(allLoadedPicks);
         const user = profileUsername || 'user';
-        const record = stats.wins + '-' + stats.losses + '-' + stats.pushes;
-        const roi = stats.roi.toFixed(1);
-        const units = stats.netUnits.toFixed(2);
-        const wr = stats.winRate.toFixed(1);
-        const conf = adv ? adv.confidence.toFixed(0) : '0';
-        const zs = adv ? adv.zScore.toFixed(2) : '0.00';
-
-        // Build recent form string
-        const graded = allLoadedPicks.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
-        const recentForm = graded.slice(0, 10).map(p => p.status === 'won' ? 'W' : p.status === 'lost' ? 'L' : 'P').join('');
-
-        const embedCode = `<!-- TrustMyRecord Verified Record Widget -->
-<div id="tmr-widget" style="font-family:Inter,system-ui,sans-serif;background:#1c1f2a;border:1px solid #2a2e3d;border-radius:12px;padding:20px;max-width:360px;color:#f0f2f5;">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-    <div style="width:36px;height:36px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff;">${user.charAt(0).toUpperCase()}</div>
-    <div><div style="font-weight:700;font-size:15px;">@${user}</div><div style="font-size:11px;color:#6b7280;">Verified by TrustMyRecord</div></div>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-bottom:12px;">
-    <div style="background:#0f1117;border-radius:8px;padding:10px 6px;"><div style="font-size:18px;font-weight:800;">${record}</div><div style="font-size:10px;color:#6b7280;text-transform:uppercase;">Record</div></div>
-    <div style="background:#0f1117;border-radius:8px;padding:10px 6px;"><div style="font-size:18px;font-weight:800;color:${parseFloat(roi) >= 0 ? '#22c55e' : '#ef4444'};">${parseFloat(roi) >= 0 ? '+' : ''}${roi}%</div><div style="font-size:10px;color:#6b7280;text-transform:uppercase;">ROI</div></div>
-    <div style="background:#0f1117;border-radius:8px;padding:10px 6px;"><div style="font-size:18px;font-weight:800;color:${parseFloat(units) >= 0 ? '#22c55e' : '#ef4444'};">${parseFloat(units) >= 0 ? '+' : ''}${units}u</div><div style="font-size:10px;color:#6b7280;text-transform:uppercase;">Units</div></div>
-  </div>
-  <div style="display:flex;justify-content:space-between;font-size:12px;color:#9ba3b5;margin-bottom:10px;">
-    <span>Win Rate: ${wr}%</span><span>Z-Score: ${zs}</span><span>Confidence: ${conf}%</span>
-  </div>
-  <div style="display:flex;gap:3px;margin-bottom:12px;">${recentForm.split('').map(r => '<div style="flex:1;height:22px;border-radius:3px;background:' + (r === 'W' ? '#22c55e' : r === 'L' ? '#ef4444' : '#6b7280') + ';display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;">' + r + '</div>').join('')}</div>
-  <a href="https://trustmyrecord.com/profile.html?user=${user}" target="_blank" style="display:block;text-align:center;padding:8px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;border-radius:8px;text-decoration:none;font-size:12px;font-weight:600;">View Full Record on TrustMyRecord</a>
-</div>`;
+        const encodedUser = encodeURIComponent(user);
+        const profileUrl = `https://trustmyrecord.com/profile.html?user=${encodedUser}`;
+        const widgetUrl = `https://trustmyrecord.com/profile-widget.html?user=${encodedUser}&theme=dark&refresh=15000`;
+        const iframeCode = `<!-- TrustMyRecord Live Profile Widget -->\n<iframe\n  src="${widgetUrl}"\n  title="TrustMyRecord profile for ${user}"\n  width="100%"\n  height="260"\n  style="max-width:420px;border:0;overflow:hidden;background:transparent;"\n  loading="lazy"\n  referrerpolicy="strict-origin-when-cross-origin"\n  scrolling="no">\n</iframe>`;
+        const scriptCode = `<!-- TrustMyRecord Auto-Resizing Profile Widget -->\n<script\n  src="https://trustmyrecord.com/static/js/profile-widget-embed.js"\n  data-username="${user}"\n  data-theme="dark"\n  data-refresh="15000"\n  data-max-width="420px">\n</script>`;
+        const previewCode = `<iframe src="${widgetUrl}" title="TrustMyRecord profile for ${user}" width="100%" height="260" style="max-width:420px;border:0;overflow:hidden;background:transparent;" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" scrolling="no"></iframe>`;
 
         const modal = document.createElement('div');
         modal.id = 'embedModal';
         modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
         modal.innerHTML = '<div style="background:#1c1f2a;border:1px solid #2a2e3d;border-radius:12px;padding:28px;max-width:600px;width:100%;max-height:85vh;overflow-y:auto;">' +
-            '<h2 style="font-size:1.15rem;font-weight:700;margin-bottom:6px;">Embed Your Verified Record</h2>' +
-            '<p style="color:var(--text-muted);font-size:.85rem;margin-bottom:20px;">Copy this HTML and paste it on your website to show your verified stats.</p>' +
-            '<div style="margin-bottom:20px;"><div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;">PREVIEW:</div>' +
-            '<div style="background:#0f1117;border-radius:8px;padding:20px;display:flex;justify-content:center;">' + embedCode + '</div></div>' +
-            '<div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;">EMBED CODE:</div>' +
-            '<textarea id="embedCodeArea" readonly style="width:100%;height:160px;padding:12px;border-radius:8px;border:1px solid var(--border-color);background:#0f1117;color:#22c55e;font-family:monospace;font-size:.75rem;resize:vertical;">' + embedCode.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea>' +
+            '<h2 style="font-size:1.15rem;font-weight:700;margin-bottom:6px;">Share Your Live TrustMyRecord Profile</h2>' +
+            '<p style="color:var(--text-muted);font-size:.85rem;margin-bottom:20px;">Use your public profile link anywhere, or embed a live auto-updating widget that refreshes every 15 seconds.</p>' +
+            '<div style="margin-bottom:20px;"><div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;">LIVE PREVIEW:</div>' +
+            '<div style="background:#0f1117;border-radius:8px;padding:20px;display:flex;justify-content:center;">' + previewCode + '</div></div>' +
+            '<div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;">PUBLIC PROFILE LINK:</div>' +
+            '<textarea id="profileShareLinkArea" readonly style="width:100%;height:68px;padding:12px;border-radius:8px;border:1px solid var(--border-color);background:#0f1117;color:#22c55e;font-family:monospace;font-size:.75rem;resize:none;margin-bottom:10px;"></textarea>' +
+            '<div style="display:flex;justify-content:flex-end;margin-bottom:16px;"><button class="btn btn-secondary" onclick="copyTextValue(\'profileShareLinkArea\', \'Profile link copied!\')">Copy Link</button></div>' +
+            '<div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;">IFRAME EMBED:</div>' +
+            '<textarea id="embedCodeArea" readonly style="width:100%;height:160px;padding:12px;border-radius:8px;border:1px solid var(--border-color);background:#0f1117;color:#22c55e;font-family:monospace;font-size:.75rem;resize:vertical;margin-bottom:10px;"></textarea>' +
+            '<div style="display:flex;justify-content:flex-end;margin-bottom:16px;"><button class="btn btn-secondary" onclick="copyTextValue(\'embedCodeArea\', \'Iframe code copied!\')">Copy Iframe</button></div>' +
+            '<div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;">SCRIPT EMBED:</div>' +
+            '<textarea id="scriptEmbedCodeArea" readonly style="width:100%;height:132px;padding:12px;border-radius:8px;border:1px solid var(--border-color);background:#0f1117;color:#22c55e;font-family:monospace;font-size:.75rem;resize:vertical;"></textarea>' +
             '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">' +
             '<button class="btn btn-secondary" onclick="document.getElementById(\'embedModal\').remove()">Close</button>' +
-            '<button class="btn btn-primary" onclick="copyEmbedCode()">Copy Code</button></div></div>';
+            '<button class="btn btn-primary" onclick="copyTextValue(\'scriptEmbedCodeArea\', \'Script embed code copied!\')">Copy Script</button></div></div>';
         document.body.appendChild(modal);
         modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 
-        // Fix the textarea to show actual HTML (not entity-escaped)
-        document.getElementById('embedCodeArea').value = embedCode;
+        document.getElementById('profileShareLinkArea').value = profileUrl;
+        document.getElementById('embedCodeArea').value = iframeCode;
+        document.getElementById('scriptEmbedCodeArea').value = scriptCode;
     }
 
-    function copyEmbedCode() {
-        const ta = document.getElementById('embedCodeArea');
+    function copyTextValue(elementId, successMessage) {
+        const ta = document.getElementById(elementId);
+        if (!ta) return;
         ta.select();
         document.execCommand('copy');
-        showToast('Embed code copied!', 'success');
+        showToast(successMessage || 'Copied!', 'success');
     }
 
     function openEditModal() {
