@@ -1,6 +1,16 @@
 ﻿// Complete Challenges/Arena Engine for Trust My Record
 // Head-to-head, Tournaments, Daily Trivia, Polls, Betting Challenges
 
+function shouldUseBackendChallengesData() {
+    const activeApi = window.api;
+    if (!activeApi) return false;
+    return !!(
+        activeApi.baseUrl ||
+        typeof activeApi.request === 'function' ||
+        typeof activeApi.getChallenges === 'function'
+    );
+}
+
 class ChallengesEngine {
     constructor() {
         this.CHALLENGES_KEY = 'tmr_challenges';
@@ -10,9 +20,12 @@ class ChallengesEngine {
         this.POLLS_KEY = 'tmr_polls';
         this.POLL_VOTES_KEY = 'tmr_poll_votes';
         this.CHALLENGE_HISTORY_KEY = 'tmr_challenge_history';
-        
-        this.initializeTrivia();
-        this.initializePolls();
+        this.backendManaged = shouldUseBackendChallengesData();
+
+        if (!this.backendManaged) {
+            this.initializeTrivia();
+            this.initializePolls();
+        }
     }
 
     /**

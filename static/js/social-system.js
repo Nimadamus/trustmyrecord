@@ -1,6 +1,17 @@
 ﻿// Complete Social System for Trust My Record
 // Followers, Following, Friends, User Discovery, Activity Feed
 
+function shouldUseBackendSocialData() {
+    const activeApi = window.api;
+    if (!activeApi) return false;
+    return !!(
+        activeApi.baseUrl ||
+        typeof activeApi.request === 'function' ||
+        typeof activeApi.getFollowers === 'function' ||
+        typeof activeApi.getFollowing === 'function'
+    );
+}
+
 class SocialSystem {
     constructor() {
         this.USERS_KEY = 'trustmyrecord_users';
@@ -554,7 +565,9 @@ class SocialSystem {
 // Create global instance
 const socialSystem = new SocialSystem();
 
-// Auto-update online status
-setInterval(() => {
-    socialSystem.updateOnlineStatus();
-}, 60000); // Every minute
+// Auto-update browser-only online status only on legacy pages without backend social data.
+if (!shouldUseBackendSocialData()) {
+    setInterval(() => {
+        socialSystem.updateOnlineStatus();
+    }, 60000); // Every minute
+}
