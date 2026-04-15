@@ -1153,10 +1153,11 @@
         if (typeof api !== 'undefined' && typeof api.loadTokens === 'function') {
             try { api.loadTokens(); } catch(e) {}
         }
-        var hasBackendAuth = typeof api !== 'undefined' && !!(api.token || api.refreshToken);
+        var hasBackendApi = typeof api !== 'undefined' && typeof api.createPick === 'function';
+        var hasBackendAuth = hasBackendApi && !!(api.token || api.refreshToken);
 
         // Try backend API first
-        if (typeof api !== 'undefined' && api.backendAvailable) {
+        if (hasBackendApi) {
             if (!hasBackendAuth) {
                 alert('Your login session expired. Please log in again before submitting picks.');
                 try { showSection('login'); } catch(e) {}
@@ -1236,7 +1237,7 @@
         var picks = [];
 
         // Try backend API first (async, will re-render when data arrives)
-        if (typeof api !== 'undefined' && api.backendAvailable && !window._tmrPicksLoading) {
+        if (typeof api !== 'undefined' && typeof api.getPicks === 'function' && !window._tmrPicksLoading) {
             window._tmrPicksLoading = true;
             var _user = null;
             try { _user = window.auth && window.auth.getCurrentUser ? window.auth.getCurrentUser() : null; } catch(e) {}
@@ -19648,7 +19649,7 @@ document.addEventListener('DOMContentLoaded', function() {
             };
 
             // Try backend API first, localStorage as fallback
-            if (typeof api !== 'undefined' && api.backendAvailable) {
+            if (typeof api !== 'undefined' && typeof api.createPick === 'function') {
                 try {
                     api.createPick({
                         game_id: newPick.game_id,
@@ -19735,7 +19736,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let picks = [];
         if (window.auth && window.auth.isLoggedIn()) {
             // Try backend API first
-            if (typeof api !== 'undefined' && api.backendAvailable) {
+            if (typeof api !== 'undefined' && typeof api.getPicks === 'function') {
                 try {
                     const user = window.auth.getCurrentUser();
                     const numericId = user.id && !String(user.id).startsWith('user_') ? user.id : null;
@@ -21171,7 +21172,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const user = window.auth.getCurrentUser();
         const userId = user.username || user.id || 'local';
         const numericUserId = (user && user.id && !String(user.id).startsWith('user_')) ? user.id : null;
-        if (typeof api !== 'undefined' && api.backendAvailable && !window._tmrMyPicksLoading && !window._tmrBackendPicks) {
+        if (typeof api !== 'undefined' && typeof api.getPicks === 'function' && !window._tmrMyPicksLoading && !window._tmrBackendPicks) {
             window._tmrMyPicksLoading = true;
             api.getPicks({ userId: numericUserId, limit: 100 }).then(function(result) {
                 window._tmrMyPicksLoading = false;

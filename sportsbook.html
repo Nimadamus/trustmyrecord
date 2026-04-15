@@ -1081,7 +1081,7 @@
         var pickSaved = false;
 
         // Try backend API first
-        if (typeof api !== 'undefined' && api.backendAvailable) {
+        if (typeof api !== 'undefined' && typeof api.createPick === 'function') {
             try {
                 var backendPick = {
                     game_id: newPick.game_id,
@@ -1156,7 +1156,7 @@
         var picks = [];
 
         // Try backend API first (async, will re-render when data arrives)
-        if (typeof api !== 'undefined' && api.backendAvailable && !window._tmrPicksLoading) {
+        if (typeof api !== 'undefined' && typeof api.getPicks === 'function' && !window._tmrPicksLoading) {
             window._tmrPicksLoading = true;
             var _user = null;
             try { _user = window.auth && window.auth.getCurrentUser ? window.auth.getCurrentUser() : null; } catch(e) {}
@@ -17706,7 +17706,7 @@ document.addEventListener('DOMContentLoaded', function() {
             };
 
             // Try backend API first, localStorage as fallback
-            if (typeof api !== 'undefined' && api.backendAvailable) {
+            if (typeof api !== 'undefined' && typeof api.createPick === 'function') {
                 try {
                     api.createPick({
                         game_id: newPick.game_id,
@@ -17793,7 +17793,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let picks = [];
         if (window.auth && window.auth.isLoggedIn()) {
             // Try backend API first
-            if (typeof api !== 'undefined' && api.backendAvailable) {
+            if (typeof api !== 'undefined' && typeof api.getPicks === 'function') {
                 try {
                     const user = window.auth.getCurrentUser();
                     const numericId = user.id && !String(user.id).startsWith('user_') ? user.id : null;

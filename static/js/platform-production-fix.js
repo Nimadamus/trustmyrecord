@@ -43,7 +43,12 @@
         } catch (err) {
             return false;
         }
-        return !!api.backendAvailable;
+        if (!api.backendAvailable && typeof api.detectBackend === 'function') {
+            try {
+                await api.detectBackend();
+            } catch (err) {}
+        }
+        return !!(api.baseUrl || typeof api.request === 'function' || typeof api.getCurrentUser === 'function');
     }
 
     function getCurrentUsername() {
