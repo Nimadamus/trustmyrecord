@@ -174,7 +174,7 @@ async function loadGames() {
 
         // Fetch games from backend API (odds endpoint returns bookmakers data)
         let games = [];
-        if (window.api && window.api.backendAvailable) {
+        if (window.api && typeof window.api.getGames === 'function') {
             // Backend is available - use the odds endpoint for full data
             const baseUrl = window.api.baseUrl;
             const res = await fetch(`${baseUrl}/games/odds/${sportKey}`);
@@ -477,75 +477,48 @@ async function submitPick() {
     const sportKey = sportKeyMap[selectedSport] || selectedSport.toLowerCase();
     const marketType = marketTypeMap[selectedBetType] || selectedBetType;
 
-    // Try backend API first
-    if (window.api && window.api.backendAvailable && window.api.isLoggedIn()) {
-        try {
-            const result = await window.api.createPick({
-                game_id: selectedGameObj.id,
-                sport_key: sportKey,
-                market_type: marketType,
-                selection: selection,
-                odds_snapshot: oddsValue,
-                line_snapshot: lineValue,
-                units: selectedUnits || 1
-            });
-            alert('Pick submitted and recorded on your permanent record!');
-        } catch (err) {
-            console.error('[TMR] Backend pick submission failed:', err);
-            alert(`Pick submission failed: ${err.message || 'Unknown error'}. Please try again.`);
-            return;
-        }
-    } else {
-        // Fallback: save to localStorage
-        const pick = {
-            id: Date.now().toString(),
-            game_id: selectedGameObj.id || null,
+    // Backend API is mandatory for production
+    if (!window.api || typeof window.api.createPick !== 'function') {
+        alert('Server connection unavailable. Please refresh or try again later.');
+        return;
+    }
+
+    if (typeof window.api.loadTokens === 'function') {
+        try { window.api.loadTokens(); } catch (e) {}
+    }
+
+    if (typeof auth === 'undefined' || !auth.isLoggedIn()) {
+        alert('You must be logged in to make a pick.');
+        if (typeof showSection === 'function') showSection('login');
+        return;
+    }
+
+    if (!window.api.token && !window.api.refreshToken) {
+        alert('Your login session expired. Please log in again before submitting picks.');
+        if (typeof showSection === 'function') showSection('login');
+        return;
+    }
+
+    try {
+        const result = await window.api.createPick({
+            game_id: selectedGameObj.id,
             sport_key: sportKey,
-            sport_title: selectedSport,
-            home_team: homeTeam,
-            away_team: awayTeam,
             market_type: marketType,
             selection: selection,
-            line_snapshot: lineValue,
             odds_snapshot: oddsValue,
+            line_snapshot: lineValue,
             units: selectedUnits || 1,
-            commence_time: selectedGameObj.commence_time,
-            status: 'pending',
-            confidence: selectedConfidence,
-            reasoning: reasoning,
-            created_at: new Date().toISOString(),
-            locked_at: new Date().toISOString()
-        };
-
-        const picks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
-        picks.unshift(pick);
-        localStorage.setItem('tmr_picks', JSON.stringify(picks));
-        alert('Pick submitted! (Saved locally - connect to backend for permanent record)');
+            home_team: homeTeam,
+            away_team: awayTeam,
+            commence_time: selectedGameObj.commence_time
+        });
+        alert('Pick submitted and recorded on your permanent record!');
+        if (typeof showSection === 'function') showSection('profile');
+    } catch (err) {
+        console.error('[TMR] Backend pick submission failed:', err);
+        alert(`Pick submission failed: ${err.message || 'Unknown error'}. Please try again.`);
+        return;
     }
-
-    // Analytics: track pick submission
-    if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.pickSubmitted({ sport: selectedSport, pick_type: selectedBetType, odds: oddsValue, units: selectedUnits, league: sportKey });
-
-    // Update picks history display if it exists
-    if (typeof loadPicksHistory === 'function') {
-        loadPicksHistory();
-    }
-
-    // Reset and go back to sport selection
-    selectedSport = null;
-    selectedBetType = null;
-    selectedGame = null;
-    selectedConfidence = 3;
-    selectedUnits = 1;
-    document.getElementById('pickReasoning').value = '';
-
-    // Clear game grid
-    const gamesGrid = document.getElementById('gamesGrid');
-    if (gamesGrid) {
-        gamesGrid.innerHTML = '';
-    }
-
-    showStep('sport');
 }
 /**
  * Load picks history
@@ -570,6 +543,28 @@ function loadPicksHistory() {
         const selection = pick.selection || 'Unknown';
         const marketType = pick.market_type || pick.pickType || pick.betType || 'h2h';
         const status = pick.status || pick.result || 'pending';
+        const marketLabel = ({
+            h2h: 'Moneyline',
+            moneyline: 'Moneyline',
+            spreads: 'Spread',
+            spread: 'Spread',
+            totals: 'Game Total',
+            total: 'Game Total',
+            team_totals: 'Team Total',
+            f5_h2h: 'First 5 ML',
+            f5_spreads: 'First 5 Spread',
+            f5_totals: 'First 5 Total',
+            first_half_h2h: 'First Half ML',
+            first_half_spreads: 'First Half Spread',
+            first_half_totals: 'First Half Total',
+            second_half_h2h: 'Second Half ML',
+            second_half_spreads: 'Second Half Spread',
+            second_half_totals: 'Second Half Total',
+            period_1_h2h: '1st Period ML',
+            period_1_totals: '1st Period Total',
+            alt_spreads: 'Alt Spread',
+            alt_totals: 'Alt Total'
+        })[marketType] || String(marketType).replace(/_/g, ' ');
         
         // Format the pick description based on market type
         let pickDesc = '';
@@ -591,7 +586,7 @@ function loadPicksHistory() {
         <div class="pick-history-item ${status}">
             <div class="pick-history-header">
                 <span class="pick-sport-badge">${sportKey.split('_')[0].toUpperCase()}</span>
-                <span class="pick-bet-type">${marketType}</span>
+                <span class="pick-bet-type">${marketLabel}</span>
                 <span class="pick-date">${createdAt ? new Date(createdAt).toLocaleDateString() : 'Today'}</span>
             </div>
             <div class="pick-history-details">
