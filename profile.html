@@ -970,8 +970,8 @@
                 try { await api.ready; } catch (e) { /* detection failed */ }
             }
 
-            if (!api || !api.backendAvailable) {
-                throw new Error('Server connection unavailable. Please refresh or try again later.');
+            if (!api || typeof api.getUserProfile !== 'function') {
+                throw new Error('Profile service is unavailable. Please refresh and try again.');
             }
 
             // Get current user from auth system
@@ -996,8 +996,8 @@
     // ======================== LOAD PROFILE ========================
     async function loadProfile() {
         try {
-            if (api.backendAvailable !== true) {
-                throw new Error('Server connection unavailable.');
+            if (!api || typeof api.getUserProfile !== 'function') {
+                throw new Error('Profile service is unavailable.');
             }
 
             const data = await api.getUserProfile(profileUsername);
@@ -1041,8 +1041,7 @@
     async function loadAllPicks() {
         let picks = [];
 
-        // Backend is mandatory for production
-        if (api.backendAvailable === true) {
+        if (api && typeof api.getPicks === 'function') {
             let hasMore = true, offset = 0;
             while (hasMore) {
                 try {
@@ -1798,7 +1797,7 @@
     }
 
     async function refreshAdvancedBreakdowns() {
-        if (!profileUsername || !api || api.backendAvailable !== true) {
+        if (!profileUsername || !api || typeof api.getUserAdvancedStats !== 'function') {
             await loadSportBreakdown();
             renderBetTypeBreakdownFromPicks();
             renderOddsRangeBreakdown();
@@ -2333,7 +2332,7 @@
                 if (pendingAvatarData) updates.avatar_url = pendingAvatarData;
 
                 // Try backend first
-                if (api.backendAvailable === true) {
+                if (api && typeof api.updateProfile === 'function') {
                     try { await api.updateProfile(updates); } catch(err) { /* fall through to localStorage */ }
 
                     // Save favorite teams

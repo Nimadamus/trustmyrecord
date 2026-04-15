@@ -9335,9 +9335,9 @@
                                     <span class="action-icon">📊</span>
                                     <span class="action-text">My Record</span>
                                 </button>
-                                <button onclick="if(typeof window.autoGradeAll==='function'){window.autoGradeAll().then(function(r){alert('Grading complete: '+(r?r.graded:0)+' picks graded')}).catch(function(){alert('Grading failed')})}" class="action-btn" style="background: linear-gradient(135deg, var(--neon-green), #00cc00);">
+                                <button onclick="loadMyPicks(window.currentPicksTab||'pending'); if (typeof refreshAdvancedStats === 'function') refreshAdvancedStats();" class="action-btn" style="background: linear-gradient(135deg, var(--neon-green), #00cc00);">
                                     <span class="action-icon">✅</span>
-                                    <span class="action-text">Grade Picks</span>
+                                    <span class="action-text">Sync Results</span>
                                 </button>
                                 <button onclick="showSection('leaderboards')" class="action-btn">
                                     <span class="action-icon">🏆</span>
@@ -10946,16 +10946,44 @@
             </div>
 
             <div id="data" class="page-section">
-                <div class="coming-soon">
+                <div class="coming-soon" style="max-width: 1100px; margin: 0 auto; text-align: left;">
                     <h2>Data Core</h2>
-                    <p>Advanced analytics and insights hub in development...</p>
+                    <p style="margin-bottom: 20px;">Track real performance, market edges, and verified records from the live site.</p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px;">
+                        <a href="profile.html" style="text-decoration: none; color: inherit; background: rgba(7, 16, 32, 0.9); border: 1px solid rgba(0, 255, 255, 0.18); border-radius: 16px; padding: 20px; display: block;">
+                            <h3 style="margin: 0 0 10px; color: #00ffff;">Advanced Profiles</h3>
+                            <p style="margin: 0; color: var(--text-secondary);">View ROI, streaks, market splits, odds buckets, and recent form.</p>
+                        </a>
+                        <a href="forum.html" style="text-decoration: none; color: inherit; background: rgba(7, 16, 32, 0.9); border: 1px solid rgba(0, 255, 255, 0.18); border-radius: 16px; padding: 20px; display: block;">
+                            <h3 style="margin: 0 0 10px; color: #00ffff;">Market Discussion</h3>
+                            <p style="margin: 0; color: var(--text-secondary);">Compare line movement, post analysis, and review community angles.</p>
+                        </a>
+                        <a href="premium.html" style="text-decoration: none; color: inherit; background: rgba(7, 16, 32, 0.9); border: 1px solid rgba(0, 255, 255, 0.18); border-radius: 16px; padding: 20px; display: block;">
+                            <h3 style="margin: 0 0 10px; color: #00ffff;">Verified Leaderboards</h3>
+                            <p style="margin: 0; color: var(--text-secondary);">Surface top cappers, premium seller tiers, and performance-based rankings.</p>
+                        </a>
+                    </div>
                 </div>
             </div>
 
             <div id="blog" class="page-section">
-                <div class="coming-soon">
-                    <h2>Blog</h2>
-                    <p>Expert analysis and betting insights coming soon...</p>
+                <div class="coming-soon" style="max-width: 1100px; margin: 0 auto; text-align: left;">
+                    <h2>Analysis Hub</h2>
+                    <p style="margin-bottom: 20px;">Use the live product sections instead of placeholder editorial blocks.</p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px;">
+                        <a href="feed.html" style="text-decoration: none; color: inherit; background: rgba(7, 16, 32, 0.9); border: 1px solid rgba(0, 255, 255, 0.18); border-radius: 16px; padding: 20px; display: block;">
+                            <h3 style="margin: 0 0 10px; color: #00ffff;">Feed</h3>
+                            <p style="margin: 0; color: var(--text-secondary);">Follow real picks, reactions, and social proof from active users.</p>
+                        </a>
+                        <a href="sportsbook.html" style="text-decoration: none; color: inherit; background: rgba(7, 16, 32, 0.9); border: 1px solid rgba(0, 255, 255, 0.18); border-radius: 16px; padding: 20px; display: block;">
+                            <h3 style="margin: 0 0 10px; color: #00ffff;">Sportsbook Board</h3>
+                            <p style="margin: 0; color: var(--text-secondary);">Lock picks from the live DraftKings-backed board and track the closing line.</p>
+                        </a>
+                        <a href="profile.html" style="text-decoration: none; color: inherit; background: rgba(7, 16, 32, 0.9); border: 1px solid rgba(0, 255, 255, 0.18); border-radius: 16px; padding: 20px; display: block;">
+                            <h3 style="margin: 0 0 10px; color: #00ffff;">Pick Monitor View</h3>
+                            <p style="margin: 0; color: var(--text-secondary);">See the clean profile dashboard with records, charts, and breakdowns.</p>
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -10984,10 +11012,10 @@
                         </button>
                     </div>
 
-                    <!-- Auto-Grade Bar -->
+                    <!-- Sync Bar -->
                     <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center; flex-wrap: wrap;">
-                        <button onclick="if(typeof window.autoGradeAll==='function'){window.autoGradeAll().then(function(){loadMyPicks(window.currentPicksTab||'pending')})}" style="background: linear-gradient(135deg, #00c853, #009624); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                            <span>&#9889;</span> Auto-Grade Pending
+                        <button onclick="loadMyPicks(window.currentPicksTab||'pending'); if (typeof refreshAdvancedStats === 'function') refreshAdvancedStats();" style="background: linear-gradient(135deg, #00c853, #009624); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            <span>&#9889;</span> Sync Results
                         </button>
                         <span id="myPicksGradeStatus" style="color: #6c7380; font-size: 13px;"></span>
                     </div>
@@ -13083,8 +13111,8 @@
 
         <!-- Actions Bar -->
         <div class="stats-actions-bar">
-            <button class="stats-action-btn primary" onclick="tryAutoGradeAll()">
-                <span>⚡</span> Auto-Grade Pending
+            <button class="stats-action-btn primary" onclick="loadMyPicks(window.currentPicksTab||'pending'); refreshAdvancedStats();">
+                <span>⚡</span> Sync Results
             </button>
             <button class="stats-action-btn" onclick="refreshAdvancedStats()">
                 <span>🔄</span> Refresh
