@@ -4303,11 +4303,11 @@
 
         .header-content {
             display: grid;
-            grid-template-columns: auto 1fr auto;
+            grid-template-columns: auto minmax(760px, 1fr) auto;
             grid-template-areas: "logo nav actions";
             align-items: center;
             min-height: 78px;
-            gap: 18px;
+            gap: 24px;
             padding: 0 20px;
         }
 
@@ -4333,23 +4333,26 @@
 
         .main-nav {
             grid-area: nav;
-            gap: 18px;
+            display: flex;
+            width: 100%;
+            gap: 28px;
             flex-wrap: wrap;
-            justify-content: flex-start;
+            justify-content: space-evenly;
             align-items: center;
         }
 
         .nav-link {
             color: #516276;
             font-weight: 700;
-            font-size: 0.98rem;
+            font-size: 1.08rem;
             text-transform: none;
-            letter-spacing: 0;
-            padding: 8px 0;
+            letter-spacing: 0.01em;
+            padding: 14px 8px;
             border: none;
             background: transparent;
             box-shadow: none;
             border-radius: 0;
+            text-align: center;
         }
 
         .nav-link:hover {
@@ -4412,13 +4415,14 @@
             padding: 0 20px;
             border-bottom: 1px solid #d8dde6;
             color: #516276;
-            font-size: 0.9rem;
-            font-weight: 600;
-            min-height: 54px;
+            font-size: 0.98rem;
+            font-weight: 700;
+            min-height: 58px;
+            gap: 24px;
         }
 
         .portal-sports-nav span {
-            padding-bottom: 16px;
+            padding-bottom: 18px;
             border-bottom: 2px solid transparent;
         }
 
@@ -4442,12 +4446,12 @@
 
         .portal-hero-grid {
             display: grid;
-            grid-template-columns: 1.08fr 0.92fr;
-            min-height: 360px;
+            grid-template-columns: 1.02fr 0.98fr;
+            min-height: 410px;
         }
 
         .portal-hero-copy {
-            padding: 28px;
+            padding: 38px 36px;
             background: linear-gradient(135deg, #102338 0%, #163451 100%);
             color: #ffffff;
         }
@@ -4464,10 +4468,10 @@
 
         .portal-hero-copy p {
             color: rgba(255,255,255,0.82);
-            max-width: 620px;
+            max-width: 640px;
             margin: 0;
-            font-size: 1rem;
-            line-height: 1.7;
+            font-size: 1.04rem;
+            line-height: 1.78;
         }
 
         .portal-eyebrow {
@@ -4487,7 +4491,7 @@
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
-            margin-top: 20px;
+            margin-top: 24px;
         }
 
         .portal-hero-button {
@@ -4516,12 +4520,12 @@
         .portal-hero-stats {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-top: 22px;
+            gap: 12px;
+            margin-top: 26px;
         }
 
         .portal-hero-stat {
-            padding: 12px;
+            padding: 14px;
             border-radius: 12px;
             background: rgba(255,255,255,0.08);
         }
@@ -4540,14 +4544,14 @@
         .portal-hero-image {
             background:
                 linear-gradient(130deg, rgba(16,35,56,0.16), rgba(16,35,56,0.74)),
-                url('https://images.unsplash.com/photo-1508098682722-e99c643e7485?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
+                url('https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
         }
 
         .portal-home-layout {
-            margin-top: 20px;
+            margin-top: 24px;
             display: grid;
-            grid-template-columns: 1.38fr 0.82fr;
-            gap: 20px;
+            grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.78fr);
+            gap: 22px;
         }
 
         .portal-module,
@@ -4564,7 +4568,7 @@
             justify-content: space-between;
             align-items: center;
             gap: 14px;
-            padding: 18px 20px 0;
+            padding: 20px 22px 0;
         }
 
         .portal-module-head h2,
@@ -4584,15 +4588,15 @@
 
         .portal-copy {
             color: #637389;
-            font-size: 0.88rem;
-            line-height: 1.7;
+            font-size: 0.92rem;
+            line-height: 1.75;
         }
 
         .portal-tabs {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             flex-wrap: wrap;
-            padding: 14px 20px 0;
+            padding: 16px 22px 0;
         }
 
         .portal-tab {
@@ -4612,9 +4616,9 @@
         }
 
         .portal-games {
-            padding: 18px 20px 20px;
+            padding: 20px 22px 22px;
             display: grid;
-            gap: 12px;
+            gap: 14px;
         }
 
         .portal-game {
@@ -4759,14 +4763,14 @@
         }
 
         .portal-story-grid {
-            margin-top: 18px;
+            margin-top: 20px;
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 18px;
+            grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+            gap: 20px;
         }
 
         .portal-story-image {
-            height: 180px;
+            height: 220px;
             background-size: cover;
             background-position: center;
         }
@@ -10042,14 +10046,14 @@
 
                         <div class="portal-story-grid">
                             <article class="portal-story-card">
-                                <div class="portal-story-image" style="background-image:url('https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1200&q=80');"></div>
+                                <div class="portal-story-image" style="background-image:url('https://images.unsplash.com/photo-1504450758481-7338eba7524a?auto=format&fit=crop&w=1200&q=80');"></div>
                                 <div class="portal-story-body">
                                     <h3>Featured Matchup Analysis</h3>
                                     <p class="portal-copy">Lead with the biggest game on the board, key angles, and the sharpest writeup of the day without burying the odds experience.</p>
                                 </div>
                             </article>
                             <article class="portal-story-card">
-                                <div class="portal-story-image" style="background-image:url('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80');"></div>
+                                <div class="portal-story-image" style="background-image:url('https://images.unsplash.com/photo-1547347298-4074fc3086f0?auto=format&fit=crop&w=1200&q=80');"></div>
                                 <div class="portal-story-body">
                                     <h3>Consensus, Picks, and Market Talk</h3>
                                     <p class="portal-copy">Bring user picks, consensus movement, and discussion together in one place so the homepage feels active without turning into clutter.</p>
