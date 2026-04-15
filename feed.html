@@ -14,16 +14,96 @@
     <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260415a">
     <script defer src="static/js/tmr-sitewide.js?v=20260415a"></script>
     <style>
-        body {
+        body,
+        body.tmr-site-shell {
             font-family: 'Inter', sans-serif;
-            background: #f3f5f8;
+            background: #f3f5f8 !important;
             color: #162231;
+        }
+        body::before,
+        body::after {
+            display: none;
+        }
+        .tmr-route-note {
+            display: none;
+        }
+        .tmr-global-nav {
+            background: rgba(255,255,255,0.96);
+            border-bottom: 1px solid #d8dde6;
+            box-shadow: 0 1px 0 rgba(15,23,42,0.03);
+        }
+        .tmr-global-nav__inner {
+            min-height: 64px;
+            width: min(1360px, calc(100% - 32px));
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            gap: 18px;
+        }
+        .tmr-global-nav__brand {
+            color: #102338;
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 1.32rem;
+            letter-spacing: -0.03em;
+        }
+        .tmr-global-nav__mark {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            color: #ffffff;
+            background: #102338;
+        }
+        .tmr-global-nav__brand span span {
+            color: #f58220;
+        }
+        .tmr-global-nav__links {
+            justify-content: center;
+            gap: 4px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .tmr-global-nav__links::-webkit-scrollbar {
+            display: none;
+        }
+        .tmr-global-nav__links a,
+        .tmr-global-nav__actions a {
+            color: #526274;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.84rem;
+            font-weight: 700;
+            letter-spacing: 0;
+            text-transform: none;
+            white-space: nowrap;
+            border-radius: 8px;
+        }
+        .tmr-global-nav__links a {
+            padding: 8px 10px;
+        }
+        .tmr-global-nav__links a:hover {
+            color: #102338;
+            background: #eef4fb;
+        }
+        .tmr-global-nav__links a[aria-current="page"] {
+            color: #102338;
+            background: #e9f1fb;
+            box-shadow: inset 0 0 0 1px #cddbea;
+        }
+        .tmr-global-nav__actions {
+            gap: 8px;
+        }
+        .tmr-global-nav__button {
+            padding: 8px 12px;
+            border: 1px solid #d8dde6;
+            background: #ffffff;
+        }
+        .tmr-global-nav__button--primary {
+            color: #ffffff !important;
+            background: #f58220 !important;
         }
         .messages-top-strip,
         header,
         .page-layout,
         footer.site-footer {
-            max-width: 1440px;
+            max-width: 1360px;
             margin-left: auto;
             margin-right: auto;
         }
@@ -92,36 +172,75 @@
             border: 1px solid #d8dde6;
         }
         .page-layout {
-            padding: 22px 20px 40px;
-            grid-template-columns: 240px minmax(0, 1fr) 300px;
-            gap: 20px;
+            padding: 20px 16px 36px;
+            grid-template-columns: 220px minmax(0, 1fr) 292px;
+            gap: 18px;
         }
         .feed-hero {
-            border-radius: 18px;
+            grid-template-columns: minmax(0, 1fr) 300px;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding: 22px;
+            border-radius: 14px;
             border: 1px solid #d8dde6;
-            background: linear-gradient(135deg, #102338 0%, #163451 100%);
-            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
+            background: #ffffff !important;
+            box-shadow: 0 12px 30px rgba(18, 32, 49, 0.06) !important;
         }
+        .feed-hero::before { display: none; }
         .eyebrow {
-            color: #ffffff;
-            border: none;
-            background: rgba(255,255,255,0.1);
+            margin-bottom: 10px;
+            color: #637389;
+            border: 1px solid #d8dde6;
+            background: #f6f8fb;
+            letter-spacing: 0.08em;
         }
+        body.tmr-site-shell .feed-hero h1,
         .feed-hero h1 {
             font-family: 'Barlow', 'Inter', sans-serif;
-            max-width: 10ch;
-            letter-spacing: -0.05em;
+            max-width: 680px;
+            margin-bottom: 8px;
+            color: #102338 !important;
+            font-size: clamp(1.85rem, 2.5vw, 2.55rem) !important;
+            line-height: 1.08 !important;
+            letter-spacing: -0.025em !important;
         }
         .feed-hero p,
         .hero-stat-sub {
-            color: rgba(255,255,255,0.82);
+            color: #637389 !important;
+        }
+        .feed-hero p {
+            max-width: 720px;
+            font-size: 0.97rem;
+            line-height: 1.65;
+        }
+        .feed-hero-actions {
+            margin-top: 16px;
+        }
+        .feed-hero-actions .btn {
+            border-radius: 8px !important;
+        }
+        .feed-hero-stats {
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
         .hero-stat-card {
-            border: 1px solid rgba(255,255,255,0.08);
-            background: rgba(255,255,255,0.08);
+            min-height: 92px;
+            padding: 13px;
+            border-radius: 10px;
+            border: 1px solid #d8dde6;
+            background: #f7f9fc;
         }
-        .hero-stat-label { color: rgba(255,255,255,0.65); }
-        .hero-stat-card strong { color: #ffffff; font-family: 'Barlow', 'Inter', sans-serif; }
+        .hero-stat-label {
+            color: #6f7f92;
+            font-size: 0.66rem;
+            letter-spacing: 0.08em;
+        }
+        .hero-stat-card strong {
+            margin-top: 8px;
+            color: #102338;
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 1.38rem;
+        }
         .left-sidebar,
         .right-sidebar { top: 22px; }
         .sidebar-nav,
@@ -130,8 +249,18 @@
         .rs-card {
             background: #ffffff;
             border: 1px solid #d8dde6;
-            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
+            border-radius: 12px;
+            box-shadow: 0 12px 30px rgba(18, 32, 49, 0.06);
             backdrop-filter: none;
+        }
+        .sidebar-nav {
+            gap: 2px;
+            padding: 8px;
+        }
+        .sidebar-link {
+            padding: 10px 11px;
+            border-radius: 8px;
+            font-size: 0.86rem;
         }
         .sidebar-link,
         .sidebar-card-title,
@@ -148,8 +277,9 @@
         }
         .sidebar-link.active,
         .feed-tab.active {
-            color: #1f7ae0;
+            color: #102338;
             background: #eaf3fe;
+            border-color: #cddbea;
             box-shadow: none;
         }
         .composer-avatar {
@@ -163,6 +293,115 @@
             border: 1px solid #d8dde6;
             color: #162231;
         }
+        .composer-card {
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+        .composer-avatar,
+        .fi-avatar {
+            border-radius: 10px;
+        }
+        .composer-textarea {
+            min-height: 74px;
+            border-radius: 10px;
+        }
+        .composer-action,
+        .feed-tab,
+        .fi-action,
+        .load-more-btn,
+        .rs-follow-btn {
+            border-radius: 8px !important;
+        }
+        .feed-tabs {
+            margin-bottom: 14px;
+            padding: 5px;
+            border-radius: 10px;
+            background: #ffffff;
+            border-color: #d8dde6;
+            box-shadow: 0 8px 20px rgba(18, 32, 49, 0.04);
+        }
+        .feed-tab {
+            padding: 8px 13px;
+            font-size: 0.84rem;
+        }
+        .feed-item {
+            margin-bottom: 12px;
+            padding: 16px;
+            border-radius: 12px;
+            background: #ffffff;
+            border-color: #d8dde6;
+            box-shadow: 0 10px 24px rgba(18, 32, 49, 0.05);
+        }
+        .feed-item:hover {
+            transform: none;
+            background: #fbfdff;
+            border-color: #cddbea;
+        }
+        .feed-item::before {
+            display: none;
+        }
+        .fi-name,
+        .fi-content {
+            color: #162231;
+        }
+        .fi-handle,
+        .fi-time,
+        .fi-dot,
+        .rs-user-detail,
+        .rs-count,
+        .rs-rank {
+            color: #7a8898;
+        }
+        .fi-actions {
+            border-top-color: #e4e9f0;
+        }
+        .pick-embed,
+        .poll-opt {
+            background: #f7f9fc;
+            border-color: #d8dde6;
+            border-radius: 10px;
+        }
+        .pe-team,
+        .rs-user-name {
+            color: #162231;
+        }
+        .pe-chip {
+            background: #ffffff;
+            border: 1px solid #e3e8ef;
+            color: #516276;
+        }
+        .rs-card {
+            padding: 15px;
+        }
+        .rs-title {
+            color: #102338;
+            font-size: 0.86rem;
+            letter-spacing: 0;
+        }
+        .rs-text {
+            color: #516276;
+        }
+        .empty-state,
+        .tmr-loading-state {
+            padding: 38px 20px;
+            border-radius: 12px;
+            background: #ffffff;
+            border: 1px dashed #cfd8e4;
+            color: #637389;
+        }
+        .empty-state i {
+            font-size: 1.65rem;
+        }
+        .feed-state-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+        .feed-state-actions .btn {
+            border-radius: 8px !important;
+        }
         .site-footer {
             background: #ffffff;
             border-top: 1px solid #d8dde6;
@@ -171,7 +410,7 @@
         .site-footer h4 {
             font-family: 'Barlow', 'Inter', sans-serif;
         }
-        .tmr-loading-state { text-align: center; padding: 60px 20px; }
+        .tmr-loading-state { text-align: center; }
         .tmr-loading-state .tmr-spinner { width: 40px; height: 40px; border: 3px solid rgba(31,122,224,0.15); border-top-color: #1f7ae0; border-radius: 50%; animation: tmr-spin 0.8s linear infinite; margin: 0 auto 16px; }
         @keyframes tmr-spin { to { transform: rotate(360deg); } }
         .tmr-loading-state p { color: #637389; font-size: 0.95rem; margin: 8px 0; }
@@ -179,6 +418,58 @@
         .tmr-loading-state .tmr-loading-retry { display: none; }
         .tmr-loading-state .tmr-loading-retry button { background: #1f7ae0; color: #ffffff; border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; margin-top: 8px; }
         .tmr-loading-state .tmr-loading-retry button:hover { background: #1767bd; }
+        @media (max-width: 1180px) {
+            .tmr-global-nav__actions {
+                display: none;
+            }
+            .page-layout {
+                grid-template-columns: minmax(0, 1fr) 280px;
+            }
+            .left-sidebar {
+                display: none;
+            }
+        }
+        @media (max-width: 860px) {
+            .tmr-global-nav__inner {
+                min-height: auto;
+                grid-template-columns: 1fr;
+                padding: 12px 0;
+            }
+            .tmr-global-nav__links {
+                justify-content: flex-start;
+            }
+            .page-layout {
+                grid-template-columns: 1fr;
+            }
+            .right-sidebar {
+                display: none;
+            }
+            .feed-hero {
+                grid-template-columns: 1fr;
+                padding: 18px;
+            }
+            .feed-hero-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            .composer-bottom {
+                padding-left: 0;
+                align-items: flex-start;
+                gap: 10px;
+                flex-direction: column;
+            }
+            .feed-tabs {
+                overflow-x: auto;
+            }
+        }
+        @media (max-width: 520px) {
+            .feed-hero-stats {
+                grid-template-columns: 1fr;
+            }
+            body.tmr-site-shell .feed-hero h1,
+            .feed-hero h1 {
+                font-size: 1.75rem !important;
+            }
+        }
     </style>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
@@ -241,9 +532,9 @@
         <main class="main-feed">
             <section class="feed-hero">
                 <div class="feed-hero-copy">
-                    <div class="eyebrow">Reference-Led Direction</div>
-                    <h1>The clean timeline for bettors with receipts.</h1>
-                    <p>Posts, picks, polls, grading, and profile activity should feel like one sharp product. This feed should read like the community and editorial layer of the same sportsbook portal.</p>
+                    <div class="eyebrow">Community Feed</div>
+                    <h1>The timeline for verified sports talk.</h1>
+                    <p>Follow picks, reactions, polls, and profile activity in one compact feed built around public records and visible receipts.</p>
                     <div class="feed-hero-actions">
                         <a href="sportsbook.html" class="btn btn-primary"><i class="fas fa-plus"></i> Open Board</a>
                         <a href="forum.html" class="btn btn-ghost"><i class="fas fa-comments"></i> Open Forum</a>
