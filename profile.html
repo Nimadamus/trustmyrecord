@@ -2215,9 +2215,9 @@
         const w = graded.filter(p => p.status === 'won').length;
         const l = graded.filter(p => p.status === 'lost').length;
         const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
-        let units = 0;
-        graded.forEach(p => { units += pickPL(p); });
-        el.textContent = 'Showing ' + filtered.length + ' picks | ' + w + '-' + l + ' | ' + wr + '% | ' + (units >= 0 ? '+' : '') + units.toFixed(2) + 'u';
+        let netUnitsFiltered = 0;
+        graded.forEach(p => { netUnitsFiltered += pickPL(p); });
+        el.textContent = 'Showing ' + filtered.length + ' picks | ' + w + '-' + l + ' | ' + wr + '% | ' + (netUnitsFiltered >= 0 ? '+' : '') + netUnitsFiltered.toFixed(2) + 'u';
 
         // Update picks table
         renderPicksTable(filtered);
@@ -2517,7 +2517,7 @@
         const profileUrl = `https://trustmyrecord.com/profile.html?user=${encodedUser}`;
         const widgetUrl = `https://trustmyrecord.com/profile-widget.html?user=${encodedUser}&theme=dark&refresh=15000`;
         const iframeCode = `<!-- TrustMyRecord Live Profile Widget -->\n<iframe\n  src="${widgetUrl}"\n  title="TrustMyRecord profile for ${user}"\n  width="100%"\n  height="260"\n  style="max-width:420px;border:0;overflow:hidden;background:transparent;"\n  loading="lazy"\n  referrerpolicy="strict-origin-when-cross-origin"\n  scrolling="no">\n</iframe>`;
-        const scriptCode = `<!-- TrustMyRecord Auto-Resizing Profile Widget -->\n<script\n  src="https://trustmyrecord.com/static/js/profile-widget-embed.js"\n  data-username="${user}"\n  data-theme="dark"\n  data-refresh="15000"\n  data-max-width="420px">\n</script>`;
+        const scriptCode = `<!-- TrustMyRecord Auto-Resizing Profile Widget -->\n<script\n  src="https://trustmyrecord.com/static/js/profile-widget-embed.js"\n  data-username="${user}"\n  data-theme="dark"\n  data-refresh="15000"\n  data-max-width="420px">\n<\/script>`;
         const previewCode = `<iframe src="${widgetUrl}" title="TrustMyRecord profile for ${user}" width="100%" height="260" style="max-width:420px;border:0;overflow:hidden;background:transparent;" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" scrolling="no"></iframe>`;
 
         const modal = document.createElement('div');
