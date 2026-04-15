@@ -7841,10 +7841,17 @@
 <body>
     <div class="animated-grid"></div>
     <div class="container">
+        <div class="sportsbook-top-strip">
+            <strong>Today:</strong>
+            <span>Live odds boards</span>
+            <span>Verified user picks</span>
+            <span>Scores and matchups</span>
+            <span>Consensus and forum chatter</span>
+        </div>
         <header>
             <div class="header-content">
                 <div style="display: flex; align-items: center; gap: 20px;">
-                    <div class="logo" onclick="showSection('home')">TRUST<span style="color: var(--neon-cyan);">MY</span>RECORD</div>
+                    <div class="logo" onclick="showSection('home')">TRUST<span style="color: #f58220;">MY</span>RECORD</div>
                 </div>
 
 
@@ -7856,22 +7863,20 @@
                     <button class="header-icon-btn" onclick="toggleSearch()">
                         <span class="icon">🔍</span>
                     </button>
-                    <div id="headerAuthButtons" style="display: flex; align-items: center; gap: 10px; margin-left: 10px;">
-                        <button onclick="showSection('login')" class="btn btn-primary" style="padding: 8px 20px; font-size: 14px;">Login</button>
+                    <div id="headerAuthButtons" style="display: flex; align-items: center; gap: 10px; margin-left: 0;">
+                        <button onclick="showSection('login')" class="btn" style="padding: 11px 16px; font-size: 14px; background: #ffffff; color: #162231; border: 1px solid #d8dde6; border-radius: 10px; cursor: pointer;">Log In</button>
+                        <button onclick="showSection('signup')" class="btn btn-primary" style="padding: 11px 16px; font-size: 14px; background: #f58220; color: #ffffff; font-weight: 700; border: 1px solid #f58220; border-radius: 10px; cursor: pointer;">Join Free</button>
                     </div>
                 </div>
 
                 <nav class="main-nav">
-                    <a href="index.html" class="nav-link">Home</a>
-                    <a href="#picks" class="nav-link make-picks-nav" onclick="handleMakePicksCta()">Make Picks</a>
-                    <a href="#mypicks" class="nav-link" onclick="showSection('mypicks')">My Picks</a>
-                    <a href="feed.html" class="nav-link">Feed</a>
-                    <a href="challenges.html" class="nav-link">Picks Arena</a>
-                    <a href="arena.html" class="nav-link">Gaming Arena</a>
+                    <a href="sportsbook.html" class="nav-link">Odds</a>
+                    <a href="#picks" class="nav-link make-picks-nav" onclick="handleMakePicksCta()">Picks</a>
+                    <a href="sportsbook.html" class="nav-link">Scores &amp; Matchups</a>
+                    <a href="#leaderboards" class="nav-link" onclick="showSection('leaderboards')">Handicappers</a>
+                    <a href="feed.html" class="nav-link">News</a>
                     <a href="forum.html" class="nav-link">Forum</a>
-                    <a href="#leaderboards" class="nav-link" onclick="showSection('leaderboards')">Leaderboards</a>
-                    <a href="messages.html" class="nav-link">Messages</a>
-                    <a href="#profile" class="nav-link profile-link" onclick="showSection('profile')">My Profile</a>
+                    <a href="#profile" class="nav-link profile-link" onclick="showSection('profile')">My Account</a>
                 </nav>
             </div>
 
@@ -7905,42 +7910,55 @@
             </div>
         </header>
 
+        <div class="sportsbook-sports-nav">
+            <span class="active">MLB</span>
+            <span>NBA</span>
+            <span>NHL</span>
+            <span>NFL</span>
+            <span>NCAAB</span>
+            <span>NCAAF</span>
+            <span>Soccer</span>
+            <span>Promos</span>
+            <span>Consensus Picks</span>
+        </div>
+
         <main>
             <!-- Home Section -->
             <div id="home" class="page-section active">
                 <section class="hero">
-                    <h1 class="reveal">THE END OF THE BULLSHIT</h1>
-                    <p class="reveal">A new standard for sports betting has arrived. Built on absolute proof, radical transparency, and zero excuses.</p>
+                    <div class="sportsbook-hero-grid">
+                        <div class="sportsbook-hero-copy">
+                            <div class="sportsbook-eyebrow">Reference-Led Direction</div>
+                            <h1 class="reveal">Live odds, real picks, and a cleaner sportsbook shell.</h1>
+                            <p class="reveal">This page should feel like the actual odds and matchup center for the product, not a different site. Browse live boards, lock picks, and keep record tracking tied directly to the betting workflow.</p>
 
-                    <!-- PRIMARY CTA - Above the fold, impossible to miss -->
-                    <div class="hero-cta-group reveal">
-                        <a id="heroPrimaryCta" class="hero-cta-primary" onclick="handleMakePicksCta()">
-                            POST A PICK NOW
-                        </a>
-                        <p class="hero-cta-sub">Free forever. No credit card. Your record starts the second you sign up.</p>
-                    </div>
+                            <div class="hero-cta-group reveal">
+                                <a id="heroPrimaryCta" class="hero-cta-primary" onclick="handleMakePicksCta()">
+                                    Open Make Your Picks
+                                </a>
+                                <p class="hero-cta-sub">Browse the live board, pick a market, and track every play under a public record.</p>
+                            </div>
 
-                    <!-- HOW IT WORKS - Quick journey visualization -->
-                    <div class="hero-journey reveal">
-                        <div class="journey-step">
-                            <div class="journey-icon">01</div>
-                            <div class="journey-label">Create Account</div>
+                            <div class="hero-journey reveal">
+                                <div class="journey-step">
+                                    <div class="journey-icon">Live</div>
+                                    <div class="journey-label">Board-first sportsbook flow</div>
+                                </div>
+                                <div class="journey-step">
+                                    <div class="journey-icon">Markets</div>
+                                    <div class="journey-label">Moneyline, spreads, totals, halves</div>
+                                </div>
+                                <div class="journey-step">
+                                    <div class="journey-icon">Picks</div>
+                                    <div class="journey-label">Lock plays into your record</div>
+                                </div>
+                                <div class="journey-step">
+                                    <div class="journey-icon">Proof</div>
+                                    <div class="journey-label">Transparent results and rankings</div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="journey-arrow">&rarr;</div>
-                        <div class="journey-step">
-                            <div class="journey-icon">02</div>
-                            <div class="journey-label">Post Your Picks</div>
-                        </div>
-                        <div class="journey-arrow">&rarr;</div>
-                        <div class="journey-step">
-                            <div class="journey-icon">03</div>
-                            <div class="journey-label">Build Your Record</div>
-                        </div>
-                        <div class="journey-arrow">&rarr;</div>
-                        <div class="journey-step">
-                            <div class="journey-icon">04</div>
-                            <div class="journey-label">Climb Leaderboards</div>
-                        </div>
+                        <div class="sportsbook-hero-image"></div>
                     </div>
                 </section>
 
@@ -19635,10 +19653,10 @@ document.addEventListener('DOMContentLoaded', function() {
     transform: translateX(5px);
 }
 
-@media (max-width: 768px) {
-    .compare-selectors {
-        flex-direction: column;
-    }
+        @media (max-width: 768px) {
+            .compare-selectors {
+                flex-direction: column;
+            }
 
     .compare-row {
         grid-template-columns: 1fr;
@@ -19649,14 +19667,333 @@ document.addEventListener('DOMContentLoaded', function() {
         font-size: 1rem;
     }
 
-    .compare-header-row {
-        flex-direction: column;
-        gap: 20px;
-    }
-}
-</style>
+            .compare-header-row {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
 
-    <script src="static/js/platform-production-fix.js?v=20260413b"></script>
+        /* ========================================
+           SPORTSBOOK PORTAL SHELL OVERRIDE
+           ======================================== */
+        body {
+            background: #f3f5f8;
+            color: #162231;
+        }
+
+        .animated-grid {
+            display: none;
+        }
+
+        .container {
+            max-width: 1440px;
+            padding: 0 20px 32px;
+        }
+
+        .sportsbook-top-strip,
+        header,
+        .sportsbook-sports-nav {
+            margin-left: -20px;
+            margin-right: -20px;
+        }
+
+        header {
+            background: #ffffff;
+            border-bottom: 1px solid #d8dde6;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+            border-radius: 0;
+            padding: 0;
+            position: static;
+        }
+
+        .sportsbook-top-strip {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            overflow-x: auto;
+            white-space: nowrap;
+            background: #102338;
+            color: #ffffff;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            scrollbar-width: none;
+        }
+
+        .sportsbook-top-strip::-webkit-scrollbar {
+            display: none;
+        }
+
+        .header-content {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            grid-template-areas: "logo nav actions";
+            align-items: center;
+            gap: 18px;
+            min-height: 78px;
+            padding: 0 20px;
+        }
+
+        .header-content > div:first-child {
+            grid-area: logo;
+        }
+
+        .header-actions {
+            grid-area: actions;
+            margin-right: 0;
+            justify-self: end;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 1.58rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #102338;
+            -webkit-text-fill-color: initial;
+            background: none;
+            animation: none;
+        }
+
+        .main-nav {
+            grid-area: nav;
+            gap: 18px;
+            align-items: center;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .main-nav .nav-link {
+            color: #516276;
+            font-weight: 700;
+            font-size: 0.98rem;
+            padding: 8px 0;
+            border: none;
+            border-radius: 0;
+            background: transparent;
+        }
+
+        .main-nav .nav-link:hover,
+        .main-nav .nav-link.profile-link:hover {
+            color: #f58220;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .main-nav .nav-link.profile-link {
+            background: transparent;
+            border: none;
+            color: #516276;
+            padding: 8px 0;
+            border-radius: 0;
+        }
+
+        .header-icon-btn {
+            display: none;
+        }
+
+        .sportsbook-sports-nav {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            overflow-x: auto;
+            white-space: nowrap;
+            min-height: 54px;
+            padding: 0 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #d8dde6;
+            color: #516276;
+            font-size: 0.9rem;
+            font-weight: 600;
+            scrollbar-width: none;
+        }
+
+        .sportsbook-sports-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        .sportsbook-sports-nav span {
+            padding-bottom: 16px;
+            border-bottom: 2px solid transparent;
+        }
+
+        .sportsbook-sports-nav span.active {
+            color: #1f7ae0;
+            border-bottom-color: #1f7ae0;
+        }
+
+        #home.page-section {
+            padding-top: 22px;
+        }
+
+        .hero {
+            text-align: left;
+            padding: 0;
+            position: relative;
+            background: linear-gradient(135deg, #102338 0%, #163451 100%);
+            color: #ffffff;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
+            margin-bottom: 18px;
+        }
+
+        .sportsbook-hero-grid {
+            display: grid;
+            grid-template-columns: 1.08fr 0.92fr;
+            min-height: 340px;
+        }
+
+        .sportsbook-hero-copy {
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .sportsbook-eyebrow {
+            display: inline-flex;
+            width: fit-content;
+            padding: 7px 11px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.1);
+            color: #ffffff;
+            font-size: 0.74rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 14px;
+        }
+
+        .hero h1 {
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: clamp(2.2rem, 4vw, 3.8rem);
+            line-height: 0.94;
+            margin: 0 0 14px;
+            color: #ffffff;
+            text-transform: none;
+            letter-spacing: -0.04em;
+        }
+
+        .hero p {
+            max-width: 620px;
+            margin: 0;
+            color: rgba(255,255,255,0.82);
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        .hero-cta-group {
+            margin: 20px 0 0;
+        }
+
+        .hero-cta-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 800;
+            color: #ffffff;
+            background: #f58220;
+            padding: 13px 18px;
+            border-radius: 10px;
+            text-transform: none;
+            letter-spacing: 0;
+            box-shadow: none;
+            animation: none;
+        }
+
+        .hero-cta-primary:hover {
+            transform: none;
+            box-shadow: none;
+            background: #dd7419;
+        }
+
+        .hero-cta-sub {
+            margin-top: 16px;
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.72);
+            letter-spacing: 0;
+        }
+
+        .hero-journey {
+            margin-top: 22px;
+            padding: 0;
+            border-top: none;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            justify-content: start;
+        }
+
+        .journey-step {
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.08);
+            text-align: left;
+        }
+
+        .journey-icon {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .journey-label {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.82);
+            text-transform: none;
+            letter-spacing: 0;
+            font-weight: 600;
+        }
+
+        .journey-arrow {
+            display: none;
+        }
+
+        .sportsbook-hero-image {
+            background:
+                linear-gradient(130deg, rgba(16,35,56,0.16), rgba(16,35,56,0.74)),
+                url('https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
+        }
+
+        @media (max-width: 1200px) {
+            .header-content {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "logo"
+                    "actions"
+                    "nav";
+                justify-items: start;
+                padding-top: 16px;
+                padding-bottom: 16px;
+            }
+
+            .header-actions {
+                justify-self: start;
+            }
+
+            .sportsbook-hero-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 860px) {
+            .main-nav {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .hero-journey {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+
+    <script src="static/js/platform-production-fix.js?v=20260414c"></script>
 </body>
 </html>
-<!-- Deploy: Tue, Jan 20, 2026  9:59:20 PM -->
+<!-- Deploy: Tue, Apr 14, 2026  7:32:00 PM -->
