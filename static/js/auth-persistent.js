@@ -251,7 +251,7 @@ class PersistentAuthSystem {
     async updateProfile(updates) {
         if (!this.currentUser) throw new Error('Not logged in');
 
-        if (this.currentUser.backendUser && typeof api !== 'undefined' && api.backendAvailable === true) {
+        if (this.currentUser.backendUser && typeof api !== 'undefined' && typeof api.updateProfile === 'function') {
             const payload = {};
             if (updates.displayName != null) payload.display_name = updates.displayName;
             if (updates.bio != null) payload.bio = updates.bio;

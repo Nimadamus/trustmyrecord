@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications | Trust My Record</title>
+    <meta name="description" content="Review likes, comments, follows, challenge activity, and updates on Trust My Record.">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f1117;
+            --bg-secondary: #161920;
+            --bg-card: #1c1f2a;
+            --border-color: #2a2e3d;
+            --text-primary: #f0f2f5;
+            --text-secondary: #9ba3b5;
+            --text-muted: #6b7280;
+            --accent-blue: #3b82f6;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --accent-gold: #f59e0b;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-inner, .page {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .header-inner {
+            height: 58px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        .logo {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 900;
+            font-size: 1.25rem;
+        }
+        .logo span { color: var(--accent-blue); }
+        nav {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: .9rem;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+        nav a.active, nav a:hover {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--text-primary);
+        }
+        .page {
+            padding-top: 28px;
+            padding-bottom: 48px;
+        }
+        .hero {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .hero h1 {
+            margin: 0 0 6px;
+            font-size: 1.9rem;
+            letter-spacing: -0.03em;
+        }
+        .hero p {
+            margin: 0;
+            color: var(--text-secondary);
+        }
+        .btn {
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-primary);
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn.primary {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
+        }
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filter {
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: .85rem;
+            cursor: pointer;
+        }
+        .filter.active {
+            color: white;
+            border-color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.2);
+        }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .list-empty, .list-loading {
+            padding: 40px 24px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        .notif {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+        .notif:last-child { border-bottom: none; }
+        .notif.unread { background: rgba(59, 130, 246, 0.08); }
+        .notif:hover { background: rgba(255,255,255,0.03); }
+        .notif-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+        .notif-body {
+            min-width: 0;
+            flex: 1;
+        }
+        .notif-message {
+            color: var(--text-primary);
+            font-size: .96rem;
+            line-height: 1.45;
+            margin-bottom: 6px;
+        }
+        .notif-meta {
+            color: var(--text-muted);
+            font-size: .8rem;
+        }
+        .notif-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--accent-red);
+            border-radius: 50%;
+            margin-top: 8px;
+            flex-shrink: 0;
+        }
+        @media (max-width: 700px) {
+            .header-inner, .page { padding-left: 16px; padding-right: 16px; }
+            nav { display: none; }
+            .hero h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-inner">
+            <a href="index.html" class="logo">Trust<span>My</span>Record</a>
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="sportsbook.html">Sportsbook</a>
+                <a href="feed.html">Feed</a>
+                <a href="challenges.html">Challenges</a>
+                <a href="forum.html">Forum</a>
+                <a href="profile.html">Profile</a>
+                <a href="notifications.html" class="active">Notifications</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page">
+        <section class="hero">
+            <div>
+                <h1>Notifications</h1>
+                <p>Track follows, likes, comments, challenge activity, and account updates.</p>
+            </div>
+            <button id="markAllBtn" class="btn primary" type="button">Mark All Read</button>
+        </section>
+
+        <section class="filters">
+            <button class="filter active" data-filter="all" type="button">All</button>
+            <button class="filter" data-filter="unread" type="button">Unread</button>
+        </section>
+
+        <section class="card">
+            <div id="notifList" class="list-loading">Loading notifications...</div>
+        </section>
+    </main>
+
+    <script src="static/js/config.js?v=20260330"></script>
+    <script src="static/js/backend-api.js?v=20260414c"></script>
+<script src="static/js/auth-persistent.js?v=20260414e"></script>
+    <script>
+        let notifFilter = 'all';
+        let notifications = [];
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            document.querySelectorAll('.filter').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.filter').forEach(function(el) { el.classList.remove('active'); });
+                    btn.classList.add('active');
+                    notifFilter = btn.dataset.filter;
+                    renderNotifications();
+                });
+            });
+
+            document.getElementById('markAllBtn').addEventListener('click', markAllRead);
+
+            if (typeof api !== 'undefined' && api.ready) {
+                try { await api.ready; } catch (e) {}
+            }
+
+            if (!api || !api.backendAvailable || !api.isLoggedIn()) {
+                document.getElementById('notifList').innerHTML = '<div class="list-empty">Log in to view your notifications.</div>';
+                return;
+            }
+
+            await loadNotifications();
+        });
+
+        async function loadNotifications() {
+            const list = document.getElementById('notifList');
+            list.innerHTML = '<div class="list-loading">Loading notifications...</div>';
+            try {
+                const data = await api.getNotifications({ limit: 100 });
+                notifications = data.notifications || [];
+                renderNotifications();
+            } catch (error) {
+                list.innerHTML = '<div class="list-empty">Failed to load notifications.</div>';
+            }
+        }
+
+        function renderNotifications() {
+            const list = document.getElementById('notifList');
+            const visible = notifFilter === 'unread'
+                ? notifications.filter(function(n) { return !n.is_read; })
+                : notifications;
+
+            if (!visible.length) {
+                list.innerHTML = '<div class="list-empty">' + (notifFilter === 'unread' ? 'No unread notifications.' : 'No notifications yet.') + '</div>';
+                return;
+            }
+
+            list.innerHTML = visible.map(function(n) {
+                const meta = formatTime(n.created_at);
+                const icon = getNotifTheme(n.type);
+                return '<div class="notif ' + (n.is_read ? '' : 'unread') + '" onclick="openNotification(\'' + escapeJs(String(n.id || '')) + '\', \'' + escapeJs(n.type || '') + '\')">' +
+                    '<div class="notif-icon" style="background:' + icon.bg + ';color:' + icon.fg + ';">' + icon.label + '</div>' +
+                    '<div class="notif-body">' +
+                    '<div class="notif-message">' + escapeHtml(n.content || n.message || '') + '</div>' +
+                    '<div class="notif-meta">' + meta + (n.username ? ' • @' + escapeHtml(n.username) : '') + '</div>' +
+                    '</div>' +
+                    (n.is_read ? '' : '<div class="notif-dot"></div>') +
+                    '</div>';
+            }).join('');
+        }
+
+        async function openNotification(id, type) {
+            try {
+                await api.markNotificationRead(id);
+                notifications = notifications.map(function(n) {
+                    return String(n.id) === String(id) ? { ...n, is_read: true } : n;
+                });
+                renderNotifications();
+            } catch (e) {}
+
+            switch (type) {
+                case 'follow':
+                case 'friend_request':
+                case 'friend_accept':
+                    location.href = 'friends.html';
+                    break;
+                case 'challenge':
+                case 'challenge_invite':
+                case 'challenge_result':
+                    location.href = 'challenges.html';
+                    break;
+                case 'like':
+                case 'comment':
+                case 'pick_graded':
+                default:
+                    location.href = 'feed.html';
+                    break;
+            }
+        }
+
+        async function markAllRead() {
+            try {
+                await api.markAllNotificationsRead();
+                notifications = notifications.map(function(n) { return { ...n, is_read: true }; });
+                renderNotifications();
+            } catch (error) {}
+        }
+
+        function getNotifTheme(type) {
+            const map = {
+                follow: { label: 'F', bg: 'rgba(59,130,246,0.15)', fg: '#60a5fa' },
+                like: { label: 'L', bg: 'rgba(239,68,68,0.15)', fg: '#f87171' },
+                comment: { label: 'C', bg: 'rgba(34,197,94,0.15)', fg: '#4ade80' },
+                challenge: { label: 'T', bg: 'rgba(245,158,11,0.15)', fg: '#fbbf24' },
+                challenge_invite: { label: 'T', bg: 'rgba(245,158,11,0.15)', fg: '#fbbf24' },
+                challenge_result: { label: 'T', bg: 'rgba(245,158,11,0.15)', fg: '#fbbf24' },
+                pick_graded: { label: 'P', bg: 'rgba(59,130,246,0.15)', fg: '#60a5fa' }
+            };
+            return map[type] || { label: 'N', bg: 'rgba(255,255,255,0.08)', fg: '#e5e7eb' };
+        }
+
+        function formatTime(value) {
+            const date = new Date(value);
+            const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+            if (diff < 60) return 'just now';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+            if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+            return date.toLocaleDateString();
+        }
+
+        function escapeHtml(value) {
+            const div = document.createElement('div');
+            div.textContent = value || '';
+            return div.innerHTML;
+        }
+
+        function escapeJs(value) {
+            return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        }
+    </script>
+</body>
+</html>

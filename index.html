@@ -1702,7 +1702,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700;900&family=Barlow:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="static/css/social.css" rel="stylesheet">
     <link href="static/css/sportsbook.css" rel="stylesheet">
@@ -10092,7 +10092,7 @@
                         <h2>Live From The <span class="highlight">Community</span></h2>
                         <p>Real picks from real users, tracked in real time.</p>
                     </div>
-                    <div class="activity-feed" id="spActivityFeed">
+                    <div class="activity-feed" id="legacySpActivityFeed">
                         <!-- Populated by JS -->
                     </div>
 
@@ -18745,7 +18745,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="static/js/config.js?v=20260405"></script>
     <script src="static/js/analytics.js?v=20260405"></script>
     <script src="static/js/backend-api.js?v=20260414c"></script>
-    <script src="static/js/auth-persistent.js?v=20260414d"></script>
+    <script src="static/js/auth-persistent.js?v=20260414e"></script>
     <script>
         // Backend API integration active
         console.log('[TMR] Backend API URL:', CONFIG?.api?.baseUrl);
@@ -21879,9 +21879,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Start with defaults immediately
     var picksEl = document.getElementById('spPicksTracked');
     var gamesEl = document.getElementById('spActiveGames');
+    var picksSidebarEl = document.getElementById('spPicksTrackedSidebar');
+    var gamesSidebarEl = document.getElementById('spActiveGamesSidebar');
 
     if (picksEl) animateCounter(picksEl, defaults.picksTracked);
     if (gamesEl) animateCounter(gamesEl, defaults.activeGames);
+    if (picksSidebarEl) animateCounter(picksSidebarEl, defaults.picksTracked);
+    if (gamesSidebarEl) animateCounter(gamesSidebarEl, defaults.activeGames);
     renderActivityFeed(defaults.recentPicks);
 
     // Then try to fetch real data from backend
@@ -21890,9 +21894,11 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(function(data) {
             if (data && data.totalPicks) {
                 if (picksEl) animateCounter(picksEl, data.totalPicks);
+                if (picksSidebarEl) animateCounter(picksSidebarEl, data.totalPicks);
             }
             if (data && data.activeGames) {
                 if (gamesEl) animateCounter(gamesEl, data.activeGames);
+                if (gamesSidebarEl) animateCounter(gamesSidebarEl, data.activeGames);
             }
         })
         .catch(function() { /* defaults already shown */ });
