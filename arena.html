@@ -718,12 +718,10 @@ async function loadChallenges() {
     const container = document.getElementById('challengesList');
     try {
         let data;
-        if (api && api.backendAvailable) {
+        if (api && typeof api.request === 'function') {
             data = await api.request('/gaming/challenges?limit=50');
         }
-        if (!data || !data.challenges) {
-            data = { challenges: getSampleChallenges() };
-        }
+        if (!data || !data.challenges) data = { challenges: [] };
         allChallenges = data.challenges;
         renderChallenges(allChallenges);
         document.getElementById('statActiveChallenges').textContent = allChallenges.filter(c => ['pending','accepted','in_progress'].includes(c.status)).length;
@@ -851,7 +849,7 @@ async function loadRecentMatches(game) {
         let url = '/gaming/matches?limit=30';
         if (game) url += '&game=' + game;
         let data;
-        if (api && api.backendAvailable) {
+        if (api && typeof api.request === 'function') {
             data = await api.request(url);
         }
         if (!data || !data.matches) data = { matches: [] };
@@ -939,7 +937,7 @@ async function loadLeaderboard(game) {
         let url = '/gaming/leaderboard?limit=25&sort=wins';
         if (game && game !== 'all') url += '&game=' + game;
         let data;
-        if (api && api.backendAvailable) {
+        if (api && typeof api.request === 'function') {
             data = await api.request(url);
         }
         if (!data || !data.leaderboard) data = { leaderboard: [] };
@@ -1002,7 +1000,7 @@ async function loadMLBHub() {
     try {
         // Load MLB leaderboard
         let data;
-        if (api && api.backendAvailable) {
+        if (api && typeof api.request === 'function') {
             data = await api.request('/gaming/leaderboard?game=mlb-the-show-26&limit=25&sort=wins');
         }
         if (!data || !data.leaderboard) data = { leaderboard: [] };
@@ -1026,7 +1024,7 @@ async function loadMLBHub() {
 
         // Load recent MLB matches
         let matchData;
-        if (api && api.backendAvailable) {
+        if (api && typeof api.request === 'function') {
             matchData = await api.request('/gaming/matches?game=mlb-the-show-26&limit=15');
         }
         if (!matchData || !matchData.matches) matchData = { matches: [] };
@@ -1054,7 +1052,7 @@ async function loadMyStats() {
 
     try {
         let data;
-        if (api && api.backendAvailable) {
+        if (api && typeof api.request === 'function') {
             data = await api.request('/gaming/stats/' + currentUser.username);
         }
         if (!data) { data = { stats_by_game: [], totals: {}, top_rivals: [] }; }
@@ -1161,7 +1159,7 @@ function toggleBoxScore() {
 async function loadActiveChallengesForDropdown() {
     const sel = document.getElementById('lmChallenge');
     sel.innerHTML = '<option value="">No linked challenge</option>';
-    if (!currentUser || !api || !api.backendAvailable) return;
+    if (!currentUser || !api || typeof api.request !== 'function') return;
     try {
         const data = await api.request('/gaming/challenges?status=accepted&limit=20');
         if (data && data.challenges) {
@@ -1312,11 +1310,6 @@ function getGameIcon(slug) {
     return '<i class="fas fa-gamepad"></i>';
 }
 
-function getSampleChallenges() {
-    // Placeholder data for when backend is offline
-    return [];
-}
-
 // ============================================
 // GAMER PROFILE
 // ============================================
@@ -1325,7 +1318,7 @@ let cachedGamerProfiles = {};
 async function loadGamerProfile() {
     if (!currentUser) return;
     try {
-        if (api && api.backendAvailable) {
+        if (api && typeof api.getGamerProfile === 'function') {
             const data = await api.getGamerProfile(currentUser.username);
             if (data && data.profile) {
                 updateProfileCard(data.profile);
@@ -1415,7 +1408,7 @@ async function submitProfile(e) {
 }
 
 async function getGamertagForUser(username, platform) {
-    if (!username || !api || !api.backendAvailable) return null;
+    if (!username || !api || typeof api.getGamerProfile !== 'function') return null;
     if (cachedGamerProfiles[username]) {
         return extractGamertagByPlatform(cachedGamerProfiles[username], platform);
     }
