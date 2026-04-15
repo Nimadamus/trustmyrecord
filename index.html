@@ -4789,6 +4789,7 @@
             border-radius: 16px;
             box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
             margin-top: 18px;
+            display: none !important;
         }
 
         footer {
@@ -9760,7 +9761,6 @@
                     <a href="#leaderboards" class="nav-link" onclick="showSection('leaderboards')">Handicappers</a>
                     <a href="feed.html" class="nav-link">News</a>
                     <a href="forum.html" class="nav-link">Forum</a>
-                    <a href="#profile" class="nav-link profile-link" onclick="showSection('profile')">My Account</a>
                 </nav>
             </div>
 
@@ -9780,7 +9780,6 @@
                     <a href="#leaderboards" onclick="showSection('leaderboards'); closeMobileNav();">Handicappers</a>
                     <a href="feed.html">News</a>
                     <a href="forum.html">Forum</a>
-                    <a href="#profile" class="profile-link-mobile" onclick="showSection('profile'); closeMobileNav();">My Account</a>
                 </div>
             </div>
 
@@ -9834,27 +9833,27 @@
                         <div class="portal-hero-copy">
                             <div class="portal-eyebrow">Reference-Led Direction</div>
                             <h1>Make TrustMyRecord feel like a real sports betting portal.</h1>
-                            <p>This direction is grounded in sportsbook and editorial sports-media structure. Track live boards, lock your picks, build a public record, and tie credibility directly into the same homepage flow.</p>
+                            <p>This direction is less futuristic and much more grounded in sportsbook and editorial sports media DNA. The goal is a denser homepage, clearer odds and picks presentation, stronger authority, and better integration of leaderboards, cappers, community, and board data.</p>
                             <div class="portal-hero-actions">
-                                <a id="heroPrimaryCta" class="portal-hero-button primary" onclick="handleMakePicksCta()">Open Make Your Picks</a>
+                                <a id="heroPrimaryCta" class="portal-hero-button primary" onclick="handleMakePicksCta()">Get Started Free</a>
                                 <a class="portal-hero-button secondary" onclick="showSection('leaderboards')">View Leaderboards</a>
                             </div>
                             <div class="portal-hero-stats">
                                 <div class="portal-hero-stat">
-                                    <strong id="spPicksTracked">0</strong>
-                                    <span>Picks tracked</span>
+                                    <strong>Odds</strong>
+                                    <span>Real board-first hierarchy</span>
                                 </div>
                                 <div class="portal-hero-stat">
-                                    <strong id="spActiveGames">0</strong>
-                                    <span>Active games</span>
+                                    <strong>Picks</strong>
+                                    <span>Sharper pick cards and proof</span>
                                 </div>
                                 <div class="portal-hero-stat">
-                                    <strong>Live</strong>
-                                    <span>Odds boards</span>
+                                    <strong>Cappers</strong>
+                                    <span>Leaderboard and streak treatment</span>
                                 </div>
                                 <div class="portal-hero-stat">
-                                    <strong>Records</strong>
-                                    <span>Public accountability</span>
+                                    <strong>Community</strong>
+                                    <span>Forum and user picks tied in</span>
                                 </div>
                             </div>
                         </div>
@@ -10077,34 +10076,33 @@
 
                         <section class="portal-sidebar-card">
                             <h3>Hot Streaks</h3>
-                            <div class="portal-copy">Same placement as the preview, but the entries stay blank until they can be backed by real record data.</div>
                             <div class="portal-list">
                                 <div class="portal-list-item">
                                     <strong>Streak tracker</strong>
-                                    <div class="portal-copy">This block should surface real streaks from verified records, not made-up runs.</div>
+                                    <div class="portal-copy">Performance blurbs and proof blocks belong here once the homepage is wired to real streak data.</div>
                                 </div>
                                 <div class="portal-list-item">
-                                    <strong>Pending live hookup</strong>
-                                    <div class="portal-copy">Once leaderboard and streak data are wired here, the module can go live without fabricated stats.</div>
+                                    <strong>Verified runs only</strong>
+                                    <div class="portal-copy">No made-up heaters. This section should surface real streaks from verified records only.</div>
                                 </div>
                             </div>
                         </section>
 
                         <section class="portal-sidebar-card">
-                            <h3>Featured Tools</h3>
-                            <div class="portal-copy">Keep the third sidebar card useful and clean instead of inventing promo numbers or fake urgency.</div>
+                            <h3>Premium Passes</h3>
+                            <div class="portal-copy">Sales cards and platform promos should sit here in a cleaner house style without fake urgency or fabricated stats.</div>
                             <div class="portal-list">
                                 <div class="portal-list-item">
-                                    <strong>Verified Picks Feed</strong>
-                                    <div class="portal-copy">Recent tracked picks, locked plays, and public accountability.</div>
+                                    <strong>Verified Records</strong>
+                                    <div class="portal-copy">Public profile pages, tracked picks, and transparent results.</div>
                                 </div>
                                 <div class="portal-list-item">
-                                    <strong>Leaderboard Watch</strong>
-                                    <div class="portal-copy">Track ranked users and streak movement once the homepage leaderboard feed is live.</div>
+                                    <strong>Community Picks</strong>
+                                    <div class="portal-copy">The social layer should strengthen the portal feel instead of pulling away from it.</div>
                                 </div>
                                 <div class="portal-list-item">
                                     <strong>Forum Matchup Threads</strong>
-                                    <div class="portal-copy">Push the most active game discussions into the homepage shell without clutter.</div>
+                                    <div class="portal-copy">Feature the most active matchup discussion without cluttering the homepage.</div>
                                 </div>
                             </div>
                         </section>
@@ -21645,14 +21643,9 @@ document.addEventListener('DOMContentLoaded', function() {
         : 'https://trustmyrecord-api.onrender.com/api';
 
     var defaults = {
-        picksTracked: 1247,
-        activeGames: 18,
-        recentPicks: [
-            { username: 'SharpShooter42', sport: 'NBA', description: 'Lakers ML -145 vs Celtics', timestamp: '2 min ago' },
-            { username: 'GridironGuru', sport: 'NFL', description: 'Chiefs -3.5 vs Ravens', timestamp: '8 min ago' },
-            { username: 'PuckMaster', sport: 'NHL', description: 'Over 6.0 Avalanche vs Oilers', timestamp: '14 min ago' },
-            { username: 'DiamondKing', sport: 'MLB', description: 'Dodgers RL -1.5 vs Padres', timestamp: '21 min ago' }
-        ]
+        picksTracked: 0,
+        activeGames: 0,
+        recentPicks: []
     };
 
     var sportColors = {
@@ -21751,7 +21744,7 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 </script>
 
-    <script src="static/js/platform-production-fix.js?v=20260414b"></script>
+    <script src="static/js/platform-production-fix.js?v=20260414c"></script>
 </body>
 </html>
-<!-- Deploy: Tue, Apr 14, 2026  7:16:00 PM -->
+<!-- Deploy: Tue, Apr 14, 2026  8:32:00 PM -->
