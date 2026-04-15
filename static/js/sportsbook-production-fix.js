@@ -1135,6 +1135,7 @@
         lockFunction(window, 'selectSportAndShowGames', selectSportAndShowGames);
         lockFunction(window, 'submitPick', lockInPick);
         lockFunction(window, 'lockInPick', lockInPick);
+        window.__tmrProductionLockInPick = lockInPick;
         window.selectGameBet = function() {};
         window.updatePickSummary = updatePickSummary;
         lockFunction(window, 'loadGamesWithAllBets', loadGamesWithAllBetsOverride);

@@ -1014,6 +1014,9 @@
 
     // ============ LOCK IN PICK (localStorage version) ============
     window.lockInPick = function() {
+        if (window.__tmrProductionLockInPick && window.__tmrProductionLockInPick !== window.lockInPick) {
+            return window.__tmrProductionLockInPick();
+        }
         var thePick = window.TMR.currentSelectedPick;
         if (!thePick) return;
 
@@ -14347,7 +14350,14 @@ function showSubSection(section) {
 // ============ POLLS SYSTEM ============
 
 function getPolls() {
-    return JSON.parse(localStorage.getItem('trustmyrecord_polls') || '[]');
+    var polls = JSON.parse(localStorage.getItem('trustmyrecord_polls') || '[]');
+    var sanitized = polls.filter(function(poll) {
+        return !(poll && typeof poll.id === 'string' && poll.id.indexOf('poll_seed_') === 0);
+    });
+    if (sanitized.length !== polls.length) {
+        savePolls(sanitized);
+    }
+    return sanitized;
 }
 
 function savePolls(polls) {
@@ -14355,75 +14365,7 @@ function savePolls(polls) {
 }
 
 function seedSamplePolls() {
-    var polls = getPolls();
-    if (polls.length > 0) return; // Already seeded
-
-    var now = Date.now();
-    var samplePolls = [
-        {
-            id: 'poll_seed_1',
-            question: 'Who wins the NBA Finals this season?',
-            category: 'nba',
-            options: [
-                { text: 'Boston Celtics', votes: 12, voters: ['demo1','demo2','demo3','demo4','demo5','demo6','demo7','demo8','demo9','demo10','demo11','demo12'] },
-                { text: 'Oklahoma City Thunder', votes: 18, voters: ['d1','d2','d3','d4','d5','d6','d7','d8','d9','d10','d11','d12','d13','d14','d15','d16','d17','d18'] },
-                { text: 'Cleveland Cavaliers', votes: 8, voters: ['c1','c2','c3','c4','c5','c6','c7','c8'] },
-                { text: 'Denver Nuggets', votes: 5, voters: ['n1','n2','n3','n4','n5'] }
-            ],
-            createdBy: 'BetLegend',
-            createdAt: new Date(now - 172800000).toISOString(),
-            expiresAt: new Date(now + 604800000).toISOString(),
-            points: 100,
-            totalVotes: 43
-        },
-        {
-            id: 'poll_seed_2',
-            question: 'Which NFL team will have the best record next season?',
-            category: 'nfl',
-            options: [
-                { text: 'Kansas City Chiefs', votes: 22, voters: Array.from({length:22}, (_,i) => 'kc'+i) },
-                { text: 'Philadelphia Eagles', votes: 15, voters: Array.from({length:15}, (_,i) => 'phi'+i) },
-                { text: 'Detroit Lions', votes: 10, voters: Array.from({length:10}, (_,i) => 'det'+i) },
-                { text: 'Buffalo Bills', votes: 8, voters: Array.from({length:8}, (_,i) => 'buf'+i) }
-            ],
-            createdBy: 'SharpMoney',
-            createdAt: new Date(now - 86400000).toISOString(),
-            expiresAt: new Date(now + 1209600000).toISOString(),
-            points: 50,
-            totalVotes: 55
-        },
-        {
-            id: 'poll_seed_3',
-            question: 'Best NHL goalie right now?',
-            category: 'nhl',
-            options: [
-                { text: 'Connor Hellebuyck', votes: 14, voters: Array.from({length:14}, (_,i) => 'hel'+i) },
-                { text: 'Igor Shesterkin', votes: 11, voters: Array.from({length:11}, (_,i) => 'igor'+i) },
-                { text: 'Sergei Bobrovsky', votes: 6, voters: Array.from({length:6}, (_,i) => 'bob'+i) }
-            ],
-            createdBy: 'PuckAnalyst',
-            createdAt: new Date(now - 43200000).toISOString(),
-            expiresAt: new Date(now + 259200000).toISOString(),
-            points: 50,
-            totalVotes: 31
-        },
-        {
-            id: 'poll_seed_4',
-            question: 'Will the Dodgers repeat as World Series champions?',
-            category: 'mlb',
-            options: [
-                { text: 'Yes, they repeat', votes: 20, voters: Array.from({length:20}, (_,i) => 'yes'+i) },
-                { text: 'No, someone else wins', votes: 25, voters: Array.from({length:25}, (_,i) => 'no'+i) }
-            ],
-            createdBy: 'DiamondSharp',
-            createdAt: new Date(now - 7200000).toISOString(),
-            expiresAt: new Date(now + 2592000000).toISOString(),
-            points: 75,
-            totalVotes: 45
-        }
-    ];
-
-    savePolls(samplePolls);
+    return;
 }
 
 function renderPollsGrid(filterCategory) {
@@ -15392,39 +15334,21 @@ var currentAcceptChallengeId = null;
 var arenaFilterMode = 'all';
 
 function getChallenges() {
-    return JSON.parse(localStorage.getItem('tmr_challenges') || '[]');
+    var challenges = JSON.parse(localStorage.getItem('tmr_challenges') || '[]');
+    var sanitized = challenges.filter(function(challenge) {
+        return !(challenge && typeof challenge.id === 'string' && challenge.id.indexOf('ch_seed_') === 0);
+    });
+    if (sanitized.length !== challenges.length) {
+        saveChallenges(sanitized);
+    }
+    return sanitized;
 }
 function saveChallenges(c) {
     localStorage.setItem('tmr_challenges', JSON.stringify(c));
 }
 
 function seedSampleChallenges() {
-    var challenges = getChallenges();
-    if (challenges.length > 0) return;
-
-    var now = Date.now();
-    var samples = [
-        {
-            id: 'ch_seed_1', creator: 'SharpMoney', opponent: null, sport: 'NBA',
-            description: 'Lakers vs Celtics tonight', creatorPick: 'Lakers -4.5',
-            opponentPick: null, units: 2, status: 'open',
-            createdAt: new Date(now - 7200000).toISOString(), result: null
-        },
-        {
-            id: 'ch_seed_2', creator: 'BetLegend', opponent: 'SharpMoney', sport: 'NFL',
-            description: 'Chiefs vs Bills AFC Championship', creatorPick: 'Chiefs -3',
-            opponentPick: 'Bills +3', units: 3, status: 'accepted',
-            createdAt: new Date(now - 86400000).toISOString(), result: null
-        },
-        {
-            id: 'ch_seed_3', creator: 'DiamondSharp', opponent: 'PuckAnalyst', sport: 'NHL',
-            description: 'Panthers vs Rangers game', creatorPick: 'Panthers ML',
-            opponentPick: 'Rangers ML', units: 1, status: 'completed',
-            createdAt: new Date(now - 172800000).toISOString(),
-            result: { winner: 'DiamondSharp', loser: 'PuckAnalyst' }
-        }
-    ];
-    saveChallenges(samples);
+    return;
 }
 
 function openCreateChallengeModal() {
@@ -16572,7 +16496,7 @@ function filterFeed(type) {
 }
 
 function filterByTag(tag) {
-    alert(`Filtering by #${tag} - feature coming soon!`);
+    window.location.href = 'forum.html?tag=' + encodeURIComponent(tag);
 }
 
 function formatTimeAgo(timestamp) {
@@ -16656,11 +16580,11 @@ function switchGroupsTab(tab) {
 }
 
 function openCreateGroupModal() {
-    alert('Create Group modal would open here. Feature coming soon!');
+    window.location.href = 'forum.html';
 }
 
 function openCreateSyndicateModal() {
-    alert('Create Syndicate modal would open here. Premium feature!');
+    window.location.href = 'premium.html';
 }
 
 // Marketplace tab switching
@@ -16684,20 +16608,16 @@ function switchMarketTab(tab) {
 }
 
 function openSellModal() {
-    alert('Seller application modal would open here. Start selling your expertise!');
+    window.location.href = 'premium.html';
 }
 
 function openSellerApplication() {
-    alert('Seller application form would open here. Apply to become a verified seller!');
+    window.location.href = 'premium.html';
 }
 
 // Premium upgrade
 function upgradeTier(tier) {
-    const tierNames = {
-        'pro': 'Pro ($29.99/month)',
-        'elite': 'Elite ($99.99/month)'
-    };
-    alert(`Upgrade to ${tierNames[tier]} selected! Payment modal would open here.`);
+    window.location.href = 'premium.html?plan=' + encodeURIComponent(tier || 'pro');
 }
 
 // Live games filtering
@@ -16727,10 +16647,6 @@ function filterLiveGames(sport) {
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', function() {
-    // Seed sample polls on first visit
-    seedSamplePolls();
-    // Seed sample challenges on first visit
-    if (typeof seedSampleChallenges === 'function') seedSampleChallenges();
     // Seed weekly contest on first visit
     if (typeof seedWeeklyContest === 'function') seedWeeklyContest();
 
@@ -17907,8 +17823,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Show comments for a pick
         function showComments(pickId) {
-            alert('Comments feature coming soon!');
-            // TODO: Implement comment modal/section
+            window.location.href = 'feed.html';
         }
 
         // ========== FORUM FUNCTIONS ==========
@@ -18221,8 +18136,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function replyComment(commentId) {
             console.log('Replying to comment:', commentId);
-            // In real implementation, would open comment reply modal
-            alert('Reply feature coming soon!');
+            window.location.href = 'forum.html';
         }
 
         function viewProfile(username) {
@@ -18275,7 +18189,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         function toggleSearch() {
-            alert('Search functionality coming soon!');
+            if (typeof showSection === 'function') {
+                showSection('search');
+            }
+            setTimeout(function() {
+                var searchInput = document.getElementById('userSearch');
+                if (searchInput) searchInput.focus();
+            }, 50);
         }
 
         // Login is handled by forms-fixed.js
@@ -18294,7 +18214,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="static/js/forums.js?v=20251208c"></script>
     <!-- forms.js REMOVED - forms-fixed.js handles login/signup -->
     <script src="static/js/navigation.js?v=20251208c"></script>
-    <script src="static/js/sportsbook-production-fix.js?v=20260414m"></script>
+    <script src="static/js/sportsbook-production-fix.js?v=20260414n"></script>
     <script src="static/js/effects.js?v=20251208c"></script>
 
     <script src="static/js/app.js?v=20260122"></script>

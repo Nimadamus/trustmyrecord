@@ -936,6 +936,9 @@
 
     // ============ LOCK IN PICK (localStorage version) ============
     window.lockInPick = function() {
+        if (window.__tmrProductionLockInPick && window.__tmrProductionLockInPick !== window.lockInPick) {
+            return window.__tmrProductionLockInPick();
+        }
         var thePick = window.TMR.currentSelectedPick;
         if (!thePick) return;
 
@@ -16916,7 +16919,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="static/js/forums.js?v=20251208c"></script>
     <!-- forms.js REMOVED - forms-fixed.js handles login/signup -->
     <script src="static/js/navigation.js?v=20251208c"></script>
-    <script src="static/js/sportsbook-production-fix.js?v=20260414m"></script>
+    <script src="static/js/sportsbook-production-fix.js?v=20260414n"></script>
     <script src="static/js/effects.js?v=20251208c"></script>
 
     <script src="static/js/app.js?v=20260122"></script>
