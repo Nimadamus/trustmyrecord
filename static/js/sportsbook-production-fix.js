@@ -4,11 +4,20 @@
     const SPORT_KEY_MAP = {
         NFL: 'americanfootball_nfl',
         NBA: 'basketball_nba',
+        WNBA: 'basketball_wnba',
         MLB: 'baseball_mlb',
         NHL: 'icehockey_nhl',
         Soccer: 'soccer_epl',
+        MLS: 'soccer_usa_mls',
+        UCL: 'soccer_uefa_champs_league',
+        LaLiga: 'soccer_spain_la_liga',
+        SerieA: 'soccer_italy_serie_a',
+        Bundesliga: 'soccer_germany_bundesliga',
+        Ligue1: 'soccer_france_ligue_one',
         NCAAB: 'basketball_ncaab',
-        NCAAF: 'americanfootball_ncaaf'
+        NCAAF: 'americanfootball_ncaaf',
+        ATP: 'tennis_atp',
+        WTA: 'tennis_wta'
     };
 
     const STATUS_MAP = {
@@ -39,6 +48,7 @@
         h2h: 'Moneyline',
         spreads: 'Spread',
         totals: 'Game Total',
+        total: 'Game Total',
         team_totals: 'Team Total',
         f5_h2h: 'First 5 ML',
         f5_spreads: 'First 5 Spread',
@@ -52,7 +62,18 @@
         period_1_h2h: '1st Period ML',
         period_1_totals: '1st Period Total',
         alt_spreads: 'Alt Spread',
-        alt_totals: 'Alt Total'
+        alt_totals: 'Alt Total',
+        h2h_3_way: '3-Way Moneyline',
+        draw_no_bet: 'Draw No Bet',
+        double_chance: 'Double Chance',
+        btts: 'Both Teams To Score',
+        player_points: 'Player Points',
+        player_rebounds: 'Player Rebounds',
+        player_assists: 'Player Assists',
+        player_threes: 'Player Threes',
+        player_hits: 'Player Hits',
+        player_home_runs: 'Player Home Runs',
+        player_shots_on_goal: 'Shots On Goal'
     };
 
     function lockFunction(target, key, value) {
@@ -659,24 +680,6 @@
                 }
             }
 
-            /*
-            if (sportKey === 'baseball_mlb' && awayMl && homeMl && over && under) {
-                const f5Total = Math.round(Number(over.point) * 0.55 * 2) / 2;
-                marketGroups.push({
-                    key: 'first_5',
-                    label: 'First 5',
-                    items: [
-                        createFallbackOption(game, index, 'First 5', 'f5_spreads', game.away_team, game.away_team + ' +0.5', -118, 0.5, 'Modeled first 5 run line'),
-                        createFallbackOption(game, index, 'First 5', 'f5_spreads', game.home_team, game.home_team + ' -0.5', -102, -0.5, 'Modeled first 5 run line'),
-                        createFallbackOption(game, index, 'First 5', 'f5_h2h', game.away_team, game.away_team + ' F5 ML', awayMl.price, null, 'Modeled first 5 moneyline'),
-                        createFallbackOption(game, index, 'First 5', 'f5_h2h', game.home_team, game.home_team + ' F5 ML', homeMl.price, null, 'Modeled first 5 moneyline'),
-                        createFallbackOption(game, index, 'First 5', 'f5_totals', 'Over', 'F5 Over ' + f5Total, -110, f5Total, 'Modeled first 5 total'),
-                        createFallbackOption(game, index, 'First 5', 'f5_totals', 'Under', 'F5 Under ' + f5Total, -110, f5Total, 'Modeled first 5 total')
-                    ]
-                });
-            }
-            */
-
             return Object.assign({}, game, {
                 updated_at: game.updated_at || game.commence_time,
                 has_sportsbook_odds: marketGroups.length > 0,
@@ -697,46 +700,7 @@
     }
 
     function ensureDerivedFirst5Group(game) {
-        if (!game || game.sport_key !== 'baseball_mlb') return game;
-
-        const existingGroups = Array.isArray(game.market_groups) ? game.market_groups.slice() : [];
-        const hasFirst5 = existingGroups.some(function(group) {
-            return group && group.key === 'first_5' && Array.isArray(group.items) && group.items.length;
-        });
-        const fullGameGroup = existingGroups.find(function(group) { return group && group.key === 'full_game'; }) || null;
-        const totalGroup = existingGroups.find(function(group) { return group && group.key === 'total'; }) || null;
-        const estimates = deriveMlbFirst5Fallback(game, fullGameGroup, totalGroup);
-        if (!estimates) return game;
-
-        const bookTitle = estimates.awayMl.book_title || estimates.homeMl.book_title || estimates.over.book_title || 'Derived from full-game lines';
-        const sourceUpdatedAt = game.updated_at || estimates.awayMl.source_updated_at || estimates.over.source_updated_at || null;
-
-        if (!hasFirst5) {
-            const first5Items = [
-                createFallbackOption(game, game.id, 'First 5', 'f5_spreads', game.away_team, game.away_team + ' +0.5', estimates.first5AwaySpreadOdds, 0.5, 'Estimated from full-game lines'),
-                createFallbackOption(game, game.id, 'First 5', 'f5_spreads', game.home_team, game.home_team + ' -0.5', estimates.first5HomeSpreadOdds, -0.5, 'Estimated from full-game lines'),
-                createFallbackOption(game, game.id, 'First 5', 'f5_h2h', game.away_team, game.away_team + ' F5 ML', estimates.first5AwayMl, null, 'Estimated from full-game lines'),
-                createFallbackOption(game, game.id, 'First 5', 'f5_h2h', game.home_team, game.home_team + ' F5 ML', estimates.first5HomeMl, null, 'Estimated from full-game lines'),
-                createFallbackOption(game, game.id, 'First 5', 'f5_totals', 'Over', 'F5 Over ' + estimates.first5Total, -110, estimates.first5Total, 'Estimated from full-game lines'),
-                createFallbackOption(game, game.id, 'First 5', 'f5_totals', 'Under', 'F5 Under ' + estimates.first5Total, -110, estimates.first5Total, 'Estimated from full-game lines')
-            ];
-            first5Items.forEach(function(item) {
-                item.book_title = bookTitle;
-                item.book_key = estimates.awayMl.book_key || estimates.homeMl.book_key || estimates.over.book_key || '';
-                item.source = 'derived';
-                item.source_label = 'Estimated from full-game lines';
-                item.source_updated_at = sourceUpdatedAt;
-            });
-            existingGroups.push({
-                key: 'first_5',
-                label: 'First 5',
-                items: first5Items
-            });
-        }
-
-        return Object.assign({}, game, {
-            market_groups: existingGroups
-        });
+        return game;
     }
 
     function setCardScope(cardId, scope) {
@@ -769,10 +733,10 @@
         }
 
         html += games.map(function(rawGame, index) {
-            const game = ensureDerivedFirst5Group(rawGame);
+            const game = rawGame;
             const cardId = 'tmr-market-card-' + index;
             const sourceClass = game.has_sportsbook_odds ? 'real' : 'fallback';
-            const sourceText = game.has_sportsbook_odds ? 'Sportsbook feed' : 'Fallback pricing';
+            const sourceText = game.has_sportsbook_odds ? 'Sportsbook feed' : 'Manual entry';
             let groupsHtml = '';
             const hasFirst5 = (game.market_groups || []).some(function(group) {
                 return group && group.key === 'first_5' && group.items && group.items.length;
@@ -783,15 +747,19 @@
                 return (order[a && a.key] || 99) - (order[b && b.key] || 99);
             });
 
-            orderedGroups.forEach(function(group) {
+            orderedGroups.forEach(function(group, groupIndex) {
                 const groupItems = group.items || [];
-                const derivedOnly = groupItems.length > 0 && groupItems.every(function(option) { return option && option.source === 'derived'; });
-                const buttons = (group.items || []).map(function(option) {
-                    state.currentOptions.set(option.id, Object.assign({ game: game }, option));
-                    const detailLabel = option && option.source === 'derived'
-                        ? (option.source_label || 'Estimated from full-game lines') + (option.book_title ? ' | ' + option.book_title : '')
-                        : (option.book_title || option.source_label || option.group_label);
-                    return '<button class="tmr-option-btn" id="option-' + option.id + '" onclick="window.tmrSelectOption(\'' + option.id + '\')">' +
+                const buttons = (group.items || []).map(function(option, optionIndex) {
+                    const optionKey = [
+                        game.id || ('game-' + index),
+                        group.key || ('group-' + groupIndex),
+                        option.id || ('option-' + optionIndex),
+                        optionIndex
+                    ].join('|');
+                    const optionDomId = 'option-' + safeDomId(optionKey);
+                    state.currentOptions.set(optionKey, Object.assign({ game: game, _domId: optionDomId, _optionKey: optionKey }, option));
+                    const detailLabel = option.book_title || option.source_label || option.group_label || 'Sportsbook feed';
+                    return '<button class="tmr-option-btn" id="' + optionDomId + '" data-option-id="' + escapeHtml(optionKey) + '" onclick="window.tmrSelectOption(this.dataset.optionId)">' +
                         '<div class="tmr-option-main">' +
                         '<div class="tmr-option-market">' + escapeHtml(option.selection_label) + '</div>' +
                         '<div class="tmr-option-detail">' + escapeHtml(detailLabel) + '</div>' +
@@ -801,7 +769,7 @@
                 }).join('');
 
                 if (buttons) {
-                    const groupTitle = group.label + (derivedOnly ? ' (Estimated)' : '');
+                    const groupTitle = group.label;
                     groupsHtml += '<div class="tmr-group" data-scope="' + getGroupScope(group) + '">' +
                         '<div class="tmr-group-title"><span>' + escapeHtml(groupTitle) + '</span><span class="tmr-group-count">' + groupItems.length + ' lines</span></div>' +
                         '<div class="tmr-option-grid">' + buttons + '</div>' +
@@ -842,6 +810,10 @@
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
+    }
+
+    function safeDomId(value) {
+        return String(value == null ? '' : value).replace(/[^a-zA-Z0-9_-]+/g, '-');
     }
 
     async function selectSportAndShowGames(sport) {
@@ -933,7 +905,7 @@
         document.querySelectorAll('.tmr-option-btn.active').forEach(function(button) {
             button.classList.remove('active');
         });
-        const active = document.getElementById('option-' + option.id);
+        const active = option._domId ? document.getElementById(option._domId) : null;
         if (active) active.classList.add('active');
 
         ensureMetadataFields();
