@@ -6,6 +6,16 @@
 (function() {
     'use strict';
 
+    function shouldUseBackendGrading() {
+        const activeApi = window.api;
+        if (!activeApi) return false;
+        return !!(
+            activeApi.baseUrl ||
+            typeof activeApi.request === 'function' ||
+            typeof activeApi.getPicks === 'function'
+        );
+    }
+
     const TMR_GRADER = {
         // Config
         PICKS_KEY: 'tmr_picks',
@@ -488,11 +498,24 @@
         } catch(e) { console.error('[Grader Fix]', e); }
     })();
 
-    // Auto-initialize when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => TMR_GRADER.init());
-    } else {
+    async function initGraderIfNeeded() {
+        if (window.api && window.api.ready) {
+            try {
+                await window.api.ready;
+            } catch (e) {}
+        }
+        if (shouldUseBackendGrading()) {
+            console.info('[Grader] Backend API detected; skipping local auto-grader.');
+            return;
+        }
         TMR_GRADER.init();
+    }
+
+    // Auto-initialize only when the page is still relying on local picks.
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => { initGraderIfNeeded(); });
+    } else {
+        initGraderIfNeeded();
     }
 
 })();
