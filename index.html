@@ -17799,24 +17799,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (sectionId === 'profile') {
                 if (typeof ensureBackendPicks === 'function') ensureBackendPicks();
                 if (typeof loadUserProfile === 'function') loadUserProfile();
-                // Auto-grade pending picks when viewing Profile
-                if (typeof window.autoGradeAll === 'function') {
+                if (typeof loadUserRecentActivity === 'function' && currentUser && currentUser.id) {
                     setTimeout(function() {
-                        window.autoGradeAll().catch(function(){});
-                    }, 1000);
+                        loadUserRecentActivity(currentUser.id);
+                    }, 250);
                 }
             }
             if (sectionId === 'mypicks') {
                 if (typeof ensureBackendPicks === 'function') ensureBackendPicks();
                 if (typeof loadMyPicks === 'function') loadMyPicks(window.currentPicksTab || 'pending');
-                // Auto-grade pending picks when viewing My Picks
-                if (typeof window.autoGradeAll === 'function') {
-                    setTimeout(function() {
-                        window.autoGradeAll().then(function() {
-                            loadMyPicks(window.currentPicksTab || 'pending');
-                        }).catch(function(){});
-                    }, 500);
-                }
             }
             if (sectionId === 'picks') {
                 if (typeof updateGameCounts === 'function') updateGameCounts();
@@ -19866,24 +19857,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     window.quickGrade = quickGrade;
 
-    // Try auto-grading all pending picks (delegates to the real grading engine)
+    // Legacy quick-grade entry point now just refreshes server-backed views
     function tryAutoGradeAll() {
-        if (typeof window.autoGradeAll === 'function') {
-            window.autoGradeAll().then(function() {
-                loadPicksHistory();
-                if (typeof updateStatsDashboard === 'function') updateStatsDashboard();
-                if (typeof loadMyRecordPage === 'function') loadMyRecordPage();
-            }).catch(function(err) {
-                console.error('Auto-grade error:', err);
-            });
-        }
+        if (typeof ensureBackendPicks === 'function') ensureBackendPicks();
+        if (typeof loadPicksHistory === 'function') loadPicksHistory();
+        if (typeof loadMyPicks === 'function') loadMyPicks(window.currentPicksTab || 'pending');
+        if (typeof updateStatsDashboard === 'function') updateStatsDashboard();
+        if (typeof loadMyRecordPage === 'function') loadMyRecordPage();
     }
     } // end of if(false) dead code block
 
     window.tryAutoGradeAll = function() {
-        if (typeof window.autoGradeAll === 'function') {
-            window.autoGradeAll().catch(function(err) { console.error('Auto-grade error:', err); });
-        }
+        if (typeof ensureBackendPicks === 'function') ensureBackendPicks();
+        if (typeof loadMyPicks === 'function') loadMyPicks(window.currentPicksTab || 'pending');
+        if (typeof updateStatsDashboard === 'function') updateStatsDashboard();
     };
 
     // Initialize on page load
@@ -19915,31 +19902,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        // =========================================================
-        // PERIODIC AUTO-GRADING - Check every 5 minutes for completed games
-        // =========================================================
-        if (typeof window.autoGradeAll === 'function') {
-            // Run initial auto-grade after a short delay (let page settle)
-            setTimeout(function() {
-                console.log('[TMR] Running initial auto-grade check...');
-                window.autoGradeAll().catch(function() {});
-            }, 2000);
-
-            // Then check every 5 minutes
-            setInterval(function() {
-                var pendingPicks = [];
-                try { pendingPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]').filter(function(p) { return p.status === 'pending'; }); } catch(e) {}
-                if (pendingPicks.length > 0) {
-                    console.log('[TMR] Periodic auto-grade: ' + pendingPicks.length + ' pending picks...');
-                    window.autoGradeAll().then(function() {
-                        // Refresh UI if user is on My Picks tab
-                        if (typeof loadMyPicks === 'function' && document.getElementById('mypicks') && document.getElementById('mypicks').style.display !== 'none') {
-                            loadMyPicks(window.currentPicksTab || 'pending');
-                        }
-                    }).catch(function() {});
-                }
-            }, 300000); // 5 minutes = 300,000ms
-        }
+        // Periodically refresh visible server-backed picks state.
+        setInterval(function() {
+            if (typeof loadMyPicks === 'function' && document.getElementById('mypicks') && document.getElementById('mypicks').style.display !== 'none') {
+                loadMyPicks(window.currentPicksTab || 'pending');
+            }
+        }, 300000);
     });
 
     async function updateGameCounts() {
@@ -21292,18 +21260,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (typeof window.renderAchievements === 'function') window.renderAchievements();
         }
         if (sectionId === 'mypicks') {
-            // Auto-grade pending picks when viewing My Picks section
-            if (typeof window.autoGradeAll === 'function') {
-                window.autoGradeAll().then(function() {
-                    loadMyPicks('pending');
-                    // Check achievements after grading
-                    if (typeof window.checkAndAwardAchievements === 'function') window.checkAndAwardAchievements();
-                }).catch(function() {
-                    loadMyPicks('pending');
-                });
-            } else {
-                loadMyPicks('pending');
-            }
+            loadMyPicks('pending');
+            if (typeof window.checkAndAwardAchievements === 'function') window.checkAndAwardAchievements();
         }
     };
 
