@@ -1,0 +1,1380 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages | Trust My Record</title>
+    <meta name="description" content="Private messaging with other bettors on Trust My Record.">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260415a">
+    <script defer src="static/js/tmr-sitewide.js?v=20260415a"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --neon-cyan: #00ffff;
+            --neon-purple: #ff00ff;
+            --neon-green: #39ff14;
+            --neon-gold: #ffd700;
+            --neon-red: #ff073a;
+            --neon-orange: #ff6b35;
+            --dark-bg: #0a0a0f;
+            --darker-bg: #050508;
+            --card-bg: rgba(20, 20, 35, 0.8);
+            --glass-border: rgba(0, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0c0;
+            --text-muted: #808090;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: var(--dark-bg);
+            background-image:
+                radial-gradient(circle at 25% 75%, rgba(0, 255, 255, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 75% 25%, rgba(255, 215, 0, 0.06) 0%, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--neon-cyan);
+        }
+
+        /* Main Layout */
+        .messages-wrapper {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            height: calc(100vh - 100px);
+        }
+
+        /* Sidebar */
+        .conversations-sidebar {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+        }
+
+        .new-message-btn {
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .conversations-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .conversation-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 5px;
+        }
+
+        .conversation-item:hover {
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .conversation-item.active {
+            background: rgba(0, 255, 255, 0.15);
+            border: 1px solid var(--glass-border);
+        }
+
+        .conversation-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .conversation-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .conversation-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .conversation-preview {
+            font-size: 13px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .conversation-meta {
+            text-align: right;
+        }
+
+        .conversation-time {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .unread-badge {
+            background: var(--neon-cyan);
+            color: black;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        /* Chat Area */
+        .chat-area {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .chat-header-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .chat-header-info h3 {
+            margin-bottom: 4px;
+        }
+
+        .chat-header-info p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            position: relative;
+        }
+
+        .message.sent {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.received {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-content {
+            line-height: 1.5;
+        }
+
+        .message-time {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .chat-input-area {
+            padding: 20px;
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            font-family: inherit;
+            font-size: 15px;
+            resize: none;
+            outline: none;
+        }
+
+        .chat-input:focus {
+            border-color: var(--neon-cyan);
+        }
+
+        .send-btn {
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.3);
+        }
+
+        /* Empty States */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 40px;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        /* New Message Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .modal h3 {
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 20px;
+        }
+
+        .modal-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 12px;
+            color: white;
+            font-family: inherit;
+            margin-bottom: 20px;
+            outline: none;
+        }
+
+        .modal-input:focus {
+            border-color: var(--neon-cyan);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .modal-btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .modal-btn.primary {
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .messages-wrapper {
+                grid-template-columns: 1fr;
+                height: calc(100vh - 80px);
+            }
+
+            .conversations-sidebar {
+                display: none;
+            }
+
+            .conversations-sidebar.active {
+                display: flex;
+                position: fixed;
+                top: 70px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 50;
+            }
+        }
+
+        /* ========================================
+           PORTAL MESSAGES OVERRIDE
+           ======================================== */
+        body {
+            background: #f3f5f8;
+            color: #162231;
+        }
+
+        .messages-top-strip,
+        header,
+        footer {
+            margin-left: -20px;
+            margin-right: -20px;
+        }
+
+        .messages-top-strip {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            overflow-x: auto;
+            white-space: nowrap;
+            background: #102338;
+            color: #ffffff;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            scrollbar-width: none;
+        }
+
+        .messages-top-strip::-webkit-scrollbar {
+            display: none;
+        }
+
+        header {
+            background: #ffffff;
+            border-bottom: 1px solid #d8dde6;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+            border-radius: 0;
+            padding: 0;
+        }
+
+        .header-content {
+            display: grid;
+            grid-template-columns: auto minmax(760px, 1fr) auto;
+            grid-template-areas: "logo nav actions";
+            align-items: center;
+            gap: 24px;
+            min-height: 78px;
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo {
+            grid-area: logo;
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 1.58rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #102338;
+            background: none;
+            -webkit-text-fill-color: initial;
+        }
+
+        .nav-links {
+            grid-area: nav;
+            display: flex;
+            width: 100%;
+            gap: 28px;
+            align-items: center;
+            justify-content: space-evenly;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #516276;
+            font-weight: 700;
+            font-size: 1.08rem;
+            padding: 14px 8px;
+            border: none;
+            background: transparent;
+            text-align: center;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #f58220;
+        }
+
+        .messages-shell-actions {
+            grid-area: actions;
+            justify-self: end;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .shell-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 11px 16px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-decoration: none;
+            border: 1px solid #d8dde6;
+            background: #ffffff;
+            color: #162231;
+        }
+
+        .shell-btn.primary {
+            background: #f58220;
+            border-color: #f58220;
+            color: #ffffff;
+        }
+
+        .messages-hero {
+            max-width: 1440px;
+            margin: 22px auto 18px;
+            padding: 0 20px;
+        }
+
+        .messages-hero-card {
+            background: linear-gradient(135deg, #102338 0%, #163451 100%);
+            color: #ffffff;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
+            display: grid;
+            grid-template-columns: 1.08fr 0.92fr;
+            min-height: 280px;
+        }
+
+        .messages-hero-copy {
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .messages-eyebrow {
+            display: inline-flex;
+            width: fit-content;
+            padding: 7px 11px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.1);
+            color: #ffffff;
+            font-size: 0.74rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 14px;
+        }
+
+        .messages-hero-copy h1 {
+            margin: 0 0 12px;
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            line-height: 0.96;
+            letter-spacing: -0.04em;
+        }
+
+        .messages-hero-copy p {
+            margin: 0;
+            color: rgba(255,255,255,0.82);
+            font-size: 1rem;
+            line-height: 1.7;
+            max-width: 620px;
+        }
+
+        .messages-hero-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .messages-hero-stat {
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.08);
+        }
+
+        .messages-hero-stat strong {
+            display: block;
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+
+        .messages-hero-stat span {
+            color: rgba(255,255,255,0.78);
+            font-size: 0.8rem;
+        }
+
+        .messages-hero-image {
+            background:
+                radial-gradient(circle at 70% 18%, rgba(45,212,191,0.24), transparent 28%),
+                radial-gradient(circle at 14% 86%, rgba(212,167,44,0.18), transparent 30%),
+                linear-gradient(135deg, #081523 0%, #122a43 48%, #0b1725 100%);
+        }
+
+        .messages-wrapper {
+            max-width: 1440px;
+            margin: 0 auto 28px;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+            height: calc(100vh - 220px);
+        }
+
+        .conversations-sidebar,
+        .chat-area {
+            background: #ffffff;
+            border: 1px solid #d8dde6;
+            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
+        }
+
+        .sidebar-header,
+        .chat-header,
+        .chat-input-area {
+            border-color: #d8dde6;
+        }
+
+        .sidebar-header h2 {
+            font-family: 'Barlow', 'Inter', sans-serif;
+            color: #162231;
+            font-size: 1.25rem;
+        }
+
+        .new-message-btn,
+        .send-btn,
+        .modal-btn.primary {
+            background: #f58220;
+            color: #ffffff;
+            border: none;
+            box-shadow: none;
+        }
+
+        .conversation-item:hover {
+            background: #f8fafc;
+        }
+
+        .conversation-item.active {
+            background: #eef4fb;
+            border: 1px solid #c4d6ef;
+        }
+
+        .conversation-avatar,
+        .chat-header-avatar {
+            background: linear-gradient(135deg, #1f7ae0, #102338);
+            color: #ffffff;
+        }
+
+        .conversation-name,
+        .chat-header-info h3,
+        .message.received {
+            color: #162231;
+        }
+
+        .conversation-preview,
+        .conversation-time,
+        .chat-header-info p,
+        .empty-state p {
+            color: #637389;
+        }
+
+        .unread-badge {
+            background: #1f7ae0;
+            color: #ffffff;
+        }
+
+        .message.received {
+            background: #f8fafc;
+            border: 1px solid #d8dde6;
+        }
+
+        .message.sent {
+            background: linear-gradient(135deg, #f58220, #d66f17);
+            color: #ffffff;
+        }
+
+        .chat-input,
+        .modal-input {
+            background: #ffffff;
+            border: 1px solid #d8dde6;
+            color: #162231;
+        }
+
+        .modal {
+            background: #ffffff;
+            border: 1px solid #d8dde6;
+            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.16);
+        }
+
+        .modal h3,
+        .empty-state h3 {
+            color: #162231;
+            font-family: 'Barlow', 'Inter', sans-serif;
+        }
+
+        footer {
+            background: #ffffff !important;
+            border-top: 1px solid #d8dde6 !important;
+            margin-top: 40px !important;
+            padding-top: 0 !important;
+        }
+
+        footer a:hover {
+            color: #1f7ae0 !important;
+        }
+
+        @media (max-width: 1200px) {
+            .header-content {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "logo"
+                    "actions"
+                    "nav";
+                justify-items: start;
+                padding-top: 16px;
+                padding-bottom: 16px;
+            }
+
+            .messages-shell-actions {
+                justify-self: start;
+            }
+
+            .messages-hero-card {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+</head>
+<body>
+    <div class="messages-top-strip">
+        <strong>Today:</strong>
+        <span>Private conversations</span>
+        <span>Verified user profiles</span>
+        <span>Pick discussion and follow-up</span>
+        <span>Forum and feed crossover</span>
+    </div>
+        <header>
+        <div class="header-content">
+            <a href="index.html" class="logo">TRUST<span style="color:#f58220;">MY</span>RECORD</a>
+            <nav class="nav-links">
+                <a href="sportsbook.html" class="nav-link">Odds</a>
+                <a href="sportsbook.html" class="nav-link">Scores &amp; Matchups</a>
+                <a href="feed.html" class="nav-link">News</a>
+                <a href="sportsbook.html" class="nav-link">Picks</a>
+                <a href="index.html#leaderboards" class="nav-link">Handicappers</a>
+                <a href="forum.html" class="nav-link">Forum</a>
+                <a href="messages.html" class="nav-link active">Messages</a>
+                <a href="profile.html" class="nav-link">My Account</a>
+            </nav>
+            <div class="messages-shell-actions">
+                <a href="index.html?section=login" class="shell-btn">Log In</a>
+                <a href="index.html?section=signup" class="shell-btn primary">Join Free</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="messages-hero">
+        <div class="messages-hero-card">
+            <div class="messages-hero-copy">
+                <div class="messages-eyebrow">Reference-Led Direction</div>
+                <h1>Private messages that feel like part of the same sportsbook portal.</h1>
+                <p>Direct messages should support the betting workflow, not look like a separate app. Talk through matchups, follow up on picks, and keep the community layer tied to the rest of TrustMyRecord.</p>
+                <div class="messages-hero-stats">
+                    <div class="messages-hero-stat">
+                        <strong>Inbox</strong>
+                        <span>Conversations and replies</span>
+                    </div>
+                    <div class="messages-hero-stat">
+                        <strong>Profiles</strong>
+                        <span>Direct access to verified users</span>
+                    </div>
+                    <div class="messages-hero-stat">
+                        <strong>Flow</strong>
+                        <span>Feed, forum, and picks stay connected</span>
+                    </div>
+                </div>
+            </div>
+            <div class="messages-hero-image"></div>
+        </div>
+    </section>
+
+    <div class="messages-wrapper">
+        <!-- Conversations Sidebar -->
+        <div class="conversations-sidebar">
+            <div class="sidebar-header">
+                <h2>Messages</h2>
+                <button class="new-message-btn" onclick="openNewMessageModal()">+ New</button>
+            </div>
+            <div class="conversations-list" id="conversationsList">
+                <!-- Conversations loaded here -->
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area">
+            <div class="chat-header" id="chatHeader" style="display: none;">
+                <div class="chat-header-avatar" id="chatAvatar">👤</div>
+                <div class="chat-header-info">
+                    <h3 id="chatUserName">Select a conversation</h3>
+                    <p id="chatUserStatus">Online</p>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="empty-state">
+                    <div class="empty-state-icon">💬</div>
+                    <h3>Select a conversation</h3>
+                    <p>Choose from your conversations or start a new one</p>
+                </div>
+            </div>
+
+            <div class="chat-input-area" id="chatInputArea" style="display: none;">
+                <textarea class="chat-input" id="messageInput" placeholder="Type a message..." rows="1"></textarea>
+                <button class="send-btn" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Message Modal -->
+    <div class="modal-overlay" id="newMessageModal">
+        <div class="modal">
+            <h3>💬 New Message</h3>
+            <input type="text" class="modal-input" id="newMessageUsername" placeholder="Search for a user..." oninput="onUserSearchInput()">
+            <div id="userSearchResults" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;"></div>
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeNewMessageModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="startNewConversation()">Start Chat</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="static/js/config.js?v=20260317"></script>
+    <script src="static/js/analytics.js?v=20260405"></script>
+    <script src="static/js/backend-api.js?v=20260414c"></script>
+    <script src="static/js/nav-badges.js"></script>
+    <script src="static/js/notifications.js?v=20260414b"></script>
+<script src="static/js/auth-persistent.js?v=20260414e"></script>
+    <script>
+        // Message System - Backend API powered
+        let currentUser = null;
+        let activeConversationUserId = null;
+        let activeConversationUsername = null;
+        let conversations = [];
+        let refreshInterval = null;
+
+        async function init() {
+            // Wait for backend API to be ready
+            await api.ready;
+
+            // Check login - try backend first, then localStorage
+            if (api.isLoggedIn()) {
+                try {
+                    const userData = await api.getCurrentUser();
+                    currentUser = userData.user || userData;
+                } catch (e) {
+                    currentUser = null;
+                }
+            }
+            // Fallback to localStorage auth
+            if (!currentUser && typeof auth !== 'undefined' && auth.isLoggedIn()) {
+                currentUser = auth.getCurrentUser();
+            }
+            if (!currentUser) {
+                try {
+                    const stored = localStorage.getItem('tmr_current_user') || localStorage.getItem('trustmyrecord_session');
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        currentUser = parsed.user || parsed;
+                    }
+                } catch(e) {}
+            }
+            if (!currentUser) {
+                window.location.href = 'index.html?section=login';
+                return;
+            }
+
+            await loadConversations();
+
+            // Check for ?to=username parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const toUser = urlParams.get('to');
+            if (toUser) {
+                await startConversationWithUser(toUser);
+            }
+
+            // Auto-resize textarea
+            const textarea = document.getElementById('messageInput');
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
+
+            // Enter to send
+            textarea.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Auto-refresh conversations every 30 seconds
+            refreshInterval = setInterval(async () => {
+                await loadConversations();
+                // If viewing a conversation, refresh its messages too
+                if (activeConversationUserId) {
+                    await loadChatMessages(activeConversationUserId, false);
+                }
+            }, 30000);
+        }
+
+        async function loadConversations() {
+            try {
+                if (api && typeof api.getConversations === 'function') {
+                    const data = await api.getConversations();
+                    conversations = data.conversations || [];
+                } else {
+                    // localStorage fallback
+                    conversations = loadLocalConversations();
+                }
+                renderConversationsList();
+            } catch (e) {
+                console.error('Failed to load conversations:', e);
+                // Try localStorage fallback
+                conversations = loadLocalConversations();
+                renderConversationsList();
+            }
+        }
+
+        function loadLocalConversations() {
+            const messages = JSON.parse(localStorage.getItem('trustmyrecord_messages') || '[]');
+            const convMap = {};
+            const users = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
+            const myId = currentUser.id || currentUser.username;
+
+            messages.forEach(m => {
+                const otherId = m.senderId === myId ? m.recipientId : (m.recipientId === myId ? m.senderId : null);
+                if (!otherId) return;
+                if (!convMap[otherId]) {
+                    const otherUser = users.find(u => u.id === otherId || u.username === otherId);
+                    convMap[otherId] = {
+                        other_user_id: otherId,
+                        other_username: otherUser ? otherUser.username : otherId,
+                        last_message: m.content,
+                        last_message_at: m.timestamp,
+                        unread_count: 0
+                    };
+                }
+                if (new Date(m.timestamp) > new Date(convMap[otherId].last_message_at || 0)) {
+                    convMap[otherId].last_message = m.content;
+                    convMap[otherId].last_message_at = m.timestamp;
+                }
+                if (m.recipientId === myId && !m.read) convMap[otherId].unread_count++;
+            });
+            return Object.values(convMap).sort((a, b) => new Date(b.last_message_at || 0) - new Date(a.last_message_at || 0));
+        }
+
+        function renderConversationsList() {
+            const list = document.getElementById('conversationsList');
+
+            if (conversations.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state" style="padding: 40px 20px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">📬</div>
+                        <p style="color: var(--text-muted);">No conversations yet</p>
+                        <p style="font-size: 13px; color: var(--text-muted); opacity: 0.7;">Start a conversation!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = conversations.map(conv => {
+                const isActive = activeConversationUserId === conv.other_user_id;
+                const initial = (conv.other_username || '?').charAt(0).toUpperCase();
+                const preview = conv.last_message ? conv.last_message.substring(0, 30) + (conv.last_message.length > 30 ? '...' : '') : 'No messages yet';
+                const time = conv.last_message_at ? formatTime(conv.last_message_at) : '';
+
+                return `
+                    <div class="conversation-item ${isActive ? 'active' : ''}"
+                         onclick="selectConversation(${conv.other_user_id}, '${escapeAttr(conv.other_username)}')">
+                        <div class="conversation-avatar">${initial}</div>
+                        <div class="conversation-info">
+                            <div class="conversation-name">${escapeHtml(conv.other_username)}</div>
+                            <div class="conversation-preview">${escapeHtml(preview)}</div>
+                        </div>
+                        <div class="conversation-meta">
+                            <div class="conversation-time">${time}</div>
+                            ${conv.unread_count > 0 ? `<span class="unread-badge">${conv.unread_count}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function selectConversation(userId, username) {
+            activeConversationUserId = userId;
+            activeConversationUsername = username;
+
+            // Mark as read
+            try {
+                await api.markAsRead(userId);
+            } catch (e) {
+                console.error('Failed to mark as read:', e);
+            }
+
+            // Update sidebar to reflect active + cleared unread
+            const conv = conversations.find(c => c.other_user_id === userId);
+            if (conv) conv.unread_count = 0;
+            renderConversationsList();
+
+            // Show chat header
+            renderChatHeader(username);
+            document.getElementById('chatHeader').style.display = 'flex';
+            document.getElementById('chatInputArea').style.display = 'flex';
+
+            // Load messages
+            await loadChatMessages(userId, true);
+        }
+
+        async function loadChatMessages(userId, scrollToBottom) {
+            try {
+                let messages;
+                if (api && typeof api.getMessages === 'function') {
+                    const data = await api.getMessages(userId);
+                    messages = data.messages || [];
+                } else {
+                    // localStorage fallback
+                    const allMsgs = JSON.parse(localStorage.getItem('trustmyrecord_messages') || '[]');
+                    const myId = currentUser.id || currentUser.username;
+                    messages = allMsgs.filter(m =>
+                        (m.senderId === myId && m.recipientId === userId) ||
+                        (m.senderId === userId && m.recipientId === myId)
+                    ).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+                    .map(m => ({ ...m, sender_id: m.senderId, created_at: m.timestamp }));
+                }
+                renderMessages(messages);
+                if (scrollToBottom) {
+                    const container = document.getElementById('chatMessages');
+                    container.scrollTop = container.scrollHeight;
+                }
+            } catch (e) {
+                console.error('Failed to load messages:', e);
+                document.getElementById('chatMessages').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <p>Failed to load messages</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderChatHeader(username) {
+            document.getElementById('chatAvatar').textContent = (username || '?').charAt(0).toUpperCase();
+            document.getElementById('chatUserName').textContent = username || 'Unknown';
+        }
+
+        function renderMessages(messages) {
+            const container = document.getElementById('chatMessages');
+
+            if (!messages || messages.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💬</div>
+                        <p>No messages yet. Say hello!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = messages.map(msg => {
+                const isSent = msg.sender_id === currentUser.id;
+                return `
+                    <div class="message ${isSent ? 'sent' : 'received'}">
+                        <div class="message-content">${escapeHtml(msg.content)}</div>
+                        <div class="message-time">${formatTime(msg.created_at)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+
+            if (!content || !activeConversationUserId) return;
+
+            // Disable send button while sending
+            const sendBtn = document.querySelector('.send-btn');
+            sendBtn.disabled = true;
+            sendBtn.textContent = '...';
+
+            try {
+                if (api && typeof api.sendMessage === 'function') {
+                    await api.sendMessage(activeConversationUserId, content);
+                } else {
+                    // localStorage fallback
+                    const allMsgs = JSON.parse(localStorage.getItem('trustmyrecord_messages') || '[]');
+                    allMsgs.push({
+                        id: 'msg_' + Date.now(),
+                        senderId: currentUser.id || currentUser.username,
+                        senderUsername: currentUser.username,
+                        recipientId: activeConversationUserId,
+                        content: content,
+                        timestamp: new Date().toISOString(),
+                        read: false
+                    });
+                    localStorage.setItem('trustmyrecord_messages', JSON.stringify(allMsgs));
+                }
+                input.value = '';
+                input.style.height = 'auto';
+
+                // Reload messages and conversations
+                await loadChatMessages(activeConversationUserId, true);
+                await loadConversations();
+            } catch (e) {
+                console.error('Failed to send message:', e);
+                alert('Failed to send message. Please try again.');
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send';
+            }
+        }
+
+        async function startConversationWithUser(username) {
+            // Check if conversation already exists in sidebar
+            const existing = conversations.find(c => c.other_username === username);
+            if (existing) {
+                await selectConversation(existing.other_user_id, existing.other_username);
+                return;
+            }
+
+            // Look up user by username to get their ID
+            try {
+                const data = await api.searchUsers(username);
+                const users = data.users || [];
+                const target = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+                if (!target) {
+                    alert('User not found: ' + username);
+                    return;
+                }
+
+                activeConversationUserId = target.id;
+                activeConversationUsername = target.username;
+
+                renderChatHeader(target.username);
+                document.getElementById('chatHeader').style.display = 'flex';
+                document.getElementById('chatInputArea').style.display = 'flex';
+
+                // Load any existing messages (may be empty)
+                await loadChatMessages(target.id, true);
+            } catch (e) {
+                console.error('Failed to find user:', e);
+                alert('Could not find user: ' + username);
+            }
+        }
+
+        function openNewMessageModal() {
+            document.getElementById('newMessageModal').classList.add('active');
+            document.getElementById('newMessageUsername').value = '';
+            document.getElementById('userSearchResults').innerHTML = '';
+            document.getElementById('newMessageUsername').focus();
+        }
+
+        function closeNewMessageModal() {
+            document.getElementById('newMessageModal').classList.remove('active');
+            document.getElementById('newMessageUsername').value = '';
+            document.getElementById('userSearchResults').innerHTML = '';
+        }
+
+        let searchTimeout = null;
+        async function onUserSearchInput() {
+            const query = document.getElementById('newMessageUsername').value.trim();
+            const resultsDiv = document.getElementById('userSearchResults');
+
+            if (query.length < 2) {
+                resultsDiv.innerHTML = '';
+                return;
+            }
+
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const data = await api.searchUsers(query, { limit: 5 });
+                    const users = (data.users || []).filter(u => u.id !== currentUser.id);
+                    if (users.length === 0) {
+                        resultsDiv.innerHTML = '<p style="color: var(--text-muted); padding: 8px;">No users found</p>';
+                        return;
+                    }
+                    resultsDiv.innerHTML = users.map(u => `
+                        <div class="search-result-item" onclick="selectUserFromSearch(${u.id}, '${escapeAttr(u.username)}')"
+                             style="display: flex; align-items: center; gap: 10px; padding: 10px; cursor: pointer; border-radius: 8px; transition: background 0.2s;"
+                             onmouseover="this.style.background='rgba(0,255,255,0.1)'" onmouseout="this.style.background='transparent'">
+                            <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px;">${u.username.charAt(0).toUpperCase()}</div>
+                            <span style="font-weight: 600;">${escapeHtml(u.username)}</span>
+                        </div>
+                    `).join('');
+                } catch (e) {
+                    console.error('User search failed:', e);
+                    resultsDiv.innerHTML = '<p style="color: var(--text-muted); padding: 8px;">Search failed</p>';
+                }
+            }, 300);
+        }
+
+        async function selectUserFromSearch(userId, username) {
+            closeNewMessageModal();
+            activeConversationUserId = userId;
+            activeConversationUsername = username;
+
+            renderChatHeader(username);
+            document.getElementById('chatHeader').style.display = 'flex';
+            document.getElementById('chatInputArea').style.display = 'flex';
+
+            await loadChatMessages(userId, true);
+            await loadConversations();
+        }
+
+        async function startNewConversation() {
+            const username = document.getElementById('newMessageUsername').value.trim();
+            if (!username) return;
+
+            if (username.toLowerCase() === (currentUser.username || '').toLowerCase()) {
+                alert('You cannot message yourself!');
+                return;
+            }
+
+            closeNewMessageModal();
+            await startConversationWithUser(username);
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+            return date.toLocaleDateString();
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function escapeAttr(text) {
+            if (!text) return '';
+            return text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        // Initialize
+        init();
+    </script>
+
+        <footer style="background: #ffffff; border-top: 1px solid #d8dde6; padding: 0; margin-top: 60px;">
+            <div style="max-width: 1440px; margin: 0 auto; padding: 22px 24px 0;">
+                <!-- Footer Columns -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding-bottom: 28px; border-bottom: 1px solid #d8dde6;">
+                    <!-- Brand Column -->
+                    <div>
+                        <div style="font-size: 1.3rem; font-weight: 800; color: #162231; margin-bottom: 10px; letter-spacing: 0;">Trust<span style='color:#f58220;'>My</span>Record</div>
+                        <p style="color: #637389; font-size: 0.85rem; line-height: 1.6; margin: 0 0 16px 0;">Transparent sports betting records, sharper social tools, and a cleaner portal-style product shell.</p>
+                        <p style="color: #637389; font-size: 0.8rem; margin: 0;">&copy; 2026 TrustMyRecord.com</p>
+                    </div>
+                    <!-- Platform Column -->
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: #162231; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Platform</div>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <a href="sportsbook.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
+                            <a href="index.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
+                            <a href="arena.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Gaming Arena</a>
+                            <a href="forum.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
+                        </div>
+                    </div>
+                    <!-- Community Column -->
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: #162231; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Community</div>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <a href="feed.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
+                            <a href="challenges.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Challenges</a>
+                            <a href="polls.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Polls</a>
+                            <a href="trivia.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
+                        </div>
+                    </div>
+                    <!-- Legal Column -->
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: #162231; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Info</div>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <a href="about.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
+                            <a href="terms.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
+                            <a href="privacy.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
+                            <a href="mailto:support@trustmyrecord.com" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Contact</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Bottom Bar -->
+                <div style="padding: 24px 0; text-align: center;">
+                    <p style="color: #637389; font-size: 0.78rem; line-height: 1.7; margin: 0 0 8px 0;">TrustMyRecord is not a gambling site. We provide pick tracking and community features only. No real money is wagered on this platform.</p>
+                    <p style="color: #637389; font-size: 0.72rem; margin: 0;">If you or someone you know has a gambling problem, call 1-800-GAMBLER. Must be 18+ to participate. Please gamble responsibly.</p>
+                </div>
+            </div>
+            <style>
+                footer a:hover { color: #1f7ae0 !important; }
+                @media (max-width: 900px) {
+                    footer > div > div:first-child { grid-template-columns: repeat(2, 1fr) !important; gap: 30px !important; }
+                }
+                @media (max-width: 540px) {
+                    footer > div > div:first-child { grid-template-columns: 1fr !important; gap: 24px !important; }
+                    footer { padding-top: 36px !important; }
+                }
+            </style>
+        </footer>
+
+
+</body>
+</html>
+<!-- Deploy: Tue, Apr 14, 2026  7:47:00 PM -->
