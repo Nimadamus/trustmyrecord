@@ -330,6 +330,53 @@
             font-weight: 800;
         }
 
+        .slogan-band {
+            display: grid;
+            grid-template-columns: 1.2fr repeat(3, 1fr);
+            gap: 12px;
+            margin: 8px 0 18px;
+        }
+
+        .slogan-main,
+        .slogan-card {
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            background:
+                radial-gradient(circle at 15% 0%, rgba(212,167,44,0.16), transparent 34%),
+                rgba(255,255,255,0.045);
+            padding: 18px;
+        }
+
+        .slogan-main {
+            border-color: rgba(45,212,191,0.28);
+            background:
+                radial-gradient(circle at 0% 0%, rgba(45,212,191,0.18), transparent 36%),
+                linear-gradient(145deg, rgba(17,28,49,0.92), rgba(10,17,31,0.96));
+        }
+
+        .slogan-main b,
+        .slogan-card b {
+            display: block;
+            font-family: "Barlow Condensed", sans-serif;
+            font-size: clamp(1.7rem, 2.5vw, 2.7rem);
+            line-height: 0.88;
+            text-transform: uppercase;
+        }
+
+        .slogan-card b {
+            font-size: clamp(1.35rem, 2vw, 2rem);
+        }
+
+        .slogan-main span,
+        .slogan-card span {
+            display: block;
+            margin-top: 9px;
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.45;
+            font-weight: 750;
+        }
+
         .section {
             padding: 28px 0;
         }
@@ -780,7 +827,7 @@
             .nav-actions { justify-content: flex-start; }
             .hero, .trust { grid-template-columns: 1fr; }
             .media-panel, .media-panel img { min-height: 460px; }
-            .proof-strip, .steps, .pick-grid, .arena-grid, .manifesto-list { grid-template-columns: repeat(2, 1fr); }
+            .proof-strip, .steps, .pick-grid, .arena-grid, .manifesto-list, .slogan-band { grid-template-columns: repeat(2, 1fr); }
             .profile-wall { grid-template-columns: 1fr; }
             .leader-row { grid-template-columns: 44px 1fr repeat(2, 90px); }
             .leader-row > :nth-child(n+5):not(.follow) { display: none; }
@@ -788,7 +835,7 @@
 
         @media (max-width: 680px) {
             .shell { width: min(100% - 24px, 1480px); }
-            .proof-strip, .steps, .pick-grid, .mock-grid, .arena-grid, .manifesto-list { grid-template-columns: 1fr; }
+            .proof-strip, .steps, .pick-grid, .mock-grid, .arena-grid, .manifesto-list, .slogan-band { grid-template-columns: 1fr; }
             h1 { font-size: 4.4rem; }
             .hero-card { padding: 28px; min-height: auto; }
             .nav-links a { font-size: 1.42rem; }
@@ -819,9 +866,9 @@
         <main>
             <section class="hero">
                 <div class="hero-card">
-                    <span class="eyebrow">Think you know sports? Prove it in public.</span>
+                    <span class="eyebrow">Real records. Real competition. Real talk.</span>
                     <h1>The end of fake handicappers.</h1>
-                    <p class="hero-copy"><strong>TrustMyRecord is the sports social arena.</strong> Lock picks, create polls and trivia, challenge other fans, talk trash, build a public record, and sell your edge only after your receipts can back it up.</p>
+                    <p class="hero-copy"><strong>Think you know sports? Prove it.</strong> Lock picks, create polls and trivia, challenge other fans, talk trash, build a public record, and sell your edge only after your receipts can back it up.</p>
                     <div class="hero-actions">
                         <a class="btn primary" href="sportsbook.html">Join Free and Start Competing</a>
                         <a class="btn" href="profile.html">Browse Verified Records</a>
@@ -848,6 +895,25 @@
                 </div>
             </section>
 
+            <section class="slogan-band" aria-label="TrustMyRecord slogans">
+                <div class="slogan-main">
+                    <b>The fraud ends here.</b>
+                    <span>No more cropped screenshots, deleted losses, mystery records, or fake hot streaks. The board remembers.</span>
+                </div>
+                <div class="slogan-card">
+                    <b>Talk is cheap.</b>
+                    <span>Your record is the receipt.</span>
+                </div>
+                <div class="slogan-card">
+                    <b>No reset button.</b>
+                    <span>Wins and losses both stay attached.</span>
+                </div>
+                <div class="slogan-card">
+                    <b>Receipts before hype.</b>
+                    <span>Sell picks only after people can inspect the history.</span>
+                </div>
+            </section>
+
             <section class="section">
                 <div class="section-head">
                     <h2>This is bigger than picks.</h2>
@@ -856,17 +922,17 @@
                 <div class="arena-grid">
                     <article class="arena-card">
                         <span class="feature-label">Make Your Pick</span>
-                        <h3>Lock the ticket before the game starts.</h3>
+                        <h3>Put the claim on the board.</h3>
                         <p>Submit the market, line, odds, and unit size. Once it is saved, the record belongs to the public ledger.</p>
                     </article>
                     <article class="arena-card">
                         <span class="feature-label">The Arena</span>
-                        <h3>Call out rivals and settle it on the board.</h3>
+                        <h3>Call out rivals. Settle it in public.</h3>
                         <p>Head-to-head challenges, featured contests, rivalry matchups, and sponsor events turn sports talk into scorekeeping.</p>
                     </article>
                     <article class="arena-card">
                         <span class="feature-label">Social Feed</span>
-                        <h3>A sports bar with receipts attached.</h3>
+                        <h3>A sports bar where receipts talk back.</h3>
                         <p>Posts, reactions, picks, score debates, and locked timestamps make every argument searchable and accountable.</p>
                     </article>
                     <article class="arena-card">
@@ -949,7 +1015,7 @@
             </section>
 
             <section class="final-cta">
-                <h2>Talk is cheap. Records are not.</h2>
+                <h2>The board remembers.</h2>
                 <p>Create a free account, make your first locked pick, challenge another fan, build your profile, and start proving what every loudmouth on sports internet only claims.</p>
                 <a class="btn primary" href="sportsbook.html">Enter The Arena</a>
             </section>
