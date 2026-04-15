@@ -4266,6 +4266,554 @@
             }
         }
 
+        /* ========================================
+           PORTAL-STYLE HOMEPAGE OVERRIDE
+           ======================================== */
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(31, 122, 224, 0.14), transparent 22%),
+                linear-gradient(180deg, #f2f5f9 0%, #eef2f7 100%);
+            color: #162231;
+        }
+
+        .animated-grid { display: none; }
+
+        .container {
+            max-width: 1440px;
+            padding: 0 20px 32px;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: #ffffff;
+            border: 1px solid rgba(216, 221, 230, 0.95);
+            border-radius: 0 0 18px 18px;
+            box-shadow: 0 12px 36px rgba(18, 32, 49, 0.08);
+        }
+
+        .header-content {
+            min-height: 78px;
+            gap: 18px;
+        }
+
+        .logo {
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 1.55rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #102338;
+            text-shadow: none;
+        }
+
+        .main-nav {
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            color: #516276;
+            font-weight: 700;
+            font-size: 0.94rem;
+            text-transform: none;
+            letter-spacing: 0;
+            padding: 0;
+            border: none;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .nav-link:hover {
+            color: #1f7ae0;
+            text-shadow: none;
+            transform: none;
+        }
+
+        .header-icon-btn,
+        .hamburger-btn {
+            background: #f8fafc;
+            border: 1px solid #d8dde6;
+            color: #516276;
+            box-shadow: none;
+        }
+
+        .header-icon-btn:hover,
+        .hamburger-btn:hover {
+            background: #eef4fb;
+            border-color: #c4d6ef;
+            color: #1f7ae0;
+            transform: none;
+        }
+
+        .portal-top-strip,
+        .portal-sports-nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
+        }
+
+        .portal-top-strip::-webkit-scrollbar,
+        .portal-sports-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        .portal-top-strip {
+            background: #102338;
+            color: #ffffff;
+            margin-bottom: 12px;
+            padding: 10px 16px;
+            border-radius: 16px;
+            font-size: 0.84rem;
+            box-shadow: 0 12px 28px rgba(16, 35, 56, 0.18);
+        }
+
+        .portal-top-strip strong {
+            color: #ffffff;
+        }
+
+        .portal-sports-nav {
+            margin: 16px 0 0;
+            padding: 0 4px 14px;
+            border-bottom: 1px solid #d8dde6;
+            color: #516276;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .portal-sports-nav span {
+            padding-bottom: 10px;
+            border-bottom: 2px solid transparent;
+        }
+
+        .portal-sports-nav span.active {
+            color: #1f7ae0;
+            border-bottom-color: #1f7ae0;
+        }
+
+        #home.page-section {
+            padding-top: 22px;
+        }
+
+        .hero.portal-hero {
+            padding: 0;
+            background: #ffffff;
+            border: 1px solid #d8dde6;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
+        }
+
+        .portal-hero-grid {
+            display: grid;
+            grid-template-columns: 1.08fr 0.92fr;
+            min-height: 360px;
+        }
+
+        .portal-hero-copy {
+            padding: 28px;
+            background: linear-gradient(135deg, #102338 0%, #163451 100%);
+            color: #ffffff;
+        }
+
+        .portal-hero-copy h1 {
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: clamp(2.2rem, 4vw, 3.8rem);
+            line-height: 0.94;
+            margin: 0 0 14px;
+            text-transform: none;
+            letter-spacing: -0.04em;
+            color: #ffffff;
+        }
+
+        .portal-hero-copy p {
+            color: rgba(255,255,255,0.82);
+            max-width: 620px;
+            margin: 0;
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        .portal-eyebrow {
+            display: inline-flex;
+            padding: 7px 11px;
+            margin-bottom: 14px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.1);
+            color: #ffffff;
+            font-size: 0.74rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .portal-hero-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .portal-hero-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 13px 18px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 0.92rem;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .portal-hero-button.primary {
+            background: #f58220;
+            color: #ffffff;
+        }
+
+        .portal-hero-button.secondary {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.18);
+            color: #ffffff;
+        }
+
+        .portal-hero-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        .portal-hero-stat {
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.08);
+        }
+
+        .portal-hero-stat strong {
+            display: block;
+            font-size: 1.16rem;
+            margin-bottom: 4px;
+        }
+
+        .portal-hero-stat span {
+            color: rgba(255,255,255,0.82);
+            font-size: 0.8rem;
+        }
+
+        .portal-hero-image {
+            background:
+                linear-gradient(130deg, rgba(16,35,56,0.16), rgba(16,35,56,0.74)),
+                url('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
+        }
+
+        .portal-home-layout {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: 1.38fr 0.82fr;
+            gap: 20px;
+        }
+
+        .portal-module,
+        .portal-sidebar-card,
+        .portal-story-card {
+            background: #ffffff;
+            border: 1px solid #d8dde6;
+            border-radius: 16px;
+            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
+        }
+
+        .portal-module-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            padding: 18px 20px 0;
+        }
+
+        .portal-module-head h2,
+        .portal-sidebar-card h3,
+        .portal-story-card h3 {
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 1.35rem;
+            margin: 0;
+            color: #162231;
+        }
+
+        .portal-module-head .meta-link {
+            color: #1f7ae0;
+            font-size: 0.86rem;
+            font-weight: 700;
+        }
+
+        .portal-copy {
+            color: #637389;
+            font-size: 0.88rem;
+            line-height: 1.7;
+        }
+
+        .portal-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 14px 20px 0;
+        }
+
+        .portal-tab {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #f8fafc;
+            border: 1px solid #d8dde6;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #637389;
+        }
+
+        .portal-tab.active {
+            background: #eaf3fe;
+            border-color: #b9d5fb;
+            color: #1f7ae0;
+        }
+
+        .portal-games {
+            padding: 18px 20px 20px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .portal-game {
+            border: 1px solid #d8dde6;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #f8fafc;
+        }
+
+        .portal-game-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-bottom: 1px solid #d8dde6;
+            background: #ffffff;
+        }
+
+        .portal-badge {
+            display: inline-flex;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #fff1e5;
+            color: #f58220;
+            font-size: 0.74rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .portal-meta {
+            color: #637389;
+            font-size: 0.82rem;
+        }
+
+        .portal-market-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 14px 16px 16px;
+        }
+
+        .portal-market {
+            background: #ffffff;
+            border: 1px solid #d8dde6;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .portal-market strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 0.92rem;
+        }
+
+        .portal-market .positive { color: #159a55; }
+        .portal-market .action { color: #f58220; }
+
+        .portal-sidebar {
+            display: grid;
+            gap: 18px;
+        }
+
+        .portal-sidebar-card {
+            padding: 18px;
+        }
+
+        .portal-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            margin-top: 12px;
+        }
+
+        .portal-table th,
+        .portal-table td {
+            padding: 12px 0;
+            border-bottom: 1px solid #d8dde6;
+            text-align: left;
+        }
+
+        .portal-table th {
+            color: #637389;
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .portal-profit {
+            color: #159a55;
+            font-weight: 700;
+        }
+
+        .portal-list {
+            display: grid;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .portal-list-item {
+            border: 1px solid #d8dde6;
+            border-radius: 12px;
+            padding: 14px;
+            background: #f8fafc;
+        }
+
+        .portal-list-item strong {
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .portal-stats-strip {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .portal-small-stat {
+            border: 1px solid #d8dde6;
+            border-radius: 12px;
+            padding: 14px;
+            background: #f8fafc;
+        }
+
+        .portal-small-stat strong {
+            display: block;
+            font-size: 1.15rem;
+            margin-bottom: 4px;
+        }
+
+        .portal-story-grid {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        .portal-story-image {
+            height: 180px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .portal-story-body {
+            padding: 18px;
+        }
+
+        .portal-story-body h3 {
+            margin-bottom: 10px;
+        }
+
+        .legacy-home-block {
+            display: none !important;
+        }
+
+        #userStatsDashboard.section {
+            background: #ffffff;
+            border: 1px solid #d8dde6;
+            border-radius: 16px;
+            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
+            margin-top: 18px;
+        }
+
+        footer {
+            margin-top: 32px;
+            text-align: left;
+            padding: 0;
+            border-top: 1px solid #d8dde6;
+            background: #ffffff;
+        }
+
+        .portal-footer {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 22px 20px 28px;
+            color: #637389;
+            font-size: 0.82rem;
+            line-height: 1.7;
+        }
+
+        .portal-footer-grid {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr 1fr 1fr;
+            gap: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #d8dde6;
+            margin-bottom: 18px;
+        }
+
+        .portal-footer h4 {
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 1rem;
+            margin: 0 0 10px;
+            color: #162231;
+        }
+
+        .portal-footer a {
+            display: block;
+            margin-bottom: 8px;
+            color: #637389;
+            text-decoration: none;
+        }
+
+        .portal-footer a:hover {
+            color: #1f7ae0;
+        }
+
+        @media (max-width: 1200px) {
+            .portal-home-layout,
+            .portal-hero-grid,
+            .portal-story-grid,
+            .portal-footer-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 860px) {
+            .portal-market-grid,
+            .hero-stats,
+            .portal-stats-strip,
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* Scroll reveal animations */
         .reveal {
             opacity: 1;
@@ -9112,6 +9660,13 @@
 <body>
     <div class="animated-grid"></div>
     <div class="container">
+        <div class="portal-top-strip">
+            <strong>Today:</strong>
+            <span>Live odds boards</span>
+            <span>Verified user picks</span>
+            <span>Top capper streaks</span>
+            <span>Consensus and community pulse</span>
+        </div>
         <header>
             <div class="header-content">
                 <div style="display: flex; align-items: center; gap: 20px;">
@@ -9203,42 +9758,52 @@
             </div>
         </header>
 
+        <div class="portal-sports-nav">
+            <span class="active">MLB</span>
+            <span>NBA</span>
+            <span>NHL</span>
+            <span>NFL</span>
+            <span>NCAAB</span>
+            <span>NCAAF</span>
+            <span>Soccer</span>
+            <span>Consensus Picks</span>
+            <span>Top Cappers</span>
+            <span>Promos</span>
+        </div>
+
         <main>
             <!-- Home Section -->
             <div id="home" class="page-section active">
-                <section class="hero">
-                    <h1 class="reveal">THE END OF THE BULLSHIT</h1>
-                    <p class="reveal">A new standard for sports betting has arrived. Built on absolute proof, radical transparency, and zero excuses.</p>
-
-                    <!-- PRIMARY CTA - Above the fold, impossible to miss -->
-                    <div class="hero-cta-group reveal">
-                        <a id="heroPrimaryCta" class="hero-cta-primary" onclick="handleMakePicksCta()">
-                            GET STARTED FREE
-                        </a>
-                        <p class="hero-cta-sub">Free forever. No credit card. Your record starts the second you sign up.</p>
-                    </div>
-
-                    <!-- HOW IT WORKS - Quick journey visualization -->
-                    <div class="hero-journey reveal">
-                        <div class="journey-step">
-                            <div class="journey-icon">01</div>
-                            <div class="journey-label">Create Account</div>
+                <section class="hero portal-hero">
+                    <div class="portal-hero-grid">
+                        <div class="portal-hero-copy">
+                            <div class="portal-eyebrow">Sportsbook Portal Direction</div>
+                            <h1>Live odds, verified picks, and leaderboard credibility in one place.</h1>
+                            <p>TrustMyRecord should feel like a real sports betting portal, not a scattered app. Track live boards, lock your picks, build a public record, and see who is actually winning.</p>
+                            <div class="portal-hero-actions">
+                                <a id="heroPrimaryCta" class="portal-hero-button primary" onclick="handleMakePicksCta()">Get Started Free</a>
+                                <a class="portal-hero-button secondary" onclick="showSection('leaderboards')">View Leaderboards</a>
+                            </div>
+                            <div class="portal-hero-stats">
+                                <div class="portal-hero-stat">
+                                    <strong id="spPicksTracked">0</strong>
+                                    <span>Picks tracked</span>
+                                </div>
+                                <div class="portal-hero-stat">
+                                    <strong id="spActiveGames">0</strong>
+                                    <span>Active games</span>
+                                </div>
+                                <div class="portal-hero-stat">
+                                    <strong>7</strong>
+                                    <span>Sports covered</span>
+                                </div>
+                                <div class="portal-hero-stat">
+                                    <strong>100%</strong>
+                                    <span>Locked records</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="journey-arrow">&rarr;</div>
-                        <div class="journey-step">
-                            <div class="journey-icon">02</div>
-                            <div class="journey-label">Post Your Picks</div>
-                        </div>
-                        <div class="journey-arrow">&rarr;</div>
-                        <div class="journey-step">
-                            <div class="journey-icon">03</div>
-                            <div class="journey-label">Build Your Record</div>
-                        </div>
-                        <div class="journey-arrow">&rarr;</div>
-                        <div class="journey-step">
-                            <div class="journey-icon">04</div>
-                            <div class="journey-label">Climb Leaderboards</div>
-                        </div>
+                        <div class="portal-hero-image"></div>
                     </div>
                 </section>
 
@@ -9372,18 +9937,142 @@
                     </div>
                 </section>
 
+                <div class="portal-home-layout">
+                    <div class="stack">
+                        <section class="portal-module">
+                            <div class="portal-module-head">
+                                <div>
+                                    <h2>Live Odds + Make Your Picks</h2>
+                                    <div class="portal-copy">Covers-style board density with cleaner pick locking and market grouping for your own card.</div>
+                                </div>
+                                <div class="meta-link">View all boards</div>
+                            </div>
+                            <div class="portal-tabs">
+                                <div class="portal-tab active">MLB</div>
+                                <div class="portal-tab">NBA</div>
+                                <div class="portal-tab">NHL</div>
+                                <div class="portal-tab">NFL</div>
+                            </div>
+                            <div class="portal-games">
+                                <div class="portal-game">
+                                    <div class="portal-game-top">
+                                        <div>
+                                            <strong>Dodgers at Padres</strong>
+                                            <div class="portal-meta">7:10 PM PT • 42 picks locked • live board sync</div>
+                                        </div>
+                                        <div class="portal-badge">Most Active</div>
+                                    </div>
+                                    <div class="portal-market-grid">
+                                        <div class="portal-market"><strong>Moneyline</strong><span>LAD -128</span></div>
+                                        <div class="portal-market"><strong>Run Line</strong><span>SD +1.5 -154</span></div>
+                                        <div class="portal-market"><strong class="positive">Total</strong><span>Over 8.0 -108</span></div>
+                                    </div>
+                                </div>
+
+                                <div class="portal-game">
+                                    <div class="portal-game-top">
+                                        <div>
+                                            <strong>5 Innings</strong>
+                                            <div class="portal-meta">Own market slice with cleaner labels and stronger visual separation</div>
+                                        </div>
+                                        <div class="portal-badge">Featured</div>
+                                    </div>
+                                    <div class="portal-market-grid">
+                                        <div class="portal-market"><strong>LAD F5</strong><span>-122</span></div>
+                                        <div class="portal-market"><strong>SD +0.5</strong><span>-115</span></div>
+                                        <div class="portal-market"><strong class="action">Lock Pick</strong><span>Primary action</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <div class="portal-story-grid">
+                            <article class="portal-story-card">
+                                <div class="portal-story-image" style="background-image:url('https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80');"></div>
+                                <div class="portal-story-body">
+                                    <h3>Featured Matchup Analysis</h3>
+                                    <p class="portal-copy">Homepage modules can carry stronger editorial weight: matchup writeups, trend notes, injury context, and featured promo placement without the page feeling random.</p>
+                                </div>
+                            </article>
+                            <article class="portal-story-card">
+                                <div class="portal-story-image" style="background-image:url('https://images.unsplash.com/photo-1504450758481-7338eba7524a?auto=format&fit=crop&w=1200&q=80');"></div>
+                                <div class="portal-story-body">
+                                    <h3>Community Pulse</h3>
+                                    <p class="portal-copy">Blend verified user picks, consensus movement, and live discussion into the same portal structure so your social layer strengthens the sportsbook feel instead of fighting it.</p>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+
+                    <aside class="portal-sidebar">
+                        <section class="portal-sidebar-card">
+                            <h3>Top Cappers</h3>
+                            <div class="portal-copy">Leaderboard-style proof blocks inspired by handicapper portals.</div>
+                            <table class="portal-table">
+                                <thead>
+                                    <tr><th>#</th><th>Capper</th><th>Profit</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>1</td><td>Ben Burns</td><td class="portal-profit">+$1,145</td></tr>
+                                    <tr><td>2</td><td>Sniper Wes</td><td class="portal-profit">+$1,024</td></tr>
+                                    <tr><td>3</td><td>Mike Lundin</td><td class="portal-profit">+$966</td></tr>
+                                    <tr><td>4</td><td>Rocky Atkinson</td><td class="portal-profit">+$845</td></tr>
+                                </tbody>
+                            </table>
+                        </section>
+
+                        <section class="portal-sidebar-card">
+                            <h3>Hot Streaks</h3>
+                            <div class="portal-list">
+                                <div class="portal-list-item">
+                                    <strong>Ben Burns</strong>
+                                    <div class="portal-copy">10-1 start to the week • 6-0 MLB run • strong basketball season units.</div>
+                                </div>
+                                <div class="portal-list-item">
+                                    <strong>Jesse Schule</strong>
+                                    <div class="portal-copy">Top MLB profit profile • 60% winners • strong east division record.</div>
+                                </div>
+                                <div class="portal-list-item">
+                                    <strong>Steve Seagrave</strong>
+                                    <div class="portal-copy">11-3 all sports run • top-tier NBA and NHL form.</div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="portal-sidebar-card">
+                            <h3>Live Community Pulse</h3>
+                            <div class="portal-stats-strip">
+                                <div class="portal-small-stat">
+                                    <strong id="spPicksTrackedSidebar">0</strong>
+                                    <span class="portal-meta">Tracked picks</span>
+                                </div>
+                                <div class="portal-small-stat">
+                                    <strong id="spActiveGamesSidebar">0</strong>
+                                    <span class="portal-meta">Games live</span>
+                                </div>
+                            </div>
+                            <div class="portal-list" id="spActivityFeed" style="margin-top: 14px;">
+                                <div class="portal-list-item">
+                                    <strong>Loading community activity</strong>
+                                    <div class="portal-copy">Recent picks and locked plays will appear here.</div>
+                                </div>
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+
                 <!-- Social Proof Section -->
-                <section class="social-proof-section reveal">
+                <section class="legacy-home-block social-proof-section reveal">
                     <!-- Live Stats Bar -->
                     <div class="social-proof-stats-bar">
                         <div class="sp-stat-card">
                             <div class="sp-stat-icon">📊</div>
-                            <div class="sp-stat-value" id="spPicksTracked">0</div>
+                            <div class="sp-stat-value" id="legacySpPicksTracked">0</div>
                             <div class="sp-stat-label">Picks Tracked</div>
                         </div>
                         <div class="sp-stat-card">
                             <div class="sp-stat-icon">🎯</div>
-                            <div class="sp-stat-value" id="spActiveGames">0</div>
+                            <div class="sp-stat-value" id="legacySpActiveGames">0</div>
                             <div class="sp-stat-label">Active Games</div>
                         </div>
                         <div class="sp-stat-card">
@@ -9414,7 +10103,7 @@
                     </div>
                 </section>
 
-                <section class="section">
+                <section class="legacy-home-block section">
                     <div class="section-header reveal">
                         <h2>The Platform is the <span class="highlight">Future</span></h2>
                         <p>This is more than just a page for picks. We are building the definitive ecosystem for bettors who value real data over loud hype.</p>
@@ -9453,7 +10142,7 @@
                     </div>
                 </section>
 
-                <section class="section">
+                <section class="legacy-home-block section">
                     <div class="section-header reveal">
                         <h2>Enter <span class="highlight">The Arena</span></h2>
                         <p>Where legends are made and egos are destroyed. Face off against the best handicappers in the world in our competitive battleground.</p>
@@ -9477,7 +10166,7 @@
                     </div>
                 </section>
 
-                <section class="section">
+                <section class="legacy-home-block section">
                     <div class="section-header reveal">
                         <h2>Community <span class="highlight">Forums</span></h2>
                         <p>No echo chambers. No fake positivity. Just raw, unfiltered discussion where your record speaks louder than your mouth.</p>
@@ -9501,7 +10190,7 @@
                     </div>
                 </section>
                 
-                <section class="cta">
+                <section class="legacy-home-block cta">
                     <div class="section-header reveal">
                         <h2>The Record Starts Now.</h2>
                         <p>The era of the guru is over. The era of the record has begun. Witness the transparency from day one.</p>
@@ -16705,63 +17394,37 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
         </main>
 
-        <footer style="background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.8) 100%); border-top: 1px solid rgba(0, 255, 255, 0.15); padding: 50px 0 0 0; margin-top: 60px;">
-            <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px;">
-                <!-- Footer Columns -->
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.08);">
-                    <!-- Brand Column -->
+        <footer>
+            <div class="portal-footer">
+                <div class="portal-footer-grid">
                     <div>
-                        <div style="font-size: 1.3rem; font-weight: 800; color: #00ffff; margin-bottom: 10px; letter-spacing: 0.5px;">TrustMyRecord</div>
-                        <p style="color: #808090; font-size: 0.85rem; line-height: 1.6; margin: 0 0 16px 0;">The future of transparent sports betting.</p>
-                        <p style="color: #606070; font-size: 0.8rem; margin: 0;">&copy; 2026 TrustMyRecord.com</p>
+                        <h4>TrustMyRecord</h4>
+                        <div>The sportsbook portal direction: live boards, verified user records, capper leaderboards, streak tracking, and a cleaner content hierarchy.</div>
                     </div>
-                    <!-- Platform Column -->
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Platform</div>
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="sportsbook.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
-                            <a href="index.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
-                            <a href="arena.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Gaming Arena</a>
-                            <a href="forum.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
-                        </div>
+                        <h4>Platform</h4>
+                        <a href="sportsbook.html">Sportsbook</a>
+                        <a href="index.html">Leaderboards</a>
+                        <a href="arena.html">Gaming Arena</a>
+                        <a href="forum.html">Forum</a>
                     </div>
-                    <!-- Community Column -->
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Community</div>
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="feed.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
-                            <a href="challenges.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Challenges</a>
-                            <a href="polls.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Polls</a>
-                            <a href="trivia.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
-                        </div>
+                        <h4>Community</h4>
+                        <a href="feed.html">Feed</a>
+                        <a href="challenges.html">Picks Arena</a>
+                        <a href="polls.html">Polls</a>
+                        <a href="trivia.html">Trivia</a>
                     </div>
-                    <!-- Legal Column -->
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Info</div>
-                        <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="about.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
-                            <a href="terms.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
-                            <a href="privacy.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
-                            <a href="mailto:support@trustmyrecord.com" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Contact</a>
-                        </div>
+                        <h4>Info</h4>
+                        <a href="about.html">About</a>
+                        <a href="terms.html">Terms of Service</a>
+                        <a href="privacy.html">Privacy Policy</a>
+                        <a href="mailto:support@trustmyrecord.com">Contact</a>
                     </div>
                 </div>
-                <!-- Bottom Bar -->
-                <div style="padding: 24px 0; text-align: center;">
-                    <p style="color: #606070; font-size: 0.78rem; line-height: 1.7; margin: 0 0 8px 0;">TrustMyRecord is not a gambling site. We provide pick tracking and community features only. No real money is wagered on this platform.</p>
-                    <p style="color: #505060; font-size: 0.72rem; margin: 0;">If you or someone you know has a gambling problem, call 1-800-GAMBLER. Must be 18+ to participate. Please gamble responsibly.</p>
-                </div>
+                <div>TrustMyRecord is not a gambling site. We provide pick tracking and community features only. No real money is wagered on this platform. If you or someone you know has a gambling problem, call 1-800-GAMBLER.</div>
             </div>
-            <style>
-                footer a:hover { color: #00ffff !important; }
-                @media (max-width: 900px) {
-                    footer > div > div:first-child { grid-template-columns: repeat(2, 1fr) !important; gap: 30px !important; }
-                }
-                @media (max-width: 540px) {
-                    footer > div > div:first-child { grid-template-columns: 1fr !important; gap: 24px !important; }
-                    footer { padding-top: 36px !important; }
-                }
-            </style>
         </footer>
     </div>
 
@@ -18579,7 +19242,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div id="expandedMarkets${index}" class="expanded-markets">
                     <div class="market-section">
                         <div class="market-title">Player Props & Alt Lines</div>
-                        <p style="color: var(--text-muted); font-size: 0.9rem;">Coming soon</p>
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">Additional markets appear here when they are available from the live sportsbook feed.</p>
                     </div>
                 </div>
             </div>`;
@@ -18764,7 +19427,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function generateOddsDisplay(game, betType, labels) {
-        if (!game.odds) return '<div class="game-odds"><div class="no-odds">Odds coming soon</div></div>';
+        if (!game.odds) return '<div class="game-odds"><div class="no-odds">Live odds temporarily unavailable</div></div>';
 
         const awayShort = game.away_team.split(' ').pop();
         const homeShort = game.home_team.split(' ').pop();
@@ -19962,7 +20625,7 @@ document.addEventListener('DOMContentLoaded', function() {
             container.innerHTML = `
                 <div class="lb-row empty">
                     <div style="text-align:center; padding: 20px; color: var(--text-muted);">
-                        No users yet. Be the first!
+                        No ranked users yet. Check back after more verified action posts.
                     </div>
                 </div>
             `;
