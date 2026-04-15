@@ -1129,7 +1129,6 @@
         if (isOwnProfile) {
             actions = '<div class="profile-actions">' +
                 '<button class="btn btn-secondary" onclick="openEditModal()">Edit Profile</button>' +
-                '<button class="btn btn-secondary" onclick="resetProfileRecord()" style="border-color:rgba(239,68,68,0.45);color:#fca5a5;">Reset Record</button>' +
                 '</div>';
         } else if (currentUser) {
             const ft = isFollowingProfile ? 'Unfollow' : 'Follow';
@@ -1150,23 +1149,6 @@
             '<button type="button" class="profile-meta-item" style="background:none;border:none;padding:0;cursor:pointer;" onclick="openSocialList(\'followers\')">' + (Number(p.follower_count) || 0) + ' followers</button>' +
             '<button type="button" class="profile-meta-item" style="background:none;border:none;padding:0;cursor:pointer;" onclick="openSocialList(\'following\')">' + (Number(p.following_count) || 0) + ' following</button>' +
             '</div>' + actions + '</div>';
-    }
-
-    async function resetProfileRecord() {
-        if (!isOwnProfile) return;
-        const confirmed = window.confirm('Reset your visible Trust My Record history to 0-0-0 and hide all earlier picks from your public record?');
-        if (!confirmed) return;
-
-        try {
-            await api.request('/users/profile/reset-record', { method: 'POST' });
-            allLoadedPicks = [];
-            latestAdvancedStats = null;
-            showToast('Your record has been reset.', 'success');
-            await loadProfile();
-        } catch (error) {
-            console.error('[Profile] Reset record failed:', error);
-            showToast(error.message || 'Failed to reset record.', 'error');
-        }
     }
 
     // ======================== SUMMARY BAR ========================
