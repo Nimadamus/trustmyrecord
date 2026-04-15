@@ -195,7 +195,6 @@ async function loadFeed() {
     const c = document.getElementById('feedList');
     c.innerHTML = '<div class="tmr-loading-state" id="feedLoadingState"><div class="tmr-spinner"></div><p>Loading feed...</p><p class="tmr-loading-slow" id="feedLoadingSlow">Preparing the latest community activity.</p></div>';
     const _feedSlowTimer = setTimeout(() => { const el = document.getElementById('feedLoadingSlow'); if (el) el.style.display = 'block'; }, 5000);
-    const _feedRetryTimer = setTimeout(() => { renderDemoFeed('Demo content unavailable from live data. Showing a polished preview feed.'); }, 30000);
 
     let items = [];
 
@@ -280,12 +279,12 @@ async function loadFeed() {
             }
         }
     } catch(e) {
-        clearTimeout(_feedSlowTimer); clearTimeout(_feedRetryTimer);
-        renderDemoFeed('Demo content unavailable from live data. Showing a polished preview feed.');
+        clearTimeout(_feedSlowTimer);
+        renderFeedUnavailable('Live feed data is temporarily unavailable. Only real community posts are shown here.');
         return;
     }
 
-    clearTimeout(_feedSlowTimer); clearTimeout(_feedRetryTimer);
+    clearTimeout(_feedSlowTimer);
 
     if (!items.length) {
         updateHeroCounts(0);
@@ -318,106 +317,21 @@ function updateHeroCounts(visibleCount) {
     }
 }
 
-function getDemoFeedItems() {
-    const now = Date.now();
-    const minutesAgo = mins => new Date(now - mins * 60000).toISOString();
-    const items = [
-        {
-            item_type: 'pick',
-            post_type: 'pick',
-            item_id: 9001,
-            pick_id: 9001,
-            username: 'sharpLedger',
-            display_name: 'Sharp Ledger',
-            created_at: minutesAgo(7),
-            pick_selection: 'Yankees ML',
-            pick_market_type: 'h2h',
-            pick_odds: -118,
-            pick_units: 1.5,
-            pick_status: 'pending',
-            pick_home_team: 'New York Yankees',
-            pick_away_team: 'Toronto Blue Jays',
-            pick_sport_key: 'baseball_mlb',
-            likes_count: 18,
-            comments_count: 6
-        },
-        {
-            item_type: 'feed_post',
-            post_type: 'text',
-            item_id: 9002,
-            username: 'totalMarket',
-            display_name: 'Total Market',
-            created_at: minutesAgo(18),
-            content: 'Public card check: I am passing on the early NHL total movement until lineups confirm. Number moved from 5.5 to 6 without enough goalie clarity for me.',
-            sport: 'NHL',
-            likes_count: 31,
-            comments_count: 9
-        },
-        {
-            item_type: 'poll',
-            post_type: 'poll',
-            item_id: 9003,
-            poll_id: 9003,
-            username: 'hoopsBoard',
-            display_name: 'Hoops Board',
-            created_at: minutesAgo(36),
-            content: 'Best NBA angle tonight?',
-            sport: 'NBA',
-            total_votes: 142,
-            user_voted: true,
-            options: [
-                { id: 1, text: 'First half spread', votes: 54 },
-                { id: 2, text: 'Player PRA', votes: 41 },
-                { id: 3, text: 'Underdog moneyline', votes: 29 },
-                { id: 4, text: 'Pass the board', votes: 18 }
-            ]
-        },
-        {
-            item_type: 'feed_post',
-            post_type: 'hot_take',
-            item_id: 9004,
-            username: 'iceTilt',
-            display_name: 'Ice Tilt',
-            created_at: minutesAgo(54),
-            content: 'Hot take: the best live hockey number is often the one you wait three extra minutes to avoid. Early panic money is paying tax.',
-            sport: 'NHL',
-            likes_count: 44,
-            comments_count: 12
-        },
-        {
-            item_type: 'activity',
-            post_type: 'activity',
-            item_id: 9005,
-            content: 'NorthSideCapper had a Cubs team total grade as won and moved to 24-16-2 on MLB plays.',
-            created_at: minutesAgo(82),
-            notif_type: 'pick_graded'
-        }
-    ];
-
-    if (currentFilter === 'picks') return items.filter(i => i.item_type === 'pick');
-    if (currentFilter === 'hot-takes') return items.filter(i => i.post_type === 'hot_take');
-    if (currentFilter === 'polls') return items.filter(i => i.item_type === 'poll');
-    if (currentFilter === 'following') return items.slice(0, 2);
-    return items;
-}
-
-function renderDemoFeed(message) {
+function renderFeedUnavailable(message) {
     const c = document.getElementById('feedList');
     if (!c) return;
-    const items = getDemoFeedItems();
-    updateHeroCounts(items.length);
+    updateHeroCounts(0);
     document.getElementById('loadMore').style.display = 'none';
     c.innerHTML = `
-        <div class="empty-state" style="margin-bottom:12px;">
+        <div class="empty-state">
             <i class="fas fa-database"></i>
-            <h3 style="margin-bottom:6px;">Preview feed</h3>
-            <p>${esc(message || 'Live data is not connected in this preview.')}</p>
+            <h3 style="margin-bottom:6px;">Feed unavailable</h3>
+            <p>${esc(message || 'Live data is not connected right now.')}</p>
             <div class="feed-state-actions">
                 <button class="btn btn-primary" onclick="loadFeed()">Refresh Feed</button>
                 <a class="btn btn-ghost" href="sportsbook.html">Open Board</a>
             </div>
         </div>
-        ${items.map(renderFeedItem).join('')}
     `;
 }
 
@@ -759,15 +673,9 @@ async function loadTrending() {
             }
         }
     } catch(e) {}
-    const demoTopics = [
-        ['1', 'MLB moneyline steam', '42 posts'],
-        ['2', 'NBA first half edges', '31 posts'],
-        ['3', 'NHL goalie confirmations', '18 posts'],
-        ['4', 'Public fade watch', '14 posts']
-    ];
-    if (heroTrending) heroTrending.textContent = String(demoTopics.length);
+    if (heroTrending) heroTrending.textContent = '0';
     setRailCardVisibility('trendingList', true);
-    el.innerHTML = demoTopics.map(([rank, text, count]) => `<div class="rs-item"><span class="rs-rank">${rank}</span><span class="rs-text">${text}</span><span class="rs-count">${count}</span></div>`).join('');
+    el.innerHTML = '<div class="rs-empty">No live trending picks yet.</div>';
 }
 
 async function loadSuggested() {
@@ -801,23 +709,9 @@ async function loadSuggested() {
             }
         }
     } catch(e) {}
-    const demoUsers = [
-        { username: 'marketReader', display_name: 'Market Reader', picks: 126, roi: 8.4 },
-        { username: 'chalkFilter', display_name: 'Chalk Filter', picks: 92, roi: 6.1 },
-        { username: 'lateSwap', display_name: 'Late Swap', picks: 74, roi: 5.8 }
-    ];
-    if (heroSuggested) heroSuggested.textContent = String(demoUsers.length);
+    if (heroSuggested) heroSuggested.textContent = '0';
     setRailCardVisibility('suggestedList', true);
-    el.innerHTML = demoUsers.map(u => `
-        <div class="rs-user">
-            <div class="rs-user-avatar" style="background:var(--accent-blue);">${u.display_name[0]}</div>
-            <div class="rs-user-info">
-                <div class="rs-user-name"><a href="profile.html?user=${u.username}" style="color:inherit;text-decoration:none;">${u.display_name}</a></div>
-                <div class="rs-user-detail">${u.picks} picks • ${u.roi.toFixed(1)}% ROI</div>
-            </div>
-            <a href="profile.html?user=${u.username}" class="rs-follow-btn">View</a>
-        </div>
-    `).join('');
+    el.innerHTML = '<div class="rs-empty">No suggested users from live data yet.</div>';
 }
 
 async function hydrateFollowingState() {

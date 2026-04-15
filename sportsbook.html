@@ -162,7 +162,7 @@
         // Determine source quality
         var source = bk.key || 'unknown';
         if (source === 'record_estimate' || source === 'espn_predictor') {
-            return { valid: false, source: 'none', reason: 'Estimated odds are disabled', allDefault: true };
+            return { valid: false, source: 'none', reason: 'Unverified odds are disabled', allDefault: true };
         }
         if (source === 'nhl_fixed') {
             // NHL: check if moneylines are real (not both -110)
@@ -174,7 +174,7 @@
                     return { valid: true, source: 'espn', reason: 'ESPN odds', allDefault: false };
                 }
             }
-            return { valid: true, source: 'estimated', reason: 'Default NHL odds', allDefault: allDefault };
+            return { valid: false, source: 'none', reason: 'No verified NHL odds available', allDefault: allDefault };
         }
         // Real sportsbook odds from ESPN
         if (!allDefault) {
@@ -242,7 +242,7 @@
                         if (!isNaN(gameStart.getTime()) && gameStart.getTime() < nowTime - 5 * 60 * 1000) continue;
 
                         var bookmakers = window.TMR.parseEspnOdds(comp.odds || [], homeTeam, awayTeam);
-                        // Extract team records for fallback odds estimation
+                        // Keep records as display metadata only. Never generate betting lines from records.
                         var homeRecord = homeComp.records && homeComp.records[0] && homeComp.records[0].summary;
                         var awayRecord = awayComp.records && awayComp.records[0] && awayComp.records[0].summary;
                         games.push({
@@ -15381,7 +15381,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <!-- Bottom Bar -->
                 <div style="padding: 24px 0; text-align: center;">
                     <p style="color: #606070; font-size: 0.78rem; line-height: 1.7; margin: 0 0 8px 0;">TrustMyRecord is not a gambling site. We provide pick tracking and community features only. No real money is wagered on this platform.</p>
-                    <p style="color: #505060; font-size: 0.72rem; margin: 0;">If you or someone you know has a gambling problem, call 1-800-GAMBLER. Must be 18+ to participate. Please gamble responsibly.</p>
+                    <p style="color: #505060; font-size: 0.72rem; margin: 0;">If you or someone you know has a gambling problem, call local support resources. Must be 18+ to participate. Please gamble responsibly.</p>
                 </div>
             </div>
             <style>

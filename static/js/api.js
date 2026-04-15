@@ -1,4 +1,4 @@
-﻿// API Integration for Trust My Record - 100% Static Version
+// API Integration for Trust My Record - 100% Static Version
 // All data stored in localStorage, no backend required
 
 class TrustMyRecordAPI {
@@ -46,7 +46,6 @@ class TrustMyRecordAPI {
             }
         }
 
-        // Seed demo users if no users exist
         const users = this.getLocal('tmr_users');
         if (users.length === 0) {
             this.seedDemoData();
@@ -898,7 +897,7 @@ class TrustMyRecordAPI {
         return challenge;
     }
 
-    // UPCOMING GAMES WITH ODDS - ESPN + Sample Odds
+    // UPCOMING GAMES WITH ODDS - ESPN only. Do not invent fallback lines.
     
     async getUpcomingGames(sportKey) {
         const sportMap = {
@@ -913,7 +912,7 @@ class TrustMyRecordAPI {
         const espnKey = sportMap[sportKey];
         if (!espnKey) {
             console.warn('No ESPN mapping for sport:', sportKey);
-            return this.getSampleGames(sportKey);
+            return [];
         }
 
         // Check cache first
@@ -954,9 +953,6 @@ class TrustMyRecordAPI {
                 const status = comp.status?.type?.state;
                 if (status === 'post') continue;
                 
-                // Generate realistic odds based on team records
-                const odds = this.generateRealisticOdds(homeComp, awayComp, sportKey);
-                
                 games.push({
                     id: event.id,
                     sport: sportKey.toLowerCase(),
@@ -965,7 +961,7 @@ class TrustMyRecordAPI {
                     away_team: awayTeam,
                     commence_time: event.date,
                     status: status,
-                    odds: odds
+                    odds: null
                 });
             }
             
@@ -975,173 +971,20 @@ class TrustMyRecordAPI {
                 timestamp: Date.now()
             });
             
-            // If no games from API, return sample games
             if (games.length === 0) {
-                return this.getSampleGames(sportKey);
+                return [];
             }
             
             return games;
             
         } catch (error) {
             console.error('[TMR] Failed to fetch games from ESPN:', error);
-            // Return sample games as fallback
-            return this.getSampleGames(sportKey);
+            return [];
         }
     }
     
-    generateRealisticOdds(homeComp, awayComp, sport) {
-        // Get records if available
-        const homeRecord = homeComp.records?.[0]?.summary;
-        const awayRecord = awayComp.records?.[0]?.summary;
-        
-        // Parse win percentages
-        const getWinPct = (record) => {
-            if (!record) return 0.5;
-            const parts = record.split('-');
-            const wins = parseInt(parts[0]) || 0;
-            const losses = parseInt(parts[1]) || 0;
-            return wins / (wins + losses) || 0.5;
-        };
-        
-        const homeWinPct = getWinPct(homeRecord);
-        const awayWinPct = getWinPct(awayRecord);
-        
-        // Calculate implied win probability with home field advantage
-        const homeAdvantage = 0.05; // 5% home field advantage
-        const homeImplied = homeWinPct + homeAdvantage;
-        const awayImplied = 1 - homeImplied;
-        
-        // Convert to American odds
-        const toAmerican = (prob) => {
-            if (prob >= 0.5) {
-                return Math.round(-100 * prob / (1 - prob));
-            } else {
-                return Math.round(100 * (1 - prob) / prob);
-            }
-        };
-        
-        const homeML = toAmerican(homeImplied);
-        const awayML = toAmerican(awayImplied);
-        
-        // Calculate spread (approximate)
-        const winDiff = (homeWinPct - awayWinPct) * 20;
-        let spread = Math.round(winDiff * 2) / 2;
-        spread = Math.max(-14, Math.min(14, spread)); // Cap at +/- 14
-        
-        // Spread odds (-110 standard)
-        const spreadOdds = -110;
-        
-        // Calculate total based on sport
-        let total = 210; // Default for NBA
-        if (sport === 'NFL') total = 46;
-        if (sport === 'MLB') total = 8.5;
-        if (sport === 'NHL') total = 6;
-        if (sport === 'NCAAF') total = 52;
-        if (sport === 'NCAAB') total = 145;
-        
-        // Add some variance based on teams
-        const totalVariance = (Math.random() - 0.5) * 4;
-        total = Math.round((total + totalVariance) * 2) / 2;
-        
-        return {
-            moneyline: {
-                home: homeML,
-                away: awayML
-            },
-            spread: {
-                home: spread,
-                away: -spread,
-                homeOdds: spreadOdds,
-                awayOdds: spreadOdds
-            },
-            totals: {
-                over: total,
-                under: total,
-                overOdds: -110,
-                underOdds: -110
-            }
-        };
-    }
-    
     getSampleGames(sportKey) {
-        // Real sample games with realistic odds as fallback
-        const samples = {
-            'NBA': [
-                {
-                    id: 'nba_001',
-                    sport: 'nba',
-                    sport_title: 'NBA',
-                    home_team: 'Boston Celtics',
-                    away_team: 'LA Lakers',
-                    commence_time: new Date(Date.now() + 86400000).toISOString(),
-                    odds: {
-                        moneyline: { home: -140, away: +120 },
-                        spread: { home: -3, away: +3, homeOdds: -110, awayOdds: -110 },
-                        totals: { over: 225.5, under: 225.5, overOdds: -110, underOdds: -110 }
-                    }
-                },
-                {
-                    id: 'nba_002',
-                    sport: 'nba',
-                    sport_title: 'NBA',
-                    home_team: 'Denver Nuggets',
-                    away_team: 'Phoenix Suns',
-                    commence_time: new Date(Date.now() + 172800000).toISOString(),
-                    odds: {
-                        moneyline: { home: -160, away: +135 },
-                        spread: { home: -4, away: +4, homeOdds: -110, awayOdds: -110 },
-                        totals: { over: 219.5, under: 219.5, overOdds: -110, underOdds: -110 }
-                    }
-                }
-            ],
-            'NFL': [
-                {
-                    id: 'nfl_001',
-                    sport: 'nfl',
-                    sport_title: 'NFL',
-                    home_team: 'Kansas City Chiefs',
-                    away_team: 'Buffalo Bills',
-                    commence_time: new Date(Date.now() + 259200000).toISOString(),
-                    odds: {
-                        moneyline: { home: -125, away: +105 },
-                        spread: { home: -2.5, away: +2.5, homeOdds: -110, awayOdds: -110 },
-                        totals: { over: 48.5, under: 48.5, overOdds: -110, underOdds: -110 }
-                    }
-                }
-            ],
-            'MLB': [
-                {
-                    id: 'mlb_001',
-                    sport: 'mlb',
-                    sport_title: 'MLB',
-                    home_team: 'New York Yankees',
-                    away_team: 'Boston Red Sox',
-                    commence_time: new Date(Date.now() + 129600000).toISOString(),
-                    odds: {
-                        moneyline: { home: -155, away: +130 },
-                        spread: { home: -1.5, away: +1.5, homeOdds: +115, awayOdds: -140 },
-                        totals: { over: 8.5, under: 8.5, overOdds: -110, underOdds: -110 }
-                    }
-                }
-            ],
-            'NHL': [
-                {
-                    id: 'nhl_001',
-                    sport: 'nhl',
-                    sport_title: 'NHL',
-                    home_team: 'Toronto Maple Leafs',
-                    away_team: 'Montreal Canadiens',
-                    commence_time: new Date(Date.now() + 64800000).toISOString(),
-                    odds: {
-                        moneyline: { home: -170, away: +145 },
-                        spread: { home: -1.5, away: +1.5, homeOdds: +160, awayOdds: -195 },
-                        totals: { over: 6, under: 6, overOdds: -110, underOdds: -110 }
-                    }
-                }
-            ]
-        };
-        
-        return samples[sportKey] || samples['NBA'];
+        return [];
     }
 
     // SPORTS DATA - External API calls (ESPN, read-only)

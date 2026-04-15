@@ -14,6 +14,7 @@ $htmlFiles = Get-ChildItem $Root -Filter *.html
 
 $forbiddenPattern = 'index\.html#leaderboards|href="index\.html"[^>]*>Picks|href="#(?:picks|leaderboards|profile)"|showSection\(''leaderboard''\)|volleyball|cycling|bicycle|bike'
 $estimatedPattern = 'Estimated lines|Some lines are estimated|Generated odds|Pre-generated odds|Estimated from full-game|Modeled first 5|Fallback pricing|title="Estimated odds"|deriveMlbFirst5Fallback'
+$fakeFallbackPattern = 'renderDemoFeed|getDemoFeedItems|demoTopics|demoUsers|generateRealisticOdds|Real sample games|realistic odds as fallback|estimatedOdds'
 
 foreach ($file in $htmlFiles) {
     $html = Get-Content $file.FullName -Raw
@@ -45,6 +46,20 @@ foreach ($file in $sportsbookFiles) {
     $content = Get-Content $file -Raw
     if ($content -match $estimatedPattern) {
         Add-Failure "Forbidden estimated-line pattern found in $(Split-Path $file -Leaf)"
+    }
+}
+
+$fallbackFiles = @(
+    (Join-Path $Root 'static/js/social-home.js'),
+    (Join-Path $Root 'static/js/api.js'),
+    (Join-Path $Root 'static/js/nhl-markets.js'),
+    (Join-Path $Root 'static/js/sportsbook-production-fix.js')
+) | Where-Object { Test-Path $_ }
+
+foreach ($file in $fallbackFiles) {
+    $content = Get-Content $file -Raw
+    if ($content -match $fakeFallbackPattern) {
+        Add-Failure "Forbidden fake/demo fallback pattern found in $(Split-Path $file -Leaf)"
     }
 }
 

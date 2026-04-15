@@ -802,7 +802,7 @@
     }
 
     function disableLegacyFeed() {
-        const message = 'Legacy estimated odds feed disabled. Use /api/games/board instead.';
+        const message = 'Legacy odds feed disabled. Use /api/games/board instead.';
         window.TMR = window.TMR || {};
         lockFunction(window.TMR, 'fetchGamesFromESPN', function(sportKey, callback) {
             if (typeof callback === 'function') {
