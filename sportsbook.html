@@ -7910,16 +7910,16 @@
             </div>
         </header>
 
-        <div class="sportsbook-sports-nav">
-            <span class="active">MLB</span>
-            <span>NBA</span>
-            <span>NHL</span>
-            <span>NFL</span>
-            <span>NCAAB</span>
-            <span>NCAAF</span>
-            <span>Soccer</span>
-            <span>Promos</span>
-            <span>Consensus Picks</span>
+        <div class="sportsbook-sports-nav" aria-label="Sportsbook navigation">
+            <button type="button" class="active" data-sportsbook-tab="sport" data-sport="MLB">MLB</button>
+            <button type="button" data-sportsbook-tab="sport" data-sport="NBA">NBA</button>
+            <button type="button" data-sportsbook-tab="sport" data-sport="NHL">NHL</button>
+            <button type="button" data-sportsbook-tab="sport" data-sport="NFL">NFL</button>
+            <button type="button" data-sportsbook-tab="sport" data-sport="NCAAB">NCAAB</button>
+            <button type="button" data-sportsbook-tab="sport" data-sport="NCAAF">NCAAF</button>
+            <button type="button" data-sportsbook-tab="sport" data-sport="Soccer">Soccer</button>
+            <button type="button" data-sportsbook-tab="promos">Promos</button>
+            <button type="button" data-sportsbook-tab="consensus">Consensus Picks</button>
         </div>
 
         <main>
@@ -8014,6 +8014,26 @@
                                     <div class="stat-subtitle" id="bestStreak">Best: 0</div>
                                 </div>
                             </div>
+                            <div class="analytics-depth-grid" id="dashboardAnalyticsDepth" aria-live="polite">
+                                <div class="analytics-depth-card"><span>Wins</span><strong id="dashboardWins">0</strong></div>
+                                <div class="analytics-depth-card"><span>Losses</span><strong id="dashboardLosses">0</strong></div>
+                                <div class="analytics-depth-card"><span>Pushes</span><strong id="dashboardPushes">0</strong></div>
+                                <div class="analytics-depth-card"><span>Pending</span><strong id="dashboardPending">0</strong></div>
+                                <div class="analytics-depth-card"><span>Graded Picks</span><strong id="dashboardGraded">0</strong></div>
+                                <div class="analytics-depth-card"><span>Average Odds</span><strong id="dashboardAvgOdds">--</strong></div>
+                                <div class="analytics-depth-card"><span>Average Units</span><strong id="dashboardAvgUnits">0.00u</strong></div>
+                                <div class="analytics-depth-card"><span>Best Streak</span><strong id="dashboardBestStreak">0</strong></div>
+                            </div>
+                            <div class="breakdown-panels">
+                                <div class="breakdown-panel">
+                                    <div class="breakdown-title">Sport Breakdown</div>
+                                    <div id="dashboardSportBreakdown" class="breakdown-list"></div>
+                                </div>
+                                <div class="breakdown-panel">
+                                    <div class="breakdown-title">Market Breakdown</div>
+                                    <div id="dashboardMarketBreakdown" class="breakdown-list"></div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Activity Section -->
@@ -8092,99 +8112,84 @@
                     </div>
                 </section>
 
-                <section class="section">
-                    <div class="section-header reveal">
-                        <h2>The Platform is the <span class="highlight">Future</span></h2>
-                        <p>This is more than just a page for picks. We are building the definitive ecosystem for bettors who value real data over loud hype.</p>
+                <section class="sportsbook-control-panel">
+                    <div class="sportsbook-panel-header">
+                        <span class="sportsbook-eyebrow">Betting control center</span>
+                        <h2>Board, record, and results in one place.</h2>
+                        <p>Sportsbook is now focused on the actual workflow: open the board, lock a pick, review the record, and audit performance from the same source of truth.</p>
                     </div>
-                    <div class="feature-grid">
-                        <div class="glass-card feature-card reveal">
-                            <div class="feature-icon">📊</div>
-                            <h3>Track Every Pick</h3>
-                            <p>Your complete betting history stored permanently and publicly. Every user's picks, wins, losses, and stats are tracked with surgical precision. No hiding, no editing, no excuses.</p>
-                        </div>
-                        <div class="glass-card feature-card reveal">
-                            <div class="feature-icon">📈</div>
-                            <h3>Advanced Analytics</h3>
-                            <p>Deep statistical breakdowns by sport, bet type, odds range, team, and more. Identify your strengths, expose your weaknesses, and track your improvement over time. The ultimate handicapping tool.</p>
-                        </div>
-                        <div class="glass-card feature-card reveal">
-                            <div class="feature-icon">💰</div>
-                            <h3>Sell Your Picks</h3>
-                            <p>Prove you're a knowledgeable handicapper and monetize your skills. Set your own prices, build a subscriber base, and earn from your expertise. Your verified track record is your resume.</p>
-                        </div>
-                        <div class="glass-card feature-card reveal">
-                            <div class="feature-icon">🧠</div>
-                            <h3>Sports Trivia & Polls</h3>
-                            <p>Think you know sports? Prove it. Compete in daily trivia, predict outcomes, and vote in polls against other users. Earn points, climb rankings, and show off your sports IQ.</p>
-                        </div>
-                        <div class="glass-card feature-card reveal">
-                            <div class="feature-icon">🔒</div>
-                            <h3>Immutable Records</h3>
-                            <p>Every pick is permanently locked in our system. Filter by user, sport, bet type, or date. Compare anyone's track record instantly. The proof is always one click away.</p>
-                        </div>
-                        <div class="glass-card feature-card reveal">
-                            <div class="feature-icon">⚔️</div>
-                            <h3>Compete & Prove It</h3>
-                            <p>Challenge other handicappers head-to-head. Join tournaments. Climb the leaderboards. Talk your game in the forums, but your record does the real talking.</p>
-                        </div>
+                    <div class="sportsbook-workflow-grid">
+                        <button type="button" class="workflow-card primary" onclick="showSection('picks')">
+                            <span>01</span>
+                            <strong>Open the Board</strong>
+                            <small>Choose sport, market, line, and units.</small>
+                        </button>
+                        <button type="button" class="workflow-card" onclick="showSection('mypicks'); if (typeof loadMyPicks === 'function') loadMyPicks('all');">
+                            <span>02</span>
+                            <strong>Audit My Picks</strong>
+                            <small>Pending, graded, and historical cards.</small>
+                        </button>
+                        <button type="button" class="workflow-card" onclick="showSection('my-record')">
+                            <span>03</span>
+                            <strong>Review Record</strong>
+                            <small>Record, ROI, streaks, sport splits.</small>
+                        </button>
+                        <button type="button" class="workflow-card" data-sportsbook-tab="consensus">
+                            <span>04</span>
+                            <strong>Consensus Picks</strong>
+                            <small>Real pick clusters from loaded data.</small>
+                        </button>
                     </div>
                 </section>
 
-                <section class="section">
-                    <div class="section-header reveal">
-                        <h2>Enter <span class="highlight">The Arena</span></h2>
-                        <p>Where legends are made and egos are destroyed. Face off against the best handicappers in the world in our competitive battleground.</p>
+                <section class="sportsbook-trust-panel">
+                    <div>
+                        <span class="sportsbook-eyebrow">Data discipline</span>
+                        <h2>No duplicate record math.</h2>
+                        <p>The page now uses one normalized pick list for total picks, W-L-P, win rate, net units, ROI, streaks, recent picks, and status badges.</p>
                     </div>
-                    <div class="feature-grid">
-                        <div class="glass-card feature-card reveal">
-                            <div class="feature-icon">⚔️</div>
-                            <h3>Head-to-Head Battles</h3>
-                            <p>Challenge anyone, anytime. Set your stakes, pick your sport, and let your records do the talking. Winner takes glory, loser takes the walk of shame.</p>
-                        </div>
-                        <div class="glass-card feature-card reveal">
-                            <div class="feature-icon">🏆</div>
-                            <h3>Tournament Mode</h3>
-                            <p>Monthly tournaments with bracketed elimination. Survive multiple rounds against increasingly skilled opponents. Only the elite make it to the finals.</p>
-                        </div>
-                        <div class="glass-card feature-card reveal">
-                            <div class="feature-icon">👑</div>
-                            <h3>Beat The Founder</h3>
-                            <p>Think you're better than the house? Prove it. Take on our founder's record in a public showdown. Beat the creator of the platform and earn eternal bragging rights.</p>
-                        </div>
+                    <div class="trust-flow">
+                        <div><strong>Lock</strong><span>Pick submitted</span></div>
+                        <div><strong>Grade</strong><span>Result normalized</span></div>
+                        <div><strong>Sync</strong><span>Dashboard updates</span></div>
+                        <div><strong>Audit</strong><span>Same record everywhere</span></div>
                     </div>
                 </section>
+            </div>
 
-                <section class="section">
-                    <div class="section-header reveal">
-                        <h2>Community <span class="highlight">Forums</span></h2>
-                        <p>No echo chambers. No fake positivity. Just raw, unfiltered discussion where your record speaks louder than your mouth.</p>
+            <div id="promos" class="page-section">
+                <section class="sportsbook-tool-page">
+                    <div class="sportsbook-panel-header">
+                        <span class="sportsbook-eyebrow">Promo tracker</span>
+                        <h2>Track offers without pretending they are picks.</h2>
+                        <p>Add sportsbook offers you are considering, compare rollover and expiry notes, and keep them separate from your public record until a real pick is locked.</p>
                     </div>
-                    <div class="feature-grid">
-                        <div class="glass-card feature-card reveal">
-                            <div class="feature-icon">🎯</div>
-                            <h3>Sport-Specific Channels</h3>
-                            <p>NFL, NBA, MLB, NHL, Soccer, Tennis - dedicated spaces for serious discussion about every major sport and league.</p>
+                    <div class="promo-tool-grid">
+                        <div class="promo-tool-card">
+                            <label for="promoBook">Sportsbook</label>
+                            <input id="promoBook" type="text" placeholder="Book name">
+                            <label for="promoOffer">Offer</label>
+                            <input id="promoOffer" type="text" placeholder="Example: 25% profit boost">
+                            <label for="promoNotes">Rules / expiry</label>
+                            <textarea id="promoNotes" rows="4" placeholder="Rollover, max bet, expiration, eligible markets"></textarea>
+                            <button type="button" onclick="window.tmrAddPromoNote && window.tmrAddPromoNote()">Save Promo Note</button>
                         </div>
-                        <div class="glass-card feature-card reveal">
-                            <div class="feature-icon">📊</div>
-                            <h3>Data-Driven Debates</h3>
-                            <p>Back up your opinions with stats. Your posting privilege is tied to your track record. Performance determines credibility.</p>
-                        </div>
-                        <div class="glass-card feature-card reveal">
-                            <div class="feature-icon">🔥</div>
-                            <h3>No Bullshit Zone</h3>
-                            <p>Verified records only. If you talk the talk, you better walk the walk. Your history is your reputation.</p>
+                        <div class="promo-tool-card">
+                            <h3>Saved Promo Notes</h3>
+                            <div id="promoNotesList" class="promo-notes-list"></div>
                         </div>
                     </div>
                 </section>
-                
-                <section class="cta">
-                    <div class="section-header reveal">
-                        <h2>The Record Starts Now.</h2>
-                        <p>The era of the guru is over. The era of the record has begun. Witness the transparency from day one.</p>
+            </div>
+
+            <div id="consensus" class="page-section">
+                <section class="sportsbook-tool-page">
+                    <div class="sportsbook-panel-header">
+                        <span class="sportsbook-eyebrow">Consensus picks</span>
+                        <h2>Pick clusters from real loaded records.</h2>
+                        <p>This panel aggregates the currently loaded pick data. It does not invent consensus numbers or fake public action.</p>
                     </div>
-                    <a onclick="handleMakePicksCta()" class="cta-button reveal">START TRACKING YOUR PICKS</a>
+                    <div id="consensusPicksPanel" class="consensus-panel"></div>
                 </section>
             </div>
 
@@ -16966,7 +16971,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="static/js/social.js?v=20251208c"></script>
     <script src="static/js/forums.js?v=20251208c"></script>
     <!-- forms.js REMOVED - forms-fixed.js handles login/signup -->
-    <script src="static/js/navigation.js?v=20251208c"></script>
+    <script src="static/js/navigation.js?v=20260415a"></script>
     <script src="static/js/sportsbook-production-fix.js?v=20260414n"></script>
     <script src="static/js/effects.js?v=20251208c"></script>
 
@@ -16999,7 +17004,6 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="static/js/stats-engine.js"></script>
     <script src="static/js/challenges-engine.js?v=20260414b"></script>
     <script src="static/js/notifications.js?v=20260414b"></script>
-    <script src="static/js/social-system.js?v=20260414b"></script>
     <script src="static/js/leaderboard.js?v=20260414b"></script>
 
     <script>
@@ -18004,7 +18008,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ========== ADVANCED STATS ENGINE ==========
     // Comprehensive analytics for TrustMyRecord.com
 
-    const SPORT_ICONS = {
+    const ADVANCED_SPORT_ICONS = {
         'NBA': '🏀', 'NFL': '🏈', 'NHL': '🏒', 'MLB': '⚾',
         'NCAAB': '🏫', 'NCAAF': '🎓', 'SOCCER': '⚽', 'OTHER': '🎯'
     };
@@ -18177,7 +18181,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const total = s.w + s.l + s.p;
                 const winPct = (s.w + s.l) > 0 ? (s.w / (s.w + s.l) * 100).toFixed(1) : '0.0';
                 const roi = s.risked > 0 ? (s.units / s.risked * 100).toFixed(1) : '0.0';
-                const icon = SPORT_ICONS[sport] || '🎯';
+                const icon = ADVANCED_SPORT_ICONS[sport] || '🎯';
                 return `<tr>
                     <td><span class="sport-icon">${icon}</span>${sport}</td>
                     <td>${s.w}-${s.l}-${s.p}</td>
@@ -19822,14 +19826,173 @@ document.addEventListener('DOMContentLoaded', function() {
             display: none;
         }
 
-        .sportsbook-sports-nav span {
-            padding-bottom: 18px;
+        .sportsbook-sports-nav button {
+            appearance: none;
+            border: 0;
+            background: transparent;
+            color: inherit;
+            font: inherit;
+            cursor: pointer;
+            padding: 18px 0 16px;
             border-bottom: 2px solid transparent;
+            transition: color 0.18s ease, border-color 0.18s ease;
+            white-space: nowrap;
         }
 
-        .sportsbook-sports-nav span.active {
+        .sportsbook-sports-nav button:hover,
+        .sportsbook-sports-nav button:focus-visible {
+            color: #1f7ae0;
+        }
+
+        .sportsbook-sports-nav button:focus-visible {
+            outline: 2px solid rgba(31, 122, 224, 0.35);
+            outline-offset: 4px;
+        }
+
+        .sportsbook-sports-nav button.active {
             color: #1f7ae0;
             border-bottom-color: #1f7ae0;
+        }
+
+        .sportsbook-control-panel,
+        .sportsbook-trust-panel {
+            margin: 18px 0;
+            border: 1px solid #d8dde6;
+            border-radius: 18px;
+            background: #ffffff;
+            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
+        }
+
+        .sportsbook-control-panel {
+            padding: clamp(22px, 3vw, 34px);
+        }
+
+        .sportsbook-panel-header {
+            max-width: 760px;
+            margin-bottom: 22px;
+        }
+
+        .sportsbook-panel-header h2,
+        .sportsbook-trust-panel h2 {
+            font-family: 'Barlow', 'Inter', sans-serif;
+            color: #102338;
+            font-size: clamp(1.8rem, 3vw, 2.7rem);
+            line-height: 1;
+            letter-spacing: -0.04em;
+            margin: 0 0 10px;
+            text-transform: none;
+        }
+
+        .sportsbook-panel-header p,
+        .sportsbook-trust-panel p {
+            color: #637389;
+            font-size: 1rem;
+            line-height: 1.55;
+            margin: 0;
+        }
+
+        .sportsbook-workflow-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .workflow-card {
+            display: grid;
+            gap: 9px;
+            min-height: 150px;
+            padding: 20px;
+            border: 1px solid #d8dde6;
+            border-radius: 16px;
+            background: #f8fafc;
+            color: #162231;
+            cursor: pointer;
+            text-align: left;
+            font-family: inherit;
+            transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .workflow-card:hover,
+        .workflow-card:focus-visible {
+            transform: translateY(-2px);
+            border-color: #1f7ae0;
+            box-shadow: 0 16px 34px rgba(31, 122, 224, 0.12);
+            outline: none;
+        }
+
+        .workflow-card.primary {
+            background: linear-gradient(135deg, #102338 0%, #163451 100%);
+            border-color: #102338;
+            color: #ffffff;
+        }
+
+        .workflow-card span {
+            width: fit-content;
+            border-radius: 999px;
+            padding: 5px 9px;
+            background: rgba(31, 122, 224, 0.12);
+            color: #1f7ae0;
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+
+        .workflow-card.primary span {
+            background: rgba(245, 130, 32, 0.18);
+            color: #ffb36d;
+        }
+
+        .workflow-card strong {
+            font-size: 1.05rem;
+            line-height: 1.1;
+        }
+
+        .workflow-card small {
+            color: #637389;
+            font-size: 0.88rem;
+            line-height: 1.4;
+        }
+
+        .workflow-card.primary small {
+            color: rgba(255,255,255,0.74);
+        }
+
+        .sportsbook-trust-panel {
+            display: grid;
+            grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr);
+            gap: 20px;
+            align-items: center;
+            padding: clamp(22px, 3vw, 32px);
+        }
+
+        .trust-flow {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .trust-flow div {
+            min-height: 96px;
+            border: 1px solid #d8dde6;
+            border-radius: 14px;
+            padding: 14px;
+            background: #f8fafc;
+        }
+
+        .trust-flow strong,
+        .trust-flow span {
+            display: block;
+        }
+
+        .trust-flow strong {
+            color: #102338;
+            font-size: 0.96rem;
+            margin-bottom: 6px;
+        }
+
+        .trust-flow span {
+            color: #637389;
+            font-size: 0.82rem;
+            line-height: 1.35;
         }
 
         #home.page-section {
@@ -20049,10 +20212,17 @@ document.addEventListener('DOMContentLoaded', function() {
             .hero-journey {
                 grid-template-columns: 1fr 1fr;
             }
+
+            .sportsbook-workflow-grid,
+            .sportsbook-trust-panel,
+            .trust-flow {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 
     <script src="static/js/platform-production-fix.js?v=20260414c"></script>
+    <script src="static/js/sportsbook-dashboard-sync.js?v=20260415a"></script>
     <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260415a">
     <script defer src="static/js/tmr-sitewide.js?v=20260415a"></script>
     <style>
@@ -20302,6 +20472,436 @@ document.addEventListener('DOMContentLoaded', function() {
             font-weight: 850;
         }
 
+        .sportsbook-control-panel,
+        .sportsbook-trust-panel,
+        .sportsbook-tool-page {
+            width: min(1220px, calc(100% - 32px));
+            margin: 18px auto;
+            border: 1px solid rgba(148,163,184,0.20);
+            border-radius: 28px;
+            background: #ffffff;
+            box-shadow: 0 18px 50px rgba(18,32,49,0.08);
+            padding: clamp(22px, 3vw, 34px);
+            color: #102338;
+        }
+
+        .sportsbook-panel-header {
+            max-width: 760px;
+            margin-bottom: 24px;
+        }
+
+        .sportsbook-panel-header h2,
+        .sportsbook-trust-panel h2 {
+            color: #102338;
+            font-size: clamp(1.8rem, 3vw, 3rem);
+            line-height: 1.02;
+            letter-spacing: -0.035em;
+            margin: 8px 0 10px;
+        }
+
+        .sportsbook-panel-header p,
+        .sportsbook-trust-panel p {
+            color: #516276;
+            font-size: 1.02rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .sportsbook-workflow-grid,
+        .promo-tool-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .workflow-card {
+            text-align: left;
+            border: 1px solid #dce3ec;
+            border-radius: 20px !important;
+            padding: 20px;
+            background: #f7fafc;
+            color: #102338;
+            cursor: pointer;
+            transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .workflow-card:hover {
+            transform: translateY(-2px);
+            border-color: #2dd4bf;
+            box-shadow: 0 16px 34px rgba(18,32,49,0.10);
+        }
+
+        .workflow-card.primary {
+            background: linear-gradient(135deg, #102338, #0f766e);
+            border-color: #0f766e;
+            color: #ffffff;
+        }
+
+        .tmr-site-shell .workflow-card {
+            border-radius: 20px !important;
+        }
+
+        .sportsbook-sports-nav button {
+            border-radius: 0 !important;
+        }
+
+        .tmr-site-shell .sportsbook-sports-nav button {
+            border-radius: 0 !important;
+        }
+
+        .workflow-card span,
+        .workflow-card small {
+            display: block;
+        }
+
+        .workflow-card span {
+            color: #2dd4bf;
+            font-size: 0.78rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            margin-bottom: 18px;
+        }
+
+        .workflow-card strong {
+            display: block;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .workflow-card small {
+            color: inherit;
+            opacity: 0.74;
+            line-height: 1.4;
+        }
+
+        .sportsbook-trust-panel {
+            display: grid;
+            grid-template-columns: minmax(0, 0.95fr) minmax(420px, 1.05fr);
+            gap: 24px;
+            align-items: center;
+        }
+
+        .trust-flow {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .trust-flow div,
+        .analytics-depth-card,
+        .breakdown-panel,
+        .promo-tool-card,
+        .consensus-row {
+            border: 1px solid #dce3ec;
+            border-radius: 18px;
+            background: #f8fbfd;
+        }
+
+        .trust-flow div {
+            padding: 16px;
+        }
+
+        .trust-flow strong,
+        .trust-flow span {
+            display: block;
+        }
+
+        .trust-flow strong {
+            color: #0f766e;
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .trust-flow span {
+            color: #516276;
+            font-size: 0.84rem;
+            line-height: 1.35;
+        }
+
+        .analytics-depth-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        #userStatsDashboard.section {
+            padding: 0;
+        }
+
+        .dashboard-command-center {
+            width: min(1220px, calc(100% - 32px));
+            max-width: none;
+            margin: 18px auto;
+            padding: 0;
+        }
+
+        .dashboard-profile-header,
+        .dashboard-stats-section,
+        .dashboard-activity-section,
+        .dashboard-actions,
+        .dashboard-recent {
+            border: 1px solid rgba(148,163,184,0.20) !important;
+            border-radius: 24px !important;
+            background: #ffffff !important;
+            box-shadow: 0 18px 50px rgba(18,32,49,0.08);
+            padding: clamp(20px, 2.4vw, 28px);
+        }
+
+        .dashboard-profile-header {
+            margin-bottom: 16px;
+        }
+
+        .tmr-site-shell .dashboard-username,
+        .tmr-site-shell .section-label,
+        .dashboard-username,
+        .section-label {
+            background: none !important;
+            -webkit-background-clip: border-box !important;
+            background-clip: border-box !important;
+            color: #102338 !important;
+            -webkit-text-fill-color: #102338 !important;
+            text-shadow: none !important;
+        }
+
+        .tmr-site-shell .dashboard-username {
+            font-size: clamp(1.45rem, 2.2vw, 2.15rem) !important;
+            line-height: 1.05 !important;
+            letter-spacing: -0.025em !important;
+        }
+
+        body.tmr-site-shell #dashboardUsername.dashboard-username {
+            color: #102338 !important;
+            -webkit-text-fill-color: #102338 !important;
+            background: transparent !important;
+            text-shadow: none !important;
+        }
+
+        .tmr-site-shell .section-label {
+            font-size: 1rem !important;
+            line-height: 1.2 !important;
+            letter-spacing: 0.08em !important;
+        }
+
+        .dashboard-member-since,
+        .stat-subtitle,
+        .activity-label,
+        .pick-details-text {
+            color: #64748b !important;
+        }
+
+        .stats-grid.enhanced .stat-card,
+        .activity-card,
+        .recent-picks-mini {
+            border: 1px solid #dce3ec !important;
+            border-radius: 18px !important;
+            background: #f8fbfd !important;
+            box-shadow: none !important;
+        }
+
+        .tmr-site-shell .stat-value,
+        .tmr-site-shell .activity-value,
+        .tmr-site-shell .pick-game,
+        .stat-value,
+        .activity-value,
+        .pick-game {
+            color: #102338 !important;
+            -webkit-text-fill-color: #102338 !important;
+            text-shadow: none !important;
+        }
+
+        .stat-value.positive {
+            color: #0f766e !important;
+        }
+
+        .stat-value.negative {
+            color: #dc2626 !important;
+        }
+
+        .quick-actions-grid .action-btn {
+            border-radius: 999px !important;
+            box-shadow: none !important;
+        }
+
+        .analytics-depth-card {
+            padding: 16px;
+        }
+
+        .analytics-depth-card span {
+            display: block;
+            color: #64748b;
+            font-size: 0.78rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 7px;
+        }
+
+        .analytics-depth-card strong {
+            color: #102338;
+            font-size: 1.35rem;
+        }
+
+        .breakdown-panels {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .breakdown-panel {
+            padding: 16px;
+        }
+
+        .breakdown-title {
+            color: #102338;
+            font-weight: 900;
+            margin-bottom: 12px;
+        }
+
+        .breakdown-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto auto;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 0;
+            border-top: 1px solid #e6edf4;
+            color: #516276;
+            font-size: 0.92rem;
+        }
+
+        .breakdown-row:first-child {
+            border-top: 0;
+        }
+
+        .breakdown-row strong {
+            color: #102338;
+        }
+
+        .breakdown-row em {
+            color: #0f766e;
+            font-style: normal;
+            font-weight: 800;
+        }
+
+        .breakdown-empty,
+        .tool-empty {
+            color: #64748b;
+            padding: 14px 0;
+        }
+
+        .pick-status.push {
+            background: rgba(100,116,139,0.18);
+            color: #64748b;
+        }
+
+        .pick-correction-note {
+            color: #0f766e;
+            font-size: 0.78rem;
+            font-weight: 800;
+            margin-top: 4px;
+        }
+
+        .promo-tool-grid {
+            grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
+        }
+
+        .promo-tool-card {
+            padding: 20px;
+        }
+
+        .promo-tool-card label {
+            display: block;
+            color: #102338;
+            font-weight: 900;
+            margin: 12px 0 6px;
+        }
+
+        .promo-tool-card input,
+        .promo-tool-card textarea {
+            width: 100%;
+            border: 1px solid #d5dee9;
+            border-radius: 12px;
+            padding: 11px 12px;
+            font: inherit;
+            color: #102338;
+            background: #ffffff;
+        }
+
+        .promo-tool-card button {
+            width: 100%;
+            margin-top: 14px;
+            border: 0;
+            border-radius: 999px;
+            padding: 12px 16px;
+            background: #102338;
+            color: #ffffff;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .promo-note {
+            display: grid;
+            gap: 4px;
+            padding: 14px 0;
+            border-top: 1px solid #e6edf4;
+        }
+
+        .promo-note:first-child {
+            border-top: 0;
+        }
+
+        .promo-note strong {
+            color: #102338;
+        }
+
+        .promo-note span {
+            color: #0f766e;
+            font-weight: 800;
+        }
+
+        .promo-note small {
+            color: #64748b;
+            line-height: 1.45;
+        }
+
+        .consensus-panel {
+            display: grid;
+            gap: 10px;
+        }
+
+        .consensus-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1.8fr) repeat(4, minmax(90px, 0.55fr));
+            gap: 14px;
+            align-items: center;
+            padding: 16px;
+        }
+
+        .consensus-row strong,
+        .consensus-row span,
+        .consensus-row b,
+        .consensus-row small {
+            display: block;
+        }
+
+        .consensus-row strong {
+            color: #102338;
+            font-size: 1rem;
+        }
+
+        .consensus-row span,
+        .consensus-row small {
+            color: #64748b;
+            font-size: 0.82rem;
+            margin-top: 3px;
+        }
+
+        .consensus-row b {
+            color: #0f766e;
+            font-size: 1.05rem;
+        }
+
         @media (max-width: 720px) {
             #picks .sport-cards-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -20315,6 +20915,16 @@ document.addEventListener('DOMContentLoaded', function() {
             .market-chip-row span {
                 width: 100%;
                 justify-content: center;
+            }
+
+            .sportsbook-workflow-grid,
+            .sportsbook-trust-panel,
+            .trust-flow,
+            .analytics-depth-grid,
+            .breakdown-panels,
+            .promo-tool-grid,
+            .consensus-row {
+                grid-template-columns: 1fr;
             }
         }
     </style>

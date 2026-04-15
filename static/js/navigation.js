@@ -19,7 +19,7 @@ function showSection(sectionId, updateHistory = true) {
     navLinks.forEach(link => link.classList.remove('active'));
 
     // Add active class to clicked nav item (if event exists)
-    if (event && event.target) {
+    if (typeof event !== 'undefined' && event && event.target && event.target.classList) {
         event.target.classList.add('active');
     }
 
@@ -35,7 +35,7 @@ function showSection(sectionId, updateHistory = true) {
 }
 
 // Valid section IDs for routing
-const validSections = ['home', 'picks', 'leaderboards', 'live', 'marketplace', 'groups', 'messages', 'profile', 'premium', 'forums', 'notifications', 'polls-trivia'];
+const validSections = ['home', 'picks', 'mypicks', 'my-record', 'promos', 'consensus', 'leaderboards', 'live', 'marketplace', 'groups', 'messages', 'profile', 'premium', 'forums', 'notifications', 'polls-trivia'];
 
 /**
  * Handle URL-based routing for SPA
