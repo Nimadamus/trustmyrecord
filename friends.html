@@ -516,6 +516,147 @@
                 flex-direction: column;
             }
         }
+
+        /* ========================================
+           FRIENDS PORTAL OVERRIDE
+           ======================================== */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f3f5f8;
+            color: #162231;
+        }
+
+        .friends-top-strip,
+        header,
+        .container,
+        footer {
+            max-width: 1440px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .friends-top-strip {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            overflow-x: auto;
+            white-space: nowrap;
+            background: #102338;
+            color: #ffffff;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            scrollbar-width: none;
+        }
+
+        .friends-top-strip::-webkit-scrollbar { display: none; }
+
+        header {
+            background: #ffffff;
+            border-bottom: 1px solid #d8dde6;
+            padding: 0;
+            position: static;
+            backdrop-filter: none;
+        }
+
+        .header-content {
+            max-width: 1440px;
+            padding: 0 20px;
+            min-height: 78px;
+        }
+
+        .logo {
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 1.58rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #162231;
+            background: none;
+            -webkit-text-fill-color: initial;
+        }
+
+        .logo span { color: #f58220; }
+
+        .nav-links a {
+            color: #637389;
+            font-weight: 700;
+            font-size: 0.98rem;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #f58220;
+        }
+
+        .container {
+            max-width: 1440px;
+            padding: 22px 20px 40px;
+        }
+
+        .page-title {
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 2.4rem;
+            color: #162231;
+            background: none;
+            -webkit-text-fill-color: initial;
+            letter-spacing: -0.05em;
+        }
+
+        .page-subtitle {
+            color: #637389;
+        }
+
+        .stats-bar,
+        .search-section,
+        .friend-card {
+            background: #ffffff;
+            border: 1px solid #d8dde6;
+            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
+        }
+
+        .stat-value {
+            font-family: 'Barlow', 'Inter', sans-serif;
+            color: #1f7ae0;
+        }
+
+        .search-input {
+            background: #ffffff;
+            border: 1px solid #d8dde6;
+            color: #162231;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .search-btn,
+        .add-friend-btn {
+            background: #f58220;
+            border: none;
+            color: #ffffff;
+        }
+
+        .tabs {
+            border-bottom-color: #d8dde6;
+        }
+
+        .tab {
+            border-color: #d8dde6;
+            color: #637389;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .tab.active {
+            background: rgba(31, 122, 224, 0.1);
+            border-color: #1f7ae0;
+            color: #1f7ae0;
+        }
+
+        .friend-card:hover {
+            border-color: #1f7ae0;
+        }
+
+        .friend-avatar {
+            background: linear-gradient(135deg, #1f7ae0, #102338);
+        }
+
+        footer a:hover { color: #1f7ae0 !important; }
     </style>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
@@ -527,19 +668,26 @@
     </script>
 </head>
 <body>
+    <div class="friends-top-strip">
+        <strong>Today:</strong>
+        <span>Followers and following</span>
+        <span>Mutual betting networks</span>
+        <span>Direct community discovery</span>
+        <span>Cleaner social connections</span>
+    </div>
         <header>
         <div class="header-content">
             <a href="index.html" class="logo">TRUST<span>MY</span>RECORD</a>
             <nav class="nav-links">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="sportsbook.html" class="nav-link">Sportsbook</a>
-                <a href="feed.html" class="nav-link">Feed</a>
-                <a href="challenges.html" class="nav-link">Picks Arena</a>
-                <a href="arena.html" class="nav-link">Gaming Arena</a>
+                <a href="sportsbook.html" class="nav-link">Odds</a>
+                <a href="sportsbook.html" class="nav-link">Scores &amp; Matchups</a>
+                <a href="feed.html" class="nav-link">News</a>
+                <a href="index.html" class="nav-link">Picks</a>
+                <a href="index.html#leaderboards" class="nav-link">Handicappers</a>
                 <a href="forum.html" class="nav-link">Forum</a>
                 <a href="messages.html" class="nav-link">Messages</a>
                 <a href="friends.html" class="nav-link active">Friends</a>
-                <a href="profile.html" class="nav-link">My Profile</a>
+                <a href="profile.html" class="nav-link">My Account</a>
             </nav>
         </div>
     </header>
@@ -909,65 +1057,56 @@
         });
     </script>
 
-        <footer style="background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.8) 100%); border-top: 1px solid rgba(0, 255, 255, 0.15); padding: 50px 0 0 0; margin-top: 60px;">
-            <div style="max-width: 1200px; margin: 0 auto; padding: 0 24px;">
+        <footer style="background: #ffffff; border-top: 1px solid #d8dde6; padding: 0; margin-top: 60px;">
+            <div style="max-width: 1440px; margin: 0 auto; padding: 22px 24px 0;">
                 <!-- Footer Columns -->
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding-bottom: 28px; border-bottom: 1px solid #d8dde6;">
                     <!-- Brand Column -->
                     <div>
-                        <div style="font-size: 1.3rem; font-weight: 800; color: #00ffff; margin-bottom: 10px; letter-spacing: 0.5px;">TrustMyRecord</div>
-                        <p style="color: #808090; font-size: 0.85rem; line-height: 1.6; margin: 0 0 16px 0;">The future of transparent sports betting.</p>
-                        <p style="color: #606070; font-size: 0.8rem; margin: 0;">&copy; 2026 TrustMyRecord.com</p>
+                        <div style="font-size: 1.3rem; font-weight: 800; color: #162231; margin-bottom: 10px; letter-spacing: 0;">Trust<span style='color:#f58220;'>My</span>Record</div>
+                        <p style="color: #637389; font-size: 0.85rem; line-height: 1.6; margin: 0 0 16px 0;">Transparent sports betting records, sharper social tools, and a cleaner portal-style product shell.</p>
+                        <p style="color: #637389; font-size: 0.8rem; margin: 0;">&copy; 2026 TrustMyRecord.com</p>
                     </div>
                     <!-- Platform Column -->
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Platform</div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: #162231; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Platform</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="sportsbook.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
-                            <a href="index.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
-                            <a href="arena.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Gaming Arena</a>
-                            <a href="forum.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
+                            <a href="sportsbook.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
+                            <a href="index.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
+                            <a href="arena.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Gaming Arena</a>
+                            <a href="forum.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
                         </div>
                     </div>
                     <!-- Community Column -->
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Community</div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: #162231; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Community</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="feed.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
-                            <a href="challenges.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Challenges</a>
-                            <a href="polls.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Polls</a>
-                            <a href="trivia.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
+                            <a href="feed.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
+                            <a href="challenges.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Challenges</a>
+                            <a href="polls.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Polls</a>
+                            <a href="trivia.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
                         </div>
                     </div>
                     <!-- Legal Column -->
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Info</div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: #162231; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Info</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="about.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
-                            <a href="terms.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
-                            <a href="privacy.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
-                            <a href="mailto:support@trustmyrecord.com" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Contact</a>
+                            <a href="about.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
+                            <a href="terms.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
+                            <a href="privacy.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
+                            <a href="mailto:support@trustmyrecord.com" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Contact</a>
                         </div>
                     </div>
                 </div>
                 <!-- Bottom Bar -->
                 <div style="padding: 24px 0; text-align: center;">
-                    <p style="color: #606070; font-size: 0.78rem; line-height: 1.7; margin: 0 0 8px 0;">TrustMyRecord is not a gambling site. We provide pick tracking and community features only. No real money is wagered on this platform.</p>
-                    <p style="color: #505060; font-size: 0.72rem; margin: 0;">If you or someone you know has a gambling problem, call 1-800-GAMBLER. Must be 18+ to participate. Please gamble responsibly.</p>
+                    <p style="color: #637389; font-size: 0.78rem; line-height: 1.7; margin: 0 0 8px 0;">TrustMyRecord is not a gambling site. We provide pick tracking and community features only. No real money is wagered on this platform.</p>
+                    <p style="color: #637389; font-size: 0.72rem; margin: 0;">If you or someone you know has a gambling problem, call 1-800-GAMBLER. Must be 18+ to participate. Please gamble responsibly.</p>
                 </div>
             </div>
-            <style>
-                footer a:hover { color: #00ffff !important; }
-                @media (max-width: 900px) {
-                    footer > div > div:first-child { grid-template-columns: repeat(2, 1fr) !important; gap: 30px !important; }
-                }
-                @media (max-width: 540px) {
-                    footer > div > div:first-child { grid-template-columns: 1fr !important; gap: 24px !important; }
-                    footer { padding-top: 36px !important; }
-                }
-            </style>
         </footer>
 
 
 </body>
 </html>
+<!-- Deploy: Tue, Apr 14, 2026  8:18:00 PM -->
