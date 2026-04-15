@@ -933,6 +933,17 @@ var cachedThread = null;   // current thread detail
 var cachedPosts = [];      // posts for current thread
 var searchDebounceTimer = null;
 
+var fallbackCategories = [
+    { id: 101, slug: 'nfl', name: 'NFL', description: 'NFL picks, matchups, injuries, market movement, and game discussion.', group_name: 'Sports Betting', icon: '&#127944;', thread_count: 0, post_count: 0 },
+    { id: 102, slug: 'nba', name: 'NBA', description: 'NBA sides, totals, props, rotations, and matchup discussion.', group_name: 'Sports Betting', icon: '&#127936;', thread_count: 0, post_count: 0 },
+    { id: 103, slug: 'mlb', name: 'MLB', description: 'MLB moneylines, run lines, first five innings, totals, and team totals.', group_name: 'Sports Betting', icon: '&#9918;', thread_count: 0, post_count: 0 },
+    { id: 104, slug: 'nhl', name: 'NHL', description: 'NHL puck lines, totals, goalie news, and matchup discussion.', group_name: 'Sports Betting', icon: '&#127954;', thread_count: 0, post_count: 0 },
+    { id: 105, slug: 'college-sports', name: 'College Sports', description: 'College football, college hoops, and campus rivalry discussion.', group_name: 'Sports Betting', icon: '&#127891;', thread_count: 0, post_count: 0 },
+    { id: 201, slug: 'trash-talk', name: 'Trash Talk', description: 'Callouts, rivalries, receipts, and record-backed arguments.', group_name: 'Community', icon: '&#128293;', thread_count: 0, post_count: 0 },
+    { id: 202, slug: 'site-feedback', name: 'Site Feedback', description: 'Bug reports, feature requests, and product feedback.', group_name: 'Community', icon: '&#128736;', thread_count: 0, post_count: 0 }
+];
+var usingFallbackCategories = false;
+
 // ================================================================
 // UTILITY
 // ================================================================
@@ -1077,6 +1088,7 @@ async function loadCategories() {
     try {
         var data = await api.request('/forum/categories');
         categories = data.categories || [];
+        usingFallbackCategories = false;
         updateForumJump();
         renderCategories();
 
@@ -1095,7 +1107,16 @@ async function loadCategories() {
             // Stats are optional, don't break the page
         }
     } catch (err) {
-        showError(container, 'Failed to load categories. Please try again later.');
+        usingFallbackCategories = true;
+        categories = fallbackCategories.slice();
+        updateForumJump();
+        renderCategories();
+        var fallbackNotice = document.createElement('div');
+        fallbackNotice.className = 'empty-msg';
+        fallbackNotice.style.color = 'var(--text-muted)';
+        fallbackNotice.style.padding = '10px 12px';
+        fallbackNotice.textContent = 'Live forum data is temporarily unavailable. Showing empty forum categories without fake threads or seeded users.';
+        container.insertBefore(fallbackNotice, container.firstChild);
         console.error('Load categories error:', err);
     }
 }
@@ -1178,6 +1199,16 @@ async function loadThreads() {
     body.innerHTML = '<tr><td colspan="4" class="empty-msg">Loading threads...</td></tr>';
 
     try {
+        var isFallbackCategory = fallbackCategories.some(function(cat) {
+            return cat.slug === currentCategorySlug;
+        }) && categories.some(function(cat) {
+            return cat.slug === currentCategorySlug;
+        });
+        if (usingFallbackCategories && isFallbackCategory) {
+            cachedThreads = [];
+            renderThreads();
+            return;
+        }
         var data = await api.request('/forum/categories/' + encodeURIComponent(currentCategorySlug));
         cachedThreads = data.threads || [];
         // Update category id from response if we didn't have it
