@@ -1660,7 +1660,11 @@
             try { window.loadUserProfile(); } catch(e) {}
         }
     };
-    window.tryAutoGradeAll = window.autoGradeAll;
+    window.tryAutoGradeAll = function() {
+        if (typeof window.renderPicksList === 'function') window.renderPicksList();
+        if (typeof window.loadMyPicks === 'function') window.loadMyPicks(window.currentPicksTab || 'pending');
+        if (typeof window.updateStatsDashboard === 'function') window.updateStatsDashboard();
+    };
 
     console.log('[TMR EARLY] Core functions + grading engine defined.');
     </script>
