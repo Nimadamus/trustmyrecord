@@ -361,7 +361,7 @@ async function handleNotifClick(notifId, type) {
         case 'challenge_invite':
         case 'challenge_result':
         case 'challenge':
-            window.location.href = 'challenges.html';
+            window.location.href = 'arena.html';
             break;
         case 'premium_upgrade':
         case 'premium_expired':
