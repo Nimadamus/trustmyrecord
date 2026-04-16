@@ -483,6 +483,34 @@
         }
     }
 
+    function getLineInputLabel(option) {
+        const marketType = String(option && option.market_type || '').toLowerCase();
+        if (!marketType || option == null || option.line == null) return 'Line';
+        if (marketType.indexOf('total') !== -1 || marketType === 'btts') return 'Total / Number';
+        if (marketType.indexOf('spread') !== -1) return 'Spread / Handicap';
+        if (marketType.indexOf('player_') === 0) return 'Prop Line';
+        return 'Line';
+    }
+
+    function syncPickDetailsLayout(option) {
+        const selectorIds = ['betScopeSelector', 'betTypeSelector', 'betTypeSelector2', 'betTypeSelectorF5'];
+        selectorIds.forEach(function(id) {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+
+        const lineGroup = document.getElementById('lineInputGroup');
+        if (lineGroup) {
+            lineGroup.style.display = option && option.line != null ? 'block' : 'none';
+            const label = lineGroup.querySelector('label');
+            if (label) label.textContent = getLineInputLabel(option);
+            const hint = lineGroup.querySelector('p');
+            if (hint) hint.textContent = option && option.line != null
+                ? 'Line loaded from the live market. You can adjust it if your book differs.'
+                : 'No line is required for this market.';
+        }
+    }
+
     function injectStyles() {
         if (document.getElementById('tmr-prod-fix-style')) return;
         const style = document.createElement('style');
@@ -944,9 +972,7 @@
         const marketInput = document.getElementById('pickMarketInput');
         const bookInput = document.getElementById('pickBookInput');
         const timestampInput = document.getElementById('pickTimestampInput');
-        const lineGroup = document.getElementById('lineInputGroup');
-
-        if (lineGroup) lineGroup.style.display = option.line != null ? 'block' : 'none';
+        syncPickDetailsLayout(option);
         if (lineInput) lineInput.value = option.line_display || '';
         if (oddsInput) oddsInput.value = option.odds != null ? option.odds : '';
         if (marketInput) marketInput.value = option.group_label + ' / ' + getMarketLabel(option.market_type);
@@ -962,7 +988,8 @@
         const oddsInput = document.getElementById('pickOddsInput');
         const lineValue = lineInput ? lineInput.value.trim() : '';
         const oddsValue = oddsInput ? oddsInput.value.trim() : '';
-        updateText('summaryPick', state.selectedOption.selection + (lineValue ? ' ' + lineValue : ''));
+        const summaryText = state.selectedOption.selection_label || state.selectedOption.selection || 'Pick';
+        updateText('summaryPick', lineValue && summaryText.indexOf(lineValue) === -1 ? (summaryText + ' (' + lineValue + ')') : summaryText);
         updateText('summaryOdds', oddsValue || 'Manual');
     }
 
