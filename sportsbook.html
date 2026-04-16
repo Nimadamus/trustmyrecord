@@ -451,7 +451,7 @@
                 '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'under\',\'Under\',\'' + esc(pv(total)) + '\',\'' + esc(pv(underPrice)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + totLine('Under') + '</span><span class="odds-value">' + totOdds(underPrice) + '</span></button>' +
                 '</div></div>';
             // More Markets expandable section. Only render sportsbook-provided
-            // team totals and first-five markets; never derive or estimate lines.
+            // team totals and first-five markets; never synthesize lines.
             var isMLB = (sport && (sport.toLowerCase().indexOf('baseball') !== -1 || sport === 'MLB'));
             var first5Group = Array.isArray(game.market_groups) ? game.market_groups.find(function(group) { return group && group.key === 'first_5'; }) : null;
             var first5Items = first5Group && Array.isArray(first5Group.items) ? first5Group.items : [];
@@ -539,7 +539,7 @@
             games.forEach(function(g, i) {
                 var bk = g.bookmakers;
                 var mkts = bk && bk[0] ? bk[0].markets : [];
-                console.log('[TMR] Game ' + i + ': ' + g.away_team + ' @ ' + g.home_team + ' | bookmakers=' + (bk ? bk.length : 'null') + ' markets=' + mkts.length + ' estimated=' + !!g.estimatedOdds + ' record=' + g.home_record);
+                console.log('[TMR] Game ' + i + ': ' + g.away_team + ' @ ' + g.home_team + ' | bookmakers=' + (bk ? bk.length : 'null') + ' markets=' + mkts.length + ' record=' + g.home_record);
             });
             window.TMR.currentGames = games;
 
@@ -16915,41 +16915,40 @@ document.addEventListener('DOMContentLoaded', function() {
             const gameTime = new Date(game.commence_time);
             const timeStr = gameTime.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
-            // Compute team total line (game total / 2, rounded to nearest 0.5)
-            const ttLine = total !== '--' ? Math.round(parseFloat(total) / 2 * 2) / 2 : '?';
+            const teamTotalGroup = Array.isArray(game.market_groups) ? game.market_groups.find(group => group && group.key === 'team_totals') : null;
+            const teamTotalItems = teamTotalGroup && Array.isArray(teamTotalGroup.items) ? teamTotalGroup.items : [];
 
             // Build F5 HTML for MLB games only
             const selSport = window.TMR && window.TMR.selectedSport;
             const isMLBGame = selSport === 'MLB' || (game.sport_key && game.sport_key.indexOf('baseball') !== -1);
             let f5Html = '';
             if (isMLBGame) {
-                const f5t = total !== '--' ? (Math.round(parseFloat(total) * 0.55 * 2) / 2) : '?';
                 const first5Group = Array.isArray(game.market_groups) ? game.market_groups.find(group => group && group.key === 'first_5') : null;
                 const first5Items = first5Group && Array.isArray(first5Group.items) ? first5Group.items : [];
-                const awayF5Spread = first5Items.find(item => item && item.market_type === 'f5_spreads' && item.selection === game.away_team) || null;
-                const homeF5Spread = first5Items.find(item => item && item.market_type === 'f5_spreads' && item.selection === game.home_team) || null;
-                const awayF5Line = awayF5Spread && awayF5Spread.line != null ? awayF5Spread.line : 0.5;
-                const homeF5Line = homeF5Spread && homeF5Spread.line != null ? homeF5Spread.line : -0.5;
-                const awayF5Odds = awayF5Spread && awayF5Spread.odds != null ? awayF5Spread.odds : -118;
-                const homeF5Odds = homeF5Spread && homeF5Spread.odds != null ? homeF5Spread.odds : -102;
                 const escAway = game.away_team.replace(/'/g, "\\'");
                 const escHome = game.home_team.replace(/'/g, "\\'");
-                const awayShort = game.away_team.split(' ').pop();
-                const homeShort = game.home_team.split(' ').pop();
+                const escJs = value => String(value == null ? '' : value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                const f5Buttons = first5Items.map(item => {
+                    const type = item.market_type === 'f5_h2h' ? 'f5ml' : (item.market_type === 'f5_totals' && item.selection === 'Over' ? 'f5over' : (item.market_type === 'f5_totals' ? 'f5under' : 'f5spread'));
+                    const line = item.line != null ? item.line : '';
+                    const odds = item.odds != null ? item.odds : '';
+                    const label = item.selection_label || item.selection || 'First 5';
+                    return `<button class="bet-pick-btn" onclick="selectGameBet(${index}, '${type}', '${escJs(item.selection || label)}', '${escJs(line)}', '${escJs(odds)}', '${escAway}', '${escHome}')"><span class="line">${label}</span><span class="odds">${odds}</span></button>`;
+                }).join('');
                 f5Html = `<div class="market-section"><div class="market-title">First 5 Innings</div>
-                    <div style="display:flex;gap:10px;margin-bottom:8px;">
-                        <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5spread', '${escAway}', '${awayF5Line}', '${awayF5Odds}', '${escAway}', '${escHome}')"><span class="line">${awayShort} ${awayF5Line > 0 ? '+' : ''}${awayF5Line}</span><span class="odds">${awayF5Odds > 0 ? '+' : ''}${awayF5Odds}</span></button>
-                        <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5spread', '${escHome}', '${homeF5Line}', '${homeF5Odds}', '${escAway}', '${escHome}')"><span class="line">${homeShort} ${homeF5Line > 0 ? '+' : ''}${homeF5Line}</span><span class="odds">${homeF5Odds > 0 ? '+' : ''}${homeF5Odds}</span></button>
-                    </div>
-                    <div style="display:flex;gap:10px;margin-bottom:8px;">
-                        <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5ml', '${escAway}', 'F5 ML', '${awayML}', '${escAway}', '${escHome}')"><span class="line">${awayShort} F5</span><span class="odds">${awayML}</span></button>
-                        <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5ml', '${escHome}', 'F5 ML', '${homeML}', '${escAway}', '${escHome}')"><span class="line">${homeShort} F5</span><span class="odds">${homeML}</span></button>
-                    </div>
-                    <div style="display:flex;gap:10px;">
-                        <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5over', 'Over', '${f5t}', '-110', '${escAway}', '${escHome}')"><span class="line">F5 O ${f5t}</span><span class="odds">-110</span></button>
-                        <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5under', 'Under', '${f5t}', '-110', '${escAway}', '${escHome}')"><span class="line">F5 U ${f5t}</span><span class="odds">-110</span></button>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        ${f5Buttons || '<div style="color:var(--text-muted,#aaa);font-size:12px;">No verified first-5 lines available for this game.</div>'}
                     </div></div>`;
             }
+
+            const escMarketJs = value => String(value == null ? '' : value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            const teamTotalsHtml = teamTotalItems.length ? teamTotalItems.map(item => {
+                const type = item.market_type === 'team_totals' && item.selection_label && item.selection_label.toLowerCase().indexOf('under') !== -1 ? 'teamunder' : 'teamover';
+                const label = item.selection_label || item.selection || 'Team Total';
+                const line = item.line != null ? item.line : '';
+                const odds = item.odds != null ? item.odds : '';
+                return `<button class="bet-pick-btn" onclick="selectGameBet(${index}, '${type}', '${escMarketJs(item.selection || label)}', '${escMarketJs(line)}', '${escMarketJs(odds)}', '${game.away_team.replace(/'/g, "\\'")}', '${game.home_team.replace(/'/g, "\\'")}')"><span class="line">${label}</span><span class="odds">${odds}</span></button>`;
+            }).join('') : '<div style="color:var(--text-muted,#aaa);font-size:12px;">No verified team-total lines available for this game.</div>';
 
             html += `
             <div class="game-card-new" data-game-index="${index}">
@@ -17017,29 +17016,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div id="expandedMarkets${index}" class="expanded-markets">
                     <div class="market-section">
                         <div class="market-title">Team Totals</div>
-                        <div class="team-totals-grid" style="display: grid; gap: 10px;">
-                            <div class="team-total-row" style="display: flex; align-items: center; gap: 10px;">
-                                <span class="team-name" style="min-width: 100px; font-weight: 600;">${game.away_team.split(' ').pop()}</span>
-                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'teamover', '${game.away_team.replace(/'/g, "\\'")}', '${ttLine}', '-110', '${game.away_team.replace(/'/g, "\\'")}', '${game.home_team.replace(/'/g, "\\'")}')">
-                                    <span class="line">O ${ttLine}</span>
-                                    <span class="odds">-110</span>
-                                </button>
-                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'teamunder', '${game.away_team.replace(/'/g, "\\'")}', '${ttLine}', '-110', '${game.away_team.replace(/'/g, "\\'")}', '${game.home_team.replace(/'/g, "\\'")}')">
-                                    <span class="line">U ${ttLine}</span>
-                                    <span class="odds">-110</span>
-                                </button>
-                            </div>
-                            <div class="team-total-row" style="display: flex; align-items: center; gap: 10px;">
-                                <span class="team-name" style="min-width: 100px; font-weight: 600;">${game.home_team.split(' ').pop()}</span>
-                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'teamover', '${game.home_team.replace(/'/g, "\\'")}', '${ttLine}', '-110', '${game.away_team.replace(/'/g, "\\'")}', '${game.home_team.replace(/'/g, "\\'")}')">
-                                    <span class="line">O ${ttLine}</span>
-                                    <span class="odds">-110</span>
-                                </button>
-                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'teamunder', '${game.home_team.replace(/'/g, "\\'")}', '${ttLine}', '-110', '${game.away_team.replace(/'/g, "\\'")}', '${game.home_team.replace(/'/g, "\\'")}')">
-                                    <span class="line">U ${ttLine}</span>
-                                    <span class="odds">-110</span>
-                                </button>
-                            </div>
+                        <div class="team-totals-grid" style="display:flex;gap:10px;flex-wrap:wrap;">
+                            ${teamTotalsHtml}
                         </div>
                     </div>
                     ${f5Html}
