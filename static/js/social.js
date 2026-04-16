@@ -200,7 +200,10 @@ class SocialSystem {
     }
 
     loadAllPicks() {
-        // Check both storage keys (tmr_picks is primary, trustmyrecord_picks is legacy)
+        if (Array.isArray(window._cachedBackendPicks) && window._cachedBackendPicks.length > 0) {
+            return window._cachedBackendPicks;
+        }
+
         const stored = localStorage.getItem('tmr_picks') || localStorage.getItem('trustmyrecord_picks');
         return stored ? JSON.parse(stored) : [];
     }

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * TrustMyRecord - Auto-Grader (FIXED VERSION)
  * Grades picks using ESPN API scores
  */
@@ -471,6 +471,7 @@
     // ONE-TIME FIX: Revert any picks incorrectly graded on April 5 2026
     // The old auto-grader.js had a bug that graded in-progress games
     (function() {
+        if (shouldUseBackendGrading()) return;
         var FIX_KEY = 'tmr_grader_fix_v3';
         if (localStorage.getItem(FIX_KEY)) return;
         try {
