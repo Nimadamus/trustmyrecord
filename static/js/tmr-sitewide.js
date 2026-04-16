@@ -8,6 +8,8 @@
         ["trivia.html", "Trivia"],
         ["profile.html", "Records"],
         ["forum.html", "Forum"],
+        ["friends.html", "Friends"],
+        ["messages.html", "Messages"],
         ["about.html", "About"]
     ];
 
