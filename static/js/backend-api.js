@@ -1,4 +1,4 @@
-﻿/**
+/**
  * TrustMyRecord Backend API Client
  * Connects frontend to Node.js/Express backend
  */
@@ -71,8 +71,14 @@ class TrustMyRecordAPI {
 
     // Token Management
     loadTokens() {
-        this.token = localStorage.getItem('trustmyrecord_token');
-        this.refreshToken = localStorage.getItem('trustmyrecord_refresh_token');
+        this.token = localStorage.getItem('trustmyrecord_token') ||
+            localStorage.getItem('token') ||
+            localStorage.getItem('tmr_token') ||
+            null;
+        this.refreshToken = localStorage.getItem('trustmyrecord_refresh_token') ||
+            localStorage.getItem('refreshToken') ||
+            localStorage.getItem('refresh_token') ||
+            null;
     }
 
     saveTokens(token, refreshToken) {
@@ -80,13 +86,17 @@ class TrustMyRecordAPI {
         this.refreshToken = refreshToken || null;
         if (token) {
             localStorage.setItem('trustmyrecord_token', token);
+            localStorage.setItem('token', token);
         } else {
             localStorage.removeItem('trustmyrecord_token');
+            localStorage.removeItem('token');
         }
         if (refreshToken) {
             localStorage.setItem('trustmyrecord_refresh_token', refreshToken);
+            localStorage.setItem('refreshToken', refreshToken);
         } else {
             localStorage.removeItem('trustmyrecord_refresh_token');
+            localStorage.removeItem('refreshToken');
         }
     }
 
@@ -96,6 +106,10 @@ class TrustMyRecordAPI {
         this._cachedUser = null;
         localStorage.removeItem('trustmyrecord_token');
         localStorage.removeItem('trustmyrecord_refresh_token');
+        localStorage.removeItem('token');
+        localStorage.removeItem('tmr_token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('refresh_token');
     }
 
     getAuthHeaders() {

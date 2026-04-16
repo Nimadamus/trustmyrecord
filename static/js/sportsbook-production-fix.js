@@ -119,7 +119,21 @@
 
     function getStoredAuthToken() {
         try {
-            return localStorage.getItem('trustmyrecord_token') || '';
+            return localStorage.getItem('trustmyrecord_token') ||
+                localStorage.getItem('token') ||
+                localStorage.getItem('tmr_token') ||
+                '';
+        } catch (error) {
+            return '';
+        }
+    }
+
+    function getStoredRefreshToken() {
+        try {
+            return localStorage.getItem('trustmyrecord_refresh_token') ||
+                localStorage.getItem('refreshToken') ||
+                localStorage.getItem('refresh_token') ||
+                '';
         } catch (error) {
             return '';
         }
@@ -147,6 +161,34 @@
             return window.api;
         }
         return null;
+    }
+
+    async function ensureBackendAccessToken(apiClient) {
+        const client = apiClient || window.api;
+        if (client && typeof client.loadTokens === 'function') {
+            try { client.loadTokens(); } catch (error) {}
+        }
+
+        if (client && client.token) return client.token;
+
+        const storedToken = getStoredAuthToken();
+        if (storedToken) {
+            if (client) client.token = storedToken;
+            return storedToken;
+        }
+
+        const storedRefresh = (client && client.refreshToken) || getStoredRefreshToken();
+        if (storedRefresh && client) {
+            client.refreshToken = storedRefresh;
+            if (typeof client.refreshAccessToken === 'function') {
+                try {
+                    const refreshed = await client.refreshAccessToken();
+                    if (refreshed && client.token) return client.token;
+                } catch (error) {}
+            }
+        }
+
+        throw new Error('Your login session is missing a backend access token. Please log in again before submitting picks.');
     }
 
     function getDirectApiBases() {
@@ -197,7 +239,7 @@
                 if (requireAuth) {
                     const token = getStoredAuthToken();
                     if (!token) {
-                        throw new Error('You need to log in again before submitting a pick.');
+                        throw new Error('Your login session is missing a backend access token. Please log in again before submitting picks.');
                     }
                     headers['Authorization'] = 'Bearer ' + token;
                 }
@@ -909,6 +951,7 @@
 
         try {
             const api = await getApiClientOrFallback();
+            await ensureBackendAccessToken(api);
             const response = await api.createPick({
                 game_id: option.game_id,
                 sport_key: option.sport_key,
