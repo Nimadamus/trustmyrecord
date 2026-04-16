@@ -38,7 +38,7 @@
 
     document.body.classList.add("tmr-site-shell");
 
-    document.querySelectorAll("header, body > nav.nav, body > .messages-top-strip, body > .sportsbook-top-strip, .sportsbook-top-strip").forEach((el) => {
+    document.querySelectorAll("header, body > nav.nav, body > .messages-top-strip, body > .sportsbook-top-strip, body > .notifications-top-strip, .sportsbook-top-strip, .notifications-top-strip").forEach((el) => {
         if (!el.classList.contains("tmr-global-nav")) {
             el.setAttribute("data-tmr-legacy-nav", "hidden");
             el.style.display = "none";
