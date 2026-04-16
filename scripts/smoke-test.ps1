@@ -14,7 +14,7 @@ $htmlFiles = Get-ChildItem $Root -Filter *.html
 
 $forbiddenPattern = 'index\.html#leaderboards|href="index\.html"[^>]*>Picks|href="#(?:picks|leaderboards|profile)"|showSection\(''leaderboard''\)|volleyball|cycling|bicycle|bike|NFL Sharp Bettors|LIVE Q[1-4]|live bets|Earn 70% Revenue|Make 5 picks per week'
 $estimatedPattern = 'Estimated lines|Some lines are estimated|Generated odds|Pre-generated odds|Estimated from full-game|Modeled first 5|Fallback pricing|title="Estimated odds"|deriveMlbFirst5Fallback'
-$fakeFallbackPattern = 'renderDemoFeed|getDemoFeedItems|demoTopics|demoUsers|generateRealisticOdds|Real sample games|realistic odds as fallback|estimatedOdds|seedSamplePolls|seedSampleChallenges|sample contest|SharpMoney|DiamondSharp|Team A'
+$fakeFallbackPattern = 'renderDemoFeed|getDemoFeedItems|demoTopics|demoUsers|generateRealisticOdds|Real sample games|realistic odds as fallback|estimatedOdds|seedSamplePolls|seedSampleChallenges|sample contest|SharpMoney|DiamondSharp|Team A|Auto-create user if not exists'
 
 foreach ($file in $htmlFiles) {
     $html = Get-Content $file.FullName -Raw

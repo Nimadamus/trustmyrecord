@@ -83,24 +83,7 @@ class TrustMyRecordAPI {
         const user = users.find(u => u.username === credentials.username && u.password === credentials.password);
         
         if (!user) {
-            // Auto-create user if not exists
-            const newUser = {
-                id: 'user_' + Date.now(),
-                username: credentials.username,
-                email: `${credentials.username}@local.com`,
-                password: credentials.password,
-                displayName: credentials.username,
-                bio: '',
-                avatar: null,
-                tier: 'bronze',
-                verified: false,
-                createdAt: new Date().toISOString(),
-                stats: { wins: 0, losses: 0, pushes: 0, units: 0 }
-            };
-            users.push(newUser);
-            this.setLocal('tmr_users', users);
-            this.setLocal('tmr_user', newUser);
-            return { user: newUser, success: true };
+            throw new Error('Invalid username or password');
         }
         
         this.setLocal('tmr_user', user);
