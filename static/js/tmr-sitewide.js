@@ -2,7 +2,7 @@
     const routes = [
         ["index.html", "Home"],
         ["sportsbook.html", "Make Picks"],
-        ["challenges.html", "Arena"],
+        ["arena.html", "Arena"],
         ["feed.html", "Feed"],
         ["polls.html", "Polls"],
         ["trivia.html", "Trivia"],
@@ -15,8 +15,8 @@
 
     const routeMeta = {
         "sportsbook.html": ["Make Picks", "Live markets, pick submission, odds boards, and permanent locked receipts."],
-        "challenges.html": ["Arena", "Head-to-head contests, rival callouts, public challenges, and competition loops."],
-        "arena.html": ["Gaming Arena", "Gaming-specific challenges live here as a secondary arena route."],
+        "arena.html": ["Arena", "Head-to-head contests, rival callouts, public challenges, and competition loops."],
+        "challenges.html": ["Arena", "Legacy arena route. Public competition and challenge traffic belongs on the Arena page."],
         "feed.html": ["Social Feed", "Posts, reactions, sports debate, locked picks, and activity from the community."],
         "polls.html": ["Polls", "Prediction polls and scored fan forecasting, separate from pick submission."],
         "trivia.html": ["Trivia", "Sports knowledge games, custom questions, and scored fan status."],
@@ -55,7 +55,7 @@
             </a>
             <div class="tmr-global-nav__links">
                 ${routes.slice(1).filter(([href]) => href !== "profile.html").map(([href, label]) => {
-                    const active = currentFile === href.toLowerCase() || (currentFile === "arena.html" && href === "challenges.html");
+                    const active = currentFile === href.toLowerCase() || ((currentFile === "arena.html" || currentFile === "challenges.html") && href === "arena.html");
                     return `<a href="${href}"${active ? ' aria-current="page"' : ""}>${label}</a>`;
                 }).join("")}
             </div>
