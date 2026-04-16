@@ -1,5 +1,6 @@
 // Leaderboard Data Loader - TrustMyRecord
-// Prefers backend leaderboard APIs and falls back to static JSON only when unavailable.
+// Prefers backend leaderboard APIs. No seeded public rankings are rendered when
+// the backend is unavailable.
 
 (function() {
     let leaderboardData = null;
@@ -13,9 +14,7 @@
                 return;
             }
 
-            const resp = await fetch('static/data/leaderboard.json?v=' + Date.now());
-            if (!resp.ok) throw new Error('Failed to load leaderboard data');
-            leaderboardData = await resp.json();
+            leaderboardData = { users: [] };
             backendLeaderboardState = null;
             renderAllLeaderboards();
         } catch (err) {
@@ -50,7 +49,7 @@
             leaderboardData = null;
             return true;
         } catch (err) {
-            console.warn('[Leaderboard] Backend leaderboard fetch failed, using static fallback:', err);
+            console.warn('[Leaderboard] Backend leaderboard fetch failed:', err);
             backendLeaderboardState = null;
             return false;
         }

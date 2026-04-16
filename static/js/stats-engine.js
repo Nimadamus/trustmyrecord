@@ -1,4 +1,4 @@
-﻿// Advanced Statistics Engine for Trust My Record
+// Advanced Statistics Engine for Trust My Record
 // Calculates ROI, CLV, streaks, sport breakdowns, and all handicapping metrics
 
 class StatsEngine {
@@ -13,8 +13,42 @@ class StatsEngine {
      * Get all picks for a user
      */
     getUserPicks(username) {
-        const allPicks = JSON.parse(localStorage.getItem(this.PICKS_KEY) || '[]');
-        return allPicks.filter(p => p.user_id === username || p.username === username);
+        const userKey = String(username || '').toLowerCase();
+        const backendPicks = Array.isArray(window._cachedBackendPicks) ? window._cachedBackendPicks : [];
+        const source = backendPicks.length ? backendPicks : this.getLocalPicks();
+        return source
+            .filter(pick => {
+                if (!userKey) return true;
+                return [pick.user_id, pick.userId, pick.username, pick.user_email, pick.email]
+                    .map(value => String(value || '').toLowerCase())
+                    .includes(userKey);
+            })
+            .map(pick => this.normalizePick(pick));
+    }
+
+    getLocalPicks() {
+        try {
+            const picks = JSON.parse(localStorage.getItem(this.PICKS_KEY) || '[]');
+            return Array.isArray(picks) ? picks : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    normalizePick(pick) {
+        const normalized = { ...(pick || {}) };
+        const status = String(normalized.status || normalized.result || 'pending').toLowerCase();
+        normalized.status = status === 'win' ? 'won'
+            : status === 'loss' ? 'lost'
+            : status === 'pushed' ? 'push'
+            : status || 'pending';
+        normalized.units = Number(normalized.units || normalized.stake || 1);
+        normalized.odds = Number(normalized.odds || normalized.price || normalized.odds_snapshot || -110);
+        if (normalized.result_units == null && typeof window.computeCanonicalRecordStats === 'function') {
+            const computed = window.computeCanonicalRecordStats([normalized]);
+            normalized.result_units = computed.totalUnits;
+        }
+        return normalized;
     }
 
     /**
@@ -132,7 +166,7 @@ class StatsEngine {
      * Standard: Risk 1 unit per bet, calculate net profit/loss percentage
      */
     calculateROI(picks) {
-        const graded = picks.filter(p => p.status !== 'pending');
+        const graded = picks.filter(p => p.status !== 'pending' && p.status !== 'void');
         if (graded.length === 0) return 0;
 
         let totalRisk = 0;

@@ -1,4 +1,4 @@
-﻿// Enhanced Authentication System with PERMANENT Login
+// Enhanced Authentication System with PERMANENT Login
 // v3.2 - Apr 5, 2026
 
 class PersistentAuthSystem {
@@ -9,53 +9,19 @@ class PersistentAuthSystem {
         this.usersKey = 'trustmyrecord_users';
         this.rememberKey = 'trustmyrecord_remember';
         this.pruneSeedUsers();
-        this.ensureDefaultUsers();
         this.init();
     }
 
     pruneSeedUsers() {
-        const removableUsernames = new Set(['demo', 'testuser']);
-        const filteredUsers = this.users.filter(user => !removableUsernames.has(String(user && user.username).toLowerCase()));
+        const removableUsernames = new Set(['demo', 'testuser', 'admin', 'betlegend']);
+        const removableIds = new Set(['user_admin_default', 'user_betlegend']);
+        const filteredUsers = this.users.filter(user => {
+            const username = String(user && user.username || '').toLowerCase();
+            const id = String(user && user.id || '').toLowerCase();
+            return !removableUsernames.has(username) && !removableIds.has(id);
+        });
         if (filteredUsers.length !== this.users.length) {
             this.users = filteredUsers;
-            this.saveUsers();
-        }
-    }
-
-    ensureDefaultUsers() {
-        if (!this.users.find(u => u.username === 'admin')) {
-            this.users.push({
-                id: 'user_admin_default',
-                username: 'admin',
-                email: 'admin@trustmyrecord.com',
-                passwordHash: this.hashPassword('admin123'),
-                displayName: 'Admin',
-                avatar: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23ef4444%22/><text x=%2250%22 y=%2265%22 font-size=%2250%22 text-anchor=%22middle%22 fill=%22white%22>A</text></svg>',
-                bio: 'Site Administrator',
-                joinedDate: new Date().toISOString(),
-                verified: true,
-                stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
-                social: { followers: [], following: [], reputation: 0, badges: ['admin'] },
-                isPremium: true
-            });
-            this.saveUsers();
-        }
-
-        if (!this.users.find(u => u.username === 'BetLegend')) {
-            this.users.push({
-                id: 'user_betlegend',
-                username: 'BetLegend',
-                email: 'nima@betlegendpicks.com',
-                passwordHash: this.hashPassword('betlegend2025'),
-                displayName: 'BetLegend',
-                avatar: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%2322c55e%22/><text x=%2250%22 y=%2265%22 font-size=%2250%22 text-anchor=%22middle%22 fill=%22white%22>B</text></svg>',
-                bio: 'Founder',
-                joinedDate: '2025-10-01',
-                verified: true,
-                stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
-                social: { followers: [], following: [], reputation: 0, badges: ['founder', 'verified'] },
-                isPremium: true
-            });
             this.saveUsers();
         }
     }
