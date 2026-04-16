@@ -636,6 +636,56 @@
                 });
             }
 
+            const addRawMarketGroup = function(groupKey, groupLabel, marketKeys) {
+                const items = [];
+                marketKeys.forEach(function(marketKey) {
+                    const market = markets.find(function(candidate) { return candidate.key === marketKey; });
+                    if (!market || !Array.isArray(market.outcomes) || !market.outcomes.length) return;
+
+                    market.outcomes.forEach(function(outcome) {
+                        const line = outcome.point != null ? outcome.point : null;
+                        const isTotal = marketKey.indexOf('totals') !== -1 || marketKey === 'alt_totals';
+                        const isMoneyline = marketKey.indexOf('h2h') !== -1 || marketKey === 'h2h_3_way';
+                        let label = outcome.name || groupLabel;
+
+                        if (isTotal && line != null) {
+                            label = outcome.name + ' ' + line;
+                        } else if (!isMoneyline && line != null) {
+                            label = outcome.name + ' ' + (line > 0 ? '+' : '') + line;
+                        } else if (isMoneyline) {
+                            label = outcome.name + ' ML';
+                        }
+
+                        items.push(createFallbackOption(
+                            game,
+                            index,
+                            groupLabel,
+                            marketKey,
+                            outcome.name,
+                            label,
+                            outcome.price,
+                            line,
+                            bookmaker ? bookmaker.title : 'Sportsbook feed'
+                        ));
+                    });
+                });
+
+                if (items.length) {
+                    marketGroups.push({
+                        key: groupKey,
+                        label: groupLabel,
+                        items: items
+                    });
+                }
+            };
+
+            addRawMarketGroup('first_half', 'First Half', ['first_half_h2h', 'first_half_spreads', 'first_half_totals']);
+            addRawMarketGroup('second_half', 'Second Half', ['second_half_h2h', 'second_half_spreads', 'second_half_totals']);
+            addRawMarketGroup('period_1', '1st Period', ['period_1_h2h', 'period_1_spreads', 'period_1_totals']);
+            addRawMarketGroup('alt_spreads', 'Alt Spreads', ['alt_spreads']);
+            addRawMarketGroup('alt_totals', 'Alt Totals', ['alt_totals']);
+            addRawMarketGroup('three_way', '3-Way Moneyline', ['h2h_3_way']);
+
             if (sportKey === 'baseball_mlb' && (f5H2h || f5Spreads || f5Totals)) {
                 const f5AwayMl = f5H2h && f5H2h.outcomes ? f5H2h.outcomes.find(function(outcome) { return outcome.name === game.away_team; }) : null;
                 const f5HomeMl = f5H2h && f5H2h.outcomes ? f5H2h.outcomes.find(function(outcome) { return outcome.name === game.home_team; }) : null;
