@@ -1085,6 +1085,174 @@
         }
     }
 
+    function setSportsbookTabActive(activeButton) {
+        document.querySelectorAll('[data-sportsbook-tab]').forEach(function(button) {
+            button.classList.toggle('active', button === activeButton);
+        });
+    }
+
+    function renderPromoNotes() {
+        const list = document.getElementById('promoNotesList');
+        if (!list) return;
+        let notes = [];
+        try {
+            notes = JSON.parse(localStorage.getItem('tmr_promo_notes') || '[]');
+        } catch (error) {
+            notes = [];
+        }
+
+        list.innerHTML = notes.length
+            ? notes.map(function(note) {
+                return '<div class="tmr-empty-state" style="text-align:left;margin-bottom:10px;">' +
+                    '<strong>' + escapeHtml(note.book || 'Sportsbook') + '</strong><br>' +
+                    '<span>' + escapeHtml(note.offer || 'Offer') + '</span><br>' +
+                    '<small>' + escapeHtml(note.notes || '') + '</small>' +
+                    '</div>';
+            }).join('')
+            : '<div class="tmr-empty-state">No saved promo notes yet. This panel stores only notes you enter.</div>';
+    }
+
+    function addPromoNote() {
+        const book = document.getElementById('promoBook');
+        const offer = document.getElementById('promoOffer');
+        const notes = document.getElementById('promoNotes');
+        const record = {
+            book: book ? book.value.trim() : '',
+            offer: offer ? offer.value.trim() : '',
+            notes: notes ? notes.value.trim() : '',
+            created_at: new Date().toISOString()
+        };
+        if (!record.book && !record.offer && !record.notes) {
+            alert('Enter a sportsbook, offer, or note before saving.');
+            return;
+        }
+
+        let saved = [];
+        try {
+            saved = JSON.parse(localStorage.getItem('tmr_promo_notes') || '[]');
+        } catch (error) {
+            saved = [];
+        }
+        saved.unshift(record);
+        localStorage.setItem('tmr_promo_notes', JSON.stringify(saved.slice(0, 25)));
+        if (book) book.value = '';
+        if (offer) offer.value = '';
+        if (notes) notes.value = '';
+        renderPromoNotes();
+    }
+
+    async function renderConsensusPanel() {
+        const panel = document.getElementById('consensusPicksPanel');
+        if (!panel) return;
+
+        let picks = [];
+        try {
+            picks = await fetchCurrentUserPicks();
+        } catch (error) {
+            picks = [];
+        }
+
+        const settled = picks.map(normalizePick).filter(function(pick) {
+            return pick.selection && pick.status !== 'pending';
+        });
+
+        if (!settled.length) {
+            panel.innerHTML = '<div class="tmr-empty-state">No graded picks are loaded yet, so there is no real consensus to display.</div>';
+            return;
+        }
+
+        const clusters = new Map();
+        settled.forEach(function(pick) {
+            const key = [
+                pick.sport_key || '',
+                pick.away_team || '',
+                pick.home_team || '',
+                pick.market_type || '',
+                pick.selection || '',
+                pick.line_snapshot == null ? '' : pick.line_snapshot
+            ].join('|');
+            const existing = clusters.get(key) || {
+                count: 0,
+                wins: 0,
+                losses: 0,
+                pushes: 0,
+                units: 0,
+                label: pick.selection + (pick.line_snapshot != null ? ' ' + pick.line_snapshot : ''),
+                matchup: (pick.away_team || '') + ' @ ' + (pick.home_team || ''),
+                market: getMarketLabel(pick.market_type)
+            };
+            existing.count += 1;
+            if (pick.status === 'won') existing.wins += 1;
+            if (pick.status === 'lost') existing.losses += 1;
+            if (pick.status === 'push') existing.pushes += 1;
+            existing.units += parseFloat(pick.result_units || 0);
+            clusters.set(key, existing);
+        });
+
+        const rows = Array.from(clusters.values()).sort(function(a, b) {
+            return b.count - a.count || b.units - a.units;
+        }).slice(0, 8);
+
+        panel.innerHTML = rows.map(function(row) {
+            const decisions = row.wins + row.losses;
+            const winRate = decisions ? Math.round((row.wins / decisions) * 100) + '%' : '0%';
+            const units = (row.units >= 0 ? '+' : '') + row.units.toFixed(2) + 'u';
+            return '<div class="tmr-empty-state" style="text-align:left;margin-bottom:10px;">' +
+                '<strong>' + escapeHtml(row.label) + '</strong>' +
+                '<div style="margin-top:4px;">' + escapeHtml(row.matchup) + ' | ' + escapeHtml(row.market) + '</div>' +
+                '<div style="margin-top:8px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;">' +
+                row.count + ' loaded pick' + (row.count === 1 ? '' : 's') + ' | ' +
+                row.wins + '-' + row.losses + '-' + row.pushes + ' | ' +
+                winRate + ' | ' + units +
+                '</div>' +
+                '</div>';
+        }).join('');
+    }
+
+    function wireSportsbookTabs() {
+        document.querySelectorAll('[data-sportsbook-tab]').forEach(function(button) {
+            if (button.__tmrSportsbookTabWired) return;
+            button.__tmrSportsbookTabWired = true;
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+                const tab = button.getAttribute('data-sportsbook-tab');
+                setSportsbookTabActive(button);
+
+                if (tab === 'sport') {
+                    const sport = button.getAttribute('data-sport') || 'MLB';
+                    if (typeof window.showSection === 'function') window.showSection('picks');
+                    selectSportAndShowGames(sport).catch(function() {});
+                    return;
+                }
+
+                if (typeof window.showSection === 'function') window.showSection(tab);
+                if (tab === 'promos') renderPromoNotes();
+                if (tab === 'consensus') renderConsensusPanel();
+            });
+        });
+    }
+
+    function redirectLegacySportsbookSection(sectionId) {
+        const routeMap = {
+            feed: 'feed.html',
+            forums: 'forum.html',
+            arena: 'arena.html',
+            trivia: 'trivia.html',
+            'polls-trivia': 'polls.html',
+            predictions: 'polls.html',
+            contests: 'arena.html',
+            profile: 'profile.html',
+            messages: 'messages.html',
+            groups: 'friends.html',
+            marketplace: 'premium.html',
+            premium: 'premium.html'
+        };
+        const route = routeMap[sectionId];
+        if (!route) return false;
+        window.location.href = route;
+        return true;
+    }
+
     function startLiveRefreshLoop() {
         if (window.__tmrSportsbookRefreshTimer) return;
         window.__tmrSportsbookRefreshTimer = window.setInterval(function() {
@@ -1128,6 +1296,9 @@
         ensureMetadataFields();
         disableLegacyFeed();
         wireSportPrefetch();
+        wireSportsbookTabs();
+        window.tmrAddPromoNote = addPromoNote;
+        window.tmrRenderConsensusPanel = renderConsensusPanel;
 
         window.tmrToggleCard = toggleCard;
         window.tmrSetCardScope = setCardScope;
@@ -1157,11 +1328,16 @@
         if (typeof originalShowSection === 'function' && !window.__tmrProdShowSectionWrapped) {
             window.__tmrProdShowSectionWrapped = true;
             window.showSection = function(sectionId) {
+                if (redirectLegacySportsbookSection(sectionId)) return;
                 originalShowSection(sectionId);
                 if (sectionId === 'mypicks') {
                     loadMyPicks(window.currentPicksTab || 'pending');
                 } else if (sectionId === 'my-record' || sectionId === 'profile') {
                     loadMyRecordPage();
+                } else if (sectionId === 'promos') {
+                    renderPromoNotes();
+                } else if (sectionId === 'consensus') {
+                    renderConsensusPanel();
                 }
             };
         }
