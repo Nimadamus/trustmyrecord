@@ -262,6 +262,139 @@
             margin-bottom: 16px;
         }
 
+        .preview-card {
+            margin-bottom: 16px;
+            padding: 20px;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)),
+                rgba(11, 20, 34, 0.94);
+            box-shadow: 0 22px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .preview-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            align-items: start;
+            margin-bottom: 14px;
+        }
+
+        .preview-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .preview-avatar {
+            width: 42px;
+            height: 42px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--gold), var(--teal));
+            color: #06120f;
+            font-size: 0.86rem;
+            font-weight: 900;
+        }
+
+        .preview-title h3 {
+            font-size: 1.38rem;
+        }
+
+        .preview-sub {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 0.8rem;
+            line-height: 1.45;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: 320px minmax(0, 1fr);
+            gap: 16px;
+            align-items: start;
+        }
+
+        .preview-stats {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .preview-stat {
+            padding: 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.04);
+        }
+
+        .preview-stat span {
+            display: block;
+            color: var(--muted);
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .preview-stat strong {
+            display: block;
+            margin-top: 8px;
+            font-size: 1.02rem;
+            line-height: 1.1;
+        }
+
+        .split-list,
+        .pick-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .split-item,
+        .pick-item {
+            padding: 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.04);
+        }
+
+        .split-item strong,
+        .pick-item strong {
+            display: block;
+            font-size: 0.88rem;
+            line-height: 1.4;
+        }
+
+        .split-item span,
+        .pick-item span {
+            display: block;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 0.76rem;
+            line-height: 1.45;
+        }
+
+        .pick-result {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: fit-content;
+            margin-top: 8px;
+            padding: 5px 8px;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .pick-result.won { background: rgba(34,197,94,0.12); color: #b5f7ca; }
+        .pick-result.lost { background: rgba(239,68,68,0.12); color: #fecaca; }
+        .pick-result.push { background: rgba(148,163,184,0.14); color: #e2e8f0; }
+        .pick-result.pending { background: rgba(96,165,250,0.14); color: #bfdbfe; }
+
         .filters-grid {
             display: grid;
             grid-template-columns: 1.3fr repeat(3, minmax(0, 1fr));
@@ -443,6 +576,11 @@
                 grid-template-columns: 1fr;
             }
 
+            .preview-grid,
+            .preview-stats {
+                grid-template-columns: 1fr;
+            }
+
             h1 {
                 font-size: clamp(2.4rem, 11vw, 3.2rem);
             }
@@ -526,6 +664,45 @@
                     </div>
                 </div>
 
+                <div id="capperPreviewCard" class="preview-card" style="display:none;">
+                    <div class="preview-head">
+                        <div class="preview-title">
+                            <div id="previewAvatar" class="preview-avatar">T</div>
+                            <div>
+                                <h3 id="previewName">Capper preview</h3>
+                                <div id="previewMeta" class="preview-sub">Recent picks and split snapshot</div>
+                            </div>
+                        </div>
+                        <div class="link-actions">
+                            <a id="previewProfileLink" class="mini-link" href="profile.html">Full profile</a>
+                            <a id="previewChallengeLink" class="mini-link" href="arena.html">Challenge</a>
+                        </div>
+                    </div>
+                    <div class="preview-grid">
+                        <div>
+                            <div id="previewStats" class="preview-stats">
+                                <div class="loading" style="min-height:120px;">Loading capper snapshot...</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="display:grid;gap:14px;">
+                                <div>
+                                    <div class="rail-note" style="margin-bottom:10px;">Best current split</div>
+                                    <div id="previewSplits" class="split-list">
+                                        <div class="loading" style="min-height:120px;">Loading split data...</div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="rail-note" style="margin-bottom:10px;">Recent verified picks</div>
+                                    <div id="previewPicks" class="pick-list">
+                                        <div class="loading" style="min-height:120px;">Loading recent picks...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="table-card">
                     <div class="table-head">
                         <div>
@@ -581,6 +758,7 @@
     <script>
         let fullLeaderboard = [];
         let filteredLeaderboard = [];
+        let activePreviewUsername = '';
 
         function trackHandicappers(eventName, params) {
             if (typeof window.TMRAnalytics !== 'undefined' && typeof window.TMRAnalytics.track === 'function') {
@@ -655,6 +833,24 @@
             };
         }
 
+        function describeRecentPick(pick) {
+            const game = pick.game_title || pick.matchup || pick.event_name || [pick.away_team, pick.home_team].filter(Boolean).join(' @ ') || 'Recent pick';
+            const selection = pick.selection || pick.pick_name || pick.pick || 'Selection';
+            const line = pick.line != null ? ' ' + pick.line : pick.line_snapshot != null ? ' ' + pick.line_snapshot : '';
+            return {
+                title: selection + line,
+                game: game
+            };
+        }
+
+        function getResultClass(result) {
+            const normalized = String(result || 'pending').toLowerCase();
+            if (normalized === 'won' || normalized === 'win') return 'won';
+            if (normalized === 'lost' || normalized === 'loss') return 'lost';
+            if (normalized === 'push') return 'push';
+            return 'pending';
+        }
+
         function setHeroStats(entries) {
             const positiveRoi = entries.filter(function(entry) { return entry.roi > 0; }).length;
             const avgSample = entries.length ? Math.round(entries.reduce(function(sum, entry) { return sum + entry.totalPicks; }, 0) / entries.length) : 0;
@@ -701,6 +897,7 @@
                     '<td class="' + statClass(entry.winRate - 50) + '">' + entry.winRate.toFixed(1) + '%</td>' +
                     '<td>' + entry.totalPicks + '</td>' +
                     '<td><div class="link-actions">' +
+                        '<button type="button" class="mini-link" onclick="inspectCapper(\'' + escapeJs(entry.username) + '\')">Inspect</button>' +
                         '<a class="mini-link" href="profile.html?user=' + encodeURIComponent(entry.username) + '" onclick="trackHandicappers(\'handicapper_profile_opened\', { username: \'' + escapeJs(entry.username) + '\', source: \'board\' });">Profile</a>' +
                         '<a class="mini-link" href="arena.html?challenge=' + encodeURIComponent(entry.username) + '" onclick="trackHandicappers(\'handicapper_challenge_clicked\', { username: \'' + escapeJs(entry.username) + '\', source: \'board\' });">Challenge</a>' +
                     '</div></td>' +
@@ -756,6 +953,126 @@
                     '<span>' + escapeHtml(challenger) + ' vs ' + escapeHtml(challenged) + ' • ' + escapeHtml(entry.game_title || entry.game_slug || 'Arena') + ' • ' + timeAgo(entry.created_at || entry.createdAt) + '</span>' +
                 '</a>';
             }).join('');
+        }
+
+        function renderPreviewPlaceholder() {
+            document.getElementById('capperPreviewCard').style.display = 'none';
+            activePreviewUsername = '';
+        }
+
+        function renderPreviewStats(entry, advancedData) {
+            const stats = [
+                ['Record', entry.wins + '-' + entry.losses + (entry.pushes ? '-' + entry.pushes : ''), 'neutral'],
+                ['ROI', signed(entry.roi, '%'), entry.roi > 0 ? 'pos' : entry.roi < 0 ? 'neg' : 'neutral'],
+                ['Net units', signed(entry.units, 'u'), entry.units > 0 ? 'pos' : entry.units < 0 ? 'neg' : 'neutral'],
+                ['Win rate', entry.winRate.toFixed(1) + '%', entry.winRate >= 50 ? 'pos' : 'neg'],
+                ['Current streak', entry.streak > 0 ? 'W' + entry.streak : entry.streak < 0 ? 'L' + Math.abs(entry.streak) : 'Even', 'neutral'],
+                ['Projected ROI', advancedData && advancedData.pROI != null ? signed(advancedData.pROI, '%') : '--', advancedData && advancedData.pROI > 0 ? 'pos' : advancedData && advancedData.pROI < 0 ? 'neg' : 'neutral']
+            ];
+            document.getElementById('previewStats').innerHTML = stats.map(function(item) {
+                return '<div class="preview-stat"><span>' + item[0] + '</span><strong class="' + item[2] + '">' + item[1] + '</strong></div>';
+            }).join('');
+        }
+
+        function renderPreviewSplits(advancedData, entry) {
+            const container = document.getElementById('previewSplits');
+            const candidates = [];
+
+            if (advancedData) {
+                const pushSplit = function(label, source) {
+                    if (!source || source.picks == null || num(source.picks) === 0) return;
+                    candidates.push({
+                        label: label,
+                        record: (num(source.wins) || 0) + '-' + (num(source.losses) || 0) + (num(source.pushes) ? '-' + num(source.pushes) : ''),
+                        roi: num(source.roi),
+                        picks: num(source.picks)
+                    });
+                };
+
+                pushSplit('Favorites', advancedData.favorite);
+                pushSplit('Underdogs', advancedData.underdog);
+                pushSplit('Home', advancedData.home);
+                pushSplit('Away', advancedData.away);
+                pushSplit('Spread', advancedData.spread);
+                pushSplit('Moneyline', advancedData.moneyline);
+                pushSplit('Total', advancedData.total);
+                pushSplit('First half / first 5', advancedData.firstHalf || advancedData.first5);
+            }
+
+            candidates.sort(function(a, b) { return b.roi - a.roi; });
+            const top = candidates.slice(0, 3);
+            if (!top.length) {
+                container.innerHTML = '<div class="empty" style="min-height:110px;">No split data available yet.</div>';
+                return;
+            }
+
+            container.innerHTML = top.map(function(item) {
+                return '<div class="split-item"><strong>' + escapeHtml(item.label) + '</strong><span>' + item.record + ' • ' + signed(item.roi, '%') + ' ROI • ' + item.picks + ' picks</span></div>';
+            }).join('');
+        }
+
+        function renderPreviewPicks(picks) {
+            const container = document.getElementById('previewPicks');
+            if (!picks.length) {
+                container.innerHTML = '<div class="empty" style="min-height:110px;">No recent picks available.</div>';
+                return;
+            }
+
+            container.innerHTML = picks.map(function(pick) {
+                const desc = describeRecentPick(pick);
+                const resultClass = getResultClass(pick.result || pick.status);
+                const odds = pick.odds != null ? ' • ' + pick.odds : '';
+                const units = pick.units != null ? ' • ' + signed(pick.units, 'u') : '';
+                return '<div class="pick-item">' +
+                    '<strong>' + escapeHtml(desc.title) + '</strong>' +
+                    '<span>' + escapeHtml(desc.game) + odds + units + '</span>' +
+                    '<span class="pick-result ' + resultClass + '">' + escapeHtml(resultClass) + '</span>' +
+                '</div>';
+            }).join('');
+        }
+
+        async function inspectCapper(username) {
+            const entry = fullLeaderboard.find(function(item) { return item.username === username; });
+            if (!entry || !window.api) return;
+
+            activePreviewUsername = username;
+            const card = document.getElementById('capperPreviewCard');
+            card.style.display = '';
+            document.getElementById('previewAvatar').textContent = (entry.displayName || '?').charAt(0).toUpperCase();
+            document.getElementById('previewName').textContent = entry.displayName;
+            document.getElementById('previewMeta').textContent = '@' + entry.username + ' • ' + entry.totalPicks + ' picks • ' + escapeHtml(entry.sport || 'All sports');
+            document.getElementById('previewProfileLink').href = 'profile.html?user=' + encodeURIComponent(entry.username);
+            document.getElementById('previewChallengeLink').href = 'arena.html?challenge=' + encodeURIComponent(entry.username);
+            document.getElementById('previewStats').innerHTML = '<div class="loading" style="min-height:120px;">Loading capper snapshot...</div>';
+            document.getElementById('previewSplits').innerHTML = '<div class="loading" style="min-height:110px;">Loading split data...</div>';
+            document.getElementById('previewPicks').innerHTML = '<div class="loading" style="min-height:110px;">Loading recent picks...</div>';
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            trackHandicappers('handicapper_inspected', { username: username, source: 'board' });
+
+            try {
+                const profileData = await window.api.getUserProfile(entry.username);
+                const userId = profileData && profileData.user && profileData.user.id ? profileData.user.id : profileData && profileData.id ? profileData.id : null;
+                const results = await Promise.allSettled([
+                    window.api.getUserAdvancedStats(entry.username, {}),
+                    userId ? window.api.getPicks({ userId: userId, limit: 5, offset: 0 }) : Promise.resolve([])
+                ]);
+
+                if (activePreviewUsername !== username) return;
+
+                const advanced = results[0].status === 'fulfilled' ? (results[0].value && (results[0].value.stats || results[0].value)) : null;
+                const picksPayload = results[1].status === 'fulfilled' ? results[1].value : [];
+                const picks = Array.isArray(picksPayload) ? picksPayload : Array.isArray(picksPayload && picksPayload.picks) ? picksPayload.picks : [];
+
+                renderPreviewStats(entry, advanced);
+                renderPreviewSplits(advanced, entry);
+                renderPreviewPicks(picks.slice(0, 5));
+            } catch (error) {
+                if (activePreviewUsername !== username) return;
+                document.getElementById('previewStats').innerHTML = '<div class="empty" style="min-height:110px;">Snapshot unavailable.</div>';
+                document.getElementById('previewSplits').innerHTML = '<div class="empty" style="min-height:110px;">Split data unavailable.</div>';
+                document.getElementById('previewPicks').innerHTML = '<div class="empty" style="min-height:110px;">Recent picks unavailable.</div>';
+            }
         }
 
         function applyFilters() {
