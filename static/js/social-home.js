@@ -43,6 +43,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await initAuth();
     await loadFeed();
     loadTrending();
+    loadTopCappers();
+    loadArenaWatch();
     loadSuggested();
     loadNotificationBadge();
 });
@@ -704,16 +706,168 @@ async function loadTrending() {
     el.innerHTML = '<div class="rs-empty">No live trending picks yet.</div>';
 }
 
+async function loadTopCappers() {
+    const el = document.getElementById('topCappersList');
+    if (!el) return;
+
+    try {
+        let data = null;
+        if (api && typeof api.getLeaderboard === 'function') {
+            data = await api.getLeaderboard({ sortBy: 'roi', limit: 5 });
+        }
+
+        const rawEntries = Array.isArray(data)
+            ? data
+            : Array.isArray(data?.leaderboard)
+                ? data.leaderboard
+                : Array.isArray(data?.users)
+                    ? data.users
+                    : Array.isArray(data?.rankings)
+                        ? data.rankings
+                        : [];
+
+        const entries = rawEntries.filter(Boolean).slice(0, 5);
+        if (!entries.length) {
+            el.innerHTML = '<div class="rs-empty">No verified capper leaderboard data yet.</div>';
+            return;
+        }
+
+        el.innerHTML = `<div class="rs-capper-list">${entries.map(renderCapperRailItem).join('')}</div>`;
+    } catch (e) {
+        el.innerHTML = '<div class="rs-empty">Capper leaderboard is temporarily unavailable.</div>';
+    }
+}
+
+function renderCapperRailItem(entry, index) {
+    const username = entry.username || entry.user_name || entry.handle || 'capper';
+    const displayName = entry.display_name || entry.displayName || username;
+    const wins = toNumber(entry.wins);
+    const losses = toNumber(entry.losses);
+    const pushes = toNumber(entry.pushes);
+    const totalPicks = toNumber(entry.total_picks ?? entry.totalPicks ?? wins + losses + pushes);
+    const roi = toNumber(entry.roi);
+    const netUnits = toNumber(entry.net_units ?? entry.units);
+    const winRate = normalizePercent(entry.win_percentage ?? entry.winRate);
+    const rankClass = index === 0 ? 'top-1' : index === 1 ? 'top-2' : index === 2 ? 'top-3' : '';
+    const roiClass = roi >= 0 ? 'positive' : 'negative';
+    const unitClass = netUnits >= 0 ? 'positive' : 'negative';
+    const badgeText = totalPicks >= 50 ? 'High volume' : totalPicks >= 20 ? 'Verified sample' : 'Emerging';
+
+    return `
+        <div class="rs-capper-item">
+            <div class="rs-capper-head">
+                <div class="rs-capper-name-row">
+                    <span class="rs-capper-rank ${rankClass}">#${index + 1}</span>
+                    <div class="rs-capper-meta">
+                        <a class="rs-capper-name" href="profile.html?user=${encodeURIComponent(username)}" onclick="trackFeedProfileOpen('${escapeJsString(username)}','leaderboard');">${escapeHtml(displayName)}</a>
+                        <span class="rs-capper-handle">@${escapeHtml(username)}</span>
+                    </div>
+                </div>
+                <span class="rs-capper-badge">${badgeText}</span>
+            </div>
+            <div class="rs-capper-grid">
+                <div class="rs-capper-stat">
+                    <span class="rs-capper-stat-label">Record</span>
+                    <span class="rs-capper-stat-value">${wins}-${losses}${pushes ? '-' + pushes : ''}</span>
+                </div>
+                <div class="rs-capper-stat">
+                    <span class="rs-capper-stat-label">ROI</span>
+                    <span class="rs-capper-stat-value ${roiClass}">${formatSigned(roi)}%</span>
+                </div>
+                <div class="rs-capper-stat">
+                    <span class="rs-capper-stat-label">Units</span>
+                    <span class="rs-capper-stat-value ${unitClass}">${formatSigned(netUnits)}u</span>
+                </div>
+            </div>
+            <div class="rs-battle-cta">
+                <span class="rs-battle-meta">${winRate.toFixed(1)}% win rate over ${totalPicks} picks</span>
+                <a class="rs-link-btn" href="profile.html?user=${encodeURIComponent(username)}" onclick="trackFeedProfileOpen('${escapeJsString(username)}','leaderboard');">
+                    <i class="fas fa-arrow-right"></i> View
+                </a>
+            </div>
+        </div>
+    `;
+}
+
+async function loadArenaWatch() {
+    const el = document.getElementById('arenaWatchList');
+    const heroCompetition = document.getElementById('heroCompetitionCount');
+    if (!el) return;
+
+    try {
+        let data = null;
+        if (api && typeof api.request === 'function') {
+            data = await api.request('/gaming/challenges?limit=6');
+        }
+
+        const challenges = Array.isArray(data?.challenges) ? data.challenges : [];
+        const liveChallenges = challenges.filter(isVisibleBattle);
+
+        if (heroCompetition) {
+            heroCompetition.textContent = String(liveChallenges.length);
+        }
+
+        if (!liveChallenges.length) {
+            el.innerHTML = '<div class="rs-empty">No live arena challenges are active right now.</div>';
+            return;
+        }
+
+        el.innerHTML = `<div class="rs-battle-list">${liveChallenges.slice(0, 4).map(renderBattleRailItem).join('')}</div>`;
+    } catch (e) {
+        if (heroCompetition) heroCompetition.textContent = '0';
+        el.innerHTML = '<div class="rs-empty">Arena activity is temporarily unavailable.</div>';
+    }
+}
+
+function isVisibleBattle(challenge) {
+    const status = String(challenge?.status || '').toLowerCase();
+    return ['pending', 'accepted', 'in_progress', 'open'].includes(status);
+}
+
+function renderBattleRailItem(challenge) {
+    const status = String(challenge.status || 'pending').replace(/_/g, ' ');
+    const title = challenge.title || challenge.game_title || challenge.game_slug || 'Open challenge';
+    const challenger = challenge.challenger_display || challenge.challenger_username || 'Challenger';
+    const challenged = challenge.challenged_display || challenge.challenged_username || 'Open';
+    const meta = [challenge.game_title || challenge.game_slug || 'Arena', challenge.platform || null].filter(Boolean).join(' • ');
+    const challengeId = challenge.id != null ? String(challenge.id) : '';
+
+    return `
+        <div class="rs-battle-item">
+            <div class="rs-battle-head">
+                <div class="rs-battle-title">${escapeHtml(title)}</div>
+                <span class="rs-battle-badge">${escapeHtml(status)}</span>
+            </div>
+            <div class="rs-battle-meta">${escapeHtml(meta)}</div>
+            <div class="rs-battle-matchup">
+                <div class="rs-battle-user">
+                    <span class="rs-mini-avatar">${escapeHtml(challenger.charAt(0).toUpperCase())}</span>
+                    <span class="rs-battle-name">${escapeHtml(challenger)}</span>
+                </div>
+                <span class="rs-battle-vs">VS</span>
+                <div class="rs-battle-user right">
+                    <span class="rs-battle-name">${escapeHtml(challenged)}</span>
+                    <span class="rs-mini-avatar">${escapeHtml(challenged.charAt(0).toUpperCase())}</span>
+                </div>
+            </div>
+            <div class="rs-battle-cta">
+                <span class="rs-battle-time">${timeAgo(challenge.created_at || challenge.createdAt || new Date().toISOString())}</span>
+                <a class="rs-link-btn" href="arena.html" onclick="trackArenaWatchClick('${escapeJsString(challengeId)}','${escapeJsString(status)}');">
+                    <i class="fas fa-trophy"></i> Open Arena
+                </a>
+            </div>
+        </div>
+    `;
+}
+
 async function loadSuggested() {
     const el = document.getElementById('suggestedList');
-    const heroSuggested = document.getElementById('heroSuggestedCount');
     if (!el) return;
     try {
         if (api && typeof api.request === 'function') {
             const data = await api.request('/users?limit=5');
             const users = (data.users || []).filter(u => !viewerUser || String(u.id) !== String(viewerUser.id));
             if (users.length) {
-                if (heroSuggested) heroSuggested.textContent = String(users.length);
                 setRailCardVisibility('suggestedList', true);
                 el.innerHTML = users.map(u => {
                     const isFollowing = followingUserIds.has(String(u.id));
@@ -735,9 +889,53 @@ async function loadSuggested() {
             }
         }
     } catch(e) {}
-    if (heroSuggested) heroSuggested.textContent = '0';
     setRailCardVisibility('suggestedList', true);
     el.innerHTML = '<div class="rs-empty">No suggested users from live data yet.</div>';
+}
+
+function trackFeedProfileOpen(username, source) {
+    analyticsTrack('feed_capper_profile_opened', {
+        username,
+        source: source || 'feed'
+    });
+}
+
+function trackArenaWatchClick(challengeId, status) {
+    analyticsTrack('feed_arena_watch_opened', {
+        challenge_id: challengeId || 'unknown',
+        challenge_status: status || 'unknown'
+    });
+}
+
+function toNumber(value) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function normalizePercent(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return 0;
+    return parsed <= 1 && parsed >= 0 ? parsed * 100 : parsed;
+}
+
+function formatSigned(value) {
+    const number = toNumber(value);
+    return `${number >= 0 ? '+' : ''}${number.toFixed(1)}`;
+}
+
+function escapeHtml(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function escapeJsString(value) {
+    return String(value == null ? '' : value)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'");
 }
 
 async function hydrateFollowingState() {
