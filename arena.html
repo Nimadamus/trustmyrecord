@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Arena - Gaming Challenges | TrustMyRecord</title>
     <meta name="description" content="Challenge other gamers in MLB The Show, NBA 2K, Madden and more. Track your record, build rivalries, climb the leaderboard.">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260415e">
     <script defer src="static/js/tmr-sitewide.js?v=20260415f"></script>
@@ -313,22 +320,22 @@
             <div class="game-pill" data-game="mlb-the-show-26" onclick="filterByGame('mlb-the-show-26')"><span class="icon">&#9918;</span> MLB The Show</div>
             <div class="game-pill" data-game="nba-2k26" onclick="filterByGame('nba-2k26')"><span class="icon">&#127936;</span> NBA 2K</div>
             <div class="game-pill" data-game="madden-26" onclick="filterByGame('madden-26')"><span class="icon">&#127944;</span> Madden</div>
-            <div class="game-pill" data-game="ea-fc-26" onclick="filterByGame('ea-fc-26')"><span class="icon">&#9917;</span> EA FC</div>
+            <div class="game-pill" data-game="ea-sports-fc-26" onclick="filterByGame('ea-sports-fc-26')"><span class="icon">&#9917;</span> EA FC</div>
             <div class="game-pill" data-game="nhl-26" onclick="filterByGame('nhl-26')"><span class="icon">&#127954;</span> NHL</div>
         </div>
 
-        <div id="challengesList" class="challenges-grid">
+        <div class="challenges-grid" id="challengesList">
             <div class="loading"><div class="spinner"></div></div>
         </div>
     </div>
 
-    <!-- ===== RECENT MATCHES TAB ===== -->
+    <!-- ===== MATCHES TAB ===== -->
     <div class="panel" id="panel-matches">
         <div class="section-header">
-            <h2>Recent Matches</h2>
+            <h2>Recent Match Results</h2>
             <button class="btn btn-primary" onclick="openLogMatch()"><i class="fas fa-plus"></i> Log Match</button>
         </div>
-        <div id="matchesFeed" class="match-feed">
+        <div class="match-feed" id="matchesFeed">
             <div class="loading"><div class="spinner"></div></div>
         </div>
     </div>
@@ -336,138 +343,136 @@
     <!-- ===== LEADERBOARD TAB ===== -->
     <div class="panel" id="panel-leaderboard">
         <div class="section-header">
-            <h2>Gaming Leaderboard</h2>
+            <h2>Global Leaderboard</h2>
+            <div class="game-filters" style="margin-bottom:0;" id="lbGameFilters">
+                <div class="game-pill active" data-game="all" onclick="filterLeaderboard('all')">All</div>
+                <div class="game-pill" data-game="mlb-the-show-26" onclick="filterLeaderboard('mlb-the-show-26')">MLB</div>
+                <div class="game-pill" data-game="nba-2k26" onclick="filterLeaderboard('nba-2k26')">2K</div>
+                <div class="game-pill" data-game="madden-26" onclick="filterLeaderboard('madden-26')">Madden</div>
+            </div>
         </div>
-        <div class="game-filters" id="lbGameFilters">
-            <div class="game-pill active" data-game="all" onclick="filterLeaderboard('all')">All Games</div>
-            <div class="game-pill" data-game="mlb-the-show-26" onclick="filterLeaderboard('mlb-the-show-26')">MLB The Show</div>
-            <div class="game-pill" data-game="nba-2k26" onclick="filterLeaderboard('nba-2k26')">NBA 2K</div>
-            <div class="game-pill" data-game="madden-26" onclick="filterLeaderboard('madden-26')">Madden</div>
-            <div class="game-pill" data-game="ea-fc-26" onclick="filterLeaderboard('ea-fc-26')">EA FC</div>
-            <div class="game-pill" data-game="nhl-26" onclick="filterLeaderboard('nhl-26')">NHL</div>
-        </div>
-        <div id="leaderboardTable">
-            <div class="loading"><div class="spinner"></div></div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+            <div id="leaderboardTable"><div class="loading"><div class="spinner"></div></div></div>
         </div>
     </div>
 
-    <!-- ===== MLB THE SHOW TAB ===== -->
+    <!-- ===== MLB THE SHOW HUB ===== -->
     <div class="panel" id="panel-mlb-the-show">
         <div class="section-header">
-            <h2>MLB The Show 26 Hub</h2>
-            <button class="btn btn-primary" onclick="openLogMatch('mlb-the-show-26')"><i class="fas fa-plus"></i> Log Game</button>
+            <h2><span style="color:var(--accent-gold);">&#9918;</span> MLB The Show 26 Hub</h2>
         </div>
 
-        <div class="stats-grid" id="mlbOverviewStats">
-            <div class="stat-card"><div class="value" id="mlbTotalGames">-</div><div class="label">Total Games</div></div>
-            <div class="stat-card"><div class="value" id="mlbTopWins">-</div><div class="label">Most Wins</div></div>
-            <div class="stat-card"><div class="value" id="mlbAvgRuns">-</div><div class="label">Avg Runs/Game</div></div>
-            <div class="stat-card"><div class="value" id="mlbLongestStreak">-</div><div class="label">Longest Win Streak</div></div>
+        <div class="stats-grid">
+            <div class="stat-card"><div class="value" id="mlbTotalGames">0</div><div class="label">Total Games</div></div>
+            <div class="stat-card"><div class="value" id="mlbTopWins">0</div><div class="label">Top Wins</div></div>
+            <div class="stat-card"><div class="value" id="mlbAvgRuns">0</div><div class="label">Avg Runs/Game</div></div>
+            <div class="stat-card"><div class="value" id="mlbLongestStreak">0</div><div class="label">Longest Streak</div></div>
         </div>
 
-        <h3 style="font-family:var(--font-display);margin-bottom:16px;color:var(--text-dim);">MLB The Show Leaderboard</h3>
-        <div id="mlbLeaderboard">
-            <div class="loading"><div class="spinner"></div></div>
-        </div>
-
-        <h3 style="font-family:var(--font-display);margin:24px 0 16px;color:var(--text-dim);">Recent MLB The Show Games</h3>
-        <div id="mlbRecentMatches" class="match-feed">
-            <div class="loading"><div class="spinner"></div></div>
+        <div style="display:grid;grid-template-columns:1.3fr .7fr;gap:24px;">
+            <div>
+                <div class="section-header"><h3>Recent Games</h3></div>
+                <div class="match-feed" id="mlbRecentMatches"></div>
+            </div>
+            <div>
+                <div class="section-header"><h3>Top Players</h3></div>
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+                    <div id="mlbLeaderboard"></div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- ===== MY STATS TAB ===== -->
+    <!-- ===== MY STATS ===== -->
     <div class="panel" id="panel-my-stats">
-        <div id="myStatsContent">
-            <div class="empty-state" id="myStatsLogin" style="display:none;">
-                <i class="fas fa-lock"></i>
-                <h3>Sign in to see your stats</h3>
-                <p>Log in to track your gaming record and stats.</p>
-                <a href="index.html" class="btn btn-primary" style="margin-top:12px;">Sign In</a>
-            </div>
-            <div id="myStatsData" style="display:none;">
-                <div class="section-header">
-                    <h2>My Gaming Stats</h2>
+        <div class="section-header"><h2>My Gaming Stats</h2></div>
+        <div id="myStatsLogin" class="empty-state" style="display:none;">
+            <i class="fas fa-user-lock"></i>
+            <h3>Sign in required</h3>
+            <p>Log in to view your personal gaming stats and record.</p>
+        </div>
+        <div id="myStatsData" style="display:none;">
+            <!-- Gamer Profile Card -->
+            <div class="gamer-profile-card">
+                <div class="gp-header">
+                    <h3><i class="fas fa-user-circle"></i> Gamer Profile</h3>
+                    <button class="btn btn-outline btn-sm" onclick="openEditProfile()"><i class="fas fa-edit"></i> Edit</button>
                 </div>
-
-                <!-- GAMER PROFILE CARD -->
-                <div class="gamer-profile-card" id="gamerProfileCard">
-                    <div class="gp-header">
-                        <h3><i class="fas fa-id-card"></i> My Gamer Profile</h3>
-                        <button class="btn btn-outline btn-sm" onclick="openEditProfile()"><i class="fas fa-pen"></i> Edit</button>
+                <div class="gp-fields">
+                    <div class="gp-field">
+                        <div class="gp-icon psn"><i class="fab fa-playstation"></i></div>
+                        <div class="gp-info">
+                            <div class="gp-label">PSN Username</div>
+                            <div class="gp-value empty" id="gpPSN">Not set</div>
+                        </div>
                     </div>
-                    <div class="gp-fields" id="gamerProfileFields">
-                        <div class="gp-field">
-                            <div class="gp-icon psn"><i class="fab fa-playstation"></i></div>
-                            <div class="gp-info">
-                                <div class="gp-label">PSN Username</div>
-                                <div class="gp-value empty" id="gpPSN">Not set</div>
-                            </div>
+                    <div class="gp-field">
+                        <div class="gp-icon xbox"><i class="fab fa-xbox"></i></div>
+                        <div class="gp-info">
+                            <div class="gp-label">Xbox Gamertag</div>
+                            <div class="gp-value empty" id="gpXbox">Not set</div>
                         </div>
-                        <div class="gp-field">
-                            <div class="gp-icon xbox"><i class="fab fa-xbox"></i></div>
-                            <div class="gp-info">
-                                <div class="gp-label">Xbox Gamertag</div>
-                                <div class="gp-value empty" id="gpXbox">Not set</div>
-                            </div>
+                    </div>
+                    <div class="gp-field">
+                        <div class="gp-icon steam"><i class="fab fa-steam"></i></div>
+                        <div class="gp-info">
+                            <div class="gp-label">Steam</div>
+                            <div class="gp-value empty" id="gpSteam">Not set</div>
                         </div>
-                        <div class="gp-field">
-                            <div class="gp-icon steam"><i class="fab fa-steam"></i></div>
-                            <div class="gp-info">
-                                <div class="gp-label">Steam Username</div>
-                                <div class="gp-value empty" id="gpSteam">Not set</div>
-                            </div>
-                        </div>
-                        <div class="gp-field">
-                            <div class="gp-icon console"><i class="fas fa-gamepad"></i></div>
-                            <div class="gp-info">
-                                <div class="gp-label">Preferred Console</div>
-                                <div class="gp-value empty" id="gpConsole">Not set</div>
-                            </div>
+                    </div>
+                    <div class="gp-field">
+                        <div class="gp-icon console"><i class="fas fa-gamepad"></i></div>
+                        <div class="gp-info">
+                            <div class="gp-label">Preferred Console</div>
+                            <div class="gp-value empty" id="gpConsole">Not set</div>
                         </div>
                     </div>
                 </div>
-
-                <div class="stats-grid" id="myStatsGrid"></div>
-                <h3 style="font-family:var(--font-display);margin:16px 0;color:var(--text-dim);">Stats by Game</h3>
-                <div id="myGameStats"></div>
-                <h3 style="font-family:var(--font-display);margin:24px 0 16px;color:var(--text-dim);">Top Rivals</h3>
-                <div id="myRivals"></div>
             </div>
+
+            <div class="stats-grid" id="myStatsGrid"></div>
+            <div class="section-header"><h3>Per-Game Breakdown</h3></div>
+            <div id="myGameStats"></div>
+            <div class="section-header" style="margin-top:24px;"><h3>Top Rivals</h3></div>
+            <div id="myRivals"></div>
         </div>
     </div>
+
 </div>
 
 <!-- CREATE CHALLENGE MODAL -->
 <div class="modal-overlay" id="createChallengeModal">
     <div class="modal">
         <button class="close-btn" onclick="closeModal('createChallengeModal')">&times;</button>
-        <h2><i class="fas fa-gamepad" style="color:var(--accent-gold);margin-right:8px;"></i>Issue Challenge</h2>
+        <h2>Issue a Challenge</h2>
         <form id="createChallengeForm" onsubmit="submitChallenge(event)">
             <div class="form-group">
                 <label>Game</label>
                 <select class="form-control" id="ccGame" required>
-                    <option value="">Select a game...</option>
+                    <option value="">Choose a game...</option>
                     <option value="mlb-the-show-26">MLB The Show 26</option>
                     <option value="nba-2k26">NBA 2K26</option>
-                    <option value="madden-26">Madden NFL 26</option>
-                    <option value="ea-fc-26">EA FC 26</option>
+                    <option value="madden-26">Madden 26</option>
+                    <option value="ea-sports-fc-26">EA Sports FC 26</option>
                     <option value="nhl-26">NHL 26</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label>Challenge Opponent (leave blank for open challenge)</label>
-                <input class="form-control" id="ccOpponent" placeholder="@username" autocomplete="off">
-            </div>
             <div class="form-row">
                 <div class="form-group">
+                    <label>Opponent (optional)</label>
+                    <input class="form-control" id="ccOpponent" placeholder="@username or leave blank for open">
+                </div>
+                <div class="form-group">
                     <label>Platform</label>
-                    <select class="form-control" id="ccPlatform">
+                    <select class="form-control" id="ccPlatform" required>
+                        <option value="">Choose...</option>
                         <option value="PS5">PS5</option>
                         <option value="Xbox">Xbox</option>
                         <option value="PC">PC</option>
                     </select>
                 </div>
+            </div>
+            <div class="form-row">
                 <div class="form-group">
                     <label>Best Of</label>
                     <select class="form-control" id="ccBestOf">
@@ -477,118 +482,114 @@
                         <option value="7">Best of 7</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label>Challenge Title</label>
+                    <input class="form-control" id="ccTitle" placeholder="Friendly wager...">
+                </div>
             </div>
             <div class="form-group">
-                <label>Title (optional)</label>
-                <input class="form-control" id="ccTitle" placeholder="Name your challenge..." maxlength="100">
+                <label>Description</label>
+                <textarea class="form-control" id="ccDesc" rows="3" placeholder="Optional notes, rules, or trash talk..."></textarea>
             </div>
-            <div class="form-group">
-                <label>Description (optional)</label>
-                <textarea class="form-control" id="ccDesc" rows="2" placeholder="Add details, trash talk, rules..."></textarea>
-            </div>
-            <button type="submit" class="btn btn-gold btn-block" style="margin-top:8px;padding:12px;font-size:15px;">
-                <i class="fas fa-paper-plane"></i> Send Challenge
-            </button>
+            <button type="submit" class="btn btn-gold btn-block"><i class="fas fa-paper-plane"></i> Send Challenge</button>
         </form>
     </div>
 </div>
 
 <!-- LOG MATCH MODAL -->
 <div class="modal-overlay" id="logMatchModal">
-    <div class="modal">
+    <div class="modal" style="max-width:680px;">
         <button class="close-btn" onclick="closeModal('logMatchModal')">&times;</button>
-        <h2><i class="fas fa-gamepad" style="color:var(--primary);margin-right:8px;"></i>Log Match Result</h2>
+        <h2>Log Match Result</h2>
         <form id="logMatchForm" onsubmit="submitMatch(event)">
-            <div class="form-group">
-                <label>Game</label>
-                <select class="form-control" id="lmGame" required onchange="toggleBoxScore()">
-                    <option value="">Select a game...</option>
-                    <option value="mlb-the-show-26">MLB The Show 26</option>
-                    <option value="nba-2k26">NBA 2K26</option>
-                    <option value="madden-26">Madden NFL 26</option>
-                    <option value="ea-fc-26">EA FC 26</option>
-                    <option value="nhl-26">NHL 26</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Opponent</label>
-                <input class="form-control" id="lmOpponent" placeholder="@username" required autocomplete="off">
-            </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Your Score</label>
-                    <input class="form-control" type="number" id="lmMyScore" min="0" max="999" required>
+                    <label>Game</label>
+                    <select class="form-control" id="lmGame" onchange="toggleBoxScore()" required>
+                        <option value="">Choose a game...</option>
+                        <option value="mlb-the-show-26">MLB The Show 26</option>
+                        <option value="nba-2k26">NBA 2K26</option>
+                        <option value="madden-26">Madden 26</option>
+                        <option value="ea-sports-fc-26">EA Sports FC 26</option>
+                        <option value="nhl-26">NHL 26</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label>Opponent Score</label>
-                    <input class="form-control" type="number" id="lmOppScore" min="0" max="999" required>
+                    <label>Linked Challenge</label>
+                    <select class="form-control" id="lmChallenge"></select>
                 </div>
             </div>
             <div class="form-row">
+                <div class="form-group">
+                    <label>Opponent Username</label>
+                    <input class="form-control" id="lmOpponent" placeholder="@username" required>
+                </div>
                 <div class="form-group">
                     <label>Platform</label>
-                    <select class="form-control" id="lmPlatform">
+                    <select class="form-control" id="lmPlatform" required>
+                        <option value="">Choose...</option>
                         <option value="PS5">PS5</option>
                         <option value="Xbox">Xbox</option>
                         <option value="PC">PC</option>
                     </select>
                 </div>
+            </div>
+            <div class="form-row">
                 <div class="form-group">
-                    <label>Challenge (optional)</label>
-                    <select class="form-control" id="lmChallenge">
-                        <option value="">No linked challenge</option>
-                    </select>
+                    <label>Your Score</label>
+                    <input type="number" class="form-control" id="lmMyScore" min="0" max="99" required>
+                </div>
+                <div class="form-group">
+                    <label>Opponent Score</label>
+                    <input type="number" class="form-control" id="lmOppScore" min="0" max="99" required>
                 </div>
             </div>
-
-            <!-- MLB BOX SCORE (shown only for MLB The Show) -->
+            <!-- MLB BOX SCORE -->
             <div id="mlbBoxScoreSection" style="display:none;">
-                <h3 style="font-family:var(--font-display);font-size:14px;color:var(--accent-gold);margin:16px 0 12px;border-top:1px solid var(--border);padding-top:16px;">
-                    <i class="fas fa-baseball"></i> MLB Box Score (Optional)
-                </h3>
+                <h3 style="font-family:var(--font-display);font-size:14px;font-weight:700;margin:20px 0 12px;color:var(--accent-gold);">MLB Box Score</h3>
+                <div class="form-row">
+                    <div class="form-group"><label>Your Team</label><input class="form-control" id="lmHomeTeam" placeholder="e.g. Yankees"></div>
+                    <div class="form-group"><label>Opponent Team</label><input class="form-control" id="lmAwayTeam" placeholder="e.g. Dodgers"></div>
+                </div>
+                <table class="box-score">
+                    <thead>
+                        <tr><th class="team-col">Team</th><th>H</th><th>E</th><th>HR</th><th>K</th><th class="total">R</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="team-col">You</td>
+                            <td><input type="number" class="form-control" style="padding:4px 6px;height:32px;" id="lmHomeHits" min="0"></td>
+                            <td><input type="number" class="form-control" style="padding:4px 6px;height:32px;" id="lmHomeErrors" min="0"></td>
+                            <td><input type="number" class="form-control" style="padding:4px 6px;height:32px;" id="lmHomeHR" min="0"></td>
+                            <td><input type="number" class="form-control" style="padding:4px 6px;height:32px;" id="lmHomeK" min="0"></td>
+                            <td class="total"><span id="lmHomeRunsDisplay">-</span></td>
+                        </tr>
+                        <tr>
+                            <td class="team-col">Opponent</td>
+                            <td><input type="number" class="form-control" style="padding:4px 6px;height:32px;" id="lmAwayHits" min="0"></td>
+                            <td><input type="number" class="form-control" style="padding:4px 6px;height:32px;" id="lmAwayErrors" min="0"></td>
+                            <td><input type="number" class="form-control" style="padding:4px 6px;height:32px;" id="lmAwayHR" min="0"></td>
+                            <td><input type="number" class="form-control" style="padding:4px 6px;height:32px;" id="lmAwayK" min="0"></td>
+                            <td class="total"><span id="lmAwayRunsDisplay">-</span></td>
+                        </tr>
+                    </tbody>
+                </table>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Your Team Used</label>
-                        <input class="form-control" id="lmHomeTeam" placeholder="e.g. Yankees">
+                        <label>Your innings (comma-separated)</label>
+                        <input class="form-control" id="lmHomeInnings" placeholder="1,0,2,0,0,1,0,0,0">
                     </div>
                     <div class="form-group">
-                        <label>Opponent Team Used</label>
-                        <input class="form-control" id="lmAwayTeam" placeholder="e.g. Dodgers">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>Your Hits</label><input class="form-control" type="number" id="lmHomeHits" min="0"></div>
-                    <div class="form-group"><label>Opp Hits</label><input class="form-control" type="number" id="lmAwayHits" min="0"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>Your Errors</label><input class="form-control" type="number" id="lmHomeErrors" min="0"></div>
-                    <div class="form-group"><label>Opp Errors</label><input class="form-control" type="number" id="lmAwayErrors" min="0"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>Your HRs</label><input class="form-control" type="number" id="lmHomeHR" min="0"></div>
-                    <div class="form-group"><label>Opp HRs</label><input class="form-control" type="number" id="lmAwayHR" min="0"></div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label>Your Ks</label><input class="form-control" type="number" id="lmHomeK" min="0"></div>
-                    <div class="form-group"><label>Opp Ks</label><input class="form-control" type="number" id="lmAwayK" min="0"></div>
-                </div>
-                <div class="form-group">
-                    <label>Innings (Inning-by-inning, comma separated, e.g. 0,2,0,1,0,0,3,0,1)</label>
-                    <div class="form-row">
-                        <input class="form-control" id="lmHomeInnings" placeholder="Your runs by inning">
-                        <input class="form-control" id="lmAwayInnings" placeholder="Opp runs by inning">
+                        <label>Opponent innings (comma-separated)</label>
+                        <input class="form-control" id="lmAwayInnings" placeholder="0,1,0,0,0,0,0,0,0">
                     </div>
                 </div>
             </div>
-
             <div class="form-group">
-                <label>Notes (optional)</label>
-                <textarea class="form-control" id="lmNotes" rows="2" placeholder="Great game, walk-off HR in the 9th..."></textarea>
+                <label>Notes</label>
+                <textarea class="form-control" id="lmNotes" rows="2" placeholder="Optional notes..."></textarea>
             </div>
-
-            <button type="submit" class="btn btn-primary btn-block" style="margin-top:8px;padding:12px;font-size:15px;">
-                <i class="fas fa-check"></i> Log Match
-            </button>
+            <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-save"></i> Save Match Result</button>
         </form>
     </div>
 </div>
@@ -597,59 +598,51 @@
 <div class="modal-overlay" id="editProfileModal">
     <div class="modal">
         <button class="close-btn" onclick="closeModal('editProfileModal')">&times;</button>
-        <h2><i class="fas fa-id-card" style="color:var(--accent-gold);margin-right:8px;"></i>Edit Gamer Profile</h2>
+        <h2>Edit Gamer Profile</h2>
         <form id="editProfileForm" onsubmit="submitProfile(event)">
             <div class="form-group">
-                <label><i class="fab fa-playstation" style="color:#4da6ff;margin-right:4px;"></i> PSN Username</label>
-                <input class="form-control" id="epPSN" placeholder="Your PSN ID" autocomplete="off">
+                <label>PSN Username</label>
+                <input class="form-control" id="epPSN" placeholder="Your PlayStation Network ID">
             </div>
             <div class="form-group">
-                <label><i class="fab fa-xbox" style="color:#00cc66;margin-right:4px;"></i> Xbox Gamertag</label>
-                <input class="form-control" id="epXbox" placeholder="Your Xbox Gamertag" autocomplete="off">
+                <label>Xbox Gamertag</label>
+                <input class="form-control" id="epXbox" placeholder="Your Xbox Gamertag">
             </div>
             <div class="form-group">
-                <label><i class="fab fa-steam" style="color:#a0a0cc;margin-right:4px;"></i> Steam Username</label>
-                <input class="form-control" id="epSteam" placeholder="Your Steam username" autocomplete="off">
+                <label>Steam Username</label>
+                <input class="form-control" id="epSteam" placeholder="Your Steam profile name">
             </div>
             <div class="form-group">
-                <label><i class="fab fa-nintendo-switch" style="color:#e60012;margin-right:4px;"></i> Nintendo Friend Code</label>
-                <input class="form-control" id="epNintendo" placeholder="SW-XXXX-XXXX-XXXX" autocomplete="off">
+                <label>Nintendo Friend Code</label>
+                <input class="form-control" id="epNintendo" placeholder="SW-XXXX-XXXX-XXXX">
             </div>
             <div class="form-group">
-                <label><i class="fas fa-gamepad" style="color:var(--accent-purple);margin-right:4px;"></i> Preferred Console</label>
+                <label>Preferred Console</label>
                 <select class="form-control" id="epConsole">
-                    <option value="">Select...</option>
+                    <option value="">Choose...</option>
                     <option value="PS5">PS5</option>
-                    <option value="Xbox">Xbox Series X|S</option>
+                    <option value="Xbox">Xbox</option>
                     <option value="PC">PC</option>
-                    <option value="Nintendo Switch">Nintendo Switch</option>
+                    <option value="Switch">Switch</option>
                 </select>
             </div>
-            <button type="submit" class="btn btn-gold btn-block" style="margin-top:8px;padding:12px;font-size:15px;" id="epSaveBtn">
-                <i class="fas fa-save"></i> Save Profile
-            </button>
+            <button type="submit" class="btn btn-primary btn-block" id="epSaveBtn"><i class="fas fa-save"></i> Save Profile</button>
         </form>
     </div>
 </div>
 
 <!-- DISPUTE MATCH MODAL -->
 <div class="modal-overlay" id="disputeMatchModal">
-    <div class="modal" style="max-width:440px;">
+    <div class="modal">
         <button class="close-btn" onclick="closeModal('disputeMatchModal')">&times;</button>
-        <h2><i class="fas fa-exclamation-triangle" style="color:var(--accent-red);margin-right:8px;"></i>Dispute Match</h2>
-        <p style="color:var(--text-dim);margin-bottom:16px;font-size:14px;">Explain why you are disputing this match result. The other player will be notified.</p>
-        <form id="disputeMatchForm" onsubmit="submitDispute(event)">
-            <input type="hidden" id="disputeMatchId" value="">
+        <h2>Dispute Match Result</h2>
+        <form id="disputeForm" onsubmit="submitDispute(event)">
+            <input type="hidden" id="disputeMatchId">
             <div class="form-group">
-                <label>Reason for Dispute</label>
-                <textarea class="form-control" id="disputeReason" rows="3" placeholder="e.g. Wrong score reported, game was never played..." required></textarea>
+                <label>Why are you disputing this result?</label>
+                <textarea class="form-control" id="disputeReason" rows="4" required placeholder="Explain why this result is incorrect. Include what actually happened."></textarea>
             </div>
-            <div style="display:flex;gap:8px;margin-top:8px;">
-                <button type="button" class="btn btn-outline btn-block" onclick="closeModal('disputeMatchModal')">Cancel</button>
-                <button type="submit" class="btn btn-danger btn-block" style="padding:12px;font-size:14px;">
-                    <i class="fas fa-flag"></i> Submit Dispute
-                </button>
-            </div>
+            <button type="submit" class="btn btn-danger btn-block"><i class="fas fa-flag"></i> Submit Dispute</button>
         </form>
     </div>
 </div>
@@ -669,6 +662,12 @@ let currentLbGameFilter = 'all';
 let currentUser = null;
 let allChallenges = [];
 
+function analyticsTrack(eventName, params) {
+    if (typeof window.TMRAnalytics !== 'undefined' && typeof window.TMRAnalytics.track === 'function') {
+        window.TMRAnalytics.track(eventName, params || {});
+    }
+}
+
 // ============================================
 // INIT
 // ============================================
@@ -684,6 +683,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (e) { /* not logged in */ }
 
     updateNavUser();
+    analyticsTrack('arena_viewed', { initial_tab: currentTab || 'challenges' });
     loadChallenges();
     loadRecentMatches();
     loadLeaderboard();
@@ -710,6 +710,7 @@ function switchTab(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
     document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab));
 
+    analyticsTrack('arena_tab_switched', { tab_name: tab });
     if (tab === 'my-stats') loadMyStats();
 }
 
@@ -737,6 +738,10 @@ function filterByGame(game) {
     currentGameFilter = game;
     document.querySelectorAll('#gameFilters .game-pill').forEach(p => p.classList.toggle('active', p.dataset.game === game));
     const filtered = game === 'all' ? allChallenges : allChallenges.filter(c => c.game_slug === game);
+    analyticsTrack('arena_game_filter_applied', {
+        filter_name: game,
+        visible_challenges: filtered.length
+    });
     renderChallenges(filtered);
 }
 
@@ -831,6 +836,10 @@ async function loadGamertagsForChallengeCards() {
 async function respondChallenge(id, action) {
     try {
         await api.request(`/gaming/challenges/${id}/respond`, { method: 'PUT', body: { action } });
+        analyticsTrack('arena_challenge_responded', {
+            challenge_id: String(id),
+            response_action: action
+        });
         loadChallenges();
     } catch (e) { alert('Failed: ' + (e.message || e)); }
 }
@@ -838,6 +847,7 @@ async function respondChallenge(id, action) {
 async function cancelChallenge(id) {
     try {
         await api.request(`/gaming/challenges/${id}`, { method: 'DELETE' });
+        analyticsTrack('arena_challenge_cancelled', { challenge_id: String(id) });
         loadChallenges();
     } catch (e) { alert('Failed: ' + (e.message || e)); }
 }
@@ -1124,11 +1134,17 @@ async function loadMyStats() {
 // ============================================
 function openCreateChallenge() {
     if (!currentUser) { alert('Please sign in first'); return; }
+    analyticsTrack('arena_create_challenge_opened', {
+        current_filter: currentGameFilter || 'all'
+    });
     document.getElementById('createChallengeModal').classList.add('open');
 }
 
 function openLogMatch(presetGame) {
     if (!currentUser) { alert('Please sign in first'); return; }
+    analyticsTrack('arena_log_match_opened', {
+        preset_game: presetGame || 'none'
+    });
     document.getElementById('logMatchModal').classList.add('open');
     if (presetGame) document.getElementById('lmGame').value = presetGame;
     toggleBoxScore();
@@ -1189,6 +1205,12 @@ async function submitChallenge(e) {
             method: 'POST',
             body: { game_slug, challenged_username: opponent || null, platform, best_of, title, description }
         });
+        analyticsTrack('arena_challenge_created', {
+            game_slug: game_slug,
+            platform: platform || 'unspecified',
+            best_of: best_of,
+            open_challenge: opponent ? 'no' : 'yes'
+        });
         closeModal('createChallengeModal');
         document.getElementById('createChallengeForm').reset();
         loadChallenges();
@@ -1233,6 +1255,13 @@ async function submitMatch(e) {
 
     try {
         await api.request('/gaming/matches', { method: 'POST', body: payload });
+        analyticsTrack('arena_match_logged', {
+            game_slug: game_slug,
+            platform: platform || 'unspecified',
+            challenge_linked: challenge_id ? 'yes' : 'no',
+            my_score: player1_score,
+            opponent_score: player2_score
+        });
         closeModal('logMatchModal');
         document.getElementById('logMatchForm').reset();
         loadRecentMatches();
@@ -1251,6 +1280,7 @@ async function confirmMatch(matchId) {
     if (!currentUser) { alert('Please sign in first'); return; }
     try {
         await api.request(`/gaming/matches/${matchId}/confirm`, { method: 'PUT' });
+        analyticsTrack('arena_match_confirmed', { match_id: String(matchId) });
         // Refresh all match feeds
         loadRecentMatches();
         loadMLBHub();
@@ -1262,6 +1292,7 @@ async function confirmMatch(matchId) {
 
 function openDisputeMatch(matchId) {
     if (!currentUser) { alert('Please sign in first'); return; }
+    analyticsTrack('arena_dispute_opened', { match_id: String(matchId) });
     document.getElementById('disputeMatchId').value = matchId;
     document.getElementById('disputeReason').value = '';
     document.getElementById('disputeMatchModal').classList.add('open');
@@ -1275,6 +1306,10 @@ async function submitDispute(e) {
 
     try {
         await api.request(`/gaming/matches/${matchId}/dispute`, { method: 'PUT', body: { reason } });
+        analyticsTrack('arena_match_disputed', {
+            match_id: String(matchId),
+            reason_length: reason.length
+        });
         closeModal('disputeMatchModal');
         // Refresh all match feeds
         loadRecentMatches();
@@ -1508,5 +1543,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 
 
 
+        <script src="static/js/config.js?v=20260330"></script>
+        <script src="static/js/analytics.js?v=20260417"></script>
 </body>
 </html>
