@@ -9,6 +9,10 @@
  * 4. (Optional) Create GTM container, update CONFIG.analytics.gtmId
  * 5. In GA4 Admin > Events, mark conversions (see ANALYTICS_EVENTS.md)
  * 6. Register custom dimensions in GA4 for parameters like sport, pick_type, etc.
+ *
+ * NOTE:
+ * This module can now self-bootstrap GA4 if a page forgot the inline snippet.
+ * Existing inline snippets still work and take priority when present.
  */
 
 (function () {
@@ -36,25 +40,73 @@
 
     // =========================================================================
     // GA4 INITIALIZATION
-    // The gtag.js script and config are loaded inline in <head> of every page.
-    // This function just confirms gtag is available for custom event tracking.
+    // Prefer an existing inline snippet when present, otherwise bootstrap GA4 here.
     // =========================================================================
+
+    let gaBootstrapPromise = null;
+
+    function bootstrapGA4() {
+        if (!ANALYTICS_CONFIG.enabled || !ANALYTICS_CONFIG.measurementId) {
+            return Promise.resolve(false);
+        }
+
+        if (typeof window.gtag === 'function') {
+            return Promise.resolve(true);
+        }
+
+        if (gaBootstrapPromise) return gaBootstrapPromise;
+
+        gaBootstrapPromise = new Promise(function(resolve) {
+            window.dataLayer = window.dataLayer || [];
+            window.gtag = window.gtag || function(){ window.dataLayer.push(arguments); };
+
+            const existing = document.querySelector('script[data-tmr-ga4="true"]');
+            if (existing) {
+                window.gtag('js', new Date());
+                window.gtag('config', ANALYTICS_CONFIG.measurementId);
+                resolve(true);
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.async = true;
+            script.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(ANALYTICS_CONFIG.measurementId);
+            script.setAttribute('data-tmr-ga4', 'true');
+            script.onload = function() {
+                window.gtag('js', new Date());
+                window.gtag('config', ANALYTICS_CONFIG.measurementId);
+                resolve(true);
+            };
+            script.onerror = function() {
+                console.warn('[TMR Analytics] Failed to load GA4 script.');
+                resolve(false);
+            };
+            (document.head || document.documentElement).appendChild(script);
+        });
+
+        return gaBootstrapPromise;
+    }
 
     function initGA4() {
         if (!ANALYTICS_CONFIG.enabled) return;
 
-        // gtag should already be defined by the inline snippet in <head>
-        if (typeof window.gtag !== 'function') {
-            console.warn('[TMR Analytics] gtag not found. Make sure the GA4 snippet is in <head>.');
+        if (!ANALYTICS_CONFIG.measurementId) {
+            console.warn('[TMR Analytics] Missing GA4 measurement ID.');
             return;
         }
 
-        // Set debug mode if configured
-        if (ANALYTICS_CONFIG.debug) {
-            window.gtag('set', { debug_mode: true });
-        }
+        bootstrapGA4().then(function(ready) {
+            if (!ready || typeof window.gtag !== 'function') {
+                console.warn('[TMR Analytics] gtag unavailable after bootstrap.');
+                return;
+            }
 
-        console.log('[TMR Analytics] GA4 connected:', ANALYTICS_CONFIG.measurementId);
+            if (ANALYTICS_CONFIG.debug) {
+                window.gtag('set', { debug_mode: true });
+            }
+
+            console.log('[TMR Analytics] GA4 connected:', ANALYTICS_CONFIG.measurementId);
+        });
     }
 
     // =========================================================================
