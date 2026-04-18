@@ -11,6 +11,12 @@ const FEED_LIMIT = 20;
 let viewerUser = null;
 let followingUserIds = new Set();
 
+function analyticsTrack(eventName, params) {
+    if (typeof window.TMRAnalytics !== 'undefined' && typeof window.TMRAnalytics.track === 'function') {
+        window.TMRAnalytics.track(eventName, params || {});
+    }
+}
+
 function formatMarketLabel(marketType) {
     return {
         h2h: 'Moneyline',
@@ -131,6 +137,10 @@ function toggleType(type) {
         else { postType = 'poll'; pollBtnEl.classList.add('active-poll'); takeBtn.classList.remove('active-take'); pb.classList.add('show'); }
     }
     document.getElementById('compInput').placeholder = postType === 'hot-take' ? "Drop your hottest take..." : postType === 'poll' ? "Ask a question..." : "What's your take?";
+    analyticsTrack('feed_post_type_toggled', {
+        selected_type: postType,
+        requested_type: type
+    });
 }
 
 // ==================== POLL BUILDER ====================
@@ -167,6 +177,11 @@ async function submitPost() {
                     body: { title: content, options: opts.map(t => ({ text: t })), sport: sport || undefined, scoring_type: 'binary', points_correct: 100 }
                 });
             }
+            analyticsTrack('feed_post_created', {
+                post_type: 'poll',
+                sport: sport || 'all',
+                poll_option_count: opts.length
+            });
         } else {
             if (api && typeof api.request === 'function') {
                 await api.request('/feed', {
@@ -174,6 +189,11 @@ async function submitPost() {
                     body: { content, post_type: postType === 'hot-take' ? 'hot_take' : 'text', sport }
                 });
             }
+            analyticsTrack('feed_post_created', {
+                post_type: postType === 'hot-take' ? 'hot_take' : 'text',
+                sport: sport || 'all',
+                content_length: content.length
+            });
         }
     } catch(e) {
         alert('Failed to post: ' + (e.message || 'Unknown error'));
@@ -633,6 +653,7 @@ async function votePoll(pollId, optionId) {
 
 function sharePost(id) {
     navigator.clipboard?.writeText(`${location.origin}/feed.html?post=${id}`);
+    analyticsTrack('feed_post_shared', { post_id: String(id) });
     const el = event.currentTarget;
     const orig = el.innerHTML;
     el.innerHTML = '<i class="fas fa-check"></i> Copied!';
@@ -645,11 +666,16 @@ function setFilter(f, btn) {
     feedOffset = 0;
     document.querySelectorAll('.feed-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    analyticsTrack('feed_filter_applied', { filter_name: f });
     loadFeed();
 }
 
 function loadMorePosts() {
     feedOffset += FEED_LIMIT;
+    analyticsTrack('feed_load_more_clicked', {
+        filter_name: currentFilter,
+        next_offset: feedOffset
+    });
     loadFeed();
 }
 
