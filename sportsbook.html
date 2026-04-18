@@ -766,6 +766,12 @@
         window.showPickStep('pickDetails');
     };
 
+    function analyticsTrackSportsbook(eventName, params) {
+        if (typeof window.TMRAnalytics !== 'undefined' && typeof window.TMRAnalytics.track === 'function') {
+            window.TMRAnalytics.track(eventName, params || {});
+        }
+    }
+
     // ============ LOCK IN PICK (localStorage version) ============
     window.lockInPick = function() {
         if (window.__tmrProductionLockInPick && window.__tmrProductionLockInPick !== window.lockInPick) {
@@ -903,6 +909,16 @@
             var displayMeta = thePick.awayTeam + ' @ ' + thePick.homeTeam + '  |  ' + units + 'u  |  ' + (thePick.sport || '') + '  |  ' + lockMsg;
             if (el1) el1.textContent = displayPick;
             if (el2) el2.textContent = displayMeta;
+
+            analyticsTrackSportsbook('sportsbook_pick_created', {
+                sport: thePick.sport || '',
+                bet_type: betType,
+                market_type: marketType,
+                selection: selection,
+                odds: newPick.odds_snapshot,
+                units: units,
+                save_mode: newPick._backendSynced ? 'backend' : 'local_fallback'
+            });
 
             window.showPickStep('pickConfirmation');
             window.TMR.currentSelectedPick = null;
@@ -16706,7 +16722,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="static/js/forums.js?v=20251208c"></script>
     <!-- forms.js REMOVED - forms-fixed.js handles login/signup -->
     <script src="static/js/navigation.js?v=20260415a"></script>
-    <script src="static/js/sportsbook-production-fix.js?v=20260415f"></script>
+    <script src="static/js/sportsbook-production-fix.js?v=20260416a"></script>
     <script src="static/js/effects.js?v=20251208c"></script>
 
     <script src="static/js/app.js?v=20260122"></script>
@@ -17074,6 +17090,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (summaryGame) summaryGame.textContent = awayTeam + ' @ ' + homeTeam;
         if (summaryPick) summaryPick.textContent = team + ' ' + line;
         if (summaryOdds) summaryOdds.textContent = odds;
+
+        analyticsTrackSportsbook('sportsbook_pick_selected', {
+            sport: (window.TMR.selectedSport || selectedSport || ''),
+            bet_type: betType,
+            team: team || '',
+            line: line || '',
+            odds: odds || '',
+            matchup: awayTeam + ' @ ' + homeTeam
+        });
 
         // Go to confirmation
         showPickStep('pickDetails');
