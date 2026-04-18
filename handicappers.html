@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handicappers | TrustMyRecord</title>
+    <meta name="description" content="Discover verified handicappers by ROI, units, sample size, and current streak on TrustMyRecord.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://trustmyrecord.com/handicappers.html">
+    <meta property="og:title" content="Handicappers | TrustMyRecord">
+    <meta property="og:description" content="Ranked cappers, recent verified picks, and open sports competition in one discovery board.">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260415e">
+    <script defer src="static/js/tmr-sitewide.js?v=20260415f"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #08111d;
+            --bg-soft: #0d1727;
+            --card: rgba(13, 23, 39, 0.92);
+            --line: rgba(148, 163, 184, 0.18);
+            --line-strong: rgba(45, 212, 191, 0.32);
+            --text: #eef4fb;
+            --muted: #96a7bb;
+            --teal: #2dd4bf;
+            --teal-soft: rgba(45, 212, 191, 0.12);
+            --gold: #d4a72c;
+            --green: #22c55e;
+            --red: #ef4444;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            background:
+                radial-gradient(circle at 0% 0%, rgba(45,212,191,0.13), transparent 30%),
+                radial-gradient(circle at 100% 0%, rgba(96,165,250,0.08), transparent 26%),
+                linear-gradient(180deg, #07111c 0%, #0b1523 100%);
+        }
+
+        a { color: inherit; text-decoration: none; }
+
+        .page {
+            width: min(1380px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 30px 0 56px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) 360px;
+            gap: 18px;
+            align-items: stretch;
+            margin-bottom: 20px;
+        }
+
+        .hero-panel,
+        .hero-side,
+        .filters-card,
+        .table-card,
+        .rail-card {
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)),
+                var(--card);
+            box-shadow: 0 22px 60px rgba(0, 0, 0, 0.24);
+        }
+
+        .hero-panel {
+            padding: 28px;
+            background:
+                radial-gradient(circle at 10% 0%, rgba(45,212,191,0.16), transparent 30%),
+                linear-gradient(160deg, rgba(14, 24, 39, 0.95), rgba(8, 15, 26, 0.98));
+        }
+
+        .hero-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--line-strong);
+            background: var(--teal-soft);
+            color: #d7fffb;
+            font-size: 0.76rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        h1, h2, h3 {
+            margin: 0;
+            font-family: 'Barlow', sans-serif;
+            letter-spacing: -0.03em;
+        }
+
+        h1 {
+            margin-top: 18px;
+            font-size: clamp(2.9rem, 5vw, 4.6rem);
+            line-height: 0.94;
+            text-transform: uppercase;
+        }
+
+        .hero-panel p {
+            max-width: 780px;
+            margin: 16px 0 0;
+            color: #c3d0dd;
+            font-size: 1rem;
+            line-height: 1.62;
+        }
+
+        .hero-metrics {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        .hero-metric {
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.04);
+        }
+
+        .hero-metric b {
+            display: block;
+            font-size: 1.35rem;
+            line-height: 1;
+        }
+
+        .hero-metric span {
+            display: block;
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .hero-side,
+        .filters-card,
+        .table-card,
+        .rail-card {
+            padding: 20px;
+        }
+
+        .hero-side {
+            display: grid;
+            gap: 14px;
+        }
+
+        .side-title,
+        .filters-head,
+        .table-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            gap: 12px;
+        }
+
+        .side-title h2,
+        .filters-head h2,
+        .table-head h2 {
+            font-size: 1.42rem;
+        }
+
+        .side-note,
+        .filters-head p,
+        .table-head p,
+        .rail-note {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 0.82rem;
+            line-height: 1.46;
+        }
+
+        .challenge-list,
+        .rail-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .challenge-row,
+        .rail-item {
+            display: grid;
+            gap: 6px;
+            padding: 13px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.04);
+        }
+
+        .challenge-row strong,
+        .rail-item strong {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .challenge-row span,
+        .rail-item span {
+            color: var(--muted);
+            font-size: 0.77rem;
+            line-height: 1.45;
+        }
+
+        .badge,
+        .count-chip,
+        .mini-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: fit-content;
+            min-height: 32px;
+            padding: 0 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.18);
+            background: rgba(255,255,255,0.04);
+            color: var(--text);
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
+
+        .badge {
+            min-height: 28px;
+            background: rgba(45,212,191,0.12);
+            color: #d7fffb;
+            border-color: rgba(45,212,191,0.22);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .badge.gold {
+            background: rgba(212,167,44,0.12);
+            border-color: rgba(212,167,44,0.22);
+            color: #ffe8a3;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 18px;
+            align-items: start;
+        }
+
+        .filters-card {
+            margin-bottom: 16px;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: 1.3fr repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .field {
+            display: grid;
+            gap: 7px;
+        }
+
+        .field label {
+            color: var(--muted);
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            min-height: 44px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 12px;
+            padding: 0 14px;
+            color: var(--text);
+            background: rgba(255,255,255,0.05);
+            font: 600 0.92rem/1 'Inter', sans-serif;
+        }
+
+        .field input::placeholder { color: #7a8ea4; }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            min-width: 920px;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            padding: 0 0 12px;
+            color: #7c91a8;
+            font-size: 0.71rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+            text-align: left;
+            border-bottom: 1px solid rgba(148,163,184,0.18);
+        }
+
+        tbody td {
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(148,163,184,0.12);
+            font-size: 0.87rem;
+            vertical-align: middle;
+        }
+
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+        .rank {
+            width: 34px;
+            height: 34px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.08);
+            font-size: 0.82rem;
+            font-weight: 900;
+        }
+
+        .rank.top-1 { background: rgba(212,167,44,0.22); color: #ffe8a3; }
+        .rank.top-2 { background: rgba(148,163,184,0.24); color: #e2e8f0; }
+        .rank.top-3 { background: rgba(194,120,70,0.24); color: #ffd3b5; }
+
+        .capper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .capper-avatar {
+            width: 38px;
+            height: 38px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--teal), #b9fff1);
+            color: #06120f;
+            font-size: 0.82rem;
+            font-weight: 900;
+            flex: 0 0 auto;
+        }
+
+        .capper-meta { min-width: 0; }
+
+        .capper-name {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text);
+            font-size: 0.92rem;
+            font-weight: 800;
+        }
+
+        .capper-name:hover { color: var(--teal); }
+
+        .capper-sub {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 0.76rem;
+            line-height: 1.45;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .link-actions {
+            display: inline-flex;
+            gap: 8px;
+        }
+
+        .pos { color: var(--green); font-weight: 850; }
+        .neg { color: var(--red); font-weight: 850; }
+        .neutral { color: var(--text); font-weight: 850; }
+
+        .rail-card {
+            display: grid;
+            gap: 14px;
+        }
+
+        .rail-card h3 {
+            font-size: 1.28rem;
+        }
+
+        .loading,
+        .empty {
+            display: grid;
+            place-items: center;
+            min-height: 180px;
+            border-radius: 16px;
+            border: 1px dashed rgba(148,163,184,0.24);
+            background: rgba(255,255,255,0.03);
+            color: var(--muted);
+            text-align: center;
+            font-size: 0.92rem;
+        }
+
+        @media (max-width: 1180px) {
+            .hero,
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .page {
+                width: min(100% - 22px, 1380px);
+                padding-top: 22px;
+            }
+
+            .hero-panel,
+            .hero-side,
+            .filters-card,
+            .table-card,
+            .rail-card {
+                padding: 16px;
+                border-radius: 18px;
+            }
+
+            .hero-metrics,
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: clamp(2.4rem, 11vw, 3.2rem);
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <section class="hero">
+            <div class="hero-panel">
+                <span class="hero-kicker">Verified capper discovery</span>
+                <h1>Find the people actually beating the board.</h1>
+                <p>TrustMyRecord should make handicappers discoverable by real performance, not screenshots or vague claims. This board ranks cappers by current ROI, units, sample size, and streak while keeping the path into head-to-head competition one click away.</p>
+                <div class="hero-metrics">
+                    <div class="hero-metric"><b id="heroCapperCount">0</b><span>Ranked cappers</span></div>
+                    <div class="hero-metric"><b id="heroPositiveRoi">0</b><span>Positive ROI</span></div>
+                    <div class="hero-metric"><b id="heroChallengeCount">0</b><span>Open battles</span></div>
+                    <div class="hero-metric"><b id="heroAvgSample">0</b><span>Avg sample size</span></div>
+                </div>
+            </div>
+            <aside class="hero-side">
+                <div class="side-title">
+                    <div>
+                        <h2>Open challenge board</h2>
+                        <div class="side-note">Competition stays visible here so discovery leads directly into action.</div>
+                    </div>
+                    <a href="arena.html" class="mini-link">Open Arena</a>
+                </div>
+                <div id="heroChallenges" class="challenge-list">
+                    <div class="loading">Loading live competition...</div>
+                </div>
+            </aside>
+        </section>
+
+        <section class="content">
+            <div>
+                <div class="filters-card">
+                    <div class="filters-head">
+                        <div>
+                            <h2>Filter the board</h2>
+                            <p>Sort by performance or sample size, narrow by sport, and search usernames directly.</p>
+                        </div>
+                        <button type="button" class="mini-link" onclick="resetFilters()">Reset</button>
+                    </div>
+                    <div class="filters-grid">
+                        <div class="field">
+                            <label for="capperSearch">Search capper</label>
+                            <input id="capperSearch" type="text" placeholder="@username or display name">
+                        </div>
+                        <div class="field">
+                            <label for="sportFilter">Sport</label>
+                            <select id="sportFilter">
+                                <option value="all">All sports</option>
+                                <option value="NFL">NFL</option>
+                                <option value="NBA">NBA</option>
+                                <option value="MLB">MLB</option>
+                                <option value="NHL">NHL</option>
+                                <option value="NCAAB">NCAAB</option>
+                                <option value="NCAAF">NCAAF</option>
+                                <option value="Soccer">Soccer</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="sortFilter">Sort by</label>
+                            <select id="sortFilter">
+                                <option value="roi">ROI</option>
+                                <option value="units">Net units</option>
+                                <option value="winRate">Win rate</option>
+                                <option value="totalPicks">Sample size</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="sampleFilter">Minimum picks</label>
+                            <select id="sampleFilter">
+                                <option value="5">5 picks</option>
+                                <option value="10">10 picks</option>
+                                <option value="25">25 picks</option>
+                                <option value="50">50 picks</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-head">
+                        <div>
+                            <h2>Handicapper leaderboard</h2>
+                            <p>Built from the same backend leaderboard that powers profile rank and record discovery.</p>
+                        </div>
+                        <div class="count-chip" id="resultCount">0 cappers</div>
+                    </div>
+                    <div id="leaderboardState" class="loading">Loading verified handicapper data...</div>
+                    <div id="leaderboardWrap" class="table-wrap" style="display:none;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width:64px;">Rank</th>
+                                    <th>Capper</th>
+                                    <th>Record</th>
+                                    <th>ROI</th>
+                                    <th>Units</th>
+                                    <th>Win rate</th>
+                                    <th>Picks</th>
+                                    <th style="width:170px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboardBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="rail-card">
+                <div>
+                    <h3>Hot streaks</h3>
+                    <div class="rail-note">Users on current winning runs, sorted from the live board.</div>
+                </div>
+                <div id="streakRail" class="rail-list">
+                    <div class="loading">Loading streak leaders...</div>
+                </div>
+
+                <div>
+                    <h3>Sample-size leaders</h3>
+                    <div class="rail-note">Cappers with enough volume to matter, not just a lucky week.</div>
+                </div>
+                <div id="volumeRail" class="rail-list">
+                    <div class="loading">Loading volume leaders...</div>
+                </div>
+            </aside>
+        </section>
+    </main>
+
+    <script src="static/js/config.js?v=20260330"></script>
+    <script src="static/js/backend-api.js?v=20260415c"></script>
+    <script src="static/js/analytics.js?v=20260417"></script>
+    <script>
+        let fullLeaderboard = [];
+        let filteredLeaderboard = [];
+
+        function trackHandicappers(eventName, params) {
+            if (typeof window.TMRAnalytics !== 'undefined' && typeof window.TMRAnalytics.track === 'function') {
+                window.TMRAnalytics.track(eventName, params || {});
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function escapeJs(value) {
+            return String(value == null ? '' : value)
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, "\\'");
+        }
+
+        function num(value) {
+            const parsed = Number(value);
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+
+        function pct(value) {
+            const parsed = Number(value);
+            if (!Number.isFinite(parsed)) return 0;
+            return parsed <= 1 && parsed >= 0 ? parsed * 100 : parsed;
+        }
+
+        function signed(value, suffix) {
+            const parsed = num(value);
+            return (parsed >= 0 ? '+' : '') + parsed.toFixed(1) + (suffix || '');
+        }
+
+        function timeAgo(value) {
+            const date = new Date(value || Date.now()).getTime();
+            const diff = Math.max(0, Date.now() - date);
+            const hour = 3600000;
+            const day = 86400000;
+            if (diff < hour) return Math.max(1, Math.round(diff / 60000)) + 'm ago';
+            if (diff < day) return Math.round(diff / hour) + 'h ago';
+            return Math.round(diff / day) + 'd ago';
+        }
+
+        function normalizeEntry(entry) {
+            const username = entry.username || entry.user_name || entry.handle || '';
+            const wins = num(entry.wins);
+            const losses = num(entry.losses);
+            const pushes = num(entry.pushes);
+            const totalPicks = num(entry.total_picks != null ? entry.total_picks : entry.totalPicks != null ? entry.totalPicks : wins + losses + pushes);
+            const roi = pct(entry.roi);
+            const units = num(entry.net_units != null ? entry.net_units : entry.units);
+            const winRate = pct(entry.win_percentage != null ? entry.win_percentage : entry.winRate);
+            const streak = num(entry.current_streak != null ? entry.current_streak : entry.currentStreak);
+            return {
+                raw: entry,
+                username: username,
+                displayName: entry.display_name || entry.displayName || username,
+                sport: entry.sport || entry.primary_sport || 'All',
+                wins: wins,
+                losses: losses,
+                pushes: pushes,
+                totalPicks: totalPicks,
+                roi: roi,
+                units: units,
+                winRate: winRate,
+                streak: streak
+            };
+        }
+
+        function setHeroStats(entries) {
+            const positiveRoi = entries.filter(function(entry) { return entry.roi > 0; }).length;
+            const avgSample = entries.length ? Math.round(entries.reduce(function(sum, entry) { return sum + entry.totalPicks; }, 0) / entries.length) : 0;
+            document.getElementById('heroCapperCount').textContent = String(entries.length);
+            document.getElementById('heroPositiveRoi').textContent = String(positiveRoi);
+            document.getElementById('heroAvgSample').textContent = String(avgSample);
+        }
+
+        function renderLeaderboard(entries) {
+            const state = document.getElementById('leaderboardState');
+            const wrap = document.getElementById('leaderboardWrap');
+            const body = document.getElementById('leaderboardBody');
+            const count = document.getElementById('resultCount');
+
+            count.textContent = entries.length + ' cappers';
+            if (!entries.length) {
+                wrap.style.display = 'none';
+                state.style.display = 'grid';
+                state.className = 'empty';
+                state.textContent = 'No handicappers match the current filters.';
+                return;
+            }
+
+            state.style.display = 'none';
+            wrap.style.display = '';
+            body.innerHTML = entries.map(function(entry, index) {
+                const rankClass = index === 0 ? 'top-1' : index === 1 ? 'top-2' : index === 2 ? 'top-3' : '';
+                const record = entry.wins + '-' + entry.losses + (entry.pushes ? '-' + entry.pushes : '');
+                const statClass = function(value) {
+                    return value > 0 ? 'pos' : value < 0 ? 'neg' : 'neutral';
+                };
+                return '<tr>' +
+                    '<td><span class="rank ' + rankClass + '">#' + (index + 1) + '</span></td>' +
+                    '<td><div class="capper">' +
+                        '<span class="capper-avatar">' + escapeHtml((entry.displayName || '?').charAt(0).toUpperCase()) + '</span>' +
+                        '<div class="capper-meta">' +
+                            '<a class="capper-name" href="profile.html?user=' + encodeURIComponent(entry.username) + '" onclick="trackHandicappers(\'handicapper_profile_opened\', { username: \'' + escapeJs(entry.username) + '\', source: \'board\' });">' + escapeHtml(entry.displayName) + '</a>' +
+                            '<span class="capper-sub">@' + escapeHtml(entry.username) + ' • ' + escapeHtml(entry.sport || 'All sports') + ' • streak ' + (entry.streak > 0 ? 'W' + entry.streak : entry.streak < 0 ? 'L' + Math.abs(entry.streak) : '0') + '</span>' +
+                        '</div>' +
+                    '</div></td>' +
+                    '<td>' + record + '</td>' +
+                    '<td class="' + statClass(entry.roi) + '">' + signed(entry.roi, '%') + '</td>' +
+                    '<td class="' + statClass(entry.units) + '">' + signed(entry.units, 'u') + '</td>' +
+                    '<td class="' + statClass(entry.winRate - 50) + '">' + entry.winRate.toFixed(1) + '%</td>' +
+                    '<td>' + entry.totalPicks + '</td>' +
+                    '<td><div class="link-actions">' +
+                        '<a class="mini-link" href="profile.html?user=' + encodeURIComponent(entry.username) + '" onclick="trackHandicappers(\'handicapper_profile_opened\', { username: \'' + escapeJs(entry.username) + '\', source: \'board\' });">Profile</a>' +
+                        '<a class="mini-link" href="arena.html?challenge=' + encodeURIComponent(entry.username) + '" onclick="trackHandicappers(\'handicapper_challenge_clicked\', { username: \'' + escapeJs(entry.username) + '\', source: \'board\' });">Challenge</a>' +
+                    '</div></td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        function renderStreakRail(entries) {
+            const rail = document.getElementById('streakRail');
+            if (!entries.length) {
+                rail.innerHTML = '<div class="empty">No active streaks yet.</div>';
+                return;
+            }
+            rail.innerHTML = entries.map(function(entry) {
+                return '<a class="rail-item" href="profile.html?user=' + encodeURIComponent(entry.username) + '" onclick="trackHandicappers(\'handicapper_profile_opened\', { username: \'' + escapeJs(entry.username) + '\', source: \'streak_rail\' });">' +
+                    '<strong>' + escapeHtml(entry.displayName) + '</strong>' +
+                    '<span>@' + escapeHtml(entry.username) + ' • ' + entry.winRate.toFixed(1) + '% win rate • ' + signed(entry.units, 'u') + '</span>' +
+                    '<span class="badge">W' + entry.streak + ' current run</span>' +
+                '</a>';
+            }).join('');
+        }
+
+        function renderVolumeRail(entries) {
+            const rail = document.getElementById('volumeRail');
+            if (!entries.length) {
+                rail.innerHTML = '<div class="empty">No high-volume cappers yet.</div>';
+                return;
+            }
+            rail.innerHTML = entries.map(function(entry) {
+                return '<a class="rail-item" href="profile.html?user=' + encodeURIComponent(entry.username) + '" onclick="trackHandicappers(\'handicapper_profile_opened\', { username: \'' + escapeJs(entry.username) + '\', source: \'volume_rail\' });">' +
+                    '<strong>' + escapeHtml(entry.displayName) + '</strong>' +
+                    '<span>' + entry.totalPicks + ' picks • ' + signed(entry.roi, '%') + ' ROI • ' + signed(entry.units, 'u') + '</span>' +
+                    '<span class="badge gold">Verified sample</span>' +
+                '</a>';
+            }).join('');
+        }
+
+        function renderChallenges(entries) {
+            const container = document.getElementById('heroChallenges');
+            document.getElementById('heroChallengeCount').textContent = String(entries.length);
+            if (!entries.length) {
+                container.innerHTML = '<div class="empty">No live arena challenges right now.</div>';
+                return;
+            }
+            container.innerHTML = entries.map(function(entry) {
+                const title = entry.title || entry.game_title || entry.game_slug || 'Open challenge';
+                const challenger = entry.challenger_display || entry.challenger_username || 'Challenger';
+                const challenged = entry.challenged_display || entry.challenged_username || 'Open';
+                const status = String(entry.status || 'pending').replace(/_/g, ' ');
+                return '<a class="challenge-row" href="arena.html" onclick="trackHandicappers(\'handicapper_arena_opened\', { challenge_id: \'' + escapeJs(String(entry.id || 'unknown')) + '\', source: \'hero\' });">' +
+                    '<span class="badge">' + escapeHtml(status) + '</span>' +
+                    '<strong>' + escapeHtml(title) + '</strong>' +
+                    '<span>' + escapeHtml(challenger) + ' vs ' + escapeHtml(challenged) + ' • ' + escapeHtml(entry.game_title || entry.game_slug || 'Arena') + ' • ' + timeAgo(entry.created_at || entry.createdAt) + '</span>' +
+                '</a>';
+            }).join('');
+        }
+
+        function applyFilters() {
+            const search = String(document.getElementById('capperSearch').value || '').trim().toLowerCase();
+            const sport = document.getElementById('sportFilter').value;
+            const sort = document.getElementById('sortFilter').value;
+            const minSample = num(document.getElementById('sampleFilter').value);
+
+            filteredLeaderboard = fullLeaderboard.filter(function(entry) {
+                const matchesSearch = !search || entry.username.toLowerCase().indexOf(search) !== -1 || entry.displayName.toLowerCase().indexOf(search) !== -1;
+                const matchesSport = sport === 'all' || String(entry.sport || '').toLowerCase() === String(sport).toLowerCase();
+                return matchesSearch && matchesSport && entry.totalPicks >= minSample;
+            });
+
+            filteredLeaderboard.sort(function(a, b) {
+                if (sort === 'units') return b.units - a.units;
+                if (sort === 'winRate') return b.winRate - a.winRate;
+                if (sort === 'totalPicks') return b.totalPicks - a.totalPicks;
+                return b.roi - a.roi;
+            });
+
+            renderLeaderboard(filteredLeaderboard);
+            trackHandicappers('handicapper_filters_applied', {
+                search_query: search || '',
+                sport: sport,
+                sort_by: sort,
+                min_sample: minSample,
+                visible_count: filteredLeaderboard.length
+            });
+        }
+
+        function resetFilters() {
+            document.getElementById('capperSearch').value = '';
+            document.getElementById('sportFilter').value = 'all';
+            document.getElementById('sortFilter').value = 'roi';
+            document.getElementById('sampleFilter').value = '5';
+            applyFilters();
+        }
+
+        async function loadHandicappers() {
+            const state = document.getElementById('leaderboardState');
+            try {
+                const data = await window.api.getLeaderboard({ sortBy: 'roi', limit: 100 });
+                const rawEntries = Array.isArray(data)
+                    ? data
+                    : Array.isArray(data && data.leaderboard)
+                        ? data.leaderboard
+                        : Array.isArray(data && data.users)
+                            ? data.users
+                            : [];
+
+                fullLeaderboard = rawEntries.map(normalizeEntry).filter(function(entry) {
+                    return entry.username && entry.totalPicks >= 5;
+                });
+
+                setHeroStats(fullLeaderboard);
+                renderStreakRail(fullLeaderboard
+                    .filter(function(entry) { return entry.streak > 0; })
+                    .sort(function(a, b) { return b.streak - a.streak; })
+                    .slice(0, 4));
+                renderVolumeRail(fullLeaderboard
+                    .slice()
+                    .sort(function(a, b) { return b.totalPicks - a.totalPicks; })
+                    .slice(0, 4));
+                applyFilters();
+            } catch (error) {
+                state.className = 'empty';
+                state.textContent = 'Leaderboard data is temporarily unavailable.';
+                document.getElementById('streakRail').innerHTML = '<div class="empty">Streak data unavailable.</div>';
+                document.getElementById('volumeRail').innerHTML = '<div class="empty">Volume data unavailable.</div>';
+            }
+        }
+
+        async function loadChallengeRail() {
+            try {
+                const data = await window.api.request('/gaming/challenges?limit=5');
+                const challenges = Array.isArray(data && data.challenges) ? data.challenges : [];
+                const openChallenges = challenges.filter(function(entry) {
+                    const status = String(entry.status || '').toLowerCase();
+                    return ['pending', 'accepted', 'in_progress', 'open'].indexOf(status) !== -1;
+                }).slice(0, 4);
+                renderChallenges(openChallenges);
+            } catch (error) {
+                renderChallenges([]);
+            }
+        }
+
+        function bindFilters() {
+            ['capperSearch', 'sportFilter', 'sortFilter', 'sampleFilter'].forEach(function(id) {
+                document.getElementById(id).addEventListener(id === 'capperSearch' ? 'input' : 'change', applyFilters);
+            });
+        }
+
+        async function bootstrapHandicappersPage() {
+            bindFilters();
+            trackHandicappers('handicappers_page_viewed', {});
+            await Promise.all([
+                loadHandicappers(),
+                loadChallengeRail()
+            ]);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bootstrapHandicappersPage);
+        } else {
+            bootstrapHandicappersPage();
+        }
+    </script>
+</body>
+</html>

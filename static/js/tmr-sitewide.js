@@ -2,6 +2,7 @@
     const routes = [
         ["index.html", "Home"],
         ["sportsbook.html", "Make Picks"],
+        ["handicappers.html", "Handicappers"],
         ["arena.html", "Arena"],
         ["feed.html", "Feed"],
         ["polls.html", "Polls"],
@@ -15,6 +16,7 @@
 
     const routeMeta = {
         "sportsbook.html": ["Make Picks", "Live markets, pick submission, odds boards, and permanent locked receipts."],
+        "handicappers.html": ["Handicappers", "Discover ranked cappers by ROI, sample size, units, streaks, and open challenge paths."],
         "arena.html": ["Arena", "Head-to-head contests, rival callouts, public challenges, and competition loops."],
         "challenges.html": ["Arena", "Legacy arena route. Public competition and challenge traffic belongs on the Arena page."],
         "feed.html": ["Social Feed", "Posts, reactions, sports debate, locked picks, and activity from the community."],
