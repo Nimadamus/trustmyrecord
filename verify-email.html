@@ -1,63 +1,83 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify Email - TrustMyRecord</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260415a">
-    <script defer src="static/js/tmr-sitewide.js?v=20260415a"></script>
+    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260419a">
+    <script defer src="static/js/tmr-sitewide.js?v=20260415f"></script>
     <link rel="stylesheet" href="static/css/style.css">
     <link rel="stylesheet" href="static/css/social.css">
     <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background:
+                radial-gradient(circle at 12% 0%, rgba(45, 212, 191, 0.12), transparent 28%),
+                linear-gradient(180deg, #08111d, #0d1726) !important;
+            color: #eef4fb;
+            font-family: 'Inter', sans-serif;
+        }
+
         .verify-container {
-            max-width: 500px;
-            margin: 100px auto;
-            padding: 40px;
-            background: var(--surface, #1a1a2e);
-            border-radius: 16px;
+            width: min(560px, 100%);
+            margin: 0 auto;
+            padding: 34px;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
+                rgba(11, 20, 34, 0.94);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 22px;
             text-align: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 24px 60px rgba(0,0,0,0.32);
         }
         .verify-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
+            font-size: 48px;
+            margin-bottom: 14px;
         }
         .verify-title {
-            font-size: 28px;
-            margin-bottom: 16px;
-            color: var(--text-primary, #fff);
+            margin: 0 0 12px;
+            font-family: 'Barlow', sans-serif;
+            font-size: clamp(2rem, 5vw, 2.55rem);
+            line-height: 0.96;
+            letter-spacing: -0.03em;
+            color: #eef4fb;
         }
         .verify-message {
-            font-size: 16px;
-            color: var(--text-secondary, #888);
+            font-size: 0.96rem;
+            color: #97a8bc;
             margin-bottom: 24px;
-            line-height: 1.6;
+            line-height: 1.65;
         }
         .verify-error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #ef4444;
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.24);
+            color: #fecaca;
             padding: 16px;
-            border-radius: 8px;
+            border-radius: 14px;
             margin-bottom: 20px;
         }
         .verify-success {
-            background: rgba(34, 197, 94, 0.1);
-            border: 1px solid rgba(34, 197, 94, 0.3);
-            color: #22c55e;
+            background: rgba(45, 212, 191, 0.12);
+            border: 1px solid rgba(45, 212, 191, 0.22);
+            color: #d7fffb;
             padding: 16px;
-            border-radius: 8px;
+            border-radius: 14px;
             margin-bottom: 20px;
         }
         .btn-primary {
-            background: linear-gradient(135deg, #ffd700, #ffb700);
-            color: #000;
+            background: linear-gradient(135deg, #2dd4bf, #8df5ea);
+            color: #06120f;
             border: none;
-            padding: 14px 32px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
+            min-height: 46px;
+            padding: 0 22px;
+            border-radius: 999px;
+            font-size: 0.9rem;
+            font-weight: 800;
             cursor: pointer;
             transition: all 0.3s;
             text-decoration: none;
@@ -65,31 +85,43 @@
         }
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.3);
+            box-shadow: 0 18px 38px rgba(45, 212, 191, 0.22);
         }
         .btn-secondary {
-            background: transparent;
-            color: var(--text-secondary, #888);
-            border: 1px solid var(--border, #333);
-            padding: 14px 32px;
-            border-radius: 8px;
-            font-size: 16px;
+            background: rgba(255,255,255,0.045);
+            color: #d7e2ee;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            min-height: 46px;
+            padding: 0 22px;
+            border-radius: 999px;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.3s;
             margin-left: 12px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
         .btn-secondary:hover {
-            border-color: #ffd700;
-            color: #ffd700;
+            border-color: rgba(45, 212, 191, 0.28);
+            color: #eef4fb;
         }
         .spinner {
             width: 48px;
             height: 48px;
-            border: 4px solid rgba(255, 215, 0, 0.2);
-            border-top-color: #ffd700;
+            border: 4px solid rgba(45, 212, 191, 0.16);
+            border-top-color: #2dd4bf;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 20px auto;
+        }
+        @media (max-width: 640px) {
+            .verify-container { padding: 24px 20px; }
+            .btn-primary, .btn-secondary {
+                width: 100%;
+                margin: 8px 0 0;
+            }
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
@@ -157,7 +189,7 @@
 
     <script src="static/js/config.js"></script>
     <script src="static/js/analytics.js?v=20260405"></script>
-    <script src="static/js/backend-api.js?v=20260414c"></script>
+    <script src="static/js/backend-api.js?v=20260415c"></script>
     <script>
         const apiClient = window.api;
         let userEmail = '';
@@ -176,6 +208,46 @@
             return apiClient;
         }
 
+        function cacheVerifiedSession(data) {
+            var user = data && data.user;
+            if (!user) return;
+
+            var sessionPayload = {
+                user: user,
+                timestamp: Date.now(),
+                rememberMe: true
+            };
+
+            try {
+                localStorage.setItem('trustmyrecord_session', JSON.stringify(sessionPayload));
+                localStorage.setItem('tmr_current_user', JSON.stringify(user));
+                localStorage.setItem('tmr_is_logged_in', 'true');
+            } catch (error) {}
+
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('tmr-auth-changed', {
+                    detail: {
+                        loggedIn: true,
+                        user: user
+                    }
+                }));
+            }
+        }
+
+        function resolvePostVerifyRedirect() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('redirect') || sessionStorage.getItem('tmr_post_auth_redirect') || '';
+            if (!redirect) return 'index.html';
+            sessionStorage.removeItem('tmr_post_auth_redirect');
+
+            if (redirect === 'picks') return 'sportsbook.html#picks';
+            if (redirect === 'profile') return 'profile.html';
+            if (redirect === 'leaderboards') return 'sportsbook.html#leaderboards';
+            if (/^[a-z0-9-]+\.html(?:#.*)?$/i.test(redirect)) return redirect;
+
+            return 'index.html';
+        }
+
         async function verifyEmail() {
             const urlParams = new URLSearchParams(window.location.search);
             const token = urlParams.get('token');
@@ -192,7 +264,8 @@
 
             try {
                 const api = await ensureApiReady();
-                await api.verifyEmail(token);
+                const data = await api.verifyEmail(token);
+                cacheVerifiedSession(data || {});
                 showSuccess();
             } catch (error) {
                 console.error('Verification error:', error);
@@ -204,7 +277,7 @@
             document.getElementById('loading-state').classList.add('hidden');
             document.getElementById('success-state').classList.remove('hidden');
             setTimeout(function() {
-                window.location.href = 'index.html';
+                window.location.href = resolvePostVerifyRedirect();
             }, 1800);
         }
 
