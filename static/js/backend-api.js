@@ -71,8 +71,18 @@ class TrustMyRecordAPI {
 
     // Token Management
     loadTokens() {
-        this.token = localStorage.getItem('trustmyrecord_token');
-        this.refreshToken = localStorage.getItem('trustmyrecord_refresh_token');
+        this.token = localStorage.getItem('trustmyrecord_token') ||
+            localStorage.getItem('accessToken') ||
+            localStorage.getItem('access_token') ||
+            localStorage.getItem('token') ||
+            localStorage.getItem('tmr_token') ||
+            null;
+        this.refreshToken = localStorage.getItem('trustmyrecord_refresh_token') ||
+            localStorage.getItem('refreshToken') ||
+            localStorage.getItem('accessRefreshToken') ||
+            localStorage.getItem('tmr_refresh_token') ||
+            localStorage.getItem('refresh_token') ||
+            null;
     }
 
     saveTokens(token, refreshToken) {
@@ -80,14 +90,60 @@ class TrustMyRecordAPI {
         this.refreshToken = refreshToken || null;
         if (token) {
             localStorage.setItem('trustmyrecord_token', token);
+            localStorage.setItem('accessToken', token);
+            localStorage.setItem('access_token', token);
+            localStorage.setItem('token', token);
+            localStorage.setItem('tmr_token', token);
         } else {
             localStorage.removeItem('trustmyrecord_token');
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('token');
+            localStorage.removeItem('tmr_token');
         }
         if (refreshToken) {
             localStorage.setItem('trustmyrecord_refresh_token', refreshToken);
+            localStorage.setItem('refreshToken', refreshToken);
+            localStorage.setItem('refresh_token', refreshToken);
+            localStorage.setItem('tmr_refresh_token', refreshToken);
         } else {
             localStorage.removeItem('trustmyrecord_refresh_token');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('refresh_token');
+            localStorage.removeItem('tmr_refresh_token');
         }
+    }
+
+    clearFrontendSession() {
+        this._cachedUser = null;
+
+        try {
+            if (typeof window !== 'undefined' && window.auth && typeof window.auth.clearSession === 'function') {
+                window.auth.clearSession();
+            }
+        } catch (error) {
+            console.warn('[TMR API] Failed to clear auth session via auth system:', error);
+        }
+
+        [
+            'trustmyrecord_session',
+            'tmr_current_user',
+            'currentUser',
+            'trustmyrecord_remember',
+            'tmr_is_logged_in'
+        ].forEach((key) => {
+            try {
+                localStorage.removeItem(key);
+            } catch (error) {}
+        });
+
+        try {
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('tmr-auth-changed', {
+                    detail: { loggedIn: false, user: null }
+                }));
+            }
+        } catch (error) {}
     }
 
     clearTokens() {
@@ -96,6 +152,14 @@ class TrustMyRecordAPI {
         this._cachedUser = null;
         localStorage.removeItem('trustmyrecord_token');
         localStorage.removeItem('trustmyrecord_refresh_token');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('token');
+        localStorage.removeItem('tmr_token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('tmr_refresh_token');
+        this.clearFrontendSession();
     }
 
     getAuthHeaders() {
@@ -114,6 +178,7 @@ class TrustMyRecordAPI {
 
     // HTTP Request Helper
     async request(endpoint, options = {}) {
+        this.loadTokens();
         const candidateUrls = this.getCandidateBaseUrls();
         let lastError = null;
 
@@ -132,6 +197,14 @@ class TrustMyRecordAPI {
             }
 
             try {
+                if (!this.token && this.refreshToken) {
+                    await this.refreshAccessToken(baseUrl);
+                    config.headers = {
+                        ...this.getAuthHeaders(),
+                        ...(options.headers || {})
+                    };
+                }
+
                 let response = await fetch(url, config);
 
                 // Handle token expiration
@@ -616,18 +689,7 @@ class TrustMyRecordAPI {
     // ==================== UTILITY ====================
 
     isLoggedIn() {
-        // Check JWT token first
-        if (this.token) return true;
-        // Fallback: check localStorage auth session (PersistentAuthSystem)
-        try {
-            const session = localStorage.getItem('trustmyrecord_session');
-            if (session) {
-                const parsed = JSON.parse(session);
-                const user = parsed.user || parsed;
-                if (user && (user.username || user.email)) return true;
-            }
-        } catch(e) {}
-        return false;
+        return !!(this.token || this.refreshToken);
     }
 
     /**
@@ -666,7 +728,11 @@ class TrustMyRecordAPI {
     }
 
     async getGamerProfile(username) {
-        return this.request(`/gaming/profile/${username}`);
+        const data = await this.request(`/gaming/profile/${username}`);
+        if (data && data.gamer_profile && !data.profile) {
+            data.profile = data.gamer_profile;
+        }
+        return data;
     }
 
     async updateGamerProfile(data) {
