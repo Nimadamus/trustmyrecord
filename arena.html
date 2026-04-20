@@ -5,9 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Arena - Gaming Challenges | TrustMyRecord</title>
     <meta name="description" content="Challenge other gamers in MLB The Show, NBA 2K, Madden and more. Track your record, build rivalries, climb the leaderboard.">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260415a">
-    <script defer src="static/js/tmr-sitewide.js?v=20260415a"></script>
+    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260419a">
+    <script defer src="static/js/tmr-sitewide.js?v=20260415f"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -252,6 +259,143 @@
         .match-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
         .match-status-col { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 120px; }
     </style>
+    <style>
+        body {
+            background:
+                radial-gradient(circle at 12% 0%, rgba(45, 212, 191, 0.12), transparent 28%),
+                linear-gradient(180deg, #08111d, #0d1726) !important;
+            color: #eef4fb;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .nav {
+            height: 68px;
+            padding: 0 20px;
+            background: rgba(8, 15, 26, 0.88);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+            backdrop-filter: blur(18px);
+        }
+
+        .nav-logo,
+        .hero h1,
+        .section-header h2,
+        .section-header h3 {
+            font-family: 'Barlow', sans-serif;
+            letter-spacing: -0.03em;
+        }
+
+        .nav-logo {
+            font-size: 1.5rem;
+            color: #eef4fb;
+        }
+
+        .nav-logo span,
+        .tab.active,
+        .hero-stat .num {
+            color: #2dd4bf;
+        }
+
+        .nav-link {
+            border-radius: 999px;
+            color: #9aacbf;
+            font-weight: 700;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .hero {
+            padding: 38px 24px 30px;
+            background:
+                radial-gradient(circle at 50% 0%, rgba(45, 212, 191, 0.12), transparent 34%),
+                linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+            border-bottom-color: rgba(148, 163, 184, 0.12);
+        }
+
+        .hero h1 {
+            font-size: clamp(2.35rem, 5vw, 3.8rem);
+            line-height: 0.96;
+        }
+
+        .hero h1 .gold,
+        .hero h1 .blue {
+            color: #eef4fb;
+        }
+
+        .hero p,
+        .hero-stat .label,
+        .section-header h3,
+        .cc-meta,
+        .match-time {
+            color: #97a8bc;
+        }
+
+        .tabs,
+        .challenge-card,
+        .match-item,
+        .stat-card,
+        .modal,
+        .game-pill {
+            border-color: rgba(148, 163, 184, 0.14);
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
+                rgba(11, 20, 34, 0.9);
+            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22);
+        }
+
+        .main {
+            max-width: 1280px;
+            padding-top: 20px;
+        }
+
+        .tabs {
+            margin: 16px auto 0;
+            width: min(1280px, calc(100% - 32px));
+            border-radius: 18px;
+        }
+
+        .tab {
+            border-radius: 999px;
+            color: #9aacbf;
+            font-weight: 700;
+        }
+
+        .tab.active {
+            background: rgba(45, 212, 191, 0.12);
+            border-color: rgba(45, 212, 191, 0.24);
+        }
+
+        .challenge-card,
+        .match-item,
+        .stat-card,
+        .modal {
+            border-radius: 18px;
+        }
+
+        .challenge-card:hover,
+        .match-item:hover {
+            border-color: rgba(45, 212, 191, 0.24);
+            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.24);
+        }
+
+        .btn-primary,
+        .btn-gold {
+            background: linear-gradient(135deg, #2dd4bf, #8df5ea);
+            color: #06120f;
+        }
+
+        .btn-outline {
+            color: #d7e2ee;
+            background: rgba(255,255,255,0.04);
+        }
+
+        .form-control {
+            background: rgba(255,255,255,0.045);
+            color: #eef4fb;
+        }
+    </style>
 </head>
 <body>
 
@@ -263,7 +407,7 @@
         <a href="index.html" class="nav-link">Home</a>
         <a href="sportsbook.html" class="nav-link">Sportsbook</a>
         <a href="feed.html" class="nav-link">Feed</a>
-        <a href="challenges.html" class="nav-link">Picks Arena</a>
+        <a href="arena.html" class="nav-link">Arena</a>
         <a href="arena.html" class="nav-link active">Gaming Arena</a>
         <a href="forum.html" class="nav-link">Forum</a>
         <a href="messages.html" class="nav-link">Messages</a>
@@ -656,9 +800,9 @@
 
 <!-- SCRIPTS -->
 <script src="static/js/config.js?v=20260405"></script>
-<script src="static/js/backend-api.js?v=20260414c"></script>
+<script src="static/js/backend-api.js?v=20260415c"></script>
 <script src="static/js/nav-badges.js"></script>
-<script src="static/js/auth-persistent.js?v=20260414e"></script>
+<script src="static/js/auth-persistent.js?v=20260415d"></script>
 <script>
 // ============================================
 // STATE
@@ -668,6 +812,12 @@ let currentGameFilter = 'all';
 let currentLbGameFilter = 'all';
 let currentUser = null;
 let allChallenges = [];
+
+function analyticsTrack(eventName, params) {
+    if (typeof window.TMRAnalytics !== 'undefined' && typeof window.TMRAnalytics.track === 'function') {
+        window.TMRAnalytics.track(eventName, params || {});
+    }
+}
 
 // ============================================
 // INIT
@@ -684,6 +834,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (e) { /* not logged in */ }
 
     updateNavUser();
+    analyticsTrack('arena_viewed', { initial_tab: currentTab || 'challenges' });
     loadChallenges();
     loadRecentMatches();
     loadLeaderboard();
@@ -710,6 +861,7 @@ function switchTab(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
     document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab));
 
+    analyticsTrack('arena_tab_switched', { tab_name: tab });
     if (tab === 'my-stats') loadMyStats();
 }
 
@@ -737,6 +889,10 @@ function filterByGame(game) {
     currentGameFilter = game;
     document.querySelectorAll('#gameFilters .game-pill').forEach(p => p.classList.toggle('active', p.dataset.game === game));
     const filtered = game === 'all' ? allChallenges : allChallenges.filter(c => c.game_slug === game);
+    analyticsTrack('arena_game_filter_applied', {
+        filter_name: game,
+        visible_challenges: filtered.length
+    });
     renderChallenges(filtered);
 }
 
@@ -831,6 +987,10 @@ async function loadGamertagsForChallengeCards() {
 async function respondChallenge(id, action) {
     try {
         await api.request(`/gaming/challenges/${id}/respond`, { method: 'PUT', body: { action } });
+        analyticsTrack('arena_challenge_responded', {
+            challenge_id: String(id),
+            response_action: action
+        });
         loadChallenges();
     } catch (e) { alert('Failed: ' + (e.message || e)); }
 }
@@ -838,6 +998,7 @@ async function respondChallenge(id, action) {
 async function cancelChallenge(id) {
     try {
         await api.request(`/gaming/challenges/${id}`, { method: 'DELETE' });
+        analyticsTrack('arena_challenge_cancelled', { challenge_id: String(id) });
         loadChallenges();
     } catch (e) { alert('Failed: ' + (e.message || e)); }
 }
@@ -1124,11 +1285,17 @@ async function loadMyStats() {
 // ============================================
 function openCreateChallenge() {
     if (!currentUser) { alert('Please sign in first'); return; }
+    analyticsTrack('arena_create_challenge_opened', {
+        current_filter: currentGameFilter || 'all'
+    });
     document.getElementById('createChallengeModal').classList.add('open');
 }
 
 function openLogMatch(presetGame) {
     if (!currentUser) { alert('Please sign in first'); return; }
+    analyticsTrack('arena_log_match_opened', {
+        preset_game: presetGame || 'none'
+    });
     document.getElementById('logMatchModal').classList.add('open');
     if (presetGame) document.getElementById('lmGame').value = presetGame;
     toggleBoxScore();
@@ -1189,6 +1356,12 @@ async function submitChallenge(e) {
             method: 'POST',
             body: { game_slug, challenged_username: opponent || null, platform, best_of, title, description }
         });
+        analyticsTrack('arena_challenge_created', {
+            game_slug: game_slug,
+            platform: platform || 'unspecified',
+            best_of: best_of,
+            open_challenge: opponent ? 'no' : 'yes'
+        });
         closeModal('createChallengeModal');
         document.getElementById('createChallengeForm').reset();
         loadChallenges();
@@ -1233,6 +1406,13 @@ async function submitMatch(e) {
 
     try {
         await api.request('/gaming/matches', { method: 'POST', body: payload });
+        analyticsTrack('arena_match_logged', {
+            game_slug: game_slug,
+            platform: platform || 'unspecified',
+            challenge_linked: challenge_id ? 'yes' : 'no',
+            my_score: player1_score,
+            opponent_score: player2_score
+        });
         closeModal('logMatchModal');
         document.getElementById('logMatchForm').reset();
         loadRecentMatches();
@@ -1251,6 +1431,7 @@ async function confirmMatch(matchId) {
     if (!currentUser) { alert('Please sign in first'); return; }
     try {
         await api.request(`/gaming/matches/${matchId}/confirm`, { method: 'PUT' });
+        analyticsTrack('arena_match_confirmed', { match_id: String(matchId) });
         // Refresh all match feeds
         loadRecentMatches();
         loadMLBHub();
@@ -1262,6 +1443,7 @@ async function confirmMatch(matchId) {
 
 function openDisputeMatch(matchId) {
     if (!currentUser) { alert('Please sign in first'); return; }
+    analyticsTrack('arena_dispute_opened', { match_id: String(matchId) });
     document.getElementById('disputeMatchId').value = matchId;
     document.getElementById('disputeReason').value = '';
     document.getElementById('disputeMatchModal').classList.add('open');
@@ -1275,6 +1457,10 @@ async function submitDispute(e) {
 
     try {
         await api.request(`/gaming/matches/${matchId}/dispute`, { method: 'PUT', body: { reason } });
+        analyticsTrack('arena_match_disputed', {
+            match_id: String(matchId),
+            reason_length: reason.length
+        });
         closeModal('disputeMatchModal');
         // Refresh all match feeds
         loadRecentMatches();
@@ -1472,7 +1658,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
                         <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Community</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             <a href="feed.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
-                            <a href="challenges.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Challenges</a>
+                            <a href="arena.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Arena</a>
                             <a href="polls.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Polls</a>
                             <a href="trivia.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
                         </div>
@@ -1491,7 +1677,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
                 <!-- Bottom Bar -->
                 <div style="padding: 24px 0; text-align: center;">
                     <p style="color: #606070; font-size: 0.78rem; line-height: 1.7; margin: 0 0 8px 0;">TrustMyRecord is not a gambling site. We provide pick tracking and community features only. No real money is wagered on this platform.</p>
-                    <p style="color: #505060; font-size: 0.72rem; margin: 0;">If you or someone you know has a gambling problem, call 1-800-GAMBLER. Must be 18+ to participate. Please gamble responsibly.</p>
+                    <p style="color: #505060; font-size: 0.72rem; margin: 0;">If you or someone you know has a gambling problem, call local support resources. Must be 18+ to participate. Please gamble responsibly.</p>
                 </div>
             </div>
             <style>
@@ -1508,5 +1694,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 
 
 
+        <script src="static/js/config.js?v=20260330"></script>
+        <script src="static/js/analytics.js?v=20260417"></script>
 </body>
 </html>
