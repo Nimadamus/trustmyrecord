@@ -4,11 +4,20 @@
     const SPORT_KEY_MAP = {
         NFL: 'americanfootball_nfl',
         NBA: 'basketball_nba',
+        WNBA: 'basketball_wnba',
         MLB: 'baseball_mlb',
         NHL: 'icehockey_nhl',
         Soccer: 'soccer_epl',
+        MLS: 'soccer_usa_mls',
+        UCL: 'soccer_uefa_champs_league',
+        LaLiga: 'soccer_spain_la_liga',
+        SerieA: 'soccer_italy_serie_a',
+        Bundesliga: 'soccer_germany_bundesliga',
+        Ligue1: 'soccer_france_ligue_one',
         NCAAB: 'basketball_ncaab',
-        NCAAF: 'americanfootball_ncaaf'
+        NCAAF: 'americanfootball_ncaaf',
+        ATP: 'tennis_atp',
+        WTA: 'tennis_wta'
     };
 
     const STATUS_MAP = {
@@ -39,6 +48,7 @@
         h2h: 'Moneyline',
         spreads: 'Spread',
         totals: 'Game Total',
+        total: 'Game Total',
         team_totals: 'Team Total',
         f5_h2h: 'First 5 ML',
         f5_spreads: 'First 5 Spread',
@@ -52,7 +62,18 @@
         period_1_h2h: '1st Period ML',
         period_1_totals: '1st Period Total',
         alt_spreads: 'Alt Spread',
-        alt_totals: 'Alt Total'
+        alt_totals: 'Alt Total',
+        h2h_3_way: '3-Way Moneyline',
+        draw_no_bet: 'Draw No Bet',
+        double_chance: 'Double Chance',
+        btts: 'Both Teams To Score',
+        player_points: 'Player Points',
+        player_rebounds: 'Player Rebounds',
+        player_assists: 'Player Assists',
+        player_threes: 'Player Threes',
+        player_hits: 'Player Hits',
+        player_home_runs: 'Player Home Runs',
+        player_shots_on_goal: 'Shots On Goal'
     };
 
     function lockFunction(target, key, value) {
@@ -96,9 +117,75 @@
         return null;
     }
 
+    function clearFrontendAuthState() {
+        try {
+            if (window.api && typeof window.api.clearTokens === 'function') {
+                window.api.clearTokens();
+                return;
+            }
+        } catch (error) {}
+
+        [
+            'trustmyrecord_session',
+            'tmr_current_user',
+            'currentUser',
+            'trustmyrecord_remember',
+            'tmr_is_logged_in',
+            'trustmyrecord_token',
+            'trustmyrecord_refresh_token',
+            'token',
+            'tmr_token',
+            'refreshToken',
+            'refresh_token'
+        ].forEach(function(key) {
+            try { localStorage.removeItem(key); } catch (error) {}
+        });
+
+        try {
+            if (window.auth && typeof window.auth.clearSession === 'function') {
+                window.auth.clearSession();
+            }
+        } catch (error) {}
+
+        try {
+            window.dispatchEvent(new CustomEvent('tmr-auth-changed', {
+                detail: { loggedIn: false, user: null }
+            }));
+        } catch (error) {}
+    }
+
+    function redirectToLoginForPicks(message) {
+        try {
+            sessionStorage.setItem('tmr_post_auth_redirect', 'picks');
+        } catch (error) {}
+        if (message) {
+            alert(message);
+        }
+        if (typeof window.showSection === 'function') {
+            window.showSection('login');
+        }
+    }
+
     function getStoredAuthToken() {
         try {
-            return localStorage.getItem('trustmyrecord_token') || '';
+            return localStorage.getItem('trustmyrecord_token') ||
+                localStorage.getItem('accessToken') ||
+                localStorage.getItem('access_token') ||
+                localStorage.getItem('token') ||
+                localStorage.getItem('tmr_token') ||
+                '';
+        } catch (error) {
+            return '';
+        }
+    }
+
+    function getStoredRefreshToken() {
+        try {
+            return localStorage.getItem('trustmyrecord_refresh_token') ||
+                localStorage.getItem('refreshToken') ||
+                localStorage.getItem('tmr_refresh_token') ||
+                localStorage.getItem('refresh_token') ||
+                '';
         } catch (error) {
             return '';
         }
@@ -126,6 +213,64 @@
             return window.api;
         }
         return null;
+    }
+
+    async function ensureBackendAccessToken(apiClient) {
+        const client = apiClient || window.api;
+        if (client && typeof client.loadTokens === 'function') {
+            try { client.loadTokens(); } catch (error) {}
+        }
+
+        if (client && client.token) return client.token;
+
+        const storedToken = getStoredAuthToken();
+        if (storedToken) {
+            if (client) client.token = storedToken;
+            return storedToken;
+        }
+
+        const storedRefresh = (client && client.refreshToken) || getStoredRefreshToken();
+        if (storedRefresh && client) {
+            client.refreshToken = storedRefresh;
+            if (typeof client.refreshAccessToken === 'function') {
+                try {
+                    const refreshed = await client.refreshAccessToken();
+                    if (refreshed && client.token) return client.token;
+                } catch (error) {}
+            }
+        }
+
+        throw new Error('Your login session is missing a backend access token. Please log in again before submitting picks.');
+    }
+
+    async function ensurePicksAccess() {
+        const user = getCurrentUser();
+        if (!user) {
+            redirectToLoginForPicks('Please log in to submit a pick.');
+            return false;
+        }
+
+        const apiClient = await waitForApi();
+        const token = getStoredAuthToken();
+        const refreshToken = getStoredRefreshToken() || (apiClient && apiClient.refreshToken);
+
+        if (token) {
+            return true;
+        }
+
+        if (refreshToken && apiClient && typeof apiClient.refreshAccessToken === 'function') {
+            apiClient.refreshToken = refreshToken;
+            try {
+                const refreshed = await apiClient.refreshAccessToken();
+                if (refreshed && getStoredAuthToken()) {
+                    return true;
+                }
+            } catch (error) {}
+        }
+
+        clearFrontendAuthState();
+        redirectToLoginForPicks('Your login session expired. Please log in again before making picks.');
+        return false;
     }
 
     function getDirectApiBases() {
@@ -176,7 +321,7 @@
                 if (requireAuth) {
                     const token = getStoredAuthToken();
                     if (!token) {
-                        throw new Error('You need to log in again before submitting a pick.');
+                        throw new Error('Your login session is missing a backend access token. Please log in again before submitting picks.');
                     }
                     headers['Authorization'] = 'Bearer ' + token;
                 }
@@ -327,7 +472,15 @@
         }
 
         const api = await getApiClientOrFallback();
-        const response = await api.getPicks({ userId: user.id, limit: 100 });
+        let response;
+        try {
+            response = await api.getPicks({ userId: user.id, limit: 100 });
+        } catch (error) {
+            if (error && (error.status === 401 || error.status === 403)) {
+                clearFrontendAuthState();
+            }
+            throw error;
+        }
         const picks = (response.picks || []).map(normalizePick).sort(function(a, b) {
             return new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0);
         });
@@ -420,6 +573,34 @@
         }
     }
 
+    function getLineInputLabel(option) {
+        const marketType = String(option && option.market_type || '').toLowerCase();
+        if (!marketType || option == null || option.line == null) return 'Line';
+        if (marketType.indexOf('total') !== -1 || marketType === 'btts') return 'Total / Number';
+        if (marketType.indexOf('spread') !== -1) return 'Spread / Handicap';
+        if (marketType.indexOf('player_') === 0) return 'Prop Line';
+        return 'Line';
+    }
+
+    function syncPickDetailsLayout(option) {
+        const selectorIds = ['betScopeSelector', 'betTypeSelector', 'betTypeSelector2', 'betTypeSelectorF5'];
+        selectorIds.forEach(function(id) {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+
+        const lineGroup = document.getElementById('lineInputGroup');
+        if (lineGroup) {
+            lineGroup.style.display = option && option.line != null ? 'block' : 'none';
+            const label = lineGroup.querySelector('label');
+            if (label) label.textContent = getLineInputLabel(option);
+            const hint = lineGroup.querySelector('p');
+            if (hint) hint.textContent = option && option.line != null
+                ? 'Line loaded from the live market. You can adjust it if your book differs.'
+                : 'No line is required for this market.';
+        }
+    }
+
     function injectStyles() {
         if (document.getElementById('tmr-prod-fix-style')) return;
         const style = document.createElement('style');
@@ -493,67 +674,51 @@
         return numeric > 0 ? '+' + numeric : String(numeric);
     }
 
-    function americanToProbability(odds) {
-        const numeric = Number(odds);
-        if (!Number.isFinite(numeric) || numeric === 0) return null;
-        if (numeric > 0) return 100 / (numeric + 100);
-        return Math.abs(numeric) / (Math.abs(numeric) + 100);
+    function isPlaceholderTeamName(value) {
+        const normalized = String(value || '').trim().toLowerCase();
+        return !normalized || ['tbd', 'unknown', 'team a', 'team b', 'home', 'away'].includes(normalized);
     }
 
-    function probabilityToAmerican(probability) {
-        const clamped = Math.min(0.95, Math.max(0.05, Number(probability) || 0.5));
-        if (clamped >= 0.5) return Math.round((-100 * clamped) / (1 - clamped));
-        return Math.round((100 * (1 - clamped)) / clamped);
+    function deriveTeamsFromBookmakers(game) {
+        const bookmakers = Array.isArray(game && game.bookmakers) ? game.bookmakers : [];
+        for (let i = 0; i < bookmakers.length; i += 1) {
+            const bookmaker = bookmakers[i];
+            const markets = Array.isArray(bookmaker && bookmaker.markets) ? bookmaker.markets : [];
+            const h2h = markets.find(function(market) {
+                return market && market.key === 'h2h' && Array.isArray(market.outcomes) && market.outcomes.length >= 2;
+            });
+            if (h2h) {
+                const first = String(h2h.outcomes[0] && h2h.outcomes[0].name || '').trim();
+                const second = String(h2h.outcomes[1] && h2h.outcomes[1].name || '').trim();
+                if (!isPlaceholderTeamName(first) && !isPlaceholderTeamName(second)) {
+                    return { home_team: first, away_team: second };
+                }
+            }
+        }
+        return null;
     }
 
-    function roundToHalf(value) {
-        return Math.round(Number(value) * 2) / 2;
+    function repairGameTeams(game) {
+        if (!game) return game;
+        if (!isPlaceholderTeamName(game.home_team) && !isPlaceholderTeamName(game.away_team)) {
+            return game;
+        }
+        const derived = deriveTeamsFromBookmakers(game);
+        if (!derived) return game;
+        return Object.assign({}, game, {
+            home_team: isPlaceholderTeamName(game.home_team) ? derived.home_team : game.home_team,
+            away_team: isPlaceholderTeamName(game.away_team) ? derived.away_team : game.away_team
+        });
     }
 
-    function clamp(value, min, max) {
-        return Math.min(max, Math.max(min, value));
-    }
-
-    function normalizeProbabilities(a, b) {
-        const first = americanToProbability(a);
-        const second = americanToProbability(b);
-        if (first == null || second == null) return null;
-        const total = first + second;
-        if (!total) return null;
-        return {
-            first: first / total,
-            second: second / total
-        };
-    }
-
-    function deriveMlbFirst5Fallback(game, fullGameGroup, totalGroup) {
-        if (!game || game.sport_key !== 'baseball_mlb' || !fullGameGroup || !totalGroup) return null;
-        const awayMl = (fullGameGroup.items || []).find(function(item) { return item.selection === game.away_team; }) || null;
-        const homeMl = (fullGameGroup.items || []).find(function(item) { return item.selection === game.home_team; }) || null;
-        const over = (totalGroup.items || []).find(function(item) { return String(item.selection).toLowerCase() === 'over'; }) || null;
-        const under = (totalGroup.items || []).find(function(item) { return String(item.selection).toLowerCase() === 'under'; }) || null;
-
-        if (!awayMl || !homeMl || !over || !under || over.line == null) return null;
-
-        const normalized = normalizeProbabilities(awayMl.odds, homeMl.odds);
-        if (!normalized) return null;
-
-        const fullGameTotal = Number(over.line);
-        const first5HomeProb = clamp(0.5 + ((normalized.second - 0.5) * 0.82), 0.08, 0.92);
-        const first5AwayProb = 1 - first5HomeProb;
-        const first5Total = roundToHalf(clamp(fullGameTotal * 0.54, 3.0, 6.5));
-
-        return {
-            awayMl: awayMl,
-            homeMl: homeMl,
-            over: over,
-            under: under,
-            first5Total: first5Total,
-            first5AwayMl: probabilityToAmerican(first5AwayProb),
-            first5HomeMl: probabilityToAmerican(first5HomeProb),
-            first5AwaySpreadOdds: first5AwayProb >= 0.5 ? -102 : -118,
-            first5HomeSpreadOdds: first5HomeProb >= 0.5 ? -102 : -118
-        };
+    function boardHasBrokenTeamPlaceholders(response) {
+        const games = Array.isArray(response && response.games) ? response.games : [];
+        return games.some(function(game) {
+            if (!game || (!isPlaceholderTeamName(game.home_team) && !isPlaceholderTeamName(game.away_team))) {
+                return false;
+            }
+            return Boolean(deriveTeamsFromBookmakers(game));
+        });
     }
 
     function createFallbackOption(game, index, groupLabel, marketType, selection, selectionLabel, odds, line, detailLabel) {
@@ -580,6 +745,7 @@
 
     function buildFallbackBoardGames(games, sportKey) {
         return (games || []).map(function(game, index) {
+            game = repairGameTeams(game);
             const bookmaker = (game.bookmakers || [])[0] || null;
             const markets = bookmaker && Array.isArray(bookmaker.markets) ? bookmaker.markets : [];
             const h2h = markets.find(function(market) { return market.key === 'h2h'; }) || null;
@@ -636,6 +802,56 @@
                 });
             }
 
+            const addRawMarketGroup = function(groupKey, groupLabel, marketKeys) {
+                const items = [];
+                marketKeys.forEach(function(marketKey) {
+                    const market = markets.find(function(candidate) { return candidate.key === marketKey; });
+                    if (!market || !Array.isArray(market.outcomes) || !market.outcomes.length) return;
+
+                    market.outcomes.forEach(function(outcome) {
+                        const line = outcome.point != null ? outcome.point : null;
+                        const isTotal = marketKey.indexOf('totals') !== -1 || marketKey === 'alt_totals';
+                        const isMoneyline = marketKey.indexOf('h2h') !== -1 || marketKey === 'h2h_3_way';
+                        let label = outcome.name || groupLabel;
+
+                        if (isTotal && line != null) {
+                            label = outcome.name + ' ' + line;
+                        } else if (!isMoneyline && line != null) {
+                            label = outcome.name + ' ' + (line > 0 ? '+' : '') + line;
+                        } else if (isMoneyline) {
+                            label = outcome.name + ' ML';
+                        }
+
+                        items.push(createFallbackOption(
+                            game,
+                            index,
+                            groupLabel,
+                            marketKey,
+                            outcome.name,
+                            label,
+                            outcome.price,
+                            line,
+                            bookmaker ? bookmaker.title : 'Sportsbook feed'
+                        ));
+                    });
+                });
+
+                if (items.length) {
+                    marketGroups.push({
+                        key: groupKey,
+                        label: groupLabel,
+                        items: items
+                    });
+                }
+            };
+
+            addRawMarketGroup('first_half', 'First Half', ['first_half_h2h', 'first_half_spreads', 'first_half_totals']);
+            addRawMarketGroup('second_half', 'Second Half', ['second_half_h2h', 'second_half_spreads', 'second_half_totals']);
+            addRawMarketGroup('period_1', '1st Period', ['period_1_h2h', 'period_1_spreads', 'period_1_totals']);
+            addRawMarketGroup('alt_spreads', 'Alt Spreads', ['alt_spreads']);
+            addRawMarketGroup('alt_totals', 'Alt Totals', ['alt_totals']);
+            addRawMarketGroup('three_way', '3-Way Moneyline', ['h2h_3_way']);
+
             if (sportKey === 'baseball_mlb' && (f5H2h || f5Spreads || f5Totals)) {
                 const f5AwayMl = f5H2h && f5H2h.outcomes ? f5H2h.outcomes.find(function(outcome) { return outcome.name === game.away_team; }) : null;
                 const f5HomeMl = f5H2h && f5H2h.outcomes ? f5H2h.outcomes.find(function(outcome) { return outcome.name === game.home_team; }) : null;
@@ -659,24 +875,6 @@
                 }
             }
 
-            /*
-            if (sportKey === 'baseball_mlb' && awayMl && homeMl && over && under) {
-                const f5Total = Math.round(Number(over.point) * 0.55 * 2) / 2;
-                marketGroups.push({
-                    key: 'first_5',
-                    label: 'First 5',
-                    items: [
-                        createFallbackOption(game, index, 'First 5', 'f5_spreads', game.away_team, game.away_team + ' +0.5', -118, 0.5, 'Modeled first 5 run line'),
-                        createFallbackOption(game, index, 'First 5', 'f5_spreads', game.home_team, game.home_team + ' -0.5', -102, -0.5, 'Modeled first 5 run line'),
-                        createFallbackOption(game, index, 'First 5', 'f5_h2h', game.away_team, game.away_team + ' F5 ML', awayMl.price, null, 'Modeled first 5 moneyline'),
-                        createFallbackOption(game, index, 'First 5', 'f5_h2h', game.home_team, game.home_team + ' F5 ML', homeMl.price, null, 'Modeled first 5 moneyline'),
-                        createFallbackOption(game, index, 'First 5', 'f5_totals', 'Over', 'F5 Over ' + f5Total, -110, f5Total, 'Modeled first 5 total'),
-                        createFallbackOption(game, index, 'First 5', 'f5_totals', 'Under', 'F5 Under ' + f5Total, -110, f5Total, 'Modeled first 5 total')
-                    ]
-                });
-            }
-            */
-
             return Object.assign({}, game, {
                 updated_at: game.updated_at || game.commence_time,
                 has_sportsbook_odds: marketGroups.length > 0,
@@ -694,49 +892,6 @@
 
     function getGroupScope(group) {
         return group && group.key === 'first_5' ? 'f5' : 'full';
-    }
-
-    function ensureDerivedFirst5Group(game) {
-        if (!game || game.sport_key !== 'baseball_mlb') return game;
-
-        const existingGroups = Array.isArray(game.market_groups) ? game.market_groups.slice() : [];
-        const hasFirst5 = existingGroups.some(function(group) {
-            return group && group.key === 'first_5' && Array.isArray(group.items) && group.items.length;
-        });
-        const fullGameGroup = existingGroups.find(function(group) { return group && group.key === 'full_game'; }) || null;
-        const totalGroup = existingGroups.find(function(group) { return group && group.key === 'total'; }) || null;
-        const estimates = deriveMlbFirst5Fallback(game, fullGameGroup, totalGroup);
-        if (!estimates) return game;
-
-        const bookTitle = estimates.awayMl.book_title || estimates.homeMl.book_title || estimates.over.book_title || 'Derived from full-game lines';
-        const sourceUpdatedAt = game.updated_at || estimates.awayMl.source_updated_at || estimates.over.source_updated_at || null;
-
-        if (!hasFirst5) {
-            const first5Items = [
-                createFallbackOption(game, game.id, 'First 5', 'f5_spreads', game.away_team, game.away_team + ' +0.5', estimates.first5AwaySpreadOdds, 0.5, 'Estimated from full-game lines'),
-                createFallbackOption(game, game.id, 'First 5', 'f5_spreads', game.home_team, game.home_team + ' -0.5', estimates.first5HomeSpreadOdds, -0.5, 'Estimated from full-game lines'),
-                createFallbackOption(game, game.id, 'First 5', 'f5_h2h', game.away_team, game.away_team + ' F5 ML', estimates.first5AwayMl, null, 'Estimated from full-game lines'),
-                createFallbackOption(game, game.id, 'First 5', 'f5_h2h', game.home_team, game.home_team + ' F5 ML', estimates.first5HomeMl, null, 'Estimated from full-game lines'),
-                createFallbackOption(game, game.id, 'First 5', 'f5_totals', 'Over', 'F5 Over ' + estimates.first5Total, -110, estimates.first5Total, 'Estimated from full-game lines'),
-                createFallbackOption(game, game.id, 'First 5', 'f5_totals', 'Under', 'F5 Under ' + estimates.first5Total, -110, estimates.first5Total, 'Estimated from full-game lines')
-            ];
-            first5Items.forEach(function(item) {
-                item.book_title = bookTitle;
-                item.book_key = estimates.awayMl.book_key || estimates.homeMl.book_key || estimates.over.book_key || '';
-                item.source = 'derived';
-                item.source_label = 'Estimated from full-game lines';
-                item.source_updated_at = sourceUpdatedAt;
-            });
-            existingGroups.push({
-                key: 'first_5',
-                label: 'First 5',
-                items: first5Items
-            });
-        }
-
-        return Object.assign({}, game, {
-            market_groups: existingGroups
-        });
     }
 
     function setCardScope(cardId, scope) {
@@ -769,10 +924,10 @@
         }
 
         html += games.map(function(rawGame, index) {
-            const game = ensureDerivedFirst5Group(rawGame);
+            const game = rawGame;
             const cardId = 'tmr-market-card-' + index;
             const sourceClass = game.has_sportsbook_odds ? 'real' : 'fallback';
-            const sourceText = game.has_sportsbook_odds ? 'Sportsbook feed' : 'Fallback pricing';
+            const sourceText = game.has_sportsbook_odds ? 'Sportsbook feed' : 'Manual entry';
             let groupsHtml = '';
             const hasFirst5 = (game.market_groups || []).some(function(group) {
                 return group && group.key === 'first_5' && group.items && group.items.length;
@@ -783,15 +938,19 @@
                 return (order[a && a.key] || 99) - (order[b && b.key] || 99);
             });
 
-            orderedGroups.forEach(function(group) {
+            orderedGroups.forEach(function(group, groupIndex) {
                 const groupItems = group.items || [];
-                const derivedOnly = groupItems.length > 0 && groupItems.every(function(option) { return option && option.source === 'derived'; });
-                const buttons = (group.items || []).map(function(option) {
-                    state.currentOptions.set(option.id, Object.assign({ game: game }, option));
-                    const detailLabel = option && option.source === 'derived'
-                        ? (option.source_label || 'Estimated from full-game lines') + (option.book_title ? ' | ' + option.book_title : '')
-                        : (option.book_title || option.source_label || option.group_label);
-                    return '<button class="tmr-option-btn" id="option-' + option.id + '" onclick="window.tmrSelectOption(\'' + option.id + '\')">' +
+                const buttons = (group.items || []).map(function(option, optionIndex) {
+                    const optionKey = [
+                        game.id || ('game-' + index),
+                        group.key || ('group-' + groupIndex),
+                        option.id || ('option-' + optionIndex),
+                        optionIndex
+                    ].join('|');
+                    const optionDomId = 'option-' + safeDomId(optionKey);
+                    state.currentOptions.set(optionKey, Object.assign({ game: game, _domId: optionDomId, _optionKey: optionKey }, option));
+                    const detailLabel = option.book_title || option.source_label || option.group_label || 'Sportsbook feed';
+                    return '<button class="tmr-option-btn" id="' + optionDomId + '" data-option-id="' + escapeHtml(optionKey) + '" onclick="window.tmrSelectOption(this.dataset.optionId)">' +
                         '<div class="tmr-option-main">' +
                         '<div class="tmr-option-market">' + escapeHtml(option.selection_label) + '</div>' +
                         '<div class="tmr-option-detail">' + escapeHtml(detailLabel) + '</div>' +
@@ -801,7 +960,7 @@
                 }).join('');
 
                 if (buttons) {
-                    const groupTitle = group.label + (derivedOnly ? ' (Estimated)' : '');
+                    const groupTitle = group.label;
                     groupsHtml += '<div class="tmr-group" data-scope="' + getGroupScope(group) + '">' +
                         '<div class="tmr-group-title"><span>' + escapeHtml(groupTitle) + '</span><span class="tmr-group-count">' + groupItems.length + ' lines</span></div>' +
                         '<div class="tmr-option-grid">' + buttons + '</div>' +
@@ -844,6 +1003,10 @@
             .replace(/'/g, '&#39;');
     }
 
+    function safeDomId(value) {
+        return String(value == null ? '' : value).replace(/[^a-zA-Z0-9_-]+/g, '-');
+    }
+
     async function selectSportAndShowGames(sport) {
         const requestId = ++latestBoardRequestId;
         state.selectedSport = sport;
@@ -867,6 +1030,9 @@
 
         try {
             const response = await fetchMarketBoardFast(sportKey, false);
+            if (boardHasBrokenTeamPlaceholders(response)) {
+                throw new Error('Board response contained placeholder teams');
+            }
             renderBoardIfCurrent(requestId, sport, badge, response);
         } catch (error) {
             try {
@@ -897,7 +1063,7 @@
     }
 
     function disableLegacyFeed() {
-        const message = 'Legacy estimated odds feed disabled. Use /api/games/board instead.';
+        const message = 'Legacy odds feed disabled. Use /api/games/board instead.';
         window.TMR = window.TMR || {};
         lockFunction(window.TMR, 'fetchGamesFromESPN', function(sportKey, callback) {
             if (typeof callback === 'function') {
@@ -933,7 +1099,7 @@
         document.querySelectorAll('.tmr-option-btn.active').forEach(function(button) {
             button.classList.remove('active');
         });
-        const active = document.getElementById('option-' + option.id);
+        const active = option._domId ? document.getElementById(option._domId) : null;
         if (active) active.classList.add('active');
 
         ensureMetadataFields();
@@ -947,9 +1113,7 @@
         const marketInput = document.getElementById('pickMarketInput');
         const bookInput = document.getElementById('pickBookInput');
         const timestampInput = document.getElementById('pickTimestampInput');
-        const lineGroup = document.getElementById('lineInputGroup');
-
-        if (lineGroup) lineGroup.style.display = option.line != null ? 'block' : 'none';
+        syncPickDetailsLayout(option);
         if (lineInput) lineInput.value = option.line_display || '';
         if (oddsInput) oddsInput.value = option.odds != null ? option.odds : '';
         if (marketInput) marketInput.value = option.group_label + ' / ' + getMarketLabel(option.market_type);
@@ -965,7 +1129,8 @@
         const oddsInput = document.getElementById('pickOddsInput');
         const lineValue = lineInput ? lineInput.value.trim() : '';
         const oddsValue = oddsInput ? oddsInput.value.trim() : '';
-        updateText('summaryPick', state.selectedOption.selection + (lineValue ? ' ' + lineValue : ''));
+        const summaryText = state.selectedOption.selection_label || state.selectedOption.selection || 'Pick';
+        updateText('summaryPick', lineValue && summaryText.indexOf(lineValue) === -1 ? (summaryText + ' (' + lineValue + ')') : summaryText);
         updateText('summaryOdds', oddsValue || 'Manual');
     }
 
@@ -976,10 +1141,8 @@
             return;
         }
 
-        const user = getCurrentUser();
-        if (!user) {
-            alert('Please log in to submit a pick.');
-            if (typeof window.showSection === 'function') window.showSection('login');
+        const allowed = await ensurePicksAccess();
+        if (!allowed) {
             return;
         }
 
@@ -1004,6 +1167,7 @@
 
         try {
             const api = await getApiClientOrFallback();
+            await ensureBackendAccessToken(api);
             const response = await api.createPick({
                 game_id: option.game_id,
                 sport_key: option.sport_key,
@@ -1087,6 +1251,185 @@
         }
     }
 
+    function setSportsbookTabActive(activeButton) {
+        document.querySelectorAll('[data-sportsbook-tab]').forEach(function(button) {
+            button.classList.toggle('active', button === activeButton);
+        });
+    }
+
+    function renderPromoNotes() {
+        const list = document.getElementById('promoNotesList');
+        if (!list) return;
+        let notes = [];
+        try {
+            notes = JSON.parse(localStorage.getItem('tmr_promo_notes') || '[]');
+        } catch (error) {
+            notes = [];
+        }
+
+        list.innerHTML = notes.length
+            ? notes.map(function(note) {
+                return '<div class="tmr-empty-state" style="text-align:left;margin-bottom:10px;">' +
+                    '<strong>' + escapeHtml(note.book || 'Sportsbook') + '</strong><br>' +
+                    '<span>' + escapeHtml(note.offer || 'Offer') + '</span><br>' +
+                    '<small>' + escapeHtml(note.notes || '') + '</small>' +
+                    '</div>';
+            }).join('')
+            : '<div class="tmr-empty-state">No saved promo notes yet. Use this panel to track real sportsbook offers and your plan for attacking them.</div>';
+    }
+
+    function addPromoNote() {
+        const book = document.getElementById('promoBook');
+        const offer = document.getElementById('promoOffer');
+        const notes = document.getElementById('promoNotes');
+        const record = {
+            book: book ? book.value.trim() : '',
+            offer: offer ? offer.value.trim() : '',
+            notes: notes ? notes.value.trim() : '',
+            created_at: new Date().toISOString()
+        };
+        if (!record.book && !record.offer && !record.notes) {
+            alert('Enter a sportsbook, offer, or note before saving.');
+            return;
+        }
+
+        let saved = [];
+        try {
+            saved = JSON.parse(localStorage.getItem('tmr_promo_notes') || '[]');
+        } catch (error) {
+            saved = [];
+        }
+        saved.unshift(record);
+        localStorage.setItem('tmr_promo_notes', JSON.stringify(saved.slice(0, 25)));
+        if (book) book.value = '';
+        if (offer) offer.value = '';
+        if (notes) notes.value = '';
+        renderPromoNotes();
+    }
+
+    async function renderConsensusPanel() {
+        const panel = document.getElementById('consensusPicksPanel');
+        if (!panel) return;
+
+        let picks = [];
+        try {
+            picks = await fetchCurrentUserPicks();
+        } catch (error) {
+            picks = [];
+        }
+
+        const settled = picks.map(normalizePick).filter(function(pick) {
+            return pick.selection && pick.status !== 'pending';
+        });
+
+        if (!settled.length) {
+            panel.innerHTML = '<div class="tmr-empty-state">Consensus appears once settled picks create a real sample of graded positions.</div>';
+            return;
+        }
+
+        const clusters = new Map();
+        settled.forEach(function(pick) {
+            const key = [
+                pick.sport_key || '',
+                pick.away_team || '',
+                pick.home_team || '',
+                pick.market_type || '',
+                pick.selection || '',
+                pick.line_snapshot == null ? '' : pick.line_snapshot
+            ].join('|');
+            const existing = clusters.get(key) || {
+                count: 0,
+                wins: 0,
+                losses: 0,
+                pushes: 0,
+                units: 0,
+                label: pick.selection + (pick.line_snapshot != null ? ' ' + pick.line_snapshot : ''),
+                matchup: (pick.away_team || '') + ' @ ' + (pick.home_team || ''),
+                market: getMarketLabel(pick.market_type)
+            };
+            existing.count += 1;
+            if (pick.status === 'won') existing.wins += 1;
+            if (pick.status === 'lost') existing.losses += 1;
+            if (pick.status === 'push') existing.pushes += 1;
+            existing.units += parseFloat(pick.result_units || 0);
+            clusters.set(key, existing);
+        });
+
+        const rows = Array.from(clusters.values()).sort(function(a, b) {
+            return b.count - a.count || b.units - a.units;
+        }).slice(0, 8);
+
+        panel.innerHTML = rows.map(function(row) {
+            const decisions = row.wins + row.losses;
+            const winRate = decisions ? Math.round((row.wins / decisions) * 100) + '%' : '0%';
+            const units = (row.units >= 0 ? '+' : '') + row.units.toFixed(2) + 'u';
+            return '<div class="tmr-empty-state" style="text-align:left;margin-bottom:10px;">' +
+                '<strong>' + escapeHtml(row.label) + '</strong>' +
+                '<div style="margin-top:4px;">' + escapeHtml(row.matchup) + ' | ' + escapeHtml(row.market) + '</div>' +
+                '<div style="margin-top:8px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;">' +
+                row.count + ' loaded pick' + (row.count === 1 ? '' : 's') + ' | ' +
+                row.wins + '-' + row.losses + '-' + row.pushes + ' | ' +
+                winRate + ' | ' + units +
+                '</div>' +
+                '</div>';
+        }).join('');
+    }
+
+    function wireSportsbookTabs() {
+        document.querySelectorAll('[data-sportsbook-tab]').forEach(function(button) {
+            if (button.__tmrSportsbookTabWired) return;
+            button.__tmrSportsbookTabWired = true;
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+                const tab = button.getAttribute('data-sportsbook-tab');
+                setSportsbookTabActive(button);
+
+                if (tab === 'sport') {
+                    const sport = button.getAttribute('data-sport') || 'MLB';
+                    ensurePicksAccess().then(function(allowed) {
+                        if (!allowed) return;
+                        if (typeof window.showSection === 'function') window.showSection('picks');
+                        selectSportAndShowGames(sport).catch(function() {});
+                    });
+                    return;
+                }
+
+                if (tab === 'picks') {
+                    ensurePicksAccess().then(function(allowed) {
+                        if (!allowed) return;
+                        if (typeof window.showSection === 'function') window.showSection(tab);
+                    });
+                    return;
+                }
+
+                if (typeof window.showSection === 'function') window.showSection(tab);
+                if (tab === 'promos') renderPromoNotes();
+                if (tab === 'consensus') renderConsensusPanel();
+            });
+        });
+    }
+
+    function redirectLegacySportsbookSection(sectionId) {
+        const routeMap = {
+            feed: 'feed.html',
+            forums: 'forum.html',
+            arena: 'arena.html',
+            trivia: 'trivia.html',
+            'polls-trivia': 'polls.html',
+            predictions: 'polls.html',
+            contests: 'arena.html',
+            profile: 'profile.html',
+            messages: 'messages.html',
+            groups: 'friends.html',
+            marketplace: 'premium.html',
+            premium: 'premium.html'
+        };
+        const route = routeMap[sectionId];
+        if (!route) return false;
+        window.location.href = route;
+        return true;
+    }
+
     function startLiveRefreshLoop() {
         if (window.__tmrSportsbookRefreshTimer) return;
         window.__tmrSportsbookRefreshTimer = window.setInterval(function() {
@@ -1130,6 +1473,9 @@
         ensureMetadataFields();
         disableLegacyFeed();
         wireSportPrefetch();
+        wireSportsbookTabs();
+        window.tmrAddPromoNote = addPromoNote;
+        window.tmrRenderConsensusPanel = renderConsensusPanel;
 
         window.tmrToggleCard = toggleCard;
         window.tmrSetCardScope = setCardScope;
@@ -1159,11 +1505,23 @@
         if (typeof originalShowSection === 'function' && !window.__tmrProdShowSectionWrapped) {
             window.__tmrProdShowSectionWrapped = true;
             window.showSection = function(sectionId) {
+                if (redirectLegacySportsbookSection(sectionId)) return;
+                if (sectionId === 'picks') {
+                    ensurePicksAccess().then(function(allowed) {
+                        if (!allowed) return;
+                        originalShowSection(sectionId);
+                    });
+                    return;
+                }
                 originalShowSection(sectionId);
                 if (sectionId === 'mypicks') {
                     loadMyPicks(window.currentPicksTab || 'pending');
                 } else if (sectionId === 'my-record' || sectionId === 'profile') {
                     loadMyRecordPage();
+                } else if (sectionId === 'promos') {
+                    renderPromoNotes();
+                } else if (sectionId === 'consensus') {
+                    renderConsensusPanel();
                 }
             };
         }
