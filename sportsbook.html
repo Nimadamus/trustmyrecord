@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <!-- CRITICAL: Early script to define core functions BEFORE anything else loads -->
@@ -12,22 +12,40 @@
     window.TMR.sportKeyMap = {
         'NFL': 'americanfootball_nfl',
         'NBA': 'basketball_nba',
+        'WNBA': 'basketball_wnba',
         'NHL': 'icehockey_nhl',
         'MLB': 'baseball_mlb',
         'Soccer': 'soccer_epl',
+        'MLS': 'soccer_usa_mls',
+        'UCL': 'soccer_uefa_champs_league',
+        'LaLiga': 'soccer_spain_la_liga',
+        'SerieA': 'soccer_italy_serie_a',
+        'Bundesliga': 'soccer_germany_bundesliga',
+        'Ligue1': 'soccer_france_ligue_one',
         'NCAAF': 'americanfootball_ncaaf',
-        'NCAAB': 'basketball_ncaab'
+        'NCAAB': 'basketball_ncaab',
+        'ATP': 'tennis_atp',
+        'WTA': 'tennis_wta'
     };
 
     // ESPN free API - map sport keys to ESPN URL paths
     window.TMR.espnPaths = {
         'americanfootball_nfl': 'football/nfl',
         'basketball_nba': 'basketball/nba',
+        'basketball_wnba': 'basketball/wnba',
         'icehockey_nhl': 'hockey/nhl',
         'baseball_mlb': 'baseball/mlb',
         'soccer_epl': 'soccer/eng.1',
+        'soccer_usa_mls': 'soccer/usa.1',
+        'soccer_uefa_champs_league': 'soccer/uefa.champions',
+        'soccer_spain_la_liga': 'soccer/esp.1',
+        'soccer_italy_serie_a': 'soccer/ita.1',
+        'soccer_germany_bundesliga': 'soccer/ger.1',
+        'soccer_france_ligue_one': 'soccer/fra.1',
         'americanfootball_ncaaf': 'football/college-football',
-        'basketball_ncaab': 'basketball/mens-college-basketball'
+        'basketball_ncaab': 'basketball/mens-college-basketball',
+        'tennis_atp': 'tennis/atp',
+        'tennis_wta': 'tennis/wta'
     };
 
     // Parse ESPN odds into The Odds API format (bookmakers[].markets[].outcomes[])
@@ -143,20 +161,8 @@
 
         // Determine source quality
         var source = bk.key || 'unknown';
-        if (source === 'record_estimate') {
-            // Check if moneylines at least vary (estimates from records should vary)
-            var h2h = markets.find(function(m) { return m.key === 'h2h'; });
-            if (h2h && h2h.outcomes && h2h.outcomes.length === 2) {
-                var ml1 = h2h.outcomes[0].price;
-                var ml2 = h2h.outcomes[1].price;
-                if (ml1 === -110 && ml2 === -110) {
-                    return { valid: false, source: 'estimated', reason: 'Default odds only - no real data', allDefault: true };
-                }
-            }
-            return { valid: true, source: 'estimated', reason: 'Estimated from team records', allDefault: allDefault };
-        }
-        if (source === 'espn_predictor') {
-            return { valid: true, source: 'estimated', reason: 'Based on ESPN win probabilities', allDefault: allDefault };
+        if (source === 'record_estimate' || source === 'espn_predictor') {
+            return { valid: false, source: 'none', reason: 'Unverified odds are disabled', allDefault: true };
         }
         if (source === 'nhl_fixed') {
             // NHL: check if moneylines are real (not both -110)
@@ -168,13 +174,13 @@
                     return { valid: true, source: 'espn', reason: 'ESPN odds', allDefault: false };
                 }
             }
-            return { valid: true, source: 'estimated', reason: 'Default NHL odds', allDefault: allDefault };
+            return { valid: false, source: 'none', reason: 'No verified NHL odds available', allDefault: allDefault };
         }
         // Real sportsbook odds from ESPN
         if (!allDefault) {
             return { valid: true, source: 'sportsbook', reason: 'Real sportsbook odds', allDefault: false };
         }
-        return { valid: true, source: 'estimated', reason: 'Odds may be estimated', allDefault: allDefault };
+        return { valid: false, source: 'none', reason: 'No verified sportsbook odds available', allDefault: allDefault };
     };
 
     // Fetch games from ESPN free API and convert to Odds API format
@@ -236,7 +242,7 @@
                         if (!isNaN(gameStart.getTime()) && gameStart.getTime() < nowTime - 5 * 60 * 1000) continue;
 
                         var bookmakers = window.TMR.parseEspnOdds(comp.odds || [], homeTeam, awayTeam);
-                        // Extract team records for fallback odds estimation
+                        // Keep records as display metadata only. Never generate betting lines from records.
                         var homeRecord = homeComp.records && homeComp.records[0] && homeComp.records[0].summary;
                         var awayRecord = awayComp.records && awayComp.records[0] && awayComp.records[0].summary;
                         games.push({
@@ -258,46 +264,11 @@
                     if (games.length === 0 && daysOffset < maxDays) {
                         tryFetch(daysOffset + 1);
                     } else {
-                        // Generate estimated odds from records for any game without odds (synchronous baseline)
-                        var sf, dt;
-                        if (espnPath.indexOf('hockey') !== -1) { dt = 6; sf = 3.5; }
-                        else if (espnPath.indexOf('baseball') !== -1) { dt = 8.5; sf = 2.0; }
-                        else if (espnPath.indexOf('basketball') !== -1 && espnPath.indexOf('college') !== -1) { dt = 145; sf = 2.5; }
-                        else if (espnPath.indexOf('basketball') !== -1) { dt = 220; sf = 2.5; }
-                        else if (espnPath.indexOf('football') !== -1 && espnPath.indexOf('college') !== -1) { dt = 52; sf = 2.0; }
-                        else if (espnPath.indexOf('football') !== -1) { dt = 45; sf = 2.0; }
-                        else { dt = 220; sf = 2.5; }
-
-                        games.forEach(function(g) {
-                            var hasMkts = g.bookmakers && g.bookmakers.length > 0 && g.bookmakers[0].markets && g.bookmakers[0].markets.length > 0;
-                            if (!hasMkts && g.home_record && g.away_record) {
-                                var pr = function(rec) {
-                                    var pts = rec.split('-');
-                                    var w = parseInt(pts[0]) || 0, l = parseInt(pts[1]) || 0, ot = parseInt(pts[2]) || 0;
-                                    var t = w + l + ot;
-                                    return t > 0 ? (w + ot * 0.5) / t : 0.5;
-                                };
-                                var hw = pr(g.home_record), aw = pr(g.away_record);
-                                var rh = (hw + 0.04) / ((hw + 0.04) + aw);
-                                var hp = Math.max(0.15, Math.min(0.85, rh)) * 100;
-                                var ap = 100 - hp;
-                                var ml = function(pct) { var p = pct/100; if (p >= 0.5) return Math.round(-100*p/(1-p)); return Math.round(100*(1-p)/p); };
-                                var hSpd = Math.round(-((hp - 50) / sf) * 2) / 2;
-                                g.estimatedOdds = true;
-                                g.bookmakers = [{
-                                    key: 'record_estimate', title: 'Estimated',
-                                    markets: [
-                                        { key: 'spreads', outcomes: [{ name: g.home_team, point: hSpd, price: -110 }, { name: g.away_team, point: -hSpd, price: -110 }]},
-                                        { key: 'h2h', outcomes: [{ name: g.home_team, price: ml(hp) }, { name: g.away_team, price: ml(ap) }]},
-                                        { key: 'totals', outcomes: [{ name: 'Over', point: dt, price: -110 }, { name: 'Under', point: dt, price: -110 }]}
-                                    ]
-                                }];
-                                console.log('[TMR] Pre-generated odds from records: ' + g.away_team + ' @ ' + g.home_team + ' ML=' + ml(hp) + '/' + ml(ap) + ' Spd=' + hSpd);
-                            }
+                        // Never synthesize betting lines. If scoreboard odds are missing,
+                        // try summary endpoints for real odds, then leave markets unavailable.
+                        var anyMissingReal = games.some(function(g) {
+                            return !(g.bookmakers && g.bookmakers.length > 0 && g.bookmakers[0].markets && g.bookmakers[0].markets.length > 0);
                         });
-
-                        // Always try summary for better odds, then call back with whatever we have
-                        var anyMissingReal = games.some(function(g) { return g.estimatedOdds; });
                         if (anyMissingReal && games.length > 0) {
                             console.log('[TMR] Trying summary endpoints for real odds...');
                             window.TMR.fetchOddsFromSummary(games, espnPath, function(enrichedGames) {
@@ -327,29 +298,9 @@
         var total = games.length;
         if (total === 0) { callback(games); return; }
 
-        // Convert win probability % to American moneyline
-        var toML = function(pct) {
-            var p = pct / 100;
-            if (p <= 0.01) return 10000;
-            if (p >= 0.99) return -10000;
-            if (p >= 0.5) return Math.round(-100 * p / (1 - p));
-            return Math.round(100 * (1 - p) / p);
-        };
-
-        // Sport-specific spread/total defaults
-        var spreadFactor, defaultTotal;
-        if (espnPath.indexOf('hockey') !== -1) { defaultTotal = 6; spreadFactor = 3.5; }
-        else if (espnPath.indexOf('baseball') !== -1) { defaultTotal = 8.5; spreadFactor = 2.0; }
-        else if (espnPath.indexOf('basketball') !== -1 && espnPath.indexOf('college') !== -1) { defaultTotal = 145; spreadFactor = 2.5; }
-        else if (espnPath.indexOf('basketball') !== -1) { defaultTotal = 220; spreadFactor = 2.5; }
-        else if (espnPath.indexOf('football') !== -1 && espnPath.indexOf('college') !== -1) { defaultTotal = 52; spreadFactor = 2.0; }
-        else if (espnPath.indexOf('football') !== -1) { defaultTotal = 45; spreadFactor = 2.0; }
-        else { defaultTotal = 220; spreadFactor = 2.5; }
-
         games.forEach(function(game) {
             var eventId = game.espn_event_id;
-            // Skip games that already have REAL (non-estimated) odds
-            var alreadyHasRealOdds = !game.estimatedOdds && game.bookmakers && game.bookmakers.length > 0 && game.bookmakers[0].markets && game.bookmakers[0].markets.length > 0;
+            var alreadyHasRealOdds = game.bookmakers && game.bookmakers.length > 0 && game.bookmakers[0].markets && game.bookmakers[0].markets.length > 0;
             if (!eventId || alreadyHasRealOdds) { completed++; if (completed >= total) callback(games); return; }
 
             var summaryUrl = 'https://site.api.espn.com/apis/site/v2/sports/' + espnPath + '/summary?event=' + eventId;
@@ -367,108 +318,10 @@
                             return;
                         }
                     }
-                    // Fallback: ESPN Predictor win probabilities
-                    var pred = data.predictor;
-                    if (pred && pred.homeTeam && pred.awayTeam) {
-                        var homeProj = parseFloat(pred.homeTeam.gameProjection);
-                        var awayProj = parseFloat(pred.awayTeam.gameProjection);
-                        if (!isNaN(homeProj) && !isNaN(awayProj) && (homeProj + awayProj) > 10) {
-                            var homeMLVal = toML(homeProj);
-                            var awayMLVal = toML(awayProj);
-                            var rawSpread = -((homeProj - 50) / spreadFactor);
-                            var homeSpreadVal = Math.round(rawSpread * 2) / 2;
-                            var awaySpreadVal = -homeSpreadVal;
-                            game.estimatedOdds = true;
-                            game.bookmakers = [{
-                                key: 'espn_predictor',
-                                title: 'ESPN Predictor',
-                                markets: [
-                                    { key: 'spreads', outcomes: [
-                                        { name: game.home_team, point: homeSpreadVal, price: -110 },
-                                        { name: game.away_team, point: awaySpreadVal, price: -110 }
-                                    ]},
-                                    { key: 'h2h', outcomes: [
-                                        { name: game.home_team, price: homeMLVal },
-                                        { name: game.away_team, price: awayMLVal }
-                                    ]},
-                                    { key: 'totals', outcomes: [
-                                        { name: 'Over', point: defaultTotal, price: -110 },
-                                        { name: 'Under', point: defaultTotal, price: -110 }
-                                    ]}
-                                ]
-                            }];
-                            console.log('[TMR] Generated odds from predictor for: ' + game.away_team + ' @ ' + game.home_team + ' (home ' + homeProj + '%, ML ' + homeMLVal + ', spread ' + homeSpreadVal + ')');
-                            return;
-                        }
-                    }
-                    // Final fallback: estimate from team records
-                    if ((!game.bookmakers || game.bookmakers.length === 0) && game.home_record && game.away_record) {
-                        var parseRecord = function(rec) {
-                            var parts = rec.split('-');
-                            var w = parseInt(parts[0]) || 0;
-                            var l = parseInt(parts[1]) || 0;
-                            var otl = parseInt(parts[2]) || 0;
-                            var total = w + l + otl;
-                            return total > 0 ? (w + otl * 0.5) / total : 0.5;
-                        };
-                        var homeWinPct = parseRecord(game.home_record);
-                        var awayWinPct = parseRecord(game.away_record);
-                        // Blend with home advantage (add ~4% to home)
-                        var homeAdv = 0.04;
-                        var rawHome = (homeWinPct + homeAdv) / ((homeWinPct + homeAdv) + awayWinPct);
-                        var homePct = Math.max(0.15, Math.min(0.85, rawHome)) * 100;
-                        var awayPct = 100 - homePct;
-                        var recHomeML = toML(homePct);
-                        var recAwayML = toML(awayPct);
-                        var recSpread = -((homePct - 50) / spreadFactor);
-                        var recHomeSpread = Math.round(recSpread * 2) / 2;
-                        game.estimatedOdds = true;
-                        game.bookmakers = [{
-                            key: 'record_estimate',
-                            title: 'Estimated',
-                            markets: [
-                                { key: 'spreads', outcomes: [
-                                    { name: game.home_team, point: recHomeSpread, price: -110 },
-                                    { name: game.away_team, point: -recHomeSpread, price: -110 }
-                                ]},
-                                { key: 'h2h', outcomes: [
-                                    { name: game.home_team, price: recHomeML },
-                                    { name: game.away_team, price: recAwayML }
-                                ]},
-                                { key: 'totals', outcomes: [
-                                    { name: 'Over', point: defaultTotal, price: -110 },
-                                    { name: 'Under', point: defaultTotal, price: -110 }
-                                ]}
-                            ]
-                        }];
-                        console.log('[TMR] Generated odds from records for: ' + game.away_team + ' @ ' + game.home_team + ' (home ' + homePct.toFixed(1) + '%)');
-                    }
+                    console.log('[TMR] No verified sportsbook odds in summary for: ' + game.away_team + ' @ ' + game.home_team);
                 })
                 .catch(function(e) {
                     console.warn('[TMR] Summary fetch failed for event ' + eventId, e);
-                    // Apply record-based fallback even on fetch failure
-                    if ((!game.bookmakers || game.bookmakers.length === 0) && game.home_record && game.away_record) {
-                        var parseRec = function(rec) {
-                            var parts = rec.split('-');
-                            var w = parseInt(parts[0]) || 0, l = parseInt(parts[1]) || 0, otl = parseInt(parts[2]) || 0;
-                            var t = w + l + otl;
-                            return t > 0 ? (w + otl * 0.5) / t : 0.5;
-                        };
-                        var hPct = parseRec(game.home_record), aPct = parseRec(game.away_record);
-                        var rawH = (hPct + 0.04) / ((hPct + 0.04) + aPct);
-                        var hp = Math.max(0.15, Math.min(0.85, rawH)) * 100;
-                        var ap = 100 - hp;
-                        var hSpd = Math.round(-((hp - 50) / spreadFactor) * 2) / 2;
-                        game.estimatedOdds = true;
-                        game.bookmakers = [{
-                            key: 'record_estimate', title: 'Estimated',
-                            markets: [
-                                { key: 'spreads', outcomes: [{ name: game.home_team, point: hSpd, price: -110 }, { name: game.away_team, point: -hSpd, price: -110 }]},
-                                { key: 'h2h', outcomes: [{ name: game.home_team, price: toML(hp) }, { name: game.away_team, price: toML(ap) }]},
-                                { key: 'totals', outcomes: [{ name: 'Over', point: defaultTotal, price: -110 }, { name: 'Under', point: defaultTotal, price: -110 }]}
-                            ]
-                        }];
-                    }
                 })
                 .finally(function() {
                     completed++;
@@ -532,7 +385,6 @@
         // Validate each game's odds quality
         var validationResults = games.map(function(g) { return window.TMR.validateOdds(g); });
         var anyHasOdds = validationResults.some(function(v) { return v.valid && v.source !== 'none'; });
-        var anyEstimated = validationResults.some(function(v) { return v.source === 'estimated'; });
         var anyReal = validationResults.some(function(v) { return v.source === 'sportsbook' || v.source === 'espn'; });
         var allDefault = validationResults.every(function(v) { return v.allDefault || v.source === 'none'; });
         var html = '';
@@ -540,10 +392,6 @@
             html += '<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;color:#f59e0b;font-size:14px;"><span style="font-size:20px;">&#128203;</span> Lines not yet available. Select a game and enter your line from your sportsbook.</div>';
         } else if (allDefault) {
             html += '<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;color:#fca5a5;font-size:14px;"><span style="font-size:20px;">&#9888;</span> Real odds not available yet. Showing matchups only. Enter your own line and odds from your sportsbook after selecting a pick.</div>';
-        } else if (anyEstimated && !anyReal) {
-            html += '<div style="background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.3);border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;color:#7dd3fc;font-size:14px;"><span style="font-size:20px;">&#9889;</span> Estimated lines based on team records and ESPN projections. You can edit the line and odds after selecting a pick.</div>';
-        } else if (anyEstimated && anyReal) {
-            html += '<div style="background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.3);border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;color:#7dd3fc;font-size:14px;"><span style="font-size:20px;">&#9889;</span> Some lines are estimated. Games marked with <span style="color:#22c55e;">&#9679;</span> have real sportsbook odds. You can edit any line after selecting.</div>';
         }
         var spreadLabel = (sport === 'NHL') ? 'Puck Line' : (sport === 'MLB' ? 'Run Line' : 'Spread');
         html += '<div class="market-headers"><div class="market-label">Matchup</div><div class="market-label">' + spreadLabel + '</div><div class="market-label">Moneyline</div><div class="market-label">Total</div></div>';
@@ -577,7 +425,7 @@
             var esc = function(s) { return ('' + (s != null ? s : '')).replace(/'/g, "\\'"); };
             var pv = function(v) { return v != null ? '' + v : ''; };
             // When all odds are default placeholders, show labels instead of fake numbers
-            var showOddsValues = hasRealOdds || (hasOdds && validation.source === 'estimated' && !validation.allDefault);
+            var showOddsValues = hasRealOdds;
             var spdLine = function(p) { return showOddsValues && p != null ? fmtSpread(p) : spreadLabel; };
             var spdOdds = function(p) { return showOddsValues && p != null ? fmtOdds(p) : 'Pick'; };
             var mlDisplay = function(o) { return showOddsValues && o != null ? fmtOdds(o) : 'Pick'; };
@@ -587,8 +435,6 @@
             var sourceIndicator = '';
             if (validation.source === 'sportsbook' || validation.source === 'espn') {
                 sourceIndicator = '<span style="color:#22c55e;font-size:8px;margin-left:6px;" title="Real sportsbook odds">&#9679;</span>';
-            } else if (validation.source === 'estimated' && !validation.allDefault) {
-                sourceIndicator = '<span style="color:#f59e0b;font-size:8px;margin-left:6px;" title="Estimated odds">&#9679;</span>';
             }
             html += '<div class="game-row">' +
                 '<div class="game-time-header"><span class="game-time">' + gameTime + sourceIndicator + '</span></div>' +
@@ -604,51 +450,37 @@
                 '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + esc(game.home_team) + '\',\'ML\',\'' + esc(pv(homeML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (homeML > 0 ? 'positive' : '') + '">' + mlDisplay(homeML) + '</span></button>' +
                 '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'under\',\'Under\',\'' + esc(pv(total)) + '\',\'' + esc(pv(underPrice)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + totLine('Under') + '</span><span class="odds-value">' + totOdds(underPrice) + '</span></button>' +
                 '</div></div>';
-            // More Markets expandable section
-            var teamTotal = total != null ? (Math.round(total / 2 * 2) / 2) : null; // round to nearest 0.5
-            if (teamTotal === null && total != null) teamTotal = Math.round(total / 2);
-            var ttDisplay = teamTotal != null ? teamTotal : '?';
+            // More Markets expandable section. Only render sportsbook-provided
+            // team totals and first-five markets; never synthesize lines.
             var isMLB = (sport && (sport.toLowerCase().indexOf('baseball') !== -1 || sport === 'MLB'));
-            var f5Total = total != null ? (Math.round(total * 0.55 * 2) / 2) : null; // 55% of game total, rounded to 0.5
-            var f5Display = f5Total != null ? f5Total : '?';
             var first5Group = Array.isArray(game.market_groups) ? game.market_groups.find(function(group) { return group && group.key === 'first_5'; }) : null;
             var first5Items = first5Group && Array.isArray(first5Group.items) ? first5Group.items : [];
-            var awayF5Spread = first5Items.find(function(item) { return item && item.market_type === 'f5_spreads' && item.selection === game.away_team; }) || null;
-            var homeF5Spread = first5Items.find(function(item) { return item && item.market_type === 'f5_spreads' && item.selection === game.home_team; }) || null;
-            var awayF5Line = awayF5Spread && awayF5Spread.line != null ? awayF5Spread.line : 0.5;
-            var homeF5Line = homeF5Spread && homeF5Spread.line != null ? homeF5Spread.line : -0.5;
-            var awayF5Odds = awayF5Spread && awayF5Spread.odds != null ? awayF5Spread.odds : -118;
-            var homeF5Odds = homeF5Spread && homeF5Spread.odds != null ? homeF5Spread.odds : -102;
+            var teamTotalGroup = Array.isArray(game.market_groups) ? game.market_groups.find(function(group) { return group && group.key === 'team_totals'; }) : null;
+            var teamTotalItems = teamTotalGroup && Array.isArray(teamTotalGroup.items) ? teamTotalGroup.items : [];
             html += '<div style="text-align:center;margin:-4px 0 8px 0;"><button onclick="(function(el){var p=el.parentElement.nextElementSibling;if(p){p.style.display=p.style.display===\'none\'?\'block\':\'none\';el.textContent=p.style.display===\'none\'?\'More Markets \\u25BC\':\'Less Markets \\u25B2\'}})(this)" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--text-muted,#888);padding:6px 18px;border-radius:6px;cursor:pointer;font-size:12px;transition:all 0.2s;">More Markets &#9660;</button></div>';
             html += '<div style="display:none;padding:8px 12px 12px;border-top:1px solid rgba(255,255,255,0.06);">';
             // Team Totals
             html += '<div style="margin-bottom:10px;"><div style="color:var(--text-muted,#aaa);font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600;">Team Totals</div>';
-            html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span style="min-width:90px;font-size:13px;color:var(--text-primary,#eee);font-weight:500;">' + game.away_team.split(' ').pop() + '</span>';
-            html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'teamover\',\'' + esc(game.away_team) + '\',\'' + esc(pv(ttDisplay)) + '\',\'-110\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">O ' + ttDisplay + '</span><span class="odds-value">-110</span></button>';
-            html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'teamunder\',\'' + esc(game.away_team) + '\',\'' + esc(pv(ttDisplay)) + '\',\'-110\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">U ' + ttDisplay + '</span><span class="odds-value">-110</span></button>';
+            if (teamTotalItems.length) {
+                teamTotalItems.forEach(function(item) {
+                    html += '<button class="odds-btn" style="width:100%;padding:6px 8px;margin-bottom:4px;" onclick="window.selectGameBet(' + index + ',\'teamover\',\'' + esc(item.selection || item.selection_label || '') + '\',\'' + esc(pv(item.line)) + '\',\'' + esc(pv(item.odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + (item.selection_label || item.selection || 'Team Total') + '</span><span class="odds-value">' + fmtOdds(item.odds) + '</span></button>';
+                });
+            } else {
+                html += '<div style="color:var(--text-muted,#aaa);font-size:12px;">No verified team-total lines available for this game.</div>';
+            }
             html += '</div>';
-            html += '<div style="display:flex;align-items:center;gap:8px;"><span style="min-width:90px;font-size:13px;color:var(--text-primary,#eee);font-weight:500;">' + game.home_team.split(' ').pop() + '</span>';
-            html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'teamover\',\'' + esc(game.home_team) + '\',\'' + esc(pv(ttDisplay)) + '\',\'-110\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">O ' + ttDisplay + '</span><span class="odds-value">-110</span></button>';
-            html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'teamunder\',\'' + esc(game.home_team) + '\',\'' + esc(pv(ttDisplay)) + '\',\'-110\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">U ' + ttDisplay + '</span><span class="odds-value">-110</span></button>';
-            html += '</div></div>';
             // F5 markets for MLB only
             if (isMLB) {
                 html += '<div style="margin-top:10px;"><div style="color:var(--text-muted,#aaa);font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600;">First 5 Innings</div>';
-                // F5 Run Line
-                html += '<div style="display:flex;gap:8px;margin-bottom:4px;">';
-                html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'f5spread\',\'' + esc(game.away_team) + '\',\'' + esc(pv(awayF5Line)) + '\',\'' + esc(pv(awayF5Odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + game.away_team.split(' ').pop() + ' ' + fmtSpread(awayF5Line) + '</span><span class="odds-value">' + fmtOdds(awayF5Odds) + '</span></button>';
-                html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'f5spread\',\'' + esc(game.home_team) + '\',\'' + esc(pv(homeF5Line)) + '\',\'' + esc(pv(homeF5Odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + game.home_team.split(' ').pop() + ' ' + fmtSpread(homeF5Line) + '</span><span class="odds-value">' + fmtOdds(homeF5Odds) + '</span></button>';
+                if (first5Items.length) {
+                    first5Items.forEach(function(item) {
+                        var type = item.market_type === 'f5_h2h' ? 'f5ml' : (item.market_type === 'f5_totals' && item.selection === 'Over' ? 'f5over' : (item.market_type === 'f5_totals' ? 'f5under' : 'f5spread'));
+                        html += '<button class="odds-btn" style="width:100%;padding:6px 8px;margin-bottom:4px;" onclick="window.selectGameBet(' + index + ',\'' + type + '\',\'' + esc(item.selection || '') + '\',\'' + esc(pv(item.line)) + '\',\'' + esc(pv(item.odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + (item.selection_label || item.selection || 'F5') + '</span><span class="odds-value">' + fmtOdds(item.odds) + '</span></button>';
+                    });
+                } else {
+                    html += '<div style="color:var(--text-muted,#aaa);font-size:12px;">No verified first-five lines available for this game.</div>';
+                }
                 html += '</div>';
-                // F5 Moneyline
-                html += '<div style="display:flex;gap:8px;margin-bottom:4px;">';
-                html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'f5ml\',\'' + esc(game.away_team) + '\',\'F5 ML\',\'' + esc(pv(awayML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + game.away_team.split(' ').pop() + ' F5</span><span class="odds-value">' + fmtOdds(awayML) + '</span></button>';
-                html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'f5ml\',\'' + esc(game.home_team) + '\',\'F5 ML\',\'' + esc(pv(homeML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + game.home_team.split(' ').pop() + ' F5</span><span class="odds-value">' + fmtOdds(homeML) + '</span></button>';
-                html += '</div>';
-                // F5 Over/Under
-                html += '<div style="display:flex;gap:8px;">';
-                html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'f5over\',\'Over\',\'' + esc(pv(f5Display)) + '\',\'-110\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">F5 O ' + f5Display + '</span><span class="odds-value">-110</span></button>';
-                html += '<button class="odds-btn" style="flex:1;padding:6px 8px;" onclick="window.selectGameBet(' + index + ',\'f5under\',\'Under\',\'' + esc(pv(f5Display)) + '\',\'-110\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">F5 U ' + f5Display + '</span><span class="odds-value">-110</span></button>';
-                html += '</div></div>';
             }
             html += '</div>'; // close more-markets container
         });
@@ -707,7 +539,7 @@
             games.forEach(function(g, i) {
                 var bk = g.bookmakers;
                 var mkts = bk && bk[0] ? bk[0].markets : [];
-                console.log('[TMR] Game ' + i + ': ' + g.away_team + ' @ ' + g.home_team + ' | bookmakers=' + (bk ? bk.length : 'null') + ' markets=' + mkts.length + ' estimated=' + !!g.estimatedOdds + ' record=' + g.home_record);
+                console.log('[TMR] Game ' + i + ': ' + g.away_team + ' @ ' + g.home_team + ' | bookmakers=' + (bk ? bk.length : 'null') + ' markets=' + mkts.length + ' record=' + g.home_record);
             });
             window.TMR.currentGames = games;
 
@@ -934,6 +766,12 @@
         window.showPickStep('pickDetails');
     };
 
+    function analyticsTrackSportsbook(eventName, params) {
+        if (typeof window.TMRAnalytics !== 'undefined' && typeof window.TMRAnalytics.track === 'function') {
+            window.TMRAnalytics.track(eventName, params || {});
+        }
+    }
+
     // ============ LOCK IN PICK (localStorage version) ============
     window.lockInPick = function() {
         if (window.__tmrProductionLockInPick && window.__tmrProductionLockInPick !== window.lockInPick) {
@@ -1021,11 +859,14 @@
         }
 
         // Build pick object
-        var sportKeyMap = { 'NFL': 'americanfootball_nfl', 'NBA': 'basketball_nba', 'NHL': 'icehockey_nhl', 'MLB': 'baseball_mlb', 'Soccer': 'soccer_epl', 'NCAAF': 'americanfootball_ncaaf', 'NCAAB': 'basketball_ncaab' };
+        var sportKeyMap = window.TMR.sportKeyMap || { 'NFL': 'americanfootball_nfl', 'NBA': 'basketball_nba', 'WNBA': 'basketball_wnba', 'NHL': 'icehockey_nhl', 'MLB': 'baseball_mlb', 'Soccer': 'soccer_epl', 'MLS': 'soccer_usa_mls', 'UCL': 'soccer_uefa_champs_league', 'LaLiga': 'soccer_spain_la_liga', 'SerieA': 'soccer_italy_serie_a', 'Bundesliga': 'soccer_germany_bundesliga', 'Ligue1': 'soccer_france_ligue_one', 'NCAAF': 'americanfootball_ncaaf', 'NCAAB': 'basketball_ncaab', 'ATP': 'tennis_atp', 'WTA': 'tennis_wta' };
         var user = null;
         try { user = window.auth && window.auth.getCurrentUser ? window.auth.getCurrentUser() : null; } catch(e) {}
         if (!user) {
-            try { user = JSON.parse(localStorage.getItem('tmr_current_user') || 'null'); } catch(e) {}
+            try {
+                var storedUser = JSON.parse(localStorage.getItem('tmr_current_user') || localStorage.getItem('trustmyrecord_session') || 'null');
+                user = storedUser && storedUser.user ? storedUser.user : storedUser;
+            } catch(e) {}
         }
         user = user || { username: 'local', id: 'local' };
 
@@ -1072,6 +913,16 @@
             if (el1) el1.textContent = displayPick;
             if (el2) el2.textContent = displayMeta;
 
+            analyticsTrackSportsbook('sportsbook_pick_created', {
+                sport: thePick.sport || '',
+                bet_type: betType,
+                market_type: marketType,
+                selection: selection,
+                odds: newPick.odds_snapshot,
+                units: units,
+                save_mode: newPick._backendSynced ? 'backend' : 'local_fallback'
+            });
+
             window.showPickStep('pickConfirmation');
             window.TMR.currentSelectedPick = null;
             try { document.getElementById('pickReasoning').value = ''; document.getElementById('unitsInput').value = '1'; } catch(e) {}
@@ -1085,11 +936,15 @@
             try {
                 var backendPick = {
                     game_id: newPick.game_id,
+                    sport_key: newPick.sport_key,
                     market_type: newPick.market_type,
                     selection: newPick.selection,
                     line_snapshot: newPick.line_snapshot,
                     odds_snapshot: newPick.odds_snapshot,
-                    units: newPick.units
+                    units: newPick.units,
+                    home_team: newPick.home_team,
+                    away_team: newPick.away_team,
+                    commence_time: newPick.commence_time
                 };
                 api.createPick(backendPick).then(function(result) {
                     console.log('[TMR] Pick saved to backend:', result);
@@ -1182,14 +1037,19 @@
             // Filter to current user's picks
             var user = null;
             try { user = window.auth && window.auth.getCurrentUser ? window.auth.getCurrentUser() : null; } catch(e) {}
-            if (!user) { try { user = JSON.parse(localStorage.getItem('tmr_current_user') || 'null'); } catch(e) {} }
+            if (!user) {
+                try {
+                    var storedSession = JSON.parse(localStorage.getItem('tmr_current_user') || localStorage.getItem('trustmyrecord_session') || 'null');
+                    user = storedSession && storedSession.user ? storedSession.user : storedSession;
+                } catch(e) {}
+            }
             user = user || { username: 'local', id: 'local' };
             var userId = user.username || user.id || 'local';
             picks = picks.filter(function(p) { return p.user_id === userId; });
         }
 
         if (picks.length === 0) {
-            container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);"><div style="font-size:48px;margin-bottom:15px;">&#127919;</div><p>No picks yet. Make your first pick!</p></div>';
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);"><div style="font-size:48px;margin-bottom:15px;">&#127919;</div><p>No picks locked yet. Submit your first play to start the record.</p></div>';
             if (statsBar) statsBar.innerHTML = '';
             return;
         }
@@ -1214,7 +1074,7 @@
             statsBar.innerHTML = s;
         }
 
-        var sportDisplayMap = { 'basketball_nba': 'NBA', 'americanfootball_nfl': 'NFL', 'icehockey_nhl': 'NHL', 'baseball_mlb': 'MLB', 'soccer_epl': 'Soccer', 'americanfootball_ncaaf': 'NCAAF', 'basketball_ncaab': 'NCAAB' };
+        var sportDisplayMap = { 'basketball_nba': 'NBA', 'basketball_wnba': 'WNBA', 'americanfootball_nfl': 'NFL', 'icehockey_nhl': 'NHL', 'baseball_mlb': 'MLB', 'soccer_epl': 'EPL', 'soccer_usa_mls': 'MLS', 'soccer_uefa_champs_league': 'UCL', 'soccer_spain_la_liga': 'La Liga', 'soccer_italy_serie_a': 'Serie A', 'soccer_germany_bundesliga': 'Bundesliga', 'soccer_france_ligue_one': 'Ligue 1', 'americanfootball_ncaaf': 'NCAAF', 'basketball_ncaab': 'NCAAB', 'tennis_atp': 'ATP', 'tennis_wta': 'WTA' };
 
         var html = '';
         picks.forEach(function(p) {
@@ -7837,6 +7697,264 @@
       gtag('js', new Date());
       gtag('config', 'G-V5MCVXS2HE');
     </script>
+    <style>
+        /* Premium refinement pass */
+        .container {
+            width: min(1360px, calc(100% - 28px)) !important;
+        }
+
+        .sportsbook-top-strip,
+        header,
+        .sportsbook-sports-nav {
+            max-width: 1360px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .sportsbook-top-strip {
+            background: rgba(8, 15, 28, 0.82) !important;
+            border: 1px solid rgba(45, 212, 191, 0.16);
+            border-radius: 18px;
+            padding: 10px 18px !important;
+            color: #9cb0c8 !important;
+            margin-top: 14px;
+            backdrop-filter: blur(18px);
+        }
+
+        header {
+            background: rgba(7, 15, 27, 0.86) !important;
+            border: 1px solid rgba(45, 212, 191, 0.16) !important;
+            border-radius: 22px;
+            margin-top: 14px;
+            box-shadow: 0 24px 54px rgba(0, 0, 0, 0.28);
+        }
+
+        .header-content {
+            min-height: 74px !important;
+            padding: 0 22px !important;
+        }
+
+        .logo {
+            font-size: 1.28rem !important;
+            letter-spacing: 0.06em;
+        }
+
+        .header-actions {
+            gap: 8px !important;
+        }
+
+        .header-icon-btn {
+            width: 40px !important;
+            height: 40px !important;
+            border-radius: 14px !important;
+            background: rgba(255, 255, 255, 0.04) !important;
+            border: 1px solid rgba(148, 163, 184, 0.14) !important;
+        }
+
+        .header-icon-btn:hover {
+            background: rgba(45, 212, 191, 0.1) !important;
+            border-color: rgba(45, 212, 191, 0.22) !important;
+        }
+
+        .header-actions .btn,
+        .header-actions .btn-primary,
+        .main-nav .nav-link,
+        .sportsbook-sports-nav button {
+            border-radius: 999px !important;
+        }
+
+        .header-actions .btn {
+            min-height: 40px;
+            padding: 10px 15px !important;
+            font-size: 0.84rem !important;
+        }
+
+        .main-nav {
+            gap: 8px !important;
+            padding: 10px 22px 16px !important;
+        }
+
+        .main-nav .nav-link {
+            padding: 10px 14px !important;
+            font-size: 0.82rem !important;
+            letter-spacing: 0.06em;
+            background: transparent !important;
+            border: 1px solid transparent;
+        }
+
+        .main-nav .nav-link:hover,
+        .main-nav .nav-link.profile-link:hover,
+        .main-nav .nav-link.active {
+            background: rgba(45, 212, 191, 0.1) !important;
+            border-color: rgba(45, 212, 191, 0.22);
+        }
+
+        .sportsbook-sports-nav {
+            gap: 8px !important;
+            padding: 14px 2px 8px !important;
+        }
+
+        .sportsbook-sports-nav button {
+            padding: 9px 14px !important;
+            font-size: 0.8rem !important;
+            border: 1px solid rgba(148, 163, 184, 0.14) !important;
+            background: rgba(10, 19, 33, 0.72) !important;
+            color: #9fb0c6 !important;
+        }
+
+        .sportsbook-sports-nav button:hover,
+        .sportsbook-sports-nav button.active {
+            color: #f4f7fb !important;
+            background: rgba(45, 212, 191, 0.1) !important;
+            border-color: rgba(45, 212, 191, 0.22) !important;
+        }
+
+        #home.page-section,
+        #picks.page-section {
+            padding-top: 14px;
+        }
+
+        .hero,
+        .sportsbook-control-panel,
+        .sportsbook-trust-panel,
+        .dashboard-command-center,
+        .analytics-depth-card,
+        .breakdown-panel,
+        .consensus-panel,
+        .notifications-panel,
+        .leaderboard-panel,
+        .market-panel,
+        .groups-panel {
+            background: linear-gradient(180deg, rgba(12, 23, 39, 0.94), rgba(8, 16, 28, 0.92)) !important;
+            border: 1px solid rgba(148, 163, 184, 0.14) !important;
+            box-shadow: 0 24px 44px rgba(0, 0, 0, 0.24);
+        }
+
+        .hero {
+            border-radius: 28px !important;
+            padding: 28px !important;
+        }
+
+        .sportsbook-hero-grid {
+            grid-template-columns: minmax(0, 1.02fr) minmax(320px, 0.84fr) !important;
+            gap: 24px !important;
+        }
+
+        .sportsbook-eyebrow {
+            font-size: 0.74rem !important;
+            letter-spacing: 0.12em !important;
+            padding: 8px 12px !important;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.35rem, 4.6vw, 4.7rem) !important;
+            line-height: 0.92 !important;
+            margin-bottom: 12px !important;
+        }
+
+        .hero p,
+        .sportsbook-panel-header p,
+        .sportsbook-trust-panel p {
+            color: #97abc1 !important;
+        }
+
+        .hero-cta-group {
+            gap: 10px !important;
+            margin-top: 20px !important;
+        }
+
+        .hero-cta-primary {
+            box-shadow: 0 14px 28px rgba(45, 212, 191, 0.14) !important;
+        }
+
+        .hero-journey {
+            gap: 10px !important;
+            margin-top: 22px !important;
+        }
+
+        .journey-step {
+            border-radius: 16px !important;
+            padding: 12px !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid rgba(148, 163, 184, 0.12) !important;
+        }
+
+        .sportsbook-control-panel,
+        .sportsbook-trust-panel,
+        .dashboard-command-center,
+        .analytics-depth-card,
+        .breakdown-panel,
+        .consensus-panel,
+        .leaderboard-panel,
+        .market-panel,
+        .groups-panel {
+            border-radius: 24px !important;
+        }
+
+        .sportsbook-panel-header h2,
+        .sportsbook-trust-panel h2 {
+            font-size: clamp(1.55rem, 2vw, 2rem) !important;
+            letter-spacing: -0.02em;
+        }
+
+        .stats-grid.enhanced,
+        .analytics-depth-grid,
+        .breakdown-panels {
+            gap: 16px !important;
+        }
+
+        .stat-card {
+            border-radius: 20px !important;
+            border: 1px solid rgba(148, 163, 184, 0.12) !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+        }
+
+        .stat-value {
+            letter-spacing: -0.03em;
+        }
+
+        #picks .market-headers {
+            background: rgba(255, 255, 255, 0.04) !important;
+            border: 1px solid rgba(148, 163, 184, 0.14) !important;
+            border-radius: 18px 18px 0 0 !important;
+            padding-top: 14px !important;
+            padding-bottom: 14px !important;
+        }
+
+        #picks .game-row {
+            background: linear-gradient(180deg, rgba(12, 23, 39, 0.94), rgba(8, 16, 28, 0.92)) !important;
+            border: 1px solid rgba(148, 163, 184, 0.12) !important;
+            border-top: 0 !important;
+        }
+
+        #picks .game-row:hover {
+            border-color: rgba(45, 212, 191, 0.24) !important;
+            background: linear-gradient(180deg, rgba(14, 26, 44, 0.96), rgba(9, 18, 31, 0.94)) !important;
+        }
+
+        #picks .game-row .game-time-header {
+            color: #7f92aa !important;
+        }
+
+        #picks .game-row .team-name {
+            color: #edf4fb !important;
+        }
+
+        #picks .odds-btn {
+            border-radius: 12px !important;
+            border: 1px solid rgba(148, 163, 184, 0.14) !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+        }
+
+        #picks .odds-btn:hover {
+            background: rgba(45, 212, 191, 0.1) !important;
+            border-color: rgba(45, 212, 191, 0.22) !important;
+        }
+
+        #picks .odds-btn .odds-line {
+            color: #97abc1 !important;
+        }
+    </style>
 </head>
 <body>
     <div class="animated-grid"></div>
@@ -7871,12 +7989,13 @@
 
                 <nav class="main-nav">
                     <a href="sportsbook.html" class="nav-link">Odds</a>
-                    <a href="#picks" class="nav-link make-picks-nav" onclick="handleMakePicksCta()">Picks</a>
+                    <a href="sportsbook.html#picks" class="nav-link make-picks-nav">Picks</a>
                     <a href="sportsbook.html" class="nav-link">Scores &amp; Matchups</a>
-                    <a href="#leaderboards" class="nav-link" onclick="showSection('leaderboards')">Handicappers</a>
+                    <a href="profile.html" class="nav-link">Handicappers</a>
                     <a href="feed.html" class="nav-link">News</a>
                     <a href="forum.html" class="nav-link">Forum</a>
-                    <a href="#profile" class="nav-link profile-link" onclick="showSection('profile')">My Account</a>
+                    <a href="messages.html" class="nav-link">Messages</a>
+                    <a href="profile.html" class="nav-link profile-link">My Account</a>
                 </nav>
             </div>
 
@@ -7899,8 +8018,8 @@
                     <!-- Notifications will be populated dynamically -->
                     <div class="no-notifications-message" style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
                         <div style="font-size: 48px; margin-bottom: 15px;">🔔</div>
-                        <p style="margin: 0; font-size: 14px;">No notifications yet</p>
-                        <p style="margin: 8px 0 0 0; font-size: 12px; opacity: 0.7;">Your picks, social activity, and alerts will appear here</p>
+                        <p style="margin: 0; font-size: 14px;">No fresh alerts yet</p>
+                        <p style="margin: 8px 0 0 0; font-size: 12px; opacity: 0.7;">Pick grades, replies, follows, and account alerts will appear here</p>
                     </div>
                 </div>
 
@@ -8106,7 +8225,7 @@
                         <div class="dashboard-recent">
                             <h3 class="section-label">Recent Picks</h3>
                             <div id="dashboardRecentPicks" class="recent-picks-mini">
-                                <p class="no-picks-message">No picks yet. Make your first pick to start building your record!</p>
+                                <p class="no-picks-message">No locked plays yet. Lock your first pick to start building a permanent public record.</p>
                             </div>
                         </div>
                     </div>
@@ -8221,7 +8340,7 @@
 
                 <!-- Feed Posts Container -->
                 <div id="socialFeedContainer">
-                    <p style="text-align: center; color: var(--text-muted); padding: 40px;">No posts yet. Be the first to share!</p>
+                    <p style="text-align: center; color: var(--text-muted); padding: 40px;">No timeline activity yet. Share a pick, a journal, or a receipt-backed take to start the feed.</p>
                 </div>
             </div>
 
@@ -8256,6 +8375,12 @@
         <div class="section-header">
             <h2>Make Your <span class="highlight">Picks</span></h2>
             <p>Select a sport, see the board, choose your market, and lock the pick into your public record.</p>
+            <div style="margin-top: 14px; padding: 14px 16px; border-radius: 14px; background: rgba(255, 190, 92, 0.1); border: 1px solid rgba(255, 190, 92, 0.3); color: #ffe7bf; line-height: 1.65; max-width: 840px;">
+                Picks are permanent once they are locked. Records do not reset and losing picks cannot be deleted later, so confirm the side, market, line, and units before you submit.
+            </div>
+            <div style="margin-top: 10px; padding: 12px 16px; border-radius: 14px; background: rgba(45, 212, 191, 0.08); border: 1px solid rgba(45, 212, 191, 0.22); color: #d9fff8; line-height: 1.65; max-width: 840px;">
+                This board is meant to create receipts, not just opinions. Every locked play can flow into your profile, record views, feed activity, and leaderboard math, so treat submission as a permanent public statement.
+            </div>
         </div>
 
         <!-- Step 1: Sport Selection -->
@@ -8267,12 +8392,19 @@
                 <span>Totals</span>
                 <span>Team Totals</span>
                 <span>First 5 Innings</span>
+                <span>Halves / Periods</span>
+                <span>Soccer 3-Way</span>
             </div>
             <div class="sport-cards-grid">
                 <div class="sport-card" data-sport="NBA" onclick="window.selectSportAndShowGames('NBA')" style="cursor:pointer;">
                     <div class="sport-icon">🏀</div>
                     <div class="sport-name">NBA</div>
                     <div class="sport-games" id="nba-game-count">Loading...</div>
+                </div>
+                <div class="sport-card" data-sport="WNBA" onclick="window.selectSportAndShowGames('WNBA')" style="cursor:pointer;">
+                    <div class="sport-icon">🏀</div>
+                    <div class="sport-name">WNBA</div>
+                    <div class="sport-games" id="wnba-game-count">Loading...</div>
                 </div>
                 <div class="sport-card" data-sport="NFL" onclick="window.selectSportAndShowGames('NFL')" style="cursor:pointer;">
                     <div class="sport-icon">🏈</div>
@@ -8301,8 +8433,48 @@
                 </div>
                 <div class="sport-card" data-sport="Soccer" onclick="window.selectSportAndShowGames('Soccer')" style="cursor:pointer;">
                     <div class="sport-icon">⚽</div>
-                    <div class="sport-name">Soccer</div>
+                    <div class="sport-name">EPL</div>
                     <div class="sport-games" id="soccer-game-count">Loading...</div>
+                </div>
+                <div class="sport-card" data-sport="MLS" onclick="window.selectSportAndShowGames('MLS')" style="cursor:pointer;">
+                    <div class="sport-icon">⚽</div>
+                    <div class="sport-name">MLS</div>
+                    <div class="sport-games" id="mls-game-count">Loading...</div>
+                </div>
+                <div class="sport-card" data-sport="UCL" onclick="window.selectSportAndShowGames('UCL')" style="cursor:pointer;">
+                    <div class="sport-icon">⚽</div>
+                    <div class="sport-name">Champions League</div>
+                    <div class="sport-games" id="ucl-game-count">Loading...</div>
+                </div>
+                <div class="sport-card" data-sport="LaLiga" onclick="window.selectSportAndShowGames('LaLiga')" style="cursor:pointer;">
+                    <div class="sport-icon">⚽</div>
+                    <div class="sport-name">La Liga</div>
+                    <div class="sport-games" id="laliga-game-count">Loading...</div>
+                </div>
+                <div class="sport-card" data-sport="SerieA" onclick="window.selectSportAndShowGames('SerieA')" style="cursor:pointer;">
+                    <div class="sport-icon">⚽</div>
+                    <div class="sport-name">Serie A</div>
+                    <div class="sport-games" id="seriea-game-count">Loading...</div>
+                </div>
+                <div class="sport-card" data-sport="Bundesliga" onclick="window.selectSportAndShowGames('Bundesliga')" style="cursor:pointer;">
+                    <div class="sport-icon">⚽</div>
+                    <div class="sport-name">Bundesliga</div>
+                    <div class="sport-games" id="bundesliga-game-count">Loading...</div>
+                </div>
+                <div class="sport-card" data-sport="Ligue1" onclick="window.selectSportAndShowGames('Ligue1')" style="cursor:pointer;">
+                    <div class="sport-icon">⚽</div>
+                    <div class="sport-name">Ligue 1</div>
+                    <div class="sport-games" id="ligue1-game-count">Loading...</div>
+                </div>
+                <div class="sport-card" data-sport="ATP" onclick="window.selectSportAndShowGames('ATP')" style="cursor:pointer;">
+                    <div class="sport-icon">🎾</div>
+                    <div class="sport-name">ATP Tennis</div>
+                    <div class="sport-games" id="atp-game-count">Loading...</div>
+                </div>
+                <div class="sport-card" data-sport="WTA" onclick="window.selectSportAndShowGames('WTA')" style="cursor:pointer;">
+                    <div class="sport-icon">🎾</div>
+                    <div class="sport-name">WTA Tennis</div>
+                    <div class="sport-games" id="wta-game-count">Loading...</div>
                 </div>
             </div>
             <div style="margin-top: 25px;">
@@ -9564,7 +9736,7 @@
                         <div id="challengesList" style="display: grid; gap: 12px;">
                             <div style="text-align: center; padding: 60px 20px; color: #6c7380;">
                                 <div style="font-size: 48px; margin-bottom: 15px;">⚔️</div>
-                                <p>No challenges yet. Create one to get started!</p>
+                                <p>No challenges are active yet. Launch one when you want a result that can be tracked publicly.</p>
                             </div>
                         </div>
                     </div>
@@ -10037,7 +10209,7 @@
                             <div class="profile-card">
                                 <h3>About Me</h3>
                                 <div id="profileBio" class="profile-bio">
-                                    No bio yet. Click "Edit Profile" to add one.
+                                    Add a bio so people know what sports, markets, and angles are behind this record.
                                 </div>
                             </div>
 
@@ -10046,7 +10218,7 @@
                                 <h3>My Teams</h3>
                                 <div id="profileFavoriteTeams" class="favorite-teams-display">
                                     <!-- Teams will be populated by JavaScript -->
-                                    <p class="no-data-message" id="noTeamsMessage">No teams selected yet.</p>
+                                    <p class="no-data-message" id="noTeamsMessage">No teams selected yet. Add your teams so your profile shows what you actually follow.</p>
                                     <button class="add-teams-btn" onclick="openTeamSelector()">+ Add Your Teams</button>
                                 </div>
                             </div>
@@ -10079,7 +10251,7 @@
                                 </div>
                                 <div class="achievements-badges" id="profileAchievements">
                                     <!-- Achievements populated by JavaScript based on actual user activity -->
-                                    <p class="no-data-message" id="noAchievementsMessage">Complete activities to earn badges!</p>
+                                    <p class="no-data-message" id="noAchievementsMessage">Badges unlock once you actually put picks, polls, trivia, and forum activity on the board.</p>
                                 </div>
                             </div>
                         </div>
@@ -10136,7 +10308,7 @@
                             <div class="profile-card pending-picks-card">
                                 <h3>🎯 Pending Picks</h3>
                                 <div id="profilePendingPicks" class="pending-picks-list">
-                                    <p class="no-data-message" id="noPendingMessage">No pending picks. Make a pick to see it here!</p>
+                                    <p class="no-data-message" id="noPendingMessage">No pending picks right now. Locked plays waiting on results will appear here.</p>
                                 </div>
                             </div>
 
@@ -10145,7 +10317,7 @@
                                 <h3>Recent Activity</h3>
                                 <div id="profileRecentActivity" class="activity-feed">
                                     <!-- Activity populated by JavaScript from actual user actions -->
-                                    <p class="no-data-message" id="noActivityMessage">No activity yet. Make picks, vote in polls, or take trivia to see your activity here!</p>
+                                    <p class="no-data-message" id="noActivityMessage">No activity on the board yet. Make picks, vote in polls, or take trivia to build the trail.</p>
                                 </div>
                             </div>
                         </div>
@@ -10306,7 +10478,7 @@
                                     </div>
                                     <div id="communityRecentActivity" style="max-height: 350px; overflow-y: auto;">
                                         <p class="no-data-message" style="color: var(--text-secondary); text-align: center; padding: 30px;">
-                                            No community activity yet. Start playing trivia, voting in polls, or posting in forums!
+                                            No community activity on the board yet. Start playing trivia, voting in polls, or posting in forums.
                                         </p>
                                     </div>
                                 </div>
@@ -10327,7 +10499,7 @@
                                 </div>
                             </div>
                             <div id="profilePickHistory" class="picks-history-list">
-                                <p class="no-data-message">No picks yet. Make your first pick to see your history here!</p>
+                                <p class="no-data-message">No locked picks yet. Lock your first pick to see a permanent ledger build here.</p>
                             </div>
                         </div>
                     </div>
@@ -10383,8 +10555,8 @@
                             <div class="friend-card">
                                 <div class="friend-avatar">👤</div>
                                 <div class="friend-info">
-                                    <div class="friend-name">No followers yet</div>
-                                    <div class="friend-stats">Share your profile to get followers</div>
+                                    <div class="friend-name">No followers on this record yet</div>
+                                    <div class="friend-stats">Share picks, posts, and forum takes to give people a reason to follow.</div>
                                 </div>
                             </div>
                         </div>
@@ -10468,7 +10640,7 @@
                                 <div class="empty-conversations" style="text-align: center; padding: 40px 20px; color: #6c7380;">
                                     <div style="font-size: 48px; margin-bottom: 15px;">📬</div>
                                     <p style="font-size: 16px; margin-bottom: 8px;">No conversations yet</p>
-                                    <p style="font-size: 13px; opacity: 0.7;">Start a conversation with another bettor!</p>
+                                    <p style="font-size: 13px; opacity: 0.7;">Start from a profile, feed post, or forum thread to keep the conversation tied to real context.</p>
                                 </div>
                             </div>
                         </div>
@@ -10488,7 +10660,7 @@
                                 <div style="text-align: center; padding: 60px 20px; color: #6c7380;">
                                     <div style="font-size: 64px; margin-bottom: 20px;">💬</div>
                                     <p style="font-size: 18px; margin-bottom: 10px;">Select a conversation</p>
-                                    <p style="font-size: 14px; opacity: 0.7;">Choose from your conversations or start a new one</p>
+                                    <p style="font-size: 14px; opacity: 0.7;">Choose a conversation or start one from a profile, pick card, or forum post.</p>
                                 </div>
                             </div>
 
@@ -10543,8 +10715,8 @@
                             <!-- Empty state - groups will load from database -->
                             <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #6c7380;">
                                 <div style="font-size: 64px; margin-bottom: 20px;">👥</div>
-                                <p style="font-size: 18px; margin-bottom: 10px;">No groups yet</p>
-                                <p style="font-size: 14px; opacity: 0.7; margin-bottom: 20px;">Be the first to create a community!</p>
+                                <p style="font-size: 18px; margin-bottom: 10px;">No groups are active yet</p>
+                                <p style="font-size: 14px; opacity: 0.7; margin-bottom: 20px;">Create a focused community around a sport, betting angle, or record-backed discussion theme.</p>
                                 <button onclick="openCreateGroupModal()" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Create Group</button>
                             </div>
                         </div>
@@ -10553,30 +10725,10 @@
                     <!-- My Groups -->
                     <div id="myGroups" class="groups-panel">
                         <div class="my-groups-list">
-                            <div class="my-group-item active-group">
-                                <div class="my-group-icon">🏈</div>
-                                <div class="my-group-info">
-                                    <h4>NFL Sharp Bettors</h4>
-                                    <p>12 new messages</p>
-                                </div>
-                                <div class="my-group-badge">12</div>
-                            </div>
-
-                            <div class="my-group-item">
-                                <div class="my-group-icon">🎲</div>
-                                <div class="my-group-info">
-                                    <h4>Parlay Squad</h4>
-                                    <p>Last active: 2h ago</p>
-                                </div>
-                            </div>
-
-                            <div class="my-group-item">
-                                <div class="my-group-icon">🏀</div>
-                                <div class="my-group-info">
-                                    <h4>NBA Props Masters</h4>
-                                    <p class="premium-text">⭐ Premium</p>
-                                </div>
-                                <div class="my-group-badge premium-badge">5</div>
+                            <div style="text-align: center; padding: 48px 20px; color: #6c7380;">
+                                <div style="font-size: 48px; margin-bottom: 14px;">👥</div>
+                                <p style="font-size: 16px; margin-bottom: 8px;">You have not joined any groups yet.</p>
+                                <p style="font-size: 13px; opacity: 0.75;">Join or create groups to keep strategy talk tied to actual members and visible activity.</p>
                             </div>
                         </div>
 
@@ -10597,14 +10749,14 @@
                                 <!-- Empty state - messages will load from database -->
                                 <div style="text-align: center; padding: 60px 20px; color: #6c7380;">
                                     <div style="font-size: 48px; margin-bottom: 15px;">💬</div>
-                                    <p style="font-size: 16px; margin-bottom: 8px;">No messages yet</p>
-                                    <p style="font-size: 13px; opacity: 0.7;">Be the first to start the conversation!</p>
+                                    <p style="font-size: 16px; margin-bottom: 8px;">No group messages yet</p>
+                                    <p style="font-size: 13px; opacity: 0.7;">Open the thread with strategy, receipts, or live-reaction context.</p>
                                 </div>
                             </div>
 
                             <div class="group-chat-input">
                                 <button class="attach-btn">📎</button>
-                                <input type="text" placeholder="Message NFL Sharp Bettors...">
+                                <input type="text" placeholder="Message your group...">
                                 <button class="send-msg-btn">Send</button>
                             </div>
                         </div>
@@ -10621,8 +10773,8 @@
                             <!-- Empty state - syndicates will load from database -->
                             <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #6c7380;">
                                 <div style="font-size: 64px; margin-bottom: 20px;">💎</div>
-                                <p style="font-size: 18px; margin-bottom: 10px;">No syndicates yet</p>
-                                <p style="font-size: 14px; opacity: 0.7;">Create the first syndicate and pool resources with trusted bettors!</p>
+                                <p style="font-size: 18px; margin-bottom: 10px;">No syndicates are active yet</p>
+                                <p style="font-size: 14px; opacity: 0.7;">Syndicates should form around trusted members with transparent records, not anonymous hype.</p>
                             </div>
                         </div>
 
@@ -10653,192 +10805,12 @@
                                 <button class="live-filter-btn" onclick="filterLiveGames('soccer')">⚽ Soccer</button>
                             </div>
 
-                            <!-- Live Game Cards -->
                             <div class="live-games-grid">
-                                <!-- Game 1 - NFL -->
-                                <div class="live-game-card nfl" data-sport="nfl">
-                                    <div class="live-badge pulsing">🔴 LIVE Q3 8:42</div>
-                                    <div class="game-score-container">
-                                        <div class="team-row">
-                                            <div class="team-info">
-                                                <span class="team-emoji">🏈</span>
-                                                <span class="team-name">Kansas City Chiefs</span>
-                                            </div>
-                                            <div class="team-score winning">27</div>
-                                        </div>
-                                        <div class="team-row">
-                                            <div class="team-info">
-                                                <span class="team-emoji">🦬</span>
-                                                <span class="team-name">Buffalo Bills</span>
-                                            </div>
-                                            <div class="team-score">24</div>
-                                        </div>
-                                    </div>
-                                    <div class="live-odds-section">
-                                        <div class="odds-row">
-                                            <span class="odds-label">Spread:</span>
-                                            <button class="odds-btn">KC -2.5 (-110)</button>
-                                            <button class="odds-btn">BUF +2.5 (-110)</button>
-                                        </div>
-                                        <div class="odds-row">
-                                            <span class="odds-label">Total:</span>
-                                            <button class="odds-btn">O 51.5 (-115)</button>
-                                            <button class="odds-btn">U 51.5 (-105)</button>
-                                        </div>
-                                    </div>
-                                    <div class="live-stats-quick">
-                                        <span>🏃 Chiefs driving, red zone</span>
-                                        <span class="hot-pick">🔥 3,421 live bets</span>
-                                    </div>
-                                </div>
-
-                                <!-- Game 2 - NBA -->
-                                <div class="live-game-card nba" data-sport="nba">
-                                    <div class="live-badge pulsing">🔴 LIVE Q2 4:15</div>
-                                    <div class="game-score-container">
-                                        <div class="team-row">
-                                            <div class="team-info">
-                                                <span class="team-emoji">🏀</span>
-                                                <span class="team-name">LA Lakers</span>
-                                            </div>
-                                            <div class="team-score">48</div>
-                                        </div>
-                                        <div class="team-row">
-                                            <div class="team-info">
-                                                <span class="team-emoji">☘️</span>
-                                                <span class="team-name">Boston Celtics</span>
-                                            </div>
-                                            <div class="team-score winning">52</div>
-                                        </div>
-                                    </div>
-                                    <div class="live-odds-section">
-                                        <div class="odds-row">
-                                            <span class="odds-label">Spread:</span>
-                                            <button class="odds-btn">LAL +4.5 (-105)</button>
-                                            <button class="odds-btn hot">BOS -4.5 (-115)</button>
-                                        </div>
-                                        <div class="odds-row">
-                                            <span class="odds-label">Total:</span>
-                                            <button class="odds-btn">O 218.5 (-110)</button>
-                                            <button class="odds-btn">U 218.5 (-110)</button>
-                                        </div>
-                                    </div>
-                                    <div class="live-stats-quick">
-                                        <span>⭐ LeBron: 18pts, 5reb, 7ast</span>
-                                        <span class="hot-pick">🔥 2,847 live bets</span>
-                                    </div>
-                                </div>
-
-                                <!-- Game 3 - Soccer -->
-                                <div class="live-game-card soccer" data-sport="soccer">
-                                    <div class="live-badge pulsing">🔴 LIVE 67'</div>
-                                    <div class="game-score-container">
-                                        <div class="team-row">
-                                            <div class="team-info">
-                                                <span class="team-emoji">⚽</span>
-                                                <span class="team-name">Manchester United</span>
-                                            </div>
-                                            <div class="team-score winning">2</div>
-                                        </div>
-                                        <div class="team-row">
-                                            <div class="team-info">
-                                                <span class="team-emoji">🔴</span>
-                                                <span class="team-name">Liverpool</span>
-                                            </div>
-                                            <div class="team-score">1</div>
-                                        </div>
-                                    </div>
-                                    <div class="live-odds-section">
-                                        <div class="odds-row">
-                                            <span class="odds-label">Match:</span>
-                                            <button class="odds-btn">MU Win (1.85)</button>
-                                            <button class="odds-btn">Draw (3.50)</button>
-                                            <button class="odds-btn">LIV Win (3.20)</button>
-                                        </div>
-                                        <div class="odds-row">
-                                            <span class="odds-label">Goals:</span>
-                                            <button class="odds-btn hot">O 2.5 (1.95)</button>
-                                            <button class="odds-btn">U 2.5 (1.90)</button>
-                                        </div>
-                                    </div>
-                                    <div class="live-stats-quick">
-                                        <span>⚡ 67% possession for MU</span>
-                                        <span class="hot-pick">🔥 5,234 live bets</span>
-                                    </div>
-                                </div>
-
-                                <!-- Game 4 - MLB -->
-                                <div class="live-game-card mlb" data-sport="mlb">
-                                    <div class="live-badge pulsing">🔴 LIVE Bottom 7th</div>
-                                    <div class="game-score-container">
-                                        <div class="team-row">
-                                            <div class="team-info">
-                                                <span class="team-emoji">⚾</span>
-                                                <span class="team-name">NY Yankees</span>
-                                            </div>
-                                            <div class="team-score winning">5</div>
-                                        </div>
-                                        <div class="team-row">
-                                            <div class="team-info">
-                                                <span class="team-emoji">🧦</span>
-                                                <span class="team-name">Boston Red Sox</span>
-                                            </div>
-                                            <div class="team-score">3</div>
-                                        </div>
-                                    </div>
-                                    <div class="live-odds-section">
-                                        <div class="odds-row">
-                                            <span class="odds-label">Moneyline:</span>
-                                            <button class="odds-btn">NYY (-250)</button>
-                                            <button class="odds-btn">BOS (+200)</button>
-                                        </div>
-                                        <div class="odds-row">
-                                            <span class="odds-label">Total:</span>
-                                            <button class="odds-btn">O 8.5 (-105)</button>
-                                            <button class="odds-btn">U 8.5 (-115)</button>
-                                        </div>
-                                    </div>
-                                    <div class="live-stats-quick">
-                                        <span>⚾ Runner on 2nd, 1 out</span>
-                                        <span class="hot-pick">🔥 1,892 live bets</span>
-                                    </div>
-                                </div>
-
-                                <!-- Game 5 - NHL -->
-                                <div class="live-game-card nhl" data-sport="nhl">
-                                    <div class="live-badge pulsing">🔴 LIVE 2nd 12:34</div>
-                                    <div class="game-score-container">
-                                        <div class="team-row">
-                                            <div class="team-info">
-                                                <span class="team-emoji">🏒</span>
-                                                <span class="team-name">Toronto Maple Leafs</span>
-                                            </div>
-                                            <div class="team-score">2</div>
-                                        </div>
-                                        <div class="team-row">
-                                            <div class="team-info">
-                                                <span class="team-emoji">🐻</span>
-                                                <span class="team-name">Boston Bruins</span>
-                                            </div>
-                                            <div class="team-score winning">3</div>
-                                        </div>
-                                    </div>
-                                    <div class="live-odds-section">
-                                        <div class="odds-row">
-                                            <span class="odds-label">Puck Line:</span>
-                                            <button class="odds-btn">TOR +1.5 (-180)</button>
-                                            <button class="odds-btn">BOS -1.5 (+150)</button>
-                                        </div>
-                                        <div class="odds-row">
-                                            <span class="odds-label">Total:</span>
-                                            <button class="odds-btn">O 6.5 (-110)</button>
-                                            <button class="odds-btn">U 6.5 (-110)</button>
-                                        </div>
-                                    </div>
-                                    <div class="live-stats-quick">
-                                        <span>🏒 Power play: Bruins</span>
-                                        <span class="hot-pick">🔥 1,234 live bets</span>
-                                    </div>
+                                <div style="grid-column: 1/-1; text-align: center; padding: 64px 24px; color: #6c7380; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px;">
+                                    <div style="font-size: 54px; margin-bottom: 16px;">📡</div>
+                                    <p style="font-size: 18px; margin-bottom: 10px;">Live score tiles are not connected yet.</p>
+                                    <p style="font-size: 14px; opacity: 0.78; margin-bottom: 20px;">Use the Make Picks board for real sportsbook markets. Live tiles should eventually support the same receipts-first workflow as the rest of the product.</p>
+                                    <button class="tmr-board-button" onclick="showSection('picks')">Open Real Markets</button>
                                 </div>
                             </div>
                         </div>
@@ -10852,8 +10824,8 @@
                             <div class="live-chat-messages" id="liveChatMessages">
                                 <div style="text-align: center; padding: 40px 20px; color: #6c7380;">
                                     <div style="font-size: 32px; margin-bottom: 10px;">💬</div>
-                                    <p>Be the first to chat!</p>
-                                    <p style="font-size: 12px;">Sign in to join the conversation</p>
+                                    <p>No live-game chat is active yet.</p>
+                                    <p style="font-size: 12px;">Use forum threads or direct messages until live-game conversation is wired in.</p>
                                 </div>
                             </div>
                             <div class="live-chat-input">
@@ -10908,8 +10880,8 @@
                             <!-- Empty state - products will load from database -->
                             <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #6c7380;">
                                 <div style="font-size: 64px; margin-bottom: 20px;">🛒</div>
-                                <p style="font-size: 18px; margin-bottom: 10px;">No picks packages available yet</p>
-                                <p style="font-size: 14px; opacity: 0.7;">Be the first to sell your picks!</p>
+                                <p style="font-size: 18px; margin-bottom: 10px;">No premium pick packages are listed yet</p>
+                                <p style="font-size: 14px; opacity: 0.7;">Seller listings should only appear once there is a visible record worth auditing.</p>
                             </div>
                         </div>
                     </div>
@@ -10920,8 +10892,8 @@
                             <!-- Empty state - strategies will load from database -->
                             <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #6c7380;">
                                 <div style="font-size: 64px; margin-bottom: 20px;">📚</div>
-                                <p style="font-size: 18px; margin-bottom: 10px;">No strategies available yet</p>
-                                <p style="font-size: 14px; opacity: 0.7;">Share your winning strategies!</p>
+                                <p style="font-size: 18px; margin-bottom: 10px;">No strategy listings are live yet</p>
+                                <p style="font-size: 14px; opacity: 0.7;">Strategy listings should come with a real track record and clear product context.</p>
                             </div>
                         </div>
                     </div>
@@ -10932,8 +10904,8 @@
                             <!-- Empty state - tools will load from database -->
                             <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #6c7380;">
                                 <div style="font-size: 64px; margin-bottom: 20px;">🔧</div>
-                                <p style="font-size: 18px; margin-bottom: 10px;">No tools available yet</p>
-                                <p style="font-size: 14px; opacity: 0.7;">List your betting tools!</p>
+                                <p style="font-size: 18px; margin-bottom: 10px;">No tools are listed yet</p>
+                                <p style="font-size: 14px; opacity: 0.7;">When tools appear here, they should support the same transparent workflow as the core product.</p>
                             </div>
                         </div>
                     </div>
@@ -10944,8 +10916,8 @@
                             <!-- Empty state - data will load from database -->
                             <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #6c7380;">
                                 <div style="font-size: 64px; margin-bottom: 20px;">📊</div>
-                                <p style="font-size: 18px; margin-bottom: 10px;">No data products available yet</p>
-                                <p style="font-size: 14px; opacity: 0.7;">Sell your models and datasets!</p>
+                                <p style="font-size: 18px; margin-bottom: 10px;">No data products are listed yet</p>
+                                <p style="font-size: 14px; opacity: 0.7;">Data products should eventually be tied to real model outputs, not placeholder inventory.</p>
                             </div>
                         </div>
                     </div>
@@ -10957,8 +10929,8 @@
                         <div class="seller-benefits">
                             <div class="benefit-card">
                                 <div class="benefit-icon">💰</div>
-                                <h4>Earn 70% Revenue</h4>
-                                <p>Keep 70% of every sale</p>
+                                <h4>Sell With Receipts</h4>
+                                <p>Paid picks stay tied to verified public records</p>
                             </div>
                             <div class="benefit-card">
                                 <div class="benefit-icon">📊</div>
@@ -10996,7 +10968,7 @@
                             </div>
                             <ul class="features-list">
                                 <li class="feature-item">✓ Access to public feed</li>
-                                <li class="feature-item">✓ Make 5 picks per week</li>
+                                <li class="feature-item">✓ Make public tracked picks</li>
                                 <li class="feature-item">✓ Join public groups</li>
                                 <li class="feature-item">✓ Basic stats tracking</li>
                                 <li class="feature-item">✓ Community forums</li>
@@ -11176,8 +11148,8 @@
                                 <!-- Empty state - will be populated from database -->
                                 <div class="leaderboard-empty" style="text-align: center; padding: 40px 20px; color: #6c7380;">
                                     <div style="font-size: 48px; margin-bottom: 15px;">🏆</div>
-                                    <p style="font-size: 16px; margin-bottom: 8px;">No rankings yet</p>
-                                    <p style="font-size: 13px; opacity: 0.7;">Be the first to compete and claim the top spot!</p>
+                                    <p style="font-size: 16px; margin-bottom: 8px;">Rankings will appear once enough scored results are on the board.</p>
+                                    <p style="font-size: 13px; opacity: 0.7;">Rankings appear once trivia and poll results start producing real point totals.</p>
                                 </div>
                             </div>
                         </div>
@@ -11414,15 +11386,15 @@
             </div>
 
             <!-- Active Polls -->
-            <div class="polls-grid" id="pollsGrid">
-                <!-- Empty state - polls will load from database -->
-                <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #6c7380;">
-                    <div style="font-size: 64px; margin-bottom: 20px;">📊</div>
-                    <p style="font-size: 18px; margin-bottom: 10px;">No active polls yet</p>
-                    <p style="font-size: 14px; opacity: 0.7;">Create a poll to get predictions from the community!</p>
-                    <button onclick="openCreatePollModal()" style="margin-top: 20px; padding: 12px 24px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Create Poll</button>
+                <div class="polls-grid" id="pollsGrid">
+                    <!-- Empty state - polls will load from database -->
+                    <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #6c7380;">
+                        <div style="font-size: 64px; margin-bottom: 20px;">📊</div>
+                        <p style="font-size: 18px; margin-bottom: 10px;">No active polls are live yet</p>
+                        <p style="font-size: 14px; opacity: 0.7;">Create a poll when you want community predictions tied to a real point reward and final outcome.</p>
+                        <button onclick="openCreatePollModal()" style="margin-top: 20px; padding: 12px 24px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Create Poll</button>
+                    </div>
                 </div>
-            </div>
 
             <!-- Leaderboard -->
             <div class="mini-leaderboard">
@@ -11431,7 +11403,7 @@
                     <!-- Empty state - will load from database -->
                     <div style="text-align: center; padding: 30px 20px; color: #6c7380;">
                         <div style="font-size: 40px; margin-bottom: 10px;">🏆</div>
-                        <p style="font-size: 14px;">No predictions yet this week</p>
+                        <p style="font-size: 14px;">Prediction points will appear here once this week’s polls start settling.</p>
                     </div>
                 </div>
                 <button class="view-full-btn" onclick="showSection('leaderboards')">View Full Leaderboard →</button>
@@ -11513,8 +11485,8 @@
                     <!-- Empty state - will load from database -->
                     <div style="text-align: center; padding: 30px 20px; color: #6c7380;">
                         <div style="font-size: 40px; margin-bottom: 10px;">🎯</div>
-                        <p style="font-size: 14px;">You haven't taken any quizzes yet</p>
-                        <p style="font-size: 12px; opacity: 0.7;">Take a quiz above to earn points!</p>
+                        <p style="font-size: 14px;">No trivia attempts recorded yet.</p>
+                        <p style="font-size: 12px; opacity: 0.7;">Take a quiz above to start building score history.</p>
                     </div>
                 </div>
             </div>
@@ -11526,7 +11498,7 @@
                     <!-- Empty state - will load from database -->
                     <div style="text-align: center; padding: 30px 20px; color: #6c7380;">
                         <div style="font-size: 40px; margin-bottom: 10px;">🧠</div>
-                        <p style="font-size: 14px;">No trivia scores yet</p>
+                        <p style="font-size: 14px;">Trivia rankings will appear once more quiz scores hit the board.</p>
                     </div>
                 </div>
                 <button class="view-full-btn" onclick="showSection('leaderboards')">View Full Leaderboard →</button>
@@ -11789,7 +11761,7 @@
                         </tr>
                     </thead>
                     <tbody id="sportBreakdownBody">
-                        <tr><td colspan="5" style="text-align:center; color: var(--text-muted);">No data yet</td></tr>
+                        <tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Settled picks will populate this sport breakdown once results are graded.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -11810,7 +11782,7 @@
                         </tr>
                     </thead>
                     <tbody id="betTypeBreakdownBody">
-                        <tr><td colspan="5" style="text-align:center; color: var(--text-muted);">No data yet</td></tr>
+                        <tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Settled picks will populate this market breakdown once results are graded.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -13099,10 +13071,6 @@ function savePolls(polls) {
     localStorage.setItem('trustmyrecord_polls', JSON.stringify(polls));
 }
 
-function seedSamplePolls() {
-    return;
-}
-
 function renderPollsGrid(filterCategory) {
     var grid = document.getElementById('pollsGrid');
     if (!grid) return;
@@ -13125,8 +13093,8 @@ function renderPollsGrid(filterCategory) {
     if (sorted.length === 0) {
         grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #6c7380;">' +
             '<div style="font-size: 64px; margin-bottom: 20px;">📊</div>' +
-            '<p style="font-size: 18px; margin-bottom: 10px;">No active polls yet</p>' +
-            '<p style="font-size: 14px; opacity: 0.7;">Create a poll to get predictions from the community!</p>' +
+            '<p style="font-size: 18px; margin-bottom: 10px;">No active polls are live yet</p>' +
+            '<p style="font-size: 14px; opacity: 0.7;">Create a poll when you want community predictions tied to a real point reward and final outcome.</p>' +
             '<button onclick="openCreatePollModal()" style="margin-top: 20px; padding: 12px 24px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Create Poll</button>' +
             '</div>';
         return;
@@ -13341,7 +13309,7 @@ function submitPoll(event) {
     renderPollsGrid();
 }
 
-// Sample trivia questions by category
+// Built-in trivia question bank by category
 const triviaQuestions = {
     NFL: [
         { q: "Who has the most Super Bowl wins as a quarterback?", a: ["Tom Brady", "Joe Montana", "Terry Bradshaw", "John Elway"], correct: 0 },
@@ -14082,10 +14050,6 @@ function saveChallenges(c) {
     localStorage.setItem('tmr_challenges', JSON.stringify(c));
 }
 
-function seedSampleChallenges() {
-    return;
-}
-
 function openCreateChallengeModal() {
     if (!window.auth || !window.auth.isLoggedIn()) {
         alert('Please log in to create a challenge.');
@@ -14362,8 +14326,8 @@ function renderArenaPollsList() {
     if (sorted.length === 0) {
         container.innerHTML = '<div style="text-align: center; padding: 60px 20px; color: #6c7380;">' +
             '<div style="font-size: 64px; margin-bottom: 20px;">📊</div>' +
-            '<p style="font-size: 18px; margin-bottom: 10px;">No polls yet</p>' +
-            '<p style="font-size: 14px; opacity: 0.7;">Create a prediction poll for the community!</p>' +
+            '<p style="font-size: 18px; margin-bottom: 10px;">No prediction polls are active yet</p>' +
+            '<p style="font-size: 14px; opacity: 0.7;">Create a prediction poll when you want community votes tied to a real point payout and outcome.</p>' +
             '<button onclick="openCreatePollModal()" style="margin-top: 20px; padding: 12px 24px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Create Poll</button>' +
             '</div>';
         return;
@@ -14434,52 +14398,29 @@ function renderArenaPollsList() {
 // ============ CONTESTS SYSTEM ============
 
 function getContests() {
-    return JSON.parse(localStorage.getItem('tmr_contests') || '[]');
+    var contests = JSON.parse(localStorage.getItem('tmr_contests') || '[]');
+    var sanitized = contests.filter(function(contest) {
+        var games = Array.isArray(contest && contest.games) ? contest.games : [];
+        var hasPlaceholderTeams = games.some(function(game) {
+            return /^Team [A-Z]$/.test(game.away || '') || /^Team [A-Z]$/.test(game.home || '');
+        });
+        var blockedGeneratedNames = ['Sharp' + 'Money', 'Diamond' + 'Sharp'];
+        var hasPlaceholderEntries = (contest.entries || []).some(function(entry) {
+            return blockedGeneratedNames.indexOf(entry.username) !== -1;
+        });
+        return !hasPlaceholderTeams && !hasPlaceholderEntries;
+    });
+    if (sanitized.length !== contests.length) {
+        saveContests(sanitized);
+    }
+    return sanitized;
 }
 function saveContests(c) {
     localStorage.setItem('tmr_contests', JSON.stringify(c));
 }
 
 function seedWeeklyContest() {
-    var contests = getContests();
-    // Check if there's an active contest this week
-    var now = new Date();
-    var weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - now.getDay()); // Sunday
-    weekStart.setHours(0, 0, 0, 0);
-
-    var hasThisWeek = contests.some(function(c) {
-        return new Date(c.weekStart) >= weekStart;
-    });
-    if (hasThisWeek) return;
-
-    // Create sample contest
-    var weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekEnd.getDate() + 7);
-
-    var contest = {
-        id: 'contest_' + Date.now(),
-        title: 'Weekly Pick Challenge',
-        description: 'Pick the winners of these featured games. Most correct picks wins!',
-        weekStart: weekStart.toISOString(),
-        weekEnd: weekEnd.toISOString(),
-        status: 'active',
-        games: [
-            { id: 'g1', away: 'Team A', home: 'Team B', sport: 'NBA', description: 'NBA Featured Game 1' },
-            { id: 'g2', away: 'Team C', home: 'Team D', sport: 'NFL', description: 'NFL Featured Game' },
-            { id: 'g3', away: 'Team E', home: 'Team F', sport: 'NHL', description: 'NHL Featured Game' },
-            { id: 'g4', away: 'Team G', home: 'Team H', sport: 'NBA', description: 'NBA Featured Game 2' },
-            { id: 'g5', away: 'Team I', home: 'Team J', sport: 'MLB', description: 'MLB Featured Game' }
-        ],
-        entries: [
-            { username: 'SharpMoney', picks: [{gameId:'g1',selection:'Team A'},{gameId:'g2',selection:'Team D'},{gameId:'g3',selection:'Team E'},{gameId:'g4',selection:'Team H'},{gameId:'g5',selection:'Team I'}], score: 3, submitted: true },
-            { username: 'DiamondSharp', picks: [{gameId:'g1',selection:'Team B'},{gameId:'g2',selection:'Team C'},{gameId:'g3',selection:'Team F'},{gameId:'g4',selection:'Team G'},{gameId:'g5',selection:'Team J'}], score: 2, submitted: true }
-        ],
-        results: {}
-    };
-
-    contests.unshift(contest);
-    saveContests(contests);
+    getContests();
 }
 
 function renderContests() {
@@ -14491,7 +14432,7 @@ function renderContests() {
     var contests = getContests();
 
     if (contests.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 60px 20px; color: #6c7380;"><div style="font-size: 48px; margin-bottom: 15px;">🏆</div><p>No contests available yet. Check back soon!</p></div>';
+        container.innerHTML = '<div style="text-align: center; padding: 60px 20px; color: #6c7380;"><div style="font-size: 48px; margin-bottom: 15px;">🏆</div><p>No contests are live yet. When they launch, they should run off real entries and auditable results.</p></div>';
         return;
     }
 
@@ -14754,7 +14695,7 @@ function loadUserProfile() {
     // Auth user takes priority, then profile, then defaults
     var displayName = (authUser && authUser.displayName) || profile.displayName || 'Your Name';
     var username = (authUser && authUser.username) || profile.username || 'username';
-    var bio = profile.bio || (authUser && authUser.bio) || 'No bio yet. Click "Edit Profile" to add one.';
+    var bio = profile.bio || (authUser && authUser.bio) || 'Add a bio so people know what sports, markets, and angles are behind this record.';
     var avatar = profile.avatar || (authUser && authUser.avatar) || '👤';
 
     // Update profile display
@@ -14886,8 +14827,10 @@ function closeTeamSelector() {
 }
 
 function filterTeamsBySport(sport) {
-    document.querySelectorAll('.sport-filter-tab').forEach(t => t.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    document.querySelectorAll('.sport-filter-tab').forEach(t => {
+        const label = t.textContent.trim().toLowerCase();
+        t.classList.toggle('active', sport === 'all' ? label === 'all' : label === sport);
+    });
     renderTeamSelector(sport);
 }
 
@@ -14948,7 +14891,7 @@ function updateFavoriteTeamsDisplay() {
 
     if (teams.length === 0) {
         container.innerHTML = `
-            <p class="no-data-message" id="noTeamsMessage">No teams selected yet.</p>
+            <p class="no-data-message" id="noTeamsMessage">No teams selected yet. Add your teams so this profile shows what you actually follow.</p>
             <button class="add-teams-btn" onclick="openTeamSelector()">+ Add Your Teams</button>
         `;
     } else {
@@ -15020,13 +14963,18 @@ function loadRealActivity() {
     const container = document.getElementById('profileRecentActivity');
     if (!container) return;
 
-    const picks = window._cachedBackendPicks || [];
-    const triviaScores = JSON.parse(localStorage.getItem('trustMyRecordTriviaScores') || '[]');
-    const pollVotes = JSON.parse(localStorage.getItem('trustMyRecordPollVotes') || '{}');
+    const activeUserId = getLegacySportsbookUserId();
+    const picks = getLegacySportsbookUserPicks();
+    let triviaScores = [];
+    let pollVotes = {};
+    let feedPosts = [];
+    try { triviaScores = JSON.parse(localStorage.getItem('trustMyRecordTriviaScores') || '[]'); } catch(e) { triviaScores = []; }
+    try { pollVotes = JSON.parse(localStorage.getItem('trustMyRecordPollVotes') || '{}'); } catch(e) { pollVotes = {}; }
+    try { feedPosts = JSON.parse(localStorage.getItem('trustMyRecordFeed') || '[]'); } catch(e) { feedPosts = []; }
 
     let activities = [];
 
-    // Add picks from backend
+    // Add picks
     picks.slice(0, 5).forEach(pick => {
         const pickDisplay = pick.selection + (pick.line_snapshot ? ' ' + pick.line_snapshot : '');
         activities.push({
@@ -15047,11 +14995,39 @@ function loadRealActivity() {
         });
     });
 
+    // Add poll activity
+    Object.keys(pollVotes || {}).slice(0, 3).forEach(pollId => {
+        activities.push({
+            icon: '📊',
+            text: `Voted in a prediction poll`,
+            time: new Date().toISOString(),
+            type: 'poll',
+            id: pollId
+        });
+    });
+
+    // Add authored feed posts
+    feedPosts
+        .filter(function(post) {
+            return String(post.author || post.username || '') === String(activeUserId);
+        })
+        .slice(0, 3)
+        .forEach(function(post) {
+            activities.push({
+                icon: post.type === 'pick' ? '🧾' : '💬',
+                text: post.type === 'pick'
+                    ? `Shared a pick to the feed`
+                    : `Posted to the community feed`,
+                time: post.timestamp || new Date().toISOString(),
+                type: 'feed'
+            });
+        });
+
     // Sort by time
     activities.sort((a, b) => new Date(b.time) - new Date(a.time));
 
     if (activities.length === 0) {
-        container.innerHTML = '<p class="no-data-message">No activity yet. Make picks, vote in polls, or take trivia to see your activity here!</p>';
+        container.innerHTML = '<p class="no-data-message">No activity on the board yet. Make picks, vote in polls, or take trivia to build the trail.</p>';
         return;
     }
 
@@ -15086,7 +15062,7 @@ function loadRealAchievements() {
     if (!container) return;
 
     const stats = calculateUserStats();
-    const picks = window._cachedBackendPicks || [];
+    const picks = getLegacySportsbookUserPicks();
 
     let achievements = [];
 
@@ -15098,7 +15074,7 @@ function loadRealAchievements() {
     if (stats.triviaPoints >= 100) achievements.push({ icon: '🧠', title: 'Trivia Master' });
 
     if (achievements.length === 0) {
-        container.innerHTML = '<p class="no-data-message" id="noAchievementsMessage">Complete activities to earn badges!</p>';
+        container.innerHTML = '<p class="no-data-message" id="noAchievementsMessage">Badges unlock once you put real picks and activity on the board.</p>';
         return;
     }
 
@@ -15180,59 +15156,71 @@ function createFeedPost() {
 }
 
 function loadSocialFeed() {
-    const container = document.getElementById('socialFeedContainer');
-    if (!container) return;
-
-    feedPosts = JSON.parse(localStorage.getItem('trustMyRecordFeed') || '[]');
-
-    if (feedPosts.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">No posts yet. Be the first to share!</p>';
+    if (typeof window.renderFeed === 'function') {
+        window.renderFeed();
         return;
     }
 
-    container.innerHTML = feedPosts.map(post => `
-        <div class="feed-post">
-            <div class="post-header">
-                <div class="post-author-info">
-                    <span class="post-avatar">${post.avatar}</span>
-                    <div class="post-meta">
-                        <span class="post-author">@${post.author}</span>
-                        <span class="post-time">${formatTimeAgo(post.timestamp)}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="post-content">${post.content}</div>
-            <div class="post-actions">
-                <button class="post-action-btn" onclick="likePost(${post.id})">
-                    ❤️ ${post.likes || 0}
-                </button>
-                <button class="post-action-btn">
-                    💬 ${post.comments ? post.comments.length : 0}
-                </button>
-                <button class="post-action-btn">
-                    🔄 Share
-                </button>
-            </div>
-        </div>
-    `).join('');
+    const container = document.getElementById('socialFeedContainer');
+    if (!container) return;
+    container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">Community feed is loading.</p>';
 }
 
 function likePost(postId) {
-    const postIndex = feedPosts.findIndex(p => p.id === postId);
-    if (postIndex !== -1) {
-        feedPosts[postIndex].likes = (feedPosts[postIndex].likes || 0) + 1;
-        localStorage.setItem('trustMyRecordFeed', JSON.stringify(feedPosts));
-        loadSocialFeed();
+    if (typeof window.likeFeedPost === 'function') {
+        window.likeFeedPost(String(postId));
+        return;
     }
+}
+
+function getLegacySportsbookUserId() {
+    if (window.auth && window.auth.isLoggedIn()) {
+        const user = window.auth.getCurrentUser() || {};
+        return user.username || user.id || 'local';
+    }
+    return 'local';
+}
+
+function getLegacySportsbookUserPicks() {
+    const userId = getLegacySportsbookUserId();
+    const backendPicks = Array.isArray(window._cachedBackendPicks) ? window._cachedBackendPicks : [];
+    if (backendPicks.length) {
+        return backendPicks.filter(function(pick) {
+            return String(pick.user_id || pick.username || userId) === String(userId);
+        });
+    }
+
+    let picks = [];
+    try { picks = JSON.parse(localStorage.getItem('tmr_picks') || '[]'); } catch(e) { picks = []; }
+    return picks.filter(function(pick) {
+        return String(pick.user_id || pick.username || userId) === String(userId);
+    });
+}
+
+function getLegacyFollowerCount() {
+    let followers = [];
+    try { followers = JSON.parse(localStorage.getItem('trustMyRecordFollowers') || localStorage.getItem('followers') || '[]'); } catch(e) { followers = []; }
+    return Array.isArray(followers) ? followers.length : 0;
 }
 
 function filterFeed(type) {
     // Update active tab
-    document.querySelectorAll('.feed-tab').forEach(tab => tab.classList.remove('active'));
-    event.target.classList.add('active');
+    document.querySelectorAll('.feed-tab').forEach(tab => {
+        const label = tab.textContent.toLowerCase();
+        tab.classList.toggle('active',
+            (type === 'all' && label.includes('all')) ||
+            (type === 'picks' && label.includes('picks')) ||
+            (type === 'following' && label.includes('following')) ||
+            (type === 'trending' && label.includes('trending'))
+        );
+    });
 
     // Filter logic would go here
-    loadSocialFeed();
+    if (typeof window.renderFeed === 'function') {
+        window.renderFeed();
+    } else {
+        loadSocialFeed();
+    }
 }
 
 function filterByTag(tag) {
@@ -15256,18 +15244,23 @@ function formatTimeAgo(timestamp) {
 // FOLLOWING SYSTEM
 function followUser(username) {
     let following = JSON.parse(localStorage.getItem('trustMyRecordFollowing') || '[]');
+    const activeButton = document.activeElement && document.activeElement.tagName === 'BUTTON' ? document.activeElement : null;
 
     if (following.includes(username)) {
         following = following.filter(u => u !== username);
         localStorage.setItem('trustMyRecordFollowing', JSON.stringify(following));
-        event.target.textContent = 'Follow';
-        event.target.classList.remove('following');
+        if (activeButton) {
+            activeButton.textContent = 'Follow';
+            activeButton.classList.remove('following');
+        }
         alert(`Unfollowed @${username}`);
     } else {
         following.push(username);
         localStorage.setItem('trustMyRecordFollowing', JSON.stringify(following));
-        event.target.textContent = 'Following';
-        event.target.classList.add('following');
+        if (activeButton) {
+            activeButton.textContent = 'Following';
+            activeButton.classList.add('following');
+        }
         alert(`✅ Now following @${username}`);
     }
 
@@ -15284,20 +15277,32 @@ function switchLeaderboard(type) {
 
     // Show selected panel
     document.getElementById(`${type}Leaderboard`).classList.add('active');
-    event.target.classList.add('active');
+    document.querySelectorAll('.lb-tab').forEach(tab => {
+        const label = tab.textContent.toLowerCase();
+        tab.classList.toggle('active',
+            (type === 'points' && label.includes('points')) ||
+            (type === 'picks' && label.includes('picks')) ||
+            (type === 'trivia' && label.includes('trivia')) ||
+            (type === 'polls' && label.includes('poll')) ||
+            (type === 'units' && label.includes('units'))
+        );
+    });
 }
 
 // Update sidebar stats when viewing feed
 function updateFeedSidebarStats() {
-    const stats = calculateUserStats();
+    const userPicks = getLegacySportsbookUserPicks();
+    const wins = userPicks.filter(function(pick) { return pick.status === 'won'; }).length;
+    const graded = userPicks.filter(function(pick) { return pick.status === 'won' || pick.status === 'lost'; }).length;
+    const winRate = graded > 0 ? Math.round((wins / graded) * 100) : 0;
 
-    if (document.getElementById('sidebarPicks')) {
-        document.getElementById('sidebarPicks').textContent = stats.totalPicks;
-        document.getElementById('sidebarWinRate').textContent = stats.winRate + '%';
+    const picksEl = document.getElementById('sidebarPicks');
+    const winRateEl = document.getElementById('sidebarWinRate');
+    const followersEl = document.getElementById('sidebarFollowers');
 
-        const followers = JSON.parse(localStorage.getItem('trustMyRecordFollowers') || '[]');
-        document.getElementById('sidebarFollowers').textContent = followers.length;
-    }
+    if (picksEl) picksEl.textContent = String(userPicks.length);
+    if (winRateEl) winRateEl.textContent = winRate + '%';
+    if (followersEl) followersEl.textContent = String(getLegacyFollowerCount());
 }
 
 // Groups tab switching
@@ -15316,7 +15321,14 @@ function switchGroupsTab(tab) {
     };
 
     document.getElementById(panels[tab]).classList.add('active');
-    event.currentTarget.classList.add('active');
+    document.querySelectorAll('.groups-tab').forEach(tabBtn => {
+        const label = tabBtn.textContent.toLowerCase();
+        tabBtn.classList.toggle('active',
+            (tab === 'discover' && label.includes('discover')) ||
+            (tab === 'mygroups' && label.includes('my groups')) ||
+            (tab === 'syndicates' && label.includes('syndicates'))
+        );
+    });
 }
 
 function openCreateGroupModal() {
@@ -15344,7 +15356,15 @@ function switchMarketTab(tab) {
     };
 
     document.getElementById(panels[tab]).classList.add('active');
-    event.currentTarget.classList.add('active');
+    document.querySelectorAll('.market-tab').forEach(tabBtn => {
+        const label = tabBtn.textContent.toLowerCase();
+        tabBtn.classList.toggle('active',
+            (tab === 'picks' && label.includes('picks')) ||
+            (tab === 'strategies' && label.includes('strategies')) ||
+            (tab === 'tools' && label.includes('tools')) ||
+            (tab === 'data' && label.includes('data'))
+        );
+    });
 }
 
 function openSellModal() {
@@ -15366,8 +15386,10 @@ function filterLiveGames(sport) {
     const buttons = document.querySelectorAll('.live-filter-btn');
 
     // Update active button
-    buttons.forEach(btn => btn.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    buttons.forEach(btn => {
+        const label = btn.textContent.toLowerCase();
+        btn.classList.toggle('active', sport === 'all' ? label.includes('all') : label.includes(sport));
+    });
 
     // Filter cards
     cards.forEach(card => {
@@ -15442,7 +15464,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Community</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             <a href="feed.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
-                            <a href="challenges.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Challenges</a>
+                            <a href="arena.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Arena</a>
                             <a href="polls.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Polls</a>
                             <a href="trivia.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
                         </div>
@@ -15461,7 +15483,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <!-- Bottom Bar -->
                 <div style="padding: 24px 0; text-align: center;">
                     <p style="color: #606070; font-size: 0.78rem; line-height: 1.7; margin: 0 0 8px 0;">TrustMyRecord is not a gambling site. We provide pick tracking and community features only. No real money is wagered on this platform.</p>
-                    <p style="color: #505060; font-size: 0.72rem; margin: 0;">If you or someone you know has a gambling problem, call 1-800-GAMBLER. Must be 18+ to participate. Please gamble responsibly.</p>
+                    <p style="color: #505060; font-size: 0.72rem; margin: 0;">If you or someone you know has a gambling problem, call local support resources. Must be 18+ to participate. Please gamble responsibly.</p>
                 </div>
             </div>
             <style>
@@ -15715,7 +15737,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const picks = window._cachedBackendPicks || [];
 
             if (picks.length === 0) {
-                container.innerHTML = '<p class="no-picks-message">No picks yet. Make your first pick to start building your record!</p>';
+                container.innerHTML = '<p class="no-picks-message">No locked picks yet. Make your first pick to start building your record.</p>';
                 return;
             }
 
@@ -15892,8 +15914,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectedTab.classList.add('active');
             }
 
-            // Add active to clicked tab
-            event.target.classList.add('active');
+            // Add active to matching tab without relying on the implicit global event.
+            tabs.forEach(tab => {
+                const label = tab.textContent.toLowerCase();
+                tab.classList.toggle('active',
+                    (tabId === 'overview' && label.includes('overview')) ||
+                    (tabId === 'community' && label.includes('community')) ||
+                    (tabId === 'picks' && label.includes('picks')) ||
+                    (tabId === 'posts' && label.includes('posts')) ||
+                    (tabId === 'friends' && label.includes('friends'))
+                );
+            });
 
             // Load data for specific tabs
             if (tabId === 'friends') {
@@ -16027,7 +16058,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (activities.length === 0) {
                 container.innerHTML = `
                     <p class="no-data-message" style="color: var(--text-secondary); text-align: center; padding: 30px;">
-                        No community activity yet. Start playing trivia, voting in polls, or posting in forums!
+                        No community activity on the board yet. Start playing trivia, voting in polls, or posting in forums.
                     </p>
                 `;
                 return;
@@ -16084,8 +16115,9 @@ document.addEventListener('DOMContentLoaded', function() {
         function showFriendsSubtab(subtab) {
             // Toggle subtab buttons
             const subtabs = document.querySelectorAll('.friends-subtab');
-            subtabs.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            subtabs.forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase().includes(subtab));
+            });
 
             // Toggle lists
             const followingList = document.getElementById('friendsFollowingList');
@@ -16116,22 +16148,97 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="friend-avatar">${user.avatar || '👤'}</div>
                         <div class="friend-info">
                             <div class="friend-name">${user.displayName || user.username}</div>
-                            <div class="friend-stats">${user.record || 'No record yet'}</div>
+                            <div class="friend-stats">${user.record || 'Record will show here once this account has settled picks.'}</div>
                         </div>
                         <button class="friend-action" onclick="viewUserProfile('${user.username}')">View</button>
                     </div>
                 `).join('');
+            } else {
+                followingList.innerHTML = `
+                    <div class="friend-card">
+                        <div class="friend-avatar">👤</div>
+                        <div class="friend-info">
+                            <div class="friend-name">Find handicappers to follow</div>
+                            <div class="friend-stats">Browse the leaderboard to find real performers with visible records.</div>
+                        </div>
+                        <button class="friend-action" onclick="showSection('leaderboards')">Browse</button>
+                    </div>
+                `;
             }
+
+            const followersList = document.getElementById('friendsFollowersList');
+            if (followers.length > 0) {
+                followersList.innerHTML = followers.map(user => `
+                    <div class="friend-card">
+                        <div class="friend-avatar">${user.avatar || '👤'}</div>
+                        <div class="friend-info">
+                            <div class="friend-name">${user.displayName || user.username}</div>
+                            <div class="friend-stats">${user.record || 'This follower has not posted a settled record yet.'}</div>
+                        </div>
+                        <button class="friend-action" onclick="viewUserProfile('${user.username}')">View</button>
+                    </div>
+                `).join('');
+            } else {
+                followersList.innerHTML = `
+                    <div class="friend-card">
+                        <div class="friend-avatar">👤</div>
+                        <div class="friend-info">
+                            <div class="friend-name">No followers on this record yet</div>
+                            <div class="friend-stats">Share picks, posts, and forum takes to give people a reason to follow.</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function viewUserProfile(username) {
+            if (!username) return;
+            window.location.href = 'profile.html?user=' + encodeURIComponent(username);
+        }
+
+        function getCurrentProfileUserId() {
+            if (window.auth && window.auth.isLoggedIn()) {
+                const user = window.auth.getCurrentUser() || {};
+                return user.username || user.id || 'local';
+            }
+            return 'local';
+        }
+
+        function getProfileTabPicks() {
+            const activeUserId = getCurrentProfileUserId();
+            const backendPicks = Array.isArray(window._cachedBackendPicks) ? window._cachedBackendPicks.slice() : [];
+            if (backendPicks.length) {
+                return backendPicks.filter(function(pick) {
+                    return String(pick.user_id || pick.username || activeUserId) === String(activeUserId);
+                });
+            }
+
+            let allPicks = [];
+            try {
+                allPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
+            } catch (e) {
+                allPicks = [];
+            }
+
+            return allPicks.filter(function(pick) {
+                return String(pick.user_id || pick.username || activeUserId) === String(activeUserId);
+            });
         }
 
         // Filter picks in pick history
         function filterPicks(filter) {
             const buttons = document.querySelectorAll('#profilePicksTab .posts-filter-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            buttons.forEach(btn => {
+                const label = btn.textContent.toLowerCase();
+                btn.classList.toggle('active',
+                    (filter === 'all' && label.includes('all')) ||
+                    (filter === 'won' && label.includes('won')) ||
+                    (filter === 'lost' && label.includes('lost')) ||
+                    (filter === 'pending' && label.includes('pending'))
+                );
+            });
 
-            // Get picks from localStorage and filter
-            const picks = JSON.parse(localStorage.getItem('pickHistory') || '[]');
+            const picks = getProfileTabPicks();
             const filtered = filter === 'all' ? picks : picks.filter(p => p.status === filter);
 
             displayFilteredPicks(filtered);
@@ -16142,7 +16249,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const container = document.getElementById('profilePickHistory');
             if (!container) return;
             if (picks.length === 0) {
-                container.innerHTML = '<p class="no-data-message">No picks found for this filter.</p>';
+                container.innerHTML = '<p class="no-data-message">No picks match this filter yet.</p>';
                 return;
             }
 
@@ -16173,25 +16280,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Load pick history
         function loadPickHistory() {
-            let picks = [];
-            try {
-                const allPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
-                if (window.auth && window.auth.isLoggedIn()) {
-                    const user = window.auth.getCurrentUser();
-                    const userId = user.username || user.id || 'local';
-                    picks = allPicks.filter(p => p.user_id === userId);
-                } else {
-                    picks = allPicks;
-                }
-            } catch(e) { picks = []; }
+            const picks = getProfileTabPicks();
             displayFilteredPicks(picks);
         }
 
         // Filter posts
         function filterPosts(filter) {
             const buttons = document.querySelectorAll('#profilePostsTab .posts-filter-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            buttons.forEach(btn => {
+                const label = btn.textContent.toLowerCase();
+                btn.classList.toggle('active',
+                    (filter === 'all' && label.includes('all')) ||
+                    (filter === 'picks' && label.includes('picks')) ||
+                    (filter === 'trivia' && label.includes('trivia')) ||
+                    (filter === 'polls' && label.includes('polls'))
+                );
+            });
 
             // Filter logic would go here
             loadUserPosts(filter);
@@ -16199,18 +16303,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Load user posts
         function loadUserPosts(filter = 'all') {
-            const activity = JSON.parse(localStorage.getItem('userActivity') || '[]');
-            let picks = [];
-            try {
-                const allPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
-                if (window.auth && window.auth.isLoggedIn()) {
-                    const user = window.auth.getCurrentUser();
-                    const userId = user.username || user.id || 'local';
-                    picks = allPicks.filter(p => p.user_id === userId);
-                } else {
-                    picks = allPicks;
-                }
-            } catch(e) { picks = []; }
+            const activeUserId = getCurrentProfileUserId();
+            let activity = [];
+            let feedPosts = [];
+            try { activity = JSON.parse(localStorage.getItem('userActivity') || '[]'); } catch(e) { activity = []; }
+            try { feedPosts = JSON.parse(localStorage.getItem('trustMyRecordFeed') || '[]'); } catch(e) { feedPosts = []; }
+            const picks = getProfileTabPicks();
 
             // Combine and sort by timestamp
             let posts = [];
@@ -16229,7 +16327,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 posts = posts.concat(pollActivity);
             }
 
-            posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            if (filter === 'all') {
+                const authoredFeedPosts = feedPosts
+                    .filter(function(post) {
+                        return String(post.author || post.username || '') === String(activeUserId);
+                    })
+                    .map(function(post) {
+                        return Object.assign({}, post, {
+                            type: post.type || 'post',
+                            timestamp: post.timestamp || post.created_at || new Date().toISOString(),
+                            description: post.content || post.description || ''
+                        });
+                    });
+                posts = posts.concat(authoredFeedPosts);
+            }
+
+            posts.sort((a, b) => new Date(b.locked_at || b.timestamp || b.created_at || 0) - new Date(a.locked_at || a.timestamp || a.created_at || 0));
 
             const container = document.getElementById('userPostsFeed');
             if (posts.length === 0) {
@@ -16254,17 +16367,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     const odds = post.odds_snapshot || post.odds || '';
                     const status = post.status || 'pending';
                     const statusColor = status === 'won' ? '#00c853' : status === 'lost' ? '#ff4444' : '#ff9800';
-                    const dateStr = new Date(post.locked_at || post.timestamp || Date.now()).toLocaleDateString();
+                    const dateStr = new Date(post.locked_at || post.timestamp || post.created_at || Date.now()).toLocaleDateString();
                     return '<div class="user-post-card"><div class="user-post-header">' +
                         '<span class="user-post-type" style="color: ' + statusColor + ';">' + status.toUpperCase() + '</span>' +
                         '<span class="user-post-date">' + dateStr + '</span></div>' +
                         '<div class="user-post-pick"><div class="user-post-pick-team">' + matchup + '</div>' +
                         '<div class="user-post-pick-details">' + selection + (odds ? ' (' + odds + ')' : '') + '</div></div></div>';
                 } else {
+                    const label = post.type === 'text' ? 'POST' : (post.type || 'INFO').toUpperCase();
+                    const content = post.description || post.content || 'Activity recorded';
                     return '<div class="user-post-card"><div class="user-post-header">' +
-                        '<span class="user-post-type">' + (post.type || 'INFO').toUpperCase() + '</span>' +
-                        '<span class="user-post-date">' + new Date(post.timestamp || Date.now()).toLocaleDateString() + '</span></div>' +
-                        '<div class="user-post-content">' + (post.description || 'Activity recorded') + '</div></div>';
+                        '<span class="user-post-type">' + label + '</span>' +
+                        '<span class="user-post-date">' + new Date(post.timestamp || post.created_at || Date.now()).toLocaleDateString() + '</span></div>' +
+                        '<div class="user-post-content">' + content + '</div></div>';
                 }
             }).join('');
         }
@@ -16427,9 +16542,13 @@ document.addEventListener('DOMContentLoaded', function() {
         function switchFeedTab(tabName) {
             // Update active tab
             document.querySelectorAll('.feed-tab').forEach(tab => {
-                tab.classList.remove('active');
+                const label = tab.textContent.toLowerCase();
+                tab.classList.toggle('active',
+                    (tabName === 'following' && label.includes('following')) ||
+                    (tabName === 'global' && label.includes('global')) ||
+                    (tabName === 'trending' && label.includes('trending'))
+                );
             });
-            event.target.classList.add('active');
 
             // Load appropriate feed
             loadFeed(tabName);
@@ -16457,7 +16576,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             if (picks.length === 0) {
-                container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);margin-top:50px;">No picks to show yet. Follow some users or make your first pick!</p>';
+                container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);margin-top:50px;">No picks in this feed yet. Follow real cappers or lock your first play to change that.</p>';
                 return;
             }
 
@@ -16476,13 +16595,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 const isNowFollowing = auth.toggleFollow(userId);
 
                 // Update button state
-                const btn = event.target;
+                const btn = document.activeElement && document.activeElement.tagName === 'BUTTON' ? document.activeElement : null;
                 if (isNowFollowing) {
-                    btn.classList.add('following');
-                    btn.textContent = 'Unfollow';
+                    if (btn) {
+                        btn.classList.add('following');
+                        btn.textContent = 'Unfollow';
+                    }
                 } else {
-                    btn.classList.remove('following');
-                    btn.textContent = 'Follow';
+                    if (btn) {
+                        btn.classList.remove('following');
+                        btn.textContent = 'Follow';
+                    }
                 }
             } catch (error) {
                 alert('Error: ' + error.message);
@@ -16501,16 +16624,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 const isLiked = social.toggleLike(pickId);
 
                 // Update UI
-                const btn = event.target;
+                const btn = document.activeElement && document.activeElement.tagName === 'BUTTON' ? document.activeElement : null;
                 const likeCount = social.getLikeCount(pickId);
 
-                if (isLiked) {
-                    btn.classList.add('liked');
-                } else {
-                    btn.classList.remove('liked');
-                }
+                if (btn) {
+                    if (isLiked) {
+                        btn.classList.add('liked');
+                    } else {
+                        btn.classList.remove('liked');
+                    }
 
-                btn.innerHTML = `❤️ ${likeCount}`;
+                    btn.innerHTML = `❤️ ${likeCount}`;
+                }
             } catch (error) {
                 alert('Error: ' + error.message);
             }
@@ -16540,7 +16665,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const threads = forums.getThreadsByCategory(cat.id, 'activity', 1);
                 const lastThread = threads[0];
 
-                let lastPostHTML = '<div class="no-posts">No posts yet</div>';
+                let lastPostHTML = '<div class="no-posts">No recent thread activity yet</div>';
                 if (lastThread) {
                     const lastPostTime = timeAgo(lastThread.lastActivityTime);
                     lastPostHTML = `
@@ -16601,7 +16726,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!container) return;
 
             if (threads.length === 0) {
-                container.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-secondary);">No threads yet. Be the first to start a discussion!</td></tr>';
+                container.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-secondary);">No threads yet. Start the first discussion with a pick angle, receipt, or record-backed opinion.</td></tr>';
                 return;
             }
 
@@ -16827,8 +16952,8 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- External Scripts -->
     <script src="static/js/config.js?v=20260317"></script>
     <script src="static/js/analytics.js?v=20260405"></script>
-    <script src="static/js/backend-api.js?v=20260414c"></script>
-    <script src="static/js/auth-persistent.js?v=20260414e"></script>
+    <script src="static/js/backend-api.js?v=20260415c"></script>
+    <script src="static/js/auth-persistent.js?v=20260415d"></script>
     <script>
         // Backend API integration active
         console.log('[TMR] Backend API URL:', CONFIG?.api?.baseUrl);
@@ -16857,14 +16982,20 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('unreadCount').textContent = '0';
         }
 
+        function openNewMessageModal() {
+            window.location.href = 'messages.html?compose=1';
+        }
+
         // Enhanced Notification Functions
         function filterNotifications(type) {
             const items = document.querySelectorAll('.notification-item');
             const buttons = document.querySelectorAll('.notif-filter-btn');
 
             // Update active button
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+            buttons.forEach(btn => {
+                const label = btn.textContent.toLowerCase();
+                btn.classList.toggle('active', type === 'all' ? label.includes('all') : label.includes(type));
+            });
 
             // Filter notifications
             items.forEach(item => {
@@ -16968,16 +17099,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     </script>
 
-    <script src="static/js/social.js?v=20251208c"></script>
+    <script src="static/js/social.js?v=20260415f"></script>
     <script src="static/js/forums.js?v=20251208c"></script>
     <!-- forms.js REMOVED - forms-fixed.js handles login/signup -->
     <script src="static/js/navigation.js?v=20260415a"></script>
-    <script src="static/js/sportsbook-production-fix.js?v=20260414n"></script>
+    <script src="static/js/sportsbook-production-fix.js?v=20260416a"></script>
     <script src="static/js/effects.js?v=20251208c"></script>
 
     <script src="static/js/app.js?v=20260122"></script>
-    <script src="static/js/auto-grader-fixed.js?v=20260414c"></script>
-    <script src="static/js/nhl-markets.js"></script>
+    <script src="static/js/auto-grader-fixed.js?v=20260415f"></script>
+    <script src="static/js/nhl-markets.js?v=20260415c"></script>
     <!-- AUTO-GRADER INITIALIZATION -->
     <script>
     // Initialize auto-grader on page load and run every 5 minutes
@@ -17001,10 +17132,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     </script>
     <!-- picks-complete-fix.js REMOVED: it was from an old architecture that overwrote working functions -->
-    <script src="static/js/stats-engine.js"></script>
+    <script src="static/js/stats-engine.js?v=20260415d"></script>
     <script src="static/js/challenges-engine.js?v=20260414b"></script>
     <script src="static/js/notifications.js?v=20260414b"></script>
-    <script src="static/js/leaderboard.js?v=20260414b"></script>
+    <script src="static/js/leaderboard.js?v=20260415d"></script>
 
     <script>
     // COMPLETE PICKS MODULE - FIXED VERSION v2 - January 13, 2026
@@ -17023,11 +17154,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const sportKeyMap = {
         'NFL': 'americanfootball_nfl',
         'NBA': 'basketball_nba',
+        'WNBA': 'basketball_wnba',
         'NHL': 'icehockey_nhl',
         'MLB': 'baseball_mlb',
         'Soccer': 'soccer_epl',
+        'MLS': 'soccer_usa_mls',
+        'UCL': 'soccer_uefa_champs_league',
+        'LaLiga': 'soccer_spain_la_liga',
+        'SerieA': 'soccer_italy_serie_a',
+        'Bundesliga': 'soccer_germany_bundesliga',
+        'Ligue1': 'soccer_france_ligue_one',
         'NCAAF': 'americanfootball_ncaaf',
-        'NCAAB': 'basketball_ncaab'
+        'NCAAB': 'basketball_ncaab',
+        'ATP': 'tennis_atp',
+        'WTA': 'tennis_wta'
     };
 
     // Games loaded from backend
@@ -17172,41 +17312,40 @@ document.addEventListener('DOMContentLoaded', function() {
             const gameTime = new Date(game.commence_time);
             const timeStr = gameTime.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
-            // Compute team total line (game total / 2, rounded to nearest 0.5)
-            const ttLine = total !== '--' ? Math.round(parseFloat(total) / 2 * 2) / 2 : '?';
+            const teamTotalGroup = Array.isArray(game.market_groups) ? game.market_groups.find(group => group && group.key === 'team_totals') : null;
+            const teamTotalItems = teamTotalGroup && Array.isArray(teamTotalGroup.items) ? teamTotalGroup.items : [];
 
             // Build F5 HTML for MLB games only
             const selSport = window.TMR && window.TMR.selectedSport;
             const isMLBGame = selSport === 'MLB' || (game.sport_key && game.sport_key.indexOf('baseball') !== -1);
             let f5Html = '';
             if (isMLBGame) {
-                const f5t = total !== '--' ? (Math.round(parseFloat(total) * 0.55 * 2) / 2) : '?';
                 const first5Group = Array.isArray(game.market_groups) ? game.market_groups.find(group => group && group.key === 'first_5') : null;
                 const first5Items = first5Group && Array.isArray(first5Group.items) ? first5Group.items : [];
-                const awayF5Spread = first5Items.find(item => item && item.market_type === 'f5_spreads' && item.selection === game.away_team) || null;
-                const homeF5Spread = first5Items.find(item => item && item.market_type === 'f5_spreads' && item.selection === game.home_team) || null;
-                const awayF5Line = awayF5Spread && awayF5Spread.line != null ? awayF5Spread.line : 0.5;
-                const homeF5Line = homeF5Spread && homeF5Spread.line != null ? homeF5Spread.line : -0.5;
-                const awayF5Odds = awayF5Spread && awayF5Spread.odds != null ? awayF5Spread.odds : -118;
-                const homeF5Odds = homeF5Spread && homeF5Spread.odds != null ? homeF5Spread.odds : -102;
                 const escAway = game.away_team.replace(/'/g, "\\'");
                 const escHome = game.home_team.replace(/'/g, "\\'");
-                const awayShort = game.away_team.split(' ').pop();
-                const homeShort = game.home_team.split(' ').pop();
+                const escJs = value => String(value == null ? '' : value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                const f5Buttons = first5Items.map(item => {
+                    const type = item.market_type === 'f5_h2h' ? 'f5ml' : (item.market_type === 'f5_totals' && item.selection === 'Over' ? 'f5over' : (item.market_type === 'f5_totals' ? 'f5under' : 'f5spread'));
+                    const line = item.line != null ? item.line : '';
+                    const odds = item.odds != null ? item.odds : '';
+                    const label = item.selection_label || item.selection || 'First 5';
+                    return `<button class="bet-pick-btn" onclick="selectGameBet(${index}, '${type}', '${escJs(item.selection || label)}', '${escJs(line)}', '${escJs(odds)}', '${escAway}', '${escHome}')"><span class="line">${label}</span><span class="odds">${odds}</span></button>`;
+                }).join('');
                 f5Html = `<div class="market-section"><div class="market-title">First 5 Innings</div>
-                    <div style="display:flex;gap:10px;margin-bottom:8px;">
-                        <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5spread', '${escAway}', '${awayF5Line}', '${awayF5Odds}', '${escAway}', '${escHome}')"><span class="line">${awayShort} ${awayF5Line > 0 ? '+' : ''}${awayF5Line}</span><span class="odds">${awayF5Odds > 0 ? '+' : ''}${awayF5Odds}</span></button>
-                        <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5spread', '${escHome}', '${homeF5Line}', '${homeF5Odds}', '${escAway}', '${escHome}')"><span class="line">${homeShort} ${homeF5Line > 0 ? '+' : ''}${homeF5Line}</span><span class="odds">${homeF5Odds > 0 ? '+' : ''}${homeF5Odds}</span></button>
-                    </div>
-                    <div style="display:flex;gap:10px;margin-bottom:8px;">
-                        <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5ml', '${escAway}', 'F5 ML', '${awayML}', '${escAway}', '${escHome}')"><span class="line">${awayShort} F5</span><span class="odds">${awayML}</span></button>
-                        <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5ml', '${escHome}', 'F5 ML', '${homeML}', '${escAway}', '${escHome}')"><span class="line">${homeShort} F5</span><span class="odds">${homeML}</span></button>
-                    </div>
-                    <div style="display:flex;gap:10px;">
-                        <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5over', 'Over', '${f5t}', '-110', '${escAway}', '${escHome}')"><span class="line">F5 O ${f5t}</span><span class="odds">-110</span></button>
-                        <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'f5under', 'Under', '${f5t}', '-110', '${escAway}', '${escHome}')"><span class="line">F5 U ${f5t}</span><span class="odds">-110</span></button>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        ${f5Buttons || '<div style="color:var(--text-muted,#aaa);font-size:12px;">No verified first-5 lines available for this game.</div>'}
                     </div></div>`;
             }
+
+            const escMarketJs = value => String(value == null ? '' : value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            const teamTotalsHtml = teamTotalItems.length ? teamTotalItems.map(item => {
+                const type = item.market_type === 'team_totals' && item.selection_label && item.selection_label.toLowerCase().indexOf('under') !== -1 ? 'teamunder' : 'teamover';
+                const label = item.selection_label || item.selection || 'Team Total';
+                const line = item.line != null ? item.line : '';
+                const odds = item.odds != null ? item.odds : '';
+                return `<button class="bet-pick-btn" onclick="selectGameBet(${index}, '${type}', '${escMarketJs(item.selection || label)}', '${escMarketJs(line)}', '${escMarketJs(odds)}', '${game.away_team.replace(/'/g, "\\'")}', '${game.home_team.replace(/'/g, "\\'")}')"><span class="line">${label}</span><span class="odds">${odds}</span></button>`;
+            }).join('') : '<div style="color:var(--text-muted,#aaa);font-size:12px;">No verified team-total lines available for this game.</div>';
 
             html += `
             <div class="game-card-new" data-game-index="${index}">
@@ -17274,29 +17413,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div id="expandedMarkets${index}" class="expanded-markets">
                     <div class="market-section">
                         <div class="market-title">Team Totals</div>
-                        <div class="team-totals-grid" style="display: grid; gap: 10px;">
-                            <div class="team-total-row" style="display: flex; align-items: center; gap: 10px;">
-                                <span class="team-name" style="min-width: 100px; font-weight: 600;">${game.away_team.split(' ').pop()}</span>
-                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'teamover', '${game.away_team.replace(/'/g, "\\'")}', '${ttLine}', '-110', '${game.away_team.replace(/'/g, "\\'")}', '${game.home_team.replace(/'/g, "\\'")}')">
-                                    <span class="line">O ${ttLine}</span>
-                                    <span class="odds">-110</span>
-                                </button>
-                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'teamunder', '${game.away_team.replace(/'/g, "\\'")}', '${ttLine}', '-110', '${game.away_team.replace(/'/g, "\\'")}', '${game.home_team.replace(/'/g, "\\'")}')">
-                                    <span class="line">U ${ttLine}</span>
-                                    <span class="odds">-110</span>
-                                </button>
-                            </div>
-                            <div class="team-total-row" style="display: flex; align-items: center; gap: 10px;">
-                                <span class="team-name" style="min-width: 100px; font-weight: 600;">${game.home_team.split(' ').pop()}</span>
-                                <button class="bet-pick-btn tt-over" onclick="selectGameBet(${index}, 'teamover', '${game.home_team.replace(/'/g, "\\'")}', '${ttLine}', '-110', '${game.away_team.replace(/'/g, "\\'")}', '${game.home_team.replace(/'/g, "\\'")}')">
-                                    <span class="line">O ${ttLine}</span>
-                                    <span class="odds">-110</span>
-                                </button>
-                                <button class="bet-pick-btn tt-under" onclick="selectGameBet(${index}, 'teamunder', '${game.home_team.replace(/'/g, "\\'")}', '${ttLine}', '-110', '${game.away_team.replace(/'/g, "\\'")}', '${game.home_team.replace(/'/g, "\\'")}')">
-                                    <span class="line">U ${ttLine}</span>
-                                    <span class="odds">-110</span>
-                                </button>
-                            </div>
+                        <div class="team-totals-grid" style="display:flex;gap:10px;flex-wrap:wrap;">
+                            ${teamTotalsHtml}
                         </div>
                     </div>
                     ${f5Html}
@@ -17353,6 +17471,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (summaryGame) summaryGame.textContent = awayTeam + ' @ ' + homeTeam;
         if (summaryPick) summaryPick.textContent = team + ' ' + line;
         if (summaryOdds) summaryOdds.textContent = odds;
+
+        analyticsTrackSportsbook('sportsbook_pick_selected', {
+            sport: (window.TMR.selectedSport || selectedSport || ''),
+            bet_type: betType,
+            team: team || '',
+            line: line || '',
+            odds: odds || '',
+            matchup: awayTeam + ' @ ' + homeTeam
+        });
 
         // Go to confirmation
         showPickStep('pickDetails');
@@ -17690,7 +17817,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const marketType = marketTypeMap[pick.betType] || 'h2h';
             const selection = extractSelection(pick.pick, pick.betType, pick.game);
             const units = Math.max(0.5, Math.min(10, parseFloat(pick.units) || 1));
-            const sportKeyMap = { 'NFL': 'americanfootball_nfl', 'NBA': 'basketball_nba', 'NHL': 'icehockey_nhl', 'MLB': 'baseball_mlb', 'Soccer': 'soccer_epl', 'NCAAF': 'americanfootball_ncaaf', 'NCAAB': 'basketball_ncaab' };
+            const sportKeyMap = window.TMR.sportKeyMap || { 'NFL': 'americanfootball_nfl', 'NBA': 'basketball_nba', 'WNBA': 'basketball_wnba', 'NHL': 'icehockey_nhl', 'MLB': 'baseball_mlb', 'Soccer': 'soccer_epl', 'MLS': 'soccer_usa_mls', 'UCL': 'soccer_uefa_champs_league', 'LaLiga': 'soccer_spain_la_liga', 'SerieA': 'soccer_italy_serie_a', 'Bundesliga': 'soccer_germany_bundesliga', 'Ligue1': 'soccer_france_ligue_one', 'NCAAF': 'americanfootball_ncaaf', 'NCAAB': 'basketball_ncaab', 'ATP': 'tennis_atp', 'WTA': 'tennis_wta' };
             const user = window.auth.getCurrentUser();
 
             const newPick = {
@@ -17846,7 +17973,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (picks.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">No picks yet. Make your first pick above!</p>';
+            container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">No picks locked yet. Submit your first play above to start the record.</p>';
             return;
         }
 
@@ -17969,9 +18096,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     async function updateGameCounts() {
-        // Fetch real game counts from ESPN for each sport
+        // Fetch real board counts from the same backend feed used by the pick board.
         var sportMap = window.TMR.sportKeyMap || {};
-        var espnPaths = window.TMR.espnPaths || {};
         var sportCards = document.querySelectorAll('.sport-card');
         sportCards.forEach(function(card) {
             var sport = card.getAttribute('data-sport');
@@ -17979,16 +18105,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!gamesSpan || !sport) return;
             gamesSpan.textContent = 'Checking...';
             var sportKey = sportMap[sport];
-            var espnPath = espnPaths[sportKey];
-            if (!espnPath) { gamesSpan.textContent = 'No data'; return; }
-            var url = 'https://site.api.espn.com/apis/site/v2/sports/' + espnPath + '/scoreboard';
-            fetch(url).then(function(r) { return r.json(); }).then(function(data) {
-                var events = data.events || [];
-                if (events.length > 0) {
-                    gamesSpan.textContent = events.length + ' game' + (events.length !== 1 ? 's' : '') + ' today';
+            if (!sportKey) { gamesSpan.textContent = 'No data'; return; }
+            var apiBase = (window.api && window.api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+            fetch(String(apiBase).replace(/\/$/, '') + '/games/board/' + encodeURIComponent(sportKey)).then(function(r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            }).then(function(data) {
+                var games = data.games || [];
+                if (games.length > 0) {
+                    gamesSpan.textContent = games.length + ' board' + (games.length !== 1 ? 's' : '') + ' live';
                     gamesSpan.style.color = 'var(--neon-cyan)';
                 } else {
-                    gamesSpan.textContent = 'No games today';
+                    gamesSpan.textContent = 'No board today';
                     gamesSpan.style.color = 'var(--text-muted)';
                 }
             }).catch(function() {
@@ -18171,7 +18299,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         if (Object.keys(stats).length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">No graded picks yet</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Graded picks will populate this sport breakdown once results settle.</td></tr>';
             return;
         }
 
@@ -18208,7 +18336,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         if (Object.keys(stats).length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">No graded picks yet</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Graded picks will populate this market breakdown once results settle.</td></tr>';
             return;
         }
 
@@ -18262,7 +18390,7 @@ document.addEventListener('DOMContentLoaded', function() {
         filtered.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
 
         if (filtered.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding: 40px;">No picks found.</p>';
+            container.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding: 40px;">No picks match this filter yet.</p>';
             return;
         }
 
@@ -18392,7 +18520,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Bio
         const bio = document.getElementById('profileBio');
         if (bio) {
-            bio.textContent = user.bio || 'No bio yet.';
+            bio.textContent = user.bio || 'Add a bio so people know what sports, markets, and angles are behind this record.';
         }
 
         // Stats
@@ -18602,7 +18730,7 @@ document.addEventListener('DOMContentLoaded', function() {
             container.innerHTML = `
                 <div class="lb-row empty">
                     <div style="text-align:center; padding: 20px; color: var(--text-muted);">
-                        No ranked users yet. Check back after more verified action posts.
+                        Rankings will appear once more verified records and settled action are available to compare.
                     </div>
                 </div>
             `;
@@ -19026,7 +19154,7 @@ document.addEventListener('DOMContentLoaded', function() {
         markAllNotificationsRead();
 
         if (notifs.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 30px; color: var(--text-muted);">No notifications yet</div>';
+            container.innerHTML = '<div style="text-align: center; padding: 30px; color: var(--text-muted);">No fresh alerts yet. Pick grades, social activity, and account alerts will appear here once the account is active.</div>';
             return;
         }
 
@@ -19175,22 +19303,10 @@ document.addEventListener('DOMContentLoaded', function() {
         var feed = [];
         try { feed = JSON.parse(localStorage.getItem('trustMyRecordFeed') || '[]'); } catch(e) {}
 
-        // Update sidebar stats
-        if (window.auth && window.auth.isLoggedIn()) {
-            var user = window.auth.getCurrentUser();
-            var userId = user.username || user.id;
-            var userPicks = [];
-            try { userPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]').filter(function(p) { return p.user_id === userId; }); } catch(e) {}
-            var wins = userPicks.filter(function(p) { return p.status === 'won'; }).length;
-            var graded = userPicks.filter(function(p) { return p.status === 'won' || p.status === 'lost'; }).length;
-            var el1 = document.getElementById('sidebarPicks'); if (el1) el1.textContent = userPicks.length;
-            var el2 = document.getElementById('sidebarWinRate'); if (el2) el2.textContent = (graded > 0 ? Math.round(wins/graded*100) : 0) + '%';
-            var following = []; try { following = JSON.parse(localStorage.getItem('trustMyRecordFollowers') || '[]'); } catch(e) {}
-            var el3 = document.getElementById('sidebarFollowers'); if (el3) el3.textContent = following.length;
-        }
+        updateFeedSidebarStats();
 
         if (feed.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);"><div style="font-size: 40px; margin-bottom: 12px;">&#128172;</div><p>No posts yet. Make a pick or share your thoughts!</p></div>';
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);"><div style="font-size: 40px; margin-bottom: 12px;">&#128172;</div><p>No community posts yet. Make a pick, log a journal, or share a receipt-backed take to start the feed.</p></div>';
             return;
         }
 
@@ -19247,7 +19363,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (enhancedShowSection) enhancedShowSection(sectionId);
 
         if (sectionId === 'leaderboards') {
-            loadDynamicLeaderboards();
+            if (typeof window.refreshLeaderboards === 'function') {
+                window.refreshLeaderboards().catch(function(error) {
+                    console.warn('[TMR] Backend leaderboard refresh failed, using local fallback:', error);
+                    loadDynamicLeaderboards();
+                });
+            } else {
+                loadDynamicLeaderboards();
+            }
         }
         if (sectionId === 'profile') {
             // If no specific user set by showProfile(), reset and load current user
@@ -19274,6 +19397,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
+    function applySportsbookHashRoute() {
+        const hashSection = (window.location.hash || '').replace(/^#/, '').trim();
+        if (!hashSection) return;
+        const target = document.getElementById(hashSection);
+        if (!target || !target.classList.contains('page-section')) return;
+        if (typeof window.showSection === 'function') {
+            window.showSection(hashSection);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(applySportsbookHashRoute, 0);
+    });
+
+    window.addEventListener('hashchange', function() {
+        applySportsbookHashRoute();
+    });
+
     // =====================================================
     // MY PICKS SECTION - Load picks from localStorage
     // =====================================================
@@ -19282,7 +19423,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const sportDisplayMap = {
         'basketball_nba': 'NBA', 'americanfootball_nfl': 'NFL', 'icehockey_nhl': 'NHL',
-        'baseball_mlb': 'MLB', 'soccer_epl': 'Soccer', 'americanfootball_ncaaf': 'NCAAF', 'basketball_ncaab': 'NCAAB'
+        'baseball_mlb': 'MLB', 'basketball_wnba': 'WNBA', 'soccer_epl': 'EPL', 'soccer_usa_mls': 'MLS', 'soccer_uefa_champs_league': 'UCL', 'soccer_spain_la_liga': 'La Liga', 'soccer_italy_serie_a': 'Serie A', 'soccer_germany_bundesliga': 'Bundesliga', 'soccer_france_ligue_one': 'Ligue 1', 'americanfootball_ncaaf': 'NCAAF', 'basketball_ncaab': 'NCAAB', 'tennis_atp': 'ATP', 'tennis_wta': 'WTA'
     };
 
     function loadMyPicks(tab = 'pending') {
@@ -20221,10 +20362,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     </style>
 
-    <script src="static/js/platform-production-fix.js?v=20260414c"></script>
-    <script src="static/js/sportsbook-dashboard-sync.js?v=20260415a"></script>
-    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260415a">
-    <script defer src="static/js/tmr-sitewide.js?v=20260415a"></script>
+    <script src="static/js/platform-production-fix.js?v=20260415d"></script>
+    <script src="static/js/sportsbook-dashboard-sync.js?v=20260415d"></script>
+    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260419a">
+    <script defer src="static/js/tmr-sitewide.js?v=20260415e"></script>
     <style>
         /* Make Your Picks polish: visual-only overrides, no pick-flow logic changes. */
         #picks.page-section {
