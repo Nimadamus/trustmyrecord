@@ -10,8 +10,8 @@
     <meta property="og:title" content="User Profile | Trust My Record">
     <meta property="og:description" content="Check out my verified handicapping record and stats.">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260419a">
-    <script defer src="static/js/tmr-sitewide.js?v=20260415f"></script>
+    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260420d">
+    <script defer src="static/js/tmr-sitewide.js?v=20260420d"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -911,7 +911,7 @@
       gtag('config', 'G-V5MCVXS2HE');
     </script>
 </head>
-<body>
+<body class="profile-page">
     <div class="profile-top-strip">
         <strong>Today:</strong>
         <span>Verified records</span>
@@ -928,7 +928,7 @@
                     <a href="sportsbook.html" class="nav-link">Scores &amp; Matchups</a>
                     <a href="feed.html" class="nav-link">News</a>
                     <a href="sportsbook.html#picks" class="nav-link">Picks</a>
-                    <a href="profile.html" class="nav-link">Handicappers</a>
+                    <a href="handicappers.html" class="nav-link">Handicappers</a>
                     <a href="forum.html" class="nav-link">Forum</a>
                     <a href="messages.html" class="nav-link">Messages</a>
                     <a href="profile.html" class="nav-link active">My Account</a>
@@ -1810,6 +1810,239 @@
                 align-items: flex-start;
             }
         }
+
+        html body.tmr-site-shell.profile-page {
+            background:
+                linear-gradient(180deg, #eef3f8 0%, #f6f9fc 34%, #eef4fb 100%) !important;
+            color: #162231 !important;
+        }
+
+        body.tmr-site-shell.profile-page .tmr-route-note {
+            border-color: rgba(191, 201, 214, 0.72);
+            background: rgba(255, 255, 255, 0.92);
+            color: #5f7084;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+        }
+
+        body.tmr-site-shell.profile-page .tmr-route-note strong {
+            color: #1b2c42;
+        }
+
+        body.tmr-site-shell.profile-page .profile-header,
+        body.tmr-site-shell.profile-page .summary-grid,
+        body.tmr-site-shell.profile-page .workspace-nav-card,
+        body.tmr-site-shell.profile-page .ledger-filter-card,
+        body.tmr-site-shell.profile-page .picks-table-wrapper,
+        body.tmr-site-shell.profile-page .analytics-card,
+        body.tmr-site-shell.profile-page .analytics-preview-card,
+        body.tmr-site-shell.profile-page .support-module,
+        body.tmr-site-shell.profile-page .support-callout,
+        body.tmr-site-shell.profile-page .support-strip,
+        body.tmr-site-shell.profile-page .empty-state {
+            border: 1px solid #d6dfe8 !important;
+            background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(247,250,252,0.98)) !important;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08) !important;
+            backdrop-filter: none !important;
+        }
+
+        body.tmr-site-shell.profile-page .profile-header {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) minmax(260px, 320px);
+            align-items: start;
+            gap: 22px;
+            border-radius: 24px !important;
+            padding: 28px !important;
+            color: #162231 !important;
+            background:
+                radial-gradient(circle at top right, rgba(31, 122, 224, 0.12), transparent 34%),
+                linear-gradient(180deg, #ffffff 0%, #f7fafc 100%) !important;
+        }
+
+        body.tmr-site-shell.profile-page .profile-header::before {
+            display: none !important;
+        }
+
+        body.tmr-site-shell.profile-page .profile-avatar {
+            width: 88px !important;
+            height: 88px !important;
+            border: 1px solid #c9d8ea !important;
+            box-shadow: 0 16px 32px rgba(59, 130, 246, 0.14) !important;
+        }
+
+        body.tmr-site-shell.profile-page .profile-info {
+            min-width: 0;
+        }
+
+        body.tmr-site-shell.profile-page .profile-name,
+        body.tmr-site-shell.profile-page .section-title,
+        body.tmr-site-shell.profile-page .summary-stat-value,
+        body.tmr-site-shell.profile-page .analytics-card-value,
+        body.tmr-site-shell.profile-page .analytics-card h3,
+        body.tmr-site-shell.profile-page .support-module h3 {
+            color: #142538 !important;
+        }
+
+        body.tmr-site-shell.profile-page .profile-handle,
+        body.tmr-site-shell.profile-page .profile-bio,
+        body.tmr-site-shell.profile-page .section-subtitle,
+        body.tmr-site-shell.profile-page .table-note,
+        body.tmr-site-shell.profile-page .summary-stat-note,
+        body.tmr-site-shell.profile-page .analytics-card p,
+        body.tmr-site-shell.profile-page .support-module-note,
+        body.tmr-site-shell.profile-page .empty-state p {
+            color: #6a7b8f !important;
+        }
+
+        body.tmr-site-shell.profile-page .profile-trust-pill,
+        body.tmr-site-shell.profile-page .profile-meta-item,
+        body.tmr-site-shell.profile-page .workspace-tab {
+            border-color: #d7e1eb !important;
+            background: #f7fafc !important;
+            color: #58708a !important;
+        }
+
+        body.tmr-site-shell.profile-page .profile-trust-pill strong {
+            color: #1a2f45 !important;
+        }
+
+        .profile-rail {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .profile-rail-card {
+            padding: 12px 14px;
+            border-radius: 16px;
+            border: 1px solid #d9e3ed;
+            background: #f7fafc;
+        }
+
+        .profile-rail-label {
+            display: block;
+            margin-bottom: 6px;
+            color: #7b8794;
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .profile-rail-value {
+            color: #162231;
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 1.02rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        body.tmr-site-shell.profile-page .summary-grid {
+            grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+            border-radius: 22px !important;
+            overflow: hidden !important;
+        }
+
+        body.tmr-site-shell.profile-page .summary-stat {
+            min-height: 88px !important;
+            padding: 16px 18px !important;
+            border-right: 1px solid #e2e8f0 !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            background: transparent !important;
+        }
+
+        body.tmr-site-shell.profile-page .summary-stat:nth-child(5n) {
+            border-right: none !important;
+        }
+
+        body.tmr-site-shell.profile-page .summary-stat:nth-last-child(-n + 5) {
+            border-bottom: none !important;
+        }
+
+        body.tmr-site-shell.profile-page .summary-stat-label {
+            color: #718096 !important;
+        }
+
+        body.tmr-site-shell.profile-page .workspace-nav-head {
+            align-items: center;
+        }
+
+        body.tmr-site-shell.profile-page .workspace-tab.active,
+        body.tmr-site-shell.profile-page .btn-primary,
+        body.tmr-site-shell.profile-page .filter-button.active {
+            background: linear-gradient(135deg, #1f7ae0, #54a6ff) !important;
+            color: #ffffff !important;
+            border-color: transparent !important;
+        }
+
+        body.tmr-site-shell.profile-page .btn-secondary,
+        body.tmr-site-shell.profile-page .filter-button,
+        body.tmr-site-shell.profile-page .ledger-sort-button {
+            background: #ffffff !important;
+            color: #1f3348 !important;
+            border-color: #d5dee8 !important;
+        }
+
+        body.tmr-site-shell.profile-page .filter-toolbar {
+            background: #f8fafc !important;
+            border-color: #dbe3ec !important;
+        }
+
+        body.tmr-site-shell.profile-page .picks-table th {
+            background: #f8fafc;
+            color: #718096;
+        }
+
+        body.tmr-site-shell.profile-page .picks-table td {
+            color: #213345;
+            border-color: #e2e8f0;
+        }
+
+        body.tmr-site-shell.profile-page .picks-table tr:hover td {
+            background: #f8fbff;
+        }
+
+        @media (max-width: 1100px) {
+            body.tmr-site-shell.profile-page .profile-header {
+                grid-template-columns: auto minmax(0, 1fr);
+            }
+
+            .profile-rail {
+                grid-column: 1 / -1;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 760px) {
+            body.tmr-site-shell.profile-page .profile-header {
+                grid-template-columns: 1fr;
+                text-align: left;
+            }
+
+            .profile-rail {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            body.tmr-site-shell.profile-page .summary-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+
+            body.tmr-site-shell.profile-page .summary-stat:nth-child(5n) {
+                border-right: 1px solid #e2e8f0 !important;
+            }
+
+            body.tmr-site-shell.profile-page .summary-stat:nth-last-child(-n + 5) {
+                border-bottom: 1px solid #e2e8f0 !important;
+            }
+
+            body.tmr-site-shell.profile-page .summary-stat:nth-child(2n) {
+                border-right: none !important;
+            }
+
+            body.tmr-site-shell.profile-page .summary-stat:nth-last-child(-n + 2) {
+                border-bottom: none !important;
+            }
+        }
     </style>
 
     <script>
@@ -1821,7 +2054,7 @@
     </script>
     <script src="static/js/config.js?v=20260330"></script>
     <script src="static/js/analytics.js?v=20260405"></script>
-    <script src="static/js/backend-api.js?v=20260415c"></script>
+    <script src="static/js/backend-api.js?v=20260420c"></script>
     <script src="static/js/nav-badges.js"></script>
     <script src="static/js/auth-persistent.js?v=20260415d"></script>
     <script src="static/js/auto-grader-fixed.js?v=20260405b"></script>
@@ -2231,8 +2464,8 @@
             return;
         }
 
-        renderProfileHeader(profileData);
         await refreshLeaderboardRank();
+        renderProfileHeader(profileData);
         await loadAllPicks();
         analyticsTrackPickHistoryView({
             view_type: isOwnProfile ? 'own' : 'public',
@@ -2305,11 +2538,17 @@
         const rankText = currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked';
         const totalPicks = Number(p.total_picks || p.totalPicks || 0);
         const verifiedText = String(p.verification_status || '').toLowerCase() === 'verified' ? 'Verified' : 'Unverified';
+        const recordText = Number(p.wins || 0) + '-' + Number(p.losses || 0) + '-' + Number(p.pushes || 0);
         const trustPills = '<div class="profile-trust-row">' +
             '<span class="profile-trust-pill"><i class="fas fa-user"></i> Member since <strong>' + joinDate + '</strong></span>' +
-            '<span class="profile-trust-pill"><i class="fas fa-ranking-star"></i> Rank <strong>' + rankText + '</strong></span>' +
-            '<span class="profile-trust-pill"><i class="fas fa-shield-check"></i> Status <strong>' + verifiedText + '</strong></span>' +
-            '<span class="profile-trust-pill"><i class="fas fa-database"></i> Public record <strong>' + totalPicks + ' picks</strong></span>' +
+            '<span class="profile-trust-pill"><i class="fas fa-chart-simple"></i> Record <strong>' + recordText + '</strong></span>' +
+            '<span class="profile-trust-pill"><i class="fas fa-database"></i> Ledger <strong>' + totalPicks + ' tracked picks</strong></span>' +
+            '</div>';
+        const rail = '<div class="profile-rail">' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">Member Since</span><span class="profile-rail-value">' + joinDate + '</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">Leaderboard Rank</span><span class="profile-rail-value">' + rankText + '</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">Verification Status</span><span class="profile-rail-value">' + verifiedText + '</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">Tracked Picks</span><span class="profile-rail-value">' + totalPicks + '</span></div>' +
             '</div>';
 
         let actions = '';
@@ -2338,7 +2577,7 @@
             (p.location ? '<span class="profile-meta-item">' + p.location + '</span>' : '') +
             '<button type="button" class="profile-meta-item" style="cursor:pointer;" onclick="openSocialList(\'followers\')">View followers</button>' +
             '<button type="button" class="profile-meta-item" style="cursor:pointer;" onclick="openSocialList(\'following\')">View following</button>' +
-            '</div>' + actions + '</div>';
+            '</div>' + actions + '</div>' + rail;
 
         updateWorkspaceLinks(p.username);
     }
@@ -2366,34 +2605,23 @@
             roi: summary ? Number(summary.roi || s.roi || 0) : s.roi,
             netUnits: summary ? Number(summary.net_units || s.netUnits || 0) : s.netUnits,
             winRate: summary ? Number(summary.win_rate || s.winRate || 0) : s.winRate,
-            avgOdds: summary && summary.avg_odds != null ? Number(summary.avg_odds) : s.avgOdds,
-            currentStreak: s.currentStreak
+            avgOdds: summary && summary.avg_odds != null ? Number(summary.avg_odds) : s.avgOdds
         };
         const ledger = computeLedgerMetrics(getFilteredPicks());
-        const adv = computeAdvancedStats(getFilteredPicks());
         const clv = computeAggregateClv(getFilteredPicks());
         const gradedPicks = merged.wins + merged.losses + merged.pushes;
-        const currentStreakText = merged.currentStreak > 0 ? merged.currentStreak + 'W' : merged.currentStreak < 0 ? Math.abs(merged.currentStreak) + 'L' : '0';
-        const username = profileData ? (profileData.display_name || profileData.username || '--') : '--';
-        const rankText = currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked';
         const nc = merged.netUnits > 0 ? 'positive' : merged.netUnits < 0 ? 'negative' : 'neutral';
         const rc = merged.roi > 0 ? 'positive' : merged.roi < 0 ? 'negative' : 'neutral';
         document.getElementById('summaryGrid').innerHTML =
-            summaryStat('Capper', username, '@' + (profileData && profileData.username ? profileData.username : '')) +
             summaryStat('Win %', merged.winRate.toFixed(1) + '%', merged.wins + ' wins / ' + merged.losses + ' losses') +
             summaryStat('Units Won', formatSignedUnits(merged.netUnits), gradedPicks + ' graded picks', nc) +
             summaryStat('ROI', (merged.roi >= 0 ? '+' : '') + merged.roi.toFixed(1) + '%', 'Return on risked units', rc) +
             summaryStat('Total Picks', String(s.total), ledger.pending ? ledger.pending + ' pending' : 'All visible picks') +
             summaryStat('Graded', String(gradedPicks), 'Settled record sample') +
-            summaryStat('Wins', String(merged.wins), 'Official wins') +
-            summaryStat('Losses', String(merged.losses), 'Official losses') +
-            summaryStat('Pushes', String(merged.pushes), 'Official pushes') +
             summaryStat('Pending', String(ledger.pending), 'Open picks awaiting grade') +
             summaryStat('Average Odds', merged.avgOdds != null ? formatOddsValue(merged.avgOdds) : '--', 'Average market price') +
             summaryStat('Average Units', (summary ? Number(summary.avg_units || s.avgUnits || 0) : s.avgUnits).toFixed(2) + 'u', 'Average size per pick') +
             summaryStat('Best Streak', s.bestStreak + 'W', 'Longest win streak') +
-            summaryStat('Current Streak', currentStreakText, 'Current graded run') +
-            summaryStat('Profit Factor', adv.profitFactor, 'Won units divided by lost units', adv.profitFactorClass) +
             summaryStat('CLV', clv.display, clv.note, clv.className);
     }
 
