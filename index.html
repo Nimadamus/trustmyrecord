@@ -818,4 +818,822 @@
         }
 
         .sample-row span {
-            color: var->omitted for brevity<snip>
+            color: var(--muted);
+            font-size: 0.84rem;
+            font-weight: 650;
+        }
+
+        .sample-row strong {
+            color: var(--teal);
+            font-size: 0.84rem;
+        }
+
+        .final-cta {
+            margin: 34px 0 58px;
+            border: 1px solid var(--line-strong);
+            border-radius: 30px;
+            padding: clamp(28px, 4vw, 44px);
+            text-align: center;
+            background:
+                radial-gradient(circle at 50% 0%, rgba(45,212,191,0.15), transparent 42%),
+                linear-gradient(145deg, rgba(17,28,49,0.94), rgba(9,15,27,0.98));
+            box-shadow: var(--shadow);
+        }
+
+        .final-cta h2 {
+            font-size: clamp(2.35rem, 4vw, 4rem);
+            line-height: 1;
+        }
+
+        .final-cta p {
+            max-width: 680px;
+            margin: 14px auto 22px;
+            color: var(--muted);
+            line-height: 1.58;
+            font-weight: 650;
+        }
+
+        @media (max-width: 1050px) {
+            .nav { grid-template-columns: 1fr; padding: 14px 0; }
+            .nav-links { justify-content: flex-start; }
+            .nav-actions { justify-content: flex-start; }
+            .hero,
+            .visual-grid,
+            .live-grid,
+            .gameplay { grid-template-columns: 1fr; }
+            .hero-media img { height: 440px; }
+            .overview-grid,
+            .trust-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 620px) {
+            .shell { width: min(100% - 24px, 1220px); }
+            .nav {
+                min-height: auto;
+                gap: 12px;
+                padding: 12px 0 14px;
+            }
+            .brand {
+                font-size: 1.78rem;
+            }
+            .brand-mark {
+                width: 34px;
+                height: 34px;
+                border-radius: 11px;
+                font-size: 0.72rem;
+            }
+            .nav-links {
+                width: 100%;
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            .nav-links a {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 34px;
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: 999px;
+                background: rgba(255,255,255,0.04);
+                font-size: 1rem;
+            }
+            .nav-actions {
+                width: 100%;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+            .btn {
+                width: 100%;
+                min-height: 40px;
+                padding: 9px 13px;
+            }
+            .hero {
+                gap: 18px;
+                padding: 22px 0 20px;
+            }
+            .hero-copy {
+                border-radius: 24px;
+                padding: 22px;
+            }
+            .eyebrow {
+                padding: 8px 11px;
+                font-size: 0.72rem;
+                letter-spacing: 0.07em;
+            }
+            h1 {
+                max-width: 330px;
+                margin-top: 16px;
+                font-size: clamp(3rem, 13.2vw, 3.85rem);
+                line-height: 0.98;
+            }
+            .hero-copy p {
+                margin-top: 14px;
+                font-size: 0.95rem;
+                line-height: 1.55;
+            }
+            .hero-actions {
+                gap: 9px;
+                margin-top: 18px;
+            }
+            .hero-points,
+            .overview-grid,
+            .trust-grid { grid-template-columns: 1fr; }
+            .hero-points {
+                gap: 8px;
+                margin-top: 18px;
+            }
+            .hero-point {
+                padding: 11px 12px;
+            }
+            .hero-media {
+                border-radius: 24px;
+            }
+            .hero-media img {
+                height: 360px;
+                object-position: center top;
+            }
+            .media-caption {
+                padding: 14px;
+            }
+            .caption-pills { grid-template-columns: 1fr; }
+            .section {
+                padding: 22px 0;
+            }
+            .section-head {
+                display: block;
+                margin-bottom: 14px;
+            }
+            .section-head h2,
+            .final-cta h2 {
+                font-size: clamp(2.05rem, 10vw, 2.65rem);
+                line-height: 1.04;
+            }
+            .section-head p {
+                margin-top: 10px;
+                font-size: 0.94rem;
+            }
+            .feature-card {
+                min-height: auto;
+                padding: 17px;
+            }
+            .visual-grid,
+            .live-grid,
+            .gameplay {
+                gap: 12px;
+            }
+            .visual-card,
+            .game-panel,
+            .live-panel,
+            .pulse-card,
+            .trust-card {
+                padding: 17px;
+            }
+            .live-panel-head {
+                display: block;
+                margin-bottom: 12px;
+            }
+            .panel-link {
+                display: inline-block;
+                margin-top: 10px;
+            }
+            .ledger-table {
+                min-width: 640px;
+            }
+            .live-table-wrap {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .final-cta {
+                margin: 24px 0 40px;
+                border-radius: 24px;
+                padding: 24px 18px;
+            }
+        }
+    </style>
+    <style>
+        /* Premium refinement pass */
+        body::before {
+            opacity: 0.12;
+        }
+
+        .shell {
+            width: min(1180px, calc(100% - 32px));
+        }
+
+        .nav {
+            min-height: 68px;
+            gap: 18px;
+            border-bottom-color: rgba(148, 163, 184, 0.14);
+        }
+
+        .brand {
+            font-size: clamp(1.62rem, 2.2vw, 2.18rem);
+            letter-spacing: -0.015em;
+        }
+
+        .brand-mark {
+            width: 34px;
+            height: 34px;
+            border-radius: 11px;
+            font-size: 0.72rem;
+        }
+
+        .nav-links {
+            gap: clamp(10px, 1.5vw, 18px);
+        }
+
+        .nav-links a {
+            font-size: clamp(0.92rem, 1.05vw, 1.08rem);
+            letter-spacing: 0.03em;
+        }
+
+        .nav-actions {
+            gap: 8px;
+        }
+
+        .btn {
+            min-height: 40px;
+            padding: 9px 15px;
+            font-size: 0.84rem;
+        }
+
+        .btn.primary {
+            box-shadow: 0 14px 30px rgba(45, 212, 191, 0.14);
+        }
+
+        .hero {
+            grid-template-columns: minmax(0, 0.98fr) minmax(360px, 0.8fr);
+            gap: clamp(24px, 3vw, 40px);
+            padding: 24px 0 18px;
+        }
+
+        .hero-copy {
+            border-radius: 26px;
+            padding: clamp(22px, 3vw, 34px);
+            box-shadow: 0 22px 56px rgba(0, 0, 0, 0.24);
+        }
+
+        .eyebrow {
+            padding: 8px 12px;
+            font-size: 0.76rem;
+            letter-spacing: 0.1em;
+        }
+
+        h1 {
+            max-width: 520px;
+            margin-top: 16px;
+            font-size: clamp(3rem, 5vw, 4.95rem);
+            line-height: 0.92;
+        }
+
+        .hero-copy p {
+            max-width: 520px;
+            margin-top: 14px;
+            font-size: clamp(0.98rem, 1vw, 1.06rem);
+            line-height: 1.52;
+        }
+
+        .hero-actions {
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .hero-points {
+            gap: 8px;
+            margin-top: 22px;
+        }
+
+        .hero-point {
+            border-radius: 14px;
+            padding: 12px;
+        }
+
+        .hero-media {
+            border-radius: 24px;
+            box-shadow: 0 22px 56px rgba(0, 0, 0, 0.22);
+        }
+
+        .hero-media img {
+            height: clamp(360px, 35vw, 470px);
+        }
+
+        .section {
+            margin-top: 72px;
+        }
+
+        .section-head {
+            margin-bottom: 18px;
+        }
+
+        .section-head h2,
+        .final-cta h2 {
+            font-size: clamp(2.15rem, 3.2vw, 3.15rem);
+            line-height: 0.96;
+        }
+
+        .section-head p,
+        .final-cta p {
+            max-width: 620px;
+            font-size: 0.98rem;
+            line-height: 1.56;
+        }
+
+        .feature-card,
+        .visual-card,
+        .trust-card,
+        .live-panel,
+        .pulse-card,
+        .game-panel {
+            border-radius: 22px;
+            box-shadow: 0 20px 46px rgba(0, 0, 0, 0.2);
+        }
+
+        .feature-card,
+        .visual-card,
+        .trust-card {
+            padding: 20px;
+        }
+
+        .live-panel,
+        .pulse-card,
+        .game-panel {
+            padding: 20px;
+        }
+
+        .feature-card h3,
+        .live-panel-head h3,
+        .pulse-card h3,
+        .game-panel h3 {
+            letter-spacing: -0.01em;
+        }
+
+        .ledger-table thead th {
+            font-size: 0.73rem;
+            letter-spacing: 0.08em;
+        }
+
+        .final-cta {
+            margin: 34px 0 48px;
+            border-radius: 24px;
+            padding: 28px 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <header class="nav">
+            <a class="brand" href="index.html">
+                <span class="brand-mark">TMR</span>
+                <span>TRUST<span>MY</span>RECORD</span>
+            </a>
+            <nav class="nav-links" aria-label="Primary navigation">
+                <a href="sportsbook.html#picks">Make Picks</a>
+                <a href="arena.html">Arena</a>
+                <a href="feed.html">Feed</a>
+                <a href="polls.html">Polls</a>
+                <a href="trivia.html">Trivia</a>
+                <a href="handicappers.html">Handicappers</a>
+                <a href="about.html">About</a>
+            </nav>
+            <div class="nav-actions">
+                <a class="btn" href="handicappers.html">Find Cappers</a>
+                <a class="btn auth-link" href="sportsbook.html#login" id="homeNavLoginCta">Log In</a>
+                <a class="btn primary" href="sportsbook.html" id="homeNavPrimaryCta">Start Free</a>
+            </div>
+        </header>
+
+        <main>
+            <section class="hero">
+                <div class="hero-copy">
+                    <span class="eyebrow">Sports credibility, locked in public</span>
+                    <h1>The end of fake records.</h1>
+                    <p id="homeHeroCopy"><strong>TrustMyRecord turns sports talk into a public profile.</strong> Lock picks, build a verified record, debate in the feed, play polls and trivia, and let the receipts decide who actually knows sports.</p>
+                    <div class="hero-actions">
+                        <a class="btn primary" href="sportsbook.html" id="homeHeroPrimaryCta">Make Your First Pick</a>
+                        <a class="btn" href="profile.html" id="homeHeroSecondaryCta">View Records</a>
+                    </div>
+                    <div class="hero-points">
+                        <div class="hero-point"><b>Locked picks</b><span>No edits after submission.</span></div>
+                        <div class="hero-point"><b>Public record</b><span>Wins and losses stay visible.</span></div>
+                        <div class="hero-point"><b>Social proof</b><span>Debate, challenge, follow.</span></div>
+                    </div>
+                </div>
+
+                <div class="hero-media">
+                    <img src="static/media/steph-curry-hero.gif" alt="Steph Curry animated hero">
+                    <div class="media-caption">
+                        <small>Permanent public record</small>
+                        <strong>Every locked pick, poll, trivia result, and challenge adds to a profile other fans can judge.</strong>
+                        <div class="caption-pills">
+                            <span>No edits</span>
+                            <span>No deletions</span>
+                            <span>No resets</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="section-head">
+                    <h2>One profile for every sports claim.</h2>
+                    <p>The homepage should sell the product quickly: make a pick, build a record, compete socially, and earn credibility.</p>
+                </div>
+                <div class="overview-grid">
+                    <article class="feature-card">
+                        <div class="icon">01</div>
+                        <h3>Make picks</h3>
+                        <p>Submit markets, lines, and units before results are known.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="icon">02</div>
+                        <h3>Build records</h3>
+                        <p>Profiles carry locked history, streaks, sports, and market splits.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="icon">03</div>
+                        <h3>Talk sports</h3>
+                        <p>The feed connects posts, reactions, callouts, and receipts.</p>
+                    </article>
+                    <article class="feature-card">
+                        <div class="icon">04</div>
+                        <h3>Play games</h3>
+                        <p>Polls and trivia let casual fans compete without betting.</p>
+                    </article>
+                </div>
+            </section>
+
+            <section class="section visual-grid">
+                <div class="visual-card record-card">
+                    <div class="record-top">
+                        <span class="record-badge">Profile preview</span>
+                        <span class="record-badge">Public ledger</span>
+                    </div>
+                    <div class="mock-profile">
+                        <div class="mock-avatar">TMR</div>
+                        <div>
+                            <b>Verified sports profile</b>
+                            <span>Record, units, ROI, sports, markets, badges, and history load from locked activity.</span>
+                        </div>
+                    </div>
+                    <div class="record-bars" aria-label="Record visualization">
+                        <div class="bar"><span style="width: 86%;"></span></div>
+                        <div class="bar"><span style="width: 62%;"></span></div>
+                        <div class="bar"><span style="width: 74%;"></span></div>
+                    </div>
+                </div>
+
+                <div class="visual-card feed-mock">
+                    <div class="feed-card">
+                        <b>Locked pick appears in feed</b>
+                        <span>Followers can react, reply, and inspect the record behind the claim.</span>
+                        <div class="mini-pills"><span>Locked</span><span>Timestamped</span><span>Public</span></div>
+                    </div>
+                    <div class="feed-card">
+                        <b>Challenge another fan</b>
+                        <span>Rivalries become trackable instead of disappearing into comment threads.</span>
+                        <div class="mini-pills"><span>Arena</span><span>Callout</span><span>Result tracked</span></div>
+                    </div>
+                    <div class="feed-card">
+                        <b>Polls and trivia keep fans active</b>
+                        <span>Not every competition needs to be a betting market.</span>
+                        <div class="mini-pills"><span>Poll</span><span>Trivia</span><span>Status</span></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="section-head">
+                    <h2>Live credibility, not homepage filler.</h2>
+                    <p>The front page should tell users who is actually winning, who is running hot, and where the next competition is happening.</p>
+                </div>
+                <div class="live-grid">
+                    <div class="live-panel">
+                        <div class="live-panel-head">
+                            <div>
+                                <h3>Top handicappers right now</h3>
+                                <p>Leaderboard ranked from the live record system, with ROI, net units, and sample size visible.</p>
+                            </div>
+                            <a class="panel-link" href="profile.html">View full record board</a>
+                        </div>
+                        <div id="homepageLeaderboard" class="live-loading">Loading verified leaderboard...</div>
+                        <div class="panel-note">Rankings are pulled from the same leaderboard API that powers capper profiles and record pages.</div>
+                    </div>
+                    <div class="pulse-stack">
+                        <div class="pulse-card">
+                            <h3>Hot streaks</h3>
+                            <div id="homepageStreaks" class="live-loading" style="min-height: 150px;">Loading streaks...</div>
+                        </div>
+                        <div class="pulse-card">
+                            <h3>Open challenges</h3>
+                            <div id="homepageChallenges" class="live-loading" style="min-height: 150px;">Loading arena action...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="section-head">
+                    <h2>Trust rules built into the product.</h2>
+                    <p>The anti-fraud promise is strongest when it is simple and visible everywhere.</p>
+                </div>
+                <div class="trust-grid">
+                    <div class="trust-card"><b>Locked at submit</b><span>Picks are saved before the result and marked with a timestamp.</span></div>
+                    <div class="trust-card"><b>No reset button</b><span>Losing history stays attached to the same public profile.</span></div>
+                    <div class="trust-card"><b>Public archive</b><span>Followers can inspect history instead of trusting screenshots.</span></div>
+                    <div class="trust-card"><b>Creator proof</b><span>Paid picks should be backed by visible track record, not hype.</span></div>
+                </div>
+            </section>
+
+            <section class="section gameplay">
+                <div class="game-panel">
+                    <h3>Polls and predictions</h3>
+                    <p>Casual fans can forecast games, vote on debates, and climb scored prediction boards.</p>
+                    <div class="sample-row"><span>Which side are you taking tonight?</span><strong>Vote</strong></div>
+                    <div class="sample-row"><span>Prediction result adds to profile activity.</span><strong>Tracked</strong></div>
+                </div>
+                <div class="game-panel">
+                    <h3>Trivia and rivalries</h3>
+                    <p>Sports knowledge, callouts, and challenges make the site more than a pick tracker.</p>
+                    <div class="sample-row"><span>Custom trivia question goes live.</span><strong>Play</strong></div>
+                    <div class="sample-row"><span>Challenge outcome updates reputation.</span><strong>Arena</strong></div>
+                </div>
+            </section>
+
+            <section class="final-cta">
+                <h2>Think you know sports? Prove it.</h2>
+                <p id="homeFinalCopy">Start with one locked pick. Build the profile from there. The record is the product.</p>
+                <a class="btn primary" href="sportsbook.html" id="homeFinalCta">Enter TrustMyRecord</a>
+            </section>
+        </main>
+    </div>
+    <script src="static/js/config.js?v=20260330"></script>
+    <script src="static/js/backend-api.js?v=20260420c"></script>
+    <script src="static/js/analytics.js?v=20260417"></script>
+    <script>
+        function homeTrack(eventName, params) {
+            if (typeof window.TMRAnalytics !== 'undefined' && typeof window.TMRAnalytics.track === 'function') {
+                window.TMRAnalytics.track(eventName, params || {});
+            }
+        }
+
+        function homeEscape(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function homeNumber(value) {
+            const parsed = Number(value);
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+
+        function getHomepageSessionUser() {
+            const keys = ['trustmyrecord_session', 'currentUser'];
+            for (const key of keys) {
+                try {
+                    const raw = localStorage.getItem(key);
+                    if (!raw) continue;
+                    const parsed = JSON.parse(raw);
+                    const user = parsed && (parsed.user || parsed);
+                    if (user && (user.username || user.email)) {
+                        return user;
+                    }
+                } catch (error) {
+                    // Ignore malformed session values.
+                }
+            }
+            return null;
+        }
+
+        function refreshHomepageCtas() {
+            const user = getHomepageSessionUser();
+            const navPrimary = document.getElementById('homeNavPrimaryCta');
+            const navLogin = document.getElementById('homeNavLoginCta');
+            const heroPrimary = document.getElementById('homeHeroPrimaryCta');
+            const heroSecondary = document.getElementById('homeHeroSecondaryCta');
+            const heroCopy = document.getElementById('homeHeroCopy');
+            const finalCopy = document.getElementById('homeFinalCopy');
+            const finalCta = document.getElementById('homeFinalCta');
+
+            if (!navPrimary || !navLogin || !heroPrimary || !heroSecondary || !heroCopy || !finalCopy || !finalCta) return;
+
+            if (!user) {
+                navLogin.style.display = 'inline-flex';
+                navLogin.href = 'sportsbook.html#login';
+                navLogin.textContent = 'Log In';
+                navPrimary.textContent = 'Start Free';
+                navPrimary.href = 'sportsbook.html';
+                heroPrimary.textContent = 'Make Your First Pick';
+                heroPrimary.href = 'sportsbook.html';
+                heroSecondary.textContent = 'View Records';
+                heroSecondary.href = 'profile.html';
+                heroCopy.innerHTML = '<strong>TrustMyRecord turns sports talk into a public profile.</strong> Lock picks, build a verified record, debate in the feed, play polls and trivia, and let the receipts decide who actually knows sports.';
+                finalCopy.textContent = 'Start with one locked pick. Build the profile from there. The record is the product.';
+                finalCta.textContent = 'Enter TrustMyRecord';
+                finalCta.href = 'sportsbook.html';
+                return;
+            }
+
+            const username = String(user.username || user.displayName || user.email || 'user');
+            const profileHref = 'profile.html?user=' + encodeURIComponent(username);
+
+            navLogin.style.display = 'none';
+            navPrimary.textContent = 'Open Record';
+            navPrimary.href = profileHref;
+            heroPrimary.textContent = 'Go To Sportsbook';
+            heroPrimary.href = 'sportsbook.html';
+            heroSecondary.textContent = 'Open My Record';
+            heroSecondary.href = profileHref;
+            heroCopy.innerHTML = '<strong>Your account is live.</strong> Keep locking picks, updating your public record, and using the feed, arena, polls, and trivia to build visible credibility.';
+            finalCopy.textContent = 'Pick up where you left off: post another pick, review your record, and keep the profile moving.';
+            finalCta.textContent = 'Open My Dashboard';
+            finalCta.href = profileHref;
+        }
+
+        function homeSigned(value, suffix) {
+            const number = homeNumber(value);
+            return (number >= 0 ? '+' : '') + number.toFixed(1) + (suffix || '');
+        }
+
+        function homePercent(value) {
+            const parsed = Number(value);
+            if (!Number.isFinite(parsed)) return 0;
+            return parsed <= 1 && parsed >= 0 ? parsed * 100 : parsed;
+        }
+
+        function homeTimeAgo(value) {
+            const time = new Date(value || Date.now()).getTime();
+            const diff = Math.max(0, Date.now() - time);
+            const minute = 60000;
+            const hour = minute * 60;
+            const day = hour * 24;
+            if (diff < hour) return Math.max(1, Math.round(diff / minute)) + 'm ago';
+            if (diff < day) return Math.round(diff / hour) + 'h ago';
+            return Math.round(diff / day) + 'd ago';
+        }
+
+        function renderHomepageLeaderboard(entries) {
+            const container = document.getElementById('homepageLeaderboard');
+            if (!container) return;
+
+            if (!entries.length) {
+                container.className = 'live-empty';
+                container.textContent = 'No verified leaderboard data available yet.';
+                return;
+            }
+
+            container.className = 'live-table-wrap';
+            container.innerHTML = '<table class="ledger-table"><thead><tr>' +
+                '<th style="width:60px;">Rank</th>' +
+                '<th>Capper</th>' +
+                '<th>Record</th>' +
+                '<th>ROI</th>' +
+                '<th>Units</th>' +
+                '<th>Picks</th>' +
+                '</tr></thead><tbody>' +
+                entries.map(function(entry, index) {
+                    const username = entry.username || entry.user_name || entry.handle || 'capper';
+                    const displayName = entry.display_name || entry.displayName || username;
+                    const wins = homeNumber(entry.wins);
+                    const losses = homeNumber(entry.losses);
+                    const pushes = homeNumber(entry.pushes);
+                    const roi = homePercent(entry.roi);
+                    const units = homeNumber(entry.net_units != null ? entry.net_units : entry.units);
+                    const totalPicks = homeNumber(entry.total_picks != null ? entry.total_picks : entry.totalPicks != null ? entry.totalPicks : wins + losses + pushes);
+                    const rankClass = index === 0 ? 'top-1' : index === 1 ? 'top-2' : index === 2 ? 'top-3' : '';
+                    return '<tr>' +
+                        '<td><span class="rank-pill ' + rankClass + '">#' + (index + 1) + '</span></td>' +
+                        '<td><a class="capper-cell" href="profile.html?user=' + encodeURIComponent(username) + '" onclick="homeTrack(\'homepage_capper_opened\', { username: \'' + homeEscape(username).replace(/'/g, "\\'") + '\', source: \'leaderboard\' });">' +
+                            '<span class="capper-avatar">' + homeEscape((displayName || '?').charAt(0).toUpperCase()) + '</span>' +
+                            '<span class="capper-meta"><b>' + homeEscape(displayName) + '</b><span>@' + homeEscape(username) + '</span></span>' +
+                        '</a></td>' +
+                        '<td>' + wins + '-' + losses + (pushes ? '-' + pushes : '') + '</td>' +
+                        '<td class="' + (roi >= 0 ? 'stat-pos' : 'stat-neg') + '">' + homeSigned(roi, '%') + '</td>' +
+                        '<td class="' + (units >= 0 ? 'stat-pos' : 'stat-neg') + '">' + homeSigned(units, 'u') + '</td>' +
+                        '<td>' + totalPicks + '</td>' +
+                        '</tr>';
+                }).join('') +
+                '</tbody></table>';
+        }
+
+        function renderHomepageStreaks(entries) {
+            const container = document.getElementById('homepageStreaks');
+            if (!container) return;
+
+            if (!entries.length) {
+                container.className = 'live-empty';
+                container.textContent = 'No streak data available yet.';
+                return;
+            }
+
+            container.className = 'pulse-list';
+            container.innerHTML = entries.map(function(entry, index) {
+                const username = entry.username || entry.user_name || entry.handle || 'capper';
+                const displayName = entry.display_name || entry.displayName || username;
+                const streak = homeNumber(entry.current_streak || entry.currentStreak || 0);
+                const units = homeNumber(entry.net_units != null ? entry.net_units : entry.units);
+                const winRate = homePercent(entry.win_percentage != null ? entry.win_percentage : entry.winRate);
+                const streakLabel = streak > 0 ? 'W' + streak : streak < 0 ? 'L' + Math.abs(streak) : 'Even';
+                const tagClass = streak > 0 ? '' : streak < 0 ? 'red' : 'gold';
+                return '<div class="pulse-row">' +
+                    '<div><b>' + homeEscape(displayName) + '</b><span>@' + homeEscape(username) + ' • ' + winRate.toFixed(1) + '% win rate • ' + homeSigned(units, 'u') + '</span></div>' +
+                    '<span class="pulse-tag ' + tagClass + '">' + streakLabel + '</span>' +
+                '</div>';
+            }).join('');
+        }
+
+        function renderHomepageChallenges(entries) {
+            const container = document.getElementById('homepageChallenges');
+            if (!container) return;
+
+            if (!entries.length) {
+                container.className = 'live-empty';
+                container.textContent = 'No open arena challenges yet.';
+                return;
+            }
+
+            container.className = 'pulse-list';
+            container.innerHTML = entries.map(function(entry) {
+                const challenger = entry.challenger_display || entry.challenger_username || 'Challenger';
+                const challenged = entry.challenged_display || entry.challenged_username || 'Open';
+                const title = entry.title || entry.game_title || entry.game_slug || 'Open challenge';
+                const status = String(entry.status || 'pending').replace(/_/g, ' ');
+                const labelClass = status === 'in progress' ? 'gold' : '';
+                return '<a class="pulse-row" href="arena.html" onclick="homeTrack(\'homepage_challenge_opened\', { challenge_id: \'' + homeEscape(String(entry.id || 'unknown')).replace(/'/g, "\\'") + '\', status: \'' + homeEscape(status).replace(/'/g, "\\'") + '\' });">' +
+                    '<div><b>' + homeEscape(title) + '</b><span>' + homeEscape(challenger) + ' vs ' + homeEscape(challenged) + ' • ' + homeEscape(entry.game_title || entry.game_slug || 'Arena') + ' • ' + homeTimeAgo(entry.created_at || entry.createdAt) + '</span></div>' +
+                    '<span class="pulse-tag ' + labelClass + '">' + homeEscape(status) + '</span>' +
+                '</a>';
+            }).join('');
+        }
+
+        async function loadHomepageSignals() {
+            if (!window.api || typeof window.api.getLeaderboard !== 'function') {
+                renderHomepageLeaderboard([]);
+                renderHomepageStreaks([]);
+                renderHomepageChallenges([]);
+                return;
+            }
+
+            try {
+                const leaderboardData = await window.api.getLeaderboard({ sortBy: 'roi', limit: 8 });
+                const leaderboard = Array.isArray(leaderboardData)
+                    ? leaderboardData
+                    : Array.isArray(leaderboardData && leaderboardData.leaderboard)
+                        ? leaderboardData.leaderboard
+                        : Array.isArray(leaderboardData && leaderboardData.users)
+                            ? leaderboardData.users
+                            : [];
+
+                const qualified = leaderboard.filter(function(entry) {
+                    const total = homeNumber(entry.total_picks != null ? entry.total_picks : entry.totalPicks != null ? entry.totalPicks : homeNumber(entry.wins) + homeNumber(entry.losses) + homeNumber(entry.pushes));
+                    return total >= 5;
+                });
+
+                renderHomepageLeaderboard(qualified.slice(0, 5));
+                const streakLeaders = qualified
+                    .slice()
+                    .sort(function(a, b) {
+                        return homeNumber(b.current_streak || b.currentStreak || 0) - homeNumber(a.current_streak || a.currentStreak || 0);
+                    })
+                    .filter(function(entry) {
+                        return homeNumber(entry.current_streak || entry.currentStreak || 0) > 0;
+                    })
+                    .slice(0, 3);
+                renderHomepageStreaks(streakLeaders);
+            } catch (error) {
+                renderHomepageLeaderboard([]);
+                renderHomepageStreaks([]);
+            }
+
+            try {
+                const challengeData = await window.api.request('/gaming/challenges?limit=6');
+                const challenges = Array.isArray(challengeData && challengeData.challenges) ? challengeData.challenges : [];
+                const visibleChallenges = challenges.filter(function(entry) {
+                    const status = String(entry.status || '').toLowerCase();
+                    return ['pending', 'accepted', 'in_progress', 'open'].indexOf(status) !== -1;
+                }).slice(0, 3);
+                renderHomepageChallenges(visibleChallenges);
+            } catch (error) {
+                renderHomepageChallenges([]);
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                refreshHomepageCtas();
+                loadHomepageSignals();
+            });
+        } else {
+            refreshHomepageCtas();
+            loadHomepageSignals();
+        }
+
+        window.addEventListener('storage', refreshHomepageCtas);
+        window.addEventListener('tmr-auth-changed', refreshHomepageCtas);
+    </script>
+</body>
+</html>
