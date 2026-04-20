@@ -105,16 +105,95 @@ body.tmr-site-shell {
 }
 
 .tmr-global-nav__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border: 1px solid var(--tmr-line);
     border-radius: 999px;
     padding: 9px 14px;
     background: rgba(255, 255, 255, 0.06);
+    cursor: pointer;
 }
 
 .tmr-global-nav__button--primary {
     color: #06120f !important;
     border-color: transparent;
     background: linear-gradient(135deg, var(--tmr-teal), #b9fff1);
+}
+
+.tmr-global-nav__button[aria-current="page"] {
+    color: var(--tmr-teal);
+    border-color: var(--tmr-line-strong);
+    background: rgba(45, 212, 191, 0.10);
+}
+
+.tmr-global-nav__logout {
+    color: var(--tmr-text);
+    font-family: var(--tmr-display);
+    font-size: clamp(0.98rem, 1.18vw, 1.28rem);
+    font-weight: 800;
+    letter-spacing: 0.015em;
+    text-transform: uppercase;
+}
+
+.tmr-global-nav__logout:disabled {
+    opacity: 0.7;
+    cursor: progress;
+}
+
+.tmr-global-nav__user {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    max-width: 280px;
+    padding: 6px 8px 6px 6px;
+    border: 1px solid rgba(45, 212, 191, 0.22);
+    border-radius: 999px;
+    background: rgba(45, 212, 191, 0.10);
+}
+
+.tmr-global-nav__user:hover,
+.tmr-global-nav__user[aria-current="page"] {
+    border-color: var(--tmr-line-strong);
+    background: rgba(45, 212, 191, 0.16);
+}
+
+.tmr-global-nav__user-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.tmr-global-nav__user-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    line-height: 1.05;
+}
+
+.tmr-global-nav__user-copy strong,
+.tmr-global-nav__user-copy span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-transform: none;
+}
+
+.tmr-global-nav__user-copy strong {
+    color: var(--tmr-text);
+    font: 800 0.86rem/1 var(--tmr-font);
+}
+
+.tmr-global-nav__user-copy span {
+    color: var(--tmr-muted);
+    font: 700 0.72rem/1 var(--tmr-font);
 }
 
 .tmr-route-note {
@@ -210,6 +289,669 @@ body.tmr-site-shell [style*="images.unsplash.com"] {
     display: none !important;
 }
 
+html body.tmr-site-shell {
+    background:
+        radial-gradient(circle at 12% 0%, rgba(45, 212, 191, 0.16), transparent 28%),
+        radial-gradient(circle at 82% 4%, rgba(212, 167, 44, 0.11), transparent 26%),
+        linear-gradient(180deg, #09111d 0%, #0d1726 52%, #0a1422 100%) !important;
+    color: var(--tmr-text) !important;
+}
+
+html body.tmr-site-shell::before,
+html body.tmr-site-shell::after {
+    display: none !important;
+}
+
+.tmr-site-shell .container,
+.tmr-site-shell .page-container,
+.tmr-site-shell .messages-wrapper,
+.tmr-site-shell .main,
+.tmr-site-shell .content-wrapper,
+.tmr-site-shell .profile-top-strip,
+.tmr-site-shell .messages-top-strip,
+.tmr-site-shell header,
+.tmr-site-shell footer.site-footer {
+    width: min(1360px, calc(100% - 32px)) !important;
+    max-width: none !important;
+}
+
+.tmr-site-shell .container,
+.tmr-site-shell .page-container,
+.tmr-site-shell .main {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.tmr-global-nav {
+    border-bottom-color: rgba(148, 163, 184, 0.14);
+    background: rgba(7, 12, 22, 0.86);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+}
+
+.tmr-global-nav__inner {
+    min-height: 68px;
+    gap: 16px;
+}
+
+.tmr-global-nav__brand {
+    font-size: clamp(1.45rem, 1.8vw, 2rem);
+}
+
+.tmr-global-nav__mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+}
+
+.tmr-global-nav__links a,
+.tmr-global-nav__actions a,
+.tmr-global-nav__logout {
+    font-size: clamp(0.82rem, 0.92vw, 1rem);
+    letter-spacing: 0.08em;
+}
+
+.tmr-route-note {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    border-color: rgba(148, 163, 184, 0.14);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.045), rgba(45, 212, 191, 0.06));
+    font-size: 0.84rem;
+}
+
+.tmr-site-shell h1 {
+    font-size: clamp(2.8rem, 5vw, 4.9rem) !important;
+    line-height: 0.95 !important;
+}
+
+.tmr-site-shell h2,
+.tmr-site-shell .section-title {
+    font-size: clamp(1.55rem, 2.25vw, 2.4rem) !important;
+    line-height: 1 !important;
+}
+
+.tmr-site-shell h3,
+.tmr-site-shell h4,
+.tmr-site-shell .sidebar-card-title,
+.tmr-site-shell .rs-title {
+    color: var(--tmr-text) !important;
+    letter-spacing: -0.02em;
+}
+
+.tmr-site-shell p,
+.tmr-site-shell li,
+.tmr-site-shell .tagline,
+.tmr-site-shell .subtitle,
+.tmr-site-shell .page-subtitle,
+.tmr-site-shell .hero-stat-sub,
+.tmr-site-shell .stat-label,
+.tmr-site-shell .label,
+.tmr-site-shell .legal-text,
+.tmr-site-shell .conversation-preview,
+.tmr-site-shell .conversation-time,
+.tmr-site-shell .chat-header-info p,
+.tmr-site-shell .verify-message,
+.tmr-site-shell .reset-subtitle {
+    color: var(--tmr-muted) !important;
+}
+
+.tmr-site-shell input,
+.tmr-site-shell select,
+.tmr-site-shell textarea {
+    border-radius: 14px !important;
+    border: 1px solid rgba(148, 163, 184, 0.16) !important;
+    background: rgba(9, 16, 30, 0.82) !important;
+    color: var(--tmr-text) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.tmr-site-shell input::placeholder,
+.tmr-site-shell textarea::placeholder {
+    color: rgba(154, 168, 188, 0.62) !important;
+}
+
+.tmr-site-shell input:focus,
+.tmr-site-shell select:focus,
+.tmr-site-shell textarea:focus {
+    outline: none;
+    border-color: rgba(45, 212, 191, 0.42) !important;
+    box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.08) !important;
+}
+
+.tmr-site-shell .btn,
+.tmr-site-shell .btn-primary,
+.tmr-site-shell .btn-secondary,
+.tmr-site-shell .btn-outline,
+.tmr-site-shell .btn-ghost,
+.tmr-site-shell .new-message-btn,
+.tmr-site-shell .send-btn,
+.tmr-site-shell .search-btn,
+.tmr-site-shell .create-poll-btn {
+    min-height: 42px;
+    padding: 10px 16px !important;
+    border-radius: 999px !important;
+    border: 1px solid rgba(148, 163, 184, 0.16) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: var(--tmr-text) !important;
+    box-shadow: none !important;
+}
+
+.tmr-site-shell .btn-primary,
+.tmr-site-shell button.primary,
+.tmr-site-shell .tab-btn.active,
+.tmr-site-shell .filter-btn.active,
+.tmr-site-shell .tab.active,
+.tmr-site-shell .new-message-btn,
+.tmr-site-shell .send-btn,
+.tmr-site-shell .search-btn,
+.tmr-site-shell .create-poll-btn {
+    color: #06120f !important;
+    border-color: transparent !important;
+    background: linear-gradient(135deg, var(--tmr-teal), #9af3e5) !important;
+}
+
+.tmr-site-shell .hero,
+.tmr-site-shell .feed-hero,
+.tmr-site-shell .about-hero,
+.tmr-site-shell .premium-hero,
+.tmr-site-shell .profile-header,
+.tmr-site-shell .user-stats-card,
+.tmr-site-shell .summary-grid,
+.tmr-site-shell .search-section,
+.tmr-site-shell .workspace-nav-card,
+.tmr-site-shell .stats-table-card,
+.tmr-site-shell .sidebar-nav,
+.tmr-site-shell .sidebar-card,
+.tmr-site-shell .composer-card,
+.tmr-site-shell .rs-card,
+.tmr-site-shell .feed-item,
+.tmr-site-shell .feed-tabs,
+.tmr-site-shell .poll-card,
+.tmr-site-shell .trivia-card,
+.tmr-site-shell .challenge-card,
+.tmr-site-shell .friend-card,
+.tmr-site-shell .analytics-card,
+.tmr-site-shell .conversations-sidebar,
+.tmr-site-shell .chat-area,
+.tmr-site-shell .modal,
+.tmr-site-shell .verify-container,
+.tmr-site-shell .reset-container,
+.tmr-site-shell .content-wrapper,
+.tmr-site-shell .feature-card,
+.tmr-site-shell .creed-card,
+.tmr-site-shell .match-item,
+.tmr-site-shell .stat-card {
+    border: 1px solid rgba(148, 163, 184, 0.14) !important;
+    border-radius: 24px !important;
+    background:
+        linear-gradient(180deg, rgba(16, 24, 40, 0.94), rgba(10, 18, 31, 0.98)) !important;
+    box-shadow: 0 24px 60px rgba(2, 8, 18, 0.28) !important;
+    backdrop-filter: blur(16px);
+}
+
+.tmr-site-shell .page-header,
+.tmr-site-shell .profile-header-section,
+.tmr-site-shell .summary-bar,
+.tmr-site-shell .profile-workspace-section,
+.tmr-site-shell .analytics-section,
+.tmr-site-shell .analytics-preview,
+.tmr-site-shell .cta-section {
+    margin-bottom: 0 !important;
+}
+
+.tmr-site-shell .about-hero,
+.tmr-site-shell .premium-hero,
+.tmr-site-shell .hero {
+    width: min(1360px, calc(100% - 32px)) !important;
+    margin: 24px auto 0 !important;
+    padding: 44px 36px !important;
+    text-align: left !important;
+}
+
+.tmr-site-shell .about-hero h1,
+.tmr-site-shell .premium-hero h1,
+.tmr-site-shell .hero h1 {
+    max-width: 760px;
+    margin-bottom: 12px !important;
+}
+
+.tmr-site-shell .about-hero .tagline,
+.tmr-site-shell .hero p,
+.tmr-site-shell .premium-hero p {
+    max-width: 660px !important;
+    font-size: 1rem !important;
+    line-height: 1.65 !important;
+}
+
+.tmr-site-shell .content-wrapper {
+    margin: 26px auto 64px !important;
+    padding: 34px !important;
+}
+
+.tmr-site-shell .page-title {
+    margin-bottom: 10px !important;
+    font-size: clamp(2rem, 3vw, 3rem) !important;
+}
+
+.tmr-site-shell .page-subtitle {
+    margin-bottom: 28px !important;
+    font-size: 0.92rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+.tmr-site-shell .about-section,
+.tmr-site-shell .legal-text {
+    margin-bottom: 20px !important;
+}
+
+.tmr-site-shell .about-section h2,
+.tmr-site-shell .section-title {
+    margin: 0 0 14px !important;
+    padding-bottom: 12px !important;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12) !important;
+    color: var(--tmr-text) !important;
+}
+
+.tmr-site-shell .about-section p,
+.tmr-site-shell .legal-text p,
+.tmr-site-shell .legal-text li {
+    font-size: 0.98rem !important;
+    line-height: 1.72 !important;
+}
+
+.tmr-site-shell .legal-text ul {
+    margin: 12px 0 0 20px !important;
+}
+
+.tmr-site-shell .legal-text table {
+    overflow: hidden;
+    border-radius: 18px;
+    border-collapse: separate !important;
+    border-spacing: 0;
+}
+
+.tmr-site-shell .legal-text th,
+.tmr-site-shell .legal-text td {
+    border-color: rgba(148, 163, 184, 0.12) !important;
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--tmr-text) !important;
+}
+
+.tmr-site-shell .legal-text th {
+    color: var(--tmr-muted) !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.14em !important;
+}
+
+.tmr-site-shell .creed-strip,
+.tmr-site-shell .features-grid,
+.tmr-site-shell .analytics-grid,
+.tmr-site-shell .friends-grid,
+.tmr-site-shell .polls-grid,
+.tmr-site-shell .challenges-grid,
+.tmr-site-shell .stats-grid {
+    gap: 16px !important;
+}
+
+.tmr-site-shell .feature-card,
+.tmr-site-shell .creed-card,
+.tmr-site-shell .analytics-card,
+.tmr-site-shell .friend-card,
+.tmr-site-shell .poll-card,
+.tmr-site-shell .challenge-card,
+.tmr-site-shell .stat-card {
+    padding: 22px !important;
+}
+
+.tmr-site-shell .stats-bar {
+    gap: 14px !important;
+    margin: 28px 0 36px !important;
+    padding: 18px !important;
+    border: 1px solid rgba(148, 163, 184, 0.12) !important;
+    border-radius: 22px !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.tmr-site-shell .stat-item .num,
+.tmr-site-shell .stat-card .value,
+.tmr-site-shell .stat-value,
+.tmr-site-shell .analytics-card .value {
+    font-family: var(--tmr-display) !important;
+    font-size: clamp(1.65rem, 2vw, 2.3rem) !important;
+    color: var(--tmr-text) !important;
+}
+
+.tmr-site-shell .stat-item .label,
+.tmr-site-shell .stat-label,
+.tmr-site-shell .analytics-card .label,
+.tmr-site-shell .analytics-card h4 {
+    font-size: 0.72rem !important;
+    letter-spacing: 0.12em !important;
+    text-transform: uppercase !important;
+}
+
+.tmr-site-shell .page-layout {
+    width: min(1360px, calc(100% - 32px)) !important;
+    padding: 20px 0 48px !important;
+    grid-template-columns: 220px minmax(0, 1fr) 292px !important;
+    gap: 18px !important;
+}
+
+.tmr-site-shell .feed-hero {
+    grid-template-columns: minmax(0, 1fr) 304px !important;
+    gap: 16px !important;
+    margin-bottom: 16px !important;
+    padding: 24px !important;
+}
+
+.tmr-site-shell .eyebrow,
+.tmr-site-shell .hero-stat-card,
+.tmr-site-shell .feed-tab,
+.tmr-site-shell .sidebar-link,
+.tmr-site-shell .game-pill,
+.tmr-site-shell .filter-btn,
+.tmr-site-shell .tab,
+.tmr-site-shell .profile-trust-pill,
+.tmr-site-shell .profile-meta-item {
+    border-radius: 999px !important;
+    border: 1px solid rgba(148, 163, 184, 0.14) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: var(--tmr-muted) !important;
+}
+
+.tmr-site-shell .eyebrow {
+    padding: 8px 12px !important;
+    font-size: 0.72rem !important;
+    letter-spacing: 0.14em !important;
+}
+
+.tmr-site-shell .feed-hero h1,
+.tmr-site-shell .page-header h1,
+.tmr-site-shell .profile-name {
+    color: var(--tmr-text) !important;
+    letter-spacing: -0.03em !important;
+}
+
+.tmr-site-shell .feed-hero h1 {
+    font-size: clamp(2.35rem, 4vw, 3.8rem) !important;
+    margin-bottom: 10px !important;
+}
+
+.tmr-site-shell .feed-hero p {
+    font-size: 0.98rem !important;
+}
+
+.tmr-site-shell .feed-hero-actions {
+    margin-top: 14px !important;
+}
+
+.tmr-site-shell .feed-hero-actions .btn {
+    min-width: 132px;
+}
+
+.tmr-site-shell .hero-stat-card {
+    min-height: 94px !important;
+    padding: 14px !important;
+    border-radius: 18px !important;
+}
+
+.tmr-site-shell .hero-stat-card strong,
+.tmr-site-shell .summary-stat-value,
+.tmr-site-shell .analytics-card-value,
+.tmr-site-shell .profile-name {
+    font-family: var(--tmr-display) !important;
+}
+
+.tmr-site-shell .hero-stat-card strong {
+    font-size: 1.3rem !important;
+    color: var(--tmr-text) !important;
+}
+
+.tmr-site-shell .left-sidebar,
+.tmr-site-shell .right-sidebar {
+    top: 18px !important;
+}
+
+.tmr-site-shell .sidebar-nav,
+.tmr-site-shell .sidebar-card,
+.tmr-site-shell .composer-card,
+.tmr-site-shell .rs-card,
+.tmr-site-shell .feed-tabs,
+.tmr-site-shell .feed-item {
+    padding: 16px !important;
+}
+
+.tmr-site-shell .sidebar-nav {
+    gap: 6px !important;
+}
+
+.tmr-site-shell .sidebar-link,
+.tmr-site-shell .feed-tab {
+    min-height: 40px;
+    padding: 10px 14px !important;
+    font-size: 0.8rem !important;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.tmr-site-shell .sidebar-link:hover,
+.tmr-site-shell .sidebar-link.active,
+.tmr-site-shell .feed-tab:hover,
+.tmr-site-shell .feed-tab.active,
+.tmr-site-shell .game-pill:hover,
+.tmr-site-shell .game-pill.active,
+.tmr-site-shell .tab:hover,
+.tmr-site-shell .tab.active {
+    color: var(--tmr-text) !important;
+    border-color: rgba(45, 212, 191, 0.3) !important;
+    background: rgba(45, 212, 191, 0.14) !important;
+}
+
+.tmr-site-shell .composer-textarea,
+.tmr-site-shell .poll-input,
+.tmr-site-shell .composer-sport,
+.tmr-site-shell .chat-input,
+.tmr-site-shell .search-input {
+    background: rgba(8, 15, 28, 0.88) !important;
+}
+
+.tmr-site-shell .feed-item,
+.tmr-site-shell .rs-card,
+.tmr-site-shell .sidebar-card,
+.tmr-site-shell .composer-card {
+    border-radius: 22px !important;
+}
+
+.tmr-site-shell .feed-item::before {
+    display: none !important;
+}
+
+.tmr-site-shell .profile-header-section {
+    padding: 24px 0 14px !important;
+}
+
+.tmr-site-shell .profile-header {
+    gap: 20px !important;
+    padding: 28px !important;
+    overflow: hidden;
+}
+
+.tmr-site-shell .profile-avatar {
+    width: 84px !important;
+    height: 84px !important;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28) !important;
+}
+
+.tmr-site-shell .profile-name {
+    font-size: clamp(2.1rem, 3vw, 3.1rem) !important;
+}
+
+.tmr-site-shell .profile-bio {
+    color: rgba(248, 250, 252, 0.72) !important;
+    font-size: 0.98rem !important;
+}
+
+.tmr-site-shell .summary-grid {
+    overflow: hidden;
+}
+
+.tmr-site-shell .summary-stat {
+    min-height: 74px !important;
+    padding: 16px !important;
+}
+
+.tmr-site-shell .summary-stat-value {
+    font-size: 1.05rem !important;
+    color: var(--tmr-text) !important;
+}
+
+.tmr-site-shell .summary-stat-label,
+.tmr-site-shell .summary-stat-note {
+    color: var(--tmr-muted) !important;
+}
+
+.tmr-site-shell .workspace-nav-card,
+.tmr-site-shell .stats-table-card {
+    padding: 20px !important;
+}
+
+.tmr-site-shell .filter-toolbar {
+    gap: 12px !important;
+    padding: 16px !important;
+    border: 1px solid rgba(148, 163, 184, 0.14) !important;
+    border-radius: 22px !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.tmr-site-shell .filter-toolbar label,
+.tmr-site-shell .form-group label {
+    color: var(--tmr-text) !important;
+    font-size: 0.76rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.12em !important;
+    text-transform: uppercase;
+}
+
+.tmr-site-shell .picks-table,
+.tmr-site-shell .stats-summary-table,
+.tmr-site-shell .lb-table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    width: 100%;
+}
+
+.tmr-site-shell .picks-table th,
+.tmr-site-shell .stats-summary-table th,
+.tmr-site-shell .lb-table th {
+    color: var(--tmr-muted) !important;
+    font-size: 0.72rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.14em !important;
+    border-bottom-color: rgba(148, 163, 184, 0.12) !important;
+}
+
+.tmr-site-shell .picks-table td,
+.tmr-site-shell .stats-summary-table td,
+.tmr-site-shell .lb-table td {
+    color: var(--tmr-text) !important;
+    border-bottom-color: rgba(148, 163, 184, 0.08) !important;
+}
+
+.tmr-site-shell .analytics-card,
+.tmr-site-shell .analytics-card::before {
+    overflow: hidden;
+}
+
+.tmr-site-shell .analytics-card::before {
+    background: linear-gradient(90deg, var(--tmr-teal), rgba(45, 212, 191, 0.08)) !important;
+    height: 2px !important;
+}
+
+.tmr-site-shell .analytics-card-value,
+.tmr-site-shell .analytics-card .value {
+    font-size: clamp(1.25rem, 1.9vw, 1.9rem) !important;
+}
+
+.tmr-site-shell .messages-wrapper {
+    margin: 22px auto 48px !important;
+    padding: 0 !important;
+    grid-template-columns: 320px minmax(0, 1fr) !important;
+    gap: 18px !important;
+    height: calc(100vh - 142px) !important;
+}
+
+.tmr-site-shell .conversations-sidebar,
+.tmr-site-shell .chat-area {
+    overflow: hidden;
+}
+
+.tmr-site-shell .sidebar-header,
+.tmr-site-shell .chat-header,
+.tmr-site-shell .chat-input-area {
+    padding: 18px !important;
+    border-color: rgba(148, 163, 184, 0.12) !important;
+}
+
+.tmr-site-shell .conversation-item {
+    margin-bottom: 8px !important;
+    padding: 12px !important;
+    border-radius: 18px !important;
+}
+
+.tmr-site-shell .conversation-item:hover,
+.tmr-site-shell .conversation-item.active {
+    background: rgba(45, 212, 191, 0.12) !important;
+    border: 1px solid rgba(45, 212, 191, 0.22) !important;
+}
+
+.tmr-site-shell .conversation-avatar,
+.tmr-site-shell .chat-header-avatar {
+    background: linear-gradient(135deg, #1b4457, var(--tmr-teal)) !important;
+    color: #06120f !important;
+}
+
+.tmr-site-shell .message.sent {
+    background: linear-gradient(135deg, var(--tmr-teal), #167e72) !important;
+    color: #06120f !important;
+}
+
+.tmr-site-shell .message.received {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(148, 163, 184, 0.12) !important;
+}
+
+.tmr-site-shell .message-time {
+    color: rgba(248, 250, 252, 0.58) !important;
+}
+
+.tmr-site-shell .verify-container,
+.tmr-site-shell .reset-container {
+    margin: 72px auto !important;
+    padding: 30px !important;
+    max-width: 520px !important;
+}
+
+.tmr-site-shell .verify-title,
+.tmr-site-shell .reset-title {
+    font-family: var(--tmr-display) !important;
+    font-size: clamp(2rem, 3vw, 2.6rem) !important;
+    letter-spacing: -0.03em;
+    color: var(--tmr-text) !important;
+}
+
+.tmr-site-shell .verify-success,
+.tmr-site-shell .message.success {
+    background: rgba(34, 197, 94, 0.12) !important;
+    border-color: rgba(34, 197, 94, 0.22) !important;
+}
+
+.tmr-site-shell .verify-error,
+.tmr-site-shell .message.error {
+    background: rgba(239, 68, 68, 0.12) !important;
+    border-color: rgba(239, 68, 68, 0.22) !important;
+}
+
 @media (max-width: 860px) {
     .tmr-global-nav__inner {
         grid-template-columns: 1fr;
@@ -223,5 +965,56 @@ body.tmr-site-shell [style*="images.unsplash.com"] {
 
     .tmr-global-nav__actions {
         justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .tmr-site-shell .page-layout,
+    .tmr-site-shell .messages-wrapper,
+    .tmr-site-shell .feed-hero {
+        grid-template-columns: 1fr !important;
+    }
+
+    .tmr-site-shell .content-wrapper,
+    .tmr-site-shell .hero,
+    .tmr-site-shell .feed-hero,
+    .tmr-site-shell .about-hero,
+    .tmr-site-shell .premium-hero,
+    .tmr-site-shell .profile-header,
+    .tmr-site-shell .verify-container,
+    .tmr-site-shell .reset-container {
+        padding: 24px !important;
+    }
+
+    .tmr-site-shell .user-stats-card,
+    .tmr-site-shell .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .tmr-site-shell .container,
+    .tmr-site-shell .page-container,
+    .tmr-site-shell .messages-wrapper,
+    .tmr-site-shell .main,
+    .tmr-site-shell .content-wrapper,
+    .tmr-site-shell .profile-top-strip,
+    .tmr-site-shell .messages-top-strip,
+    .tmr-site-shell header,
+    .tmr-site-shell footer.site-footer,
+    .tmr-route-note,
+    .tmr-global-nav__inner,
+    .tmr-site-shell .hero,
+    .tmr-site-shell .about-hero,
+    .tmr-site-shell .premium-hero {
+        width: min(100%, calc(100% - 20px)) !important;
+    }
+
+    .tmr-site-shell .user-stats-card,
+    .tmr-site-shell .summary-grid,
+    .tmr-site-shell .friends-grid,
+    .tmr-site-shell .polls-grid,
+    .tmr-site-shell .challenges-grid,
+    .tmr-site-shell .stats-grid {
+        grid-template-columns: 1fr !important;
     }
 }
