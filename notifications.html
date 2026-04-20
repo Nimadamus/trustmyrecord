@@ -5,9 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notifications | Trust My Record</title>
     <meta name="description" content="Review likes, comments, follows, challenge activity, and updates on Trust My Record.">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260415a">
-    <script defer src="static/js/tmr-sitewide.js?v=20260415a"></script>
+    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260419a">
+    <script defer src="static/js/tmr-sitewide.js?v=20260415f"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -228,6 +235,23 @@
             color: var(--text-muted);
             font-size: .8rem;
         }
+        .notif-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .notif-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #eef4fb;
+            color: #47627e;
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .02em;
+        }
         .notif-dot {
             width: 10px;
             height: 10px;
@@ -243,6 +267,127 @@
             .hero { grid-template-columns: 1fr; }
             .hero-image { min-height: 180px; }
         }
+    </style>
+    <style>
+        /* Premium refinement pass */
+        :root {
+            --bg-primary: #07111d;
+            --bg-secondary: rgba(10, 19, 33, 0.9);
+            --bg-card: rgba(12, 23, 39, 0.94);
+            --border-color: rgba(148, 163, 184, 0.14);
+            --text-primary: #f4f7fb;
+            --text-secondary: #97abc1;
+            --text-muted: #7f92aa;
+            --accent-blue: #2dd4bf;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --accent-gold: #d4a72c;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(45, 212, 191, 0.12), transparent 26%),
+                radial-gradient(circle at top right, rgba(212, 167, 44, 0.08), transparent 20%),
+                linear-gradient(180deg, #07111d 0%, #0b1523 52%, #0d1828 100%) !important;
+        }
+
+        .notifications-top-strip,
+        header,
+        .page {
+            max-width: 1380px;
+        }
+
+        .notifications-top-strip {
+            background: rgba(8, 15, 28, 0.82) !important;
+            border: 1px solid rgba(45, 212, 191, 0.16);
+            border-radius: 18px;
+            color: #9cb0c8;
+            margin-top: 14px;
+            backdrop-filter: blur(18px);
+        }
+
+        header {
+            background: rgba(7, 15, 27, 0.86) !important;
+            border: 1px solid rgba(45, 212, 191, 0.16) !important;
+            border-radius: 22px;
+            margin-top: 14px;
+            box-shadow: 0 24px 54px rgba(0, 0, 0, 0.28);
+        }
+
+        .header-inner { min-height: 72px; }
+
+        .logo {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            color: #f4f7fb !important;
+        }
+
+        header a,
+        header .active {
+            color: #9fb0c6 !important;
+        }
+
+        header .active,
+        header a:hover {
+            color: #f4f7fb !important;
+        }
+
+        .page {
+            padding-top: 28px;
+            padding-bottom: 72px;
+        }
+
+        .hero,
+        .card {
+            background: linear-gradient(180deg, rgba(12, 23, 39, 0.94), rgba(8, 16, 28, 0.92)) !important;
+            border: 1px solid rgba(148, 163, 184, 0.14) !important;
+            box-shadow: 0 24px 44px rgba(0, 0, 0, 0.24);
+        }
+
+        .hero { border-radius: 28px; }
+        .hero-copy { padding: 30px !important; }
+
+        .hero h1 {
+            font-size: clamp(2rem, 4vw, 3rem) !important;
+            line-height: 0.95;
+            letter-spacing: 0.01em;
+        }
+
+        .hero p { color: #97abc1 !important; }
+
+        .btn.primary {
+            background: linear-gradient(135deg, #1dbaa8, #159e8f) !important;
+            box-shadow: none;
+        }
+
+        .filters { gap: 10px; }
+
+        .filter {
+            border-radius: 999px;
+            background: rgba(12, 23, 39, 0.9) !important;
+            border: 1px solid rgba(148, 163, 184, 0.12) !important;
+            color: #97abc1 !important;
+        }
+
+        .filter.active {
+            background: rgba(45, 212, 191, 0.11) !important;
+            border-color: rgba(45, 212, 191, 0.24) !important;
+            color: #f4f7fb !important;
+        }
+
+        .card { border-radius: 24px; }
+
+        .list-empty,
+        .list-loading { color: #97abc1 !important; }
+
+        .notif { border-bottom: 1px solid rgba(148, 163, 184, 0.1) !important; }
+        .notif.unread { background: rgba(45, 212, 191, 0.08) !important; }
+        .notif:hover { background: rgba(255, 255, 255, 0.03) !important; }
+        .notif-message { color: #edf4fb !important; }
+        .notif-meta,
+        .notif-tag { color: #7f92aa !important; }
+        .notif-dot { background: #2dd4bf !important; }
     </style>
 </head>
 <body>
@@ -260,8 +405,8 @@
                 <a href="sportsbook.html">Odds</a>
                 <a href="sportsbook.html">Scores &amp; Matchups</a>
                 <a href="feed.html">News</a>
-                <a href="index.html">Picks</a>
-                <a href="index.html#leaderboards">Handicappers</a>
+                <a href="sportsbook.html#picks">Picks</a>
+                <a href="profile.html">Handicappers</a>
                 <a href="forum.html">Forum</a>
                 <a href="messages.html">Messages</a>
                 <a href="profile.html">My Account</a>
@@ -286,6 +431,10 @@
         <section class="filters">
             <button class="filter active" data-filter="all" type="button">All</button>
             <button class="filter" data-filter="unread" type="button">Unread</button>
+            <button class="filter" data-filter="picks" type="button">Picks</button>
+            <button class="filter" data-filter="forum" type="button">Forum</button>
+            <button class="filter" data-filter="social" type="button">Social</button>
+            <button class="filter" data-filter="messages" type="button">Messages</button>
         </section>
 
         <section class="card">
@@ -294,11 +443,34 @@
     </main>
 
     <script src="static/js/config.js?v=20260330"></script>
-    <script src="static/js/backend-api.js?v=20260414c"></script>
-<script src="static/js/auth-persistent.js?v=20260414e"></script>
+    <script src="static/js/backend-api.js?v=20260415c"></script>
+<script src="static/js/auth-persistent.js?v=20260415d"></script>
+    <script src="static/js/analytics.js?v=20260417"></script>
     <script>
         let notifFilter = 'all';
         let notifications = [];
+
+        function getSessionUser() {
+            try {
+                if (typeof auth !== 'undefined' && typeof auth.getCurrentUser === 'function') {
+                    const authUser = auth.getCurrentUser();
+                    if (authUser && (authUser.username || authUser.email || authUser.id)) return authUser;
+                }
+            } catch (e) {}
+
+            const keys = ['trustmyrecord_session', 'tmr_current_user', 'currentUser'];
+            for (const key of keys) {
+                try {
+                    const raw = localStorage.getItem(key);
+                    if (!raw) continue;
+                    const parsed = JSON.parse(raw);
+                    const user = parsed && parsed.user ? parsed.user : parsed;
+                    if (user && (user.username || user.email || user.id)) return user;
+                } catch (e) {}
+            }
+
+            return null;
+        }
 
         document.addEventListener('DOMContentLoaded', async function() {
             document.querySelectorAll('.filter').forEach(function(btn) {
@@ -316,8 +488,10 @@
                 try { await api.ready; } catch (e) {}
             }
 
-            if (!api || typeof api.getNotifications !== 'function' || !api.isLoggedIn()) {
-                document.getElementById('notifList').innerHTML = '<div class="list-empty">Log in to view your notifications.</div>';
+            const sessionUser = getSessionUser();
+            const isLoggedIn = !!sessionUser || (api && typeof api.isLoggedIn === 'function' && api.isLoggedIn());
+            if (!api || typeof api.getNotifications !== 'function' || !isLoggedIn) {
+                document.getElementById('notifList').innerHTML = '<div class="list-empty">Log in to view your notifications.<div style="margin-top:8px;font-size:.86rem;">Replies, follows, graded picks, and social alerts show up here once your account is active.</div></div>';
                 return;
             }
 
@@ -338,55 +512,124 @@
 
         function renderNotifications() {
             const list = document.getElementById('notifList');
-            const visible = notifFilter === 'unread'
-                ? notifications.filter(function(n) { return !n.is_read; })
-                : notifications;
+            const visible = notifications.filter(function(n) {
+                const normalized = normalizeNotification(n);
+                if (notifFilter === 'unread') return !normalized.isRead;
+                if (notifFilter === 'all') return true;
+                return normalized.category === notifFilter;
+            });
 
             if (!visible.length) {
-                list.innerHTML = '<div class="list-empty">' + (notifFilter === 'unread' ? 'No unread notifications.' : 'No notifications yet.') + '</div>';
+                list.innerHTML = '<div class="list-empty">' + (notifFilter === 'unread' ? 'No unread notifications.' : 'No notifications yet.') + '<div style="margin-top:8px;font-size:.86rem;">Once people reply, follow, grade picks, or message you, the alert trail will build here.</div></div>';
                 return;
             }
 
             list.innerHTML = visible.map(function(n) {
+                const normalized = normalizeNotification(n);
                 const meta = formatTime(n.created_at);
-                const icon = getNotifTheme(n.type);
-                return '<div class="notif ' + (n.is_read ? '' : 'unread') + '" onclick="openNotification(\'' + escapeJs(String(n.id || '')) + '\', \'' + escapeJs(n.type || '') + '\')">' +
+                const icon = getNotifTheme(normalized.type);
+                const destination = getNotificationDestination(normalized);
+                return '<div class="notif ' + (normalized.isRead ? '' : 'unread') + '" onclick="openNotification(\'' + escapeJs(String(n.id || '')) + '\')">' +
                     '<div class="notif-icon" style="background:' + icon.bg + ';color:' + icon.fg + ';">' + icon.label + '</div>' +
                     '<div class="notif-body">' +
-                    '<div class="notif-message">' + escapeHtml(n.content || n.message || '') + '</div>' +
-                    '<div class="notif-meta">' + meta + (n.username ? ' • @' + escapeHtml(n.username) : '') + '</div>' +
+                    '<div class="notif-message">' + escapeHtml(normalized.message) + '</div>' +
+                    '<div class="notif-meta">' + meta + (normalized.username ? ' • @' + escapeHtml(normalized.username) : '') + '</div>' +
+                    '<div class="notif-tags"><span class="notif-tag">' + escapeHtml(destination.label) + '</span><span class="notif-tag">' + escapeHtml(formatCategoryLabel(normalized.category)) + '</span></div>' +
                     '</div>' +
-                    (n.is_read ? '' : '<div class="notif-dot"></div>') +
+                    (normalized.isRead ? '' : '<div class="notif-dot"></div>') +
                     '</div>';
             }).join('');
         }
 
-        async function openNotification(id, type) {
+        function normalizeNotification(notification) {
+            return {
+                ...notification,
+                id: notification.id,
+                type: String(notification.type || '').toLowerCase(),
+                isRead: !!(notification.is_read || notification.read),
+                message: notification.content || notification.message || '',
+                username: notification.username || notification.actor_username || notification.from_username || notification.target_username || '',
+                category: getNotificationCategory(notification)
+            };
+        }
+
+        function getNotificationCategory(notification) {
+            const type = String(notification.type || '').toLowerCase();
+            const resourceType = String(notification.resource_type || notification.resourceType || notification.entity_type || notification.entityType || '').toLowerCase();
+
+            if (['new_message', 'message'].includes(type)) return 'messages';
+            if (type.indexOf('forum') !== -1 || ['thread', 'reply'].includes(resourceType)) return 'forum';
+            if (type.indexOf('pick') !== -1 || type.indexOf('bet') !== -1 || ['pick', 'receipt'].includes(resourceType)) return 'picks';
+            if (['follow', 'friend_request', 'friend_accept', 'like', 'comment', 'mention'].includes(type)) return 'social';
+            return 'all';
+        }
+
+        function formatCategoryLabel(category) {
+            return {
+                all: 'General',
+                picks: 'Picks',
+                forum: 'Forum',
+                social: 'Social',
+                messages: 'Messages'
+            }[category] || 'General';
+        }
+
+        function getNotificationDestination(notification) {
+            const type = String(notification.type || '').toLowerCase();
+            const resourceType = String(notification.resource_type || notification.resourceType || notification.entity_type || notification.entityType || '').toLowerCase();
+            const username = notification.username || notification.actor_username || notification.from_username || notification.target_username;
+            const threadId = notification.thread_id || notification.threadId || notification.resource_id || notification.resourceId;
+            const pickId = notification.pick_id || notification.pickId || notification.bet_id || notification.betId;
+            const pollId = notification.poll_id || notification.pollId;
+            const conversationUser = notification.sender_username || notification.from_username || notification.username;
+
+            if (['follow'].includes(type) && username) {
+                return { href: 'profile.html?user=' + encodeURIComponent(username), label: 'Open profile' };
+            }
+            if (['friend_request', 'friend_accept'].includes(type)) {
+                return { href: 'friends.html', label: 'Open friends' };
+            }
+            if (['new_message', 'message'].includes(type)) {
+                return { href: conversationUser ? 'messages.html?to=' + encodeURIComponent(conversationUser) : 'messages.html', label: 'Open messages' };
+            }
+            if (type.indexOf('forum') !== -1 || ['thread', 'reply'].includes(resourceType)) {
+                return { href: threadId ? 'forum.html?thread=' + encodeURIComponent(threadId) : 'forum.html', label: 'Open forum' };
+            }
+            if (type.indexOf('poll') !== -1 || pollId) {
+                return { href: 'polls.html', label: 'Open polls' };
+            }
+            if (type.indexOf('trivia') !== -1) {
+                return { href: 'trivia.html', label: 'Open trivia' };
+            }
+            if (type.indexOf('pick') !== -1 || type.indexOf('bet') !== -1 || pickId) {
+                return {
+                    href: username ? 'profile.html?user=' + encodeURIComponent(username) + '&view=picks' : 'sportsbook.html#history',
+                    label: username ? 'Open capper record' : 'Open record'
+                };
+            }
+            if (['like', 'comment', 'mention'].includes(type)) {
+                return { href: 'feed.html', label: 'Open feed' };
+            }
+            if (['challenge', 'challenge_invite', 'challenge_result'].includes(type)) {
+                return { href: 'arena.html', label: 'Open arena' };
+            }
+            return { href: 'notifications.html', label: 'Stay here' };
+        }
+
+        async function openNotification(id) {
+            const notification = notifications.find(function(n) { return String(n.id) === String(id); });
+            const normalized = normalizeNotification(notification || {});
             try {
                 await api.markNotificationRead(id);
                 notifications = notifications.map(function(n) {
-                    return String(n.id) === String(id) ? { ...n, is_read: true } : n;
+                    return String(n.id) === String(id) ? { ...n, is_read: true, read: true } : n;
                 });
                 renderNotifications();
             } catch (e) {}
 
-            switch (type) {
-                case 'follow':
-                case 'friend_request':
-                case 'friend_accept':
-                    location.href = 'friends.html';
-                    break;
-                case 'challenge':
-                case 'challenge_invite':
-                case 'challenge_result':
-                    location.href = 'challenges.html';
-                    break;
-                case 'like':
-                case 'comment':
-                case 'pick_graded':
-                default:
-                    location.href = 'feed.html';
-                    break;
+            const destination = getNotificationDestination(normalized);
+            if (destination.href && destination.href !== 'notifications.html') {
+                location.href = destination.href;
             }
         }
 
@@ -403,10 +646,15 @@
                 follow: { label: 'F', bg: 'rgba(59,130,246,0.15)', fg: '#60a5fa' },
                 like: { label: 'L', bg: 'rgba(239,68,68,0.15)', fg: '#f87171' },
                 comment: { label: 'C', bg: 'rgba(34,197,94,0.15)', fg: '#4ade80' },
+                mention: { label: '@', bg: 'rgba(31,122,224,0.15)', fg: '#1f7ae0' },
                 challenge: { label: 'T', bg: 'rgba(245,158,11,0.15)', fg: '#fbbf24' },
                 challenge_invite: { label: 'T', bg: 'rgba(245,158,11,0.15)', fg: '#fbbf24' },
                 challenge_result: { label: 'T', bg: 'rgba(245,158,11,0.15)', fg: '#fbbf24' },
-                pick_graded: { label: 'P', bg: 'rgba(59,130,246,0.15)', fg: '#60a5fa' }
+                pick_graded: { label: 'P', bg: 'rgba(59,130,246,0.15)', fg: '#60a5fa' },
+                forum_thread_created: { label: 'Q', bg: 'rgba(139,92,246,0.15)', fg: '#8b5cf6' },
+                forum_reply_created: { label: 'R', bg: 'rgba(99,102,241,0.15)', fg: '#6366f1' },
+                new_message: { label: 'M', bg: 'rgba(45,212,191,0.15)', fg: '#14b8a6' },
+                message: { label: 'M', bg: 'rgba(45,212,191,0.15)', fg: '#14b8a6' }
             };
             return map[type] || { label: 'N', bg: 'rgba(255,255,255,0.08)', fg: '#e5e7eb' };
         }
