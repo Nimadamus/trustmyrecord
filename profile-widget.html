@@ -4,20 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TrustMyRecord Profile Widget</title>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             color-scheme: dark;
-            --bg: #0b1220;
-            --card: #111a2b;
-            --card-2: #162235;
-            --border: rgba(148, 163, 184, 0.22);
-            --text: #eff6ff;
-            --muted: #9fb0c9;
-            --accent: #38bdf8;
-            --accent-2: #8b5cf6;
+            --bg: #08111d;
+            --card: rgba(11, 20, 34, 0.94);
+            --card-2: rgba(255, 255, 255, 0.045);
+            --border: rgba(148, 163, 184, 0.18);
+            --text: #eef4fb;
+            --muted: #97a8bc;
+            --accent: #2dd4bf;
+            --accent-2: #8df5ea;
             --good: #22c55e;
             --bad: #ef4444;
             --neutral: #94a3b8;
@@ -51,14 +58,16 @@
         .widget {
             width: 100%;
             background:
-                radial-gradient(circle at top right, rgba(56, 189, 248, 0.18), transparent 30%),
+                radial-gradient(circle at top right, rgba(45, 212, 191, 0.16), transparent 30%),
+                linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
                 linear-gradient(180deg, var(--card), var(--bg));
             border: 1px solid var(--border);
-            border-radius: 18px;
+            border-radius: 22px;
             overflow: hidden;
+            box-shadow: 0 22px 48px rgba(0, 0, 0, 0.24);
         }
 
-        .widget.compact { border-radius: 14px; }
+        .widget.compact { border-radius: 18px; }
 
         .head {
             display: flex;
@@ -76,12 +85,12 @@
         .avatar {
             width: 52px;
             height: 52px;
-            border-radius: 50%;
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: linear-gradient(135deg, var(--accent), var(--accent-2));
-            color: white;
+            color: #06120f;
             font-weight: 800;
             font-size: 1.05rem;
             overflow: hidden;
@@ -128,7 +137,7 @@
             gap: 4px;
             margin-top: 6px;
             font-size: 0.72rem;
-            color: var(--accent);
+            color: #d7fffb;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.08em;
@@ -150,7 +159,7 @@
         .stat {
             background: var(--card-2);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 12px 10px;
             text-align: center;
         }
@@ -225,10 +234,10 @@
         }
 
         .cta {
-            color: var(--text);
+            color: #06120f;
             background: linear-gradient(135deg, var(--accent), var(--accent-2));
             border-radius: 999px;
-            padding: 8px 12px;
+            padding: 9px 13px;
             text-decoration: none;
             font-weight: 800;
             font-size: 0.74rem;
@@ -381,5 +390,7 @@
             });
         })();
     </script>
+    <script src="static/js/config.js?v=20260330"></script>
+    <script src="static/js/analytics.js?v=20260417"></script>
 </body>
 </html>
