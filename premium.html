@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,8 +10,8 @@
     <meta name="description" content="Unlock premium features on Trust My Record. Advanced analytics, unlimited picks, premium contests, and more. Choose the plan that fits your style.">
 
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260415a">
-    <script defer src="static/js/tmr-sitewide.js?v=20260415a"></script>
+    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260419a">
+    <script defer src="static/js/tmr-sitewide.js?v=20260415f"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -565,6 +565,153 @@
             .feature-row.header { display: none; }
         }
     </style>
+    <style>
+        body {
+            background:
+                radial-gradient(circle at 12% 0%, rgba(45, 212, 191, 0.12), transparent 28%),
+                linear-gradient(180deg, #08111d, #0d1726) !important;
+            color: #eef4fb;
+            font-family: 'Inter', sans-serif;
+        }
+
+        header {
+            background: rgba(8, 15, 26, 0.88);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+            backdrop-filter: blur(18px);
+            padding: 12px 0;
+        }
+
+        .logo,
+        .premium-hero h1,
+        .tier-name,
+        .features-section h2 {
+            font-family: 'Barlow', sans-serif;
+            letter-spacing: -0.03em;
+            -webkit-text-fill-color: initial;
+            background: none;
+        }
+
+        .logo {
+            color: #eef4fb;
+            font-size: 1.5rem;
+        }
+
+        .nav-link {
+            color: #9aacbf;
+            border-radius: 999px;
+            padding: 9px 14px;
+        }
+
+        .nav-link:hover {
+            color: #eef4fb;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .premium-hero {
+            padding: 54px 20px 34px;
+        }
+
+        .premium-hero .crown-icon {
+            margin-bottom: 12px;
+            font-size: 3rem;
+            animation: none;
+        }
+
+        .premium-hero h1 {
+            margin-bottom: 12px;
+            color: #eef4fb;
+            font-size: clamp(2.5rem, 6vw, 4.4rem);
+            line-height: 0.96;
+        }
+
+        .premium-hero p,
+        .billing-toggle span,
+        .feature-row .feature-name {
+            color: #97a8bc;
+        }
+
+        .status-banner,
+        .pricing-card,
+        .features-section,
+        .feature-row,
+        .premium-lock {
+            border-color: rgba(148, 163, 184, 0.16) !important;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
+                rgba(11, 20, 34, 0.9) !important;
+            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22);
+        }
+
+        .status-banner,
+        .pricing-card,
+        .features-section {
+            border-radius: 20px;
+        }
+
+        .current-tier,
+        .toggle-switch::after,
+        .pricing-card.featured::before {
+            background: linear-gradient(135deg, #2dd4bf, #8df5ea);
+            color: #06120f !important;
+        }
+
+        .toggle-switch {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(148, 163, 184, 0.16);
+        }
+
+        .pricing-grid {
+            gap: 18px;
+        }
+
+        .pricing-card {
+            padding: 24px;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(45, 212, 191, 0.22);
+        }
+
+        .pricing-card.featured {
+            border-color: rgba(45, 212, 191, 0.26);
+        }
+
+        .tier-icon {
+            font-size: 2rem;
+        }
+
+        .tier-name {
+            color: #eef4fb;
+            font-size: 1.45rem;
+        }
+
+        .tier-price {
+            color: #eef4fb;
+            font-family: 'Barlow', sans-serif;
+        }
+
+        .tier-price span,
+        .tier-original-price,
+        .tier-features li,
+        .feature-row .tier-value {
+            color: #97a8bc;
+        }
+
+        .tier-features .check,
+        .feature-row .tier-value.yes {
+            color: #2dd4bf;
+        }
+
+        .tier-features .x,
+        .feature-row .tier-value.no {
+            color: #ef4444;
+        }
+
+        .premium-lock {
+            color: #d7fffb;
+        }
+    </style>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
     <script>
@@ -583,7 +730,7 @@
                 <a href="index.html" class="nav-link">Home</a>
                 <a href="sportsbook.html" class="nav-link">Sportsbook</a>
                 <a href="feed.html" class="nav-link">Feed</a>
-                <a href="challenges.html" class="nav-link">Picks Arena</a>
+                <a href="arena.html" class="nav-link">Arena</a>
                 <a href="arena.html" class="nav-link">Gaming Arena</a>
                 <a href="forum.html" class="nav-link">Forum</a>
                 <a href="messages.html" class="nav-link">Messages</a>
@@ -839,7 +986,7 @@
                         <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Community</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             <a href="feed.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
-                            <a href="challenges.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Challenges</a>
+                            <a href="arena.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Arena</a>
                             <a href="polls.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Polls</a>
                             <a href="trivia.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
                         </div>
@@ -858,7 +1005,7 @@
                 <!-- Bottom Bar -->
                 <div style="padding: 24px 0; text-align: center;">
                     <p style="color: #606070; font-size: 0.78rem; line-height: 1.7; margin: 0 0 8px 0;">TrustMyRecord is not a gambling site. We provide pick tracking and community features only. No real money is wagered on this platform.</p>
-                    <p style="color: #505060; font-size: 0.72rem; margin: 0;">If you or someone you know has a gambling problem, call 1-800-GAMBLER. Must be 18+ to participate. Please gamble responsibly.</p>
+                    <p style="color: #505060; font-size: 0.72rem; margin: 0;">If you or someone you know has a gambling problem, call local support resources. Must be 18+ to participate. Please gamble responsibly.</p>
                 </div>
             </div>
             <style>
@@ -882,7 +1029,7 @@
     <!-- Scripts -->
     <script src="static/js/config.js?v=20260318"></script>
     <script src="static/js/analytics.js?v=20260405"></script>
-    <script src="static/js/backend-api.js?v=20260414"></script>
+    <script src="static/js/backend-api.js?v=20260415c"></script>
     <script src="static/js/nav-badges.js"></script>
     <script src="static/js/notifications.js?v=20260414"></script>
     <script>
