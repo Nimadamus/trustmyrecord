@@ -653,7 +653,7 @@
                             <h2>Board filters</h2>
                             <p>Refine the leaderboard by sport, sorting logic, and minimum proof threshold.</p>
                         </div>
-                        <button type="button" class="mini-link" onclick="resetFilters()">Reset</button>
+                        <button type="button" class="mini-link" data-action="reset-filters">Reset</button>
                     </div>
                     <div class="filters-grid">
                         <div class="field">
@@ -917,7 +917,7 @@
                     '<td><div class="capper">' +
                         '<span class="capper-avatar">' + escapeHtml((entry.displayName || '?').charAt(0).toUpperCase()) + '</span>' +
                         '<div class="capper-meta">' +
-                            '<a class="capper-name" href="profile.html?user=' + encodeURIComponent(entry.username) + '" onclick="trackHandicappers(\'handicapper_profile_opened\', { username: \'" + escapeJs(entry.username) + "\', source: \'board\' });">' + escapeHtml(entry.displayName) + '</a>' +
+                            '<a class="capper-name" href="profile.html?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">' + escapeHtml(entry.displayName) + '</a>' +
                             '<span class="capper-sub">@' + escapeHtml(entry.username) + ' • ' + escapeHtml(entry.sport || 'All sports') + ' • streak ' + (entry.streak > 0 ? 'W' + entry.streak : entry.streak < 0 ? 'L' + Math.abs(entry.streak) : '0') + '</span>' +
                         '</div>' +
                     '</div></td>' +
@@ -927,9 +927,9 @@
                     '<td class="' + statClass(entry.winRate - 50) + '">' + entry.winRate.toFixed(1) + '%</td>' +
                     '<td>' + entry.totalPicks + '</td>' +
                     '<td><div class="link-actions">' +
-                        '<button type="button" class="mini-link" onclick="inspectCapper(\'' + escapeJs(entry.username) + '\')">Inspect</button>' +
-                        '<a class="mini-link" href="profile.html?user=' + encodeURIComponent(entry.username) + '" onclick="trackHandicappers(\'handicapper_profile_opened\', { username: \'" + escapeJs(entry.username) + "\', source: \'board\' });">Profile</a>' +
-                        '<a class="mini-link" href="arena.html?challenge=' + encodeURIComponent(entry.username) + '" onclick="trackHandicappers(\'handicapper_challenge_clicked\', { username: \'" + escapeJs(entry.username) + "\', source: \'board\' });">Challenge</a>' +
+                        '<button type="button" class="mini-link" data-action="inspect-capper" data-username="' + escapeHtml(entry.username) + '">Inspect</button>' +
+                        '<a class="mini-link" href="profile.html?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">Profile</a>' +
+                        '<a class="mini-link" href="arena.html?challenge=' + encodeURIComponent(entry.username) + '" data-action="challenge-capper" data-username="' + escapeHtml(entry.username) + '" data-source="board">Challenge</a>' +
                     '</div></td>' +
                 '</tr>';
             }).join('');
@@ -942,7 +942,7 @@
                 return;
             }
             rail.innerHTML = entries.map(function(entry) {
-                return '<a class="rail-item" href="profile.html?user=' + encodeURIComponent(entry.username) + '" onclick="trackHandicappers(\'handicapper_profile_opened\', { username: \'" + escapeJs(entry.username) + "\', source: \'streak_rail\' });">' +
+                return '<a class="rail-item" href="profile.html?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="streak_rail">' +
                     '<strong>' + escapeHtml(entry.displayName) + '</strong>' +
                     '<span>@' + escapeHtml(entry.username) + ' • ' + entry.winRate.toFixed(1) + '% win rate • ' + signed(entry.units, 'u') + '</span>' +
                     '<span class="badge">W' + entry.streak + ' current run</span>' +
@@ -957,7 +957,7 @@
                 return;
             }
             rail.innerHTML = entries.map(function(entry) {
-                return '<a class="rail-item" href="profile.html?user=' + encodeURIComponent(entry.username) + '" onclick="trackHandicappers(\'handicapper_profile_opened\', { username: \'" + escapeJs(entry.username) + "\', source: \'volume_rail\' });">' +
+                return '<a class="rail-item" href="profile.html?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="volume_rail">' +
                     '<strong>' + escapeHtml(entry.displayName) + '</strong>' +
                     '<span>' + entry.totalPicks + ' picks • ' + signed(entry.roi, '%') + ' ROI • ' + signed(entry.units, 'u') + '</span>' +
                     '<span class="badge gold">Verified sample</span>' +
@@ -977,7 +977,7 @@
                 const challenger = entry.challenger_display || entry.challenger_username || 'Challenger';
                 const challenged = entry.challenged_display || entry.challenged_username || 'Open';
                 const status = String(entry.status || 'pending').replace(/_/g, ' ');
-                return '<a class="challenge-row" href="arena.html" onclick="trackHandicappers(\'handicapper_arena_opened\', { challenge_id: \'" + escapeJs(String(entry.id || 'unknown')) + "\', source: \'hero\' });">' +
+                return '<a class="challenge-row" href="arena.html" data-action="open-arena-challenge" data-challenge-id="' + escapeHtml(String(entry.id || 'unknown')) + '" data-source="hero">' +
                     '<span class="badge">' + escapeHtml(status) + '</span>' +
                     '<strong>' + escapeHtml(title) + '</strong>' +
                     '<span>' + escapeHtml(challenger) + ' vs ' + escapeHtml(challenged) + ' • ' + escapeHtml(entry.game_title || entry.game_slug || 'Arena') + ' • ' + timeAgo(entry.created_at || entry.createdAt) + '</span>' +
@@ -1142,6 +1142,49 @@
             applyFilters();
         }
 
+        function bindActionClicks() {
+            document.addEventListener('click', function(event) {
+                const actionEl = event.target.closest('[data-action]');
+                if (!actionEl) return;
+
+                const action = actionEl.getAttribute('data-action');
+                if (action === 'reset-filters') {
+                    event.preventDefault();
+                    resetFilters();
+                    return;
+                }
+
+                if (action === 'inspect-capper') {
+                    event.preventDefault();
+                    inspectCapper(actionEl.getAttribute('data-username') || '');
+                    return;
+                }
+
+                if (action === 'open-profile') {
+                    trackHandicappers('handicapper_profile_opened', {
+                        username: actionEl.getAttribute('data-username') || '',
+                        source: actionEl.getAttribute('data-source') || 'board'
+                    });
+                    return;
+                }
+
+                if (action === 'challenge-capper') {
+                    trackHandicappers('handicapper_challenge_clicked', {
+                        username: actionEl.getAttribute('data-username') || '',
+                        source: actionEl.getAttribute('data-source') || 'board'
+                    });
+                    return;
+                }
+
+                if (action === 'open-arena-challenge') {
+                    trackHandicappers('handicapper_arena_opened', {
+                        challenge_id: actionEl.getAttribute('data-challenge-id') || 'unknown',
+                        source: actionEl.getAttribute('data-source') || 'hero'
+                    });
+                }
+            });
+        }
+
         async function loadHandicappers() {
             const state = document.getElementById('leaderboardState');
             try {
@@ -1197,6 +1240,7 @@
         }
 
         async function bootstrapHandicappersPage() {
+            bindActionClicks();
             bindFilters();
             trackHandicappers('handicappers_page_viewed', {});
             await Promise.all([
