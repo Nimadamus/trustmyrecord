@@ -1,20 +1,25 @@
 (() => {
+    const sportsbookPicksHref = "sportsbook.html#picks";
     const routes = [
         ["index.html", "Home"],
-        ["sportsbook.html", "Make Picks"],
-        ["challenges.html", "Arena"],
+        [sportsbookPicksHref, "Make Picks"],
+        ["handicappers.html", "Handicappers"],
+        ["arena.html", "Arena"],
         ["feed.html", "Feed"],
         ["polls.html", "Polls"],
         ["trivia.html", "Trivia"],
         ["profile.html", "Records"],
         ["forum.html", "Forum"],
+        ["friends.html", "Friends"],
+        ["messages.html", "Messages"],
         ["about.html", "About"]
     ];
 
     const routeMeta = {
         "sportsbook.html": ["Make Picks", "Live markets, pick submission, odds boards, and permanent locked receipts."],
-        "challenges.html": ["Arena", "Head-to-head contests, rival callouts, public challenges, and competition loops."],
-        "arena.html": ["Gaming Arena", "Gaming-specific challenges live here as a secondary arena route."],
+        "handicappers.html": ["Handicappers", "Discover ranked cappers by ROI, sample size, units, streaks, and open challenge paths."],
+        "arena.html": ["Arena", "Head-to-head contests, rival callouts, public challenges, and competition loops."],
+        "challenges.html": ["Arena", "Legacy arena route. Public competition and challenge traffic belongs on the Arena page."],
         "feed.html": ["Social Feed", "Posts, reactions, sports debate, locked picks, and activity from the community."],
         "polls.html": ["Polls", "Prediction polls and scored fan forecasting, separate from pick submission."],
         "trivia.html": ["Trivia", "Sports knowledge games, custom questions, and scored fan status."],
@@ -34,11 +39,119 @@
     const currentFile = (location.pathname.split("/").pop() || "index.html").toLowerCase();
     if (document.querySelector(".tmr-global-nav")) return;
 
-    document.body.classList.add("tmr-site-shell");
+    function escapeHtml(value) {
+        return String(value == null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
 
-    document.querySelectorAll("header, body > nav.nav, body > .messages-top-strip, body > .sportsbook-top-strip, .sportsbook-top-strip").forEach((el) => {
+    function getSessionUser() {
+        try {
+            if (window.auth && typeof window.auth.getCurrentUser === "function") {
+                const authUser = window.auth.getCurrentUser();
+                if (authUser && (authUser.username || authUser.email)) {
+                    return authUser;
+                }
+            }
+        } catch (error) {
+            // Fall through to storage-backed checks.
+        }
+
+        try {
+            if (window.api && window.api._cachedUser && (window.api._cachedUser.username || window.api._cachedUser.email)) {
+                return window.api._cachedUser;
+            }
+        } catch (error) {
+            // Ignore API cache access failures.
+        }
+
+        const keys = ["trustmyrecord_session", "tmr_current_user", "currentUser"];
+        for (const key of keys) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (!raw) continue;
+                const parsed = JSON.parse(raw);
+                const user = parsed && (parsed.user || parsed);
+                if (user && (user.username || user.email)) {
+                    return user;
+                }
+            } catch (error) {
+                // Ignore malformed session values and keep scanning.
+            }
+        }
+        return null;
+    }
+
+    function getUserAvatar(user) {
+        if (!user) return "";
+        if (user.avatar || user.avatarUrl || user.avatar_url) {
+            return user.avatar || user.avatarUrl || user.avatar_url;
+        }
+        const seed = String(user.username || user.displayName || user.email || "U");
+        const colors = ["0ea5e9", "22c55e", "ef4444", "f59e0b", "8b5cf6"];
+        const color = colors[seed.length % colors.length];
+        const letter = escapeHtml(seed.charAt(0).toUpperCase() || "U");
+        return `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23${color}%22/><text x=%2250%22 y=%2264%22 font-size=%2248%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial,sans-serif%22>${letter}</text></svg>`;
+    }
+
+    function buildLoggedOutActions() {
+        return `
+            <a class="tmr-global-nav__button" href="profile.html"${currentFile === "profile.html" ? ' aria-current="page"' : ""}>Records</a>
+            <a class="tmr-global-nav__button tmr-global-nav__button--primary" href="sportsbook.html">Start Free</a>
+        `;
+    }
+
+    function buildLoggedInActions(user) {
+        const username = String(user.username || user.displayName || user.email || "user");
+        const displayName = String(user.displayName || user.username || user.email || "User");
+        const avatar = getUserAvatar(user);
+        const profileHref = "profile.html?user=" + encodeURIComponent(username);
+
+        return `
+            <a class="tmr-global-nav__user" href="${profileHref}"${currentFile === "profile.html" ? ' aria-current="page"' : ""}>
+                <img class="tmr-global-nav__user-avatar" src="${avatar}" alt="${escapeHtml(displayName)} avatar">
+                <span class="tmr-global-nav__user-copy">
+                    <strong>${escapeHtml(displayName)}</strong>
+                    <span>@${escapeHtml(username)}</span>
+                </span>
+            </a>
+            <a class="tmr-global-nav__button" href="notifications.html"${currentFile === "notifications.html" ? ' aria-current="page"' : ""}>Alerts</a>
+            <button class="tmr-global-nav__button tmr-global-nav__logout" type="button" data-tmr-logout>Log Out</button>
+        `;
+    }
+
+    function clearAuthStorage() {
+        [
+            "trustmyrecord_session",
+            "currentUser",
+            "trustmyrecord_remember",
+            "tmr_is_logged_in",
+            "tmr_current_user",
+            "trustmyrecord_token",
+            "trustmyrecord_refresh_token",
+            "token",
+            "tmr_token",
+            "refreshToken",
+            "refresh_token"
+        ].forEach((key) => localStorage.removeItem(key));
+    }
+
+    document.body.classList.add("tmr-site-shell");
+    document.body.setAttribute("data-tmr-route", currentFile.replace(/\.html$/, ""));
+
+    document.querySelectorAll("header, body > nav.nav, body > .messages-top-strip, body > .sportsbook-top-strip, body > .notifications-top-strip, body > .profile-top-strip, .sportsbook-top-strip, .notifications-top-strip, .profile-top-strip").forEach((el) => {
         if (!el.classList.contains("tmr-global-nav")) {
             el.setAttribute("data-tmr-legacy-nav", "hidden");
+            el.style.display = "none";
+        }
+    });
+
+    document.querySelectorAll("body > footer").forEach((el) => {
+        if (!el.classList.contains("tmr-global-footer")) {
+            el.setAttribute("data-tmr-legacy-footer", "hidden");
             el.style.display = "none";
         }
     });
@@ -53,17 +166,63 @@
             </a>
             <div class="tmr-global-nav__links">
                 ${routes.slice(1).filter(([href]) => href !== "profile.html").map(([href, label]) => {
-                    const active = currentFile === href.toLowerCase() || (currentFile === "arena.html" && href === "challenges.html");
+                    const hrefFile = href.split("#")[0].toLowerCase();
+                    const active = currentFile === hrefFile || ((currentFile === "arena.html" || currentFile === "challenges.html") && hrefFile === "arena.html");
                     return `<a href="${href}"${active ? ' aria-current="page"' : ""}>${label}</a>`;
                 }).join("")}
             </div>
-            <div class="tmr-global-nav__actions">
-                <a class="tmr-global-nav__button" href="profile.html"${currentFile === "profile.html" ? ' aria-current="page"' : ""}>Records</a>
-                <a class="tmr-global-nav__button tmr-global-nav__button--primary" href="sportsbook.html">Start Free</a>
-            </div>
+            <div class="tmr-global-nav__actions"></div>
         </div>
     `;
     document.body.prepend(nav);
+
+    const actions = nav.querySelector(".tmr-global-nav__actions");
+
+    function renderActions() {
+        if (!actions) return;
+        const user = getSessionUser();
+        actions.innerHTML = user ? buildLoggedInActions(user) : buildLoggedOutActions();
+    }
+
+    async function handleLogout() {
+        const logoutButton = nav.querySelector("[data-tmr-logout]");
+        if (logoutButton) {
+            logoutButton.disabled = true;
+            logoutButton.textContent = "Logging Out...";
+        }
+
+        try {
+            if (window.auth && typeof window.auth.logout === "function") {
+                await window.auth.logout();
+            } else if (window.api && typeof window.api.logout === "function" && typeof window.api.isLoggedIn === "function" && window.api.isLoggedIn()) {
+                await window.api.logout();
+            } else {
+                clearAuthStorage();
+            }
+        } catch (error) {
+            clearAuthStorage();
+        }
+
+        renderActions();
+        window.dispatchEvent(new CustomEvent("tmr-auth-changed", { detail: { loggedIn: false } }));
+        if (currentFile === "profile.html" || currentFile === "notifications.html" || currentFile === "messages.html" || currentFile === "friends.html") {
+            window.location.href = "index.html";
+        }
+    }
+
+    nav.addEventListener("click", (event) => {
+        const logoutButton = event.target.closest("[data-tmr-logout]");
+        if (!logoutButton) return;
+        event.preventDefault();
+        handleLogout();
+    });
+
+    renderActions();
+    window.addEventListener("storage", renderActions);
+    window.addEventListener("tmr-auth-changed", renderActions);
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) renderActions();
+    });
 
     const meta = routeMeta[currentFile];
     if (meta && currentFile !== "index.html") {
@@ -71,5 +230,53 @@
         note.className = "tmr-route-note";
         note.innerHTML = `<strong>${meta[0]}:</strong> ${meta[1]}`;
         nav.insertAdjacentElement("afterend", note);
+    }
+
+    if (currentFile !== "404.html" && !document.querySelector(".tmr-global-footer")) {
+        const footer = document.createElement("footer");
+        footer.className = "tmr-global-footer site-footer";
+        footer.innerHTML = `
+            <div class="tmr-global-footer__grid">
+                <div class="tmr-global-footer__brand">
+                    <a class="tmr-global-footer__brand-mark" href="index.html">
+                        <span class="tmr-global-nav__mark">TMR</span>
+                        <span>TRUST<span>MY</span>RECORD</span>
+                    </a>
+                    <p>The sports social arena for permanent public records, locked picks, rivalry, and receipts that cannot be rewritten.</p>
+                </div>
+                <div class="tmr-global-footer__section">
+                    <h3 class="tmr-global-footer__heading">Platform</h3>
+                    <div class="tmr-global-footer__links">
+                        <a href="sportsbook.html#picks">Make Picks</a>
+                        <a href="arena.html">Arena</a>
+                        <a href="premium.html">Premium</a>
+                        <a href="profile.html">Records</a>
+                    </div>
+                </div>
+                <div class="tmr-global-footer__section">
+                    <h3 class="tmr-global-footer__heading">Community</h3>
+                    <div class="tmr-global-footer__links">
+                        <a href="feed.html">Feed</a>
+                        <a href="forum.html">Forum</a>
+                        <a href="polls.html">Polls</a>
+                        <a href="trivia.html">Trivia</a>
+                    </div>
+                </div>
+                <div class="tmr-global-footer__section">
+                    <h3 class="tmr-global-footer__heading">Info</h3>
+                    <div class="tmr-global-footer__links">
+                        <a href="about.html">About</a>
+                        <a href="terms.html">Terms</a>
+                        <a href="privacy.html">Privacy</a>
+                        <a href="mailto:support@trustmyrecord.com">Contact</a>
+                    </div>
+                </div>
+            </div>
+            <div class="tmr-global-footer__bottom">
+                <p>&copy; 2026 TrustMyRecord.com. Transparent sports records, community competition, and locked receipts.</p>
+                <p>TrustMyRecord is not a gambling platform. No real money is wagered on this site.</p>
+            </div>
+        `;
+        document.body.appendChild(footer);
     }
 })();
