@@ -10,8 +10,8 @@
     <meta property="og:title" content="User Profile | Trust My Record">
     <meta property="og:description" content="Check out my verified handicapping record and stats.">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260415a">
-    <script defer src="static/js/tmr-sitewide.js?v=20260415a"></script>
+    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260419a">
+    <script defer src="static/js/tmr-sitewide.js?v=20260415f"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -183,6 +183,31 @@
             font-size: 0.94rem;
             margin-bottom: 12px;
         }
+        .profile-trust-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .profile-trust-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 11px;
+            border-radius: 999px;
+            font-size: 0.74rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            border: 1px solid rgba(172, 196, 226, 0.16);
+            background: rgba(9, 20, 36, 0.55);
+            color: #d7e4f7;
+        }
+        .profile-trust-pill strong {
+            color: #ffffff;
+            letter-spacing: 0;
+            text-transform: none;
+        }
         .profile-bio {
             color: rgba(255,255,255,0.82);
             font-size: 1rem;
@@ -232,33 +257,50 @@
         }
 
         /* ==================== SUMMARY BAR ==================== */
-        .summary-bar { padding: 8px 0 26px; }
+        .summary-bar { padding: 8px 0 22px; }
 
-        .summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0;
+            border: 1px solid rgba(154, 175, 198, 0.22);
+            background: linear-gradient(180deg, rgba(9, 18, 31, 0.94), rgba(13, 24, 40, 0.97));
+            box-shadow: 0 18px 40px rgba(3, 10, 20, 0.24);
+        }
 
         .summary-stat {
             text-align: left;
-            padding: 18px 18px 16px;
+            padding: 16px 18px 14px;
             position: relative;
-            border: 1px solid var(--border-color);
-            border-radius: 18px;
-            background: #ffffff;
-            box-shadow: var(--shadow-soft);
+            border-right: 1px solid rgba(154, 175, 198, 0.16);
+            border-bottom: 1px solid rgba(154, 175, 198, 0.16);
+            background: transparent;
+            min-height: 78px;
         }
+
+        .summary-stat:nth-child(4n) { border-right: none; }
+        .summary-stat:nth-last-child(-n + 4) { border-bottom: none; }
 
         .summary-stat-value {
             font-family: 'Barlow', 'Inter', sans-serif;
-            font-size: 1.85rem;
+            font-size: 1.1rem;
             font-weight: 800;
-            letter-spacing: -0.06em;
+            letter-spacing: -0.05em;
             margin-bottom: 4px;
+            color: #f8fbff;
+            line-height: 1.1;
         }
         .summary-stat-label {
-            color: var(--text-muted);
-            font-size: 0.74rem;
-            font-weight: 600;
+            color: rgba(214, 225, 241, 0.62);
+            font-size: 0.66rem;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.12em;
+            letter-spacing: 0.14em;
+        }
+        .summary-stat-note {
+            margin-top: 4px;
+            font-size: 0.72rem;
+            color: rgba(214, 225, 241, 0.72);
         }
 
         .positive { color: var(--accent-green); }
@@ -341,39 +383,72 @@
         .section-subtitle { color: var(--text-muted); font-size: 0.84rem; }
 
         .picks-table-wrapper {
-            background: #ffffff;
-            border: 1px solid var(--border-color);
-            border-radius: 22px;
-            overflow: hidden;
-            box-shadow: var(--shadow-soft);
+            background: #0b1523;
+            border: 1px solid rgba(154, 175, 198, 0.22);
+            border-radius: 0;
+            overflow-x: auto;
+            overflow-y: hidden;
+            box-shadow: 0 20px 46px rgba(4, 10, 18, 0.24);
         }
 
-        .picks-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .picks-table { width: 100%; min-width: 1500px; border-collapse: collapse; font-size: 0.78rem; }
 
         .picks-table thead {
-            background: #f8fafc;
-            border-bottom: 1px solid var(--border-color);
+            background: #09111c;
+            border-bottom: 1px solid rgba(154, 175, 198, 0.24);
         }
 
         .picks-table th {
-            padding: 14px 18px;
+            padding: 12px 14px;
             text-align: left;
-            font-weight: 600;
-            font-size: 0.75rem;
-            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 0.68rem;
+            color: rgba(214, 225, 241, 0.62);
             text-transform: uppercase;
-            letter-spacing: 0.12em;
+            letter-spacing: 0.14em;
             white-space: nowrap;
         }
 
         .picks-table td {
-            padding: 16px 18px;
-            border-bottom: 1px solid rgba(150, 179, 214, 0.1);
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(154, 175, 198, 0.11);
             white-space: nowrap;
+            color: #e7edf6;
         }
 
         .picks-table tbody tr:last-child td { border-bottom: none; }
-        .picks-table tbody tr:hover { background: var(--bg-card-hover); }
+        .picks-table tbody tr:nth-child(even) { background: rgba(255,255,255,0.018); }
+        .picks-table tbody tr:hover { background: rgba(59, 130, 246, 0.08); }
+
+        .picks-table td.col-game,
+        .picks-table td.col-pick {
+            min-width: 190px;
+            white-space: normal;
+        }
+
+        .ledger-pick-title {
+            font-weight: 700;
+            color: #f8fbff;
+            line-height: 1.25;
+        }
+
+        .ledger-pick-meta,
+        .ledger-game-meta {
+            margin-top: 3px;
+            font-size: 0.7rem;
+            color: rgba(214, 225, 241, 0.58);
+        }
+
+        .ledger-muted {
+            color: rgba(214, 225, 241, 0.58);
+            font-size: 0.72rem;
+        }
+
+        .ledger-type,
+        .ledger-status {
+            font-size: 0.72rem;
+            color: #dbe6f4;
+        }
 
         .pick-sport {
             display: inline-block;
@@ -394,11 +469,12 @@
 
         .result-badge {
             display: inline-block;
-            padding: 4px 10px;
-            border-radius: 999px;
-            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.68rem;
             font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 0.08em;
         }
         .result-badge.won { background: var(--accent-green-bg); color: var(--accent-green); }
         .result-badge.lost { background: var(--accent-red-bg); color: var(--accent-red); }
@@ -409,7 +485,56 @@
         .profit-cell.negative { color: var(--accent-red); font-weight: 600; }
         .profit-cell.zero { color: var(--text-muted); }
 
-        .load-more-row { text-align: center; padding: 18px; }
+        .load-more-row {
+            text-align: center;
+            padding: 14px;
+            border-top: 1px solid rgba(154, 175, 198, 0.14);
+            background: #09111c;
+        }
+
+        .filter-toolbar {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .filter-control,
+        .filter-button {
+            min-height: 40px;
+            padding: 0 12px;
+            border-radius: 0;
+            border: 1px solid rgba(154, 175, 198, 0.2);
+            background: #0b1523;
+            color: #e7edf6;
+            font-family: inherit;
+            font-size: 0.8rem;
+        }
+
+        .filter-control::placeholder {
+            color: rgba(214, 225, 241, 0.45);
+        }
+
+        .filter-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .filter-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .table-note {
+            color: rgba(214, 225, 241, 0.52);
+            font-size: 0.74rem;
+        }
 
         /* ==================== ANALYTICS SECTION ==================== */
         .analytics-section { padding: 24px 0 48px; }
@@ -659,24 +784,122 @@
             .profile-header { flex-direction: column; text-align: center; }
             .profile-meta { justify-content: center; }
             .profile-actions { justify-content: center; }
-            .summary-grid { grid-template-columns: repeat(3, 1fr); }
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+            .summary-stat { border-right: 1px solid rgba(154, 175, 198, 0.16); border-bottom: 1px solid rgba(154, 175, 198, 0.16); }
+            .summary-stat:nth-child(2n) { border-right: none; }
+            .summary-stat:nth-last-child(-n + 2) { border-bottom: none; }
             .workspace-nav-head { align-items: flex-start; }
             .picks-table-wrapper { overflow-x: auto; }
-            .picks-table { min-width: 700px; }
+            .picks-table { min-width: 1280px; }
             .stats-summary-table { min-width: 720px; }
             nav { display: none; }
             .analytics-grid { grid-template-columns: repeat(2, 1fr); }
+            .filter-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .site-footer-inner { grid-template-columns: 1fr; }
             .site-footer-links { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
         }
 
         @media (max-width: 480px) {
             .summary-grid { grid-template-columns: repeat(2, 1fr); }
+            .summary-stat { border-right: 1px solid rgba(154, 175, 198, 0.16); border-bottom: 1px solid rgba(154, 175, 198, 0.16); }
+            .summary-stat:nth-child(2n) { border-right: none; }
+            .summary-stat:nth-last-child(-n + 2) { border-bottom: none; }
             .analytics-grid { grid-template-columns: 1fr; }
             .container { padding: 0 16px; }
             .profile-header { padding: 24px 20px; border-radius: 22px; }
+            .filter-toolbar { grid-template-columns: 1fr; }
             .site-footer-links { grid-template-columns: 1fr; }
             .site-footer-bottom { flex-direction: column; }
+        }
+    </style>
+    <style>
+        body {
+            background:
+                radial-gradient(circle at 10% 0%, rgba(45, 212, 191, 0.12), transparent 28%),
+                linear-gradient(180deg, #08111d, #0d1726) !important;
+            color: #eef4fb;
+        }
+
+        .profile-top-strip,
+        header,
+        .profile-header,
+        .summary-bar-inner,
+        .workspace-nav-card,
+        .workspace-panel,
+        .picks-table-wrapper,
+        .support-card,
+        .support-section-grid > *,
+        .cappermetrics-card,
+        .filters-card,
+        .filter-toolbar {
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
+                rgba(11, 20, 34, 0.9) !important;
+            border-color: rgba(148, 163, 184, 0.16) !important;
+            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22) !important;
+        }
+
+        .profile-top-strip,
+        header {
+            background: rgba(8, 15, 26, 0.88) !important;
+            backdrop-filter: blur(18px);
+        }
+
+        .logo,
+        .profile-name,
+        .section-title {
+            color: #eef4fb !important;
+            font-family: 'Barlow', sans-serif;
+        }
+
+        .logo span,
+        nav a.active,
+        .profile-trust-pill strong {
+            color: #2dd4bf !important;
+        }
+
+        nav a,
+        .profile-handle,
+        .profile-bio,
+        .profile-meta,
+        .section-subtitle,
+        .ledger-pick-meta,
+        .ledger-game-meta {
+            color: #97a8bc !important;
+        }
+
+        nav a:hover {
+            color: #eef4fb !important;
+        }
+
+        .profile-header {
+            background:
+                radial-gradient(circle at 80% 0%, rgba(45, 212, 191, 0.14), transparent 34%),
+                linear-gradient(160deg, rgba(15, 27, 42, 0.96), rgba(8, 15, 26, 0.98)) !important;
+        }
+
+        .profile-trust-pill,
+        .summary-stat,
+        .workspace-nav-link,
+        .filter-control,
+        .btn-secondary {
+            background: rgba(255,255,255,0.045) !important;
+            border-color: rgba(148, 163, 184, 0.16) !important;
+            color: #d7e2ee !important;
+        }
+
+        .picks-table thead,
+        .picks-table tbody tr:nth-child(even) {
+            background: transparent !important;
+        }
+
+        .picks-table tbody tr:hover {
+            background: rgba(255,255,255,0.04) !important;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2dd4bf, #8df5ea) !important;
+            color: #06120f !important;
         }
     </style>
     <!-- Google tag (gtag.js) -->
@@ -704,8 +927,8 @@
                     <a href="sportsbook.html" class="nav-link">Odds</a>
                     <a href="sportsbook.html" class="nav-link">Scores &amp; Matchups</a>
                     <a href="feed.html" class="nav-link">News</a>
-                    <a href="index.html" class="nav-link">Picks</a>
-                    <a href="index.html#leaderboards" class="nav-link">Handicappers</a>
+                    <a href="sportsbook.html#picks" class="nav-link">Picks</a>
+                    <a href="profile.html" class="nav-link">Handicappers</a>
                     <a href="forum.html" class="nav-link">Forum</a>
                     <a href="messages.html" class="nav-link">Messages</a>
                     <a href="profile.html" class="nav-link active">My Account</a>
@@ -733,11 +956,11 @@
             <div class="workspace-nav-card">
                 <div class="workspace-nav-head">
                     <div>
-                        <div class="section-title">Profile Workspace</div>
-                        <div class="section-subtitle">Clean performance tracking, full pick filters, and direct tabs into community products.</div>
+                        <div class="section-title">Performance Profile</div>
+                        <div class="section-subtitle">Transparent ledger, sortable records table, and advanced audit splits built around the pick history.</div>
                     </div>
                     <div class="workspace-tabs">
-                        <a class="workspace-tab active" id="profilePerformanceTab" href="profile.html">Performance</a>
+                        <a class="workspace-tab active" id="profilePerformanceTab" href="profile.html">Record</a>
                         <a class="workspace-tab" id="profileTriviaTab" href="trivia.html">Trivia</a>
                         <a class="workspace-tab" id="profilePollsTab" href="polls.html">Polls</a>
                     </div>
@@ -750,37 +973,145 @@
         <div class="container">
             <div class="section-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
                 <div>
-                    <div class="section-title">Pick History</div>
+                    <div class="section-title">Records Table</div>
                     <div class="section-subtitle" id="picksCount"></div>
+                    <div class="table-note">The records table is the source of truth. Filters, ribbon stats, and breakdowns all resolve from this ledger.</div>
                 </div>
                 <div style="display:flex;gap:8px;">
                     <button class="btn btn-secondary" onclick="exportCSV()" style="padding:6px 14px;font-size:.8rem;" title="Download pick history as CSV">Export CSV</button>
                     <button class="btn btn-secondary" onclick="showEmbedModal()" style="padding:6px 14px;font-size:.8rem;" title="Get embeddable widget code">Embed Widget</button>
                 </div>
             </div>
+            <div class="ledger-filter-card">
+                <div id="pickFilters" class="filter-toolbar">
+                    <div class="filter-search-wrap">
+                        <span class="filter-search-icon"><i class="fas fa-search"></i></span>
+                        <input id="filterSearch" oninput="applyFilters()" class="filter-control filter-search-input" type="search" placeholder="Search game, pick, book, or notes">
+                    </div>
+                    <select id="filterSport" onchange="applyFilters()" class="filter-control">
+                        <option value="">All Sports</option>
+                    </select>
+                    <select id="filterType" onchange="applyFilters()" class="filter-control">
+                        <option value="">All Markets</option>
+                        <option value="h2h,moneyline">Moneyline</option>
+                        <option value="spreads,spread">Spread</option>
+                        <option value="totals,total">Totals</option>
+                        <option value="team_totals">Team Totals</option>
+                        <option value="f5_h2h,f5_spreads,f5_totals">First 5</option>
+                        <option value="first_half_h2h,first_half_spreads,first_half_totals">First Half</option>
+                        <option value="second_half_h2h,second_half_spreads,second_half_totals">Second Half</option>
+                        <option value="period_1_h2h,period_1_spreads,period_1_totals">1st Period</option>
+                        <option value="alt_spreads,alt_totals">Alt Lines</option>
+                    </select>
+                    <select id="filterResult" onchange="applyFilters()" class="filter-control">
+                        <option value="">All Results</option>
+                        <option value="won">Won</option>
+                        <option value="lost">Lost</option>
+                        <option value="push">Push</option>
+                        <option value="pending">Pending</option>
+                    </select>
+                    <select id="filterOdds" onchange="applyFilters()" class="filter-control">
+                        <option value="">All Odds</option>
+                        <option value="heavy-fav">Heavy Fav (-200+)</option>
+                        <option value="fav">Favorite (-110 to -199)</option>
+                        <option value="even">Even (+100 to -109)</option>
+                        <option value="dog">Underdog (+101 to +200)</option>
+                        <option value="longshot">Longshot (+201+)</option>
+                    </select>
+                    <select id="filterUnits" onchange="applyFilters()" class="filter-control">
+                        <option value="">All Unit Sizes</option>
+                        <option value="0-1">0.5u to 1u</option>
+                        <option value="1.5-2">1.5u to 2u</option>
+                        <option value="2.5-3">2.5u to 3u</option>
+                        <option value="3plus">3u and up</option>
+                    </select>
+                    <select id="filterPeriod" onchange="applyFilters()" class="filter-control">
+                        <option value="all">All Time</option>
+                        <option value="7">Last 7 Days</option>
+                        <option value="30">Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                        <option value="365">Last Year</option>
+                    </select>
+                    <input id="filterDateFrom" onchange="applyFilters()" class="filter-control" type="date" aria-label="Filter from date">
+                    <input id="filterDateTo" onchange="applyFilters()" class="filter-control" type="date" aria-label="Filter to date">
+                    <select id="filterSort" onchange="applyFilters()" class="filter-control">
+                        <option value="date_desc">Newest First</option>
+                        <option value="date_asc">Oldest First</option>
+                        <option value="net_units_desc">Best Net Units</option>
+                        <option value="net_units_asc">Worst Net Units</option>
+                        <option value="odds_desc">Highest Odds</option>
+                        <option value="odds_asc">Lowest Odds</option>
+                        <option value="units_desc">Highest Units</option>
+                        <option value="units_asc">Lowest Units</option>
+                        <option value="clv_desc">Best CLV</option>
+                        <option value="clv_asc">Worst CLV</option>
+                        <option value="sport_asc">Sport A-Z</option>
+                        <option value="sport_desc">Sport Z-A</option>
+                        <option value="market_asc">Market A-Z</option>
+                        <option value="market_desc">Market Z-A</option>
+                        <option value="line_desc">Highest Line</option>
+                        <option value="line_asc">Lowest Line</option>
+                        <option value="closing_line_desc">Highest Closing Line</option>
+                        <option value="closing_line_asc">Lowest Closing Line</option>
+                        <option value="book_asc">Book A-Z</option>
+                        <option value="book_desc">Book Z-A</option>
+                        <option value="status_asc">Status A-Z</option>
+                        <option value="status_desc">Status Z-A</option>
+                        <option value="result_desc">Best Result</option>
+                        <option value="result_asc">Worst Result</option>
+                    </select>
+                </div>
+                <div class="filter-actions ledger-filter-actions">
+                    <div class="filter-chip-row">
+                        <button id="btnFavOnly" onclick="toggleQuickFilter('fav')" class="filter-button btn-secondary">Favorites Only</button>
+                        <button id="btnDogOnly" onclick="toggleQuickFilter('dog')" class="filter-button btn-secondary">Underdogs Only</button>
+                        <button onclick="clearFilters()" class="filter-button btn-secondary">Clear All</button>
+                    </div>
+                    <div class="ledger-toolbar-meta">
+                        <label class="ledger-page-size-label" for="pageSizeSelect">Rows</label>
+                        <select id="pageSizeSelect" class="filter-control ledger-page-size" onchange="changePageSize(this.value)">
+                            <option value="15">15</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="filterBanner" style="display:none;padding:10px 16px;margin-bottom:8px;background:var(--accent-blue-bg);border:1px solid rgba(59,130,246,0.3);border-radius:8px;font-size:.85rem;color:var(--text-primary);align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                    <span id="filterBannerText"></span>
+                    <button onclick="clearFilters()" style="background:none;border:1px solid var(--border-color);color:var(--text-secondary);padding:4px 12px;border-radius:4px;cursor:pointer;font-size:.8rem;font-family:inherit;">Clear All Filters</button>
+                </div>
+                <div id="filterResults" style="color:var(--text-muted);font-size:.85rem;margin-bottom:8px;"></div>
+            </div>
             <div class="picks-table-wrapper" id="picksTableWrapper" style="display:none;">
                 <table class="picks-table">
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Sport</th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="date" onclick="setTableSort('date')">Date</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="sport" onclick="setTableSort('sport')">Sport</button></th>
+                            <th>Game</th>
                             <th>Pick</th>
-                            <th>Odds</th>
-                            <th>Units</th>
-                            <th>Result</th>
-                            <th>P/L</th>
-                            <th>Running Total</th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="market" onclick="setTableSort('market')">Market</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="line" onclick="setTableSort('line')">Line</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="odds" onclick="setTableSort('odds')">Odds</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="units" onclick="setTableSort('units')">Units</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="result" onclick="setTableSort('result')">Result</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="net_units" onclick="setTableSort('net_units')">Net Units</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="closing_line" onclick="setTableSort('closing_line')">Closing Line</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="clv" onclick="setTableSort('clv')">CLV</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="book" onclick="setTableSort('book')">Book</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="status" onclick="setTableSort('status')">Status</button></th>
                         </tr>
                     </thead>
                     <tbody id="picksTableBody"></tbody>
                 </table>
-                <div class="load-more-row" id="loadMoreRow" style="display:none;">
-                    <button class="btn btn-secondary" id="loadMoreBtn">Load More Picks</button>
+                <div class="load-more-row ledger-pagination-row" id="loadMoreRow" style="display:none;">
+                    <div class="ledger-pagination" id="ledgerPagination"></div>
                 </div>
             </div>
             <div class="empty-state" id="picksEmptyState" style="display:none;">
                 <p style="font-size:1.5rem;margin-bottom:8px;">No picks yet</p>
-                <p>This user hasn't made any picks.</p>
+                <p>This user hasn't locked a pick into their public record yet.</p>
             </div>
         </div>
     </section>
@@ -790,7 +1121,7 @@
             <div class="stats-table-card">
                 <div class="stats-table-head">
                     <div class="section-title">Advanced Performance Table</div>
-                    <div class="stats-table-note">Pick Monitor style summary with live filters applied to every metric below.</div>
+                    <div class="stats-table-note">Audit summary tied directly to the visible ledger and current filter set.</div>
                 </div>
                 <div class="picks-table-wrapper" style="border:none;border-radius:0;box-shadow:none;background:transparent;">
                     <table class="stats-summary-table">
@@ -809,93 +1140,74 @@
             <div class="section-header"><div class="section-title">Performance Overview</div></div>
             <div class="analytics-grid" id="analyticsGrid"></div>
 
-            <div style="margin-top:24px;">
-                <div class="section-header" style="margin-bottom:12px;"><div class="section-title">By Sport</div></div>
-                <div class="breakdown-grid" id="sportBreakdownGrid"></div>
-            </div>
-
-            <div style="margin-top:24px;">
-                <div class="section-header" style="margin-bottom:12px;"><div class="section-title">By Bet Type</div></div>
-                <div class="breakdown-grid" id="betTypeGrid"></div>
-            </div>
-
-            <div style="margin-top:24px;">
-                <div class="section-header" style="margin-bottom:12px;"><div class="section-title">By Unit Size</div></div>
-                <div class="breakdown-grid" id="unitSizeGrid"></div>
-            </div>
-
-            <div style="margin-top:24px;">
-                <div class="section-header" style="margin-bottom:12px;"><div class="section-title">By Odds Range</div></div>
-                <div class="breakdown-grid" id="oddsRangeGrid"></div>
-            </div>
-
-            <div style="margin-top:24px;">
-                <div class="section-header" style="margin-bottom:12px;"><div class="section-title">Recent Form (Last 20)</div></div>
-                <div id="recentFormGrid" style="display:flex;gap:3px;flex-wrap:wrap;padding:12px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;"></div>
-            </div>
-
-            <div style="margin-top:24px;">
-                <div class="section-header" style="margin-bottom:12px;"><div class="section-title">Performance Over Time</div></div>
-                <div id="performanceTimeline" style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;padding:20px;overflow-x:auto;"></div>
-            </div>
-
-            <div style="margin-top:24px;">
-                <div class="section-header" style="margin-bottom:12px;"><div class="section-title">Pick Filters</div></div>
-                <div id="pickFilters" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
-                    <select id="filterSport" onchange="applyFilters()" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:.85rem;">
-                        <option value="">All Sports</option>
-                    </select>
-                    <select id="filterType" onchange="applyFilters()" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:.85rem;">
-                        <option value="">All Bet Types</option>
-                        <option value="h2h,moneyline">Moneyline</option>
-                        <option value="spreads,spread">Spread</option>
-                        <option value="totals,total">Totals</option>
-                        <option value="team_totals">Team Totals</option>
-                        <option value="f5_h2h,f5_spreads,f5_totals">First 5</option>
-                        <option value="first_half_spreads,first_half_totals">First Half</option>
-                        <option value="second_half_spreads,second_half_totals">Second Half</option>
-                        <option value="period_1_h2h,period_1_totals">1st Period</option>
-                        <option value="alt_spreads,alt_totals">Alt Lines</option>
-                    </select>
-                    <select id="filterResult" onchange="applyFilters()" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:.85rem;">
-                        <option value="">All Results</option>
-                        <option value="won">Won</option>
-                        <option value="lost">Lost</option>
-                        <option value="push">Push</option>
-                        <option value="pending">Pending</option>
-                    </select>
-                    <select id="filterOdds" onchange="applyFilters()" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:.85rem;">
-                        <option value="">All Odds</option>
-                        <option value="heavy-fav">Heavy Fav (-200+)</option>
-                        <option value="fav">Favorite (-110 to -199)</option>
-                        <option value="even">Even (+100 to -109)</option>
-                        <option value="dog">Underdog (+101 to +200)</option>
-                        <option value="longshot">Longshot (+201+)</option>
-                    </select>
-                    <select id="filterUnits" onchange="applyFilters()" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:.85rem;">
-                        <option value="">All Unit Sizes</option>
-                        <option value="0-1">0.5u to 1u</option>
-                        <option value="1.5-2">1.5u to 2u</option>
-                        <option value="2.5-3">2.5u to 3u</option>
-                        <option value="3plus">3u and up</option>
-                    </select>
-                    <select id="filterPeriod" onchange="applyFilters()" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-primary);font-family:inherit;font-size:.85rem;">
-                        <option value="all">All Time</option>
-                        <option value="7">Last 7 Days</option>
-                        <option value="30">Last 30 Days</option>
-                        <option value="90">Last 90 Days</option>
-                        <option value="365">Last Year</option>
-                    </select>
-                    <button id="btnFavOnly" onclick="toggleQuickFilter('fav')" class="btn btn-secondary" style="padding:8px 14px;font-size:.85rem;">Favorites Only</button>
-                    <button id="btnDogOnly" onclick="toggleQuickFilter('dog')" class="btn btn-secondary" style="padding:8px 14px;font-size:.85rem;">Underdogs Only</button>
-                    <button onclick="clearFilters()" class="btn btn-secondary" style="padding:8px 14px;font-size:.85rem;">Clear All</button>
+            <div class="support-section-grid">
+                <div class="support-module">
+                    <div class="support-module-head">
+                        <div class="section-title">Sport Breakdown</div>
+                        <div class="support-module-note">ROI and units by sport</div>
+                    </div>
+                    <div class="breakdown-grid" id="sportBreakdownGrid"></div>
                 </div>
-                <div id="filterBanner" style="display:none;padding:10px 16px;margin-bottom:8px;background:var(--accent-blue-bg);border:1px solid rgba(59,130,246,0.3);border-radius:8px;font-size:.85rem;color:var(--text-primary);align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-                    <span id="filterBannerText"></span>
-                    <button onclick="clearFilters()" style="background:none;border:1px solid var(--border-color);color:var(--text-secondary);padding:4px 12px;border-radius:4px;cursor:pointer;font-size:.8rem;font-family:inherit;">Clear All Filters</button>
+
+                <div class="support-module">
+                    <div class="support-module-head">
+                        <div class="section-title">Market Breakdown</div>
+                        <div class="support-module-note">Performance by market type</div>
+                    </div>
+                    <div class="breakdown-grid" id="betTypeGrid"></div>
                 </div>
-                <div id="filterResults" style="color:var(--text-muted);font-size:.85rem;margin-bottom:8px;"></div>
+
+                <div class="support-module">
+                    <div class="support-module-head">
+                        <div class="section-title">Performance by Unit Size</div>
+                        <div class="support-module-note">Sizing discipline and returns</div>
+                    </div>
+                    <div class="breakdown-grid" id="unitSizeGrid"></div>
+                </div>
+
+                <div class="support-module">
+                    <div class="support-module-head">
+                        <div class="section-title">Performance by Odds Range</div>
+                        <div class="support-module-note">Favorites, even money, and dogs</div>
+                    </div>
+                    <div class="breakdown-grid" id="oddsRangeGrid"></div>
+                </div>
+
+                <div class="support-module">
+                    <div class="support-module-head">
+                        <div class="section-title">Favorites vs Underdogs</div>
+                        <div class="support-module-note">Price profile comparison</div>
+                    </div>
+                    <div class="breakdown-grid" id="priceProfileGrid"></div>
+                </div>
+
+                <div class="support-module">
+                    <div class="support-module-head">
+                        <div class="section-title">Pending Picks Summary</div>
+                        <div class="support-module-note">Open exposure and queue</div>
+                    </div>
+                    <div class="breakdown-grid" id="pendingSummaryGrid"></div>
+                </div>
             </div>
+
+            <div class="support-section-grid">
+                <div class="support-module">
+                    <div class="support-module-head">
+                        <div class="section-title">Recent Form (Last 20)</div>
+                        <div class="support-module-note">Chronological graded snapshot</div>
+                    </div>
+                    <div id="recentFormGrid" style="display:flex;gap:3px;flex-wrap:wrap;padding:12px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;"></div>
+                </div>
+
+                <div class="support-module">
+                    <div class="support-module-head">
+                        <div class="section-title">Performance Over Time</div>
+                        <div class="support-module-note">Cumulative profit trend</div>
+                    </div>
+                    <div id="performanceTimeline" style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;padding:20px;overflow-x:auto;"></div>
+                </div>
+            </div>
+
         </div>
     </section>
 
@@ -1015,6 +1327,489 @@
         .eq-zero { stroke:var(--border-color);stroke-width:1;stroke-dasharray:4,4; }
         .eq-dot { fill:var(--accent-blue,#3b82f6);r:3;opacity:0; }
         .eq-dot:hover { opacity:1;r:5; }
+
+        /* ==================== RECORDS REDESIGN OVERRIDES ==================== */
+        body {
+            background:
+                linear-gradient(180deg, rgba(12, 30, 52, 0.04), rgba(12, 30, 52, 0) 220px),
+                #edf1f5;
+        }
+
+        .profile-header-section { padding: 24px 0 12px; }
+
+        .profile-header {
+            align-items: flex-start;
+            gap: 18px;
+            padding: 20px 22px;
+            border-radius: 10px;
+            border: 1px solid #d1d9e2;
+            background:
+                linear-gradient(180deg, #fbfdff 0%, #f2f6fa 100%);
+            box-shadow: 0 10px 24px rgba(16, 35, 56, 0.06);
+        }
+
+        .profile-header::before { display: none; }
+
+        .profile-avatar {
+            width: 72px;
+            height: 72px;
+            font-size: 1.5rem;
+            border: 1px solid #d1d9e2;
+            box-shadow: none;
+        }
+
+        .profile-name {
+            font-size: clamp(1.45rem, 2vw, 2rem);
+            color: #102338;
+            margin-bottom: 2px;
+        }
+
+        .profile-handle {
+            color: #5f7186;
+            margin-bottom: 10px;
+            font-size: 0.88rem;
+        }
+
+        .profile-trust-row {
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .profile-trust-pill,
+        .profile-meta-item {
+            padding: 6px 10px;
+            border-radius: 5px;
+            border: 1px solid #d7dfe8;
+            background: #ffffff;
+            color: #344357;
+            font-size: 0.72rem;
+            box-shadow: none;
+        }
+
+        .profile-trust-pill {
+            letter-spacing: 0.08em;
+        }
+
+        .profile-bio {
+            color: #3f4d61;
+            font-size: 0.92rem;
+            max-width: 760px;
+        }
+
+        .profile-meta {
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .btn {
+            border-radius: 6px;
+            font-size: 0.82rem;
+            padding: 9px 14px;
+        }
+
+        .btn-primary {
+            background: #102338;
+            color: #ffffff;
+        }
+
+        .btn-secondary {
+            background: #ffffff;
+            color: #243447;
+            border: 1px solid #cfd8e3;
+        }
+
+        .summary-bar { padding: 4px 0 18px; }
+
+        .summary-grid {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #d0d8e2;
+            background: #ffffff;
+            box-shadow: 0 10px 26px rgba(16, 35, 56, 0.05);
+        }
+
+        .summary-stat {
+            min-height: 66px;
+            padding: 12px 14px 11px;
+            border-right: 1px solid #e1e7ee;
+            border-bottom: 1px solid #e1e7ee;
+        }
+
+        .summary-stat:nth-child(5n) { border-right: none; }
+        .summary-stat:nth-last-child(-n + 5) { border-bottom: none; }
+
+        .summary-stat-label {
+            color: #6d7b8f;
+            font-size: 0.61rem;
+            letter-spacing: 0.12em;
+        }
+
+        .summary-stat-value {
+            margin-bottom: 2px;
+            color: #13253a;
+            font-size: 1rem;
+        }
+
+        .summary-stat-note {
+            margin-top: 2px;
+            color: #6d7b8f;
+            font-size: 0.68rem;
+        }
+
+        .workspace-nav-card,
+        .stats-table-card {
+            border-radius: 10px;
+            border: 1px solid #d0d8e2;
+            box-shadow: 0 8px 20px rgba(16, 35, 56, 0.05);
+        }
+
+        .workspace-nav-card {
+            padding: 16px 18px;
+            background: #f8fafc;
+        }
+
+        .workspace-nav-head { margin-bottom: 0; }
+        .workspace-tab {
+            min-height: 38px;
+            border-radius: 6px;
+            background: #ffffff;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .section-subtitle,
+        .table-note {
+            color: #66768a;
+            font-size: 0.82rem;
+        }
+
+        .ledger-filter-card {
+            margin-bottom: 12px;
+            padding: 14px;
+            border: 1px solid #d0d8e2;
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 8px 18px rgba(16, 35, 56, 0.04);
+        }
+
+        .filter-toolbar {
+            grid-template-columns: minmax(220px, 1.4fr) repeat(4, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .filter-search-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-search-icon {
+            position: absolute;
+            left: 12px;
+            color: #6d7b8f;
+            font-size: 0.8rem;
+            pointer-events: none;
+        }
+
+        .filter-search-input {
+            padding-left: 34px;
+        }
+
+        .filter-control,
+        .filter-button {
+            min-height: 38px;
+            border-radius: 6px;
+            border-color: #d0d8e2;
+            background: #fbfcfe;
+            color: #203041;
+            font-size: 0.78rem;
+        }
+
+        .ledger-filter-actions {
+            margin-bottom: 10px;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .filter-chip-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .ledger-toolbar-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #6d7b8f;
+            font-size: 0.75rem;
+        }
+
+        .ledger-page-size-label {
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .ledger-page-size {
+            width: 82px;
+            min-width: 82px;
+        }
+
+        .picks-table-wrapper {
+            border-radius: 8px;
+            border: 1px solid #d0d8e2;
+            background: #ffffff;
+            box-shadow: 0 10px 26px rgba(16, 35, 56, 0.05);
+        }
+
+        .picks-table {
+            min-width: 1650px;
+            font-size: 0.8rem;
+        }
+
+        .picks-table thead {
+            background: #f4f7fb;
+            border-bottom: 1px solid #d9e1eb;
+        }
+
+        .picks-table th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            padding: 10px 12px;
+            background: #f4f7fb;
+            color: #647589;
+            font-size: 0.64rem;
+            letter-spacing: 0.12em;
+            border-bottom: 1px solid #d9e1eb;
+        }
+
+        .picks-table td {
+            padding: 10px 12px;
+            color: #203041;
+            border-bottom: 1px solid #e8edf3;
+            vertical-align: top;
+        }
+
+        .picks-table tbody tr:nth-child(even) { background: #fbfcfd; }
+        .picks-table tbody tr:hover { background: #f2f7fc; }
+
+        .ledger-sort-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+            background: transparent;
+            padding: 0;
+            color: inherit;
+            font: inherit;
+            text-transform: inherit;
+            letter-spacing: inherit;
+            cursor: pointer;
+        }
+
+        .ledger-sort-button::after {
+            content: "↕";
+            font-size: 0.7rem;
+            color: #91a0b2;
+        }
+
+        .ledger-sort-button.is-active {
+            color: #102338;
+        }
+
+        .ledger-sort-button.is-active::after {
+            color: #102338;
+        }
+
+        .ledger-pick-title {
+            color: #142437;
+            font-size: 0.79rem;
+        }
+
+        .ledger-pick-meta,
+        .ledger-game-meta,
+        .ledger-muted,
+        .ledger-status,
+        .ledger-type,
+        .ledger-subline {
+            color: #6a7a8c;
+            font-size: 0.69rem;
+        }
+
+        .ledger-subline {
+            margin-top: 4px;
+        }
+
+        .pick-sport {
+            border-radius: 4px;
+            padding: 3px 8px;
+        }
+
+        .result-badge {
+            border-radius: 4px;
+            padding: 3px 7px;
+        }
+
+        .ledger-pagination-row {
+            display: block;
+            padding: 12px;
+            background: #f7fafc;
+        }
+
+        .ledger-pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .ledger-pagination-summary {
+            color: #66768a;
+            font-size: 0.75rem;
+        }
+
+        .ledger-pagination-controls {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .ledger-pagination-controls button {
+            min-width: 34px;
+            min-height: 34px;
+            border: 1px solid #d0d8e2;
+            background: #ffffff;
+            color: #203041;
+            border-radius: 6px;
+            font: inherit;
+            font-size: 0.77rem;
+            cursor: pointer;
+        }
+
+        .ledger-pagination-controls button.is-active {
+            background: #102338;
+            border-color: #102338;
+            color: #ffffff;
+        }
+
+        .ledger-pagination-controls button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .ledger-page-ellipsis {
+            display: inline-flex;
+            align-items: center;
+            padding: 0 4px;
+            color: #738296;
+            font-size: 0.78rem;
+        }
+
+        .analytics-grid {
+            gap: 10px;
+        }
+
+        .analytics-card,
+        .sport-detail-card,
+        .breakdown-row,
+        #recentFormGrid,
+        #performanceTimeline,
+        #equityCurve,
+        #monthlyReturns {
+            border-radius: 8px;
+        }
+
+        .breakdown-grid {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
+        }
+
+        .support-section-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 24px;
+        }
+
+        .support-module {
+            padding: 14px;
+            border: 1px solid #d0d8e2;
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 8px 18px rgba(16, 35, 56, 0.04);
+        }
+
+        .support-module-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .support-module-note {
+            color: #728295;
+            font-size: 0.76rem;
+        }
+
+        .breakdown-row {
+            padding: 12px 14px;
+            background: #ffffff;
+            border: 1px solid #d8e0e9;
+        }
+
+        .stats-summary-table th,
+        .stats-summary-table td {
+            padding: 10px 12px;
+        }
+
+        @media (max-width: 1100px) {
+            .summary-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .summary-stat:nth-child(5n) { border-right: 1px solid #e1e7ee; }
+            .summary-stat:nth-last-child(-n + 5) { border-bottom: 1px solid #e1e7ee; }
+            .summary-stat:nth-child(3n) { border-right: none; }
+            .summary-stat:nth-last-child(-n + 3) { border-bottom: none; }
+
+            .filter-toolbar {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 760px) {
+            .summary-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .summary-stat:nth-child(3n) { border-right: 1px solid #e1e7ee; }
+            .summary-stat:nth-last-child(-n + 3) { border-bottom: 1px solid #e1e7ee; }
+            .summary-stat:nth-child(2n) { border-right: none; }
+            .summary-stat:nth-last-child(-n + 2) { border-bottom: none; }
+
+            .filter-toolbar {
+                grid-template-columns: 1fr;
+            }
+
+            .support-section-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .ledger-filter-actions,
+            .ledger-pagination {
+                align-items: flex-start;
+            }
+        }
     </style>
 
     <script>
@@ -1026,9 +1821,9 @@
     </script>
     <script src="static/js/config.js?v=20260330"></script>
     <script src="static/js/analytics.js?v=20260405"></script>
-    <script src="static/js/backend-api.js?v=20260414c"></script>
+    <script src="static/js/backend-api.js?v=20260415c"></script>
     <script src="static/js/nav-badges.js"></script>
-    <script src="static/js/auth-persistent.js?v=20260414e"></script>
+    <script src="static/js/auth-persistent.js?v=20260415d"></script>
     <script src="static/js/auto-grader-fixed.js?v=20260405b"></script>
     <script>
     // ============================================================
@@ -1042,23 +1837,27 @@
     let isFollowingProfile = false;
     let profileUserId = null;
     let allLoadedPicks = [];
-    let picksOffset = 0;
+    let currentRenderedPicks = [];
+    let currentTablePage = 1;
     let latestAdvancedStats = null;
-    const PICKS_PER_PAGE = 50;
+    let currentLeaderboardRank = null;
+    let currentTableSort = 'date_desc';
+    let currentPageSize = 25;
     const MARKET_TYPE_GROUPS = [
         { key: 'moneyline', label: 'Moneyline', types: ['h2h', 'moneyline'] },
         { key: 'spreads', label: 'Spread', types: ['spreads', 'spread'] },
         { key: 'totals', label: 'Totals', types: ['totals', 'total'] },
         { key: 'team_totals', label: 'Team Totals', types: ['team_totals'] },
         { key: 'first5', label: 'First 5', types: ['f5_h2h', 'f5_spreads', 'f5_totals'] },
-        { key: 'first_half', label: 'First Half', types: ['first_half_spreads', 'first_half_totals'] },
-        { key: 'second_half', label: 'Second Half', types: ['second_half_spreads', 'second_half_totals'] },
-        { key: 'period_1', label: '1st Period', types: ['period_1_h2h', 'period_1_totals'] },
+        { key: 'first_half', label: 'First Half', types: ['first_half_h2h', 'first_half_spreads', 'first_half_totals'] },
+        { key: 'second_half', label: 'Second Half', types: ['second_half_h2h', 'second_half_spreads', 'second_half_totals'] },
+        { key: 'period_1', label: '1st Period', types: ['period_1_h2h', 'period_1_spreads', 'period_1_totals'] },
         { key: 'alt_lines', label: 'Alt Lines', types: ['alt_spreads', 'alt_totals'] }
     ];
 
     const urlParams = new URLSearchParams(window.location.search);
     let profileUsername = (urlParams.get('user') || urlParams.get('username') || '').trim() || null;
+    const profileView = (urlParams.get('view') || '').trim().toLowerCase();
 
     // ======================== UNIFIED STATS ========================
     function getMarketTypeGroup(marketType) {
@@ -1182,6 +1981,185 @@
         return 0;
     }
 
+    function getPickTimestamp(pick) {
+        return new Date(pick.locked_at || pick.created_at || 0).getTime();
+    }
+
+    function formatOddsValue(value) {
+        if (value == null || value === '' || isNaN(Number(value))) return '--';
+        const num = Number(value);
+        return num > 0 ? '+' + num : String(num);
+    }
+
+    function formatLineValue(value) {
+        if (value == null || value === '' || isNaN(Number(value))) return '--';
+        const num = Number(value);
+        return num > 0 ? '+' + num : String(num);
+    }
+
+    function formatUnitsValue(value) {
+        if (value == null || value === '' || isNaN(Number(value))) return '--';
+        return Number(value).toFixed(Number(value) % 1 === 0 ? 0 : 2) + 'u';
+    }
+
+    function formatSignedUnits(value) {
+        if (value == null || isNaN(Number(value))) return '--';
+        const num = Number(value);
+        return (num >= 0 ? '+' : '') + num.toFixed(2) + 'u';
+    }
+
+    function normalizeStatus(status) {
+        const raw = String(status || 'pending').toLowerCase();
+        return raw === 'pushed' ? 'push' : raw;
+    }
+
+    function getClosingLineValue(pick) {
+        return pick.closing_line != null ? pick.closing_line :
+            pick.closing_line_snapshot != null ? pick.closing_line_snapshot :
+            pick.closing_spread != null ? pick.closing_spread :
+            null;
+    }
+
+    function deriveBookName(pick) {
+        return pick.book || pick.sportsbook || pick.sportsbook_name || pick.source_book || 'Tracked';
+    }
+
+    function calculatePickClv(pick) {
+        const opening = Number(pick.line_snapshot);
+        const closing = Number(getClosingLineValue(pick));
+        if (!Number.isFinite(opening) || !Number.isFinite(closing)) return null;
+
+        const selection = String(pick.selection || '').toLowerCase();
+        const market = String(pick.market_type || '').toLowerCase();
+
+        if (selection.includes('under')) return parseFloat((closing - opening).toFixed(2));
+        if (selection.includes('over')) return parseFloat((opening - closing).toFixed(2));
+
+        if (market.includes('spread') || market.includes('total') || market.includes('f5') || market.includes('half') || market.includes('period')) {
+            return parseFloat((closing - opening).toFixed(2));
+        }
+
+        return parseFloat((closing - opening).toFixed(2));
+    }
+
+    function formatClvValue(value) {
+        if (value == null || !Number.isFinite(Number(value))) return '--';
+        const num = Number(value);
+        return (num >= 0 ? '+' : '') + num.toFixed(2);
+    }
+
+    function computeAggregateClv(picks) {
+        const values = (Array.isArray(picks) ? picks : [])
+            .map(calculatePickClv)
+            .filter(function(value) { return value != null && Number.isFinite(value); });
+        if (values.length === 0) {
+            return { display: '--', note: 'CLV unavailable', className: 'neutral' };
+        }
+        const avg = values.reduce(function(total, value) { return total + value; }, 0) / values.length;
+        return {
+            display: formatClvValue(avg),
+            note: values.length + ' picks with closing data',
+            className: avg > 0 ? 'positive' : avg < 0 ? 'negative' : 'neutral'
+        };
+    }
+
+    function computeLedgerMetrics(picks) {
+        const source = Array.isArray(picks) ? picks : [];
+        const graded = source.filter(p => ['won', 'lost', 'push', 'pushed'].includes(normalizeStatus(p.status)));
+        const decisions = graded.filter(p => ['won', 'lost'].includes(normalizeStatus(p.status)));
+        const wins = graded.filter(p => normalizeStatus(p.status) === 'won').length;
+        const losses = graded.filter(p => normalizeStatus(p.status) === 'lost').length;
+        const pushes = graded.filter(p => normalizeStatus(p.status) === 'push').length;
+        const pending = source.filter(p => normalizeStatus(p.status) === 'pending').length;
+        const favorites = decisions.filter(p => Number(p.odds_snapshot || p.odds || -110) < 0);
+        const underdogs = decisions.filter(p => Number(p.odds_snapshot || p.odds || -110) > 0);
+        const home = decisions.filter(p => (p.selection || '').toLowerCase().includes(String(p.home_team || '').toLowerCase()));
+        const away = decisions.filter(p => (p.selection || '').toLowerCase().includes(String(p.away_team || '').toLowerCase()));
+        const spreads = graded.filter(p => ['spread', 'spreads', 'alt_spreads'].includes(String(p.market_type || '').toLowerCase()));
+        const moneyline = graded.filter(p => ['h2h', 'moneyline'].includes(String(p.market_type || '').toLowerCase()));
+        const totals = graded.filter(p => ['totals', 'total', 'team_totals', 'alt_totals'].includes(String(p.market_type || '').toLowerCase()));
+        const firstSegment = graded.filter(p => String(p.market_type || '').toLowerCase().includes('first_half') || String(p.market_type || '').toLowerCase().includes('f5'));
+        const last10 = graded.slice(0, 10);
+        const settledWithPL = graded.map(function(pick) { return { pick: pick, pl: pickPL(pick) }; });
+        const bestWin = settledWithPL.filter(x => x.pl > 0).sort((a, b) => b.pl - a.pl)[0] || null;
+        const biggestLoss = settledWithPL.filter(x => x.pl < 0).sort((a, b) => a.pl - b.pl)[0] || null;
+        return {
+            wins: wins,
+            losses: losses,
+            pushes: pushes,
+            pending: pending,
+            favoriteRecord: formatRecordFromArray(favorites),
+            underdogRecord: formatRecordFromArray(underdogs),
+            homeRecord: formatRecordFromArray(home),
+            awayRecord: formatRecordFromArray(away),
+            spreadRecord: formatRecordFromArray(spreads),
+            moneylineRecord: formatRecordFromArray(moneyline),
+            totalRecord: formatRecordFromArray(totals),
+            firstSegmentRecord: formatRecordFromArray(firstSegment),
+            last10Record: formatRecordFromArray(last10),
+            bestWin: bestWin,
+            biggestLoss: biggestLoss
+        };
+    }
+
+    function formatRecordFromArray(picks) {
+        const source = Array.isArray(picks) ? picks : [];
+        const wins = source.filter(p => normalizeStatus(p.status) === 'won').length;
+        const losses = source.filter(p => normalizeStatus(p.status) === 'lost').length;
+        const pushes = source.filter(p => normalizeStatus(p.status) === 'push').length;
+        return wins + '-' + losses + '-' + pushes;
+    }
+
+    function analyticsTrack(eventName, params) {
+        if (typeof window.TMRAnalytics !== 'undefined' && typeof window.TMRAnalytics.track === 'function') {
+            window.TMRAnalytics.track(eventName, params || {});
+        }
+    }
+
+    function analyticsTrackPickHistoryView(context) {
+        if (typeof window.TMRAnalytics !== 'undefined' && typeof window.TMRAnalytics.pickHistoryViewed === 'function') {
+            window.TMRAnalytics.pickHistoryViewed(context || {});
+            return;
+        }
+        analyticsTrack('pick_history_viewed', context || {});
+    }
+
+    function applyProfileDeepLinkView() {
+        let target = null;
+        if (profileView === 'picks' || profileView === 'ledger' || profileView === 'history') {
+            target = document.querySelector('.picks-section');
+        } else if (profileView === 'analytics' || profileView === 'stats') {
+            target = document.getElementById('analyticsSection');
+        }
+
+        if (!target) return;
+
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        target.style.boxShadow = '0 0 0 2px rgba(45, 212, 191, 0.65)';
+        target.style.borderRadius = '12px';
+        setTimeout(function() {
+            target.style.boxShadow = '';
+            target.style.borderRadius = '';
+        }, 2200);
+    }
+
+    function getActiveFilterState() {
+        return {
+            search: document.getElementById('filterSearch') ? document.getElementById('filterSearch').value.trim() : '',
+            sport: document.getElementById('filterSport') ? document.getElementById('filterSport').value : '',
+            bet_type: document.getElementById('filterType') ? document.getElementById('filterType').value : '',
+            result: document.getElementById('filterResult') ? document.getElementById('filterResult').value : '',
+            odds_bucket: document.getElementById('filterOdds') ? document.getElementById('filterOdds').value : '',
+            unit_range: document.getElementById('filterUnits') ? document.getElementById('filterUnits').value : '',
+            period_days: document.getElementById('filterPeriod') ? document.getElementById('filterPeriod').value : '',
+            date_from: document.getElementById('filterDateFrom') ? document.getElementById('filterDateFrom').value : '',
+            date_to: document.getElementById('filterDateTo') ? document.getElementById('filterDateTo').value : '',
+            sort: document.getElementById('filterSort') ? document.getElementById('filterSort').value : 'date_desc',
+            quick_filter: activeQuickFilter || '',
+            username: profileUsername || ''
+        };
+    }
+
     // ======================== INIT ========================
     async function init() {
         try {
@@ -1254,7 +2232,13 @@
         }
 
         renderProfileHeader(profileData);
+        await refreshLeaderboardRank();
         await loadAllPicks();
+        analyticsTrackPickHistoryView({
+            view_type: isOwnProfile ? 'own' : 'public',
+            username: profileData.username || profileUsername || '',
+            display_name: profileData.display_name || profileData.username || ''
+        });
     }
 
     // ======================== LOAD ALL PICKS ========================
@@ -1286,6 +2270,28 @@
         renderAnalytics(stats);
         renderCapperMetrics(picks);
         await refreshAdvancedBreakdowns();
+        applyProfileDeepLinkView();
+    }
+
+    async function refreshLeaderboardRank() {
+        currentLeaderboardRank = null;
+        if (!api || typeof api.getLeaderboard !== 'function' || !profileData || !profileData.username) return;
+        try {
+            const data = await api.getLeaderboard({ sortBy: 'roi', limit: 250 });
+            const pool = Array.isArray(data) ? data :
+                Array.isArray(data.users) ? data.users :
+                Array.isArray(data.leaderboard) ? data.leaderboard :
+                Array.isArray(data.rankings) ? data.rankings :
+                [];
+            const username = String(profileData.username || '').toLowerCase();
+            const idx = pool.findIndex(function(entry) {
+                const candidate = String(entry.username || entry.user_name || entry.handle || '').toLowerCase();
+                return candidate === username;
+            });
+            if (idx !== -1) currentLeaderboardRank = idx + 1;
+        } catch (error) {
+            console.warn('[Profile] Leaderboard rank unavailable:', error);
+        }
     }
 
     // ======================== RENDER PROFILE HEADER ========================
@@ -1293,9 +2299,18 @@
         const el = document.getElementById('profileHeader');
         if (!el) return;
         const _jd = new Date(p.created_at || Date.now());
-        const joinDate = (_jd.getMonth()+1) + '/' + _jd.getDate() + '/' + String(_jd.getFullYear()).slice(-2);
+        const joinDate = _jd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         const name = p.display_name || p.username;
         const letter = (p.username || '?').charAt(0).toUpperCase();
+        const rankText = currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked';
+        const totalPicks = Number(p.total_picks || p.totalPicks || 0);
+        const verifiedText = String(p.verification_status || '').toLowerCase() === 'verified' ? 'Verified' : 'Unverified';
+        const trustPills = '<div class="profile-trust-row">' +
+            '<span class="profile-trust-pill"><i class="fas fa-user"></i> Member since <strong>' + joinDate + '</strong></span>' +
+            '<span class="profile-trust-pill"><i class="fas fa-ranking-star"></i> Rank <strong>' + rankText + '</strong></span>' +
+            '<span class="profile-trust-pill"><i class="fas fa-shield-check"></i> Status <strong>' + verifiedText + '</strong></span>' +
+            '<span class="profile-trust-pill"><i class="fas fa-database"></i> Public record <strong>' + totalPicks + ' picks</strong></span>' +
+            '</div>';
 
         let actions = '';
         if (isOwnProfile) {
@@ -1307,19 +2322,22 @@
             const fc = isFollowingProfile ? 'btn-secondary' : 'btn-primary';
             const fa = isFollowingProfile ? 'doUnfollow' : 'doFollow';
             actions = '<div class="profile-actions"><button class="btn ' + fc + '" onclick="' + fa + '(' + profileUserId + ')">' + ft + '</button>' +
-                '<button class="btn btn-secondary" onclick="location.href=\'challenges.html?challenge=' + p.username + '\'">Challenge</button></div>';
+                '<button class="btn btn-secondary" onclick="location.href=\'messages.html?to=' + encodeURIComponent(p.username) + '\'">Message</button>' +
+                '<button class="btn btn-secondary" onclick="location.href=\'arena.html?challenge=' + encodeURIComponent(p.username) + '\'">Challenge</button></div>';
         }
 
         el.innerHTML = '<div class="profile-avatar">' + (p.avatar_url ? '<img src="' + p.avatar_url + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + name + '">' : letter) + '</div>' +
             '<div class="profile-info">' +
             '<div class="profile-name">' + name + '</div>' +
             '<div class="profile-handle">@' + p.username + '</div>' +
+            trustPills +
             (p.bio ? '<div class="profile-bio">' + p.bio + '</div>' : '') +
             '<div class="profile-meta">' +
-            '<span class="profile-meta-item">Joined ' + joinDate + '</span>' +
+            '<span class="profile-meta-item">Followers ' + (Number(p.follower_count) || 0) + '</span>' +
+            '<span class="profile-meta-item">Following ' + (Number(p.following_count) || 0) + '</span>' +
             (p.location ? '<span class="profile-meta-item">' + p.location + '</span>' : '') +
-            '<button type="button" class="profile-meta-item" style="background:none;border:none;padding:0;cursor:pointer;" onclick="openSocialList(\'followers\')">' + (Number(p.follower_count) || 0) + ' followers</button>' +
-            '<button type="button" class="profile-meta-item" style="background:none;border:none;padding:0;cursor:pointer;" onclick="openSocialList(\'following\')">' + (Number(p.following_count) || 0) + ' following</button>' +
+            '<button type="button" class="profile-meta-item" style="cursor:pointer;" onclick="openSocialList(\'followers\')">View followers</button>' +
+            '<button type="button" class="profile-meta-item" style="cursor:pointer;" onclick="openSocialList(\'following\')">View following</button>' +
             '</div>' + actions + '</div>';
 
         updateWorkspaceLinks(p.username);
@@ -1337,37 +2355,58 @@
 
     // ======================== SUMMARY BAR ========================
     function renderSummaryBar(s) {
-        if (latestAdvancedStats && latestAdvancedStats.summary && !hasLocalOnlyFiltersActive()) {
-            return renderSummaryBarFromAdvanced(latestAdvancedStats.summary, s);
-        }
         document.getElementById('summaryBar').style.display = 'block';
-        const nc = s.netUnits > 0 ? 'positive' : s.netUnits < 0 ? 'negative' : 'neutral';
-        const rc = s.roi > 0 ? 'positive' : s.roi < 0 ? 'negative' : 'neutral';
+        const summary = latestAdvancedStats && latestAdvancedStats.summary && !hasLocalOnlyFiltersActive()
+            ? latestAdvancedStats.summary
+            : null;
+        const merged = {
+            wins: summary ? Number(summary.wins || s.wins || 0) : s.wins,
+            losses: summary ? Number(summary.losses || s.losses || 0) : s.losses,
+            pushes: summary ? Number(summary.pushes || s.pushes || 0) : s.pushes,
+            roi: summary ? Number(summary.roi || s.roi || 0) : s.roi,
+            netUnits: summary ? Number(summary.net_units || s.netUnits || 0) : s.netUnits,
+            winRate: summary ? Number(summary.win_rate || s.winRate || 0) : s.winRate,
+            avgOdds: summary && summary.avg_odds != null ? Number(summary.avg_odds) : s.avgOdds,
+            currentStreak: s.currentStreak
+        };
+        const ledger = computeLedgerMetrics(getFilteredPicks());
+        const adv = computeAdvancedStats(getFilteredPicks());
+        const clv = computeAggregateClv(getFilteredPicks());
+        const gradedPicks = merged.wins + merged.losses + merged.pushes;
+        const currentStreakText = merged.currentStreak > 0 ? merged.currentStreak + 'W' : merged.currentStreak < 0 ? Math.abs(merged.currentStreak) + 'L' : '0';
+        const username = profileData ? (profileData.display_name || profileData.username || '--') : '--';
+        const rankText = currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked';
+        const nc = merged.netUnits > 0 ? 'positive' : merged.netUnits < 0 ? 'negative' : 'neutral';
+        const rc = merged.roi > 0 ? 'positive' : merged.roi < 0 ? 'negative' : 'neutral';
         document.getElementById('summaryGrid').innerHTML =
-            '<div class="summary-stat"><div class="summary-stat-value neutral">' + s.wins + '-' + s.losses + '-' + s.pushes + '</div><div class="summary-stat-label">Record</div></div>' +
-            '<div class="summary-stat"><div class="summary-stat-value ' + rc + '">' + (s.roi >= 0 ? '+' : '') + s.roi.toFixed(1) + '%</div><div class="summary-stat-label">ROI</div></div>' +
-            '<div class="summary-stat"><div class="summary-stat-value ' + nc + '">' + (s.netUnits >= 0 ? '+' : '') + s.netUnits.toFixed(2) + 'u</div><div class="summary-stat-label">Net Units</div></div>' +
-            '<div class="summary-stat"><div class="summary-stat-value neutral">' + s.winRate.toFixed(1) + '%</div><div class="summary-stat-label">Win Rate</div></div>' +
-            '<div class="summary-stat"><div class="summary-stat-value neutral">' + s.total + '</div><div class="summary-stat-label">Total Picks</div></div>';
+            summaryStat('Capper', username, '@' + (profileData && profileData.username ? profileData.username : '')) +
+            summaryStat('Win %', merged.winRate.toFixed(1) + '%', merged.wins + ' wins / ' + merged.losses + ' losses') +
+            summaryStat('Units Won', formatSignedUnits(merged.netUnits), gradedPicks + ' graded picks', nc) +
+            summaryStat('ROI', (merged.roi >= 0 ? '+' : '') + merged.roi.toFixed(1) + '%', 'Return on risked units', rc) +
+            summaryStat('Total Picks', String(s.total), ledger.pending ? ledger.pending + ' pending' : 'All visible picks') +
+            summaryStat('Graded', String(gradedPicks), 'Settled record sample') +
+            summaryStat('Wins', String(merged.wins), 'Official wins') +
+            summaryStat('Losses', String(merged.losses), 'Official losses') +
+            summaryStat('Pushes', String(merged.pushes), 'Official pushes') +
+            summaryStat('Pending', String(ledger.pending), 'Open picks awaiting grade') +
+            summaryStat('Average Odds', merged.avgOdds != null ? formatOddsValue(merged.avgOdds) : '--', 'Average market price') +
+            summaryStat('Average Units', (summary ? Number(summary.avg_units || s.avgUnits || 0) : s.avgUnits).toFixed(2) + 'u', 'Average size per pick') +
+            summaryStat('Best Streak', s.bestStreak + 'W', 'Longest win streak') +
+            summaryStat('Current Streak', currentStreakText, 'Current graded run') +
+            summaryStat('Profit Factor', adv.profitFactor, 'Won units divided by lost units', adv.profitFactorClass) +
+            summaryStat('CLV', clv.display, clv.note, clv.className);
     }
 
     function renderSummaryBarFromAdvanced(summary, fallbackStats) {
-        document.getElementById('summaryBar').style.display = 'block';
-        const wins = Number(summary.wins || 0);
-        const losses = Number(summary.losses || 0);
-        const pushes = Number(summary.pushes || 0);
-        const roi = Number(summary.roi || 0);
-        const netUnits = Number(summary.net_units || 0);
-        const winRate = Number(summary.win_rate || 0);
-        const total = Number(summary.total_picks || 0);
-        const nc = netUnits > 0 ? 'positive' : netUnits < 0 ? 'negative' : 'neutral';
-        const rc = roi > 0 ? 'positive' : roi < 0 ? 'negative' : 'neutral';
-        document.getElementById('summaryGrid').innerHTML =
-            '<div class="summary-stat"><div class="summary-stat-value neutral">' + wins + '-' + losses + '-' + pushes + '</div><div class="summary-stat-label">Record</div></div>' +
-            '<div class="summary-stat"><div class="summary-stat-value ' + rc + '">' + (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%</div><div class="summary-stat-label">ROI</div></div>' +
-            '<div class="summary-stat"><div class="summary-stat-value ' + nc + '">' + (netUnits >= 0 ? '+' : '') + netUnits.toFixed(2) + 'u</div><div class="summary-stat-label">Net Units</div></div>' +
-            '<div class="summary-stat"><div class="summary-stat-value neutral">' + winRate.toFixed(1) + '%</div><div class="summary-stat-label">Win Rate</div></div>' +
-            '<div class="summary-stat"><div class="summary-stat-value neutral">' + total + '</div><div class="summary-stat-label">Total Picks</div></div>';
+        renderSummaryBar(fallbackStats);
+    }
+
+    function summaryStat(label, value, note, valueClass) {
+        return '<div class="summary-stat">' +
+            '<div class="summary-stat-value ' + (valueClass || '') + '">' + value + '</div>' +
+            '<div class="summary-stat-label">' + label + '</div>' +
+            (note ? '<div class="summary-stat-note">' + note + '</div>' : '') +
+            '</div>';
     }
 
     // ======================== PICKS TABLE ========================
@@ -1378,79 +2417,162 @@
         const countEl = document.getElementById('picksCount');
 
         if (!picks || picks.length === 0) {
-            wrapper.style.display = 'none'; empty.style.display = 'block'; countEl.textContent = ''; return;
+            currentRenderedPicks = [];
+            currentTablePage = 1;
+            wrapper.style.display = 'none';
+            empty.style.display = 'block';
+            countEl.textContent = '';
+            renderTablePagination(0, 0, 0);
+            return;
         }
-        wrapper.style.display = 'block'; empty.style.display = 'none';
+        wrapper.style.display = 'block';
+        empty.style.display = 'none';
+        currentRenderedPicks = [...picks];
+        syncTableSortUI();
 
-        const graded = picks.filter(p => p.status && p.status !== 'pending').length;
+        const graded = picks.filter(p => normalizeStatus(p.status) !== 'pending').length;
         const pend = picks.length - graded;
-        countEl.textContent = graded + ' graded' + (pend > 0 ? ' + ' + pend + ' pending' : '');
+        countEl.textContent = graded + ' graded' + (pend > 0 ? ' + ' + pend + ' pending' : '') + ' | sorted by ' + sortLabel(currentTableSort);
 
         // Running totals (oldest first)
-        const chrono = [...picks].reverse();
+        const chrono = [...picks].sort((a, b) => getPickTimestamp(a) - getPickTimestamp(b));
         let rt = 0;
         const rtMap = new Map();
         chrono.forEach(p => {
-            if (p.status && p.status !== 'pending') rt += pickPL(p);
+            if (normalizeStatus(p.status) !== 'pending') rt += pickPL(p);
             rtMap.set(p.id || (p.game_id + '|' + p.selection), parseFloat(rt.toFixed(2)));
         });
 
-        const display = picks.slice(0, PICKS_PER_PAGE);
-        picksOffset = display.length;
+        const totalPages = Math.max(1, Math.ceil(picks.length / currentPageSize));
+        if (currentTablePage > totalPages) currentTablePage = totalPages;
+        const startIndex = (currentTablePage - 1) * currentPageSize;
+        const endIndex = startIndex + currentPageSize;
+        const display = picks.slice(startIndex, endIndex);
 
         tbody.innerHTML = display.map(p => pickRow(p, rtMap)).join('');
-
-        document.getElementById('loadMoreRow').style.display = picks.length > PICKS_PER_PAGE ? 'block' : 'none';
+        renderTablePagination(picks.length, startIndex, endIndex);
     }
 
     function pickRow(p, rtMap) {
         const date = p.locked_at || p.created_at || '';
         const _pd = date ? new Date(date) : null;
-        const dateStr = _pd ? ((_pd.getMonth()+1) + '/' + _pd.getDate() + '/' + String(_pd.getFullYear()).slice(-2)) : '';
+        const dateStr = _pd ? ((_pd.getMonth()+1) + '/' + _pd.getDate() + '/' + String(_pd.getFullYear()).slice(-2)) : '--';
+        const timeStr = _pd ? _pd.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
         const sport = fmtSport(p.sport_key);
         const sc = sport.toLowerCase().replace(/\s/g, '');
-        const odds = p.odds_snapshot != null ? (p.odds_snapshot > 0 ? '+' + p.odds_snapshot : '' + p.odds_snapshot) : '';
-        const line = p.line_snapshot != null ? (p.line_snapshot > 0 ? '+' + p.line_snapshot : '' + p.line_snapshot) : '';
+        const odds = formatOddsValue(p.odds_snapshot != null ? p.odds_snapshot : p.odds);
+        const line = formatLineValue(p.line_snapshot);
         const sel = p.selection || '';
-        const dSel = line ? sel + ' (' + line + ')' : sel;
-        const matchup = (p.away_team && p.home_team) ? p.away_team + ' @ ' + p.home_team : '';
-        const units = p.units != null ? p.units : '';
-        const status = p.status || 'pending';
+        const matchup = (p.away_team && p.home_team) ? p.away_team + ' @ ' + p.home_team : (p.event_name || '--');
+        const units = formatUnitsValue(p.units);
+        const status = normalizeStatus(p.status);
+        const market = marketTypeLabel(p.market_type);
+        const closingLine = getClosingLineValue(p);
+        const clvValue = calculatePickClv(p);
+        const book = deriveBookName(p);
 
         let pl = '', plc = 'zero';
         if (status === 'won' || status === 'lost') {
             const v = pickPL(p);
-            pl = (v >= 0 ? '+' : '') + v.toFixed(2) + 'u';
+            pl = formatSignedUnits(v);
             plc = v > 0 ? 'positive' : v < 0 ? 'negative' : 'zero';
-        } else if (status === 'push' || status === 'pushed') { pl = '0.00u'; }
+        } else if (status === 'push') { pl = '+0.00u'; }
+        else { pl = '--'; }
 
         const r = rtMap.get(p.id || (p.game_id + '|' + p.selection));
-        const rd = r != null ? ((r >= 0 ? '+' : '') + r.toFixed(2) + 'u') : '';
-        const rrc = r > 0 ? 'positive' : r < 0 ? 'negative' : 'zero';
+        const rd = r != null ? formatSignedUnits(r) : '--';
+        const clvClass = clvValue > 0 ? 'positive' : clvValue < 0 ? 'negative' : 'zero';
 
-        return '<tr><td>' + dateStr + '</td><td><span class="pick-sport ' + sc + '">' + sport + '</span></td>' +
-            '<td title="' + matchup + '">' + dSel + '</td><td>' + odds + '</td><td>' + units + 'u</td>' +
+        return '<tr>' +
+            '<td><div>' + dateStr + '</div><div class="ledger-muted">' + timeStr + '</div></td>' +
+            '<td><span class="pick-sport ' + sc + '">' + sport + '</span></td>' +
+            '<td class="col-game"><div class="ledger-pick-title">' + matchup + '</div><div class="ledger-game-meta">' + (p.event_name || 'Tracked pick') + '</div></td>' +
+            '<td class="col-pick"><div class="ledger-pick-title">' + sel + '</div><div class="ledger-pick-meta">' + (p.notes || '') + '</div></td>' +
+            '<td><span class="ledger-type">' + market + '</span></td>' +
+            '<td>' + line + '</td>' +
+            '<td>' + odds + '</td>' +
+            '<td>' + units + '</td>' +
             '<td><span class="result-badge ' + status + '">' + status.toUpperCase() + '</span></td>' +
-            '<td class="profit-cell ' + plc + '">' + pl + '</td>' +
-            '<td class="profit-cell ' + rrc + '">' + rd + '</td></tr>';
+            '<td class="profit-cell ' + plc + '">' + pl + '<div class="ledger-subline">Running ' + rd + '</div></td>' +
+            '<td class="ledger-closing">' + formatLineValue(closingLine) + '</td>' +
+            '<td class="profit-cell ' + clvClass + '">' + formatClvValue(clvValue) + '</td>' +
+            '<td>' + book + '</td>' +
+            '<td><span class="ledger-status">' + (status === 'pending' ? 'Open' : 'Final') + '</span></td>' +
+            '</tr>';
     }
 
     function loadMorePicks() {
-        const tbody = document.getElementById('picksTableBody');
-        const batch = allLoadedPicks.slice(picksOffset, picksOffset + PICKS_PER_PAGE);
-        if (batch.length === 0) return;
+        changeTablePage(currentTablePage + 1);
+    }
 
-        const chrono = [...allLoadedPicks].reverse();
-        let rt = 0;
-        const rtMap = new Map();
-        chrono.forEach(p => {
-            if (p.status && p.status !== 'pending') rt += pickPL(p);
-            rtMap.set(p.id || (p.game_id + '|' + p.selection), parseFloat(rt.toFixed(2)));
+    function renderTablePagination(totalItems, startIndex, endIndex) {
+        const row = document.getElementById('loadMoreRow');
+        const container = document.getElementById('ledgerPagination');
+        if (!row || !container) return;
+
+        if (!totalItems) {
+            row.style.display = 'none';
+            container.innerHTML = '';
+            return;
+        }
+
+        const totalPages = Math.max(1, Math.ceil(totalItems / currentPageSize));
+        row.style.display = totalPages > 1 ? 'block' : 'none';
+
+        const buttons = [];
+        buttons.push('<button type="button" onclick="changeTablePage(' + (currentTablePage - 1) + ')"' + (currentTablePage === 1 ? ' disabled' : '') + '>Prev</button>');
+        for (let page = 1; page <= totalPages; page++) {
+            if (page === 1 || page === totalPages || Math.abs(page - currentTablePage) <= 1) {
+                buttons.push('<button type="button" class="' + (page === currentTablePage ? 'is-active' : '') + '" onclick="changeTablePage(' + page + ')">' + page + '</button>');
+            } else if (buttons[buttons.length - 1] !== '<span class="ledger-page-ellipsis">...</span>') {
+                buttons.push('<span class="ledger-page-ellipsis">...</span>');
+            }
+        }
+        buttons.push('<button type="button" onclick="changeTablePage(' + (currentTablePage + 1) + ')"' + (currentTablePage === totalPages ? ' disabled' : '') + '>Next</button>');
+
+        container.innerHTML =
+            '<div class="ledger-pagination-summary">Showing ' + (startIndex + 1) + '-' + Math.min(endIndex, totalItems) + ' of ' + totalItems + ' picks</div>' +
+            '<div class="ledger-pagination-controls">' + buttons.join('') + '</div>';
+    }
+
+    function changeTablePage(page) {
+        const totalPages = Math.max(1, Math.ceil(currentRenderedPicks.length / currentPageSize));
+        currentTablePage = Math.min(totalPages, Math.max(1, Number(page) || 1));
+        renderPicksTable(currentRenderedPicks);
+    }
+
+    function changePageSize(value) {
+        currentPageSize = Math.max(1, Number(value) || 25);
+        currentTablePage = 1;
+        renderPicksTable(currentRenderedPicks.length ? currentRenderedPicks : getFilteredPicks());
+    }
+
+    function setTableSort(key) {
+        const currentKey = String(currentTableSort || 'date_desc').split('_')[0];
+        const currentDirection = String(currentTableSort || 'date_desc').endsWith('_asc') ? 'asc' : 'desc';
+        const nextDirection = currentKey === key && currentDirection === 'desc' ? 'asc' : 'desc';
+        currentTableSort = key + '_' + nextDirection;
+
+        const sortSelect = document.getElementById('filterSort');
+        if (sortSelect) {
+            const option = Array.from(sortSelect.options).find(function(item) { return item.value === currentTableSort; });
+            if (option) sortSelect.value = currentTableSort;
+        }
+        currentTablePage = 1;
+        applyFilters();
+    }
+
+    function syncTableSortUI() {
+        document.querySelectorAll('.ledger-sort-button').forEach(function(button) {
+            const key = button.getAttribute('data-sort-key');
+            const isActive = String(currentTableSort || '').startsWith(key + '_');
+            button.classList.toggle('is-active', isActive);
+            if (isActive) {
+                button.setAttribute('aria-sort', String(currentTableSort).endsWith('_asc') ? 'ascending' : 'descending');
+            } else {
+                button.removeAttribute('aria-sort');
+            }
         });
-
-        tbody.insertAdjacentHTML('beforeend', batch.map(p => pickRow(p, rtMap)).join(''));
-        picksOffset += batch.length;
-        if (picksOffset >= allLoadedPicks.length) document.getElementById('loadMoreRow').style.display = 'none';
     }
 
     // ======================== ANALYTICS ========================
@@ -1488,6 +2610,8 @@
         renderUnitSizeBreakdown(picksArr);
         // By Odds Range
         renderOddsRangeBreakdown(picksArr);
+        renderPriceProfile(picksArr);
+        renderPendingSummary(picksArr);
         // Recent Form
         renderRecentForm(picksArr);
         // Performance Over Time
@@ -1502,6 +2626,8 @@
 
         const source = picksArr || allLoadedPicks;
         const adv = computeAdvancedStats(source);
+        const ledger = computeLedgerMetrics(source);
+        const clv = computeAggregateClv(source);
         const summary = latestAdvancedStats && latestAdvancedStats.summary && !hasLocalOnlyFiltersActive()
             ? latestAdvancedStats.summary
             : null;
@@ -1521,9 +2647,21 @@
             ['Pending Picks', String(pendingValue), 'Open picks not graded yet'],
             ['Average Odds', avgOddsValue != null ? (avgOddsValue > 0 ? '+' : '') + avgOddsValue : 'N/A', 'Average American price'],
             ['Average Units', avgUnitsValue.toFixed(2) + 'u', 'Average risk per pick'],
+            ['CLV', clv.display, clv.note],
+            ['Favorite Record', ledger.favoriteRecord, 'All negative-price decisions'],
+            ['Underdog Record', ledger.underdogRecord, 'All plus-money decisions'],
+            ['Home Record', ledger.homeRecord, 'Selections tied to home side'],
+            ['Away Record', ledger.awayRecord, 'Selections tied to away side'],
+            ['Spread Record', ledger.spreadRecord, 'Spread and alt spread markets'],
+            ['Moneyline Record', ledger.moneylineRecord, 'Straight side winners'],
+            ['Total Record', ledger.totalRecord, 'Totals and team totals'],
+            ['First Half / First 5', ledger.firstSegmentRecord, 'Segment markets only'],
+            ['Last 10', ledger.last10Record, 'Most recent 10 graded picks'],
             ['Current Streak', currentStreak, 'Current graded streak'],
             ['Best Streak', s.bestStreak + 'W', 'Longest winning streak'],
-            ['Worst Streak', s.worstStreak + 'L', 'Longest losing streak']
+            ['Worst Streak', s.worstStreak + 'L', 'Longest losing streak'],
+            ['Highest Unit Win', ledger.bestWin ? formatSignedUnits(ledger.bestWin.pl) : '--', ledger.bestWin ? (ledger.bestWin.pick.selection || 'Winning pick') : 'No winning picks yet'],
+            ['Biggest Loss', ledger.biggestLoss ? formatSignedUnits(ledger.biggestLoss.pl) : '--', ledger.biggestLoss ? (ledger.biggestLoss.pick.selection || 'Losing pick') : 'No losing picks yet']
         ];
 
         if (adv) {
@@ -1533,6 +2671,7 @@
                 ['Z-Score', adv.zScore.toFixed(2), 'Signal strength versus implied probability'],
                 ['Confidence', adv.confidence.toFixed(1) + '%', 'Confidence in edge estimate'],
                 ['Projected ROI', (adv.pROI >= 0 ? '+' : '') + adv.pROI.toFixed(1) + '%', 'Confidence-weighted projection'],
+                ['Profit Factor', adv.profitFactor, 'Gross won units divided by gross lost units'],
                 ['Sharpe Ratio', adv.sharpe.toFixed(3), 'Return relative to variance'],
                 ['Sortino Ratio', adv.sortino.toFixed(3), 'Downside-adjusted return'],
                 ['Max Drawdown', adv.maxDD.toFixed(2) + 'u', 'Largest peak-to-trough slide'],
@@ -1546,6 +2685,61 @@
                 '<td>' + row[1] + '</td>' +
                 '<td class="stats-metric-context">' + row[2] + '</td>' +
                 '</tr>';
+        }).join('');
+    }
+
+    function renderPriceProfile(picksArr) {
+        const grid = document.getElementById('priceProfileGrid');
+        if (!grid) return;
+        const source = (picksArr || []).filter(function(pick) {
+            return ['won', 'lost', 'push', 'pushed'].includes(normalizeStatus(pick.status));
+        });
+        const favorites = source.filter(function(pick) { return Number(pick.odds_snapshot || pick.odds || -110) < 0; });
+        const underdogs = source.filter(function(pick) { return Number(pick.odds_snapshot || pick.odds || -110) > 0; });
+
+        const groups = [
+            { label: 'Favorites', picks: favorites },
+            { label: 'Underdogs', picks: underdogs }
+        ];
+
+        grid.innerHTML = groups.map(function(group) {
+            const wins = group.picks.filter(function(pick) { return normalizeStatus(pick.status) === 'won'; }).length;
+            const losses = group.picks.filter(function(pick) { return normalizeStatus(pick.status) === 'lost'; }).length;
+            const pushes = group.picks.filter(function(pick) { return normalizeStatus(pick.status) === 'push'; }).length;
+            const netUnits = group.picks.reduce(function(total, pick) { return total + pickPL(pick); }, 0);
+            const wr = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0';
+            return bRowExtended(group.label, wins + '-' + losses + '-' + pushes + ' (' + group.picks.length + ' picks)', wr, netUnits);
+        }).join('') || '<div class="empty-state" style="padding:16px;">No data</div>';
+    }
+
+    function renderPendingSummary(picksArr) {
+        const grid = document.getElementById('pendingSummaryGrid');
+        if (!grid) return;
+        const pending = (picksArr || []).filter(function(pick) {
+            return normalizeStatus(pick.status) === 'pending';
+        });
+
+        if (!pending.length) {
+            grid.innerHTML = '<div class="empty-state" style="padding:16px;">No pending picks</div>';
+            return;
+        }
+
+        const bySport = {};
+        let pendingUnits = 0;
+        pending.forEach(function(pick) {
+            const sport = fmtSport(pick.sport_key || 'unknown');
+            bySport[sport] = (bySport[sport] || 0) + 1;
+            pendingUnits += Number(pick.units || 0);
+        });
+        const topSport = Object.entries(bySport).sort(function(a, b) { return b[1] - a[1]; })[0];
+        const cards = [
+            ['Open Tickets', pending.length + ' pending', 'Awaiting grade'],
+            ['Pending Units', pendingUnits.toFixed(2) + 'u', 'Still exposed'],
+            ['Most Active Sport', topSport ? topSport[0] : 'N/A', topSport ? (topSport[1] + ' open picks') : 'No open picks']
+        ];
+
+        grid.innerHTML = cards.map(function(card) {
+            return '<div class="breakdown-row"><div style="flex:1;"><div class="breakdown-name">' + card[0] + '</div><div class="breakdown-record">' + card[2] + '</div></div><div style="text-align:right;"><div class="breakdown-winrate">' + card[1] + '</div></div></div>';
         }).join('');
     }
 
@@ -1735,6 +2929,11 @@
         const variance = returns.reduce((s, r) => s + Math.pow(r - avgReturn, 2), 0) / returns.length;
         const stdDev = Math.sqrt(variance);
         const sharpe = stdDev > 0 ? (avgReturn / stdDev) : 0;
+        const grossWon = returns.filter(r => r > 0).reduce((sum, value) => sum + value, 0);
+        const grossLostAbs = Math.abs(returns.filter(r => r < 0).reduce((sum, value) => sum + value, 0));
+        const profitFactorValue = grossLostAbs > 0 ? (grossWon / grossLostAbs) : (grossWon > 0 ? Infinity : 0);
+        const profitFactor = Number.isFinite(profitFactorValue) ? profitFactorValue.toFixed(2) : 'INF';
+        const profitFactorClass = !Number.isFinite(profitFactorValue) || profitFactorValue > 1 ? 'positive' : profitFactorValue < 1 ? 'negative' : 'neutral';
 
         // Sortino Ratio (only downside deviation)
         const downReturns = returns.filter(r => r < 0);
@@ -1817,7 +3016,8 @@
         return {
             w, l, n, winRate, netUnits, totalRisked, roi, aur, eU, eWP, aop,
             zScore, confidence, pROI, sharpe, sortino, maxDD, kelly,
-            equityPoints, dow, months, sportMap, typeMap, graded
+            equityPoints, dow, months, sportMap, typeMap, graded,
+            profitFactor, profitFactorClass
         };
     }
 
@@ -2015,8 +3215,12 @@
     }
 
     function hasLocalOnlyFiltersActive() {
+        const search = document.getElementById('filterSearch');
         const units = document.getElementById('filterUnits');
-        return !!((units && units.value) || activeQuickFilter);
+        const dateFrom = document.getElementById('filterDateFrom');
+        const dateTo = document.getElementById('filterDateTo');
+        const sort = document.getElementById('filterSort');
+        return !!((search && search.value) || (units && units.value) || (dateFrom && dateFrom.value) || (dateTo && dateTo.value) || (sort && sort.value && sort.value !== 'date_desc') || activeQuickFilter);
     }
 
     function marketTypeLabel(value) {
@@ -2036,11 +3240,14 @@
             f5_h2h: 'First 5 ML',
             f5_spreads: 'First 5 Spread',
             f5_totals: 'First 5 Totals',
+            first_half_h2h: 'First Half ML',
             first_half_spreads: 'First Half Spread',
             first_half_totals: 'First Half Totals',
+            second_half_h2h: 'Second Half ML',
             second_half_spreads: 'Second Half Spread',
             second_half_totals: 'Second Half Totals',
             period_1_h2h: '1st Period ML',
+            period_1_spreads: '1st Period Spread',
             period_1_totals: '1st Period Totals',
             alt_spreads: 'Alt Spreads',
             alt_totals: 'Alt Totals'
@@ -2064,12 +3271,41 @@
             'totals,total': 'Totals',
             'team_totals': 'Team Totals',
             'f5_h2h,f5_spreads,f5_totals': 'First 5',
-            'first_half_spreads,first_half_totals': 'First Half',
-            'second_half_spreads,second_half_totals': 'Second Half',
-            'period_1_h2h,period_1_totals': '1st Period',
+            'first_half_h2h,first_half_spreads,first_half_totals': 'First Half',
+            'second_half_h2h,second_half_spreads,second_half_totals': 'Second Half',
+            'period_1_h2h,period_1_spreads,period_1_totals': '1st Period',
             'alt_spreads,alt_totals': 'Alt Lines'
         };
         return labels[value] || value;
+    }
+
+    function sortLabel(value) {
+        return {
+            'date_desc': 'Newest first',
+            'date_asc': 'Oldest first',
+            'units_desc': 'Highest units',
+            'units_asc': 'Lowest units',
+            'odds_desc': 'Highest odds',
+            'odds_asc': 'Lowest odds',
+            'net_units_desc': 'Best net units',
+            'net_units_asc': 'Worst net units',
+            'clv_desc': 'Best CLV',
+            'clv_asc': 'Worst CLV',
+            'market_asc': 'Market A-Z',
+            'market_desc': 'Market Z-A',
+            'sport_asc': 'Sport A-Z',
+            'sport_desc': 'Sport Z-A',
+            'line_desc': 'Highest line',
+            'line_asc': 'Lowest line',
+            'closing_line_desc': 'Highest closing line',
+            'closing_line_asc': 'Lowest closing line',
+            'book_asc': 'Book A-Z',
+            'book_desc': 'Book Z-A',
+            'status_asc': 'Status A-Z',
+            'status_desc': 'Status Z-A',
+            'result_desc': 'Best result',
+            'result_asc': 'Worst result'
+        }[value] || 'Newest first';
     }
 
     async function refreshAdvancedBreakdowns() {
@@ -2123,16 +3359,26 @@
         document.getElementById('btnFavOnly').style.color = activeQuickFilter === 'fav' ? '#fff' : '';
         document.getElementById('btnDogOnly').style.background = activeQuickFilter === 'dog' ? 'var(--accent-green)' : '';
         document.getElementById('btnDogOnly').style.color = activeQuickFilter === 'dog' ? '#fff' : '';
+        analyticsTrack('profile_quick_filter_toggled', {
+            username: profileUsername || '',
+            filter_name: which,
+            filter_state: activeQuickFilter || 'off'
+        });
         applyFilters();
     }
 
     function getFilteredPicks() {
+        const search = document.getElementById('filterSearch').value.trim().toLowerCase();
         const sport = document.getElementById('filterSport').value;
         const type = document.getElementById('filterType').value;
         const result = document.getElementById('filterResult').value;
         const odds = document.getElementById('filterOdds').value;
         const units = document.getElementById('filterUnits').value;
         const period = document.getElementById('filterPeriod').value;
+        const dateFrom = document.getElementById('filterDateFrom').value;
+        const dateTo = document.getElementById('filterDateTo').value;
+        const sort = document.getElementById('filterSort').value || currentTableSort || 'date_desc';
+        currentTableSort = sort;
 
         let filtered = [...allLoadedPicks];
 
@@ -2141,9 +3387,35 @@
             filtered = filterByPeriod(filtered, period);
         }
 
+        if (dateFrom) {
+            const from = new Date(dateFrom + 'T00:00:00').getTime();
+            filtered = filtered.filter(p => getPickTimestamp(p) >= from);
+        }
+        if (dateTo) {
+            const to = new Date(dateTo + 'T23:59:59').getTime();
+            filtered = filtered.filter(p => getPickTimestamp(p) <= to);
+        }
+
         if (sport) filtered = filtered.filter(p => p.sport_key === sport);
         if (type) { const types = type.split(','); filtered = filtered.filter(p => types.includes(p.market_type)); }
         if (result) filtered = filtered.filter(p => p.status === result || (result === 'push' && p.status === 'pushed'));
+        if (search) {
+            filtered = filtered.filter(function(p) {
+                return [
+                    p.away_team,
+                    p.home_team,
+                    p.event_name,
+                    p.selection,
+                    p.notes,
+                    p.market_type,
+                    p.book,
+                    p.sportsbook,
+                    p.sportsbook_name
+                ].some(function(value) {
+                    return String(value || '').toLowerCase().includes(search);
+                });
+            });
+        }
         if (odds) {
             filtered = filtered.filter(p => {
                 const o = p.odds_snapshot || p.odds || -110;
@@ -2173,6 +3445,56 @@
             filtered = filtered.filter(p => { const o = p.odds_snapshot || p.odds || -110; return o > 0; });
         }
 
+        filtered.sort(function(a, b) {
+            const [sortKey, sortDirection = 'desc'] = String(sort).split('_');
+            const direction = sortDirection === 'asc' ? 1 : -1;
+            const resultRank = { won: 3, push: 2, pending: 1, lost: 0 };
+            const aStatus = normalizeStatus(a.status);
+            const bStatus = normalizeStatus(b.status);
+            const aValue = {
+                date: getPickTimestamp(a),
+                sport: fmtSport(a.sport_key || ''),
+                market: marketTypeLabel(a.market_type || ''),
+                line: Number(a.line_snapshot || 0),
+                odds: Number(a.odds_snapshot || a.odds || -110),
+                units: Number(a.units || 0),
+                result: resultRank[aStatus] || 0,
+                net: pickPL(a),
+                net_units: pickPL(a),
+                closing: Number(getClosingLineValue(a) || 0),
+                closing_line: Number(getClosingLineValue(a) || 0),
+                clv: Number(calculatePickClv(a) || 0),
+                book: deriveBookName(a),
+                status: aStatus
+            };
+            const bValue = {
+                date: getPickTimestamp(b),
+                sport: fmtSport(b.sport_key || ''),
+                market: marketTypeLabel(b.market_type || ''),
+                line: Number(b.line_snapshot || 0),
+                odds: Number(b.odds_snapshot || b.odds || -110),
+                units: Number(b.units || 0),
+                result: resultRank[bStatus] || 0,
+                net: pickPL(b),
+                net_units: pickPL(b),
+                closing: Number(getClosingLineValue(b) || 0),
+                closing_line: Number(getClosingLineValue(b) || 0),
+                clv: Number(calculatePickClv(b) || 0),
+                book: deriveBookName(b),
+                status: bStatus
+            };
+            const left = aValue[sortKey];
+            const right = bValue[sortKey];
+
+            if (typeof left === 'string' || typeof right === 'string') {
+                const compare = String(left || '').localeCompare(String(right || ''));
+                if (compare !== 0) return compare * direction;
+            } else if (left !== right) {
+                return ((left || 0) - (right || 0)) * direction;
+            }
+            return getPickTimestamp(b) - getPickTimestamp(a);
+        });
+
         return filtered;
     }
 
@@ -2180,18 +3502,25 @@
         const filtered = getFilteredPicks();
 
         // Check if any filter is active
+        const search = document.getElementById('filterSearch').value;
         const sport = document.getElementById('filterSport').value;
         const type = document.getElementById('filterType').value;
         const result = document.getElementById('filterResult').value;
         const odds = document.getElementById('filterOdds').value;
         const units = document.getElementById('filterUnits').value;
         const period = document.getElementById('filterPeriod').value;
-        const hasFilter = sport || type || result || odds || units || (period && period !== 'all') || activeQuickFilter;
+        const dateFrom = document.getElementById('filterDateFrom').value;
+        const dateTo = document.getElementById('filterDateTo').value;
+        const sort = document.getElementById('filterSort').value || 'date_desc';
+        const hasFilter = search || sport || type || result || odds || units || dateFrom || dateTo || (period && period !== 'all') || activeQuickFilter || sort !== 'date_desc';
+        const filterState = getActiveFilterState();
+        currentTablePage = 1;
 
         // Update filter banner (FIX 5)
         const banner = document.getElementById('filterBanner');
         if (hasFilter) {
             const parts = [];
+            if (search) parts.push('Search: ' + search);
             if (sport) parts.push(fmtSport(sport));
             if (type) {
                 parts.push(filterTypeLabel(type));
@@ -2209,6 +3538,9 @@
                 const periodLabels = { '7': 'Last 7 Days', '30': 'Last 30 Days', '90': 'Last 90 Days', '365': 'Last Year' };
                 parts.push(periodLabels[period] || period);
             }
+            if (dateFrom) parts.push('From ' + dateFrom);
+            if (dateTo) parts.push('To ' + dateTo);
+            if (sort && sort !== 'date_desc') parts.push(sortLabel(sort));
             if (activeQuickFilter === 'fav') parts.push('Favorites Only');
             if (activeQuickFilter === 'dog') parts.push('Underdogs Only');
             document.getElementById('filterBannerText').textContent = 'Showing: ' + parts.join(' | ') + ' | ' + filtered.length + ' picks';
@@ -2244,16 +3576,29 @@
             currentPeriod = 'all';
         }
         document.querySelectorAll('.period-btn').forEach(b => b.classList.toggle('active', b.dataset.period === currentPeriod));
+
+        analyticsTrack('profile_filters_applied', {
+            ...filterState,
+            filtered_count: filtered.length,
+            has_filter: !!hasFilter
+        });
     }
 
     function clearFilters() {
+        const previousFilterState = getActiveFilterState();
+        document.getElementById('filterSearch').value = '';
         document.getElementById('filterSport').value = '';
         document.getElementById('filterType').value = '';
         document.getElementById('filterResult').value = '';
         document.getElementById('filterOdds').value = '';
         document.getElementById('filterUnits').value = '';
         document.getElementById('filterPeriod').value = 'all';
+        document.getElementById('filterDateFrom').value = '';
+        document.getElementById('filterDateTo').value = '';
+        document.getElementById('filterSort').value = 'date_desc';
         activeQuickFilter = null;
+        currentTableSort = 'date_desc';
+        currentTablePage = 1;
         document.getElementById('btnFavOnly').style.background = '';
         document.getElementById('btnFavOnly').style.color = '';
         document.getElementById('btnDogOnly').style.background = '';
@@ -2270,6 +3615,10 @@
         renderPicksTable(allLoadedPicks);
         renderCapperMetrics(allLoadedPicks);
         refreshAdvancedBreakdowns();
+        analyticsTrack('profile_filters_cleared', {
+            username: profileUsername || '',
+            previous_filters: JSON.stringify(previousFilterState)
+        });
     }
 
     function ac(label, value, cls) {
@@ -2293,11 +3642,12 @@
             const sm = {};
             allLoadedPicks.forEach(p => {
                 const sk = p.sport_key || 'unknown';
-                if (!sm[sk]) sm[sk] = { sport_key: sk, wins: 0, losses: 0, pushes: 0, total_picks: 0 };
+                if (!sm[sk]) sm[sk] = { sport_key: sk, wins: 0, losses: 0, pushes: 0, total_picks: 0, net_units: 0 };
                 sm[sk].total_picks++;
                 if (p.status === 'won') sm[sk].wins++;
                 else if (p.status === 'lost') sm[sk].losses++;
                 else if (p.status === 'push' || p.status === 'pushed') sm[sk].pushes++;
+                sm[sk].net_units += pickPL(p);
             });
             renderSportGrid(Object.values(sm));
         }
@@ -2307,11 +3657,12 @@
         const sm = {};
         (picksArr || []).forEach(function(p) {
             const sk = p.sport_key || 'unknown';
-            if (!sm[sk]) sm[sk] = { sport_key: sk, wins: 0, losses: 0, pushes: 0, total_picks: 0 };
+            if (!sm[sk]) sm[sk] = { sport_key: sk, wins: 0, losses: 0, pushes: 0, total_picks: 0, net_units: 0 };
             sm[sk].total_picks++;
             if (p.status === 'won') sm[sk].wins++;
             else if (p.status === 'lost') sm[sk].losses++;
             else if (p.status === 'push' || p.status === 'pushed') sm[sk].pushes++;
+            sm[sk].net_units += pickPL(p);
         });
         renderSportGrid(Object.values(sm));
     }
@@ -2377,7 +3728,8 @@
             const w = Number(i.wins) || 0, l = Number(i.losses) || 0, p = Number(i.pushes) || 0;
             const t = Number(i.total_picks) || (w + l + p);
             const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
-            return bRow(fmtSport(i.sport_key), w + '-' + l + '-' + p + ' (' + t + ' picks)', wr);
+            const units = Number(i.net_units || i.units || 0);
+            return bRowExtended(fmtSport(i.sport_key), w + '-' + l + '-' + p + ' (' + t + ' picks)', wr, units);
         }).join('');
     }
 
@@ -2512,6 +3864,11 @@
         a.download = 'trustmyrecord_' + (profileUsername || 'picks') + '_' + new Date().toISOString().slice(0, 10) + '.csv';
         a.click();
         URL.revokeObjectURL(url);
+        analyticsTrack('profile_csv_exported', {
+            username: profileUsername || '',
+            export_count: allLoadedPicks.length,
+            filtered_count: currentRenderedPicks.length || allLoadedPicks.length
+        });
         showToast('CSV downloaded', 'success');
     }
 
@@ -2525,7 +3882,18 @@
         const profileUrl = `https://trustmyrecord.com/profile.html?user=${encodedUser}`;
         const widgetUrl = `https://trustmyrecord.com/profile-widget.html?user=${encodedUser}&theme=dark&refresh=15000`;
         const iframeCode = `<!-- TrustMyRecord Live Profile Widget -->\n<iframe\n  src="${widgetUrl}"\n  title="TrustMyRecord profile for ${user}"\n  width="100%"\n  height="260"\n  style="max-width:420px;border:0;overflow:hidden;background:transparent;"\n  loading="lazy"\n  referrerpolicy="strict-origin-when-cross-origin"\n  scrolling="no">\n</iframe>`;
-        const scriptCode = `<!-- TrustMyRecord Auto-Resizing Profile Widget -->\n<script\n  src="https://trustmyrecord.com/static/js/profile-widget-embed.js"\n  data-username="${user}"\n  data-theme="dark"\n  data-refresh="15000"\n  data-max-width="420px">\n<\/script>`;
+        const scriptTagOpen = String.fromCharCode(60) + 'script';
+        const scriptTagClose = String.fromCharCode(60) + '/script>';
+        const scriptCode = [
+            '<!-- TrustMyRecord Auto-Resizing Profile Widget -->',
+            scriptTagOpen,
+            '  src="https://trustmyrecord.com/static/js/profile-widget-embed.js"',
+            '  data-username="' + user + '"',
+            '  data-theme="dark"',
+            '  data-refresh="15000"',
+            '  data-max-width="420px">',
+            scriptTagClose
+        ].join('\n');
         const previewCode = `<iframe src="${widgetUrl}" title="TrustMyRecord profile for ${user}" width="100%" height="260" style="max-width:420px;border:0;overflow:hidden;background:transparent;" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" scrolling="no"></iframe>`;
 
         const modal = document.createElement('div');
@@ -2553,6 +3921,10 @@
         document.getElementById('profileShareLinkArea').value = profileUrl;
         document.getElementById('embedCodeArea').value = iframeCode;
         document.getElementById('scriptEmbedCodeArea').value = scriptCode;
+        analyticsTrack('profile_embed_modal_opened', {
+            username: profileUsername || '',
+            profile_url: profileUrl
+        });
     }
 
     function copyTextValue(elementId, successMessage) {
@@ -2560,11 +3932,18 @@
         if (!ta) return;
         ta.select();
         document.execCommand('copy');
+        analyticsTrack('profile_embed_copy_clicked', {
+            username: profileUsername || '',
+            copy_target: elementId
+        });
         showToast(successMessage || 'Copied!', 'success');
     }
 
     function openEditModal() {
         const m = document.getElementById('editModal'); if (m) m.remove();
+        analyticsTrack('profile_edit_modal_opened', {
+            username: profileUsername || ''
+        });
         const modal = document.createElement('div'); modal.id = 'editModal';
         modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
         const is = 'width:100%;padding:10px 12px;border-radius:6px;border:1px solid #353a4d;background:#0f1117;color:#f0f2f5;font-family:inherit;font-size:.9rem;margin-bottom:14px;';
@@ -2689,6 +4068,10 @@
                     };
                     auth.updateProfile(localUpdates);
                 }
+                analyticsTrack('profile_updated_manual', {
+                    username: profileUsername || '',
+                    fields_updated: 'display_name,bio,location,teams,gamer_profile,avatar'
+                });
                 showToast('Profile updated!', 'success'); modal.remove(); await loadProfile();
             } catch(err) { showToast(err.message, 'error'); }
         });
@@ -2731,12 +4114,12 @@
             </div>
             <div class="site-footer-bottom">
                 <p>TrustMyRecord is not a gambling site. We provide tracking and community features only.</p>
-                <p>If you or someone you know has a gambling problem, call 1-800-GAMBLER.</p>
+                <p>If you or someone you know has a gambling problem, call local support resources.</p>
             </div>
         </footer>
 
 
-    <script src="static/js/platform-production-fix.js?v=20260414e"></script>
+    <script src="static/js/platform-production-fix.js?v=20260415d"></script>
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  8:02:00 PM -->
