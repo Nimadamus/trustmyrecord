@@ -17,7 +17,7 @@
       gtag('config', 'G-V5MCVXS2HE');
     </script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260415e">
+    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260419b">
     <script defer src="static/js/tmr-sitewide.js?v=20260415f"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -425,4 +425,791 @@
 
         .field label {
             color: var(--muted);
-            font-size: 0.67
+            font-size: 0.67rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            min-height: 42px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 12px;
+            padding: 0 13px;
+            color: var(--text);
+            background: rgba(255,255,255,0.045);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+            font: 600 0.88rem/1 'Inter', sans-serif;
+        }
+
+        .field input::placeholder { color: #7a8ea4; }
+
+        .field input:focus,
+        .field select:focus {
+            outline: none;
+            border-color: rgba(45,212,191,0.38);
+            box-shadow: 0 0 0 3px rgba(45,212,191,0.12);
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            min-width: 920px;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            padding: 0 0 10px;
+            color: #7c91a8;
+            font-size: 0.66rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            text-align: left;
+            border-bottom: 1px solid rgba(148,163,184,0.18);
+        }
+
+        tbody td {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(148,163,184,0.12);
+            font-size: 0.84rem;
+            vertical-align: middle;
+        }
+
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: rgba(255,255,255,0.018); }
+
+        .rank {
+            width: 32px;
+            height: 32px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.08);
+            font-size: 0.76rem;
+            font-weight: 900;
+        }
+
+        .rank.top-1 { background: rgba(212,167,44,0.22); color: #ffe8a3; }
+        .rank.top-2 { background: rgba(148,163,184,0.24); color: #e2e8f0; }
+        .rank.top-3 { background: rgba(194,120,70,0.24); color: #ffd3b5; }
+
+        .capper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .capper-avatar {
+            width: 36px;
+            height: 36px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 11px;
+            background: linear-gradient(135deg, var(--teal), #b9fff1);
+            color: #06120f;
+            font-size: 0.78rem;
+            font-weight: 900;
+            flex: 0 0 auto;
+        }
+
+        .capper-meta { min-width: 0; }
+
+        .capper-name {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--text);
+            font-size: 0.88rem;
+            font-weight: 800;
+        }
+
+        .capper-name:hover { color: var(--teal); }
+
+        .capper-sub {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 0.73rem;
+            line-height: 1.45;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .link-actions {
+            display: inline-flex;
+            gap: 7px;
+            flex-wrap: wrap;
+        }
+
+        .pos { color: var(--green); font-weight: 850; }
+        .neg { color: var(--red); font-weight: 850; }
+        .neutral { color: var(--text); font-weight: 850; }
+
+        .rail-card {
+            display: grid;
+            gap: 12px;
+            align-content: start;
+        }
+
+        .rail-card h3 {
+            font-size: 1rem;
+            line-height: 1.05;
+        }
+
+        .loading,
+        .empty {
+            display: grid;
+            place-items: center;
+            min-height: 150px;
+            border-radius: 16px;
+            border: 1px dashed rgba(148,163,184,0.24);
+            background: rgba(255,255,255,0.03);
+            color: var(--muted);
+            text-align: center;
+            font-size: 0.86rem;
+        }
+
+        @media (max-width: 1180px) {
+            .hero,
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .page {
+                width: min(100% - 22px, 1380px);
+                padding-top: 18px;
+            }
+
+            .hero-panel,
+            .hero-side,
+            .filters-card,
+            .table-card,
+            .rail-card {
+                padding: 16px;
+                border-radius: 18px;
+            }
+
+            .hero-metrics,
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-grid,
+            .preview-stats {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                max-width: none;
+                font-size: clamp(2rem, 10.5vw, 2.8rem);
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <section class="hero">
+            <div class="hero-panel">
+                <span class="hero-kicker">Verified capper discovery</span>
+                <h1>Find the people actually beating the board.</h1>
+                <p>TrustMyRecord surfaces handicappers through verified results, not screenshots or vague claims. Scan ROI, units, sample size, and current form in one sharper board, then move straight into competition.</p>
+                <div class="hero-metrics">
+                    <div class="hero-metric"><b id="heroCapperCount">0</b><span>Ranked cappers</span></div>
+                    <div class="hero-metric"><b id="heroPositiveRoi">0</b><span>Positive ROI</span></div>
+                    <div class="hero-metric"><b id="heroChallengeCount">0</b><span>Open battles</span></div>
+                    <div class="hero-metric"><b id="heroAvgSample">0</b><span>Avg sample size</span></div>
+                </div>
+            </div>
+            <aside class="hero-side">
+                <div class="side-title">
+                    <div>
+                        <h2>Live challenge board</h2>
+                        <div class="side-note">Keep the rivalry layer visible so discovery leads directly into action.</div>
+                    </div>
+                    <a href="arena.html" class="mini-link">Open Arena</a>
+                </div>
+                <div id="heroChallenges" class="challenge-list">
+                    <div class="loading">Loading live competition...</div>
+                </div>
+            </aside>
+        </section>
+
+        <section class="content">
+            <div>
+                <div class="filters-card">
+                    <div class="filters-head">
+                        <div>
+                            <h2>Board filters</h2>
+                            <p>Refine the leaderboard by sport, sorting logic, and minimum proof threshold.</p>
+                        </div>
+                        <button type="button" class="mini-link" onclick="resetFilters()">Reset</button>
+                    </div>
+                    <div class="filters-grid">
+                        <div class="field">
+                            <label for="capperSearch">Search capper</label>
+                            <input id="capperSearch" type="text" placeholder="@username or display name">
+                        </div>
+                        <div class="field">
+                            <label for="sportFilter">Sport</label>
+                            <select id="sportFilter">
+                                <option value="all">All sports</option>
+                                <option value="NFL">NFL</option>
+                                <option value="NBA">NBA</option>
+                                <option value="MLB">MLB</option>
+                                <option value="NHL">NHL</option>
+                                <option value="NCAAB">NCAAB</option>
+                                <option value="NCAAF">NCAAF</option>
+                                <option value="Soccer">Soccer</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="sortFilter">Sort by</label>
+                            <select id="sortFilter">
+                                <option value="roi">ROI</option>
+                                <option value="units">Net units</option>
+                                <option value="winRate">Win rate</option>
+                                <option value="totalPicks">Sample size</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="sampleFilter">Minimum picks</label>
+                            <select id="sampleFilter">
+                                <option value="5">5 picks</option>
+                                <option value="10">10 picks</option>
+                                <option value="25">25 picks</option>
+                                <option value="50">50 picks</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="capperPreviewCard" class="preview-card" style="display:none;">
+                    <div class="preview-head">
+                        <div class="preview-title">
+                            <div id="previewAvatar" class="preview-avatar">T</div>
+                            <div>
+                                <h3 id="previewName">Capper preview</h3>
+                                <div id="previewMeta" class="preview-sub">Recent picks and split snapshot</div>
+                            </div>
+                        </div>
+                        <div class="link-actions">
+                            <a id="previewProfileLink" class="mini-link" href="profile.html">Full profile</a>
+                            <a id="previewChallengeLink" class="mini-link" href="arena.html">Challenge</a>
+                        </div>
+                    </div>
+                    <div class="preview-grid">
+                        <div>
+                            <div id="previewStats" class="preview-stats">
+                                <div class="loading" style="min-height:120px;">Loading capper snapshot...</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="display:grid;gap:14px;">
+                                <div>
+                                    <div class="rail-note" style="margin-bottom:10px;">Best current split</div>
+                                    <div id="previewSplits" class="split-list">
+                                        <div class="loading" style="min-height:120px;">Loading split data...</div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="rail-note" style="margin-bottom:10px;">Recent verified picks</div>
+                                    <div id="previewPicks" class="pick-list">
+                                        <div class="loading" style="min-height:120px;">Loading recent picks...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-head">
+                        <div>
+                            <h2>Handicapper leaderboard</h2>
+                            <p>Verified ranking data powering profile discovery, record trust, and head-to-head credibility.</p>
+                        </div>
+                        <div class="count-chip" id="resultCount">0 cappers</div>
+                    </div>
+                    <div id="leaderboardState" class="loading">Loading verified handicapper data...</div>
+                    <div id="leaderboardWrap" class="table-wrap" style="display:none;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width:64px;">Rank</th>
+                                    <th>Capper</th>
+                                    <th>Record</th>
+                                    <th>ROI</th>
+                                    <th>Units</th>
+                                    <th>Win rate</th>
+                                    <th>Picks</th>
+                                    <th style="width:170px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboardBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="rail-card">
+                <div>
+                    <h3>Hot streaks</h3>
+                    <div class="rail-note">Current heaters pulled from the same live leaderboard.</div>
+                </div>
+                <div id="streakRail" class="rail-list">
+                    <div class="loading">Loading streak leaders...</div>
+                </div>
+
+                <div>
+                    <h3>Sample-size leaders</h3>
+                    <div class="rail-note">High-volume records with enough sample to actually matter.</div>
+                </div>
+                <div id="volumeRail" class="rail-list">
+                    <div class="loading">Loading volume leaders...</div>
+                </div>
+            </aside>
+        </section>
+    </main>
+
+    <script src="static/js/config.js?v=20260330"></script>
+    <script src="static/js/backend-api.js?v=20260415c"></script>
+    <script src="static/js/analytics.js?v=20260417"></script>
+    <script>
+        let fullLeaderboard = [];
+        let filteredLeaderboard = [];
+        let activePreviewUsername = '';
+
+        function trackHandicappers(eventName, params) {
+            if (typeof window.TMRAnalytics !== 'undefined' && typeof window.TMRAnalytics.track === 'function') {
+                window.TMRAnalytics.track(eventName, params || {});
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function escapeJs(value) {
+            return String(value == null ? '' : value)
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, "\\'");
+        }
+
+        function num(value) {
+            const parsed = Number(value);
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+
+        function pct(value) {
+            const parsed = Number(value);
+            if (!Number.isFinite(parsed)) return 0;
+            return parsed <= 1 && parsed >= 0 ? parsed * 100 : parsed;
+        }
+
+        function signed(value, suffix) {
+            const parsed = num(value);
+            return (parsed >= 0 ? '+' : '') + parsed.toFixed(1) + (suffix || '');
+        }
+
+        function timeAgo(value) {
+            const date = new Date(value || Date.now()).getTime();
+            const diff = Math.max(0, Date.now() - date);
+            const hour = 3600000;
+            const day = 86400000;
+            if (diff < hour) return Math.max(1, Math.round(diff / 60000)) + 'm ago';
+            if (diff < day) return Math.round(diff / hour) + 'h ago';
+            return Math.round(diff / day) + 'd ago';
+        }
+
+        function normalizeEntry(entry) {
+            const username = entry.username || entry.user_name || entry.handle || '';
+            const wins = num(entry.wins);
+            const losses = num(entry.losses);
+            const pushes = num(entry.pushes);
+            const totalPicks = num(entry.total_picks != null ? entry.total_picks : entry.totalPicks != null ? entry.totalPicks : wins + losses + pushes);
+            const roi = pct(entry.roi);
+            const units = num(entry.net_units != null ? entry.net_units : entry.units);
+            const winRate = pct(entry.win_percentage != null ? entry.win_percentage : entry.winRate);
+            const streak = num(entry.current_streak != null ? entry.current_streak : entry.currentStreak);
+            return {
+                raw: entry,
+                username: username,
+                displayName: entry.display_name || entry.displayName || username,
+                sport: entry.sport || entry.primary_sport || 'All',
+                wins: wins,
+                losses: losses,
+                pushes: pushes,
+                totalPicks: totalPicks,
+                roi: roi,
+                units: units,
+                winRate: winRate,
+                streak: streak
+            };
+        }
+
+        function describeRecentPick(pick) {
+            const game = pick.game_title || pick.matchup || pick.event_name || [pick.away_team, pick.home_team].filter(Boolean).join(' @ ') || 'Recent pick';
+            const selection = pick.selection || pick.pick_name || pick.pick || 'Selection';
+            const line = pick.line != null ? ' ' + pick.line : pick.line_snapshot != null ? ' ' + pick.line_snapshot : '';
+            return {
+                title: selection + line,
+                game: game
+            };
+        }
+
+        function getResultClass(result) {
+            const normalized = String(result || 'pending').toLowerCase();
+            if (normalized === 'won' || normalized === 'win') return 'won';
+            if (normalized === 'lost' || normalized === 'loss') return 'lost';
+            if (normalized === 'push') return 'push';
+            return 'pending';
+        }
+
+        function setHeroStats(entries) {
+            const positiveRoi = entries.filter(function(entry) { return entry.roi > 0; }).length;
+            const avgSample = entries.length ? Math.round(entries.reduce(function(sum, entry) { return sum + entry.totalPicks; }, 0) / entries.length) : 0;
+            document.getElementById('heroCapperCount').textContent = String(entries.length);
+            document.getElementById('heroPositiveRoi').textContent = String(positiveRoi);
+            document.getElementById('heroAvgSample').textContent = String(avgSample);
+        }
+
+        function renderLeaderboard(entries) {
+            const state = document.getElementById('leaderboardState');
+            const wrap = document.getElementById('leaderboardWrap');
+            const body = document.getElementById('leaderboardBody');
+            const count = document.getElementById('resultCount');
+
+            count.textContent = entries.length + ' cappers';
+            if (!entries.length) {
+                wrap.style.display = 'none';
+                state.style.display = 'grid';
+                state.className = 'empty';
+                state.textContent = 'No handicappers match the current filters.';
+                return;
+            }
+
+            state.style.display = 'none';
+            wrap.style.display = '';
+            body.innerHTML = entries.map(function(entry, index) {
+                const rankClass = index === 0 ? 'top-1' : index === 1 ? 'top-2' : index === 2 ? 'top-3' : '';
+                const record = entry.wins + '-' + entry.losses + (entry.pushes ? '-' + entry.pushes : '');
+                const statClass = function(value) {
+                    return value > 0 ? 'pos' : value < 0 ? 'neg' : 'neutral';
+                };
+                return '<tr>' +
+                    '<td><span class="rank ' + rankClass + '">#' + (index + 1) + '</span></td>' +
+                    '<td><div class="capper">' +
+                        '<span class="capper-avatar">' + escapeHtml((entry.displayName || '?').charAt(0).toUpperCase()) + '</span>' +
+                        '<div class="capper-meta">' +
+                            '<a class="capper-name" href="profile.html?user=' + encodeURIComponent(entry.username) + '" onclick="trackHandicappers(\'handicapper_profile_opened\', { username: \'" + escapeJs(entry.username) + "\', source: \'board\' });">' + escapeHtml(entry.displayName) + '</a>' +
+                            '<span class="capper-sub">@' + escapeHtml(entry.username) + ' • ' + escapeHtml(entry.sport || 'All sports') + ' • streak ' + (entry.streak > 0 ? 'W' + entry.streak : entry.streak < 0 ? 'L' + Math.abs(entry.streak) : '0') + '</span>' +
+                        '</div>' +
+                    '</div></td>' +
+                    '<td>' + record + '</td>' +
+                    '<td class="' + statClass(entry.roi) + '">' + signed(entry.roi, '%') + '</td>' +
+                    '<td class="' + statClass(entry.units) + '">' + signed(entry.units, 'u') + '</td>' +
+                    '<td class="' + statClass(entry.winRate - 50) + '">' + entry.winRate.toFixed(1) + '%</td>' +
+                    '<td>' + entry.totalPicks + '</td>' +
+                    '<td><div class="link-actions">' +
+                        '<button type="button" class="mini-link" onclick="inspectCapper(\'' + escapeJs(entry.username) + '\')">Inspect</button>' +
+                        '<a class="mini-link" href="profile.html?user=' + encodeURIComponent(entry.username) + '" onclick="trackHandicappers(\'handicapper_profile_opened\', { username: \'" + escapeJs(entry.username) + "\', source: \'board\' });">Profile</a>' +
+                        '<a class="mini-link" href="arena.html?challenge=' + encodeURIComponent(entry.username) + '" onclick="trackHandicappers(\'handicapper_challenge_clicked\', { username: \'" + escapeJs(entry.username) + "\', source: \'board\' });">Challenge</a>' +
+                    '</div></td>' +
+                '</tr>';
+            }).join('');
+        }
+
+        function renderStreakRail(entries) {
+            const rail = document.getElementById('streakRail');
+            if (!entries.length) {
+                rail.innerHTML = '<div class="empty">No active streaks yet.</div>';
+                return;
+            }
+            rail.innerHTML = entries.map(function(entry) {
+                return '<a class="rail-item" href="profile.html?user=' + encodeURIComponent(entry.username) + '" onclick="trackHandicappers(\'handicapper_profile_opened\', { username: \'" + escapeJs(entry.username) + "\', source: \'streak_rail\' });">' +
+                    '<strong>' + escapeHtml(entry.displayName) + '</strong>' +
+                    '<span>@' + escapeHtml(entry.username) + ' • ' + entry.winRate.toFixed(1) + '% win rate • ' + signed(entry.units, 'u') + '</span>' +
+                    '<span class="badge">W' + entry.streak + ' current run</span>' +
+                '</a>';
+            }).join('');
+        }
+
+        function renderVolumeRail(entries) {
+            const rail = document.getElementById('volumeRail');
+            if (!entries.length) {
+                rail.innerHTML = '<div class="empty">No high-volume cappers yet.</div>';
+                return;
+            }
+            rail.innerHTML = entries.map(function(entry) {
+                return '<a class="rail-item" href="profile.html?user=' + encodeURIComponent(entry.username) + '" onclick="trackHandicappers(\'handicapper_profile_opened\', { username: \'" + escapeJs(entry.username) + "\', source: \'volume_rail\' });">' +
+                    '<strong>' + escapeHtml(entry.displayName) + '</strong>' +
+                    '<span>' + entry.totalPicks + ' picks • ' + signed(entry.roi, '%') + ' ROI • ' + signed(entry.units, 'u') + '</span>' +
+                    '<span class="badge gold">Verified sample</span>' +
+                '</a>';
+            }).join('');
+        }
+
+        function renderChallenges(entries) {
+            const container = document.getElementById('heroChallenges');
+            document.getElementById('heroChallengeCount').textContent = String(entries.length);
+            if (!entries.length) {
+                container.innerHTML = '<div class="empty">No live arena challenges right now.</div>';
+                return;
+            }
+            container.innerHTML = entries.map(function(entry) {
+                const title = entry.title || entry.game_title || entry.game_slug || 'Open challenge';
+                const challenger = entry.challenger_display || entry.challenger_username || 'Challenger';
+                const challenged = entry.challenged_display || entry.challenged_username || 'Open';
+                const status = String(entry.status || 'pending').replace(/_/g, ' ');
+                return '<a class="challenge-row" href="arena.html" onclick="trackHandicappers(\'handicapper_arena_opened\', { challenge_id: \'" + escapeJs(String(entry.id || 'unknown')) + "\', source: \'hero\' });">' +
+                    '<span class="badge">' + escapeHtml(status) + '</span>' +
+                    '<strong>' + escapeHtml(title) + '</strong>' +
+                    '<span>' + escapeHtml(challenger) + ' vs ' + escapeHtml(challenged) + ' • ' + escapeHtml(entry.game_title || entry.game_slug || 'Arena') + ' • ' + timeAgo(entry.created_at || entry.createdAt) + '</span>' +
+                '</a>';
+            }).join('');
+        }
+
+        function renderPreviewPlaceholder() {
+            document.getElementById('capperPreviewCard').style.display = 'none';
+            activePreviewUsername = '';
+        }
+
+        function renderPreviewStats(entry, advancedData) {
+            const stats = [
+                ['Record', entry.wins + '-' + entry.losses + (entry.pushes ? '-' + entry.pushes : ''), 'neutral'],
+                ['ROI', signed(entry.roi, '%'), entry.roi > 0 ? 'pos' : entry.roi < 0 ? 'neg' : 'neutral'],
+                ['Net units', signed(entry.units, 'u'), entry.units > 0 ? 'pos' : entry.units < 0 ? 'neg' : 'neutral'],
+                ['Win rate', entry.winRate.toFixed(1) + '%', entry.winRate >= 50 ? 'pos' : 'neg'],
+                ['Current streak', entry.streak > 0 ? 'W' + entry.streak : entry.streak < 0 ? 'L' + Math.abs(entry.streak) : 'Even', 'neutral'],
+                ['Projected ROI', advancedData && advancedData.pROI != null ? signed(advancedData.pROI, '%') : '--', advancedData && advancedData.pROI > 0 ? 'pos' : advancedData && advancedData.pROI < 0 ? 'neg' : 'neutral']
+            ];
+            document.getElementById('previewStats').innerHTML = stats.map(function(item) {
+                return '<div class="preview-stat"><span>' + item[0] + '</span><strong class="' + item[2] + '">' + item[1] + '</strong></div>';
+            }).join('');
+        }
+
+        function renderPreviewSplits(advancedData, entry) {
+            const container = document.getElementById('previewSplits');
+            const candidates = [];
+
+            if (advancedData) {
+                const pushSplit = function(label, source) {
+                    if (!source || source.picks == null || num(source.picks) === 0) return;
+                    candidates.push({
+                        label: label,
+                        record: (num(source.wins) || 0) + '-' + (num(source.losses) || 0) + (num(source.pushes) ? '-' + num(source.pushes) : ''),
+                        roi: num(source.roi),
+                        picks: num(source.picks)
+                    });
+                };
+
+                pushSplit('Favorites', advancedData.favorite);
+                pushSplit('Underdogs', advancedData.underdog);
+                pushSplit('Home', advancedData.home);
+                pushSplit('Away', advancedData.away);
+                pushSplit('Spread', advancedData.spread);
+                pushSplit('Moneyline', advancedData.moneyline);
+                pushSplit('Total', advancedData.total);
+                pushSplit('First half / first 5', advancedData.firstHalf || advancedData.first5);
+            }
+
+            candidates.sort(function(a, b) { return b.roi - a.roi; });
+            const top = candidates.slice(0, 3);
+            if (!top.length) {
+                container.innerHTML = '<div class="empty" style="min-height:110px;">No split data available yet.</div>';
+                return;
+            }
+
+            container.innerHTML = top.map(function(item) {
+                return '<div class="split-item"><strong>' + escapeHtml(item.label) + '</strong><span>' + item.record + ' • ' + signed(item.roi, '%') + ' ROI • ' + item.picks + ' picks</span></div>';
+            }).join('');
+        }
+
+        function renderPreviewPicks(picks) {
+            const container = document.getElementById('previewPicks');
+            if (!picks.length) {
+                container.innerHTML = '<div class="empty" style="min-height:110px;">No recent picks available.</div>';
+                return;
+            }
+
+            container.innerHTML = picks.map(function(pick) {
+                const desc = describeRecentPick(pick);
+                const resultClass = getResultClass(pick.result || pick.status);
+                const odds = pick.odds != null ? ' • ' + pick.odds : '';
+                const units = pick.units != null ? ' • ' + signed(pick.units, 'u') : '';
+                return '<div class="pick-item">' +
+                    '<strong>' + escapeHtml(desc.title) + '</strong>' +
+                    '<span>' + escapeHtml(desc.game) + odds + units + '</span>' +
+                    '<span class="pick-result ' + resultClass + '">' + escapeHtml(resultClass) + '</span>' +
+                '</div>';
+            }).join('');
+        }
+
+        async function inspectCapper(username) {
+            const entry = fullLeaderboard.find(function(item) { return item.username === username; });
+            if (!entry || !window.api) return;
+
+            activePreviewUsername = username;
+            const card = document.getElementById('capperPreviewCard');
+            card.style.display = '';
+            document.getElementById('previewAvatar').textContent = (entry.displayName || '?').charAt(0).toUpperCase();
+            document.getElementById('previewName').textContent = entry.displayName;
+            document.getElementById('previewMeta').textContent = '@' + entry.username + ' • ' + entry.totalPicks + ' picks • ' + escapeHtml(entry.sport || 'All sports');
+            document.getElementById('previewProfileLink').href = 'profile.html?user=' + encodeURIComponent(entry.username);
+            document.getElementById('previewChallengeLink').href = 'arena.html?challenge=' + encodeURIComponent(entry.username);
+            document.getElementById('previewStats').innerHTML = '<div class="loading" style="min-height:120px;">Loading capper snapshot...</div>';
+            document.getElementById('previewSplits').innerHTML = '<div class="loading" style="min-height:110px;">Loading split data...</div>';
+            document.getElementById('previewPicks').innerHTML = '<div class="loading" style="min-height:110px;">Loading recent picks...</div>';
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            trackHandicappers('handicapper_inspected', { username: username, source: 'board' });
+
+            try {
+                const profileData = await window.api.getUserProfile(entry.username);
+                const userId = profileData && profileData.user && profileData.user.id ? profileData.user.id : profileData && profileData.id ? profileData.id : null;
+                const results = await Promise.allSettled([
+                    window.api.getUserAdvancedStats(entry.username, {}),
+                    userId ? window.api.getPicks({ userId: userId, limit: 5, offset: 0 }) : Promise.resolve([])
+                ]);
+
+                if (activePreviewUsername !== username) return;
+
+                const advanced = results[0].status === 'fulfilled' ? (results[0].value && (results[0].value.stats || results[0].value)) : null;
+                const picksPayload = results[1].status === 'fulfilled' ? results[1].value : [];
+                const picks = Array.isArray(picksPayload) ? picksPayload : Array.isArray(picksPayload && picksPayload.picks) ? picksPayload.picks : [];
+
+                renderPreviewStats(entry, advanced);
+                renderPreviewSplits(advanced, entry);
+                renderPreviewPicks(picks.slice(0, 5));
+            } catch (error) {
+                if (activePreviewUsername !== username) return;
+                document.getElementById('previewStats').innerHTML = '<div class="empty" style="min-height:110px;">Snapshot unavailable.</div>';
+                document.getElementById('previewSplits').innerHTML = '<div class="empty" style="min-height:110px;">Split data unavailable.</div>';
+                document.getElementById('previewPicks').innerHTML = '<div class="empty" style="min-height:110px;">Recent picks unavailable.</div>';
+            }
+        }
+
+        function applyFilters() {
+            const search = String(document.getElementById('capperSearch').value || '').trim().toLowerCase();
+            const sport = document.getElementById('sportFilter').value;
+            const sort = document.getElementById('sortFilter').value;
+            const minSample = num(document.getElementById('sampleFilter').value);
+
+            filteredLeaderboard = fullLeaderboard.filter(function(entry) {
+                const matchesSearch = !search || entry.username.toLowerCase().indexOf(search) !== -1 || entry.displayName.toLowerCase().indexOf(search) !== -1;
+                const matchesSport = sport === 'all' || String(entry.sport || '').toLowerCase() === String(sport).toLowerCase();
+                return matchesSearch && matchesSport && entry.totalPicks >= minSample;
+            });
+
+            filteredLeaderboard.sort(function(a, b) {
+                if (sort === 'units') return b.units - a.units;
+                if (sort === 'winRate') return b.winRate - a.winRate;
+                if (sort === 'totalPicks') return b.totalPicks - a.totalPicks;
+                return b.roi - a.roi;
+            });
+
+            renderLeaderboard(filteredLeaderboard);
+            trackHandicappers('handicapper_filters_applied', {
+                search_query: search || '',
+                sport: sport,
+                sort_by: sort,
+                min_sample: minSample,
+                visible_count: filteredLeaderboard.length
+            });
+        }
+
+        function resetFilters() {
+            document.getElementById('capperSearch').value = '';
+            document.getElementById('sportFilter').value = 'all';
+            document.getElementById('sortFilter').value = 'roi';
+            document.getElementById('sampleFilter').value = '5';
+            applyFilters();
+        }
+
+        async function loadHandicappers() {
+            const state = document.getElementById('leaderboardState');
+            try {
+                const data = await window.api.getLeaderboard({ sortBy: 'roi', limit: 100 });
+                const rawEntries = Array.isArray(data)
+                    ? data
+                    : Array.isArray(data && data.leaderboard)
+                        ? data.leaderboard
+                        : Array.isArray(data && data.users)
+                            ? data.users
+                            : [];
+
+                fullLeaderboard = rawEntries.map(normalizeEntry).filter(function(entry) {
+                    return entry.username && entry.totalPicks >= 5;
+                });
+
+                setHeroStats(fullLeaderboard);
+                renderStreakRail(fullLeaderboard
+                    .filter(function(entry) { return entry.streak > 0; })
+                    .sort(function(a, b) { return b.streak - a.streak; })
+                    .slice(0, 4));
+                renderVolumeRail(fullLeaderboard
+                    .slice()
+                    .sort(function(a, b) { return b.totalPicks - a.totalPicks; })
+                    .slice(0, 4));
+                applyFilters();
+            } catch (error) {
+                state.className = 'empty';
+                state.textContent = 'Leaderboard data is temporarily unavailable.';
+                document.getElementById('streakRail').innerHTML = '<div class="empty">Streak data unavailable.</div>';
+                document.getElementById('volumeRail').innerHTML = '<div class="empty">Volume data unavailable.</div>';
+            }
+        }
+
+        async function loadChallengeRail() {
+            try {
+                const data = await window.api.request('/gaming/challenges?limit=5');
+                const challenges = Array.isArray(data && data.challenges) ? data.challenges : [];
+                const openChallenges = challenges.filter(function(entry) {
+                    const status = String(entry.status || '').toLowerCase();
+                    return ['pending', 'accepted', 'in_progress', 'open'].indexOf(status) !== -1;
+                }).slice(0, 4);
+                renderChallenges(openChallenges);
+            } catch (error) {
+                renderChallenges([]);
+            }
+        }
+
+        function bindFilters() {
+            ['capperSearch', 'sportFilter', 'sortFilter', 'sampleFilter'].forEach(function(id) {
+                document.getElementById(id).addEventListener(id === 'capperSearch' ? 'input' : 'change', applyFilters);
+            });
+        }
+
+        async function bootstrapHandicappersPage() {
+            bindFilters();
+            trackHandicappers('handicappers_page_viewed', {});
+            await Promise.all([
+                loadHandicappers(),
+                loadChallengeRail()
+            ]);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bootstrapHandicappersPage);
+        } else {
+            bootstrapHandicappersPage();
+        }
+    </script>
+</body>
+</html>
