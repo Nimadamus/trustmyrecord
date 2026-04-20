@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TrustMyRecord | Prove It In Public</title>
     <meta name="description" content="TrustMyRecord is a sports social platform for locked picks, public records, polls, trivia, and verified sports credibility.">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -517,6 +524,238 @@
             gap: 14px;
         }
 
+        .live-grid {
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            gap: 16px;
+        }
+
+        .live-panel,
+        .pulse-card {
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.03)),
+                var(--panel);
+            box-shadow: 0 20px 54px rgba(0,0,0,0.18);
+        }
+
+        .live-panel {
+            padding: 22px;
+        }
+
+        .live-panel-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .live-panel-head h3 {
+            font-size: 1.75rem;
+            line-height: 1;
+        }
+
+        .live-panel-head p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.45;
+            font-weight: 650;
+        }
+
+        .panel-link {
+            color: var(--teal);
+            font-size: 0.82rem;
+            font-weight: 850;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .panel-link:hover {
+            color: #b9fff1;
+        }
+
+        .panel-note {
+            margin-top: 14px;
+            color: var(--muted-2);
+            font-size: 0.78rem;
+            line-height: 1.45;
+            font-weight: 650;
+        }
+
+        .live-loading,
+        .live-empty {
+            display: grid;
+            place-items: center;
+            min-height: 220px;
+            border: 1px dashed rgba(148, 163, 184, 0.26);
+            border-radius: 18px;
+            color: var(--muted);
+            font-size: 0.92rem;
+            text-align: center;
+            background: rgba(255,255,255,0.035);
+        }
+
+        .ledger-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ledger-table thead th {
+            padding: 0 0 10px;
+            color: var(--muted-2);
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.09em;
+            text-align: left;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+        }
+
+        .ledger-table tbody td {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+            vertical-align: middle;
+            font-size: 0.87rem;
+        }
+
+        .ledger-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .rank-pill {
+            width: 30px;
+            height: 30px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.08);
+            color: var(--text);
+            font-size: 0.82rem;
+            font-weight: 900;
+        }
+
+        .rank-pill.top-1 { background: rgba(212,167,44,0.22); color: #ffe8a3; }
+        .rank-pill.top-2 { background: rgba(148,163,184,0.24); color: #e2e8f0; }
+        .rank-pill.top-3 { background: rgba(194,120,70,0.24); color: #ffd3b5; }
+
+        .capper-cell {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+        }
+
+        .capper-avatar {
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            color: #06120f;
+            background: linear-gradient(135deg, var(--teal), #b9fff1);
+            font-size: 0.84rem;
+            font-weight: 900;
+            flex: 0 0 auto;
+        }
+
+        .capper-meta {
+            min-width: 0;
+        }
+
+        .capper-meta b {
+            display: block;
+            font-size: 0.92rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .capper-meta span {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .stat-pos { color: var(--green); font-weight: 850; }
+        .stat-neg { color: var(--red); font-weight: 850; }
+
+        .pulse-stack {
+            display: grid;
+            gap: 14px;
+        }
+
+        .pulse-card {
+            padding: 18px;
+        }
+
+        .pulse-card h3 {
+            font-size: 1.28rem;
+            line-height: 1;
+        }
+
+        .pulse-list {
+            display: grid;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .pulse-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 16px;
+            padding: 12px;
+            background: rgba(255,255,255,0.045);
+        }
+
+        .pulse-row b {
+            display: block;
+            font-size: 0.9rem;
+        }
+
+        .pulse-row span {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 0.78rem;
+            line-height: 1.42;
+            font-weight: 700;
+        }
+
+        .pulse-tag {
+            border-radius: 999px;
+            padding: 7px 10px;
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            background: rgba(45,212,191,0.12);
+            color: #d9fffa;
+            border: 1px solid rgba(45,212,191,0.18);
+        }
+
+        .pulse-tag.gold {
+            background: rgba(212,167,44,0.14);
+            border-color: rgba(212,167,44,0.24);
+            color: #ffe8a3;
+        }
+
+        .pulse-tag.red {
+            background: rgba(239,68,68,0.14);
+            border-color: rgba(239,68,68,0.24);
+            color: #fecaca;
+        }
+
         .trust-card {
             padding: 18px;
         }
@@ -616,6 +855,7 @@
             .nav-actions { justify-content: flex-start; }
             .hero,
             .visual-grid,
+            .live-grid,
             .gameplay { grid-template-columns: 1fr; }
             .hero-media img { height: 440px; }
             .overview-grid,
@@ -734,19 +974,205 @@
                 padding: 17px;
             }
             .visual-grid,
+            .live-grid,
             .gameplay {
                 gap: 12px;
             }
             .visual-card,
             .game-panel,
+            .live-panel,
+            .pulse-card,
             .trust-card {
                 padding: 17px;
+            }
+            .live-panel-head {
+                display: block;
+                margin-bottom: 12px;
+            }
+            .panel-link {
+                display: inline-block;
+                margin-top: 10px;
+            }
+            .ledger-table {
+                min-width: 640px;
+            }
+            .live-table-wrap {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
             }
             .final-cta {
                 margin: 24px 0 40px;
                 border-radius: 24px;
                 padding: 24px 18px;
             }
+        }
+    </style>
+    <style>
+        /* Premium refinement pass */
+        body::before {
+            opacity: 0.12;
+        }
+
+        .shell {
+            width: min(1180px, calc(100% - 32px));
+        }
+
+        .nav {
+            min-height: 68px;
+            gap: 18px;
+            border-bottom-color: rgba(148, 163, 184, 0.14);
+        }
+
+        .brand {
+            font-size: clamp(1.62rem, 2.2vw, 2.18rem);
+            letter-spacing: -0.015em;
+        }
+
+        .brand-mark {
+            width: 34px;
+            height: 34px;
+            border-radius: 11px;
+            font-size: 0.72rem;
+        }
+
+        .nav-links {
+            gap: clamp(10px, 1.5vw, 18px);
+        }
+
+        .nav-links a {
+            font-size: clamp(0.92rem, 1.05vw, 1.08rem);
+            letter-spacing: 0.03em;
+        }
+
+        .nav-actions {
+            gap: 8px;
+        }
+
+        .btn {
+            min-height: 40px;
+            padding: 9px 15px;
+            font-size: 0.84rem;
+        }
+
+        .btn.primary {
+            box-shadow: 0 14px 30px rgba(45, 212, 191, 0.14);
+        }
+
+        .hero {
+            grid-template-columns: minmax(0, 0.98fr) minmax(360px, 0.8fr);
+            gap: clamp(24px, 3vw, 40px);
+            padding: 24px 0 18px;
+        }
+
+        .hero-copy {
+            border-radius: 26px;
+            padding: clamp(22px, 3vw, 34px);
+            box-shadow: 0 22px 56px rgba(0, 0, 0, 0.24);
+        }
+
+        .eyebrow {
+            padding: 8px 12px;
+            font-size: 0.76rem;
+            letter-spacing: 0.1em;
+        }
+
+        h1 {
+            max-width: 520px;
+            margin-top: 16px;
+            font-size: clamp(3rem, 5vw, 4.95rem);
+            line-height: 0.92;
+        }
+
+        .hero-copy p {
+            max-width: 520px;
+            margin-top: 14px;
+            font-size: clamp(0.98rem, 1vw, 1.06rem);
+            line-height: 1.52;
+        }
+
+        .hero-actions {
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .hero-points {
+            gap: 8px;
+            margin-top: 22px;
+        }
+
+        .hero-point {
+            border-radius: 14px;
+            padding: 12px;
+        }
+
+        .hero-media {
+            border-radius: 24px;
+            box-shadow: 0 22px 56px rgba(0, 0, 0, 0.22);
+        }
+
+        .hero-media img {
+            height: clamp(360px, 35vw, 470px);
+        }
+
+        .section {
+            margin-top: 72px;
+        }
+
+        .section-head {
+            margin-bottom: 18px;
+        }
+
+        .section-head h2,
+        .final-cta h2 {
+            font-size: clamp(2.15rem, 3.2vw, 3.15rem);
+            line-height: 0.96;
+        }
+
+        .section-head p,
+        .final-cta p {
+            max-width: 620px;
+            font-size: 0.98rem;
+            line-height: 1.56;
+        }
+
+        .feature-card,
+        .visual-card,
+        .trust-card,
+        .live-panel,
+        .pulse-card,
+        .game-panel {
+            border-radius: 22px;
+            box-shadow: 0 20px 46px rgba(0, 0, 0, 0.2);
+        }
+
+        .feature-card,
+        .visual-card,
+        .trust-card {
+            padding: 20px;
+        }
+
+        .live-panel,
+        .pulse-card,
+        .game-panel {
+            padding: 20px;
+        }
+
+        .feature-card h3,
+        .live-panel-head h3,
+        .pulse-card h3,
+        .game-panel h3 {
+            letter-spacing: -0.01em;
+        }
+
+        .ledger-table thead th {
+            font-size: 0.73rem;
+            letter-spacing: 0.08em;
+        }
+
+        .final-cta {
+            margin: 34px 0 48px;
+            border-radius: 24px;
+            padding: 28px 24px;
         }
     </style>
 </head>
@@ -758,16 +1184,17 @@
                 <span>TRUST<span>MY</span>RECORD</span>
             </a>
             <nav class="nav-links" aria-label="Primary navigation">
-                <a href="sportsbook.html">Make Picks</a>
-                <a href="challenges.html">Arena</a>
+                <a href="sportsbook.html#picks">Make Picks</a>
+                <a href="arena.html">Arena</a>
                 <a href="feed.html">Feed</a>
                 <a href="polls.html">Polls</a>
                 <a href="trivia.html">Trivia</a>
+                <a href="handicappers.html">Handicappers</a>
                 <a href="about.html">About</a>
             </nav>
             <div class="nav-actions">
-                <a class="btn" href="profile.html">Records</a>
-                <a class="btn primary" href="sportsbook.html">Start Free</a>
+                <a class="btn" href="handicappers.html">Find Cappers</a>
+                <a class="btn primary" href="sportsbook.html" id="homeNavPrimaryCta">Start Free</a>
             </div>
         </header>
 
@@ -776,10 +1203,10 @@
                 <div class="hero-copy">
                     <span class="eyebrow">Sports credibility, locked in public</span>
                     <h1>The end of fake records.</h1>
-                    <p><strong>TrustMyRecord turns sports talk into a public profile.</strong> Lock picks, build a verified record, debate in the feed, play polls and trivia, and let the receipts decide who actually knows sports.</p>
+                    <p id="homeHeroCopy"><strong>TrustMyRecord turns sports talk into a public profile.</strong> Lock picks, build a verified record, debate in the feed, play polls and trivia, and let the receipts decide who actually knows sports.</p>
                     <div class="hero-actions">
-                        <a class="btn primary" href="sportsbook.html">Make Your First Pick</a>
-                        <a class="btn" href="profile.html">View Records</a>
+                        <a class="btn primary" href="sportsbook.html" id="homeHeroPrimaryCta">Make Your First Pick</a>
+                        <a class="btn" href="profile.html" id="homeHeroSecondaryCta">View Records</a>
                     </div>
                     <div class="hero-points">
                         <div class="hero-point"><b>Locked picks</b><span>No edits after submission.</span></div>
@@ -872,6 +1299,36 @@
 
             <section class="section">
                 <div class="section-head">
+                    <h2>Live credibility, not homepage filler.</h2>
+                    <p>The front page should tell users who is actually winning, who is running hot, and where the next competition is happening.</p>
+                </div>
+                <div class="live-grid">
+                    <div class="live-panel">
+                        <div class="live-panel-head">
+                            <div>
+                                <h3>Top handicappers right now</h3>
+                                <p>Leaderboard ranked from the live record system, with ROI, net units, and sample size visible.</p>
+                            </div>
+                            <a class="panel-link" href="profile.html">View full record board</a>
+                        </div>
+                        <div id="homepageLeaderboard" class="live-loading">Loading verified leaderboard...</div>
+                        <div class="panel-note">Rankings are pulled from the same leaderboard API that powers capper profiles and record pages.</div>
+                    </div>
+                    <div class="pulse-stack">
+                        <div class="pulse-card">
+                            <h3>Hot streaks</h3>
+                            <div id="homepageStreaks" class="live-loading" style="min-height: 150px;">Loading streaks...</div>
+                        </div>
+                        <div class="pulse-card">
+                            <h3>Open challenges</h3>
+                            <div id="homepageChallenges" class="live-loading" style="min-height: 150px;">Loading arena action...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="section-head">
                     <h2>Trust rules built into the product.</h2>
                     <p>The anti-fraud promise is strongest when it is simple and visible everywhere.</p>
                 </div>
@@ -900,10 +1357,273 @@
 
             <section class="final-cta">
                 <h2>Think you know sports? Prove it.</h2>
-                <p>Start with one locked pick. Build the profile from there. The record is the product.</p>
-                <a class="btn primary" href="sportsbook.html">Enter TrustMyRecord</a>
+                <p id="homeFinalCopy">Start with one locked pick. Build the profile from there. The record is the product.</p>
+                <a class="btn primary" href="sportsbook.html" id="homeFinalCta">Enter TrustMyRecord</a>
             </section>
         </main>
     </div>
+    <script src="static/js/config.js?v=20260330"></script>
+    <script src="static/js/backend-api.js?v=20260415c"></script>
+    <script src="static/js/analytics.js?v=20260417"></script>
+    <script>
+        function homeTrack(eventName, params) {
+            if (typeof window.TMRAnalytics !== 'undefined' && typeof window.TMRAnalytics.track === 'function') {
+                window.TMRAnalytics.track(eventName, params || {});
+            }
+        }
+
+        function homeEscape(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function homeNumber(value) {
+            const parsed = Number(value);
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+
+        function getHomepageSessionUser() {
+            const keys = ['trustmyrecord_session', 'currentUser'];
+            for (const key of keys) {
+                try {
+                    const raw = localStorage.getItem(key);
+                    if (!raw) continue;
+                    const parsed = JSON.parse(raw);
+                    const user = parsed && (parsed.user || parsed);
+                    if (user && (user.username || user.email)) {
+                        return user;
+                    }
+                } catch (error) {
+                    // Ignore malformed session values.
+                }
+            }
+            return null;
+        }
+
+        function refreshHomepageCtas() {
+            const user = getHomepageSessionUser();
+            const navPrimary = document.getElementById('homeNavPrimaryCta');
+            const heroPrimary = document.getElementById('homeHeroPrimaryCta');
+            const heroSecondary = document.getElementById('homeHeroSecondaryCta');
+            const heroCopy = document.getElementById('homeHeroCopy');
+            const finalCopy = document.getElementById('homeFinalCopy');
+            const finalCta = document.getElementById('homeFinalCta');
+
+            if (!navPrimary || !heroPrimary || !heroSecondary || !heroCopy || !finalCopy || !finalCta) return;
+
+            if (!user) {
+                navPrimary.textContent = 'Start Free';
+                navPrimary.href = 'sportsbook.html';
+                heroPrimary.textContent = 'Make Your First Pick';
+                heroPrimary.href = 'sportsbook.html';
+                heroSecondary.textContent = 'View Records';
+                heroSecondary.href = 'profile.html';
+                heroCopy.innerHTML = '<strong>TrustMyRecord turns sports talk into a public profile.</strong> Lock picks, build a verified record, debate in the feed, play polls and trivia, and let the receipts decide who actually knows sports.';
+                finalCopy.textContent = 'Start with one locked pick. Build the profile from there. The record is the product.';
+                finalCta.textContent = 'Enter TrustMyRecord';
+                finalCta.href = 'sportsbook.html';
+                return;
+            }
+
+            const username = String(user.username || user.displayName || user.email || 'user');
+            const profileHref = 'profile.html?user=' + encodeURIComponent(username);
+
+            navPrimary.textContent = 'Open Record';
+            navPrimary.href = profileHref;
+            heroPrimary.textContent = 'Go To Sportsbook';
+            heroPrimary.href = 'sportsbook.html';
+            heroSecondary.textContent = 'Open My Record';
+            heroSecondary.href = profileHref;
+            heroCopy.innerHTML = '<strong>Your account is live.</strong> Keep locking picks, updating your public record, and using the feed, arena, polls, and trivia to build visible credibility.';
+            finalCopy.textContent = 'Pick up where you left off: post another pick, review your record, and keep the profile moving.';
+            finalCta.textContent = 'Open My Dashboard';
+            finalCta.href = profileHref;
+        }
+
+        function homeSigned(value, suffix) {
+            const number = homeNumber(value);
+            return (number >= 0 ? '+' : '') + number.toFixed(1) + (suffix || '');
+        }
+
+        function homePercent(value) {
+            const parsed = Number(value);
+            if (!Number.isFinite(parsed)) return 0;
+            return parsed <= 1 && parsed >= 0 ? parsed * 100 : parsed;
+        }
+
+        function homeTimeAgo(value) {
+            const time = new Date(value || Date.now()).getTime();
+            const diff = Math.max(0, Date.now() - time);
+            const minute = 60000;
+            const hour = minute * 60;
+            const day = hour * 24;
+            if (diff < hour) return Math.max(1, Math.round(diff / minute)) + 'm ago';
+            if (diff < day) return Math.round(diff / hour) + 'h ago';
+            return Math.round(diff / day) + 'd ago';
+        }
+
+        function renderHomepageLeaderboard(entries) {
+            const container = document.getElementById('homepageLeaderboard');
+            if (!container) return;
+
+            if (!entries.length) {
+                container.className = 'live-empty';
+                container.textContent = 'No verified leaderboard data available yet.';
+                return;
+            }
+
+            container.className = 'live-table-wrap';
+            container.innerHTML = '<table class="ledger-table"><thead><tr>' +
+                '<th style="width:60px;">Rank</th>' +
+                '<th>Capper</th>' +
+                '<th>Record</th>' +
+                '<th>ROI</th>' +
+                '<th>Units</th>' +
+                '<th>Picks</th>' +
+                '</tr></thead><tbody>' +
+                entries.map(function(entry, index) {
+                    const username = entry.username || entry.user_name || entry.handle || 'capper';
+                    const displayName = entry.display_name || entry.displayName || username;
+                    const wins = homeNumber(entry.wins);
+                    const losses = homeNumber(entry.losses);
+                    const pushes = homeNumber(entry.pushes);
+                    const roi = homePercent(entry.roi);
+                    const units = homeNumber(entry.net_units != null ? entry.net_units : entry.units);
+                    const totalPicks = homeNumber(entry.total_picks != null ? entry.total_picks : entry.totalPicks != null ? entry.totalPicks : wins + losses + pushes);
+                    const rankClass = index === 0 ? 'top-1' : index === 1 ? 'top-2' : index === 2 ? 'top-3' : '';
+                    return '<tr>' +
+                        '<td><span class="rank-pill ' + rankClass + '">#' + (index + 1) + '</span></td>' +
+                        '<td><a class="capper-cell" href="profile.html?user=' + encodeURIComponent(username) + '" onclick="homeTrack(\'homepage_capper_opened\', { username: \'' + homeEscape(username).replace(/'/g, "\\'") + '\', source: \'leaderboard\' });">' +
+                            '<span class="capper-avatar">' + homeEscape((displayName || '?').charAt(0).toUpperCase()) + '</span>' +
+                            '<span class="capper-meta"><b>' + homeEscape(displayName) + '</b><span>@' + homeEscape(username) + '</span></span>' +
+                        '</a></td>' +
+                        '<td>' + wins + '-' + losses + (pushes ? '-' + pushes : '') + '</td>' +
+                        '<td class="' + (roi >= 0 ? 'stat-pos' : 'stat-neg') + '">' + homeSigned(roi, '%') + '</td>' +
+                        '<td class="' + (units >= 0 ? 'stat-pos' : 'stat-neg') + '">' + homeSigned(units, 'u') + '</td>' +
+                        '<td>' + totalPicks + '</td>' +
+                        '</tr>';
+                }).join('') +
+                '</tbody></table>';
+        }
+
+        function renderHomepageStreaks(entries) {
+            const container = document.getElementById('homepageStreaks');
+            if (!container) return;
+
+            if (!entries.length) {
+                container.className = 'live-empty';
+                container.textContent = 'No streak data available yet.';
+                return;
+            }
+
+            container.className = 'pulse-list';
+            container.innerHTML = entries.map(function(entry, index) {
+                const username = entry.username || entry.user_name || entry.handle || 'capper';
+                const displayName = entry.display_name || entry.displayName || username;
+                const streak = homeNumber(entry.current_streak || entry.currentStreak || 0);
+                const units = homeNumber(entry.net_units != null ? entry.net_units : entry.units);
+                const winRate = homePercent(entry.win_percentage != null ? entry.win_percentage : entry.winRate);
+                const streakLabel = streak > 0 ? 'W' + streak : streak < 0 ? 'L' + Math.abs(streak) : 'Even';
+                const tagClass = streak > 0 ? '' : streak < 0 ? 'red' : 'gold';
+                return '<div class="pulse-row">' +
+                    '<div><b>' + homeEscape(displayName) + '</b><span>@' + homeEscape(username) + ' • ' + winRate.toFixed(1) + '% win rate • ' + homeSigned(units, 'u') + '</span></div>' +
+                    '<span class="pulse-tag ' + tagClass + '">' + streakLabel + '</span>' +
+                '</div>';
+            }).join('');
+        }
+
+        function renderHomepageChallenges(entries) {
+            const container = document.getElementById('homepageChallenges');
+            if (!container) return;
+
+            if (!entries.length) {
+                container.className = 'live-empty';
+                container.textContent = 'No open arena challenges yet.';
+                return;
+            }
+
+            container.className = 'pulse-list';
+            container.innerHTML = entries.map(function(entry) {
+                const challenger = entry.challenger_display || entry.challenger_username || 'Challenger';
+                const challenged = entry.challenged_display || entry.challenged_username || 'Open';
+                const title = entry.title || entry.game_title || entry.game_slug || 'Open challenge';
+                const status = String(entry.status || 'pending').replace(/_/g, ' ');
+                const labelClass = status === 'in progress' ? 'gold' : '';
+                return '<a class="pulse-row" href="arena.html" onclick="homeTrack(\'homepage_challenge_opened\', { challenge_id: \'' + homeEscape(String(entry.id || 'unknown')).replace(/'/g, "\\'") + '\', status: \'' + homeEscape(status).replace(/'/g, "\\'") + '\' });">' +
+                    '<div><b>' + homeEscape(title) + '</b><span>' + homeEscape(challenger) + ' vs ' + homeEscape(challenged) + ' • ' + homeEscape(entry.game_title || entry.game_slug || 'Arena') + ' • ' + homeTimeAgo(entry.created_at || entry.createdAt) + '</span></div>' +
+                    '<span class="pulse-tag ' + labelClass + '">' + homeEscape(status) + '</span>' +
+                '</a>';
+            }).join('');
+        }
+
+        async function loadHomepageSignals() {
+            if (!window.api || typeof window.api.getLeaderboard !== 'function') {
+                renderHomepageLeaderboard([]);
+                renderHomepageStreaks([]);
+                renderHomepageChallenges([]);
+                return;
+            }
+
+            try {
+                const leaderboardData = await window.api.getLeaderboard({ sortBy: 'roi', limit: 8 });
+                const leaderboard = Array.isArray(leaderboardData)
+                    ? leaderboardData
+                    : Array.isArray(leaderboardData && leaderboardData.leaderboard)
+                        ? leaderboardData.leaderboard
+                        : Array.isArray(leaderboardData && leaderboardData.users)
+                            ? leaderboardData.users
+                            : [];
+
+                const qualified = leaderboard.filter(function(entry) {
+                    const total = homeNumber(entry.total_picks != null ? entry.total_picks : entry.totalPicks != null ? entry.totalPicks : homeNumber(entry.wins) + homeNumber(entry.losses) + homeNumber(entry.pushes));
+                    return total >= 5;
+                });
+
+                renderHomepageLeaderboard(qualified.slice(0, 5));
+                const streakLeaders = qualified
+                    .slice()
+                    .sort(function(a, b) {
+                        return homeNumber(b.current_streak || b.currentStreak || 0) - homeNumber(a.current_streak || a.currentStreak || 0);
+                    })
+                    .filter(function(entry) {
+                        return homeNumber(entry.current_streak || entry.currentStreak || 0) > 0;
+                    })
+                    .slice(0, 3);
+                renderHomepageStreaks(streakLeaders);
+            } catch (error) {
+                renderHomepageLeaderboard([]);
+                renderHomepageStreaks([]);
+            }
+
+            try {
+                const challengeData = await window.api.request('/gaming/challenges?limit=6');
+                const challenges = Array.isArray(challengeData && challengeData.challenges) ? challengeData.challenges : [];
+                const visibleChallenges = challenges.filter(function(entry) {
+                    const status = String(entry.status || '').toLowerCase();
+                    return ['pending', 'accepted', 'in_progress', 'open'].indexOf(status) !== -1;
+                }).slice(0, 3);
+                renderHomepageChallenges(visibleChallenges);
+            } catch (error) {
+                renderHomepageChallenges([]);
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                refreshHomepageCtas();
+                loadHomepageSignals();
+            });
+        } else {
+            refreshHomepageCtas();
+            loadHomepageSignals();
+        }
+
+        window.addEventListener('storage', refreshHomepageCtas);
+        window.addEventListener('tmr-auth-changed', refreshHomepageCtas);
+    </script>
 </body>
 </html>
