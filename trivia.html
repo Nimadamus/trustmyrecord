@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260420d">
-    <script defer src="static/js/tmr-sitewide.js?v=20260420d"></script>
+    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260421b">
+    <script defer src="static/js/tmr-sitewide.js?v=20260421b"></script>
     <style>
         :root {
             --neon-cyan: #00ffff;
@@ -970,8 +970,8 @@ function getCurrentSessionUser() {
         }
     } catch(e) {}
     try {
-        if (window.api && window.api._cachedUser) {
-            var apiUser = window.api._cachedUser;
+        if (api && typeof api.getCurrentUser === 'function') {
+            var apiUser = api.getCurrentUser();
             if (apiUser && (apiUser.username || apiUser.email || apiUser.id)) return apiUser;
         }
     } catch(e) {}

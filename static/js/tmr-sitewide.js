@@ -6,12 +6,9 @@
         ["handicappers.html", "Handicappers"],
         ["arena.html", "Arena"],
         ["feed.html", "Feed"],
-        ["hangout.html", "Hangout"],
+        ["polls.html", "Polls"],
         ["trivia.html", "Trivia"],
-        ["profile.html", "Records"],
         ["forum.html", "Forum"],
-        ["friends.html", "Friends"],
-        ["messages.html", "Messages"],
         ["about.html", "About"]
     ];
 
@@ -21,8 +18,7 @@
         "arena.html": ["Arena", "Head-to-head contests, rival callouts, public challenges, and competition loops."],
         "challenges.html": ["Arena", "Legacy arena route. Public competition and challenge traffic belongs on the Arena page."],
         "feed.html": ["Social Feed", "Posts, reactions, sports debate, locked picks, and activity from the community."],
-        "hangout.html": ["Hangout", "Prediction polls, opinion polls, fan debates, and community conversation loops."],
-        "polls.html": ["Hangout", "Legacy polls route. Prediction polls, opinion polls, and community debates now live in Hangout."],
+        "polls.html": ["Polls", "Prediction polls and scored fan forecasting, separate from pick submission."],
         "trivia.html": ["Trivia", "Sports knowledge games, custom questions, and scored fan status."],
         "profile.html": ["Verified Records", "Public profile history, pick ledger, advanced splits, and credibility markers."],
         "forum.html": ["Forum", "Long-form sports discussion and community threads."],
@@ -143,7 +139,7 @@
     document.body.classList.add("tmr-site-shell");
     document.body.setAttribute("data-tmr-route", currentFile.replace(/\.html$/, ""));
 
-    document.querySelectorAll("header, body > nav.nav, body > .messages-top-strip, body > .sportsbook-top-strip, body > .notifications-top-strip, body > .profile-top-strip, .sportsbook-top-strip, .notifications-top-strip, .profile-top-strip").forEach((el) => {
+    document.querySelectorAll("header, body > nav.nav, body > .messages-top-strip, body > .sportsbook-top-strip, body > .notifications-top-strip, body > .profile-top-strip, body > .friends-top-strip, .sportsbook-top-strip, .notifications-top-strip, .profile-top-strip, .friends-top-strip").forEach((el) => {
         if (!el.classList.contains("tmr-global-nav")) {
             el.setAttribute("data-tmr-legacy-nav", "hidden");
             el.style.display = "none";
@@ -175,9 +171,7 @@
             <div class="tmr-global-nav__links">
                 ${routes.slice(1).filter(([href]) => href !== "profile.html").map(([href, label]) => {
                     const hrefFile = href.split("#")[0].toLowerCase();
-                    const active = currentFile === hrefFile
-                        || ((currentFile === "arena.html" || currentFile === "challenges.html") && hrefFile === "arena.html")
-                        || ((currentFile === "polls.html" || currentFile === "hangout.html") && hrefFile === "hangout.html");
+                    const active = currentFile === hrefFile || ((currentFile === "arena.html" || currentFile === "challenges.html") && hrefFile === "arena.html");
                     return `<a href="${href}"${active ? ' aria-current="page"' : ""}>${label}</a>`;
                 }).join("")}
             </div>
@@ -268,7 +262,7 @@
                     <div class="tmr-global-footer__links">
                         <a href="feed.html">Feed</a>
                         <a href="forum.html">Forum</a>
-                        <a href="hangout.html">Hangout</a>
+                        <a href="polls.html">Polls</a>
                         <a href="trivia.html">Trivia</a>
                     </div>
                 </div>

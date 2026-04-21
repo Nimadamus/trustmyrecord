@@ -13,10 +13,10 @@
       gtag('config', 'G-V5MCVXS2HE');
     </script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260421b">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260421b">
     <style>
         :root {
             --bg: #0b1220;
@@ -169,9 +169,9 @@
         .hero {
             display: grid;
             grid-template-columns: minmax(0, 1.06fr) minmax(460px, 0.94fr);
-            gap: clamp(24px, 3.8vw, 48px);
+            gap: clamp(48px, 6vw, 96px);
             align-items: center;
-            padding: 30px 0 34px;
+            padding: 42px 0 34px;
         }
 
         .hero-copy {
@@ -516,18 +516,19 @@
             margin-top: 8px;
         }
 
-        .bar {
-            height: 11px;
+        .record-chip {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 999px;
-            background: rgba(255,255,255,0.08);
-            overflow: hidden;
-        }
-
-        .bar span {
-            display: block;
-            height: 100%;
-            border-radius: inherit;
-            background: linear-gradient(90deg, var(--teal), rgba(45,212,191,0.20));
+            padding: 8px 11px;
+            color: #dce8f5;
+            background: rgba(255,255,255,0.045);
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
         }
 
         .feed-mock {
@@ -1197,6 +1198,19 @@
             .proof-band { grid-template-columns: repeat(2, 1fr); }
         }
 
+        body.tmr-site-shell[data-tmr-route="index"] .shell {
+            width: min(1260px, calc(100% - 36px));
+        }
+
+        body.tmr-site-shell[data-tmr-route="index"] .hero {
+            margin-top: 20px;
+        }
+
+        body.tmr-site-shell[data-tmr-route="index"] .hero-media {
+            justify-self: end;
+            width: min(100%, 560px);
+        }
+
         @media (max-width: 620px) {
             .shell { width: min(100% - 24px, 1220px); }
             .nav {
@@ -1526,7 +1540,7 @@
                 <a href="sportsbook.html#picks">Make Picks</a>
                 <a href="arena.html">Arena</a>
                 <a href="feed.html">Feed</a>
-                    <a href="hangout.html">Hangout</a>
+                <a href="polls.html">Polls</a>
                 <a href="trivia.html">Trivia</a>
                 <a href="handicappers.html">Handicappers</a>
                 <a href="about.html">About</a>
@@ -1599,7 +1613,7 @@
                     <article class="feature-card">
                         <div class="icon">04</div>
                         <h3>Play games</h3>
-                        <p>Hangout polls, trivia, and arena rivalries keep the platform useful even when someone is not submitting a pick.</p>
+                        <p>Polls, trivia, and arena rivalries keep the platform useful even when someone is not submitting a pick.</p>
                     </article>
                 </div>
             </section>
@@ -1618,9 +1632,9 @@
                         </div>
                     </div>
                     <div class="record-bars" aria-label="Record visualization">
-                        <div class="bar"><span style="width: 86%;"></span></div>
-                        <div class="bar"><span style="width: 62%;"></span></div>
-                        <div class="bar"><span style="width: 74%;"></span></div>
+                        <div class="record-chip">Locked picks only</div>
+                        <div class="record-chip">History stays public</div>
+                        <div class="record-chip">Stats come from graded results</div>
                     </div>
                 </div>
 
@@ -1636,9 +1650,9 @@
                         <div class="mini-pills"><span>Arena</span><span>Callout</span><span>Result tracked</span></div>
                     </div>
                     <div class="feed-card">
-                        <b>Hangout polls keep fans active</b>
+                        <b>Polls and trivia keep fans active</b>
                         <span>Not every competition needs to be a betting market.</span>
-                        <div class="mini-pills"><span>Hangout</span><span>Trivia</span><span>Status</span></div>
+                        <div class="mini-pills"><span>Poll</span><span>Trivia</span><span>Status</span></div>
                     </div>
                 </div>
             </section>
@@ -1694,8 +1708,8 @@
 
             <section class="section gameplay">
                 <div class="game-panel">
-                    <h3>The Hangout</h3>
-                    <p>Visitors should understand that TrustMyRecord is more than a bet slip. Hangout prediction polls and opinion polls keep the platform active between picks and give casual fans a reason to return.</p>
+                    <h3>Polls and predictions</h3>
+                    <p>Visitors should understand that TrustMyRecord is more than a bet slip. Polls and predictions keep the platform active between picks and give casual fans a reason to return.</p>
                     <div class="sample-row"><span>Game-day debates can become structured prediction prompts.</span><strong>Vote</strong></div>
                     <div class="sample-row"><span>Results feed back into visible activity instead of disappearing.</span><strong>Tracked</strong></div>
                 </div>
@@ -1717,7 +1731,7 @@
     <script src="static/js/config.js?v=20260330"></script>
     <script src="static/js/backend-api.js?v=20260420c"></script>
     <script src="static/js/auth-persistent.js?v=20260421a"></script>
-    <script src="static/js/tmr-sitewide.js?v=20260421b"></script>
+    <script defer src="static/js/tmr-sitewide.js?v=20260421b"></script>
     <script src="static/js/analytics.js?v=20260417"></script>
     <script>
         function homeTrack(eventName, params) {

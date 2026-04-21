@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Forum - TrustMyRecord</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260420e">
-    <script defer src="static/js/tmr-sitewide.js?v=20260420e"></script>
+    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260421b">
+    <script defer src="static/js/tmr-sitewide.js?v=20260421b"></script>
     <style>
         :root {
             --forum-blue: #4f6b9a;
@@ -1058,8 +1058,8 @@
         <div class="stats-bar">
             <div><strong id="statThreads">0</strong> <span class="stats-label">threads</span></div>
             <div><strong id="statPosts">0</strong> <span class="stats-label">posts</span></div>
-            <div><strong id="statUsers">0</strong> <span class="stats-label">active posters</span></div>
-            <div><strong id="statOnline">0</strong> <span class="stats-label">online now</span></div>
+            <div><strong id="statUsers">0</strong> <span class="stats-label">forums</span></div>
+            <div><strong id="statOnline">0</strong> <span class="stats-label">active forums</span></div>
         </div>
 
         <div class="search-row">
@@ -1311,14 +1311,19 @@ function showError(el, message) {
 function updateStats() {
     var threadCount = 0;
     var postCount = 0;
+    var categoryCount = categories.length;
+    var activeCategoryCount = 0;
     categories.forEach(function(cat) {
         threadCount += parseInt(cat.thread_count || 0);
         postCount += parseInt(cat.post_count || 0);
+        if (parseInt(cat.thread_count || 0) > 0 || parseInt(cat.post_count || 0) > 0 || cat.latest_thread) {
+            activeCategoryCount += 1;
+        }
     });
     document.getElementById('statThreads').textContent = threadCount;
     document.getElementById('statPosts').textContent = postCount;
-    document.getElementById('statUsers').textContent = Math.min(threadCount + 1, 999);
-    document.getElementById('statOnline').textContent = Math.min(Math.max(1, Math.floor(threadCount / 3)), 99);
+    document.getElementById('statUsers').textContent = categoryCount;
+    document.getElementById('statOnline').textContent = activeCategoryCount;
 }
 
 function groupCategoriesForDisplay() {
