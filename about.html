@@ -13,8 +13,8 @@
       gtag('config', 'G-V5MCVXS2HE');
     </script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260420b">
-    <script defer src="static/js/tmr-sitewide.js?v=20260420b"></script>
+    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260420e">
+    <script defer src="static/js/tmr-sitewide.js?v=20260420e"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -70,11 +70,23 @@
         }
 
         /* HERO */
-        .about-hero { background: linear-gradient(135deg, rgba(0,174,255,0.1), rgba(255,215,0,0.06)); border-bottom: 1px solid var(--border); padding: 64px 24px; text-align: center; }
+        .about-hero { background: linear-gradient(135deg, rgba(0,174,255,0.1), rgba(255,215,0,0.06)); border-bottom: 1px solid var(--border); padding: 64px 24px; }
         .about-hero h1 { font-family: var(--font-display); font-size: 36px; font-weight: 900; margin-bottom: 16px; line-height: 1.3; }
         .about-hero h1 .gold { color: var(--accent-gold); }
         .about-hero h1 .blue { color: var(--primary); }
         .about-hero .tagline { color: var(--text-dim); font-size: 18px; max-width: 640px; margin: 0 auto; line-height: 1.6; }
+        .hero-shell { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr); gap: 18px; align-items: stretch; }
+        .hero-copy-card,
+        .hero-proof-card { border: 1px solid rgba(148, 163, 184, 0.16); border-radius: 22px; padding: 28px; background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015)), rgba(11,20,34,0.84); box-shadow: 0 18px 42px rgba(0,0,0,0.22); }
+        .hero-kicker { display: inline-flex; align-items: center; border-radius: 999px; border: 1px solid rgba(45,212,191,0.22); background: rgba(45,212,191,0.1); color: #d7fffa; padding: 8px 12px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 16px; }
+        .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+        .hero-proof-card h3 { font-family: var(--font-display); font-size: 18px; letter-spacing: -0.02em; color: var(--text); margin-bottom: 14px; }
+        .hero-proof-list { display: grid; gap: 12px; }
+        .hero-proof-item { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; padding-top: 12px; border-top: 1px solid rgba(148, 163, 184, 0.12); }
+        .hero-proof-item:first-child { border-top: none; padding-top: 0; }
+        .hero-proof-index { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 12px; background: rgba(45,212,191,0.12); color: #d7fffa; font-size: 0.8rem; font-weight: 900; }
+        .hero-proof-copy strong { display: block; color: var(--text); font-size: 0.94rem; }
+        .hero-proof-copy span { display: block; margin-top: 5px; color: var(--text-dim); font-size: 0.84rem; line-height: 1.5; }
 
         /* CONTENT */
         .content-wrapper { max-width: 900px; margin: 0 auto; padding: 48px 24px 80px; }
@@ -237,6 +249,106 @@
             background: linear-gradient(135deg, #2dd4bf, #8df5ea);
             color: #06120f;
         }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.05);
+            color: #eef4fb;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+        }
+
+        .story-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(260px, 0.95fr);
+            gap: 16px;
+            margin-top: 14px;
+        }
+
+        .story-card {
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 18px;
+            padding: 18px;
+            background: rgba(255,255,255,0.03);
+        }
+
+        .story-card h3 {
+            font-family: 'Barlow', sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: -0.02em;
+            color: #eef4fb;
+            margin-bottom: 10px;
+        }
+
+        .story-card p {
+            margin-bottom: 0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .principles-list {
+            display: grid;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .principle-row {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 12px;
+            align-items: start;
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            border-radius: 16px;
+            padding: 14px;
+            background: rgba(255,255,255,0.028);
+        }
+
+        .principle-row b {
+            display: block;
+            font-size: 0.94rem;
+            color: #eef4fb;
+        }
+
+        .principle-row span {
+            display: block;
+            margin-top: 5px;
+            color: #97a8bc;
+            font-size: 0.84rem;
+            line-height: 1.52;
+        }
+
+        .principle-icon {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            background: rgba(45,212,191,0.12);
+            color: #d7fffa;
+            font-weight: 900;
+            font-size: 0.82rem;
+        }
+
+        @media (max-width: 900px) {
+            .hero-shell,
+            .story-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-right {
+                margin-left: 0;
+                width: 100%;
+                justify-content: flex-start;
+                flex-wrap: wrap;
+                padding-top: 10px;
+            }
+
+            .nav {
+                flex-wrap: wrap;
+                height: auto;
+                padding: 14px 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -261,13 +373,40 @@
             <img class="nav-avatar" id="navAvatar" src="" alt="">
             <span class="nav-username" id="navUsername"></span>
         </div>
-        <a href="profile.html" class="btn btn-primary btn-sm" id="navLoginBtn">Records</a>
+        <a href="sportsbook.html#login" class="btn btn-secondary btn-sm" id="navLoginBtn">Log In</a>
+        <a href="sportsbook.html#register" class="btn btn-primary btn-sm" id="navRegisterBtn">Register</a>
     </div>
 </nav>
 
 <div class="about-hero">
-    <h1>THE FRAUD <span class="gold">ENDS</span><br>IN THE <span class="blue">ARENA</span></h1>
-    <p class="tagline">TrustMyRecord is the sports social arena where fans compete in public and the record can never be rewritten.</p>
+    <div class="hero-shell">
+        <div class="hero-copy-card">
+            <span class="hero-kicker">Why TrustMyRecord Exists</span>
+            <h1>Stop trusting sports <span class="gold">claims</span> without <span class="blue">receipts</span>.</h1>
+            <p class="tagline">TrustMyRecord is a public record platform for sports picks, reputation, and accountability. The point is simple: if someone wants credit for being sharp, the history should be visible.</p>
+            <div class="hero-actions">
+                <a href="sportsbook.html#register" class="btn btn-primary">Create Your Account</a>
+                <a href="sportsbook.html#picks" class="btn btn-secondary">See The Sportsbook</a>
+            </div>
+        </div>
+        <div class="hero-proof-card">
+            <h3>What makes this different</h3>
+            <div class="hero-proof-list">
+                <div class="hero-proof-item">
+                    <span class="hero-proof-index">01</span>
+                    <div class="hero-proof-copy"><strong>Locked before the outcome</strong><span>Picks only matter if they are submitted before the game is decided.</span></div>
+                </div>
+                <div class="hero-proof-item">
+                    <span class="hero-proof-index">02</span>
+                    <div class="hero-proof-copy"><strong>Permanent public history</strong><span>Wins, losses, units, and profile context should stay attached to the same account.</span></div>
+                </div>
+                <div class="hero-proof-item">
+                    <span class="hero-proof-index">03</span>
+                    <div class="hero-proof-copy"><strong>Community built around proof</strong><span>Feed posts, reactions, rivalry, and status should come after the receipts, not instead of them.</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="content-wrapper">
@@ -276,13 +415,37 @@
         <h2>The Problem</h2>
         <p>Sports internet is full of people talking like legends with nothing behind it. Screenshots get cropped. Losses disappear. Bios get rewritten. Hot takes become victory laps when they hit and silent deletes when they miss.</p>
         <p>The handicapping world is the worst version of that problem. Too many people sell confidence instead of proof. Too many records exist only in captions. TrustMyRecord exists because sports fans should not need to guess who is real.</p>
+        <div class="story-grid">
+            <div class="story-card">
+                <h3>The old model</h3>
+                <p>Most sports credibility online is still built on screenshots, selective memory, and presentation. That works for marketing, but it does not work for trust.</p>
+            </div>
+            <div class="story-card">
+                <h3>The better model</h3>
+                <p>A locked submission, a public profile, and a result history tell a much clearer story than any bio ever can.</p>
+            </div>
+        </div>
     </div>
 
     <div class="about-section">
         <h2>The Founding Rule</h2>
         <p>TrustMyRecord is built on one rule: <strong>once a pick is submitted, it is locked, timestamped, and permanently attached to the account.</strong></p>
         <p>No edits. No deletions. No record resets. Wins count. Losses count. Pushes count. The profile becomes a public ledger instead of a marketing page.</p>
-        <p>That same philosophy powers the rest of the site: predictions, polls, trivia, challenges, creator sales, and rivalry talk should all connect back to public accountability.</p>
+        <p>That same philosophy powers the rest of the site: feed activity, polls, trivia, challenges, and community reputation should all connect back to public accountability.</p>
+        <div class="principles-list">
+            <div class="principle-row">
+                <span class="principle-icon">L</span>
+                <div><b>Locked picks</b><span>Submissions should create a receipt, not an editable talking point.</span></div>
+            </div>
+            <div class="principle-row">
+                <span class="principle-icon">P</span>
+                <div><b>Public profiles</b><span>Anyone viewing a capper should be able to inspect the history behind the claim.</span></div>
+            </div>
+            <div class="principle-row">
+                <span class="principle-icon">R</span>
+                <div><b>Reputation earned over time</b><span>Status should come from consistency and visible performance, not from volume or hype.</span></div>
+            </div>
+        </div>
     </div>
 
     <div class="creed-strip">
@@ -322,9 +485,9 @@
                 <p>Let casual fans compete through predictions, polls, quizzes, and creator-made sports knowledge games.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-gamepad" style="color: var(--accent-purple);"></i></div>
-                <h3>Creator Marketplace</h3>
-                <p>Sell picks or premium access only after people can inspect your locked history and trust markers.</p>
+                <div class="feature-icon"><i class="fas fa-id-badge" style="color: var(--accent-purple);"></i></div>
+                <h3>Public Credibility Layer</h3>
+                <p>Profiles, streaks, splits, reactions, and visible history turn sports opinions into something people can actually evaluate.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon"><i class="fas fa-chart-line" style="color: var(--primary);"></i></div>
@@ -336,14 +499,14 @@
 
     <div class="about-section">
         <h2>The Vision</h2>
-        <p>TrustMyRecord is not just a leaderboard and it is not just a handicapping tracker. It is a sports social network where public records, fan-created content, prediction games, challenges, paid creators, tokens, and rivalry all live in one ecosystem.</p>
-        <p>The point is simple: if you know sports, prove it. If you want to talk trash, bring receipts. If you want to sell picks, earn trust first. Welcome to the arena, where your numbers do the talking.</p>
+        <p>TrustMyRecord is not just a leaderboard and it is not just a pick tracker. It is meant to be the place where sports reputation is tied to visible history instead of selective storytelling.</p>
+        <p>The point is simple: if you know sports, prove it. If you want to talk trash, bring receipts. If you want people to trust your opinion, give them a profile worth checking.</p>
     </div>
 
     <div class="cta-section">
-        <h2>Ready to prove yourself?</h2>
-        <p>Create your free account, make a locked pick, challenge another fan, and start building a record nobody can rewrite.</p>
-        <a href="sportsbook.html" class="btn btn-gold btn-lg">Enter The Arena</a>
+        <h2>Ready to build a record people can verify?</h2>
+        <p>Create your account, make a locked pick, and start building a public sports profile that does not depend on screenshots or memory.</p>
+        <a href="sportsbook.html#register" class="btn btn-gold btn-lg">Create Your Account</a>
     </div>
 
 </div>
@@ -353,15 +516,15 @@
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.08);">
             <div>
                 <div style="font-size: 1.3rem; font-weight: 800; color: #00ffff; margin-bottom: 10px; letter-spacing: 0.5px;">TrustMyRecord</div>
-                <p style="color: #808090; font-size: 0.85rem; line-height: 1.6; margin: 0 0 16px 0;">The future of transparent sports betting.</p>
+                <p style="color: #808090; font-size: 0.85rem; line-height: 1.6; margin: 0 0 16px 0;">Transparent sports records, public receipts, and a better way to judge who is actually sharp.</p>
                 <p style="color: #606070; font-size: 0.8rem; margin: 0;">&copy; 2026 TrustMyRecord.com</p>
             </div>
             <div>
                 <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Platform</div>
                 <div style="display: flex; flex-direction: column; gap: 10px;">
                     <a href="sportsbook.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
-                    <a href="index.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
-                    <a href="arena.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Gaming Arena</a>
+                    <a href="index.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Homepage</a>
+                    <a href="arena.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Arena</a>
                     <a href="forum.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
                 </div>
             </div>
