@@ -166,6 +166,12 @@
     async function getBackendCurrentUser() {
         if (!(await waitForApi())) return null;
         try {
+            if (typeof api.loadTokens === 'function') {
+                try { api.loadTokens(); } catch (err) {}
+            }
+            if (typeof api.isLoggedIn === 'function' && !api.isLoggedIn()) {
+                return null;
+            }
             const result = await api.getCurrentUser();
             return result?.user || result || null;
         } catch (err) {
