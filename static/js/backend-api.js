@@ -724,15 +724,31 @@ class TrustMyRecordAPI {
     // ============================================================
 
     async getGamingTitles() {
-        return this.request('/gaming/titles');
+        try {
+            return await this.request('/gaming/titles');
+        } catch (error) {
+            return { games: [] };
+        }
     }
 
     async getGamerProfile(username) {
-        const data = await this.request(`/gaming/profile/${username}`);
-        if (data && data.gamer_profile && !data.profile) {
-            data.profile = data.gamer_profile;
+        try {
+            const data = await this.request(`/gaming/profile/${username}`);
+            if (data && data.gamer_profile && !data.profile) {
+                data.profile = data.gamer_profile;
+            }
+            return data;
+        } catch (error) {
+            return {
+                user: null,
+                profile: null,
+                gamer_profile: null,
+                favorite_teams: [],
+                gaming_stats: [],
+                badges: [],
+                recent_matches: []
+            };
         }
-        return data;
     }
 
     async updateGamerProfile(data) {
@@ -740,7 +756,11 @@ class TrustMyRecordAPI {
     }
 
     async getFavoriteTeams(username) {
-        return this.request(`/gaming/teams/${username}`);
+        try {
+            return await this.request(`/gaming/teams/${username}`);
+        } catch (error) {
+            return { favorite_teams: [] };
+        }
     }
 
     async updateFavoriteTeams(teams) {
@@ -754,7 +774,11 @@ class TrustMyRecordAPI {
         if (options.user) params.set('user', options.user);
         params.set('page', options.page || 1);
         params.set('limit', options.limit || 20);
-        return this.request(`/gaming/challenges?${params}`);
+        try {
+            return await this.request(`/gaming/challenges?${params}`);
+        } catch (error) {
+            return { challenges: [], total: 0, page: Number(options.page || 1), limit: Number(options.limit || 20) };
+        }
     }
 
     async createGamingChallenge(data) {
@@ -766,7 +790,11 @@ class TrustMyRecordAPI {
     }
 
     async getGamingChallenge(id) {
-        return this.request(`/gaming/challenges/${id}`);
+        try {
+            return await this.request(`/gaming/challenges/${id}`);
+        } catch (error) {
+            return { challenge: null, matches: [] };
+        }
     }
 
     async cancelGamingChallenge(id) {
@@ -783,11 +811,19 @@ class TrustMyRecordAPI {
         if (options.user) params.set('user', options.user);
         params.set('page', options.page || 1);
         params.set('limit', options.limit || 20);
-        return this.request(`/gaming/matches?${params}`);
+        try {
+            return await this.request(`/gaming/matches?${params}`);
+        } catch (error) {
+            return { matches: [], page: Number(options.page || 1), limit: Number(options.limit || 20) };
+        }
     }
 
     async getGamingMatch(id) {
-        return this.request(`/gaming/matches/${id}`);
+        try {
+            return await this.request(`/gaming/matches/${id}`);
+        } catch (error) {
+            return { match: null, box_score: null };
+        }
     }
 
     async confirmGamingMatch(id) {
@@ -803,22 +839,38 @@ class TrustMyRecordAPI {
         if (options.game) params.set('game', options.game);
         params.set('sort', options.sort || 'wins');
         params.set('limit', options.limit || 25);
-        return this.request(`/gaming/leaderboard?${params}`);
+        try {
+            return await this.request(`/gaming/leaderboard?${params}`);
+        } catch (error) {
+            return { leaderboard: [] };
+        }
     }
 
     async getGamingH2H(user1, user2) {
-        return this.request(`/gaming/h2h/${user1}/${user2}`);
+        try {
+            return await this.request(`/gaming/h2h/${user1}/${user2}`);
+        } catch (error) {
+            return { user1: null, user2: null, h2h_records: [], recent_matches: [] };
+        }
     }
 
     async getGamingStats(username) {
-        return this.request(`/gaming/stats/${username}`);
+        try {
+            return await this.request(`/gaming/stats/${username}`);
+        } catch (error) {
+            return { user: null, stats_by_game: [], totals: {}, top_rivals: [] };
+        }
     }
 
     async getGamingActivity(options = {}) {
         const params = new URLSearchParams();
         params.set('page', options.page || 1);
         params.set('limit', options.limit || 30);
-        return this.request(`/gaming/activity?${params}`);
+        try {
+            return await this.request(`/gaming/activity?${params}`);
+        } catch (error) {
+            return { activity: [] };
+        }
     }
 }
 
