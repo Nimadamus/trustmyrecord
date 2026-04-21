@@ -156,6 +156,13 @@
         }
     });
 
+    if (currentFile === "index.html") {
+        document.querySelectorAll(".shell > .nav").forEach((el) => {
+            el.setAttribute("data-tmr-legacy-nav", "hidden");
+            el.style.display = "none";
+        });
+    }
+
     const nav = document.createElement("nav");
     nav.className = "tmr-global-nav";
     nav.innerHTML = `

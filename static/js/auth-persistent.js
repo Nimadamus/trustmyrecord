@@ -98,6 +98,27 @@ class PersistentAuthSystem {
         return false;
     }
 
+    hasBackendCredentials() {
+        const tokenKeys = [
+            'trustmyrecord_token',
+            'accessToken',
+            'access_token',
+            'token',
+            'tmr_token',
+            'trustmyrecord_refresh_token',
+            'refreshToken',
+            'refresh_token',
+            'tmr_refresh_token'
+        ];
+        return tokenKeys.some((key) => {
+            try {
+                return !!localStorage.getItem(key);
+            } catch (error) {
+                return false;
+            }
+        });
+    }
+
     persistSession() {
         if (this.currentUser) {
             localStorage.setItem(this.sessionKey, JSON.stringify({
@@ -111,7 +132,11 @@ class PersistentAuthSystem {
     isSessionValid(sessionData) {
         if (!sessionData) return false;
         const user = sessionData.user || sessionData;
-        return user && (user.username || user.email);
+        if (!user || (!user.username && !user.email)) return false;
+        if (user.backendUser && !this.hasBackendCredentials()) {
+            return false;
+        }
+        return true;
     }
 
     clearSession() {
