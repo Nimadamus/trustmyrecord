@@ -11,13 +11,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="static/css/social-home.css?v=20260414c">
-    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260420b">
-    <script defer src="static/js/tmr-sitewide.js?v=20260420b"></script>
+    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260420e">
+    <script defer src="static/js/tmr-sitewide.js?v=20260420e"></script>
     <style>
         body,
         body.tmr-site-shell {
             font-family: 'Inter', sans-serif;
-            background: #f3f5f8 !important;
+            background:
+                radial-gradient(circle at 6% 0%, rgba(31, 122, 224, 0.10), transparent 22%),
+                radial-gradient(circle at 96% 0%, rgba(245, 130, 32, 0.10), transparent 18%),
+                linear-gradient(180deg, #edf2f8 0%, #f4f7fb 100%) !important;
             color: #162231;
         }
         body::before,
@@ -89,12 +92,36 @@
         .btn-primary {
             background: #f58220;
             color: #ffffff;
-            box-shadow: none;
+            box-shadow: 0 14px 28px rgba(245, 130, 32, 0.18);
         }
         .btn-ghost {
             background: #ffffff;
             color: #162231;
             border: 1px solid #d8dde6;
+        }
+        .btn,
+        .btn-primary,
+        .btn-ghost,
+        .feed-hero-actions .btn,
+        .composer-action,
+        .feed-tab,
+        .fi-action,
+        .load-more-btn,
+        .rs-follow-btn,
+        .sidebar-link {
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+        }
+        .btn:hover,
+        .btn-primary:hover,
+        .btn-ghost:hover,
+        .feed-hero-actions .btn:hover,
+        .composer-action:hover,
+        .feed-tab:hover,
+        .fi-action:hover,
+        .load-more-btn:hover,
+        .rs-follow-btn:hover,
+        .sidebar-link:hover {
+            transform: translateY(-1px);
         }
         .page-layout {
             padding: 20px 16px 36px;
@@ -106,12 +133,24 @@
             gap: 16px;
             margin-bottom: 16px;
             padding: 22px;
-            border-radius: 14px;
+            border-radius: 18px;
             border: 1px solid #d8dde6;
-            background: #ffffff !important;
-            box-shadow: 0 12px 30px rgba(18, 32, 49, 0.06) !important;
+            background: linear-gradient(145deg, rgba(255,255,255,0.98), rgba(244,248,252,0.98)) !important;
+            box-shadow: 0 18px 40px rgba(18, 32, 49, 0.08) !important;
+            position: relative;
+            overflow: hidden;
         }
-        .feed-hero::before { display: none; }
+        .feed-hero::before {
+            content: '';
+            position: absolute;
+            inset: auto -8% -28% auto;
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(31, 122, 224, 0.10), transparent 70%);
+            pointer-events: none;
+            display: block;
+        }
         .eyebrow {
             margin-bottom: 10px;
             color: #637389;
@@ -151,9 +190,10 @@
         .hero-stat-card {
             min-height: 92px;
             padding: 13px;
-            border-radius: 10px;
+            border-radius: 14px;
             border: 1px solid #d8dde6;
-            background: #f7f9fc;
+            background: linear-gradient(180deg, #ffffff, #f5f8fc);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
         }
         .hero-stat-label {
             color: #6f7f92;
@@ -174,8 +214,8 @@
         .rs-card {
             background: #ffffff;
             border: 1px solid #d8dde6;
-            border-radius: 12px;
-            box-shadow: 0 12px 30px rgba(18, 32, 49, 0.06);
+            border-radius: 16px;
+            box-shadow: 0 14px 30px rgba(18, 32, 49, 0.07);
             backdrop-filter: none;
         }
         .sidebar-nav {
@@ -252,15 +292,17 @@
         .feed-item {
             margin-bottom: 12px;
             padding: 16px;
-            border-radius: 12px;
+            border-radius: 16px;
             background: #ffffff;
             border-color: #d8dde6;
-            box-shadow: 0 10px 24px rgba(18, 32, 49, 0.05);
+            box-shadow: 0 14px 28px rgba(18, 32, 49, 0.06);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
         }
         .feed-item:hover {
-            transform: none;
+            transform: translateY(-2px);
             background: #fbfdff;
-            border-color: #cddbea;
+            border-color: #c7d8ee;
+            box-shadow: 0 18px 36px rgba(18, 32, 49, 0.09);
         }
         .feed-item::before {
             display: none;
@@ -297,6 +339,12 @@
         }
         .rs-card {
             padding: 15px;
+        }
+        .sidebar-card:hover,
+        .composer-card:hover,
+        .rs-card:hover {
+            border-color: #c7d8ee;
+            box-shadow: 0 18px 36px rgba(18, 32, 49, 0.09);
         }
         .rs-title {
             color: #102338;
@@ -746,8 +794,8 @@
                 <a href="profile.html">My Account</a>
             </nav>
             <div class="header-actions" id="headerActions">
-                <button class="btn btn-ghost" onclick="openModal('login')">Log In</button>
-                <button class="btn btn-primary" onclick="openModal('signup')">Join Free</button>
+                <button class="btn btn-ghost" id="feedHeaderLoginBtn" onclick="openModal('login')">Log In</button>
+                <button class="btn btn-primary" id="feedHeaderRegisterBtn" onclick="openModal('signup')">Register</button>
             </div>
             <button class="mobile-menu" onclick="document.getElementById('mainNav').classList.toggle('show')"><i class="fas fa-bars"></i></button>
         </div>
@@ -759,7 +807,6 @@
                 <a href="sportsbook.html" class="sidebar-link"><i class="fas fa-basketball-ball"></i> Sportsbook</a>
                 <a href="feed.html" class="sidebar-link active"><i class="fas fa-stream"></i> Feed</a>
                 <a href="arena.html" class="sidebar-link"><i class="fas fa-trophy"></i> Arena</a>
-                <a href="arena.html" class="sidebar-link"><i class="fas fa-gamepad"></i> Gaming Arena</a>
                 <a href="forum.html" class="sidebar-link"><i class="fas fa-comments"></i> Forum</a>
                 <a href="friends.html" class="sidebar-link"><i class="fas fa-user-friends"></i> Friends</a>
                 <a href="messages.html" class="sidebar-link"><i class="fas fa-envelope"></i> Messages</a>
@@ -777,10 +824,11 @@
             <section class="feed-hero">
                 <div class="feed-hero-copy">
                     <div class="eyebrow">Community Feed</div>
-                    <h1>The timeline for verified sports talk.</h1>
-                    <p>Follow picks, reactions, polls, and profile activity in one compact feed built around public records and visible receipts.</p>
+                    <h1>The feed should reward <span style="color:#f58220;">receipts</span>, not just volume.</h1>
+                    <p>Follow picks, reactions, polls, and profile activity in one feed built around public records. The strongest post on this platform should always be stronger because the history behind it is inspectable.</p>
                     <div class="feed-hero-actions">
-                        <a href="sportsbook.html" class="btn btn-primary"><i class="fas fa-plus"></i> Open Board</a>
+                        <a href="sportsbook.html#register" class="btn btn-primary"><i class="fas fa-user-plus"></i> Register</a>
+                        <a href="sportsbook.html#picks" class="btn btn-ghost"><i class="fas fa-plus"></i> Open Picks Board</a>
                         <a href="forum.html" class="btn btn-ghost"><i class="fas fa-comments"></i> Open Forum</a>
                     </div>
                 </div>
@@ -830,8 +878,8 @@
                 <div class="rail-section-note" style="margin-top:10px;">Journals, hot takes, polls, and locked picks all surface here. Pick history stays attached to your public record, and the strongest posts on this site should always be backed by receipts.</div>
             </div>
             <div class="login-banner" id="loginBanner" style="display:none;">
-                <p>Join TrustMyRecord to post your takes, track your record, and build a timeline tied to public receipts instead of deletable claims.</p>
-                <button class="btn btn-primary" onclick="openModal('signup')">Sign Up Free</button>
+                <p>Create an account to post your takes, follow people, and build a feed presence tied to public receipts instead of deletable claims.</p>
+                <button class="btn btn-primary" onclick="openModal('signup')">Register</button>
             </div>
             <div class="feed-tabs">
                 <button class="feed-tab active" onclick="setFilter('all',this)"><i class="fas fa-stream"></i> For You</button>
@@ -840,14 +888,14 @@
                 <button class="feed-tab" onclick="setFilter('polls',this)"><i class="fas fa-poll"></i> Polls</button>
                 <button class="feed-tab" onclick="setFilter('following',this)"><i class="fas fa-user-friends"></i> Following</button>
             </div>
-            <div class="feed-list" id="feedList"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div></div>
+            <div class="feed-list" id="feedList"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading verified community posts...</p></div></div>
             <div class="load-more" id="loadMore" style="display:none;"><button class="load-more-btn" onclick="loadMorePosts()">Load More</button></div>
         </main>
         <aside class="right-sidebar">
-            <div class="rs-card"><div class="rs-title"><i class="fas fa-fire" style="color:#ef4444;margin-right:6px;"></i>Trending</div><div id="trendingList"></div></div>
-            <div class="rs-card"><div class="rs-title"><i class="fas fa-chart-line" style="color:#12805c;margin-right:6px;"></i>Top Cappers</div><div id="topCappersList"></div><div class="rail-section-note">Backend leaderboard ranked by verified ROI and record volume.</div></div>
-            <div class="rs-card"><div class="rs-title"><i class="fas fa-trophy" style="color:#f59e0b;margin-right:6px;"></i>Live Battles</div><div id="arenaWatchList"></div><div class="rail-section-note">Competition is visible here while the wider conversation plays out in the feed.</div></div>
-            <div class="rs-card"><div class="rs-title"><i class="fas fa-user-plus" style="color:#3b82f6;margin-right:6px;"></i>Who to Follow</div><div id="suggestedList"></div></div>
+            <div class="rs-card"><div class="rs-title"><i class="fas fa-fire" style="color:#ef4444;margin-right:6px;"></i>Trending</div><div id="trendingList"></div><div class="rail-section-note">When the feed is active, this rail highlights the topics and tags getting real engagement.</div></div>
+            <div class="rs-card"><div class="rs-title"><i class="fas fa-chart-line" style="color:#12805c;margin-right:6px;"></i>Top Cappers</div><div id="topCappersList"></div><div class="rail-section-note">This rail should favor people with visible records, not whoever shouts the loudest.</div></div>
+            <div class="rs-card"><div class="rs-title"><i class="fas fa-trophy" style="color:#f59e0b;margin-right:6px;"></i>Live Battles</div><div id="arenaWatchList"></div><div class="rail-section-note">Arena rivalry and challenge results can surface here while the wider conversation plays out in the feed.</div></div>
+            <div class="rs-card"><div class="rs-title"><i class="fas fa-user-plus" style="color:#3b82f6;margin-right:6px;"></i>Who to Follow</div><div id="suggestedList"></div><div class="rail-section-note">As the community grows, this panel should point new users toward people worth watching.</div></div>
         </aside>
     </div>
     <div class="modal-overlay" id="loginModal"><div class="modal-box" style="position:relative;"><button class="modal-close" onclick="closeModals()">&times;</button><div class="modal-title">Welcome back</div><div class="modal-sub">Log in to your TrustMyRecord account</div><div class="modal-field"><label class="modal-label">Username or Email</label><input class="modal-input" id="loginUser" type="text" placeholder="Enter username or email"></div><div class="modal-field"><label class="modal-label">Password</label><input class="modal-input" id="loginPass" type="password" placeholder="Enter password"></div><div class="modal-error" id="loginError"></div><button class="modal-btn" onclick="handleLogin()">Log In</button><div class="modal-switch">Don't have an account? <a onclick="openModal('signup')">Sign up</a></div></div></div>
