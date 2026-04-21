@@ -13,8 +13,8 @@
       gtag('config', 'G-V5MCVXS2HE');
     </script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260420d">
-    <script defer src="static/js/tmr-sitewide.js?v=20260420d"></script>
+    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260420e">
+    <script defer src="static/js/tmr-sitewide.js?v=20260420e"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -59,7 +59,7 @@
         .nav-username { font-size: 13px; color: var(--text); font-weight: 600; }
 
         /* HERO */
-        .hero { background: linear-gradient(135deg, rgba(0,174,255,0.08), rgba(168,85,247,0.08)); border-bottom: 1px solid var(--border); padding: 40px 24px; text-align: center; }
+        .hero { background: linear-gradient(135deg, rgba(0,174,255,0.08), rgba(168,85,247,0.08)); border-bottom: 1px solid var(--border); padding: 40px 24px; }
         .hero h1 { font-family: var(--font-display); font-size: 32px; font-weight: 800; margin-bottom: 8px; }
         .hero h1 .gold { color: var(--accent-gold); }
         .hero h1 .blue { color: var(--primary); }
@@ -68,6 +68,17 @@
         .hero-stat { text-align: center; }
         .hero-stat .num { font-family: var(--font-display); font-size: 28px; font-weight: 800; color: var(--accent-gold); }
         .hero-stat .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+        .hero-shell { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr); gap: 16px; align-items: stretch; }
+        .hero-copy-card, .hero-side-card { border: 1px solid rgba(148,163,184,0.14); border-radius: 22px; padding: 24px; background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)), rgba(11,20,34,0.9); box-shadow: 0 18px 42px rgba(0,0,0,0.22); }
+        .hero-kicker { display: inline-flex; align-items: center; border-radius: 999px; padding: 8px 12px; background: rgba(45,212,191,0.1); border: 1px solid rgba(45,212,191,0.22); color: #d7fffa; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 14px; }
+        .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+        .hero-side-card h3 { font-family: 'Barlow', sans-serif; font-size: 1.28rem; line-height: 1.02; letter-spacing: -0.02em; color: #eef4fb; margin-bottom: 12px; }
+        .hero-proof-list { display: grid; gap: 12px; }
+        .hero-proof-item { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; padding-top: 10px; border-top: 1px solid rgba(148,163,184,0.12); }
+        .hero-proof-item:first-child { border-top: none; padding-top: 0; }
+        .hero-proof-index { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 10px; background: rgba(45,212,191,0.12); color: #d7fffa; font-size: 0.78rem; font-weight: 800; }
+        .hero-proof-copy strong { display: block; color: #eef4fb; font-size: 0.92rem; }
+        .hero-proof-copy span { display: block; margin-top: 4px; color: #97a8bc; font-size: 0.82rem; line-height: 1.48; }
 
         /* TABS */
         .tabs { display: flex; gap: 4px; padding: 16px 24px; background: var(--bg-surface); border-bottom: 1px solid var(--border); overflow-x: auto; }
@@ -201,7 +212,7 @@
         .section-header h3 { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text-dim); }
 
         /* EMPTY STATE */
-        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); max-width: 760px; margin: 0 auto; }
         .empty-state i { font-size: 48px; margin-bottom: 16px; display: block; color: var(--border); }
         .empty-state h3 { color: var(--text-dim); margin-bottom: 8px; }
 
@@ -216,6 +227,7 @@
             .main { padding: 16px; }
             .match-item { flex-wrap: wrap; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .hero-shell { grid-template-columns: 1fr; }
         }
 
         /* LOADING SPINNER */
@@ -407,8 +419,7 @@
         <a href="index.html" class="nav-link">Home</a>
         <a href="sportsbook.html" class="nav-link">Sportsbook</a>
         <a href="feed.html" class="nav-link">Feed</a>
-        <a href="arena.html" class="nav-link">Arena</a>
-        <a href="arena.html" class="nav-link active">Gaming Arena</a>
+        <a href="arena.html" class="nav-link active">Arena</a>
         <a href="forum.html" class="nav-link">Forum</a>
         <a href="messages.html" class="nav-link">Messages</a>
         <a href="profile.html" class="nav-link">My Profile</a>
@@ -418,18 +429,46 @@
             <img class="nav-avatar" id="navAvatar" src="" alt="">
             <span class="nav-username" id="navUsername"></span>
         </div>
-        <a href="index.html" class="btn btn-primary btn-sm" id="navLoginBtn">Sign In</a>
+        <a href="sportsbook.html#login" class="btn btn-outline btn-sm" id="navLoginBtn">Log In</a>
+        <a href="sportsbook.html#register" class="btn btn-primary btn-sm" id="navRegisterBtn">Register</a>
     </div>
 </nav>
 
 <!-- HERO -->
 <div class="hero">
-    <h1>THE <span class="gold">GAMING</span> <span class="blue">ARENA</span></h1>
-    <p>Challenge opponents. Log matches. Build your record. Climb the leaderboard.</p>
-    <div class="hero-stats">
-        <div class="hero-stat"><div class="num" id="statTotalMatches">0</div><div class="label">Matches Played</div></div>
-        <div class="hero-stat"><div class="num" id="statActiveChallenges">0</div><div class="label">Active Challenges</div></div>
-        <div class="hero-stat"><div class="num" id="statGamers">0</div><div class="label">Gamers</div></div>
+    <div class="hero-shell">
+        <div class="hero-copy-card">
+            <span class="hero-kicker">Competitive Layer</span>
+            <h1>Turn gaming rivalries into a <span class="gold">trackable</span> <span class="blue">record</span>.</h1>
+            <p>Use Arena to issue challenges, log head-to-head results, attach platform identities, and build a public competitive history that is stronger than Discord trash talk and screenshots.</p>
+            <div class="hero-actions">
+                <a href="sportsbook.html#register" class="btn btn-primary btn-sm">Register</a>
+                <a href="sportsbook.html#login" class="btn btn-outline btn-sm">Log In</a>
+                <button class="btn btn-gold btn-sm" onclick="openCreateChallenge()">Issue Challenge</button>
+            </div>
+            <div class="hero-stats" style="justify-content:flex-start; margin-top:22px;">
+                <div class="hero-stat"><div class="num" id="statTotalMatches">0</div><div class="label">Matches Played</div></div>
+                <div class="hero-stat"><div class="num" id="statActiveChallenges">0</div><div class="label">Active Challenges</div></div>
+                <div class="hero-stat"><div class="num" id="statGamers">0</div><div class="label">Gamers</div></div>
+            </div>
+        </div>
+        <div class="hero-side-card">
+            <h3>Why this page exists</h3>
+            <div class="hero-proof-list">
+                <div class="hero-proof-item">
+                    <span class="hero-proof-index">01</span>
+                    <div class="hero-proof-copy"><strong>Make rivalries visible</strong><span>Challenge outcomes should stay attached to the same people instead of disappearing into group chats.</span></div>
+                </div>
+                <div class="hero-proof-item">
+                    <span class="hero-proof-index">02</span>
+                    <div class="hero-proof-copy"><strong>Track real match history</strong><span>Records, streaks, and head-to-head stats should come from logged results, not memory.</span></div>
+                </div>
+                <div class="hero-proof-item">
+                    <span class="hero-proof-index">03</span>
+                    <div class="hero-proof-copy"><strong>Keep empty states honest</strong><span>Until the community grows, the page should explain the value clearly instead of looking dead or fake-busy.</span></div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -526,8 +565,8 @@
             <div class="empty-state" id="myStatsLogin" style="display:none;">
                 <i class="fas fa-lock"></i>
                 <h3>Sign in to see your stats</h3>
-                <p>Log in to track your gaming record and stats.</p>
-                <a href="index.html" class="btn btn-primary" style="margin-top:12px;">Sign In</a>
+                <p>Log in to track your gaming profile, match history, streaks, and rivalries from one place.</p>
+                <a href="sportsbook.html#login" class="btn btn-primary" style="margin-top:12px;">Log In</a>
             </div>
             <div id="myStatsData" style="display:none;">
                 <div class="section-header">
@@ -844,12 +883,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 function updateNavUser() {
     const navUser = document.getElementById('navUser');
     const navLogin = document.getElementById('navLoginBtn');
+    const navRegister = document.getElementById('navRegisterBtn');
     if (currentUser) {
         navUser.style.display = 'flex';
         navLogin.style.display = 'none';
+        if (navRegister) navRegister.style.display = 'none';
         document.getElementById('navUsername').textContent = currentUser.username || currentUser.displayName;
         const avatar = currentUser.avatar_url || currentUser.avatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${currentUser.username}`;
         document.getElementById('navAvatar').src = avatar;
+    } else {
+        navLogin.style.display = 'inline-flex';
+        if (navRegister) navRegister.style.display = 'inline-flex';
     }
 }
 
@@ -881,7 +925,7 @@ async function loadChallenges() {
         document.getElementById('statActiveChallenges').textContent = allChallenges.filter(c => ['pending','accepted','in_progress'].includes(c.status)).length;
     } catch (e) {
         console.error('Failed to load challenges:', e);
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No challenges yet</h3><p>Be the first to issue a challenge!</p></div>';
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No open challenges yet</h3><p>The Arena is live, but there is no active challenge board to show yet. Register, link your gamer profile, and post the first matchup instead of leaving this page empty.</p><a href="sportsbook.html#register" class="btn btn-primary" style="margin-top:12px;">Create an Account</a></div>';
     }
 }
 
@@ -899,7 +943,7 @@ function filterByGame(game) {
 function renderChallenges(challenges) {
     const container = document.getElementById('challengesList');
     if (challenges.length === 0) {
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No challenges found</h3><p>Issue a challenge to get started!</p></div>';
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No challenges match this filter</h3><p>There is nothing in this game category yet. Switch filters or issue the first challenge to seed the board with a real matchup.</p></div>';
         return;
     }
     container.innerHTML = challenges.map(ch => {
@@ -1019,13 +1063,13 @@ async function loadRecentMatches(game) {
         renderMatchFeed(container, data.matches);
         document.getElementById('statTotalMatches').textContent = data.matches.length;
     } catch (e) {
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No matches yet</h3><p>Log your first match to get started.</p></div>';
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>Match feed unavailable</h3><p>The recent match feed could not load right now. You can still log a result and build the board from real entries.</p><button class="btn btn-outline" style="margin-top:12px;" onclick="openLogMatch()">Log a Match</button></div>';
     }
 }
 
 function renderMatchFeed(container, matches) {
     if (matches.length === 0) {
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No matches yet</h3><p>Log your first match to see it here.</p></div>';
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No matches logged yet</h3><p>This feed will show confirmed results and head-to-head history once players start logging real games.</p><button class="btn btn-primary" style="margin-top:12px;" onclick="openLogMatch()">Log a Match</button></div>';
         return;
     }
     container.innerHTML = matches.map(m => {
@@ -1107,7 +1151,7 @@ async function loadLeaderboard(game) {
         renderLeaderboard(container, data.leaderboard);
         document.getElementById('statGamers').textContent = data.leaderboard.length;
     } catch (e) {
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-trophy"></i><h3>No rankings yet</h3><p>Play some matches to appear on the leaderboard.</p></div>';
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-trophy"></i><h3>No rankings yet</h3><p>The leaderboard will populate once enough matches are logged to compare players fairly.</p></div>';
     }
 }
 
@@ -1119,7 +1163,7 @@ function filterLeaderboard(game) {
 
 function renderLeaderboard(container, entries) {
     if (entries.length === 0) {
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-trophy"></i><h3>No rankings yet</h3><p>Play matches to climb the leaderboard.</p></div>';
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-trophy"></i><h3>No rankings yet</h3><p>There is no competitive history to rank yet. Once the first real results are logged, standings will appear here.</p></div>';
         return;
     }
     container.innerHTML = `
@@ -1665,7 +1709,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             <a href="sportsbook.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
                             <a href="index.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
-                            <a href="arena.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Gaming Arena</a>
+                            <a href="arena.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Arena</a>
                             <a href="forum.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
                         </div>
                     </div>
