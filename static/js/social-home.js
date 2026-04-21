@@ -106,7 +106,8 @@ async function loadSidebarStats(user) {
 async function loadNotificationBadge() {
     try {
         if (!api || typeof api.request !== 'function') return;
-        const user = (typeof auth !== 'undefined' && typeof auth.isLoggedIn === 'function' && auth.isLoggedIn())
+        const hasBackendSession = typeof api.isLoggedIn === 'function' && api.isLoggedIn();
+        const user = hasBackendSession && (typeof auth !== 'undefined' && typeof auth.isLoggedIn === 'function' && auth.isLoggedIn())
             ? auth.currentUser
             : null;
         if (!user) return;
@@ -238,7 +239,9 @@ async function loadFeed() {
 
             // Also fetch recent notifications for activity items
             let activityItems = [];
-            const canLoadNotifications = typeof auth !== 'undefined'
+            const canLoadNotifications = typeof api.isLoggedIn === 'function'
+                && api.isLoggedIn()
+                && typeof auth !== 'undefined'
                 && typeof auth.isLoggedIn === 'function'
                 && auth.isLoggedIn();
             if (currentFilter === 'all' && canLoadNotifications) {
