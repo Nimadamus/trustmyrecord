@@ -970,8 +970,8 @@ function getCurrentSessionUser() {
         }
     } catch(e) {}
     try {
-        if (api && typeof api.getCurrentUser === 'function') {
-            var apiUser = api.getCurrentUser();
+        if (window.api && window.api._cachedUser) {
+            var apiUser = window.api._cachedUser;
             if (apiUser && (apiUser.username || apiUser.email || apiUser.id)) return apiUser;
         }
     } catch(e) {}
