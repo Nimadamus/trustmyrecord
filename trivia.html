@@ -1578,10 +1578,15 @@ async function renderHistory() {
 }
 
 // ================================================================
-// CREATE QUESTION VIEW (localStorage for user-submitted)
+// CREATE QUESTION VIEW (backend-backed)
 // ================================================================
 function renderCreateView() {
     var card = document.getElementById('createQuestionCard');
+    var categoryOptions = backendCategories.length
+        ? backendCategories.map(function(cat) {
+            return '<option value="' + escapeHtml(String(cat.id)) + '">' + escapeHtml(cat.name) + '</option>';
+        }).join('')
+        : '<option value="">Loading categories...</option>';
 
     if (!isLoggedIn()) {
         card.innerHTML = '<div class="login-prompt">' +
@@ -1595,17 +1600,20 @@ function renderCreateView() {
 
     card.innerHTML =
         '<h2>&#9998; Create a Trivia Question</h2>' +
-        '<div class="subtitle">Submit a custom question. It will be saved locally for now.</div>' +
+        '<div class="subtitle">Submit a live trivia question to the shared TrustMyRecord question pool.</div>' +
         '<form id="createQuestionForm" onsubmit="handleCreateQuestion(event)">' +
             '<div class="form-group">' +
                 '<label>Category</label>' +
-                '<select class="form-select" id="cqCategory">' +
-                    '<option value="NFL">NFL</option>' +
-                    '<option value="NBA">NBA</option>' +
-                    '<option value="MLB">MLB</option>' +
-                    '<option value="NHL">NHL</option>' +
-                    '<option value="Soccer">Soccer</option>' +
-                    '<option value="Mixed">Mixed / General</option>' +
+                '<select class="form-select" id="cqCategory"' + (backendCategories.length ? '' : ' disabled') + '>' +
+                    categoryOptions +
+                '</select>' +
+            '</div>' +
+            '<div class="form-group">' +
+                '<label>Difficulty</label>' +
+                '<select class="form-select" id="cqDifficulty">' +
+                    '<option value="easy">Easy</option>' +
+                    '<option value="medium">Medium</option>' +
+                    '<option value="hard">Hard</option>' +
                 '</select>' +
             '</div>' +
             '<div class="form-group">' +
@@ -1650,79 +1658,128 @@ function setCorrectAnswer(idx) {
     }
 }
 
-function handleCreateQuestion(e) {
+async function handleCreateQuestion(e) {
     e.preventDefault();
     var errEl = document.getElementById('cqError');
     errEl.style.display = 'none';
+    errEl.textContent = '';
 
     var question = document.getElementById('cqQuestion').value.trim();
     var answers = [];
     for (var i = 0; i < 4; i++) answers.push(document.getElementById('cqAnswer' + i).value.trim());
-    var category = document.getElementById('cqCategory').value;
+    var categoryId = parseInt(document.getElementById('cqCategory').value, 10);
+    var difficulty = document.getElementById('cqDifficulty').value;
+    var submitBtn = document.querySelector('.form-submit-btn');
 
     if (!question) { errEl.textContent = 'Please enter a question.'; errEl.style.display = 'block'; return; }
     if (answers.some(function(a) { return !a; })) { errEl.textContent = 'Please fill in all 4 answers.'; errEl.style.display = 'block'; return; }
     if (selectedCorrectAnswer < 0) { errEl.textContent = 'Click the letter button (A/B/C/D) next to the correct answer.'; errEl.style.display = 'block'; return; }
+    if (!categoryId) { errEl.textContent = 'Please choose a trivia category.'; errEl.style.display = 'block'; return; }
 
-    var username = getCurrentUsername() || 'Anonymous';
-    var newQ = {
-        q: question, a: answers, correct: selectedCorrectAnswer,
-        createdBy: username, createdAt: new Date().toISOString(),
-        category: category, id: 'cq_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4)
-    };
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
 
-    var custom = [];
-    try { custom = JSON.parse(localStorage.getItem('trustmyrecord_custom_trivia') || '[]'); } catch(ex) { custom = []; }
-    custom.unshift(newQ);
-    localStorage.setItem('trustmyrecord_custom_trivia', JSON.stringify(custom));
+    try {
+        await api.ready;
+        await api.request('/trivia/questions', {
+            method: 'POST',
+            body: {
+                category_id: categoryId,
+                question_text: question,
+                difficulty: difficulty,
+                points: difficulty === 'hard' ? 150 : difficulty === 'medium' ? 125 : 100,
+                time_limit_seconds: 30,
+                answers: answers.map(function(answerText, idx) {
+                    return {
+                        answer_text: answerText,
+                        is_correct: idx === selectedCorrectAnswer
+                    };
+                })
+            }
+        });
 
-    document.getElementById('cqQuestion').value = '';
-    for (var j = 0; j < 4; j++) {
-        document.getElementById('cqAnswer' + j).value = '';
-        document.getElementById('cqCorrectBtn' + j).classList.remove('selected');
+        document.getElementById('cqQuestion').value = '';
+        for (var j = 0; j < 4; j++) {
+            document.getElementById('cqAnswer' + j).value = '';
+            document.getElementById('cqCorrectBtn' + j).classList.remove('selected');
+        }
+        selectedCorrectAnswer = -1;
+        await loadCategories();
+        await renderCustomQuestionsList();
+
+        submitBtn.textContent = 'Question Added!';
+        submitBtn.style.background = 'var(--success)';
+        setTimeout(function() {
+            submitBtn.textContent = 'Add Question';
+            submitBtn.style.background = '';
+            submitBtn.disabled = false;
+        }, 2000);
+    } catch (err) {
+        errEl.textContent = err.message || 'Failed to create question.';
+        errEl.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add Question';
     }
-    selectedCorrectAnswer = -1;
-    renderCustomQuestionsList();
-
-    var btn = document.querySelector('.form-submit-btn');
-    btn.textContent = 'Question Added!';
-    btn.style.background = 'var(--success)';
-    setTimeout(function() { btn.textContent = 'Add Question'; btn.style.background = ''; }, 2000);
 }
 
-function renderCustomQuestionsList() {
+async function renderCustomQuestionsList() {
     var container = document.getElementById('customQuestionsList');
-    var custom = [];
-    try { custom = JSON.parse(localStorage.getItem('trustmyrecord_custom_trivia') || '[]'); } catch(e) {}
-
-    if (custom.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="big-icon">&#128221;</div><p>No custom questions created yet.</p></div>';
+    var username = getCurrentUsername();
+    if (!username) {
+        container.innerHTML = '<div class="empty-state"><div class="big-icon">&#128221;</div><p>Log in to create and review your submitted trivia questions.</p></div>';
         return;
     }
 
-    var html = '';
-    custom.forEach(function(cq, idx) {
-        var dateStr = cq.createdAt ? new Date(cq.createdAt).toLocaleDateString() : '';
-        html += '<div class="custom-q-item">' +
-            '<div class="cq-question">' + escapeHtml(cq.q) + '</div>' +
-            '<div class="cq-meta">' +
-                '<span>' + escapeHtml(cq.category || 'Mixed') + '</span>' +
-                '<span>Answer: ' + escapeHtml(cq.a[cq.correct]) + '</span>' +
-                '<span>By @' + escapeHtml(cq.createdBy || 'Unknown') + '</span>' +
-                '<span>' + dateStr + '</span>' +
-                '<button class="cq-delete" onclick="deleteCustomQuestion(' + idx + ')">Delete</button>' +
-            '</div></div>';
-    });
-    container.innerHTML = html;
-}
+    if (!backendCategories.length) {
+        container.innerHTML = '<div class="empty-state"><div class="big-icon">&#9203;</div><p>Loading your submitted trivia questions...</p></div>';
+        return;
+    }
 
-function deleteCustomQuestion(idx) {
-    var custom = [];
-    try { custom = JSON.parse(localStorage.getItem('trustmyrecord_custom_trivia') || '[]'); } catch(e) {}
-    if (idx >= 0 && idx < custom.length) {
-        custom.splice(idx, 1);
-        localStorage.setItem('trustmyrecord_custom_trivia', JSON.stringify(custom));
-        renderCustomQuestionsList();
+    container.innerHTML = '<div class="empty-state"><div class="big-icon">&#9203;</div><p>Loading your submitted trivia questions...</p></div>';
+
+    try {
+        var createdQuestions = [];
+        for (var i = 0; i < backendCategories.length; i++) {
+            var cat = backendCategories[i];
+            var data = await api.request('/trivia/categories/' + encodeURIComponent(cat.slug) + '?page=1&limit=50');
+            var questions = data.questions || [];
+            questions.forEach(function(question) {
+                if (String(question.created_by || '').toLowerCase() === String(username).toLowerCase()) {
+                    createdQuestions.push({
+                        question_text: question.question_text,
+                        category_name: cat.name,
+                        difficulty: question.difficulty,
+                        created_at: question.created_at
+                    });
+                }
+            });
+        }
+
+        if (!createdQuestions.length) {
+            container.innerHTML = '<div class="empty-state"><div class="big-icon">&#128221;</div><p>No live trivia questions created yet.</p></div>';
+            return;
+        }
+
+        createdQuestions.sort(function(a, b) {
+            return new Date(b.created_at) - new Date(a.created_at);
+        });
+
+        var html = '';
+        createdQuestions.forEach(function(question) {
+            var dateStr = question.created_at ? new Date(question.created_at).toLocaleDateString() : '';
+            html += '<div class="custom-q-item">' +
+                '<div class="cq-question">' + escapeHtml(question.question_text) + '</div>' +
+                '<div class="cq-meta">' +
+                    '<span>' + escapeHtml(question.category_name || 'General') + '</span>' +
+                    '<span>' + escapeHtml((question.difficulty || 'easy').toUpperCase()) + '</span>' +
+                    '<span>By @' + escapeHtml(username) + '</span>' +
+                    '<span>' + dateStr + '</span>' +
+                    '<span>Live</span>' +
+                '</div></div>';
+        });
+        container.innerHTML = html;
+    } catch (err) {
+        container.innerHTML = '<div class="empty-state"><div class="big-icon">&#9888;</div><p>' + escapeHtml(err.message || 'Could not load your submitted trivia questions.') + '</p></div>';
     }
 }
 
