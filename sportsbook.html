@@ -7983,8 +7983,8 @@
                         <span class="icon">🔍</span>
                     </button>
                     <div id="headerAuthButtons" style="display: flex; align-items: center; gap: 10px; margin-left: 0;">
-                        <button onclick="showSection('login')" class="btn" style="padding: 11px 16px; font-size: 14px; background: #ffffff; color: #162231; border: 1px solid #d8dde6; border-radius: 10px; cursor: pointer;">Log In</button>
-                        <button onclick="showSection('signup')" class="btn btn-primary" style="padding: 11px 16px; font-size: 14px; background: #f58220; color: #ffffff; font-weight: 700; border: 1px solid #f58220; border-radius: 10px; cursor: pointer;">Join Free</button>
+                        <button id="sportsbookHeaderLoginBtn" onclick="showSection('login')" class="btn" style="padding: 11px 16px; font-size: 14px; background: #ffffff; color: #162231; border: 1px solid #d8dde6; border-radius: 10px; cursor: pointer;">Log In</button>
+                        <button id="sportsbookHeaderRegisterBtn" onclick="showSection('signup')" class="btn btn-primary" style="padding: 11px 16px; font-size: 14px; background: #f58220; color: #ffffff; font-weight: 700; border: 1px solid #f58220; border-radius: 10px; cursor: pointer;">Register</button>
                     </div>
                 </div>
 
@@ -8079,6 +8079,36 @@
                             </div>
                         </div>
                         <div class="sportsbook-hero-image"></div>
+                    </div>
+                </section>
+
+                <section class="sportsbook-entry-panel">
+                    <div class="entry-panel-card">
+                        <span class="entry-panel-kicker">First-time user flow</span>
+                        <h3>Everything starts with one locked pick.</h3>
+                        <p>This page should feel clear before anyone ever places a bet. Browse live boards, understand what gets tracked, and create an account only when you are ready to attach a play to your public record.</p>
+                        <div class="entry-panel-actions">
+                            <button type="button" class="entry-panel-btn primary" onclick="showSection('signup')">Register Free</button>
+                            <button type="button" class="entry-panel-btn" onclick="showSection('login')">Log In</button>
+                            <button type="button" class="entry-panel-btn" onclick="showSection('picks')">Browse Picks Board</button>
+                        </div>
+                    </div>
+                    <div class="entry-panel-side">
+                        <h3>What gets tracked</h3>
+                        <div class="entry-panel-list">
+                            <div class="entry-panel-row">
+                                <span class="entry-panel-index">01</span>
+                                <div class="entry-panel-copy"><strong>Market and line</strong><span>Side, total, spread, line, odds, and units are part of the saved receipt.</span></div>
+                            </div>
+                            <div class="entry-panel-row">
+                                <span class="entry-panel-index">02</span>
+                                <div class="entry-panel-copy"><strong>Result and grading</strong><span>Once games settle, the record math updates from the same normalized pick history.</span></div>
+                            </div>
+                            <div class="entry-panel-row">
+                                <span class="entry-panel-index">03</span>
+                                <div class="entry-panel-copy"><strong>Public profile impact</strong><span>Your profile, recent picks, and leaderboard position all depend on the same source of truth.</span></div>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -8381,6 +8411,20 @@
             </div>
             <div style="margin-top: 10px; padding: 12px 16px; border-radius: 14px; background: rgba(45, 212, 191, 0.08); border: 1px solid rgba(45, 212, 191, 0.22); color: #d9fff8; line-height: 1.65; max-width: 840px;">
                 This board is meant to create receipts, not just opinions. Every locked play can flow into your profile, record views, feed activity, and leaderboard math, so treat submission as a permanent public statement.
+            </div>
+            <div class="picks-onboarding-grid">
+                <div class="picks-onboarding-card">
+                    <strong>Pick a sport first</strong>
+                    <span>Game counts load by sport so you can see where real action is available before diving into the board.</span>
+                </div>
+                <div class="picks-onboarding-card">
+                    <strong>Use your own number when needed</strong>
+                    <span>If a book line is unavailable, the form stays flexible so you can enter the number you actually played.</span>
+                </div>
+                <div class="picks-onboarding-card">
+                    <strong>Submit like it will be audited later</strong>
+                    <span>Because it will. The whole point is that your record still makes sense when someone checks it weeks later.</span>
+                </div>
             </div>
         </div>
 
@@ -11204,10 +11248,24 @@
                 <div class="picks-container">
                     <div class="section-header">
                         <h2>Welcome <span class="highlight">Back</span></h2>
-                        <p>Login to access your verified track record and continue dominating.</p>
+                        <p>Log in to review your record, lock another play, and keep your public profile moving from the same saved history.</p>
                     </div>
 
                     <div class="pick-form" style="max-width: 500px; margin: 0 auto;">
+                        <div class="sportsbook-auth-grid" style="margin-bottom: 18px;">
+                            <div class="sportsbook-auth-card">
+                                <h3>Audit your record</h3>
+                                <p>Open your dashboard, recent picks, and profile stats without bouncing across multiple pages.</p>
+                            </div>
+                            <div class="sportsbook-auth-card">
+                                <h3>Continue the workflow</h3>
+                                <p>Jump back into the board, confirm lines, and submit the next pick from the same place.</p>
+                            </div>
+                            <div class="sportsbook-auth-card">
+                                <h3>Keep your history intact</h3>
+                                <p>Every login brings you back to the same public record instead of a reset or a cleaned-up slate.</p>
+                            </div>
+                        </div>
                         <form id="login-form">
                             <div class="form-group">
                                 <label for="loginEmail">Email or Username</label>
@@ -11256,11 +11314,25 @@
             <div id="signup" class="page-section">
                 <div class="picks-container">
                     <div class="section-header">
-                        <h2>Join the <span class="highlight">Revolution</span></h2>
-                        <p>Create your account and start building your verified track record today.</p>
+                        <h2>Create Your <span class="highlight">Account</span></h2>
+                        <p>Register once, lock your first play, and start a public sports profile that can actually be checked later.</p>
                     </div>
 
                     <div class="pick-form">
+                        <div class="sportsbook-auth-grid" style="margin-bottom: 18px;">
+                            <div class="sportsbook-auth-card">
+                                <h3>Free to start</h3>
+                                <p>The first step is just creating the account and making a real pick. No fake prestige, no paywall required.</p>
+                            </div>
+                            <div class="sportsbook-auth-card">
+                                <h3>Built for transparency</h3>
+                                <p>Your profile exists so people can inspect your history instead of trusting one screenshot or one good week.</p>
+                            </div>
+                            <div class="sportsbook-auth-card">
+                                <h3>Made for sports fans</h3>
+                                <p>Picks, feed activity, arena rivalries, polls, and trivia all tie back to visible reputation over time.</p>
+                            </div>
+                        </div>
                         <form id="signup-form">
                             <div class="form-group">
                                 <label for="username">Username</label>
@@ -19399,8 +19471,9 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     function applySportsbookHashRoute() {
-        const hashSection = (window.location.hash || '').replace(/^#/, '').trim();
-        if (!hashSection) return;
+        const rawHashSection = (window.location.hash || '').replace(/^#/, '').trim();
+        if (!rawHashSection) return;
+        const hashSection = rawHashSection === 'register' ? 'signup' : rawHashSection;
         const target = document.getElementById(hashSection);
         if (!target || !target.classList.contains('page-section')) return;
         if (typeof window.showSection === 'function') {
@@ -20137,6 +20210,154 @@ document.addEventListener('DOMContentLoaded', function() {
             line-height: 1.35;
         }
 
+        .sportsbook-entry-panel {
+            display: grid;
+            grid-template-columns: minmax(0, 1.06fr) minmax(280px, 0.94fr);
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .entry-panel-card,
+        .entry-panel-side {
+            border: 1px solid #d8dde6;
+            border-radius: 18px;
+            padding: 20px;
+            background: #ffffff;
+            box-shadow: 0 14px 34px rgba(18, 32, 49, 0.06);
+        }
+
+        .entry-panel-kicker {
+            display: inline-flex;
+            width: fit-content;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(16, 35, 56, 0.06);
+            color: #42546a;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .entry-panel-card h3,
+        .entry-panel-side h3,
+        .sportsbook-auth-card h3 {
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 1.42rem;
+            line-height: 1.02;
+            letter-spacing: -0.02em;
+            color: #162231;
+            margin: 0 0 10px;
+        }
+
+        .entry-panel-card p,
+        .entry-panel-side p,
+        .sportsbook-auth-card p,
+        .picks-onboarding-card p {
+            color: #5d7188;
+            line-height: 1.62;
+            margin: 0;
+        }
+
+        .entry-panel-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .entry-panel-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 11px 16px;
+            border-radius: 10px;
+            border: 1px solid #d8dde6;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            color: #162231;
+            background: #ffffff;
+        }
+
+        .entry-panel-btn.primary {
+            background: #f58220;
+            color: #ffffff;
+            border-color: #f58220;
+        }
+
+        .entry-panel-list {
+            display: grid;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .entry-panel-row {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 10px;
+            align-items: start;
+            padding-top: 10px;
+            border-top: 1px solid rgba(148, 163, 184, 0.18);
+        }
+
+        .entry-panel-row:first-child {
+            padding-top: 0;
+            border-top: none;
+        }
+
+        .entry-panel-index {
+            width: 30px;
+            height: 30px;
+            display: grid;
+            place-items: center;
+            border-radius: 10px;
+            background: rgba(16, 35, 56, 0.06);
+            color: #162231;
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+
+        .entry-panel-copy strong,
+        .picks-onboarding-card strong {
+            display: block;
+            color: #162231;
+            font-size: 0.92rem;
+        }
+
+        .entry-panel-copy span,
+        .picks-onboarding-card span {
+            display: block;
+            margin-top: 4px;
+            color: #5d7188;
+            font-size: 0.83rem;
+            line-height: 1.48;
+        }
+
+        .sportsbook-auth-grid,
+        .picks-onboarding-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .sportsbook-auth-card,
+        .picks-onboarding-card {
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 16px;
+            padding: 16px;
+            background: rgba(255,255,255,0.03);
+        }
+
+        .sportsbook-auth-card h3 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
         #home.page-section {
             padding-top: 22px;
         }
@@ -20365,8 +20586,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <script src="static/js/platform-production-fix.js?v=20260415d"></script>
     <script src="static/js/sportsbook-dashboard-sync.js?v=20260415d"></script>
-    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260420d">
-    <script defer src="static/js/tmr-sitewide.js?v=20260420d"></script>
+    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260420e">
+    <script defer src="static/js/tmr-sitewide.js?v=20260420e"></script>
     <style>
         /* Make Your Picks polish: visual-only overrides, no pick-flow logic changes. */
         #picks.page-section {
@@ -20482,6 +20703,18 @@ document.addEventListener('DOMContentLoaded', function() {
             box-shadow: 0 20px 52px rgba(0,0,0,0.22) !important;
         }
 
+        #picks .sport-card:focus-visible,
+        #picks .odds-btn:focus-visible,
+        #picks .bet-pick-btn:focus-visible,
+        #picks .total-btn:focus-visible,
+        #picks .more-markets-btn:focus-visible,
+        #picks .back-button:focus-visible,
+        .workflow-card:focus-visible,
+        .sportsbook-sports-nav button:focus-visible {
+            outline: 2px solid rgba(45,212,191,0.95) !important;
+            outline-offset: 3px !important;
+        }
+
         #picks .sport-card.selected {
             border-color: rgba(45,212,191,0.70) !important;
             background:
@@ -20546,6 +20779,53 @@ document.addEventListener('DOMContentLoaded', function() {
             box-shadow: 0 16px 42px rgba(0,0,0,0.16) !important;
         }
 
+        #picks .game-card-new:hover,
+        #picks .game-row:hover,
+        #picks .pick-summary-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(45,212,191,0.24) !important;
+            box-shadow: 0 24px 54px rgba(0,0,0,0.22) !important;
+        }
+
+        #picks .game-card-header {
+            padding: 14px 18px !important;
+            background: linear-gradient(135deg, rgba(45,212,191,0.08), rgba(255,255,255,0.04)) !important;
+            border-bottom: 1px solid rgba(148,163,184,0.12) !important;
+        }
+
+        #picks .game-time-new {
+            color: #f8fafc !important;
+            font-weight: 800 !important;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            font-size: 0.76rem !important;
+        }
+
+        #picks .game-status {
+            border: 1px solid rgba(45,212,191,0.24);
+            background: rgba(45,212,191,0.10) !important;
+            color: #b6fff4 !important;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        #picks .game-teams-section {
+            padding: 18px !important;
+        }
+
+        #picks .team-row {
+            gap: 14px;
+        }
+
+        #picks .team-name-large {
+            color: #f8fafc !important;
+            letter-spacing: -0.02em;
+        }
+
+        #picks .team-record-small {
+            color: #8ea0b7 !important;
+        }
+
         #picks .odds-btn,
         #picks .bet-pick-btn,
         #picks .total-btn {
@@ -20577,6 +20857,26 @@ document.addEventListener('DOMContentLoaded', function() {
             font-weight: 850 !important;
         }
 
+        #picks .odds-btn.selected,
+        #picks .bet-pick-btn.selected,
+        #picks .total-btn.selected {
+            border-color: rgba(45,212,191,0.72) !important;
+            background: linear-gradient(135deg, rgba(45,212,191,0.18), rgba(13,148,136,0.16)) !important;
+            box-shadow: inset 0 0 0 1px rgba(185,255,241,0.18), 0 16px 32px rgba(10,17,31,0.26) !important;
+        }
+
+        #picks .odds-btn.selected .odds-line,
+        #picks .bet-pick-btn.selected .line,
+        #picks .total-btn.selected .value {
+            color: #ffffff !important;
+        }
+
+        #picks .odds-btn.selected .odds-value,
+        #picks .bet-pick-btn.selected .odds,
+        #picks .total-btn.selected .odds {
+            color: #b9fff1 !important;
+        }
+
         #picks .more-markets-btn {
             border-top: 1px solid rgba(148,163,184,0.14) !important;
             color: #2dd4bf !important;
@@ -20587,6 +20887,43 @@ document.addEventListener('DOMContentLoaded', function() {
         #picks .expanded-markets {
             border-top: 1px solid rgba(148,163,184,0.14) !important;
             background: rgba(5,13,22,0.38) !important;
+        }
+
+        #picks .market-title {
+            color: #dce8f5 !important;
+            font-size: 0.78rem !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        #picks .pick-summary-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        #picks .pick-summary-card::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(45,212,191,0.85), rgba(212,167,44,0.58));
+            pointer-events: none;
+        }
+
+        #picks .no-games,
+        #picks .loading-games {
+            border: 1px solid rgba(148,163,184,0.16);
+            border-radius: 22px;
+            background: linear-gradient(180deg, rgba(15,23,42,0.94), rgba(10,18,31,0.98));
+            box-shadow: 0 18px 44px rgba(0,0,0,0.18);
+        }
+
+        #picks .no-games h3,
+        #picks .loading-games h3 {
+            color: #f8fafc !important;
+            font-family: "Barlow Condensed", "Inter", sans-serif !important;
+            letter-spacing: -0.02em;
         }
 
         #picks .bt-toggle-btn,
@@ -20684,11 +21021,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         .sportsbook-sports-nav button {
-            border-radius: 0 !important;
+            border-radius: 999px !important;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
         }
 
         .tmr-site-shell .sportsbook-sports-nav button {
-            border-radius: 0 !important;
+            border-radius: 999px !important;
+        }
+
+        .sportsbook-sports-nav button:hover,
+        .sportsbook-sports-nav button.active {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
         }
 
         .workflow-card span,
@@ -20737,6 +21081,54 @@ document.addEventListener('DOMContentLoaded', function() {
             border: 1px solid #dce3ec;
             border-radius: 18px;
             background: #f8fbfd;
+        }
+
+        @media (max-width: 860px) {
+            #picks .market-headers {
+                grid-template-columns: minmax(150px, 1.2fr) repeat(3, minmax(92px, 1fr));
+                gap: 8px;
+            }
+
+            #picks .game-card-header,
+            #picks .game-teams-section {
+                padding: 14px !important;
+            }
+
+            #picks .bet-buttons-row {
+                width: 100%;
+                justify-content: flex-end;
+                flex-wrap: wrap;
+            }
+        }
+
+        @media (max-width: 640px) {
+            #picks .sport-cards-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+
+            #picks .games-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            #picks .game-card-header,
+            #picks .team-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            #picks .bet-buttons-row {
+                width: 100%;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            #picks .bet-pick-btn,
+            #picks .odds-btn,
+            #picks .total-btn {
+                min-width: 0;
+                width: 100%;
+            }
         }
 
         .trust-flow div {
@@ -21062,6 +21454,9 @@ document.addEventListener('DOMContentLoaded', function() {
             .sportsbook-workflow-grid,
             .sportsbook-trust-panel,
             .trust-flow,
+            .sportsbook-entry-panel,
+            .sportsbook-auth-grid,
+            .picks-onboarding-grid,
             .analytics-depth-grid,
             .breakdown-panels,
             .promo-tool-grid,
