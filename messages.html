@@ -6,8 +6,8 @@
     <title>Messages | Trust My Record</title>
     <meta name="description" content="Private messaging with other bettors on Trust My Record.">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260420d">
-    <script defer src="static/js/tmr-sitewide.js?v=20260420d"></script>
+    <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260420e">
+    <script defer src="static/js/tmr-sitewide.js?v=20260420e"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -749,141 +749,163 @@
         footer {
             background: #ffffff !important;
             border-top: 1px solid #d8dde6 !important;
-            margin-top: 40px !important;
-            padding-top: 0 !important;
+            padding: 0 !important;
         }
 
-        footer a:hover {
-            color: #1f7ae0 !important;
-        }
-
-        @media (max-width: 1200px) {
+        @media (max-width: 1320px) {
             .header-content {
                 grid-template-columns: 1fr;
                 grid-template-areas:
                     "logo"
-                    "actions"
-                    "nav";
-                justify-items: start;
-                padding-top: 16px;
-                padding-bottom: 16px;
+                    "nav"
+                    "actions";
+                justify-items: center;
+                padding: 18px 20px;
             }
 
             .messages-shell-actions {
-                justify-self: start;
+                justify-self: center;
             }
 
             .messages-hero-card {
                 grid-template-columns: 1fr;
             }
         }
-    </style>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-V5MCVXS2HE');
-    </script>
-    <style>
+
+        @media (max-width: 900px) {
+            .messages-wrapper {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .conversations-sidebar {
+                display: flex;
+                min-height: 360px;
+            }
+
+            .chat-area {
+                min-height: 520px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                gap: 14px;
+            }
+
+            .nav-links {
+                gap: 14px 20px;
+                justify-content: center;
+            }
+
+            .messages-shell-actions {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .messages-hero-card {
+                border-radius: 16px;
+            }
+
+            .messages-hero-copy,
+            .messages-top-strip,
+            .messages-wrapper {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+        }
+
+        /* Apply full-width shell strips after mobile overrides */
+        .messages-top-strip,
+        header,
+        footer {
+            margin-left: -20px;
+            margin-right: -20px;
+        }
+
+        @media (max-width: 768px) {
+            .messages-top-strip,
+            header,
+            footer {
+                margin-left: -16px;
+                margin-right: -16px;
+            }
+        }
+
         /* Premium refinement pass */
         body {
             background:
-                radial-gradient(circle at top left, rgba(45, 212, 191, 0.12), transparent 26%),
-                radial-gradient(circle at top right, rgba(212, 167, 44, 0.08), transparent 20%),
-                linear-gradient(180deg, #07111d 0%, #0b1523 52%, #0d1828 100%) !important;
-        }
-
-        .messages-top-strip,
-        header {
-            max-width: 1380px;
-            margin: 0 auto;
+                radial-gradient(circle at top left, rgba(45, 212, 191, 0.1), transparent 26%),
+                radial-gradient(circle at bottom right, rgba(245, 130, 32, 0.08), transparent 24%),
+                linear-gradient(180deg, #f5f7fb 0%, #ebf1f7 100%) !important;
+            color: #162231 !important;
         }
 
         .messages-top-strip {
-            background: rgba(8, 15, 28, 0.82) !important;
-            border: 1px solid rgba(45, 212, 191, 0.16);
-            border-radius: 18px;
-            padding: 10px 18px;
-            color: #9cb0c8;
-            margin-top: 14px;
+            background: rgba(16, 35, 56, 0.92) !important;
             backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
         }
 
         header {
-            background: rgba(7, 15, 27, 0.86) !important;
-            border: 1px solid rgba(45, 212, 191, 0.16);
-            border-radius: 22px;
-            margin-top: 14px;
-            box-shadow: 0 24px 54px rgba(0, 0, 0, 0.28);
+            background: rgba(255,255,255,0.9) !important;
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(99, 115, 137, 0.16) !important;
+            box-shadow: 0 16px 40px rgba(18, 32, 49, 0.06);
         }
 
         .header-content {
-            max-width: none;
-            padding: 0 22px;
-            min-height: 72px;
-        }
-
-        .logo {
-            font-size: 1.25rem !important;
-            background: linear-gradient(135deg, #ecfeff, #2dd4bf 58%, #7dd3fc 100%) !important;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            min-height: 84px;
+            gap: 30px;
         }
 
         .nav-link,
-        .shell-btn {
-            border-radius: 999px !important;
+        .nav-links a {
+            font-size: 1rem !important;
         }
 
         .nav-link {
-            padding: 10px 14px !important;
-            color: #9fb0c6 !important;
+            padding: 12px 10px !important;
+            border-radius: 999px;
         }
 
         .nav-link:hover,
         .nav-link.active {
-            color: #f4f7fb !important;
-            background: rgba(45, 212, 191, 0.1) !important;
+            background: rgba(245, 130, 32, 0.08);
         }
 
         .messages-hero {
-            max-width: 1280px;
-            margin: 26px auto 0;
-            padding: 0 22px;
+            margin-top: 26px;
+            margin-bottom: 22px;
         }
 
         .messages-hero-card,
         .conversations-sidebar,
-        .chat-area {
-            background: linear-gradient(180deg, rgba(12, 23, 39, 0.94), rgba(8, 16, 28, 0.92)) !important;
-            border: 1px solid rgba(148, 163, 184, 0.14) !important;
-            box-shadow: 0 24px 44px rgba(0, 0, 0, 0.24);
+        .chat-area,
+        .modal {
+            box-shadow: 0 28px 64px rgba(18, 32, 49, 0.08) !important;
         }
 
         .messages-hero-card {
-            border-radius: 28px;
-            padding: 28px !important;
-            min-height: 0;
-            grid-template-columns: minmax(0, 1.05fr) minmax(260px, 0.75fr);
+            background:
+                radial-gradient(circle at top right, rgba(45, 212, 191, 0.18), transparent 24%),
+                linear-gradient(135deg, #102338 0%, #183f62 100%) !important;
         }
 
         .messages-eyebrow {
-            color: #5eead4 !important;
-            letter-spacing: 0.14em;
+            background: rgba(255,255,255,0.12) !important;
         }
 
         .messages-hero-copy h1 {
-            font-size: clamp(2rem, 4vw, 3.2rem) !important;
-            line-height: 0.94;
-            margin-bottom: 12px;
+            font-size: clamp(2.25rem, 4.2vw, 3.45rem) !important;
         }
 
         .messages-hero-copy p,
+        .conversation-preview,
         .chat-header-info p,
         .empty-state p {
-            color: #97abc1 !important;
+            font-size: 0.98rem;
         }
 
         .messages-hero-stats {
@@ -891,61 +913,61 @@
         }
 
         .messages-hero-stat {
-            background: rgba(255, 255, 255, 0.03) !important;
-            border: 1px solid rgba(148, 163, 184, 0.12);
-            border-radius: 18px;
-            padding: 14px 16px !important;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         .messages-wrapper {
-            max-width: 1280px;
-            margin: 22px auto 72px;
-            padding: 0 22px;
-            gap: 18px;
-        }
-
-        .conversations-sidebar,
-        .chat-area {
-            border-radius: 24px;
-        }
-
-        .sidebar-header,
-        .chat-header,
-        .chat-input-area {
-            background: rgba(255, 255, 255, 0.02) !important;
-            border-color: rgba(148, 163, 184, 0.12) !important;
+            gap: 22px;
+            height: calc(100vh - 228px);
         }
 
         .new-message-btn,
         .send-btn,
-        .shell-btn.primary {
-            background: linear-gradient(135deg, #1dbaa8, #159e8f) !important;
-            box-shadow: none !important;
+        .shell-btn.primary,
+        .modal-btn.primary {
+            background: linear-gradient(135deg, #f58220, #d66f17) !important;
+            border: none !important;
+            box-shadow: 0 12px 24px rgba(245, 130, 32, 0.16);
         }
 
-        .conversation-item {
-            border-radius: 18px;
-            border: 1px solid transparent;
-            background: rgba(255, 255, 255, 0.02) !important;
+        .shell-btn,
+        .new-message-btn,
+        .send-btn,
+        .modal-btn {
+            border-radius: 999px !important;
         }
 
-        .conversation-item:hover,
         .conversation-item.active {
-            background: rgba(45, 212, 191, 0.1) !important;
-            border-color: rgba(45, 212, 191, 0.2);
+            background: linear-gradient(180deg, #f4f8fd, #eef4fb) !important;
+            border-color: #c7d7ed !important;
         }
 
-        .chat-input {
-            background: rgba(7, 15, 27, 0.88) !important;
-            border-color: rgba(148, 163, 184, 0.18) !important;
-            color: #f4f7fb !important;
-            border-radius: 16px;
+        .message.received {
+            background: #ffffff !important;
+            box-shadow: 0 10px 22px rgba(18, 32, 49, 0.05);
+        }
+
+        .message.sent {
+            box-shadow: 0 14px 26px rgba(214, 111, 23, 0.16);
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            font-size: 1.35rem;
+        }
+
+        .chat-input,
+        .modal-input {
+            border-radius: 16px !important;
+        }
+
+        footer {
+            margin-top: 72px !important;
         }
     </style>
 </head>
 <body>
     <div class="messages-top-strip">
-        <strong>Today:</strong>
         <span>Private conversations</span>
         <span>Verified user profiles</span>
         <span>Pick discussion and follow-up</span>
@@ -965,8 +987,8 @@
                 <a href="profile.html" class="nav-link">My Account</a>
             </nav>
             <div class="messages-shell-actions">
-                <a href="index.html?section=login" class="shell-btn">Log In</a>
-                <a href="index.html?section=signup" class="shell-btn primary">Join Free</a>
+                <a href="sportsbook.html#login" class="shell-btn" id="messagesHeaderLoginBtn">Log In</a>
+                <a href="sportsbook.html#register" class="shell-btn primary" id="messagesHeaderRegisterBtn">Register</a>
             </div>
         </div>
     </header>
@@ -974,21 +996,21 @@
     <section class="messages-hero">
         <div class="messages-hero-card">
             <div class="messages-hero-copy">
-                <div class="messages-eyebrow">Reference-Led Direction</div>
-                <h1>Private messages that feel like part of the same sportsbook portal.</h1>
-                <p>Direct messages should support the betting workflow, not look like a separate app. Talk through matchups, follow up on picks, and keep the community layer tied to the rest of TrustMyRecord.</p>
+                <div class="messages-eyebrow">Private Contact With Context</div>
+                <h1>Direct messages should feel earned, not detached from the public record.</h1>
+                <p>Use messages to follow up on picks, challenge another capper, or move a forum conversation into a private thread without losing the trust layer that started it.</p>
                 <div class="messages-hero-stats">
                     <div class="messages-hero-stat">
                         <strong>Inbox</strong>
-                        <span>Conversations and replies</span>
+                        <span>Conversations tied to actual profiles</span>
                     </div>
                     <div class="messages-hero-stat">
                         <strong>Profiles</strong>
-                        <span>Direct access to verified users</span>
+                        <span>Reach bettors through visible history</span>
                     </div>
                     <div class="messages-hero-stat">
                         <strong>Flow</strong>
-                        <span>Feed, forum, and picks stay connected</span>
+                        <span>Picks, forum, and Arena stay connected</span>
                     </div>
                 </div>
             </div>
@@ -1023,7 +1045,7 @@
                 <div class="empty-state">
                     <div class="empty-state-icon">💬</div>
                     <h3>Select a conversation</h3>
-                    <p>Choose from your conversations or start a new one</p>
+                    <p>Open an existing thread or start one from a profile, pick context, or forum discussion.</p>
                 </div>
             </div>
 
@@ -1035,26 +1057,28 @@
     </div>
 
     <!-- New Message Modal -->
-    <div class="modal-overlay" id="newMessageModal">
+    <div class="modal-overlay" id="newMessageModal" onclick="if(event.target===this) closeNewMessageModal()">
         <div class="modal">
-            <h3>💬 New Message</h3>
-            <input type="text" class="modal-input" id="newMessageUsername" placeholder="Search for a user..." oninput="onUserSearchInput()">
-            <div id="userSearchResults" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;"></div>
+            <h3>New Message</h3>
+            <input
+                type="text"
+                id="newMessageUsername"
+                class="modal-input"
+                placeholder="Search for a user by username..."
+                oninput="onUserSearchInput()"
+                autocomplete="off"
+            >
+            <div id="userSearchResults" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
             <div class="modal-buttons">
                 <button class="modal-btn secondary" onclick="closeNewMessageModal()">Cancel</button>
-                <button class="modal-btn primary" onclick="startNewConversation()">Start Chat</button>
+                <button class="modal-btn primary" onclick="startNewConversation()">Start</button>
             </div>
         </div>
     </div>
 
-    <script src="static/js/config.js?v=20260317"></script>
-    <script src="static/js/analytics.js?v=20260405"></script>
-    <script src="static/js/backend-api.js?v=20260420c"></script>
-    <script src="static/js/nav-badges.js"></script>
-    <script src="static/js/notifications.js?v=20260414b"></script>
-<script src="static/js/auth-persistent.js?v=20260415d"></script>
+    <script src="static/js/backend-api.js?v=20260420e"></script>
+    <script src="static/js/auth-persistent.js?v=20260415d"></script>
     <script>
-        // Message System - Backend API powered
         let currentUser = null;
         let activeConversationUserId = null;
         let activeConversationUsername = null;
@@ -1088,7 +1112,7 @@
                 } catch(e) {}
             }
             if (!currentUser) {
-                window.location.href = 'index.html?section=login';
+                window.location.href = 'sportsbook.html#login';
                 return;
             }
 
@@ -1118,15 +1142,20 @@
                 }
             });
 
-            // Auto-refresh conversations every 30 seconds
+            // Poll for new messages every 10s
             refreshInterval = setInterval(async () => {
+                if (!currentUser) return;
                 await loadConversations();
                 // If viewing a conversation, refresh its messages too
                 if (activeConversationUserId) {
                     await loadChatMessages(activeConversationUserId, false);
                 }
-            }, 30000);
+            }, 10000);
         }
+
+        window.addEventListener('beforeunload', () => {
+            if (refreshInterval) clearInterval(refreshInterval);
+        });
 
         async function loadConversations() {
             try {
@@ -1134,13 +1163,11 @@
                     const data = await api.getConversations();
                     conversations = data.conversations || [];
                 } else {
-                    // localStorage fallback
                     conversations = loadLocalConversations();
                 }
                 renderConversationsList();
             } catch (e) {
                 console.error('Failed to load conversations:', e);
-                // Try localStorage fallback
                 conversations = loadLocalConversations();
                 renderConversationsList();
             }
@@ -1182,7 +1209,7 @@
                     <div class="empty-state" style="padding: 40px 20px;">
                         <div style="font-size: 48px; margin-bottom: 15px;">📬</div>
                         <p style="color: var(--text-muted);">No conversations yet</p>
-                        <p style="font-size: 13px; color: var(--text-muted); opacity: 0.7;">Start from a profile, feed card, or forum post to build direct connections around real picks and receipts.</p>
+                        <p style="font-size: 13px; color: var(--text-muted); opacity: 0.7;">Start from a profile, feed card, challenge, or forum post so each message thread begins with visible context instead of cold outreach.</p>
                     </div>
                 `;
                 return;
@@ -1263,7 +1290,8 @@
                 document.getElementById('chatMessages').innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">⚠️</div>
-                        <p>Failed to load messages</p>
+                        <h3>Could not load this conversation</h3>
+                        <p>Refresh and try again. Message history should load cleanly once the thread is available.</p>
                     </div>
                 `;
             }
@@ -1290,7 +1318,8 @@
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">💬</div>
-                        <p>No messages yet. Start the thread with context from a pick, forum post, or profile.</p>
+                        <h3>No messages yet</h3>
+                        <p>Start the thread with context from a pick, forum post, challenge, or profile so the conversation has a clear reason to exist.</p>
                     </div>
                 `;
                 return;
@@ -1506,8 +1535,8 @@
                         <div style="font-size: 0.75rem; font-weight: 700; color: #162231; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Platform</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             <a href="sportsbook.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
-                            <a href="index.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
-                            <a href="arena.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Gaming Arena</a>
+                            <a href="index.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Home</a>
+                            <a href="arena.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Arena</a>
                             <a href="forum.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
                         </div>
                     </div>
