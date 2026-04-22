@@ -6,7 +6,7 @@
         ["handicappers.html", "Handicappers"],
         ["arena.html", "Arena"],
         ["feed.html", "Feed"],
-        ["polls.html", "Polls"],
+        ["hangout.html", "Hangout"],
         ["trivia.html", "Trivia"],
         ["forum.html", "Forum"],
         ["about.html", "About"]
@@ -18,7 +18,8 @@
         "arena.html": ["Arena", "Head-to-head contests, rival callouts, public challenges, and competition loops."],
         "challenges.html": ["Arena", "Legacy arena route. Public competition and challenge traffic belongs on the Arena page."],
         "feed.html": ["Social Feed", "Posts, reactions, sports debate, locked picks, and activity from the community."],
-        "polls.html": ["Polls", "Prediction polls and scored fan forecasting, separate from pick submission."],
+        "hangout.html": ["Hangout", "Prediction polls, opinion polls, fan debates, and community conversation loops."],
+        "polls.html": ["Hangout", "Legacy polls route. Prediction polls and opinion polls now live in Hangout."],
         "trivia.html": ["Trivia", "Sports knowledge games, custom questions, and scored fan status."],
         "profile.html": ["Verified Records", "Public profile history, pick ledger, advanced splits, and credibility markers."],
         "forum.html": ["Forum", "Long-form sports discussion and community threads."],
@@ -262,7 +263,7 @@
                     <div class="tmr-global-footer__links">
                         <a href="feed.html">Feed</a>
                         <a href="forum.html">Forum</a>
-                        <a href="polls.html">Polls</a>
+                        <a href="hangout.html">Hangout</a>
                         <a href="trivia.html">Trivia</a>
                     </div>
                 </div>
