@@ -518,6 +518,20 @@
         target.classList.add('active');
     }
 
+    function pinPicksSectionIfRequested() {
+        const wantsPicks = window.location.hash === '#picks' || window.location.pathname === '/picks';
+        if (!wantsPicks) return;
+        forceSectionActive('picks');
+        let attempts = 0;
+        const interval = window.setInterval(function() {
+            attempts += 1;
+            forceSectionActive('picks');
+            if (attempts >= 8) {
+                window.clearInterval(interval);
+            }
+        }, 500);
+    }
+
     function renderBoardIfCurrent(requestId, sport, badge, response) {
         if (state.selectedSport !== sport) return false;
         if (requestId !== latestBoardRequestId) {
@@ -1980,9 +1994,7 @@
         injectStyles();
         ensureMetadataFields();
         disableLegacyFeed();
-        if (window.location.hash === '#picks' || window.location.pathname === '/picks') {
-            forceSectionActive('picks');
-        }
+        pinPicksSectionIfRequested();
         wireSportPrefetch();
         wireSportsbookTabs();
         window.tmrAddPromoNote = addPromoNote;
