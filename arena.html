@@ -329,6 +329,10 @@
         .hero h1 {
             font-size: clamp(2.35rem, 5vw, 3.8rem);
             line-height: 0.96;
+            max-width: 11ch;
+            text-wrap: balance;
+            word-break: normal;
+            overflow-wrap: normal;
         }
 
         .hero h1 .gold,
@@ -406,6 +410,17 @@
         .form-control {
             background: rgba(255,255,255,0.045);
             color: #eef4fb;
+        }
+
+        @media (min-width: 1024px) {
+            .hero-shell {
+                grid-template-columns: minmax(0, 1.16fr) minmax(320px, 0.84fr);
+                gap: 20px;
+            }
+
+            .hero-copy-card {
+                padding-right: 32px;
+            }
         }
 
         @media (max-width: 768px) {
