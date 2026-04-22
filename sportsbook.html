@@ -12458,16 +12458,16 @@
 /* Polls Grid */
 .polls-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 25px;
-    margin: 30px 0;
+    grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+    gap: 30px;
+    margin: 36px 0;
 }
 
 .poll-card {
     background: var(--card-bg);
     border: 2px solid var(--glass-border);
     border-radius: 16px;
-    padding: 25px;
+    padding: 30px;
     transition: all 0.3s ease;
 }
 
@@ -12480,35 +12480,36 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 18px;
+    gap: 12px;
 }
 
 .poll-category {
     background: rgba(0, 255, 255, 0.1);
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
     color: var(--neon-cyan);
 }
 
 .poll-time {
     color: var(--neon-gold);
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 0.95rem;
+    font-weight: 700;
 }
 
 .poll-question {
-    font-size: 1.2rem;
+    font-size: 1.45rem;
     font-weight: 700;
-    margin-bottom: 12px;
-    line-height: 1.4;
+    margin-bottom: 10px;
+    line-height: 1.45;
 }
 
 .poll-creator {
     color: var(--text-muted);
-    font-size: 0.85rem;
-    margin-bottom: 20px;
+    font-size: 1rem;
+    margin-bottom: 22px;
 }
 
 .poll-creator .username {
@@ -13236,13 +13237,13 @@ function renderPollsGrid(filterCategory) {
         var catIcons = { nfl: '🏈', nba: '🏀', mlb: '⚾', nhl: '🏒', ncaaf: '🎓', ncaab: '🏫', soccer: '⚽', other: '🎲' };
         var catIcon = catIcons[poll.category] || '📊';
 
-        html += '<div class="poll-card" style="background: var(--card-bg); border: 1px solid ' + (isExpired ? '#333' : 'var(--glass-border)') + '; border-radius: 16px; padding: 24px; opacity: ' + (isExpired ? '0.7' : '1') + ';">';
-        html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">';
-        html += '<span style="background: rgba(102, 126, 234, 0.2); color: #667eea; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">' + catIcon + ' ' + (poll.category || 'general').toUpperCase() + '</span>';
-        html += '<span style="color: ' + (isExpired ? '#ff4444' : '#6c7380') + '; font-size: 12px;">' + timeLeft + '</span>';
+        html += '<div class="poll-card" style="background: var(--card-bg); border: 1px solid ' + (isExpired ? '#333' : 'var(--glass-border)') + '; border-radius: 20px; padding: 30px; opacity: ' + (isExpired ? '0.7' : '1') + ';">';
+        html += '<div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px;">';
+        html += '<span style="background: rgba(102, 126, 234, 0.2); color: #667eea; padding: 7px 14px; border-radius: 999px; font-size: 14px; font-weight: 700;">' + catIcon + ' ' + (poll.category || 'general').toUpperCase() + '</span>';
+        html += '<span style="color: ' + (isExpired ? '#ff4444' : '#6c7380') + '; font-size: 14px; font-weight: 700;">' + timeLeft + '</span>';
         html += '</div>';
-        html += '<h3 style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: 6px;">' + escapeHtml(poll.question) + '</h3>';
-        html += '<p style="color: #6c7380; font-size: 12px; margin-bottom: 16px;">by @' + escapeHtml(poll.createdBy) + ' &middot; ' + totalVotes + ' votes</p>';
+        html += '<h3 style="color: var(--text-primary); font-size: 1.4rem; line-height: 1.45; margin-bottom: 10px;">' + escapeHtml(poll.question) + '</h3>';
+        html += '<p style="color: #6c7380; font-size: 15px; margin-bottom: 20px;">by @' + escapeHtml(poll.createdBy) + ' &middot; ' + totalVotes + ' votes</p>';
 
         // Options
         poll.options.forEach(function(opt, idx) {
@@ -13251,20 +13252,20 @@ function renderPollsGrid(filterCategory) {
             var isMyVote = votedIndex === idx;
 
             if (showResults) {
-                html += '<div style="position: relative; background: rgba(255,255,255,0.05); border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; overflow: hidden; border: 1px solid ' + (isMyVote ? 'var(--neon-cyan)' : 'transparent') + ';">';
+                html += '<div style="position: relative; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px 18px; margin-bottom: 10px; overflow: hidden; border: 1px solid ' + (isMyVote ? 'var(--neon-cyan)' : 'transparent') + ';">';
                 html += '<div style="position: absolute; top: 0; left: 0; height: 100%; width: ' + pct + '%; background: ' + (isWinner ? 'rgba(0, 200, 83, 0.15)' : 'rgba(102, 126, 234, 0.1)') + '; border-radius: 10px; transition: width 0.5s;"></div>';
                 html += '<div style="position: relative; display: flex; justify-content: space-between; align-items: center;">';
-                html += '<span style="color: var(--text-primary); font-weight: ' + (isMyVote ? '700' : '500') + ';">' + escapeHtml(opt.text) + (isMyVote ? ' ✓' : '') + '</span>';
-                html += '<span style="color: ' + (isWinner ? '#00c853' : '#6c7380') + '; font-weight: 700;">' + pct + '%</span>';
+                html += '<span style="color: var(--text-primary); font-size: 16px; font-weight: ' + (isMyVote ? '700' : '500') + ';">' + escapeHtml(opt.text) + (isMyVote ? ' ✓' : '') + '</span>';
+                html += '<span style="color: ' + (isWinner ? '#00c853' : '#6c7380') + '; font-size: 16px; font-weight: 700;">' + pct + '%</span>';
                 html += '</div></div>';
             } else {
-                html += '<button onclick="votePoll(\'' + poll.id + '\',' + idx + ')" style="display: block; width: 100%; text-align: left; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; color: var(--text-primary); cursor: pointer; font-size: 14px; transition: all 0.2s;" onmouseover="this.style.background=\'rgba(102,126,234,0.15)\';this.style.borderColor=\'#667eea\'" onmouseout="this.style.background=\'rgba(255,255,255,0.05)\';this.style.borderColor=\'var(--glass-border)\'">' + escapeHtml(opt.text) + '</button>';
+                html += '<button onclick="votePoll(\'' + poll.id + '\',' + idx + ')" style="display: block; width: 100%; text-align: left; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 12px; padding: 16px 18px; margin-bottom: 10px; color: var(--text-primary); cursor: pointer; font-size: 16px; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background=\'rgba(102,126,234,0.15)\';this.style.borderColor=\'#667eea\'" onmouseout="this.style.background=\'rgba(255,255,255,0.05)\';this.style.borderColor=\'var(--glass-border)\'">' + escapeHtml(opt.text) + '</button>';
             }
         });
 
-        html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05);">';
-        html += '<span style="color: #6c7380; font-size: 12px;">🏆 ' + (poll.points || 50) + ' pts</span>';
-        html += '<span style="color: #6c7380; font-size: 12px;">' + totalVotes + ' total votes</span>';
+        html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.05);">';
+        html += '<span style="color: #6c7380; font-size: 14px; font-weight: 600;">🏆 ' + (poll.points || 50) + ' pts</span>';
+        html += '<span style="color: #6c7380; font-size: 14px; font-weight: 600;">' + totalVotes + ' total votes</span>';
         html += '</div>';
         html += '</div>';
     });
