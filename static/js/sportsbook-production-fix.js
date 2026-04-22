@@ -793,13 +793,18 @@
             game = repairGameTeams(game);
             const bookmaker = (game.bookmakers || [])[0] || null;
             const markets = bookmaker && Array.isArray(bookmaker.markets) ? bookmaker.markets : [];
+            const findMarketByKeys = function(keys) {
+                return keys.map(function(key) {
+                    return markets.find(function(market) { return market.key === key; }) || null;
+                }).find(Boolean) || null;
+            };
             const h2h = markets.find(function(market) { return market.key === 'h2h'; }) || null;
             const spreads = markets.find(function(market) { return market.key === 'spreads'; }) || null;
             const totals = markets.find(function(market) { return market.key === 'totals'; }) || null;
-            const teamTotals = markets.find(function(market) { return market.key === 'team_totals'; }) || null;
-            const f5H2h = markets.find(function(market) { return market.key === 'f5_h2h'; }) || null;
-            const f5Spreads = markets.find(function(market) { return market.key === 'f5_spreads'; }) || null;
-            const f5Totals = markets.find(function(market) { return market.key === 'f5_totals'; }) || null;
+            const teamTotals = findMarketByKeys(['team_totals']);
+            const f5H2h = findMarketByKeys(['f5_h2h', 'h2h_1st_5_innings']);
+            const f5Spreads = findMarketByKeys(['f5_spreads', 'spreads_1st_5_innings']);
+            const f5Totals = findMarketByKeys(['f5_totals', 'totals_1st_5_innings']);
             const awayMl = h2h && h2h.outcomes ? h2h.outcomes.find(function(outcome) { return outcome.name === game.away_team; }) : null;
             const homeMl = h2h && h2h.outcomes ? h2h.outcomes.find(function(outcome) { return outcome.name === game.home_team; }) : null;
             const awaySpread = spreads && spreads.outcomes ? spreads.outcomes.find(function(outcome) { return outcome.name === game.away_team; }) : null;
@@ -850,7 +855,7 @@
             const addRawMarketGroup = function(groupKey, groupLabel, marketKeys) {
                 const items = [];
                 marketKeys.forEach(function(marketKey) {
-                    const market = markets.find(function(candidate) { return candidate.key === marketKey; });
+                    const market = findMarketByKeys([marketKey]);
                     if (!market || !Array.isArray(market.outcomes) || !market.outcomes.length) return;
 
                     market.outcomes.forEach(function(outcome) {
@@ -890,11 +895,11 @@
                 }
             };
 
-            addRawMarketGroup('first_half', 'First Half', ['first_half_h2h', 'first_half_spreads', 'first_half_totals']);
-            addRawMarketGroup('second_half', 'Second Half', ['second_half_h2h', 'second_half_spreads', 'second_half_totals']);
-            addRawMarketGroup('period_1', '1st Period', ['period_1_h2h', 'period_1_spreads', 'period_1_totals']);
-            addRawMarketGroup('alt_spreads', 'Alt Spreads', ['alt_spreads']);
-            addRawMarketGroup('alt_totals', 'Alt Totals', ['alt_totals']);
+            addRawMarketGroup('first_half', 'First Half', ['first_half_h2h', 'h2h_h1', 'first_half_spreads', 'spreads_h1', 'first_half_totals', 'totals_h1']);
+            addRawMarketGroup('second_half', 'Second Half', ['second_half_h2h', 'h2h_h2', 'second_half_spreads', 'spreads_h2', 'second_half_totals', 'totals_h2']);
+            addRawMarketGroup('period_1', '1st Period', ['period_1_h2h', 'h2h_p1', 'period_1_spreads', 'period_1_totals', 'totals_p1']);
+            addRawMarketGroup('alt_spreads', 'Alt Spreads', ['alt_spreads', 'alternate_spreads']);
+            addRawMarketGroup('alt_totals', 'Alt Totals', ['alt_totals', 'alternate_totals']);
             addRawMarketGroup('three_way', '3-Way Moneyline', ['h2h_3_way']);
 
             if (sportKey === 'baseball_mlb' && (f5H2h || f5Spreads || f5Totals)) {
