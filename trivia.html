@@ -153,12 +153,15 @@
         }
         .stat-box {
             text-align: center;
+            min-width: 140px;
+            padding: 18px 16px;
         }
         .stat-box .stat-value {
             font-family: 'Orbitron', monospace;
             font-size: 24px;
             font-weight: 700;
             color: var(--primary);
+            line-height: 1.1;
         }
         .stat-box .stat-label {
             font-size: 12px;
@@ -166,6 +169,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-top: 4px;
+            line-height: 1.35;
         }
 
         /* ===== VIEW TABS ===== */
@@ -705,7 +709,15 @@
         /* ===== RESPONSIVE ===== */
         @media (max-width: 640px) {
             .page-header h1 { font-size: 1.8rem; }
-            .stats-bar { gap: 20px; }
+            .stats-bar {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 14px;
+            }
+            .stat-box {
+                min-width: 0;
+                width: 100%;
+            }
             .categories-grid { grid-template-columns: 1fr; }
             .quiz-container { border-radius: 16px; }
             .quiz-body { padding: 20px 16px; }
