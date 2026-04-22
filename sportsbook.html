@@ -17360,12 +17360,12 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- forms.js REMOVED - forms-fixed.js handles login/signup -->
     <script src="static/js/navigation.js?v=20260415a"></script>
     <script src="static/js/sportsbook-production-fix.js?v=20260422a"></script>
-    <script src="static/js/sportsbook-board-hotfix.js?v=20260422b"></script>
     <script src="static/js/effects.js?v=20251208c"></script>
     <script>
     (function() {
         if (window.__tmrInlineBoardHotfix) return;
         window.__tmrInlineBoardHotfix = true;
+        window.__tmrInlineBoardHotfixVersion = '20260422c';
 
         function injectStyles() {
             if (document.getElementById('tmr-inline-board-hotfix-style')) return;
@@ -17487,14 +17487,53 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.tmr-market-card').forEach(patchCard);
         }
 
+        function ensureBoardHealth() {
+            var container = document.getElementById('gamesListContainer');
+            if (!container) return;
+            var cards = container.querySelectorAll('.tmr-market-card');
+            if (!cards.length) return;
+
+            cards.forEach(function(card) {
+                var hasButtons = !!card.querySelector('.tmr-option-btn');
+                var body = card.querySelector('.tmr-market-body');
+                var count = card.querySelector('.tmr-market-count');
+                if (count) {
+                    var visibleGroups = card.querySelectorAll('.tmr-group').length;
+                    count.textContent = visibleGroups + ' sections';
+                }
+                if (!hasButtons && body && !body.querySelector('.tmr-empty-state')) {
+                    var empty = document.createElement('div');
+                    empty.className = 'tmr-empty-state';
+                    empty.textContent = 'No markets available for this matchup right now.';
+                    body.appendChild(empty);
+                    console.warn('[TMR] Patched empty market card with fallback state');
+                }
+            });
+
+            var hasCards = !!container.querySelector('.tmr-market-card');
+            var hasLoading = !!container.querySelector('.tmr-loading-grid');
+            var hasEmpty = !!container.querySelector('.tmr-empty-state');
+            if (!hasCards && !hasLoading && !hasEmpty && container.textContent.trim() === '') {
+                container.innerHTML = '<div class="tmr-empty-state">Markets are loading or temporarily unavailable. Tap Retry Feed.</div>';
+                console.warn('[TMR] Injected board-level fallback empty state');
+            }
+        }
+
         function boot() {
             patchBoard();
+            ensureBoardHealth();
             var container = document.getElementById('gamesListContainer');
             if (!container) return;
             var observer = new MutationObserver(function() {
                 patchBoard();
+                ensureBoardHealth();
             });
             observer.observe(container, { childList: true, subtree: true });
+            window.__tmrInlineBoardHotfixObserver = observer;
+            window.__tmrInlineBoardHealthInterval = window.setInterval(function() {
+                patchBoard();
+                ensureBoardHealth();
+            }, 3000);
         }
 
         if (document.readyState === 'loading') {
