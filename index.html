@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260421c">
+<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260421d">
     <style>
         :root {
             --bg: #0b1220;
@@ -1254,6 +1254,7 @@
                 padding: 9px 13px;
             }
             .hero {
+                grid-template-columns: 1fr;
                 gap: 18px;
                 padding: 22px 0 20px;
             }
@@ -1293,6 +1294,8 @@
                 padding: 11px 12px;
             }
             .hero-media {
+                justify-self: stretch;
+                width: 100%;
                 border-radius: 24px;
             }
             .hero-media img {
@@ -1526,6 +1529,22 @@
             margin: 34px 0 48px;
             border-radius: 24px;
             padding: 28px 24px;
+        }
+    </style>
+    <style>
+        @media (max-width: 620px) {
+            .hero {
+                grid-template-columns: 1fr !important;
+            }
+
+            .hero-copy,
+            .hero-media {
+                width: 100% !important;
+            }
+
+            .hero-media {
+                justify-self: stretch !important;
+            }
         }
     </style>
 </head>

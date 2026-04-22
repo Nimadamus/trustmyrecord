@@ -501,8 +501,9 @@ html body.tmr-site-shell::after {
 .tmr-site-shell .verify-title,
 .tmr-site-shell .reset-title {
     max-width: 100%;
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: auto;
 }
 
 .tmr-site-shell p,
@@ -1345,6 +1346,60 @@ html body.tmr-site-shell::after {
         line-height: 1.12 !important;
     }
 
+    .tmr-global-nav__inner {
+        width: min(100%, calc(100% - 20px)) !important;
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+        padding: 12px 0 !important;
+    }
+
+    .tmr-global-nav__brand {
+        font-size: 1.7rem;
+    }
+
+    .tmr-global-nav__links {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px !important;
+        justify-content: stretch !important;
+        overflow: visible !important;
+        white-space: normal !important;
+    }
+
+    .tmr-global-nav__links a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 36px;
+        padding: 8px 6px;
+        border: 1px solid rgba(148, 163, 184, 0.16);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+        font-size: 0.7rem !important;
+        line-height: 1.1;
+        text-align: center;
+        letter-spacing: 0.05em;
+    }
+
+    .tmr-global-nav__actions {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        gap: 8px !important;
+        overflow: visible !important;
+    }
+
+    .tmr-global-nav__button,
+    .tmr-global-nav__user {
+        width: 100%;
+        max-width: none;
+        justify-content: center;
+    }
+
+    .tmr-global-nav__user-copy {
+        max-width: 100%;
+    }
+
     .tmr-site-shell .page-header,
     .tmr-site-shell .profile-header-section,
     .tmr-site-shell .premium-hero,
@@ -1379,5 +1434,15 @@ html body.tmr-site-shell::after {
     .tmr-site-shell[data-tmr-route="about"] .creed-strip,
     .tmr-site-shell[data-tmr-route="about"] .features-grid {
         grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 440px) {
+    .tmr-global-nav__links {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .tmr-global-nav__links a {
+        font-size: 0.68rem !important;
     }
 }
