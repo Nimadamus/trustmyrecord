@@ -17366,6 +17366,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (window.__tmrInlineBoardHotfix) return;
         window.__tmrInlineBoardHotfix = true;
         window.__tmrInlineBoardHotfixVersion = '20260422c';
+        window.__tmrInlineBoardRuntimeVersion = '20260422e';
+        window.__tmrBoardDiagnostics = window.__tmrBoardDiagnostics || [];
 
         function injectStyles() {
             if (document.getElementById('tmr-inline-board-hotfix-style')) return;
@@ -17487,6 +17489,26 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.tmr-market-card').forEach(patchCard);
         }
 
+        function recordRuntimeEvent(type, details) {
+            var event = Object.assign({
+                type: type,
+                at: new Date().toISOString(),
+                source: 'inline-board-guard'
+            }, details || {});
+            window.__tmrBoardDiagnostics.push(event);
+            while (window.__tmrBoardDiagnostics.length > 80) {
+                window.__tmrBoardDiagnostics.shift();
+            }
+            window.__tmrLastBoardEvent = event;
+            if (type.indexOf('error') !== -1 || type.indexOf('failed') !== -1) {
+                console.error('[TMR][InlineBoard]', type, event);
+            } else if (type.indexOf('warning') !== -1 || type.indexOf('blank') !== -1 || type.indexOf('empty') !== -1) {
+                console.warn('[TMR][InlineBoard]', type, event);
+            } else {
+                console.log('[TMR][InlineBoard]', type, event);
+            }
+        }
+
         function ensureBoardHealth() {
             var container = document.getElementById('gamesListContainer');
             if (!container) return;
@@ -17507,6 +17529,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     empty.textContent = 'No markets available for this matchup right now.';
                     body.appendChild(empty);
                     console.warn('[TMR] Patched empty market card with fallback state');
+                    recordRuntimeEvent('board_card_empty_recovered', {
+                        cardId: card.id || '',
+                        section_count: card.querySelectorAll('.tmr-group').length
+                    });
                 }
             });
 
@@ -17516,12 +17542,60 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!hasCards && !hasLoading && !hasEmpty && container.textContent.trim() === '') {
                 container.innerHTML = '<div class="tmr-empty-state">Markets are loading or temporarily unavailable. Tap Retry Feed.</div>';
                 console.warn('[TMR] Injected board-level fallback empty state');
+                recordRuntimeEvent('board_blank_recovered');
             }
+        }
+
+        function wrapBoardActions() {
+            if (window.__tmrBoardActionWrappersInstalled) return true;
+            if (typeof window.selectSportAndShowGames !== 'function' || typeof window.tmrSportsbookRefresh !== 'function') {
+                return false;
+            }
+
+            var originalSelectSportAndShowGames = window.selectSportAndShowGames;
+            var originalRefresh = window.tmrSportsbookRefresh;
+
+            window.selectSportAndShowGames = function(sport) {
+                recordRuntimeEvent('board_select_requested', { sport: sport || '' });
+                var result = originalSelectSportAndShowGames.apply(this, arguments);
+                window.setTimeout(function() {
+                    ensureBoardHealth();
+                    recordRuntimeEvent('board_select_postcheck', {
+                        sport: sport || '',
+                        card_count: document.querySelectorAll('.tmr-market-card').length,
+                        empty_count: document.querySelectorAll('#gamesListContainer .tmr-empty-state').length
+                    });
+                }, 2500);
+                return result;
+            };
+
+            window.tmrSportsbookRefresh = function() {
+                recordRuntimeEvent('board_refresh_requested', {
+                    sport: window.TMR && window.TMR.selectedSport ? window.TMR.selectedSport : ''
+                });
+                var result = originalRefresh.apply(this, arguments);
+                window.setTimeout(function() {
+                    ensureBoardHealth();
+                    recordRuntimeEvent('board_refresh_postcheck', {
+                        card_count: document.querySelectorAll('.tmr-market-card').length,
+                        empty_count: document.querySelectorAll('#gamesListContainer .tmr-empty-state').length
+                    });
+                }, 2500);
+                return result;
+            };
+
+            window.__tmrBoardActionWrappersInstalled = true;
+            window.tmrDumpBoardDiagnostics = function() {
+                return (window.__tmrBoardDiagnostics || []).slice();
+            };
+            recordRuntimeEvent('board_runtime_wrapped');
+            return true;
         }
 
         function boot() {
             patchBoard();
             ensureBoardHealth();
+            wrapBoardActions();
             var container = document.getElementById('gamesListContainer');
             if (!container) return;
             var observer = new MutationObserver(function() {
@@ -17533,7 +17607,9 @@ document.addEventListener('DOMContentLoaded', function() {
             window.__tmrInlineBoardHealthInterval = window.setInterval(function() {
                 patchBoard();
                 ensureBoardHealth();
+                wrapBoardActions();
             }, 3000);
+            recordRuntimeEvent('board_runtime_booted');
         }
 
         if (document.readyState === 'loading') {
