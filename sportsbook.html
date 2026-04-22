@@ -11861,6 +11861,52 @@
             </div>
         </div>
 
+        <div class="breakdown-section">
+            <h3>Advanced Metrics</h3>
+            <div class="breakdown-table-wrapper">
+                <table class="breakdown-table" id="advancedMetricsTable">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Value</th>
+                            <th>Context</th>
+                        </tr>
+                    </thead>
+                    <tbody id="advancedMetricsBody">
+                        <tr><td colspan="3" style="text-align:center; color: var(--text-muted);">Advanced metrics will populate once enough graded picks are available.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="my-record-detail-grid">
+            <div class="breakdown-section">
+                <h3>Price Profile</h3>
+                <div id="myRecordPriceProfileGrid" class="my-record-mini-grid">
+                    <div class="my-record-empty">No graded picks yet.</div>
+                </div>
+            </div>
+            <div class="breakdown-section">
+                <h3>Odds Range Breakdown</h3>
+                <div id="myRecordOddsRangeGrid" class="my-record-mini-grid">
+                    <div class="my-record-empty">No graded picks yet.</div>
+                </div>
+            </div>
+            <div class="breakdown-section">
+                <h3>Open Exposure</h3>
+                <div id="myRecordPendingSummaryGrid" class="my-record-mini-grid">
+                    <div class="my-record-empty">No pending picks.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="breakdown-section">
+            <h3>Recent Form</h3>
+            <div id="myRecordRecentFormGrid" class="my-record-recent-form">
+                <div class="my-record-empty">No graded picks yet.</div>
+            </div>
+        </div>
+
         <!-- Actions Bar -->
         <div class="stats-actions-bar">
             <button class="stats-action-btn primary" onclick="loadMyPicks(window.currentPicksTab||'pending'); refreshAdvancedStats();">
@@ -12079,6 +12125,80 @@
 .breakdown-table .positive { color: #00ff88; }
 .breakdown-table .negative { color: #ff4444; }
 .breakdown-table .sport-icon { margin-right: 8px; }
+
+.my-record-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.my-record-mini-grid {
+    display: grid;
+    gap: 10px;
+}
+
+.my-record-mini-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 0;
+    border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.my-record-mini-row:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.my-record-mini-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.my-record-mini-note {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+}
+
+.my-record-mini-value {
+    text-align: right;
+    font-weight: 700;
+}
+
+.my-record-mini-value.positive { color: #00ff88; }
+.my-record-mini-value.negative { color: #ff4444; }
+
+.my-record-recent-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.my-record-form-pill {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+.my-record-form-pill.won { background: #16a34a; }
+.my-record-form-pill.lost { background: #dc2626; }
+.my-record-form-pill.push { background: #64748b; }
+
+.my-record-empty {
+    color: var(--text-muted);
+    padding: 8px 0;
+}
 
 /* Actions Bar */
 .stats-actions-bar {
@@ -12326,6 +12446,9 @@
     }
     .secondary-stats-grid {
         grid-template-columns: repeat(3, 1fr);
+    }
+    .my-record-detail-grid {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -18408,6 +18531,27 @@ document.addEventListener('DOMContentLoaded', function() {
         // Bet Type Breakdown Table
         renderBetTypeBreakdown(picks);
 
+        // Full advanced metrics and supporting breakdowns
+        renderMyRecordAdvancedMetrics(picks, {
+            wins,
+            losses,
+            pushes,
+            graded,
+            total,
+            unitsProfit,
+            totalRisked,
+            avgOdds,
+            avgUnits: parseFloat(avgUnits),
+            winRate: parseFloat(winRate),
+            roi: parseFloat(roi),
+            zScore,
+            streaks
+        });
+        renderMyRecordPriceProfile(picks);
+        renderMyRecordOddsRanges(picks);
+        renderMyRecordPendingSummary(picks);
+        renderMyRecordRecentForm(picks);
+
         // Load history (hidden by default)
         filterAdvHistory('all');
     }
@@ -18486,6 +18630,286 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td class="${parseFloat(roi) >= 0 ? 'positive' : 'negative'}">${parseFloat(roi) >= 0 ? '+' : ''}${roi}%</td>
                 </tr>`;
             }).join('');
+    }
+
+    function normalizeMyRecordStatus(status) {
+        const value = String(status || '').toLowerCase();
+        if (value === 'pushed') return 'push';
+        return value || 'pending';
+    }
+
+    function formatSignedUnitsMyRecord(value) {
+        const numeric = Number(value || 0);
+        return (numeric >= 0 ? '+' : '') + numeric.toFixed(2) + 'u';
+    }
+
+    function formatOddsMyRecord(value) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return 'N/A';
+        return numeric > 0 ? '+' + Math.round(numeric) : String(Math.round(numeric));
+    }
+
+    function myRecordPickPL(pick) {
+        return Number(calculatePickUnits(pick) || 0);
+    }
+
+    function computeMyRecordAdvancedStats(picks) {
+        const graded = (picks || []).filter(function(pick) {
+            const status = normalizeMyRecordStatus(pick.status);
+            return status === 'won' || status === 'lost' || status === 'push';
+        });
+        const decisions = graded.filter(function(pick) {
+            const status = normalizeMyRecordStatus(pick.status);
+            return status === 'won' || status === 'lost';
+        });
+
+        if (!decisions.length) {
+            return null;
+        }
+
+        const wins = decisions.filter(function(pick) { return normalizeMyRecordStatus(pick.status) === 'won'; }).length;
+        const losses = decisions.filter(function(pick) { return normalizeMyRecordStatus(pick.status) === 'lost'; }).length;
+        const impliedAverage = decisions.reduce(function(total, pick) {
+            return total + impliedProbability(pick.odds_snapshot || pick.odds);
+        }, 0) / decisions.length;
+        const zScore = calculateZScore(wins, decisions.length, impliedAverage);
+        const avgUnits = graded.reduce(function(total, pick) { return total + (parseFloat(pick.units) || 1); }, 0) / graded.length;
+        const netUnits = graded.reduce(function(total, pick) { return total + myRecordPickPL(pick); }, 0);
+        const totalRisked = graded.reduce(function(total, pick) {
+            return total + (parseFloat(pick.units) || 1);
+        }, 0);
+        const roi = totalRisked > 0 ? (netUnits / totalRisked) * 100 : 0;
+        const effectiveUnits = avgUnits > 0 ? (netUnits / avgUnits) * 3 : 0;
+        const effectiveWinPct = Math.min(100, Math.max(0, ((roi / 100 + 1.1) / 2.1) * 100));
+        const confidenceBase = Math.max(0, Math.min(1, Math.abs(zScore) / 3));
+        const confidence = Math.max(0, Math.min(100, confidenceBase * Math.min(decisions.length, 500) / 5));
+        const projectedRoi = roi * (confidence / 100);
+        const returns = graded.map(function(pick) { return myRecordPickPL(pick); });
+        const avgReturn = returns.reduce(function(total, value) { return total + value; }, 0) / returns.length;
+        const variance = returns.reduce(function(total, value) {
+            return total + Math.pow(value - avgReturn, 2);
+        }, 0) / returns.length;
+        const stdDev = Math.sqrt(variance);
+        const sharpe = stdDev > 0 ? avgReturn / stdDev : 0;
+        const downside = returns.filter(function(value) { return value < 0; });
+        const downsideVariance = downside.length ? downside.reduce(function(total, value) {
+            return total + (value * value);
+        }, 0) / downside.length : 0;
+        const sortino = downsideVariance > 0 ? avgReturn / Math.sqrt(downsideVariance) : 0;
+        const grossWon = returns.filter(function(value) { return value > 0; }).reduce(function(total, value) { return total + value; }, 0);
+        const grossLost = Math.abs(returns.filter(function(value) { return value < 0; }).reduce(function(total, value) { return total + value; }, 0));
+        const profitFactor = grossLost > 0 ? (grossWon / grossLost) : (grossWon > 0 ? Infinity : 0);
+
+        let running = 0;
+        let peak = 0;
+        let maxDrawdown = 0;
+        graded
+            .slice()
+            .sort(function(a, b) {
+                return new Date(a.locked_at || a.timestamp || 0) - new Date(b.locked_at || b.timestamp || 0);
+            })
+            .forEach(function(pick) {
+                running += myRecordPickPL(pick);
+                if (running > peak) peak = running;
+                maxDrawdown = Math.max(maxDrawdown, peak - running);
+            });
+
+        const avgOdds = decisions.reduce(function(total, pick) {
+            return total + Number(pick.odds_snapshot || pick.odds || -110);
+        }, 0) / decisions.length;
+        const decimalOdds = avgOdds < 0 ? (100 / Math.abs(avgOdds)) + 1 : (avgOdds / 100) + 1;
+        const edge = wins / decisions.length;
+        const b = decimalOdds - 1;
+        const kelly = b > 0 ? ((b * edge - (1 - edge)) / b) * 100 : 0;
+
+        return {
+            effectiveUnits,
+            effectiveWinPct,
+            zScore,
+            confidence,
+            projectedRoi,
+            sharpe,
+            sortino,
+            profitFactor,
+            maxDrawdown,
+            kelly
+        };
+    }
+
+    function buildRecordFromPicks(picks, predicate) {
+        const filtered = (picks || []).filter(function(pick) {
+            const status = normalizeMyRecordStatus(pick.status);
+            if (!(status === 'won' || status === 'lost' || status === 'push')) return false;
+            return predicate ? predicate(pick) : true;
+        });
+        const wins = filtered.filter(function(pick) { return normalizeMyRecordStatus(pick.status) === 'won'; }).length;
+        const losses = filtered.filter(function(pick) { return normalizeMyRecordStatus(pick.status) === 'lost'; }).length;
+        const pushes = filtered.filter(function(pick) { return normalizeMyRecordStatus(pick.status) === 'push'; }).length;
+        return wins + '-' + losses + '-' + pushes;
+    }
+
+    function renderMyRecordAdvancedMetrics(picks, summary) {
+        const body = document.getElementById('advancedMetricsBody');
+        if (!body) return;
+
+        const advanced = computeMyRecordAdvancedStats(picks);
+        const recentDecisions = (picks || [])
+            .filter(function(pick) {
+                const status = normalizeMyRecordStatus(pick.status);
+                return status === 'won' || status === 'lost' || status === 'push';
+            })
+            .sort(function(a, b) {
+                return new Date(b.locked_at || b.timestamp || 0) - new Date(a.locked_at || a.timestamp || 0);
+            })
+            .slice(0, 10);
+        const highestWin = (picks || [])
+            .filter(function(pick) { return normalizeMyRecordStatus(pick.status) === 'won'; })
+            .sort(function(a, b) { return myRecordPickPL(b) - myRecordPickPL(a); })[0];
+        const biggestLoss = (picks || [])
+            .filter(function(pick) { return normalizeMyRecordStatus(pick.status) === 'lost'; })
+            .sort(function(a, b) { return myRecordPickPL(a) - myRecordPickPL(b); })[0];
+
+        const rows = [
+            ['Record', summary.wins + '-' + summary.losses + '-' + summary.pushes, 'Wins-Losses-Pushes'],
+            ['Pending Picks', String(summary.total - summary.graded), 'Open picks awaiting grade'],
+            ['Average Odds', formatOddsMyRecord(summary.avgOdds), 'Average American price'],
+            ['Average Units', summary.avgUnits.toFixed(2) + 'u', 'Average size per pick'],
+            ['Favorite Record', buildRecordFromPicks(picks, function(pick) { return Number(pick.odds_snapshot || pick.odds || -110) < 0; }), 'Negative-price decisions'],
+            ['Underdog Record', buildRecordFromPicks(picks, function(pick) { return Number(pick.odds_snapshot || pick.odds || -110) > 0; }), 'Plus-money decisions'],
+            ['Spread Record', buildRecordFromPicks(picks, function(pick) { return String(pick.market_type || pick.betType || '').toLowerCase().indexOf('spread') !== -1; }), 'Spread and alt spread markets'],
+            ['Moneyline Record', buildRecordFromPicks(picks, function(pick) { return String(pick.market_type || pick.betType || '').toLowerCase().indexOf('h2h') !== -1 || String(pick.market_type || pick.betType || '').toLowerCase().indexOf('moneyline') !== -1; }), 'Straight side markets'],
+            ['Total Record', buildRecordFromPicks(picks, function(pick) { return String(pick.market_type || pick.betType || '').toLowerCase().indexOf('total') !== -1; }), 'Game and team totals'],
+            ['Segment Record', buildRecordFromPicks(picks, function(pick) { return /(first|second|period|f5|half)/i.test(String(pick.market_type || pick.betType || '')); }), '1H, 2H, 1P and F5 markets'],
+            ['Last 10', buildRecordFromPicks(recentDecisions), 'Most recent graded sample'],
+            ['Best Win', highestWin ? formatSignedUnitsMyRecord(myRecordPickPL(highestWin)) : '--', highestWin ? (highestWin.selection || 'Winning pick') : 'No winning picks yet'],
+            ['Biggest Loss', biggestLoss ? formatSignedUnitsMyRecord(myRecordPickPL(biggestLoss)) : '--', biggestLoss ? (biggestLoss.selection || 'Losing pick') : 'No losing picks yet']
+        ];
+
+        if (advanced) {
+            rows.push(
+                ['Effective Units', formatSignedUnitsMyRecord(advanced.effectiveUnits).replace('u', ''), 'Normalized to 3u sizing'],
+                ['Effective Win %', advanced.effectiveWinPct.toFixed(1) + '%', 'Equivalent win rate at -110'],
+                ['Z-Score', advanced.zScore.toFixed(2), 'Signal strength versus implied probability'],
+                ['Confidence', advanced.confidence.toFixed(1) + '%', 'Strength of edge estimate'],
+                ['Projected ROI', (advanced.projectedRoi >= 0 ? '+' : '') + advanced.projectedRoi.toFixed(1) + '%', 'Confidence-weighted ROI'],
+                ['Profit Factor', Number.isFinite(advanced.profitFactor) ? advanced.profitFactor.toFixed(2) : 'INF', 'Gross won units divided by gross lost units'],
+                ['Sharpe Ratio', advanced.sharpe.toFixed(3), 'Return relative to variance'],
+                ['Sortino Ratio', advanced.sortino.toFixed(3), 'Downside-adjusted return'],
+                ['Max Drawdown', advanced.maxDrawdown.toFixed(2) + 'u', 'Largest peak-to-trough drop'],
+                ['Kelly %', advanced.kelly.toFixed(1) + '%', 'Sizing baseline']
+            );
+        }
+
+        body.innerHTML = rows.map(function(row) {
+            return '<tr><td>' + row[0] + '</td><td>' + row[1] + '</td><td style="color: var(--text-muted);">' + row[2] + '</td></tr>';
+        }).join('');
+    }
+
+    function renderMyRecordPriceProfile(picks) {
+        const container = document.getElementById('myRecordPriceProfileGrid');
+        if (!container) return;
+        const groups = [
+            {
+                label: 'Favorites',
+                note: 'Negative-price picks',
+                picks: (picks || []).filter(function(pick) {
+                    const status = normalizeMyRecordStatus(pick.status);
+                    return (status === 'won' || status === 'lost' || status === 'push') && Number(pick.odds_snapshot || pick.odds || -110) < 0;
+                })
+            },
+            {
+                label: 'Underdogs',
+                note: 'Plus-money picks',
+                picks: (picks || []).filter(function(pick) {
+                    const status = normalizeMyRecordStatus(pick.status);
+                    return (status === 'won' || status === 'lost' || status === 'push') && Number(pick.odds_snapshot || pick.odds || -110) > 0;
+                })
+            }
+        ].filter(function(group) { return group.picks.length; });
+
+        if (!groups.length) {
+            container.innerHTML = '<div class="my-record-empty">No graded picks yet.</div>';
+            return;
+        }
+
+        container.innerHTML = groups.map(function(group) {
+            const units = group.picks.reduce(function(total, pick) { return total + myRecordPickPL(pick); }, 0);
+            return '<div class="my-record-mini-row"><div><div class="my-record-mini-name">' + group.label + '</div><span class="my-record-mini-note">' + buildRecordFromPicks(group.picks) + ' • ' + group.note + '</span></div><div class="my-record-mini-value ' + (units > 0 ? 'positive' : units < 0 ? 'negative' : '') + '">' + formatSignedUnitsMyRecord(units) + '</div></div>';
+        }).join('');
+    }
+
+    function renderMyRecordOddsRanges(picks) {
+        const container = document.getElementById('myRecordOddsRangeGrid');
+        if (!container) return;
+        const ranges = [
+            { label: 'Heavy Fav', note: '-200 or shorter', test: function(value) { return value <= -200; } },
+            { label: 'Favorite', note: '-199 to -111', test: function(value) { return value >= -199 && value <= -111; } },
+            { label: 'Even', note: '-110 to +110', test: function(value) { return value >= -110 && value <= 110; } },
+            { label: 'Dog', note: '+111 to +200', test: function(value) { return value >= 111 && value <= 200; } },
+            { label: 'Longshot', note: '+201 or longer', test: function(value) { return value >= 201; } }
+        ];
+        const rows = ranges.map(function(range) {
+            const rangePicks = (picks || []).filter(function(pick) {
+                const status = normalizeMyRecordStatus(pick.status);
+                const odds = Number(pick.odds_snapshot || pick.odds || -110);
+                return (status === 'won' || status === 'lost' || status === 'push') && range.test(odds);
+            });
+            if (!rangePicks.length) return '';
+            const units = rangePicks.reduce(function(total, pick) { return total + myRecordPickPL(pick); }, 0);
+            return '<div class="my-record-mini-row"><div><div class="my-record-mini-name">' + range.label + '</div><span class="my-record-mini-note">' + buildRecordFromPicks(rangePicks) + ' • ' + range.note + '</span></div><div class="my-record-mini-value ' + (units > 0 ? 'positive' : units < 0 ? 'negative' : '') + '">' + formatSignedUnitsMyRecord(units) + '</div></div>';
+        }).filter(Boolean);
+
+        container.innerHTML = rows.length ? rows.join('') : '<div class="my-record-empty">No graded picks yet.</div>';
+    }
+
+    function renderMyRecordPendingSummary(picks) {
+        const container = document.getElementById('myRecordPendingSummaryGrid');
+        if (!container) return;
+        const pending = (picks || []).filter(function(pick) { return normalizeMyRecordStatus(pick.status) === 'pending'; });
+        if (!pending.length) {
+            container.innerHTML = '<div class="my-record-empty">No pending picks.</div>';
+            return;
+        }
+
+        const bySport = {};
+        let units = 0;
+        pending.forEach(function(pick) {
+            const sport = String(pick.sport_key || pick.sport || 'Other').toUpperCase();
+            bySport[sport] = (bySport[sport] || 0) + 1;
+            units += parseFloat(pick.units) || 1;
+        });
+        const topSport = Object.entries(bySport).sort(function(a, b) { return b[1] - a[1]; })[0];
+        container.innerHTML =
+            '<div class="my-record-mini-row"><div><div class="my-record-mini-name">Open Tickets</div><span class="my-record-mini-note">Awaiting grade</span></div><div class="my-record-mini-value">' + pending.length + '</div></div>' +
+            '<div class="my-record-mini-row"><div><div class="my-record-mini-name">Pending Units</div><span class="my-record-mini-note">Still exposed</span></div><div class="my-record-mini-value">' + units.toFixed(2) + 'u</div></div>' +
+            '<div class="my-record-mini-row"><div><div class="my-record-mini-name">Most Active Sport</div><span class="my-record-mini-note">' + (topSport ? topSport[1] + ' open picks' : 'No open picks') + '</span></div><div class="my-record-mini-value">' + (topSport ? topSport[0] : '--') + '</div></div>';
+    }
+
+    function renderMyRecordRecentForm(picks) {
+        const container = document.getElementById('myRecordRecentFormGrid');
+        if (!container) return;
+        const recent = (picks || [])
+            .filter(function(pick) {
+                const status = normalizeMyRecordStatus(pick.status);
+                return status === 'won' || status === 'lost' || status === 'push';
+            })
+            .sort(function(a, b) {
+                return new Date(b.locked_at || b.timestamp || 0) - new Date(a.locked_at || a.timestamp || 0);
+            })
+            .slice(0, 20);
+
+        if (!recent.length) {
+            container.innerHTML = '<div class="my-record-empty">No graded picks yet.</div>';
+            return;
+        }
+
+        container.innerHTML = recent.map(function(pick) {
+            const status = normalizeMyRecordStatus(pick.status);
+            const label = status === 'won' ? 'W' : status === 'lost' ? 'L' : 'P';
+            const odds = formatOddsMyRecord(pick.odds_snapshot || pick.odds);
+            const title = (pick.selection || 'Pick') + ' ' + odds;
+            return '<div class="my-record-form-pill ' + status + '" title="' + title + '">' + label + '</div>';
+        }).join('');
     }
 
     // Toggle full history visibility
