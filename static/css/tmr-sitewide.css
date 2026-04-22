@@ -329,14 +329,14 @@ body.tmr-site-shell {
 }
 
 .tmr-site-shell h1 {
-    font-size: clamp(3.2rem, 6vw, 6.2rem) !important;
-    line-height: 0.95 !important;
+    font-size: clamp(2.8rem, 4.8vw, 4.8rem) !important;
+    line-height: 1.04 !important;
 }
 
 .tmr-site-shell h2,
 .tmr-site-shell .section-title {
-    font-size: clamp(2rem, 3.4vw, 3.8rem) !important;
-    line-height: 1.05 !important;
+    font-size: clamp(1.8rem, 3vw, 3.2rem) !important;
+    line-height: 1.08 !important;
 }
 
 .tmr-site-shell p,
@@ -482,14 +482,89 @@ html body.tmr-site-shell::after {
 }
 
 .tmr-site-shell h1 {
-    font-size: clamp(2.8rem, 5vw, 4.9rem) !important;
-    line-height: 0.95 !important;
+    font-size: clamp(2.35rem, 4.4vw, 4rem) !important;
+    line-height: 1.06 !important;
 }
 
 .tmr-site-shell h2,
 .tmr-site-shell .section-title {
-    font-size: clamp(1.55rem, 2.25vw, 2.4rem) !important;
-    line-height: 1 !important;
+    font-size: clamp(1.45rem, 2.1vw, 2.25rem) !important;
+    line-height: 1.1 !important;
+}
+
+.tmr-site-shell h1,
+.tmr-site-shell h2,
+.tmr-site-shell h3,
+.tmr-site-shell .page-title,
+.tmr-site-shell .section-title,
+.tmr-site-shell .profile-name,
+.tmr-site-shell .verify-title,
+.tmr-site-shell .reset-title {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.tmr-site-shell p,
+.tmr-site-shell li,
+.tmr-site-shell .page-subtitle,
+.tmr-site-shell .profile-bio,
+.tmr-site-shell .hangout-note,
+.tmr-site-shell .hero-stat-sub,
+.tmr-site-shell .conversation-preview,
+.tmr-site-shell .notif-message,
+.tmr-site-shell .thread-title,
+.tmr-site-shell .thread-meta {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+.tmr-site-shell .container > *,
+.tmr-site-shell .page-container > *,
+.tmr-site-shell .content-wrapper > *,
+.tmr-site-shell .main > *,
+.tmr-site-shell .page-layout > *,
+.tmr-site-shell .profile-header > *,
+.tmr-site-shell .feed-hero > *,
+.tmr-site-shell .messages-wrapper > * {
+    min-width: 0;
+}
+
+.tmr-site-shell .tabs,
+.tmr-site-shell .category-filters,
+.tmr-site-shell .action-bar,
+.tmr-site-shell .mode-switch,
+.tmr-site-shell .billing-toggle,
+.tmr-site-shell .search-box,
+.tmr-site-shell .profile-actions,
+.tmr-site-shell .profile-meta,
+.tmr-site-shell .feed-hero-actions,
+.tmr-site-shell .header-actions,
+.tmr-site-shell .toolbar,
+.tmr-site-shell .filters {
+    flex-wrap: wrap !important;
+    row-gap: 12px;
+}
+
+.tmr-site-shell .tabs > *,
+.tmr-site-shell .category-filters > *,
+.tmr-site-shell .mode-switch > *,
+.tmr-site-shell .billing-toggle > *,
+.tmr-site-shell .profile-actions > *,
+.tmr-site-shell .feed-hero-actions > *,
+.tmr-site-shell .toolbar > *,
+.tmr-site-shell .filters > * {
+    min-width: 0;
+}
+
+.tmr-site-shell .user-stats-card,
+.tmr-site-shell .summary-grid,
+.tmr-site-shell .stats-grid,
+.tmr-site-shell .features-grid,
+.tmr-site-shell .polls-grid,
+.tmr-site-shell .challenges-grid,
+.tmr-site-shell .friends-grid {
+    align-items: stretch;
 }
 
 .tmr-site-shell h3,
@@ -1189,6 +1264,19 @@ html body.tmr-site-shell::after {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
 
+    .tmr-site-shell .profile-header,
+    .tmr-site-shell .action-bar,
+    .tmr-site-shell .search-box,
+    .tmr-site-shell .billing-toggle {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .tmr-site-shell .messages-wrapper {
+        height: auto !important;
+        min-height: 0 !important;
+    }
+
     .tmr-global-footer__grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -1242,6 +1330,46 @@ html body.tmr-site-shell::after {
     .tmr-site-shell .challenges-grid,
     .tmr-site-shell .stats-grid {
         grid-template-columns: 1fr !important;
+    }
+
+    .tmr-site-shell h1 {
+        font-size: clamp(2rem, 8vw, 2.65rem) !important;
+        line-height: 1.08 !important;
+    }
+
+    .tmr-site-shell h2,
+    .tmr-site-shell .section-title,
+    .tmr-site-shell .verify-title,
+    .tmr-site-shell .reset-title {
+        font-size: clamp(1.35rem, 6vw, 1.8rem) !important;
+        line-height: 1.12 !important;
+    }
+
+    .tmr-site-shell .page-header,
+    .tmr-site-shell .profile-header-section,
+    .tmr-site-shell .premium-hero,
+    .tmr-site-shell .hero,
+    .tmr-site-shell .about-hero,
+    .tmr-site-shell .feed-hero {
+        margin-bottom: 20px !important;
+    }
+
+    .tmr-site-shell .tabs,
+    .tmr-site-shell .category-filters,
+    .tmr-site-shell .mode-switch,
+    .tmr-site-shell .filters {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+    }
+
+    .tmr-site-shell .tabs > *,
+    .tmr-site-shell .category-filters > *,
+    .tmr-site-shell .mode-switch > *,
+    .tmr-site-shell .filters > *,
+    .tmr-site-shell .search-box > *,
+    .tmr-site-shell .billing-toggle > *,
+    .tmr-site-shell .profile-actions > * {
+        width: 100% !important;
     }
 
     .tmr-route-note {
