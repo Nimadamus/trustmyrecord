@@ -725,10 +725,10 @@
         const games = Array.isArray(response && response.games) ? response.games : [];
         let repairedCount = 0;
         let droppedCount = 0;
-        const normalizedGames = games.map(function(game) {
+        const normalizedGames = games.map(function(game, index) {
             const repaired = repairGameTeams(game);
             if (repaired !== game) repairedCount += 1;
-            return repaired;
+            return appendManualMarketTemplates(repaired, index, repaired && repaired.sport_key ? repaired.sport_key : SPORT_KEY_MAP[sport]);
         }).filter(function(game) {
             const unresolved = game && (isPlaceholderTeamName(game.home_team) || isPlaceholderTeamName(game.away_team));
             if (unresolved) {
@@ -766,7 +766,7 @@
         };
     }
 
-    function createFallbackOption(game, index, groupLabel, marketType, selection, selectionLabel, odds, line, detailLabel) {
+    function createFallbackOption(game, index, groupLabel, marketType, selection, selectionLabel, odds, line, detailLabel, sourceType) {
         return {
             id: 'fallback-' + index + '-' + marketType + '-' + String(selection).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
             game_id: game.id,
@@ -779,13 +779,123 @@
             odds_display: formatOdds(odds),
             line: line != null ? Number(line) : null,
             line_display: line != null ? String(line) : '',
-            book_title: game._bookTitle || 'Sportsbook feed',
+            book_title: sourceType === 'manual' ? 'Manual entry' : (game._bookTitle || 'Sportsbook feed'),
             book_key: game._bookKey || '',
             group_label: groupLabel,
-            source: 'sportsbook',
-            source_label: detailLabel || game._bookTitle || 'Sportsbook feed',
+            source: sourceType || 'sportsbook',
+            source_label: detailLabel || (sourceType === 'manual' ? 'Enter line and odds manually' : (game._bookTitle || 'Sportsbook feed')),
             source_updated_at: game.updated_at || game.commence_time || null
         };
+    }
+
+    function hasGroupKey(game, key) {
+        return !!((game && game.market_groups) || []).find(function(group) {
+            return group && group.key === key && Array.isArray(group.items) && group.items.length;
+        });
+    }
+
+    function createManualTemplateGroup(game, index, key, label, specs) {
+        const items = (specs || []).map(function(spec) {
+            return createFallbackOption(
+                game,
+                index,
+                label,
+                spec.marketType,
+                spec.selection,
+                spec.selectionLabel,
+                null,
+                null,
+                spec.detailLabel || 'Enter line and odds manually',
+                'manual'
+            );
+        });
+        return items.length ? { key: key, label: label, items: items } : null;
+    }
+
+    function appendManualMarketTemplates(game, index, sportKey) {
+        if (!game || !Array.isArray(game.market_groups)) return game;
+
+        const groups = game.market_groups.slice();
+        const templates = [];
+
+        if (sportKey === 'baseball_mlb') {
+            if (!hasGroupKey(game, 'team_totals')) {
+                templates.push(createManualTemplateGroup(game, index, 'team_totals', 'Team Totals', [
+                    { marketType: 'team_totals', selection: game.away_team + ' Over', selectionLabel: game.away_team + ' Team Total Over' },
+                    { marketType: 'team_totals', selection: game.away_team + ' Under', selectionLabel: game.away_team + ' Team Total Under' },
+                    { marketType: 'team_totals', selection: game.home_team + ' Over', selectionLabel: game.home_team + ' Team Total Over' },
+                    { marketType: 'team_totals', selection: game.home_team + ' Under', selectionLabel: game.home_team + ' Team Total Under' }
+                ]));
+            }
+            if (!hasGroupKey(game, 'first_5')) {
+                templates.push(createManualTemplateGroup(game, index, 'first_5', 'First 5', [
+                    { marketType: 'f5_h2h', selection: game.away_team, selectionLabel: game.away_team + ' F5 ML' },
+                    { marketType: 'f5_h2h', selection: game.home_team, selectionLabel: game.home_team + ' F5 ML' },
+                    { marketType: 'f5_spreads', selection: game.away_team, selectionLabel: game.away_team + ' F5 Spread' },
+                    { marketType: 'f5_spreads', selection: game.home_team, selectionLabel: game.home_team + ' F5 Spread' },
+                    { marketType: 'f5_totals', selection: 'Over', selectionLabel: 'F5 Over' },
+                    { marketType: 'f5_totals', selection: 'Under', selectionLabel: 'F5 Under' }
+                ]));
+            }
+        }
+
+        if (sportKey === 'basketball_nba' || sportKey === 'basketball_ncaab' || sportKey === 'americanfootball_nfl' || sportKey === 'americanfootball_ncaaf') {
+            if (!hasGroupKey(game, 'team_totals')) {
+                templates.push(createManualTemplateGroup(game, index, 'team_totals', 'Team Totals', [
+                    { marketType: 'team_totals', selection: game.away_team + ' Over', selectionLabel: game.away_team + ' Team Total Over' },
+                    { marketType: 'team_totals', selection: game.away_team + ' Under', selectionLabel: game.away_team + ' Team Total Under' },
+                    { marketType: 'team_totals', selection: game.home_team + ' Over', selectionLabel: game.home_team + ' Team Total Over' },
+                    { marketType: 'team_totals', selection: game.home_team + ' Under', selectionLabel: game.home_team + ' Team Total Under' }
+                ]));
+            }
+            if (!hasGroupKey(game, 'first_half')) {
+                templates.push(createManualTemplateGroup(game, index, 'first_half', 'First Half', [
+                    { marketType: 'first_half_h2h', selection: game.away_team, selectionLabel: game.away_team + ' 1H ML' },
+                    { marketType: 'first_half_h2h', selection: game.home_team, selectionLabel: game.home_team + ' 1H ML' },
+                    { marketType: 'first_half_spreads', selection: game.away_team, selectionLabel: game.away_team + ' 1H Spread' },
+                    { marketType: 'first_half_spreads', selection: game.home_team, selectionLabel: game.home_team + ' 1H Spread' },
+                    { marketType: 'first_half_totals', selection: 'Over', selectionLabel: '1H Over' },
+                    { marketType: 'first_half_totals', selection: 'Under', selectionLabel: '1H Under' }
+                ]));
+            }
+            if (!hasGroupKey(game, 'second_half')) {
+                templates.push(createManualTemplateGroup(game, index, 'second_half', 'Second Half', [
+                    { marketType: 'second_half_h2h', selection: game.away_team, selectionLabel: game.away_team + ' 2H ML' },
+                    { marketType: 'second_half_h2h', selection: game.home_team, selectionLabel: game.home_team + ' 2H ML' },
+                    { marketType: 'second_half_spreads', selection: game.away_team, selectionLabel: game.away_team + ' 2H Spread' },
+                    { marketType: 'second_half_spreads', selection: game.home_team, selectionLabel: game.home_team + ' 2H Spread' },
+                    { marketType: 'second_half_totals', selection: 'Over', selectionLabel: '2H Over' },
+                    { marketType: 'second_half_totals', selection: 'Under', selectionLabel: '2H Under' }
+                ]));
+            }
+        }
+
+        if (sportKey === 'icehockey_nhl') {
+            if (!hasGroupKey(game, 'team_totals')) {
+                templates.push(createManualTemplateGroup(game, index, 'team_totals', 'Team Totals', [
+                    { marketType: 'team_totals', selection: game.away_team + ' Over', selectionLabel: game.away_team + ' Team Total Over' },
+                    { marketType: 'team_totals', selection: game.away_team + ' Under', selectionLabel: game.away_team + ' Team Total Under' },
+                    { marketType: 'team_totals', selection: game.home_team + ' Over', selectionLabel: game.home_team + ' Team Total Over' },
+                    { marketType: 'team_totals', selection: game.home_team + ' Under', selectionLabel: game.home_team + ' Team Total Under' }
+                ]));
+            }
+            if (!hasGroupKey(game, 'period_1')) {
+                templates.push(createManualTemplateGroup(game, index, 'period_1', '1st Period', [
+                    { marketType: 'period_1_h2h', selection: game.away_team, selectionLabel: game.away_team + ' 1P ML' },
+                    { marketType: 'period_1_h2h', selection: game.home_team, selectionLabel: game.home_team + ' 1P ML' },
+                    { marketType: 'period_1_totals', selection: 'Over', selectionLabel: '1P Over' },
+                    { marketType: 'period_1_totals', selection: 'Under', selectionLabel: '1P Under' }
+                ]));
+            }
+        }
+
+        templates.filter(Boolean).forEach(function(group) {
+            groups.push(group);
+        });
+
+        return Object.assign({}, game, {
+            market_groups: groups
+        });
     }
 
     function buildFallbackBoardGames(games, sportKey) {
@@ -928,11 +1038,11 @@
                 }
             }
 
-            return Object.assign({}, game, {
+            return appendManualMarketTemplates(Object.assign({}, game, {
                 updated_at: game.updated_at || game.commence_time,
                 has_sportsbook_odds: marketGroups.length > 0,
                 market_groups: marketGroups
-            });
+            }), index, sportKey);
         }).filter(function(game) {
             return game.market_groups && game.market_groups.length > 0;
         });
