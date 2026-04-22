@@ -508,6 +508,16 @@
         badge.textContent = totalGames + ' game' + (totalGames === 1 ? '' : 's');
     }
 
+    function forceSectionActive(sectionId) {
+        if (!sectionId) return;
+        const target = document.getElementById(sectionId);
+        if (!target || !target.classList.contains('page-section')) return;
+        document.querySelectorAll('.page-section').forEach(function(section) {
+            section.classList.remove('active');
+        });
+        target.classList.add('active');
+    }
+
     function renderBoardIfCurrent(requestId, sport, badge, response) {
         if (state.selectedSport !== sport) return false;
         if (requestId !== latestBoardRequestId) {
@@ -1471,6 +1481,7 @@
         state.selectedSport = sport;
         window.TMR = window.TMR || {};
         window.TMR.selectedSport = sport;
+        forceSectionActive('picks');
         const sportKey = SPORT_KEY_MAP[sport];
         const container = document.getElementById('gamesListContainer');
         const title = document.getElementById('selectedSportTitle');
@@ -1969,6 +1980,9 @@
         injectStyles();
         ensureMetadataFields();
         disableLegacyFeed();
+        if (window.location.hash === '#picks' || window.location.pathname === '/picks') {
+            forceSectionActive('picks');
+        }
         wireSportPrefetch();
         wireSportsbookTabs();
         window.tmrAddPromoNote = addPromoNote;
