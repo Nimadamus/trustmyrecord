@@ -1549,6 +1549,8 @@
         }
     }
 
+    window.__tmrSelectSportBoard = selectSportAndShowGames;
+
     function disableLegacyFeed() {
         const message = 'Legacy odds feed disabled. Use /api/games/board instead.';
         window.TMR = window.TMR || {};
