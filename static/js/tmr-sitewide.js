@@ -140,7 +140,7 @@
     document.body.classList.add("tmr-site-shell");
     document.body.setAttribute("data-tmr-route", currentFile.replace(/\.html$/, ""));
 
-    document.querySelectorAll("header, body > nav.nav, body > .messages-top-strip, body > .sportsbook-top-strip, body > .notifications-top-strip, body > .profile-top-strip, body > .friends-top-strip, .sportsbook-top-strip, .notifications-top-strip, .profile-top-strip, .friends-top-strip").forEach((el) => {
+    document.querySelectorAll("header, body > nav.nav, body > nav.main-nav, nav.main-nav, body > .messages-top-strip, body > .sportsbook-top-strip, body > .notifications-top-strip, body > .profile-top-strip, body > .friends-top-strip, .sportsbook-top-strip, .notifications-top-strip, .profile-top-strip, .friends-top-strip").forEach((el) => {
         if (!el.classList.contains("tmr-global-nav")) {
             el.setAttribute("data-tmr-legacy-nav", "hidden");
             el.style.display = "none";
