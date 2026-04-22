@@ -18,11 +18,32 @@ const legacyRouteTargets = {
     'polls-trivia': 'hangout.html'
 };
 
+function getCanonicalRoute(route) {
+    if (!route) return null;
+
+    const url = new URL(route, window.location.origin);
+    return {
+        pathname: url.pathname,
+        hash: url.hash || ''
+    };
+}
+
+function isAlreadyAtLegacyTarget(sectionId) {
+    const target = getCanonicalRoute(legacyRouteTargets[sectionId]);
+    if (!target) return false;
+
+    return window.location.pathname === target.pathname &&
+        (window.location.hash || '') === target.hash;
+}
+
 /**
  * Show a specific section and hide others
  */
 function showSection(sectionId, updateHistory = true) {
     if (legacyRouteTargets[sectionId]) {
+        if (isAlreadyAtLegacyTarget(sectionId)) {
+            return;
+        }
         window.location.href = legacyRouteTargets[sectionId];
         return;
     }
@@ -76,6 +97,9 @@ function handleRouting() {
 
     if (redirectPath && validSections.includes(redirectPath)) {
         if (legacyRouteTargets[redirectPath]) {
+            if (isAlreadyAtLegacyTarget(redirectPath)) {
+                return;
+            }
             window.location.replace(legacyRouteTargets[redirectPath]);
             return;
         }
@@ -84,6 +108,9 @@ function handleRouting() {
         window.history.replaceState({}, '', '/' + targetSection);
     } else if (hashPath && validSections.includes(hashPath)) {
         if (legacyRouteTargets[hashPath]) {
+            if (isAlreadyAtLegacyTarget(hashPath)) {
+                return;
+            }
             window.location.replace(legacyRouteTargets[hashPath]);
             return;
         }
