@@ -791,8 +791,11 @@
     function buildFallbackBoardGames(games, sportKey) {
         return (games || []).map(function(game, index) {
             game = repairGameTeams(game);
-            const bookmaker = (game.bookmakers || [])[0] || null;
-            const markets = bookmaker && Array.isArray(bookmaker.markets) ? bookmaker.markets : [];
+            const bookmakers = Array.isArray(game.bookmakers) ? game.bookmakers : [];
+            const bookmaker = bookmakers[0] || null;
+            const markets = bookmakers.reduce(function(all, book) {
+                return all.concat(Array.isArray(book && book.markets) ? book.markets : []);
+            }, []);
             const findMarketByKeys = function(keys) {
                 return keys.map(function(key) {
                     return markets.find(function(market) { return market.key === key; }) || null;
