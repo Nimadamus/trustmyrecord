@@ -606,49 +606,56 @@
         const style = document.createElement('style');
         style.id = 'tmr-prod-fix-style';
         style.textContent = [
-            '.tmr-board-banner{margin:0 0 20px;padding:16px 18px;border-radius:16px;border:1px solid rgba(255,255,255,0.12);font-size:14px;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;backdrop-filter:blur(12px);box-shadow:0 18px 40px rgba(0,0,0,0.18);}',
-            '.tmr-board-banner.warning{background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.35);color:#fbbf24;}',
-            '.tmr-board-banner.info{background:rgba(14,165,233,0.12);border-color:rgba(14,165,233,0.35);color:#7dd3fc;}',
-            '.tmr-board-banner.success{background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.35);color:#86efac;}',
+            '.tmr-board-banner{margin:0 0 18px;padding:14px 16px;border-radius:18px;border:1px solid rgba(255,255,255,0.08);font-size:13px;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;background:linear-gradient(180deg,rgba(28,33,40,0.96),rgba(18,22,28,0.96));box-shadow:0 20px 36px rgba(0,0,0,0.2);}',
+            '.tmr-board-banner.warning{border-color:rgba(255,184,0,0.28);color:#ffd76a;}',
+            '.tmr-board-banner.info{border-color:rgba(82,185,255,0.26);color:#9fdbff;}',
+            '.tmr-board-banner.success{border-color:rgba(88,214,141,0.24);color:#a7f3c5;}',
             '.tmr-board-actions{display:flex;gap:10px;align-items:center;}',
-            '.tmr-board-button{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:#fff;padding:9px 13px;border-radius:10px;cursor:pointer;font-weight:700;transition:transform .15s ease,border-color .15s ease,background .15s ease;}',
-            '.tmr-board-button:hover{transform:translateY(-1px);background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.28);}',
-            '.tmr-market-card{position:relative;background:linear-gradient(180deg,rgba(18,21,28,0.97),rgba(11,15,22,0.96));border:1px solid rgba(125,211,252,0.12);border-radius:22px;margin-bottom:18px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,0.26);}',
-            '.tmr-market-card::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;background:linear-gradient(90deg,rgba(0,255,255,0),rgba(0,255,255,0.45),rgba(251,191,36,0.3),rgba(0,255,255,0));pointer-events:none;}',
-            '.tmr-market-head{display:flex;justify-content:space-between;gap:16px;padding:20px 22px;align-items:flex-start;cursor:pointer;}',
-            '.tmr-market-matchup{font-size:clamp(19px,2.3vw,24px);font-weight:800;color:#fff;letter-spacing:-0.03em;line-height:1.1;}',
-            '.tmr-market-meta{display:flex;gap:8px;flex-wrap:wrap;color:#a0a8b8;font-size:12px;margin-top:10px;}',
-            '.tmr-market-chip{padding:5px 9px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.06);}',
-            '.tmr-market-chip.real{background:rgba(34,197,94,0.15);color:#86efac;}',
-            '.tmr-market-chip.fallback{background:rgba(245,158,11,0.15);color:#fbbf24;}',
+            '.tmr-board-button{background:#2f8f53;border:1px solid rgba(120,255,181,0.25);color:#f5fff8;padding:9px 13px;border-radius:12px;cursor:pointer;font-weight:800;transition:transform .15s ease,border-color .15s ease,background .15s ease;}',
+            '.tmr-board-button:hover{transform:translateY(-1px);background:#36a45f;border-color:rgba(170,255,204,0.45);}',
+            '.tmr-market-card{position:relative;background:linear-gradient(180deg,rgba(25,29,36,0.98),rgba(15,18,24,0.98));border:1px solid rgba(255,255,255,0.08);border-radius:20px;margin-bottom:16px;overflow:hidden;box-shadow:0 16px 32px rgba(0,0,0,0.24);}',
+            '.tmr-market-card::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,#2f8f53,#4eb66f,#f2c94c);pointer-events:none;}',
+            '.tmr-market-head{display:flex;justify-content:space-between;gap:18px;padding:18px 20px 16px;align-items:flex-start;cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0));}',
+            '.tmr-market-topline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}',
+            '.tmr-market-league{font-size:11px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#f2c94c;}',
+            '.tmr-market-matchup{display:flex;flex-direction:column;gap:7px;}',
+            '.tmr-team-row{display:flex;align-items:center;gap:10px;color:#f8fafc;}',
+            '.tmr-team-abbr{width:28px;height:28px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);font-size:11px;font-weight:900;letter-spacing:0.08em;color:#dbe7ef;flex-shrink:0;}',
+            '.tmr-team-name{font-size:clamp(17px,2vw,20px);font-weight:800;letter-spacing:-0.02em;line-height:1.1;}',
+            '.tmr-market-meta{display:flex;gap:8px;flex-wrap:wrap;color:#aab4c3;font-size:11px;margin-top:14px;}',
+            '.tmr-market-chip{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.06);font-weight:700;}',
+            '.tmr-market-chip.real{background:rgba(47,143,83,0.18);color:#98f0b6;border-color:rgba(98,222,142,0.22);}',
+            '.tmr-market-chip.fallback{background:rgba(242,201,76,0.16);color:#ffe08a;border-color:rgba(242,201,76,0.2);}',
             '.tmr-market-summary{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;}',
-            '.tmr-market-count{padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);font-size:12px;font-weight:700;color:#dbe4f0;white-space:nowrap;}',
-            '.tmr-market-body{padding:0 22px 22px;display:none;}',
+            '.tmr-market-count{padding:9px 12px;border-radius:14px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);font-size:11px;font-weight:800;color:#dbe4f0;white-space:nowrap;text-transform:uppercase;letter-spacing:0.08em;}',
+            '.tmr-market-caret{font-size:18px;color:#98a4b3;transition:transform .18s ease;color:#f2c94c;}',
+            '.tmr-market-card.open .tmr-market-caret{transform:rotate(180deg);}',
+            '.tmr-market-body{padding:0 20px 20px;display:none;}',
             '.tmr-market-card.open .tmr-market-body{display:block;}',
-            '.tmr-scope-tabs{display:flex;gap:0;margin-top:18px;border:1px solid rgba(255,255,255,0.08);border-radius:14px;overflow:hidden;background:rgba(255,255,255,0.03);}',
-            '.tmr-scope-tab{flex:1;padding:11px 13px;background:transparent;border:none;color:#a0a8b8;font-weight:800;cursor:pointer;transition:background .15s ease,color .15s ease;}',
-            '.tmr-scope-tab + .tmr-scope-tab{border-left:1px solid rgba(255,255,255,0.08);}',
-            '.tmr-scope-tab.active{background:#fbbf24;color:#111827;}',
-            '.tmr-group{margin-top:18px;}',
+            '.tmr-scope-tabs{display:flex;gap:8px;margin-top:14px;}',
+            '.tmr-scope-tab{flex:1;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;color:#98a4b3;font-weight:800;cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease;}',
+            '.tmr-scope-tab.active{background:#2f8f53;color:#f8fff9;border-color:rgba(120,255,181,0.25);}',
+            '.tmr-group{margin-top:14px;border:1px solid rgba(255,255,255,0.05);border-radius:16px;background:rgba(255,255,255,0.02);padding:12px;}',
             '.tmr-group[data-scope="f5"]{display:none;}',
             '.tmr-market-card[data-scope="f5"] .tmr-group[data-scope="full"]{display:none;}',
             '.tmr-market-card[data-scope="f5"] .tmr-group[data-scope="f5"]{display:block;}',
-            '.tmr-group-title{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12px;text-transform:uppercase;letter-spacing:0.12em;color:#7dd3fc;margin:0 0 11px;font-weight:800;}',
-            '.tmr-group-count{font-size:11px;letter-spacing:0.04em;color:#8b95a7;}',
-            '.tmr-option-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}',
-            '.tmr-option-btn{background:linear-gradient(180deg,rgba(25,31,42,0.98),rgba(17,22,31,0.96));border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:15px 16px;text-align:left;color:#fff;cursor:pointer;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease,background .15s ease;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;min-height:86px;}',
-            '.tmr-option-btn:hover{transform:translateY(-1px);border-color:rgba(0,255,255,0.45);box-shadow:0 0 0 1px rgba(0,255,255,0.16) inset;}',
-            '.tmr-option-btn.active{border-color:#00ffff;box-shadow:0 0 0 1px rgba(0,255,255,0.25) inset,0 12px 26px rgba(0,255,255,0.08);background:linear-gradient(180deg,rgba(18,34,44,0.98),rgba(13,25,35,0.96));}',
+            '.tmr-group-title{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:11px;text-transform:uppercase;letter-spacing:0.14em;color:#f2c94c;margin:0 0 10px;font-weight:900;}',
+            '.tmr-group-count{font-size:10px;letter-spacing:0.08em;color:#8b95a7;background:rgba(255,255,255,0.04);padding:5px 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.05);}',
+            '.tmr-option-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;}',
+            '.tmr-option-btn{background:linear-gradient(180deg,rgba(40,45,53,0.98),rgba(27,31,38,0.98));border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:13px 14px;text-align:left;color:#fff;cursor:pointer;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease,background .15s ease;display:flex;justify-content:space-between;gap:12px;align-items:center;min-height:78px;}',
+            '.tmr-option-btn:hover{transform:translateY(-1px);border-color:rgba(120,255,181,0.28);box-shadow:0 0 0 1px rgba(120,255,181,0.12) inset;}',
+            '.tmr-option-btn.active{border-color:#46c06f;box-shadow:0 0 0 1px rgba(120,255,181,0.2) inset,0 10px 22px rgba(0,0,0,0.2);background:linear-gradient(180deg,rgba(45,60,49,0.98),rgba(27,38,31,0.98));}',
             '.tmr-option-main{display:flex;flex-direction:column;gap:6px;min-width:0;}',
-            '.tmr-option-market{font-size:15px;font-weight:800;line-height:1.28;color:#f8fafc;}',
+            '.tmr-option-market{font-size:14px;font-weight:800;line-height:1.25;color:#f8fafc;}',
             '.tmr-option-detail{font-size:11px;color:#8b95a7;line-height:1.35;}',
             '.tmr-option-detail.manual{color:#fbbf24;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;}',
-            '.tmr-option-odds{font-size:17px;font-weight:900;white-space:nowrap;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.06);color:#fbbf24;}',
-            '.tmr-empty-state{padding:48px 22px;text-align:center;color:#8b95a7;border:1px dashed rgba(125,211,252,0.16);border-radius:18px;background:rgba(255,255,255,0.02);}',
+            '.tmr-option-odds{font-size:18px;font-weight:900;white-space:nowrap;padding:9px 12px;border-radius:12px;background:linear-gradient(180deg,rgba(50,56,67,0.98),rgba(37,41,49,0.98));border:1px solid rgba(255,255,255,0.08);color:#f8fff9;min-width:72px;text-align:center;}',
+            '.tmr-option-btn.active .tmr-option-odds{background:#2f8f53;border-color:rgba(120,255,181,0.28);}',
+            '.tmr-empty-state{padding:44px 22px;text-align:center;color:#9aa7b8;border:1px dashed rgba(255,255,255,0.1);border-radius:18px;background:linear-gradient(180deg,rgba(24,28,35,0.96),rgba(16,19,24,0.96));}',
             '.tmr-loading-grid{display:grid;gap:14px;}',
-            '.tmr-loading-card{height:132px;border-radius:20px;background:linear-gradient(90deg,rgba(255,255,255,0.04),rgba(255,255,255,0.08),rgba(255,255,255,0.04));background-size:200% 100%;animation:tmrShimmer 1.35s linear infinite;border:1px solid rgba(255,255,255,0.06);}',
+            '.tmr-loading-card{height:132px;border-radius:20px;background:linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0.07),rgba(255,255,255,0.03));background-size:200% 100%;animation:tmrShimmer 1.35s linear infinite;border:1px solid rgba(255,255,255,0.05);}',
             '@keyframes tmrShimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}',
-            '@media (max-width: 700px){.tmr-market-head{padding:16px;flex-direction:column;align-items:flex-start;}.tmr-market-body{padding:0 16px 16px;}.tmr-market-summary{width:100%;justify-content:flex-start;}.tmr-option-grid{grid-template-columns:1fr;}.tmr-market-matchup{font-size:17px;}.tmr-option-btn{min-height:auto;}}'
+            '@media (max-width: 700px){.tmr-market-head{padding:16px;flex-direction:column;align-items:flex-start;}.tmr-market-body{padding:0 16px 16px;}.tmr-market-summary{width:100%;justify-content:space-between;}.tmr-option-grid{grid-template-columns:1fr;}.tmr-team-name{font-size:16px;}.tmr-option-btn{min-height:auto;padding:12px 13px;}.tmr-market-count{width:100%;text-align:center;}.tmr-market-caret{display:none;}}'
         ].join('');
         document.head.appendChild(style);
     }
@@ -1181,14 +1188,18 @@
             return '<div class="tmr-market-card' + (index === 0 ? ' open' : '') + '" id="' + cardId + '" data-scope="full">' +
                 '<div class="tmr-market-head" onclick="window.tmrToggleCard(\'' + cardId + '\')">' +
                 '<div>' +
-                '<div class="tmr-market-matchup">' + escapeHtml(game.away_team) + ' @ ' + escapeHtml(game.home_team) + '</div>' +
+                '<div class="tmr-market-topline"><span class="tmr-market-league">' + escapeHtml(state.selectedSport || game.sport_title || 'Board') + '</span></div>' +
+                '<div class="tmr-market-matchup">' +
+                '<div class="tmr-team-row"><span class="tmr-team-abbr">' + escapeHtml(teamBadge(game.away_team)) + '</span><span class="tmr-team-name">' + escapeHtml(game.away_team) + '</span></div>' +
+                '<div class="tmr-team-row"><span class="tmr-team-abbr">' + escapeHtml(teamBadge(game.home_team)) + '</span><span class="tmr-team-name">' + escapeHtml(game.home_team) + '</span></div>' +
+                '</div>' +
                 '<div class="tmr-market-meta">' +
                 '<span class="tmr-market-chip">' + escapeHtml(new Date(game.commence_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + '</span>' +
                 '<span class="tmr-market-chip ' + sourceClass + '">' + sourceText + '</span>' +
                 '<span class="tmr-market-chip">Updated ' + escapeHtml(formatTimestamp(game.updated_at)) + '</span>' +
                 '</div>' +
                 '</div>' +
-                '<div class="tmr-market-summary"><div class="tmr-market-count">' + (game.market_groups || []).length + ' sections</div></div>' +
+                '<div class="tmr-market-summary"><div class="tmr-market-count">' + (game.market_groups || []).length + ' sections</div><div class="tmr-market-caret">⌄</div></div>' +
                 '</div>' +
                 '<div class="tmr-market-body">' + scopeTabsHtml + groupsHtml + '</div>' +
                 '</div>';
@@ -1208,6 +1219,16 @@
 
     function safeDomId(value) {
         return String(value == null ? '' : value).replace(/[^a-zA-Z0-9_-]+/g, '-');
+    }
+
+    function teamBadge(name) {
+        return String(name || '')
+            .split(/\s+/)
+            .filter(Boolean)
+            .slice(0, 2)
+            .map(function(part) { return part.charAt(0); })
+            .join('')
+            .toUpperCase() || '--';
     }
 
     async function selectSportAndShowGames(sport) {
