@@ -509,7 +509,15 @@
     }
 
     function renderBoardIfCurrent(requestId, sport, badge, response) {
-        if (requestId !== latestBoardRequestId || state.selectedSport !== sport) return false;
+        if (state.selectedSport !== sport) return false;
+        if (requestId !== latestBoardRequestId) {
+            recordBoardEvent('board_render_recovered', {
+                sport: sport,
+                request_id: requestId,
+                latest_request_id: latestBoardRequestId,
+                snapshot: snapshotBoardPayload(response)
+            });
+        }
         state.currentBoard = response.games || [];
         updateBoardBadge(badge, state.currentBoard.length);
         recordBoardEvent('board_rendered', {
