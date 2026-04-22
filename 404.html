@@ -76,18 +76,41 @@
         }
     </style>
     <script>
-        // GitHub Pages SPA redirect - preserves the path as a query parameter
-        // so index.html can read it and show the correct section
-        var path = window.location.pathname;
+        // Route known legacy SPA-style paths directly to the real multipage site.
+        var path = window.location.pathname.replace(/^\/+|\/+$/g, '');
         var query = window.location.search;
         var hash = window.location.hash;
+        var legacyRouteMap = {
+            '': 'index.html',
+            'home': 'index.html',
+            'picks': 'sportsbook.html#picks',
+            'mypicks': 'sportsbook.html#mypicks',
+            'my-record': 'sportsbook.html#my-record',
+            'promos': 'sportsbook.html#promos',
+            'consensus': 'sportsbook.html#consensus',
+            'leaderboards': 'sportsbook.html#leaderboards',
+            'live': 'sportsbook.html',
+            'marketplace': 'premium.html',
+            'groups': 'friends.html',
+            'messages': 'messages.html',
+            'profile': 'profile.html',
+            'premium': 'premium.html',
+            'forums': 'forum.html',
+            'notifications': 'notifications.html',
+            'polls-trivia': 'hangout.html'
+        };
 
-        // Redirect to index.html with the original path as a query param
-        window.location.replace(
-            window.location.origin + '/?p=' + encodeURIComponent(path.replace(/^\//, '')) +
-            (query ? '&q=' + encodeURIComponent(query.slice(1)) : '') +
-            hash
-        );
+        var mappedRoute = legacyRouteMap[path];
+        if (mappedRoute) {
+            window.location.replace(window.location.origin + '/' + mappedRoute);
+        } else {
+            // Preserve unknown paths for index-level recovery when needed.
+            window.location.replace(
+                window.location.origin + '/?p=' + encodeURIComponent(path) +
+                (query ? '&q=' + encodeURIComponent(query.slice(1)) : '') +
+                hash
+            );
+        }
     </script>
 </head>
 <body>

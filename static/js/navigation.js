@@ -1,9 +1,32 @@
 // Navigation handling for Trust My Record
 
+const legacyRouteTargets = {
+    picks: 'sportsbook.html#picks',
+    mypicks: 'sportsbook.html#mypicks',
+    'my-record': 'sportsbook.html#my-record',
+    promos: 'sportsbook.html#promos',
+    consensus: 'sportsbook.html#consensus',
+    leaderboards: 'sportsbook.html#leaderboards',
+    live: 'sportsbook.html',
+    marketplace: 'premium.html',
+    groups: 'friends.html',
+    messages: 'messages.html',
+    profile: 'profile.html',
+    premium: 'premium.html',
+    forums: 'forum.html',
+    notifications: 'notifications.html',
+    'polls-trivia': 'hangout.html'
+};
+
 /**
  * Show a specific section and hide others
  */
 function showSection(sectionId, updateHistory = true) {
+    if (legacyRouteTargets[sectionId]) {
+        window.location.href = legacyRouteTargets[sectionId];
+        return;
+    }
+
     // Hide all sections
     const sections = document.querySelectorAll('.page-section');
     sections.forEach(section => section.classList.remove('active'));
@@ -52,10 +75,18 @@ function handleRouting() {
     let targetSection = 'home';
 
     if (redirectPath && validSections.includes(redirectPath)) {
+        if (legacyRouteTargets[redirectPath]) {
+            window.location.replace(legacyRouteTargets[redirectPath]);
+            return;
+        }
         targetSection = redirectPath;
         // Clean up the URL (remove the query param)
         window.history.replaceState({}, '', '/' + targetSection);
     } else if (hashPath && validSections.includes(hashPath)) {
+        if (legacyRouteTargets[hashPath]) {
+            window.location.replace(legacyRouteTargets[hashPath]);
+            return;
+        }
         targetSection = hashPath;
     }
 
