@@ -6,6 +6,14 @@ const TMR_NOTIF_POLL_INTERVAL = 60000; // 60 seconds
 let _notifPollTimer = null;
 let _notifCache = { notifications: [], unreadCount: 0 };
 
+function hasBackendNotificationSession() {
+    return !!(window.api && typeof api.isLoggedIn === 'function' && api.isLoggedIn());
+}
+
+function hasFrontendAuthSession() {
+    return !!(window.auth && typeof auth.isLoggedIn === 'function' && auth.isLoggedIn());
+}
+
 (function initNotifications() {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', setupNotifications);
@@ -38,9 +46,8 @@ async function setupNotifications() {
         try { await api.ready; } catch(e) {}
     }
     // Start polling for notifications (works with backend or localStorage)
-    const loggedIn = (window.api && api.isLoggedIn && api.isLoggedIn()) ||
-                     (window.auth && auth.isLoggedIn && auth.isLoggedIn()) ||
-                     localStorage.getItem('tmr_is_logged_in') === 'true';
+    const loggedIn = hasBackendNotificationSession() &&
+        (!window.auth || typeof auth.isLoggedIn !== 'function' || hasFrontendAuthSession());
     if (loggedIn) {
         await fetchNotifications();
         _notifPollTimer = setInterval(fetchNotifications, TMR_NOTIF_POLL_INTERVAL);
@@ -211,7 +218,7 @@ async function fetchNotifications() {
     if (!window.api || typeof api.getNotifications !== 'function') return;
     
     // Check if user is logged in via API
-    if (!api.isLoggedIn()) return;
+    if (!hasBackendNotificationSession()) return;
 
     try {
         const data = await api.getNotifications({ limit: 20 });
