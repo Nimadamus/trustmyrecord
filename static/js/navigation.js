@@ -18,6 +18,10 @@ const legacyRouteTargets = {
     'polls-trivia': 'hangout.html'
 };
 
+const previousShowSection = typeof window !== 'undefined' && typeof window.showSection === 'function'
+    ? window.showSection
+    : null;
+
 function getCanonicalRoute(route) {
     if (!route) return null;
 
@@ -42,6 +46,9 @@ function isAlreadyAtLegacyTarget(sectionId) {
 function showSection(sectionId, updateHistory = true) {
     if (legacyRouteTargets[sectionId]) {
         if (isAlreadyAtLegacyTarget(sectionId)) {
+            if (typeof previousShowSection === 'function' && previousShowSection !== showSection) {
+                return previousShowSection(sectionId, updateHistory);
+            }
             return;
         }
         window.location.href = legacyRouteTargets[sectionId];
@@ -98,6 +105,9 @@ function handleRouting() {
     if (redirectPath && validSections.includes(redirectPath)) {
         if (legacyRouteTargets[redirectPath]) {
             if (isAlreadyAtLegacyTarget(redirectPath)) {
+                if (typeof previousShowSection === 'function' && previousShowSection !== showSection) {
+                    previousShowSection(redirectPath, false);
+                }
                 return;
             }
             window.location.replace(legacyRouteTargets[redirectPath]);
@@ -109,6 +119,9 @@ function handleRouting() {
     } else if (hashPath && validSections.includes(hashPath)) {
         if (legacyRouteTargets[hashPath]) {
             if (isAlreadyAtLegacyTarget(hashPath)) {
+                if (typeof previousShowSection === 'function' && previousShowSection !== showSection) {
+                    previousShowSection(hashPath, false);
+                }
                 return;
             }
             window.location.replace(legacyRouteTargets[hashPath]);
