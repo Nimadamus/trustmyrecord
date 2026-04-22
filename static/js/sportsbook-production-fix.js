@@ -618,14 +618,19 @@
             '.tmr-market-head{display:flex;justify-content:space-between;gap:18px;padding:18px 20px 16px;align-items:flex-start;cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0));}',
             '.tmr-market-topline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}',
             '.tmr-market-league{font-size:11px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:var(--tmr-accent-soft);}',
+            '.tmr-market-status{padding:6px 10px;border-radius:999px;background:color-mix(in srgb, var(--tmr-accent) 18%, rgba(255,255,255,0.02));border:1px solid color-mix(in srgb, var(--tmr-accent) 40%, rgba(255,255,255,0.08));font-size:10px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#f8fafc;}',
             '.tmr-market-matchup{display:flex;flex-direction:column;gap:7px;}',
             '.tmr-team-row{display:flex;align-items:center;gap:10px;color:#f8fafc;}',
+            '.tmr-team-side{display:inline-flex;align-items:center;justify-content:center;min-width:52px;padding:5px 8px;border-radius:999px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:10px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#aeb8c6;}',
             '.tmr-team-abbr{width:28px;height:28px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);font-size:11px;font-weight:900;letter-spacing:0.08em;color:#dbe7ef;flex-shrink:0;}',
             '.tmr-team-name{font-size:clamp(17px,2vw,20px);font-weight:800;letter-spacing:-0.02em;line-height:1.1;}',
+            '.tmr-matchup-divider{display:flex;align-items:center;gap:10px;padding-left:62px;color:#6f7a89;font-size:10px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;}',
+            '.tmr-matchup-divider::before,.tmr-matchup-divider::after{content:"";height:1px;flex:1;background:rgba(255,255,255,0.08);}',
             '.tmr-market-meta{display:flex;gap:8px;flex-wrap:wrap;color:#aab4c3;font-size:11px;margin-top:14px;}',
             '.tmr-market-chip{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.06);font-weight:700;}',
             '.tmr-market-chip.real{background:rgba(47,143,83,0.18);color:#98f0b6;border-color:rgba(98,222,142,0.22);}',
             '.tmr-market-chip.fallback{background:rgba(242,201,76,0.16);color:#ffe08a;border-color:rgba(242,201,76,0.2);}',
+            '.tmr-market-chip.accent{background:color-mix(in srgb, var(--tmr-accent) 18%, transparent);color:#eefcf3;border-color:color-mix(in srgb, var(--tmr-accent) 42%, rgba(255,255,255,0.06));}',
             '.tmr-market-summary{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;}',
             '.tmr-market-count{padding:9px 12px;border-radius:14px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);font-size:11px;font-weight:800;color:#dbe4f0;white-space:nowrap;text-transform:uppercase;letter-spacing:0.08em;}',
             '.tmr-market-caret{font-size:18px;color:#98a4b3;transition:transform .18s ease;color:var(--tmr-accent-soft);}',
@@ -654,6 +659,9 @@
             '.tmr-option-btn:hover{transform:translateY(-1px);border-color:color-mix(in srgb, var(--tmr-accent) 35%, white 65%);box-shadow:0 0 0 1px color-mix(in srgb, var(--tmr-accent) 15%, transparent) inset;}',
             '.tmr-option-btn.active{border-color:var(--tmr-accent);box-shadow:0 0 0 1px color-mix(in srgb, var(--tmr-accent) 24%, transparent) inset,0 10px 22px rgba(0,0,0,0.2);background:linear-gradient(180deg,color-mix(in srgb, var(--tmr-accent) 18%, rgba(45,60,49,0.98)),rgba(27,38,31,0.98));}',
             '.tmr-option-main{display:flex;flex-direction:column;gap:6px;min-width:0;}',
+            '.tmr-option-topline{display:flex;align-items:center;justify-content:space-between;gap:8px;}',
+            '.tmr-option-tag{display:inline-flex;align-items:center;justify-content:center;padding:4px 7px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);font-size:10px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#c8d0dc;}',
+            '.tmr-option-line{font-size:12px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;color:var(--tmr-accent-soft);}',
             '.tmr-option-market{font-size:14px;font-weight:800;line-height:1.25;color:#f8fafc;}',
             '.tmr-option-detail{font-size:11px;color:#8b95a7;line-height:1.35;}',
             '.tmr-option-detail.manual{color:#fbbf24;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;}',
@@ -695,7 +703,7 @@
             '#picks #confirmPickDetail{font-size:26px!important;line-height:1.15!important;color:#f8fafc!important;}',
             '#picks #confirmPickMeta{font-size:13px!important;letter-spacing:0.04em;color:#b8c2cf!important;}',
             '@keyframes tmrShimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}',
-            '@media (max-width: 700px){.tmr-market-head{padding:16px;flex-direction:column;align-items:flex-start;}.tmr-market-body{padding:0 16px 16px;}.tmr-market-summary{width:100%;justify-content:space-between;}.tmr-option-grid{grid-template-columns:1fr;}.tmr-team-name{font-size:16px;}.tmr-option-btn{min-height:auto;padding:12px 13px;}.tmr-market-count{width:100%;text-align:center;}.tmr-market-caret{display:none;}#picks .pick-options{grid-template-columns:1fr;}#picks .games-header{align-items:flex-start;flex-direction:column;}#picks .sport-cards-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}#picks .sport-card{min-height:132px;padding:16px 14px!important;}#picks .sport-name{font-size:16px!important;}#picks .submit-pick-btn{padding:15px 16px;font-size:14px;}}'
+            '@media (max-width: 700px){.tmr-market-head{padding:16px;flex-direction:column;align-items:flex-start;}.tmr-market-body{padding:0 16px 16px;}.tmr-market-summary{width:100%;justify-content:space-between;}.tmr-option-grid{grid-template-columns:1fr;}.tmr-team-name{font-size:16px;}.tmr-team-side{min-width:46px;padding:4px 7px;}.tmr-matchup-divider{padding-left:56px;}.tmr-option-btn{min-height:auto;padding:12px 13px;}.tmr-market-count{width:100%;text-align:center;}.tmr-market-caret{display:none;}#picks .pick-options{grid-template-columns:1fr;}#picks .games-header{align-items:flex-start;flex-direction:column;}#picks .sport-cards-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}#picks .sport-card{min-height:132px;padding:16px 14px!important;}#picks .sport-name{font-size:16px!important;}#picks .submit-pick-btn{padding:15px 16px;font-size:14px;}}'
         ].join('');
         document.head.appendChild(style);
     }
@@ -714,6 +722,21 @@
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) return 'Unavailable';
         return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    }
+
+    function formatStartsIn(value) {
+        if (!value) return 'Schedule pending';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return 'Schedule pending';
+        const diff = date.getTime() - Date.now();
+        if (diff <= 0) return 'Started';
+        const totalMinutes = Math.round(diff / 60000);
+        const days = Math.floor(totalMinutes / 1440);
+        const hours = Math.floor((totalMinutes % 1440) / 60);
+        const minutes = totalMinutes % 60;
+        if (days > 0) return 'Starts in ' + days + 'd ' + (hours || 0) + 'h';
+        if (hours > 0) return 'Starts in ' + hours + 'h ' + minutes + 'm';
+        return 'Starts in ' + minutes + 'm';
     }
 
     function formatOdds(odds) {
@@ -1232,8 +1255,11 @@
                         ? 'Manual line entry'
                         : (option.book_title || option.source_label || option.group_label || 'Sportsbook feed');
                     const detailClass = option.source === 'manual' ? 'tmr-option-detail manual' : 'tmr-option-detail';
+                    const optionTag = getOptionTag(option, game);
+                    const optionLine = getOptionLineText(option);
                     return '<button class="tmr-option-btn" id="' + optionDomId + '" data-option-id="' + escapeHtml(optionKey) + '" onclick="window.tmrSelectOption(this.dataset.optionId)">' +
                         '<div class="tmr-option-main">' +
+                        '<div class="tmr-option-topline"><span class="tmr-option-tag">' + escapeHtml(optionTag) + '</span>' + (optionLine ? '<span class="tmr-option-line">' + escapeHtml(optionLine) + '</span>' : '') + '</div>' +
                         '<div class="tmr-option-market">' + escapeHtml(option.selection_label) + '</div>' +
                         '<div class="' + detailClass + '">' + escapeHtml(detailLabel) + '</div>' +
                         '</div>' +
@@ -1271,13 +1297,14 @@
             return '<div class="tmr-market-card' + (index === 0 ? ' open' : '') + '" id="' + cardId + '" data-scope="full" data-market-filter="all" style="--tmr-accent:' + escapeHtml(accent.primary) + ';--tmr-accent-soft:' + escapeHtml(accent.secondary) + ';">' +
                 '<div class="tmr-market-head" onclick="window.tmrToggleCard(\'' + cardId + '\')">' +
                 '<div>' +
-                '<div class="tmr-market-topline"><span class="tmr-market-league">' + escapeHtml(state.selectedSport || game.sport_title || 'Board') + '</span></div>' +
+                '<div class="tmr-market-topline"><span class="tmr-market-league">' + escapeHtml(state.selectedSport || game.sport_title || 'Board') + '</span><span class="tmr-market-status">' + escapeHtml(formatStartsIn(game.commence_time)) + '</span></div>' +
                 '<div class="tmr-market-matchup">' +
-                '<div class="tmr-team-row"><span class="tmr-team-abbr">' + escapeHtml(teamBadge(game.away_team)) + '</span><span class="tmr-team-name">' + escapeHtml(game.away_team) + '</span></div>' +
-                '<div class="tmr-team-row"><span class="tmr-team-abbr">' + escapeHtml(teamBadge(game.home_team)) + '</span><span class="tmr-team-name">' + escapeHtml(game.home_team) + '</span></div>' +
+                '<div class="tmr-team-row"><span class="tmr-team-side">Away</span><span class="tmr-team-abbr">' + escapeHtml(teamBadge(game.away_team)) + '</span><span class="tmr-team-name">' + escapeHtml(game.away_team) + '</span></div>' +
+                '<div class="tmr-matchup-divider">Matchup</div>' +
+                '<div class="tmr-team-row"><span class="tmr-team-side">Home</span><span class="tmr-team-abbr">' + escapeHtml(teamBadge(game.home_team)) + '</span><span class="tmr-team-name">' + escapeHtml(game.home_team) + '</span></div>' +
                 '</div>' +
                 '<div class="tmr-market-meta">' +
-                '<span class="tmr-market-chip">' + escapeHtml(new Date(game.commence_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + '</span>' +
+                '<span class="tmr-market-chip accent">' + escapeHtml(new Date(game.commence_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + '</span>' +
                 '<span class="tmr-market-chip ' + sourceClass + '">' + sourceText + '</span>' +
                 '<span class="tmr-market-chip">Updated ' + escapeHtml(formatTimestamp(game.updated_at)) + '</span>' +
                 '</div>' +
@@ -1312,6 +1339,29 @@
             .map(function(part) { return part.charAt(0); })
             .join('')
             .toUpperCase() || '--';
+    }
+
+    function getOptionTag(option, game) {
+        const selection = String(option && option.selection || '').toLowerCase();
+        const away = String(game && game.away_team || '').toLowerCase();
+        const home = String(game && game.home_team || '').toLowerCase();
+        if (selection && away && selection.indexOf(away) !== -1) return 'Away';
+        if (selection && home && selection.indexOf(home) !== -1) return 'Home';
+        if (selection.indexOf('over') !== -1) return 'Over';
+        if (selection.indexOf('under') !== -1) return 'Under';
+        return option && option.source === 'manual' ? 'Manual' : 'Market';
+    }
+
+    function getOptionLineText(option) {
+        if (!option) return '';
+        if (option.line_display != null && String(option.line_display).trim()) {
+            const line = String(option.line_display).trim();
+            if (/^[+-]/.test(line)) return line;
+            return /^\d/.test(line) ? 'O/U ' + line : line;
+        }
+        const selectionLabel = String(option.selection_label || '');
+        const match = selectionLabel.match(/([+-]\d+(\.\d+)?|\d+(\.\d+)?)$/);
+        return match ? match[1] : '';
     }
 
     function getSportAccent(sportKey) {
