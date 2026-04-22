@@ -721,6 +721,51 @@
         });
     }
 
+    function normalizeBoardResponse(response, sport) {
+        const games = Array.isArray(response && response.games) ? response.games : [];
+        let repairedCount = 0;
+        let droppedCount = 0;
+        const normalizedGames = games.map(function(game) {
+            const repaired = repairGameTeams(game);
+            if (repaired !== game) repairedCount += 1;
+            return repaired;
+        }).filter(function(game) {
+            const unresolved = game && (isPlaceholderTeamName(game.home_team) || isPlaceholderTeamName(game.away_team));
+            if (unresolved) {
+                droppedCount += 1;
+                console.warn('[TMR] Dropping board game with unresolved placeholder teams:', {
+                    sport: sport,
+                    gameId: game && game.id,
+                    home_team: game && game.home_team,
+                    away_team: game && game.away_team
+                });
+                return false;
+            }
+            return true;
+        });
+
+        const summary = Object.assign({}, response && response.summary ? response.summary : {});
+        if (droppedCount > 0) {
+            summary.severity = summary.severity === 'success' ? 'warning' : (summary.severity || 'warning');
+            summary.message = droppedCount === games.length
+                ? 'Live markets are temporarily unavailable for this sport right now.'
+                : 'Some matchups were hidden because their team data was incomplete. The remaining live markets are still available.';
+        } else if (repairedCount > 0 && !summary.message) {
+            summary.message = repairedCount + ' game' + (repairedCount === 1 ? '' : 's') + ' had missing team names repaired from sportsbook data.';
+            summary.severity = summary.severity || 'info';
+        }
+
+        return {
+            sport_key: response && response.sport_key ? response.sport_key : '',
+            summary: summary,
+            games: normalizedGames,
+            diagnostics: Object.assign({}, response && response.diagnostics ? response.diagnostics : {}, {
+                frontend_repaired_games: repairedCount,
+                frontend_dropped_games: droppedCount
+            })
+        };
+    }
+
     function createFallbackOption(game, index, groupLabel, marketType, selection, selectionLabel, odds, line, detailLabel) {
         return {
             id: 'fallback-' + index + '-' + marketType + '-' + String(selection).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
@@ -919,7 +964,7 @@
         }
 
         if (!games || games.length === 0) {
-            container.innerHTML = html + '<div class="tmr-empty-state">No upcoming games are available for this sport right now.</div>';
+            container.innerHTML = html + '<div class="tmr-empty-state">No ' + (state.selectedSport || 'games') + ' games available right now.</div>';
             return;
         }
 
@@ -1029,10 +1074,7 @@
         }
 
         try {
-            const response = await fetchMarketBoardFast(sportKey, false);
-            if (boardHasBrokenTeamPlaceholders(response)) {
-                throw new Error('Board response contained placeholder teams');
-            }
+            const response = normalizeBoardResponse(await fetchMarketBoardFast(sportKey, false), sport);
             renderBoardIfCurrent(requestId, sport, badge, response);
         } catch (error) {
             try {
