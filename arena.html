@@ -13,7 +13,7 @@
       gtag('config', 'G-V5MCVXS2HE');
     </script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260421d">
+<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260421e">
 <script defer src="static/js/tmr-sitewide.js?v=20260421c"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -406,6 +406,53 @@
         .form-control {
             background: rgba(255,255,255,0.045);
             color: #eef4fb;
+        }
+
+        @media (max-width: 768px) {
+            .tabs {
+                flex-wrap: wrap;
+                overflow: visible;
+                gap: 8px;
+            }
+
+            .tab {
+                flex: 1 1 calc(50% - 8px);
+                text-align: center;
+                white-space: normal;
+                line-height: 1.2;
+            }
+
+            .section-header {
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .section-header .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .cc-header,
+            .cc-players,
+            .cc-meta,
+            .cc-actions {
+                flex-wrap: wrap;
+            }
+
+            .cc-player {
+                min-width: 0;
+            }
+
+            .cc-vs {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 540px) {
+            .tab {
+                flex-basis: 100%;
+            }
         }
     </style>
 </head>
@@ -1757,3 +1804,4 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
         <script src="static/js/analytics.js?v=20260417"></script>
 </body>
 </html>
+
