@@ -613,11 +613,11 @@
             '.tmr-board-actions{display:flex;gap:10px;align-items:center;}',
             '.tmr-board-button{background:#2f8f53;border:1px solid rgba(120,255,181,0.25);color:#f5fff8;padding:9px 13px;border-radius:12px;cursor:pointer;font-weight:800;transition:transform .15s ease,border-color .15s ease,background .15s ease;}',
             '.tmr-board-button:hover{transform:translateY(-1px);background:#36a45f;border-color:rgba(170,255,204,0.45);}',
-            '.tmr-market-card{position:relative;background:linear-gradient(180deg,rgba(25,29,36,0.98),rgba(15,18,24,0.98));border:1px solid rgba(255,255,255,0.08);border-radius:20px;margin-bottom:16px;overflow:hidden;box-shadow:0 16px 32px rgba(0,0,0,0.24);}',
-            '.tmr-market-card::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,#2f8f53,#4eb66f,#f2c94c);pointer-events:none;}',
+            '.tmr-market-card{position:relative;background:linear-gradient(180deg,rgba(25,29,36,0.98),rgba(15,18,24,0.98));border:1px solid rgba(255,255,255,0.08);border-radius:20px;margin-bottom:16px;overflow:hidden;box-shadow:0 16px 32px rgba(0,0,0,0.24);--tmr-accent:#2f8f53;--tmr-accent-soft:#f2c94c;}',
+            '.tmr-market-card::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--tmr-accent),var(--tmr-accent-soft),#f2c94c);pointer-events:none;}',
             '.tmr-market-head{display:flex;justify-content:space-between;gap:18px;padding:18px 20px 16px;align-items:flex-start;cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0));}',
             '.tmr-market-topline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}',
-            '.tmr-market-league{font-size:11px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#f2c94c;}',
+            '.tmr-market-league{font-size:11px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:var(--tmr-accent-soft);}',
             '.tmr-market-matchup{display:flex;flex-direction:column;gap:7px;}',
             '.tmr-team-row{display:flex;align-items:center;gap:10px;color:#f8fafc;}',
             '.tmr-team-abbr{width:28px;height:28px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);font-size:11px;font-weight:900;letter-spacing:0.08em;color:#dbe7ef;flex-shrink:0;}',
@@ -628,29 +628,37 @@
             '.tmr-market-chip.fallback{background:rgba(242,201,76,0.16);color:#ffe08a;border-color:rgba(242,201,76,0.2);}',
             '.tmr-market-summary{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;}',
             '.tmr-market-count{padding:9px 12px;border-radius:14px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);font-size:11px;font-weight:800;color:#dbe4f0;white-space:nowrap;text-transform:uppercase;letter-spacing:0.08em;}',
-            '.tmr-market-caret{font-size:18px;color:#98a4b3;transition:transform .18s ease;color:#f2c94c;}',
+            '.tmr-market-caret{font-size:18px;color:#98a4b3;transition:transform .18s ease;color:var(--tmr-accent-soft);}',
             '.tmr-market-card.open .tmr-market-caret{transform:rotate(180deg);}',
             '.tmr-market-body{padding:0 20px 20px;display:none;}',
             '.tmr-market-card.open .tmr-market-body{display:block;}',
             '.tmr-scope-tabs{display:flex;gap:8px;margin-top:14px;}',
             '.tmr-scope-tab{flex:1;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;color:#98a4b3;font-weight:800;cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease;}',
-            '.tmr-scope-tab.active{background:#2f8f53;color:#f8fff9;border-color:rgba(120,255,181,0.25);}',
+            '.tmr-scope-tab.active{background:var(--tmr-accent);color:#f8fff9;border-color:color-mix(in srgb, var(--tmr-accent) 65%, white 35%);}',
+            '.tmr-filter-strip{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}',
+            '.tmr-filter-pill{padding:8px 11px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#9aa7b8;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease;}',
+            '.tmr-filter-pill.active{background:color-mix(in srgb, var(--tmr-accent) 22%, transparent);border-color:color-mix(in srgb, var(--tmr-accent) 55%, white 45%);color:#f8fafc;}',
             '.tmr-group{margin-top:14px;border:1px solid rgba(255,255,255,0.05);border-radius:16px;background:rgba(255,255,255,0.02);padding:12px;}',
             '.tmr-group[data-scope="f5"]{display:none;}',
             '.tmr-market-card[data-scope="f5"] .tmr-group[data-scope="full"]{display:none;}',
             '.tmr-market-card[data-scope="f5"] .tmr-group[data-scope="f5"]{display:block;}',
+            '.tmr-market-card[data-market-filter="game-lines"] .tmr-group:not([data-category="game-lines"]){display:none;}',
+            '.tmr-market-card[data-market-filter="team-totals"] .tmr-group:not([data-category="team-totals"]){display:none;}',
+            '.tmr-market-card[data-market-filter="segments"] .tmr-group:not([data-category="segments"]){display:none;}',
+            '.tmr-market-card[data-market-filter="alt-lines"] .tmr-group:not([data-category="alt-lines"]){display:none;}',
+            '.tmr-market-card[data-market-filter="specials"] .tmr-group:not([data-category="specials"]){display:none;}',
             '.tmr-group-title{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:11px;text-transform:uppercase;letter-spacing:0.14em;color:#f2c94c;margin:0 0 10px;font-weight:900;}',
             '.tmr-group-count{font-size:10px;letter-spacing:0.08em;color:#8b95a7;background:rgba(255,255,255,0.04);padding:5px 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.05);}',
             '.tmr-option-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;}',
             '.tmr-option-btn{background:linear-gradient(180deg,rgba(40,45,53,0.98),rgba(27,31,38,0.98));border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:13px 14px;text-align:left;color:#fff;cursor:pointer;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease,background .15s ease;display:flex;justify-content:space-between;gap:12px;align-items:center;min-height:78px;}',
-            '.tmr-option-btn:hover{transform:translateY(-1px);border-color:rgba(120,255,181,0.28);box-shadow:0 0 0 1px rgba(120,255,181,0.12) inset;}',
-            '.tmr-option-btn.active{border-color:#46c06f;box-shadow:0 0 0 1px rgba(120,255,181,0.2) inset,0 10px 22px rgba(0,0,0,0.2);background:linear-gradient(180deg,rgba(45,60,49,0.98),rgba(27,38,31,0.98));}',
+            '.tmr-option-btn:hover{transform:translateY(-1px);border-color:color-mix(in srgb, var(--tmr-accent) 35%, white 65%);box-shadow:0 0 0 1px color-mix(in srgb, var(--tmr-accent) 15%, transparent) inset;}',
+            '.tmr-option-btn.active{border-color:var(--tmr-accent);box-shadow:0 0 0 1px color-mix(in srgb, var(--tmr-accent) 24%, transparent) inset,0 10px 22px rgba(0,0,0,0.2);background:linear-gradient(180deg,color-mix(in srgb, var(--tmr-accent) 18%, rgba(45,60,49,0.98)),rgba(27,38,31,0.98));}',
             '.tmr-option-main{display:flex;flex-direction:column;gap:6px;min-width:0;}',
             '.tmr-option-market{font-size:14px;font-weight:800;line-height:1.25;color:#f8fafc;}',
             '.tmr-option-detail{font-size:11px;color:#8b95a7;line-height:1.35;}',
             '.tmr-option-detail.manual{color:#fbbf24;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;}',
             '.tmr-option-odds{font-size:18px;font-weight:900;white-space:nowrap;padding:9px 12px;border-radius:12px;background:linear-gradient(180deg,rgba(50,56,67,0.98),rgba(37,41,49,0.98));border:1px solid rgba(255,255,255,0.08);color:#f8fff9;min-width:72px;text-align:center;}',
-            '.tmr-option-btn.active .tmr-option-odds{background:#2f8f53;border-color:rgba(120,255,181,0.28);}',
+            '.tmr-option-btn.active .tmr-option-odds{background:var(--tmr-accent);border-color:color-mix(in srgb, var(--tmr-accent) 50%, white 50%);}',
             '.tmr-empty-state{padding:44px 22px;text-align:center;color:#9aa7b8;border:1px dashed rgba(255,255,255,0.1);border-radius:18px;background:linear-gradient(180deg,rgba(24,28,35,0.96),rgba(16,19,24,0.96));}',
             '.tmr-loading-grid{display:grid;gap:14px;}',
             '.tmr-loading-card{height:132px;border-radius:20px;background:linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0.07),rgba(255,255,255,0.03));background-size:200% 100%;animation:tmrShimmer 1.35s linear infinite;border:1px solid rgba(255,255,255,0.05);}',
@@ -1133,12 +1141,42 @@
         return group && group.key === 'first_5' ? 'f5' : 'full';
     }
 
+    function getGroupCategory(group) {
+        const key = group && group.key;
+        if (key === 'full_game' || key === 'spread' || key === 'total') return 'game-lines';
+        if (key === 'team_totals') return 'team-totals';
+        if (key === 'first_half' || key === 'second_half' || key === 'period_1' || key === 'first_5') return 'segments';
+        if (key === 'alt_spreads' || key === 'alt_totals') return 'alt-lines';
+        return 'specials';
+    }
+
+    function getFilterLabel(category) {
+        const labels = {
+            all: 'All Markets',
+            'game-lines': 'Game Lines',
+            'team-totals': 'Team Totals',
+            segments: 'Periods',
+            'alt-lines': 'Alt Lines',
+            specials: 'Specials'
+        };
+        return labels[category] || 'Markets';
+    }
+
     function setCardScope(cardId, scope) {
         const card = document.getElementById(cardId);
         if (!card) return;
         card.dataset.scope = scope;
         card.querySelectorAll('.tmr-scope-tab').forEach(function(button) {
             button.classList.toggle('active', button.dataset.scope === scope);
+        });
+    }
+
+    function setCardFilter(cardId, filter) {
+        const card = document.getElementById(cardId);
+        if (!card) return;
+        card.dataset.marketFilter = filter;
+        card.querySelectorAll('.tmr-filter-pill').forEach(function(button) {
+            button.classList.toggle('active', button.dataset.filter === filter);
         });
     }
 
@@ -1167,6 +1205,7 @@
             const cardId = 'tmr-market-card-' + index;
             const sourceClass = game.has_sportsbook_odds ? 'real' : 'fallback';
             const sourceText = game.has_sportsbook_odds ? 'Sportsbook feed' : 'Manual entry';
+            const accent = getSportAccent(game.sport_key);
             let groupsHtml = '';
             const hasFirst5 = (game.market_groups || []).some(function(group) {
                 return group && group.key === 'first_5' && group.items && group.items.length;
@@ -1179,6 +1218,7 @@
 
             orderedGroups.forEach(function(group, groupIndex) {
                 const groupItems = group.items || [];
+                const category = getGroupCategory(group);
                 const buttons = (group.items || []).map(function(option, optionIndex) {
                     const optionKey = [
                         game.id || ('game-' + index),
@@ -1203,12 +1243,23 @@
 
                 if (buttons) {
                     const groupTitle = group.label;
-                    groupsHtml += '<div class="tmr-group" data-scope="' + getGroupScope(group) + '">' +
+                    groupsHtml += '<div class="tmr-group" data-scope="' + getGroupScope(group) + '" data-category="' + category + '">' +
                         '<div class="tmr-group-title"><span>' + escapeHtml(groupTitle) + '</span><span class="tmr-group-count">' + groupItems.length + ' lines</span></div>' +
                         '<div class="tmr-option-grid">' + buttons + '</div>' +
                         '</div>';
                 }
             });
+
+            const filterOrder = ['all', 'game-lines', 'team-totals', 'segments', 'alt-lines', 'specials'];
+            const categorySet = new Set((orderedGroups || []).map(getGroupCategory));
+            const visibleFilters = filterOrder.filter(function(filter) {
+                return filter === 'all' || categorySet.has(filter);
+            });
+            const filterStripHtml = visibleFilters.length > 2
+                ? '<div class="tmr-filter-strip">' + visibleFilters.map(function(filter, filterIndex) {
+                    return '<button class="tmr-filter-pill' + (filterIndex === 0 ? ' active' : '') + '" data-filter="' + filter + '" onclick="event.stopPropagation(); window.tmrSetCardFilter(\'' + cardId + '\', \'' + filter + '\')">' + escapeHtml(getFilterLabel(filter)) + '</button>';
+                }).join('') + '</div>'
+                : '';
 
             const scopeTabsHtml = hasFirst5
                 ? '<div class="tmr-scope-tabs">' +
@@ -1217,7 +1268,7 @@
                   '</div>'
                 : '';
 
-            return '<div class="tmr-market-card' + (index === 0 ? ' open' : '') + '" id="' + cardId + '" data-scope="full">' +
+            return '<div class="tmr-market-card' + (index === 0 ? ' open' : '') + '" id="' + cardId + '" data-scope="full" data-market-filter="all" style="--tmr-accent:' + escapeHtml(accent.primary) + ';--tmr-accent-soft:' + escapeHtml(accent.secondary) + ';">' +
                 '<div class="tmr-market-head" onclick="window.tmrToggleCard(\'' + cardId + '\')">' +
                 '<div>' +
                 '<div class="tmr-market-topline"><span class="tmr-market-league">' + escapeHtml(state.selectedSport || game.sport_title || 'Board') + '</span></div>' +
@@ -1233,7 +1284,7 @@
                 '</div>' +
                 '<div class="tmr-market-summary"><div class="tmr-market-count">' + (game.market_groups || []).length + ' sections</div><div class="tmr-market-caret">⌄</div></div>' +
                 '</div>' +
-                '<div class="tmr-market-body">' + scopeTabsHtml + groupsHtml + '</div>' +
+                '<div class="tmr-market-body">' + scopeTabsHtml + filterStripHtml + groupsHtml + '</div>' +
                 '</div>';
         }).join('');
 
@@ -1261,6 +1312,23 @@
             .map(function(part) { return part.charAt(0); })
             .join('')
             .toUpperCase() || '--';
+    }
+
+    function getSportAccent(sportKey) {
+        const accents = {
+            basketball_nba: { primary: '#f97316', secondary: '#fb923c' },
+            basketball_wnba: { primary: '#f59e0b', secondary: '#fbbf24' },
+            americanfootball_nfl: { primary: '#22c55e', secondary: '#86efac' },
+            icehockey_nhl: { primary: '#38bdf8', secondary: '#7dd3fc' },
+            baseball_mlb: { primary: '#10b981', secondary: '#6ee7b7' },
+            basketball_ncaab: { primary: '#ef4444', secondary: '#fca5a5' },
+            americanfootball_ncaaf: { primary: '#a855f7', secondary: '#d8b4fe' },
+            soccer_epl: { primary: '#f43f5e', secondary: '#fda4af' },
+            soccer_usa_mls: { primary: '#0ea5e9', secondary: '#7dd3fc' },
+            tennis_atp: { primary: '#14b8a6', secondary: '#99f6e4' },
+            tennis_wta: { primary: '#ec4899', secondary: '#f9a8d4' }
+        };
+        return accents[sportKey] || { primary: '#2f8f53', secondary: '#f2c94c' };
     }
 
     async function selectSportAndShowGames(sport) {
@@ -1732,6 +1800,7 @@
 
         window.tmrToggleCard = toggleCard;
         window.tmrSetCardScope = setCardScope;
+        window.tmrSetCardFilter = setCardFilter;
         window.tmrSelectOption = selectOption;
         window.tmrSportsbookRefresh = refreshCurrentSport;
         lockFunction(window, 'selectSportAndShowGames', selectSportAndShowGames);
