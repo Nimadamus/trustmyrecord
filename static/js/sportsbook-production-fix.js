@@ -642,6 +642,7 @@
             '.tmr-option-main{display:flex;flex-direction:column;gap:6px;min-width:0;}',
             '.tmr-option-market{font-size:15px;font-weight:800;line-height:1.28;color:#f8fafc;}',
             '.tmr-option-detail{font-size:11px;color:#8b95a7;line-height:1.35;}',
+            '.tmr-option-detail.manual{color:#fbbf24;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;}',
             '.tmr-option-odds{font-size:17px;font-weight:900;white-space:nowrap;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.06);color:#fbbf24;}',
             '.tmr-empty-state{padding:48px 22px;text-align:center;color:#8b95a7;border:1px dashed rgba(125,211,252,0.16);border-radius:18px;background:rgba(255,255,255,0.02);}',
             '.tmr-loading-grid{display:grid;gap:14px;}',
@@ -837,6 +838,18 @@
                     { marketType: 'f5_totals', selection: 'Under', selectionLabel: 'F5 Under' }
                 ]));
             }
+            if (!hasGroupKey(game, 'alt_spreads')) {
+                templates.push(createManualTemplateGroup(game, index, 'alt_spreads', 'Alt Spreads', [
+                    { marketType: 'alt_spreads', selection: game.away_team, selectionLabel: game.away_team + ' Alt Run Line' },
+                    { marketType: 'alt_spreads', selection: game.home_team, selectionLabel: game.home_team + ' Alt Run Line' }
+                ]));
+            }
+            if (!hasGroupKey(game, 'alt_totals')) {
+                templates.push(createManualTemplateGroup(game, index, 'alt_totals', 'Alt Totals', [
+                    { marketType: 'alt_totals', selection: 'Over', selectionLabel: 'Alt Over' },
+                    { marketType: 'alt_totals', selection: 'Under', selectionLabel: 'Alt Under' }
+                ]));
+            }
         }
 
         if (sportKey === 'basketball_nba' || sportKey === 'basketball_ncaab' || sportKey === 'americanfootball_nfl' || sportKey === 'americanfootball_ncaaf') {
@@ -868,6 +881,18 @@
                     { marketType: 'second_half_totals', selection: 'Under', selectionLabel: '2H Under' }
                 ]));
             }
+            if (!hasGroupKey(game, 'alt_spreads')) {
+                templates.push(createManualTemplateGroup(game, index, 'alt_spreads', 'Alt Spreads', [
+                    { marketType: 'alt_spreads', selection: game.away_team, selectionLabel: game.away_team + ' Alt Spread' },
+                    { marketType: 'alt_spreads', selection: game.home_team, selectionLabel: game.home_team + ' Alt Spread' }
+                ]));
+            }
+            if (!hasGroupKey(game, 'alt_totals')) {
+                templates.push(createManualTemplateGroup(game, index, 'alt_totals', 'Alt Totals', [
+                    { marketType: 'alt_totals', selection: 'Over', selectionLabel: 'Alt Over' },
+                    { marketType: 'alt_totals', selection: 'Under', selectionLabel: 'Alt Under' }
+                ]));
+            }
         }
 
         if (sportKey === 'icehockey_nhl') {
@@ -885,6 +910,18 @@
                     { marketType: 'period_1_h2h', selection: game.home_team, selectionLabel: game.home_team + ' 1P ML' },
                     { marketType: 'period_1_totals', selection: 'Over', selectionLabel: '1P Over' },
                     { marketType: 'period_1_totals', selection: 'Under', selectionLabel: '1P Under' }
+                ]));
+            }
+            if (!hasGroupKey(game, 'alt_spreads')) {
+                templates.push(createManualTemplateGroup(game, index, 'alt_spreads', 'Alt Spreads', [
+                    { marketType: 'alt_spreads', selection: game.away_team, selectionLabel: game.away_team + ' Alt Puck Line' },
+                    { marketType: 'alt_spreads', selection: game.home_team, selectionLabel: game.home_team + ' Alt Puck Line' }
+                ]));
+            }
+            if (!hasGroupKey(game, 'alt_totals')) {
+                templates.push(createManualTemplateGroup(game, index, 'alt_totals', 'Alt Totals', [
+                    { marketType: 'alt_totals', selection: 'Over', selectionLabel: 'Alt Over' },
+                    { marketType: 'alt_totals', selection: 'Under', selectionLabel: 'Alt Under' }
                 ]));
             }
         }
@@ -1112,11 +1149,14 @@
                     ].join('|');
                     const optionDomId = 'option-' + safeDomId(optionKey);
                     state.currentOptions.set(optionKey, Object.assign({ game: game, _domId: optionDomId, _optionKey: optionKey }, option));
-                    const detailLabel = option.book_title || option.source_label || option.group_label || 'Sportsbook feed';
+                    const detailLabel = option.source === 'manual'
+                        ? 'Manual line entry'
+                        : (option.book_title || option.source_label || option.group_label || 'Sportsbook feed');
+                    const detailClass = option.source === 'manual' ? 'tmr-option-detail manual' : 'tmr-option-detail';
                     return '<button class="tmr-option-btn" id="' + optionDomId + '" data-option-id="' + escapeHtml(optionKey) + '" onclick="window.tmrSelectOption(this.dataset.optionId)">' +
                         '<div class="tmr-option-main">' +
                         '<div class="tmr-option-market">' + escapeHtml(option.selection_label) + '</div>' +
-                        '<div class="tmr-option-detail">' + escapeHtml(detailLabel) + '</div>' +
+                        '<div class="' + detailClass + '">' + escapeHtml(detailLabel) + '</div>' +
                         '</div>' +
                         '<div class="tmr-option-odds">' + escapeHtml(option.odds_display || 'Manual') + '</div>' +
                         '</button>';
