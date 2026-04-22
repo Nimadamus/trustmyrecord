@@ -42,6 +42,7 @@
     const LIVE_REFRESH_MS = 20000;
     const boardCache = new Map();
     const boardRequests = new Map();
+    const boardDiagnostics = [];
     let latestBoardRequestId = 0;
 
     const MARKET_LABELS = {
@@ -89,6 +90,37 @@
             });
         } catch (error) {
             target[key] = value;
+        }
+    }
+
+    function snapshotBoardPayload(response) {
+        const games = Array.isArray(response && response.games) ? response.games : [];
+        return {
+            sport_key: response && response.sport_key ? response.sport_key : '',
+            game_count: games.length,
+            severity: response && response.summary ? response.summary.severity || '' : '',
+            message: response && response.summary ? response.summary.message || '' : '',
+            diagnostics: response && response.diagnostics ? response.diagnostics : null
+        };
+    }
+
+    function recordBoardEvent(type, details) {
+        const event = Object.assign({
+            type: type,
+            at: new Date().toISOString(),
+            selectedSport: state.selectedSport || '',
+            requestId: latestBoardRequestId
+        }, details || {});
+        boardDiagnostics.push(event);
+        while (boardDiagnostics.length > 60) boardDiagnostics.shift();
+        window.__tmrBoardDiagnostics = boardDiagnostics.slice();
+        window.__tmrLastBoardEvent = event;
+        if (type.indexOf('error') !== -1 || type.indexOf('failed') !== -1) {
+            console.error('[TMR][Board]', type, event);
+        } else if (type.indexOf('warning') !== -1 || type.indexOf('empty') !== -1 || type.indexOf('fallback') !== -1) {
+            console.warn('[TMR][Board]', type, event);
+        } else {
+            console.log('[TMR][Board]', type, event);
         }
     }
 
@@ -309,6 +341,7 @@
         const body = settings.body;
         const requireAuth = settings.auth === true;
         let lastError = null;
+        const shouldTraceBoardRequest = endpoint.indexOf('/games/board/') === 0 || endpoint.indexOf('/games/odds/') === 0 || endpoint.indexOf('/picks') === 0;
         for (const base of getDirectApiBases()) {
             try {
                 const headers = {};
@@ -346,8 +379,26 @@
                     } catch (error) {}
                     throw new Error(message || ('HTTP ' + response.status + ' from ' + base));
                 }
-                return await response.json();
+                const parsed = await response.json();
+                if (shouldTraceBoardRequest) {
+                    recordBoardEvent('api_success', {
+                        endpoint: endpoint,
+                        method: method,
+                        base: base,
+                        status: response.status,
+                        snapshot: endpoint.indexOf('/games/') === 0 ? snapshotBoardPayload(parsed) : null
+                    });
+                }
+                return parsed;
             } catch (error) {
+                if (shouldTraceBoardRequest) {
+                    recordBoardEvent('api_error', {
+                        endpoint: endpoint,
+                        method: method,
+                        base: base,
+                        message: error && error.message ? error.message : String(error || 'Unknown error')
+                    });
+                }
                 lastError = error;
             }
         }
@@ -405,9 +456,16 @@
         if (!sportKey) throw new Error('Missing sport key');
         if (!forceRefresh) {
             const cached = getCachedBoard(sportKey);
-            if (cached) return cached;
+            if (cached) {
+                recordBoardEvent('board_cache_hit', {
+                    sport_key: sportKey,
+                    snapshot: snapshotBoardPayload(cached)
+                });
+                return cached;
+            }
         }
         if (boardRequests.has(sportKey)) {
+            recordBoardEvent('board_request_reused', { sport_key: sportKey });
             return boardRequests.get(sportKey);
         }
 
@@ -415,11 +473,26 @@
             try {
                 const directBoard = await directApiRequest('/games/board/' + encodeURIComponent(sportKey), { timeoutMs: 8000 });
                 setCachedBoard(sportKey, directBoard);
+                recordBoardEvent(forceRefresh ? 'board_refresh_success' : 'board_fetch_success', {
+                    sport_key: sportKey,
+                    source: 'direct',
+                    snapshot: snapshotBoardPayload(directBoard)
+                });
                 return directBoard;
             } catch (directError) {
+                recordBoardEvent(forceRefresh ? 'board_refresh_direct_failed' : 'board_fetch_direct_failed', {
+                    sport_key: sportKey,
+                    source: 'direct',
+                    message: directError && directError.message ? directError.message : String(directError || 'Unknown error')
+                });
                 const api = await waitForApi();
                 const response = await api.getMarketBoard(sportKey);
                 setCachedBoard(sportKey, response);
+                recordBoardEvent(forceRefresh ? 'board_refresh_fallback_success' : 'board_fetch_fallback_success', {
+                    sport_key: sportKey,
+                    source: 'api_client',
+                    snapshot: snapshotBoardPayload(response)
+                });
                 return response;
             } finally {
                 boardRequests.delete(sportKey);
@@ -439,6 +512,10 @@
         if (requestId !== latestBoardRequestId || state.selectedSport !== sport) return false;
         state.currentBoard = response.games || [];
         updateBoardBadge(badge, state.currentBoard.length);
+        recordBoardEvent('board_rendered', {
+            sport: sport,
+            snapshot: snapshotBoardPayload(response)
+        });
         renderBoard(response.summary || null, state.currentBoard);
         return true;
     }
@@ -1403,9 +1480,38 @@
         }
 
         try {
-            const response = normalizeBoardResponse(await fetchMarketBoardFast(sportKey, false), sport);
+            let response = normalizeBoardResponse(await fetchMarketBoardFast(sportKey, false), sport);
+            if ((!response.games || response.games.length === 0) && !cachedBoard) {
+                recordBoardEvent('board_empty_initial', {
+                    sport: sport,
+                    sport_key: sportKey,
+                    snapshot: snapshotBoardPayload(response)
+                });
+                try {
+                    const refreshed = normalizeBoardResponse(await fetchMarketBoardFast(sportKey, true), sport);
+                    if (refreshed.games && refreshed.games.length) {
+                        response = refreshed;
+                        recordBoardEvent('board_empty_recovered', {
+                            sport: sport,
+                            sport_key: sportKey,
+                            snapshot: snapshotBoardPayload(refreshed)
+                        });
+                    }
+                } catch (refreshError) {
+                    recordBoardEvent('board_empty_refresh_failed', {
+                        sport: sport,
+                        sport_key: sportKey,
+                        message: refreshError && refreshError.message ? refreshError.message : String(refreshError || 'Unknown error')
+                    });
+                }
+            }
             renderBoardIfCurrent(requestId, sport, badge, response);
         } catch (error) {
+            recordBoardEvent('board_primary_failed', {
+                sport: sport,
+                sport_key: sportKey,
+                message: error && error.message ? error.message : String(error || 'Unknown error')
+            });
             try {
                 let fallbackGames = null;
                 try {
@@ -1418,12 +1524,22 @@
                 if (requestId !== latestBoardRequestId || state.selectedSport !== sport) return;
                 state.currentBoard = buildFallbackBoardGames(fallbackGames || [], sportKey);
                 updateBoardBadge(badge, state.currentBoard.length);
+                recordBoardEvent('board_odds_fallback_loaded', {
+                    sport: sport,
+                    sport_key: sportKey,
+                    game_count: state.currentBoard.length
+                });
                 renderBoard({
                     severity: 'warning',
                     message: 'Live fallback markets loaded while the advanced market board is unavailable.'
                 }, state.currentBoard);
                 return;
             } catch (fallbackError) {
+                recordBoardEvent('board_total_failure', {
+                    sport: sport,
+                    sport_key: sportKey,
+                    message: fallbackError && fallbackError.message ? fallbackError.message : String(fallbackError || 'Unknown error')
+                });
                 if (requestId !== latestBoardRequestId || state.selectedSport !== sport) return;
                 if (container && !cachedBoard) {
                     container.innerHTML = '<div class="tmr-empty-state">Unable to load markets right now. ' +
@@ -1853,6 +1969,9 @@
         window.tmrSetCardFilter = setCardFilter;
         window.tmrSelectOption = selectOption;
         window.tmrSportsbookRefresh = refreshCurrentSport;
+        window.tmrDumpBoardDiagnostics = function() {
+            return boardDiagnostics.slice();
+        };
         lockFunction(window, 'selectSportAndShowGames', selectSportAndShowGames);
         lockFunction(window, 'submitPick', lockInPick);
         lockFunction(window, 'lockInPick', lockInPick);
