@@ -455,6 +455,25 @@ const App = {
         this.loadFullLeaderboard('roi');
     },
 
+    initPicksPage() {
+        const path = window.location.pathname || '';
+        const onSportsbookDocument = path.includes('/sportsbook') || path.endsWith('/sportsbook.html');
+
+        // Legacy deep links like /picks should land on the sportsbook picks board.
+        if (!onSportsbookDocument) {
+            window.location.replace('/sportsbook.html#picks');
+            return;
+        }
+
+        if (typeof window.showSection === 'function') {
+            try {
+                window.showSection('picks');
+            } catch (error) {
+                // Leave the page as-is if the sportsbook shell owns routing.
+            }
+        }
+    },
+
     async loadFullLeaderboard(metric) {
         const container = document.getElementById('leaderboard-full');
         if (!container) return;
