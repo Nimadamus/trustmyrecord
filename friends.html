@@ -867,17 +867,17 @@
     </div>
         <header>
         <div class="header-content">
-            <a href="index.html" class="logo">TRUST<span>MY</span>RECORD</a>
+            <a href="/" class="logo">TRUST<span>MY</span>RECORD</a>
             <nav class="nav-links">
-                <a href="sportsbook.html" class="nav-link">Odds</a>
-                <a href="sportsbook.html" class="nav-link">Scores &amp; Matchups</a>
-                <a href="feed.html" class="nav-link">News</a>
-                <a href="sportsbook.html#picks" class="nav-link">Picks</a>
+                <a href="/sportsbook/" class="nav-link">Odds</a>
+                <a href="/sportsbook/" class="nav-link">Scores &amp; Matchups</a>
+                <a href="/feed/" class="nav-link">News</a>
+                <a href="/picks/" class="nav-link">Picks</a>
                 <a href="handicappers.html" class="nav-link">Handicappers</a>
-                <a href="forum.html" class="nav-link">Forum</a>
-                <a href="messages.html" class="nav-link">Messages</a>
-                <a href="friends.html" class="nav-link active">Friends</a>
-                <a href="profile.html" class="nav-link">My Account</a>
+                <a href="/forum/" class="nav-link">Forum</a>
+                <a href="/messages/" class="nav-link">Messages</a>
+                <a href="/friends/" class="nav-link active">Friends</a>
+                <a href="/profile/" class="nav-link">My Account</a>
             </nav>
         </div>
     </header>
@@ -982,7 +982,7 @@
                 <div class="friend-card" data-user-id="${user.id}">
                     <div class="friend-avatar">${avatarHtml}</div>
                     <div class="friend-info">
-                        <div class="friend-name"><a href="profile.html?user=${username}" style="color:inherit;text-decoration:none;">${username}${verifiedBadge}</a></div>
+                <div class="friend-name"><a href="profile/?user=${username}" style="color:inherit;text-decoration:none;">${username}${verifiedBadge}</a></div>
                         ${user.display_name && user.display_name !== username ? `<div class="friend-meta" style="color:var(--text-muted);font-size:12px;">${user.display_name}</div>` : ''}
                         ${statsHtml}
                     </div>
@@ -1164,7 +1164,7 @@
                         <div class="search-result-item">
                             <div class="friend-avatar">${avatarHtml}</div>
                             <div class="friend-info">
-                                <div class="friend-name"><a href="profile.html?user=${u.username}" style="color:inherit;text-decoration:none;">${u.username}</a></div>
+                <div class="friend-name"><a href="profile/?user=${u.username}" style="color:inherit;text-decoration:none;">${u.username}</a></div>
                                 ${metaParts ? `<div class="friend-meta">${metaParts}</div>` : ''}
                             </div>
                             <button class="add-friend-btn" onclick="${isFollowing ? '' : `followUser(${u.id}, '${u.username}')`}" ${isFollowing ? 'disabled' : ''}>
@@ -1202,7 +1202,7 @@
         }
 
         function viewProfile(username) {
-            window.location.href = `profile.html?user=${username}`;
+        window.location.href = `profile/?user=${username}`;
         }
 
         // Initialize
@@ -1222,7 +1222,7 @@
             }
 
             if (!api.isLoggedIn()) {
-                window.location.href = 'index.html?login=1';
+        window.location.href = '/sportsbook/#login';
                 return;
             }
 
@@ -1232,7 +1232,7 @@
                 myUserId = me.user?.id || me.id;
             } catch (err) {
                 console.error('Auth error:', err);
-                window.location.href = 'index.html?login=1';
+        window.location.href = '/sportsbook/#login';
                 return;
             }
 
@@ -1261,29 +1261,29 @@
                     <div>
                         <div style="font-size: 0.75rem; font-weight: 700; color: #162231; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Platform</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="sportsbook.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
-                            <a href="index.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
-                            <a href="arena.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Gaming Arena</a>
-                            <a href="forum.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
+                            <a href="/sportsbook/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
+                            <a href="/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
+                            <a href="/arena/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Gaming Arena</a>
+                            <a href="/forum/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
                         </div>
                     </div>
                     <!-- Community Column -->
                     <div>
                         <div style="font-size: 0.75rem; font-weight: 700; color: #162231; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Community</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="feed.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
-                            <a href="arena.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Arena</a>
-                            <a href="polls.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Polls</a>
-                            <a href="trivia.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
+                            <a href="/feed/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
+                            <a href="/arena/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Arena</a>
+                            <a href="/hangout/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Polls</a>
+                            <a href="/trivia/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
                         </div>
                     </div>
                     <!-- Legal Column -->
                     <div>
                         <div style="font-size: 0.75rem; font-weight: 700; color: #162231; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Info</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="about.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
-                            <a href="terms.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
-                            <a href="privacy.html" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
+                            <a href="/about/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
+                            <a href="/terms/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
+                            <a href="/privacy/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
                             <a href="mailto:support@trustmyrecord.com" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Contact</a>
                         </div>
                     </div>

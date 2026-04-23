@@ -475,24 +475,24 @@
 
 <!-- NAVIGATION -->
 <nav class="nav">
-    <a href="index.html" class="nav-logo">TRUST<span>MY</span>RECORD</a>
+                <a href="/" class="nav-logo">TRUST<span>MY</span>RECORD</a>
     <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')"><i class="fas fa-bars"></i></button>
     <div class="nav-links">
-        <a href="index.html" class="nav-link">Home</a>
-        <a href="sportsbook.html" class="nav-link">Sportsbook</a>
-        <a href="feed.html" class="nav-link">Feed</a>
-        <a href="arena.html" class="nav-link active">Arena</a>
-        <a href="forum.html" class="nav-link">Forum</a>
-        <a href="messages.html" class="nav-link">Messages</a>
-        <a href="profile.html" class="nav-link">My Profile</a>
+                    <a href="/" class="nav-link">Home</a>
+                    <a href="/sportsbook/" class="nav-link">Sportsbook</a>
+                    <a href="/feed/" class="nav-link">Feed</a>
+                    <a href="/arena/" class="nav-link active">Arena</a>
+                    <a href="/forum/" class="nav-link">Forum</a>
+                    <a href="/messages/" class="nav-link">Messages</a>
+                    <a href="/profile/" class="nav-link">My Profile</a>
     </div>
     <div class="nav-right">
         <div class="nav-user" id="navUser" style="display:none;">
             <img class="nav-avatar" id="navAvatar" src="" alt="">
             <span class="nav-username" id="navUsername"></span>
         </div>
-        <a href="sportsbook.html#login" class="btn btn-outline btn-sm" id="navLoginBtn">Log In</a>
-        <a href="sportsbook.html#register" class="btn btn-primary btn-sm" id="navRegisterBtn">Register</a>
+                    <a href="/sportsbook/#login" class="btn btn-outline btn-sm" id="navLoginBtn">Log In</a>
+                    <a href="/sportsbook/#register" class="btn btn-primary btn-sm" id="navRegisterBtn">Register</a>
     </div>
 </nav>
 
@@ -504,8 +504,8 @@
             <h1>Turn gaming rivalries into a <span class="gold">trackable</span> <span class="blue">record</span>.</h1>
             <p>Use Arena to issue challenges, log head-to-head results, attach platform identities, and build a public competitive history that is stronger than Discord trash talk and screenshots.</p>
             <div class="hero-actions">
-                <a href="sportsbook.html#register" class="btn btn-primary btn-sm">Register</a>
-                <a href="sportsbook.html#login" class="btn btn-outline btn-sm">Log In</a>
+                    <a href="/sportsbook/#register" class="btn btn-primary btn-sm">Register</a>
+                    <a href="/sportsbook/#login" class="btn btn-outline btn-sm">Log In</a>
                 <button class="btn btn-gold btn-sm" onclick="openCreateChallenge()">Issue Challenge</button>
             </div>
             <div class="hero-stats" style="justify-content:flex-start; margin-top:22px;">
@@ -628,7 +628,7 @@
                 <i class="fas fa-lock"></i>
                 <h3>Sign in to see your stats</h3>
                 <p>Log in to track your gaming profile, match history, streaks, and rivalries from one place.</p>
-                <a href="sportsbook.html#login" class="btn btn-primary" style="margin-top:12px;">Log In</a>
+                        <a href="/sportsbook/#login" class="btn btn-primary" style="margin-top:12px;">Log In</a>
             </div>
             <div id="myStatsData" style="display:none;">
                 <div class="section-header">
@@ -987,7 +987,7 @@ async function loadChallenges() {
         document.getElementById('statActiveChallenges').textContent = allChallenges.filter(c => ['pending','accepted','in_progress'].includes(c.status)).length;
     } catch (e) {
         console.error('Failed to load challenges:', e);
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No open challenges yet</h3><p>The Arena is live, but there is no active challenge board to show yet. Register, link your gamer profile, and post the first matchup instead of leaving this page empty.</p><a href="sportsbook.html#register" class="btn btn-primary" style="margin-top:12px;">Create an Account</a></div>';
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No open challenges yet</h3><p>The Arena is live, but there is no active challenge board to show yet. Register, link your gamer profile, and post the first matchup instead of leaving this page empty.</p><a href="/sportsbook/#register" class="btn btn-primary" style="margin-top:12px;">Create an Account</a></div>';
     }
 }
 
@@ -1769,29 +1769,29 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
                     <div>
                         <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Platform</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="sportsbook.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
-                            <a href="index.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
-                            <a href="arena.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Arena</a>
-                            <a href="forum.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
+                            <a href="/sportsbook/" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
+                            <a href="/" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
+                            <a href="/arena/" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Arena</a>
+                            <a href="/forum/" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
                         </div>
                     </div>
                     <!-- Community Column -->
                     <div>
                         <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Community</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="feed.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
-                            <a href="arena.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Arena</a>
-                            <a href="polls.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Polls</a>
-                            <a href="trivia.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
+                            <a href="/feed/" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
+                            <a href="/arena/" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Arena</a>
+                            <a href="/hangout/" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Polls</a>
+                            <a href="/trivia/" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
                         </div>
                     </div>
                     <!-- Legal Column -->
                     <div>
                         <div style="font-size: 0.75rem; font-weight: 700; color: #00ffff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Info</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="about.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
-                            <a href="terms.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
-                            <a href="privacy.html" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
+                            <a href="/about/" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
+                            <a href="/terms/" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
+                            <a href="/privacy/" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
                             <a href="mailto:support@trustmyrecord.com" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Contact</a>
                         </div>
                     </div>
