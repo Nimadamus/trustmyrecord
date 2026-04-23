@@ -36,10 +36,13 @@
         currentBoard: [],
         currentOptions: new Map(),
         selectedOption: null,
-        currentUserPicks: []
+        currentUserPicks: [],
+        lastBoardRenderAt: 0,
+        lastBoardRenderSport: null
     };
     const BOARD_CACHE_TTL_MS = 15000;
     const LIVE_REFRESH_MS = 20000;
+    const MIN_VISIBLE_REFRESH_GAP_MS = 30000;
     const boardCache = new Map();
     const boardRequests = new Map();
     const boardDiagnostics = [];
@@ -546,6 +549,8 @@
             });
         }
         state.currentBoard = response.games || [];
+        state.lastBoardRenderAt = Date.now();
+        state.lastBoardRenderSport = sport;
         updateBoardBadge(badge, state.currentBoard.length);
         recordBoardEvent('board_rendered', {
             sport: sport,
@@ -1786,6 +1791,16 @@
 
     async function refreshCurrentSport() {
         if (state.selectedSport) {
+            const renderedRecently = state.lastBoardRenderSport === state.selectedSport &&
+                state.lastBoardRenderAt &&
+                (Date.now() - state.lastBoardRenderAt) < MIN_VISIBLE_REFRESH_GAP_MS;
+            if (renderedRecently) {
+                recordBoardEvent('board_refresh_skipped_recent', {
+                    sport: state.selectedSport,
+                    age_ms: Date.now() - state.lastBoardRenderAt
+                });
+                return;
+            }
             await selectSportAndShowGames(state.selectedSport);
         }
     }
