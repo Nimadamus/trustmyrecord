@@ -18,10 +18,6 @@ const legacyRouteTargets = {
     'polls-trivia': 'hangout.html'
 };
 
-const previousShowSection = typeof window !== 'undefined' && typeof window.showSection === 'function'
-    ? window.showSection
-    : null;
-
 function getCanonicalRoute(route) {
     if (!route) return null;
 
@@ -40,49 +36,68 @@ function isAlreadyAtLegacyTarget(sectionId) {
         (window.location.hash || '') === target.hash;
 }
 
-/**
- * Show a specific section and hide others
- */
-function showSection(sectionId, updateHistory = true) {
-    if (legacyRouteTargets[sectionId]) {
-        if (isAlreadyAtLegacyTarget(sectionId)) {
-            if (typeof previousShowSection === 'function' && previousShowSection !== showSection) {
-                return previousShowSection(sectionId, updateHistory);
-            }
-            return;
-        }
-        window.location.href = legacyRouteTargets[sectionId];
-        return;
-    }
-
-    // Hide all sections
+function activateCurrentPageSection(sectionId, updateHistory = true) {
     const sections = document.querySelectorAll('.page-section');
     sections.forEach(section => section.classList.remove('active'));
 
-    // Show selected section
     const targetSection = document.getElementById(sectionId);
     if (targetSection) {
         targetSection.classList.add('active');
     }
 
-    // Update nav active states
     const navLinks = document.querySelectorAll('nav a');
     navLinks.forEach(link => link.classList.remove('active'));
 
-    // Add active class to clicked nav item (if event exists)
     if (typeof event !== 'undefined' && event && event.target && event.target.classList) {
         event.target.classList.add('active');
     }
 
-    // Update URL for browser history (allows back/forward to work)
     if (updateHistory && sectionId !== 'home') {
         window.history.pushState({ section: sectionId }, '', '/' + sectionId);
     } else if (updateHistory && sectionId === 'home') {
         window.history.pushState({ section: 'home' }, '', '/');
     }
 
-    // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function activateCanonicalLegacySection(sectionId, updateHistory = true) {
+    if (window.__tmrCanonicalLegacyGuard) {
+        activateCurrentPageSection(sectionId, updateHistory);
+        return;
+    }
+
+    const currentShowSection = typeof window !== 'undefined' && typeof window.showSection === 'function'
+        ? window.showSection
+        : null;
+
+    if (currentShowSection && currentShowSection !== showSection) {
+        window.__tmrCanonicalLegacyGuard = true;
+        try {
+            currentShowSection(sectionId, updateHistory);
+            return;
+        } finally {
+            window.__tmrCanonicalLegacyGuard = false;
+        }
+    }
+
+    activateCurrentPageSection(sectionId, updateHistory);
+}
+
+/**
+ * Show a specific section and hide others
+ */
+function showSection(sectionId, updateHistory = true) {
+    if (legacyRouteTargets[sectionId]) {
+        if (isAlreadyAtLegacyTarget(sectionId)) {
+            activateCurrentPageSection(sectionId, updateHistory);
+            return;
+        }
+        window.location.href = legacyRouteTargets[sectionId];
+        return;
+    }
+
+    activateCurrentPageSection(sectionId, updateHistory);
 }
 
 // Valid section IDs for routing
@@ -105,9 +120,7 @@ function handleRouting() {
     if (redirectPath && validSections.includes(redirectPath)) {
         if (legacyRouteTargets[redirectPath]) {
             if (isAlreadyAtLegacyTarget(redirectPath)) {
-                if (typeof previousShowSection === 'function' && previousShowSection !== showSection) {
-                    previousShowSection(redirectPath, false);
-                }
+                activateCanonicalLegacySection(redirectPath, false);
                 return;
             }
             window.location.replace(legacyRouteTargets[redirectPath]);
@@ -119,9 +132,7 @@ function handleRouting() {
     } else if (hashPath && validSections.includes(hashPath)) {
         if (legacyRouteTargets[hashPath]) {
             if (isAlreadyAtLegacyTarget(hashPath)) {
-                if (typeof previousShowSection === 'function' && previousShowSection !== showSection) {
-                    previousShowSection(hashPath, false);
-                }
+                activateCanonicalLegacySection(hashPath, false);
                 return;
             }
             window.location.replace(legacyRouteTargets[hashPath]);
