@@ -464,6 +464,9 @@
                 return cached;
             }
         }
+        if (forceRefresh && boardRequests.has(sportKey)) {
+            boardRequests.delete(sportKey);
+        }
         if (boardRequests.has(sportKey)) {
             recordBoardEvent('board_request_reused', { sport_key: sportKey });
             return boardRequests.get(sportKey);
@@ -1527,7 +1530,7 @@
         }
 
         try {
-            let response = normalizeBoardResponse(await fetchMarketBoardFast(sportKey, false), sport);
+            let response = normalizeBoardResponse(await fetchMarketBoardFast(sportKey, !cachedBoard), sport);
             if ((!response.games || response.games.length === 0) && !cachedBoard) {
                 recordBoardEvent('board_empty_initial', {
                     sport: sport,
