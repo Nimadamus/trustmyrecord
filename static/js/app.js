@@ -461,7 +461,7 @@ const App = {
 
         // Legacy deep links like /picks should land on the sportsbook picks board.
         if (!onSportsbookDocument) {
-            window.location.replace('/sportsbook.html#picks');
+            window.location.replace('/picks/');
             return;
         }
 

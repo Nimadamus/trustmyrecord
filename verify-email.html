@@ -154,7 +154,7 @@
                 Once verified, you will be logged in automatically and can start posting picks immediately.
             </p>
             <button onclick="resendEmail()" class="btn-primary">Resend Verification Email</button>
-            <a href="index.html" class="btn-secondary">Go Home</a>
+            <a href="/" class="btn-secondary">Go Home</a>
         </div>
 
         <div id="success-state" class="hidden">
@@ -163,7 +163,7 @@
             <div class="verify-success">
                 Your email has been verified successfully. You can now make picks and join competitions!
             </div>
-            <a href="index.html" class="btn-primary">Go to Dashboard</a>
+            <a href="/" class="btn-primary">Go to Dashboard</a>
         </div>
 
         <div id="error-state" class="hidden">
@@ -174,7 +174,7 @@
                 The verification link may have expired or is invalid. Please request a new verification email.
             </p>
             <button onclick="resendEmail()" class="btn-primary">Resend Verification Email</button>
-            <a href="index.html" class="btn-secondary">Go Home</a>
+            <a href="/" class="btn-secondary">Go Home</a>
         </div>
 
         <div id="resend-state" class="hidden">
@@ -183,7 +183,7 @@
             <div class="verify-success">
                 A new verification link has been sent to your email address.
             </div>
-            <a href="index.html" class="btn-secondary">Go Home</a>
+            <a href="/" class="btn-secondary">Go Home</a>
         </div>
     </div>
 
@@ -238,15 +238,15 @@
         function resolvePostVerifyRedirect() {
             const urlParams = new URLSearchParams(window.location.search);
             const redirect = urlParams.get('redirect') || sessionStorage.getItem('tmr_post_auth_redirect') || '';
-            if (!redirect) return 'index.html';
+            if (!redirect) return '/';
             sessionStorage.removeItem('tmr_post_auth_redirect');
 
-            if (redirect === 'picks') return 'sportsbook.html#picks';
-            if (redirect === 'profile') return 'profile.html';
-            if (redirect === 'leaderboards') return 'sportsbook.html#leaderboards';
+            if (redirect === 'picks') return '/picks/';
+            if (redirect === 'profile') return '/profile/';
+            if (redirect === 'leaderboards') return '/leaderboards/';
             if (/^[a-z0-9-]+\.html(?:#.*)?$/i.test(redirect)) return redirect;
 
-            return 'index.html';
+            return '/';
         }
 
         async function verifyEmail() {

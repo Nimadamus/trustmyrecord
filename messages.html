@@ -983,20 +983,20 @@
     </div>
         <header>
         <div class="header-content">
-            <a href="index.html" class="logo">TRUST<span style="color:#f58220;">MY</span>RECORD</a>
+            <a href="/" class="logo">TRUST<span style="color:#f58220;">MY</span>RECORD</a>
             <nav class="nav-links">
-                <a href="sportsbook.html" class="nav-link">Odds</a>
-                <a href="sportsbook.html" class="nav-link">Scores &amp; Matchups</a>
-                <a href="feed.html" class="nav-link">News</a>
-                <a href="sportsbook.html#picks" class="nav-link">Picks</a>
+                <a href="/sportsbook/" class="nav-link">Odds</a>
+                <a href="/sportsbook/" class="nav-link">Scores &amp; Matchups</a>
+                <a href="/feed/" class="nav-link">News</a>
+                <a href="/picks/" class="nav-link">Picks</a>
                 <a href="handicappers.html" class="nav-link">Handicappers</a>
-                <a href="forum.html" class="nav-link">Forum</a>
-                <a href="messages.html" class="nav-link active">Messages</a>
-                <a href="profile.html" class="nav-link">My Account</a>
+                <a href="/forum/" class="nav-link">Forum</a>
+                <a href="/messages/" class="nav-link active">Messages</a>
+                <a href="/profile/" class="nav-link">My Account</a>
             </nav>
             <div class="messages-shell-actions">
-                <a href="sportsbook.html#login" class="shell-btn" id="messagesHeaderLoginBtn">Log In</a>
-                <a href="sportsbook.html#register" class="shell-btn primary" id="messagesHeaderRegisterBtn">Register</a>
+                <a href="/sportsbook/#login" class="shell-btn" id="messagesHeaderLoginBtn">Log In</a>
+                <a href="/sportsbook/#register" class="shell-btn primary" id="messagesHeaderRegisterBtn">Register</a>
             </div>
         </div>
     </header>
@@ -1046,7 +1046,7 @@
                     <h3 id="chatUserName">Select a conversation</h3>
                     <p id="chatUserStatus">Online</p>
                 </div>
-                <a id="chatProfileLink" href="profile.html" class="shell-btn" style="margin-left:auto;display:none;">Open Profile</a>
+                <a id="chatProfileLink" href="/profile/" class="shell-btn" style="margin-left:auto;display:none;">Open Profile</a>
             </div>
 
             <div class="chat-messages" id="chatMessages">
@@ -1121,7 +1121,7 @@
                 } catch(e) {}
             }
             if (!currentUser) {
-                window.location.href = 'sportsbook.html#login';
+            window.location.href = '/sportsbook/#login';
                 return;
             }
 
@@ -1312,7 +1312,7 @@
             const profileLink = document.getElementById('chatProfileLink');
             if (profileLink) {
                 if (username) {
-                    profileLink.href = 'profile.html?user=' + encodeURIComponent(username);
+                    profileLink.href = 'profile/?user=' + encodeURIComponent(username);
                     profileLink.style.display = 'inline-flex';
                 } else {
                     profileLink.style.display = 'none';
@@ -1424,7 +1424,7 @@
 
         function syncConversationUrl(username) {
             if (!window.history || typeof window.history.replaceState !== 'function') return;
-            const next = username ? ('messages.html?to=' + encodeURIComponent(username)) : 'messages.html';
+            const next = username ? ('messages/?to=' + encodeURIComponent(username)) : 'messages/';
             window.history.replaceState(null, '', next);
         }
 
@@ -1543,29 +1543,29 @@
                     <div>
                         <div style="font-size: 0.75rem; font-weight: 700; color: #f4f7fb; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Platform</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="sportsbook.html" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
-                            <a href="index.html" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Home</a>
-                            <a href="arena.html" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Arena</a>
-                            <a href="forum.html" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
+                            <a href="/sportsbook/" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
+                            <a href="/" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Home</a>
+                            <a href="/arena/" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Arena</a>
+                            <a href="/forum/" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
                         </div>
                     </div>
                     <!-- Community Column -->
                     <div>
                         <div style="font-size: 0.75rem; font-weight: 700; color: #f4f7fb; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Community</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="feed.html" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
-                            <a href="arena.html" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Arena</a>
-                            <a href="hangout.html" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Hangout</a>
-                            <a href="trivia.html" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
+                            <a href="/feed/" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
+                            <a href="/arena/" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Arena</a>
+                            <a href="/hangout/" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Hangout</a>
+                            <a href="/trivia/" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
                         </div>
                     </div>
                     <!-- Legal Column -->
                     <div>
                         <div style="font-size: 0.75rem; font-weight: 700; color: #f4f7fb; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Info</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <a href="about.html" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
-                            <a href="terms.html" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
-                            <a href="privacy.html" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
+                            <a href="/about/" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
+                            <a href="/terms/" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
+                            <a href="/privacy/" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
                             <a href="mailto:support@trustmyrecord.com" style="color: #a6b4c8; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Contact</a>
                         </div>
                     </div>

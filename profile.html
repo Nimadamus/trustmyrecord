@@ -6,7 +6,7 @@
     <title>Profile | Trust My Record</title>
     <meta name="description" content="View user profile, verified pick record, and performance stats on Trust My Record.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://trustmyrecord.com/profile.html">
+    <meta property="og:url" content="https://trustmyrecord.com/profile/">
     <meta property="og:title" content="User Profile | Trust My Record">
     <meta property="og:description" content="Check out my verified handicapping record and stats.">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
@@ -922,16 +922,16 @@
     <header>
         <div class="container">
             <div class="header-content">
-                <a href="index.html" class="logo">TRUST<span>MY</span>RECORD</a>
+                <a href="/" class="logo">TRUST<span>MY</span>RECORD</a>
                 <nav class="nav-links">
-                    <a href="sportsbook.html" class="nav-link">Odds</a>
-                    <a href="sportsbook.html" class="nav-link">Scores &amp; Matchups</a>
-                    <a href="feed.html" class="nav-link">News</a>
-                    <a href="sportsbook.html#picks" class="nav-link">Picks</a>
+                    <a href="/sportsbook/" class="nav-link">Odds</a>
+                    <a href="/sportsbook/" class="nav-link">Scores &amp; Matchups</a>
+                    <a href="/feed/" class="nav-link">News</a>
+                    <a href="/picks/" class="nav-link">Picks</a>
                     <a href="handicappers.html" class="nav-link">Handicappers</a>
-                    <a href="forum.html" class="nav-link">Forum</a>
-                    <a href="messages.html" class="nav-link">Messages</a>
-                    <a href="profile.html" class="nav-link active">My Account</a>
+                    <a href="/forum/" class="nav-link">Forum</a>
+                    <a href="/messages/" class="nav-link">Messages</a>
+                    <a href="/profile/" class="nav-link active">My Account</a>
                 </nav>
             </div>
         </div>
@@ -960,9 +960,9 @@
                         <div class="section-subtitle">Transparent ledger, sortable records table, and advanced audit splits built around the pick history.</div>
                     </div>
                     <div class="workspace-tabs">
-                        <a class="workspace-tab active" id="profilePerformanceTab" href="profile.html">Record</a>
-                        <a class="workspace-tab" id="profileTriviaTab" href="trivia.html">Trivia</a>
-                        <a class="workspace-tab" id="profilePollsTab" href="polls.html">Polls</a>
+                        <a class="workspace-tab active" id="profilePerformanceTab" href="profile/">Record</a>
+                        <a class="workspace-tab" id="profileTriviaTab" href="trivia/">Trivia</a>
+                        <a class="workspace-tab" id="profilePollsTab" href="hangout/">Polls</a>
                     </div>
                 </div>
             </div>
@@ -2413,7 +2413,7 @@
             if (!profileUsername && currentUser) profileUsername = currentUser.username;
             
             if (!profileUsername) {
-                document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>Not Logged In</h3><p>Please log in or specify a user.</p><a href="index.html" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
+                document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>Not Logged In</h3><p>Please log in or specify a user.</p><a href="/" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
                 return;
             }
             
@@ -2460,7 +2460,7 @@
         } catch (error) {
             console.error('[Profile] Profile load failed:', error);
             document.querySelectorAll('.summary-bar, .picks-section, .analytics-section').forEach(el => el.style.display = 'none');
-            document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>User Not Found</h3><p>User "' + profileUsername + '" not found or could not be loaded.</p><a href="index.html" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
+            document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>User Not Found</h3><p>User "' + profileUsername + '" not found or could not be loaded.</p><a href="/" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
             return;
         }
 
@@ -2561,8 +2561,8 @@
             const fc = isFollowingProfile ? 'btn-secondary' : 'btn-primary';
             const fa = isFollowingProfile ? 'doUnfollow' : 'doFollow';
             actions = '<div class="profile-actions"><button class="btn ' + fc + '" onclick="' + fa + '(' + profileUserId + ')">' + ft + '</button>' +
-                '<button class="btn btn-secondary" onclick="location.href=\'messages.html?to=' + encodeURIComponent(p.username) + '\'">Message</button>' +
-                '<button class="btn btn-secondary" onclick="location.href=\'arena.html?challenge=' + encodeURIComponent(p.username) + '\'">Challenge</button></div>';
+                '<button class="btn btn-secondary" onclick="location.href=\'messages/?to=' + encodeURIComponent(p.username) + '\'">Message</button>' +
+                '<button class="btn btn-secondary" onclick="location.href=\'arena/?challenge=' + encodeURIComponent(p.username) + '\'">Challenge</button></div>';
         }
 
         el.innerHTML = '<div class="profile-avatar">' + (p.avatar_url ? '<img src="' + p.avatar_url + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + name + '">' : letter) + '</div>' +
@@ -2587,9 +2587,9 @@
         const performanceTab = document.getElementById('profilePerformanceTab');
         const triviaTab = document.getElementById('profileTriviaTab');
         const pollsTab = document.getElementById('profilePollsTab');
-        if (performanceTab) performanceTab.href = 'profile.html' + (safeUser ? ('?user=' + safeUser) : '');
-        if (triviaTab) triviaTab.href = 'trivia.html' + (safeUser ? ('?user=' + safeUser) : '');
-        if (pollsTab) pollsTab.href = 'polls.html' + (safeUser ? ('?user=' + safeUser) : '');
+        if (performanceTab) performanceTab.href = 'profile/' + (safeUser ? ('?user=' + safeUser) : '');
+        if (triviaTab) triviaTab.href = 'trivia/' + (safeUser ? ('?user=' + safeUser) : '');
+        if (pollsTab) pollsTab.href = 'hangout/' + (safeUser ? ('?user=' + safeUser) : '');
     }
 
     // ======================== SUMMARY BAR ========================
@@ -4043,7 +4043,7 @@
                     '<div style="font-size:.8rem;color:#6b7280;">@' + (user.username || '') + '</div>' +
                     '</div>' +
                     '</div>' +
-                    '<a href="profile.html?user=' + encodeURIComponent(user.username || '') + '" class="btn btn-secondary" style="text-decoration:none;">View</a>' +
+                    '<a href="profile/?user=' + encodeURIComponent(user.username || '') + '" class="btn btn-secondary" style="text-decoration:none;">View</a>' +
                     '</div>';
             }).join('');
         } catch (error) {
@@ -4107,7 +4107,7 @@
 
         const user = profileUsername || 'user';
         const encodedUser = encodeURIComponent(user);
-        const profileUrl = `https://trustmyrecord.com/profile.html?user=${encodedUser}`;
+        const profileUrl = `https://trustmyrecord.com/profile/?user=${encodedUser}`;
         const widgetUrl = `https://trustmyrecord.com/profile-widget.html?user=${encodedUser}&theme=dark&refresh=15000`;
         const iframeCode = `<!-- TrustMyRecord Live Profile Widget -->\n<iframe\n  src="${widgetUrl}"\n  title="TrustMyRecord profile for ${user}"\n  width="100%"\n  height="260"\n  style="max-width:420px;border:0;overflow:hidden;background:transparent;"\n  loading="lazy"\n  referrerpolicy="strict-origin-when-cross-origin"\n  scrolling="no">\n</iframe>`;
         const scriptTagOpen = String.fromCharCode(60) + 'script';
@@ -4322,21 +4322,21 @@
                 <div class="site-footer-links">
                     <div>
                         <h4>Platform</h4>
-                        <a href="index.html">Home</a>
-                        <a href="sportsbook.html">Sportsbook</a>
-                        <a href="profile.html">Profile</a>
+                        <a href="/">Home</a>
+                        <a href="/sportsbook/">Sportsbook</a>
+                        <a href="/profile/">Profile</a>
                     </div>
                     <div>
                         <h4>Community</h4>
-                        <a href="feed.html">Feed</a>
-                        <a href="forum.html">Forum</a>
-                        <a href="messages.html">Messages</a>
+                        <a href="/feed/">Feed</a>
+                        <a href="/forum/">Forum</a>
+                        <a href="/messages/">Messages</a>
                     </div>
                     <div>
                         <h4>Info</h4>
-                        <a href="about.html">About</a>
-                        <a href="terms.html">Terms</a>
-                        <a href="privacy.html">Privacy</a>
+                        <a href="/about/">About</a>
+                        <a href="/terms/">Terms</a>
+                        <a href="/privacy/">Privacy</a>
                     </div>
                 </div>
             </div>

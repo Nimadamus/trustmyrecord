@@ -379,11 +379,11 @@ async function handleNotifClick(notifId, type) {
     switch (type) {
         case 'friend_request':
         case 'friend_accept':
-            window.location.href = 'friends.html';
+            window.location.href = 'friends/';
             break;
         case 'new_message':
         case 'message':
-            window.location.href = 'messages.html';
+            window.location.href = 'messages/';
             break;
         case 'challenge_invite':
         case 'challenge_result':
@@ -392,7 +392,7 @@ async function handleNotifClick(notifId, type) {
             break;
         case 'premium_upgrade':
         case 'premium_expired':
-            window.location.href = 'premium.html';
+            window.location.href = 'premium/';
             break;
         default:
             // Just mark as read, stay on page
