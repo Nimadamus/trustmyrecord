@@ -400,17 +400,17 @@
     </div>
     <header>
         <div class="header-inner">
-            <a href="index.html" class="logo">Trust<span>My</span>Record</a>
+            <a href="/" class="logo">Trust<span>My</span>Record</a>
             <nav>
-                <a href="sportsbook.html">Odds</a>
-                <a href="sportsbook.html">Scores &amp; Matchups</a>
-                <a href="feed.html">News</a>
-                <a href="sportsbook.html#picks">Picks</a>
+                <a href="/sportsbook/">Odds</a>
+                <a href="/sportsbook/">Scores &amp; Matchups</a>
+                <a href="/feed/">News</a>
+                <a href="/picks/">Picks</a>
                 <a href="handicappers.html">Handicappers</a>
-                <a href="forum.html">Forum</a>
-                <a href="messages.html">Messages</a>
-                <a href="profile.html">My Account</a>
-                <a href="notifications.html" class="active">Notifications</a>
+                <a href="/forum/">Forum</a>
+                <a href="/messages/">Messages</a>
+                <a href="/profile/">My Account</a>
+                <a href="/notifications/" class="active">Notifications</a>
             </nav>
         </div>
     </header>
@@ -584,36 +584,36 @@
             const conversationUser = notification.sender_username || notification.from_username || notification.username;
 
             if (['follow'].includes(type) && username) {
-                return { href: 'profile.html?user=' + encodeURIComponent(username), label: 'Open profile' };
+                    return { href: '/profile/?user=' + encodeURIComponent(username), label: 'Open profile' };
             }
             if (['friend_request', 'friend_accept'].includes(type)) {
-                return { href: 'friends.html', label: 'Open friends' };
+                    return { href: '/friends/', label: 'Open friends' };
             }
             if (['new_message', 'message'].includes(type)) {
-                return { href: conversationUser ? 'messages.html?to=' + encodeURIComponent(conversationUser) : 'messages.html', label: 'Open messages' };
+                    return { href: conversationUser ? '/messages/?to=' + encodeURIComponent(conversationUser) : '/messages/', label: 'Open messages' };
             }
             if (type.indexOf('forum') !== -1 || ['thread', 'reply'].includes(resourceType)) {
-                return { href: threadId ? 'forum.html?thread=' + encodeURIComponent(threadId) : 'forum.html', label: 'Open forum' };
+                    return { href: threadId ? '/forum/?thread=' + encodeURIComponent(threadId) : '/forum/', label: 'Open forum' };
             }
             if (type.indexOf('poll') !== -1 || pollId) {
-                return { href: 'polls.html', label: 'Open polls' };
+                    return { href: '/hangout/', label: 'Open polls' };
             }
             if (type.indexOf('trivia') !== -1) {
-                return { href: 'trivia.html', label: 'Open trivia' };
+                    return { href: '/trivia/', label: 'Open trivia' };
             }
             if (type.indexOf('pick') !== -1 || type.indexOf('bet') !== -1 || pickId) {
                 return {
-                    href: username ? 'profile.html?user=' + encodeURIComponent(username) + '&view=picks' : 'sportsbook.html#history',
+                        href: username ? '/profile/?user=' + encodeURIComponent(username) + '&view=picks' : '/mypicks/',
                     label: username ? 'Open capper record' : 'Open record'
                 };
             }
             if (['like', 'comment', 'mention'].includes(type)) {
-                return { href: 'feed.html', label: 'Open feed' };
+                    return { href: '/feed/', label: 'Open feed' };
             }
             if (['challenge', 'challenge_invite', 'challenge_result'].includes(type)) {
-                return { href: 'arena.html', label: 'Open arena' };
+                    return { href: '/arena/', label: 'Open arena' };
             }
-            return { href: 'notifications.html', label: 'Stay here' };
+                    return { href: '/notifications/', label: 'Stay here' };
         }
 
         async function openNotification(id) {
@@ -628,7 +628,7 @@
             } catch (e) {}
 
             const destination = getNotificationDestination(normalized);
-            if (destination.href && destination.href !== 'notifications.html') {
+            if (destination.href && destination.href !== '/notifications/') {
                 location.href = destination.href;
             }
         }

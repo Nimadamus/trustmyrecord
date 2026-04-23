@@ -61,11 +61,11 @@ async function initAuth() {
         document.getElementById('composerCard').style.display = 'block';
         document.getElementById('compAvatar').textContent = (user.displayName || user.username || '?')[0].toUpperCase();
         document.getElementById('headerActions').innerHTML = `
-            <a href="sportsbook.html" class="btn btn-primary"><i class="fas fa-plus"></i> Make Pick</a>
-            <span class="notif-bell" id="notifBell" onclick="location.href='notifications.html'" title="Notifications">
+                    <a href="/picks/" class="btn btn-primary"><i class="fas fa-plus"></i> Make Pick</a>
+                    <span class="notif-bell" id="notifBell" onclick="location.href='/notifications/'" title="Notifications">
                 <i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge" style="display:none;">0</span>
             </span>
-            <a href="profile.html" class="btn btn-ghost"><i class="fas fa-user"></i> ${user.username}</a>
+                    <a href="/profile/?user=${encodeURIComponent(user.username)}" class="btn btn-ghost"><i class="fas fa-user"></i> ${user.username}</a>
         `;
         // Load sidebar stats from backend
         loadSidebarStats(user);
@@ -293,7 +293,7 @@ async function loadFeed() {
         const message = currentFilter === 'following'
             ? 'No posts from followed accounts yet.'
             : (user ? 'No posts yet.' : 'Your feed is empty. Sign in to post, follow accounts, and build your timeline.');
-        c.innerHTML = `<div class="empty-state"><i class="fas fa-stream"></i><h3 style="margin-bottom:6px;">Your feed is empty</h3><p>${message}</p><div class="feed-state-actions"><button class="btn btn-primary" onclick="loadFeed()">Refresh Feed</button><a class="btn btn-ghost" href="sportsbook.html">Make a Pick</a></div></div>`;
+            c.innerHTML = `<div class="empty-state"><i class="fas fa-stream"></i><h3 style="margin-bottom:6px;">Your feed is empty</h3><p>${message}</p><div class="feed-state-actions"><button class="btn btn-primary" onclick="loadFeed()">Refresh Feed</button><a class="btn btn-ghost" href="/picks/">Make a Pick</a></div></div>`;
         return;
     }
 
@@ -330,7 +330,7 @@ function renderFeedUnavailable(message) {
             <p>${esc(message || 'Live feed data is not available right now.')}</p>
             <div class="feed-state-actions">
                 <button class="btn btn-primary" onclick="loadFeed()">Refresh Feed</button>
-                <a class="btn btn-ghost" href="sportsbook.html">Open Board</a>
+                    <a class="btn btn-ghost" href="/picks/">Open Board</a>
             </div>
         </div>
     `;
@@ -365,7 +365,7 @@ function renderTextPost(p) {
             <div class="fi-avatar" style="${isHot ? 'background:var(--accent-red);' : ''}">${letter}</div>
             <div class="fi-meta">
                 <div class="fi-top-row">
-                    <span class="fi-name"><a href="profile.html?user=${p.username}">${p.display_name || p.username}</a></span>
+            <span class="fi-name"><a href="/profile/?user=${p.username}">${p.display_name || p.username}</a></span>
                     <span class="fi-handle">@${p.username}</span>
                     <span class="fi-dot">&bull;</span>
                     <span class="fi-time">${timeAgo(p.created_at)}</span>
@@ -409,7 +409,7 @@ function renderPickCard(p) {
             <div class="fi-avatar" style="background:var(--accent-blue);">${letter}</div>
             <div class="fi-meta">
                 <div class="fi-top-row">
-                    <span class="fi-name"><a href="profile.html?user=${p.username}">${p.display_name || p.username}</a></span>
+            <span class="fi-name"><a href="/profile/?user=${p.username}">${p.display_name || p.username}</a></span>
                     <span class="fi-handle">@${p.username}</span>
                     <span class="fi-dot">&bull;</span>
                     <span class="fi-time">${timeAgo(p.created_at)}</span>
@@ -465,7 +465,7 @@ function renderPollCard(p) {
             <div class="fi-avatar" style="background:var(--accent-purple);">${letter}</div>
             <div class="fi-meta">
                 <div class="fi-top-row">
-                    <span class="fi-name"><a href="profile.html?user=${p.username}">${p.display_name || p.username}</a></span>
+            <span class="fi-name"><a href="/profile/?user=${p.username}">${p.display_name || p.username}</a></span>
                     <span class="fi-handle">@${p.username}</span>
                     <span class="fi-dot">&bull;</span>
                     <span class="fi-time">${timeAgo(p.created_at)}</span>
@@ -586,7 +586,7 @@ async function toggleComments(id, type) {
                 <div class="cmt-item">
                     <div class="cmt-avatar">${(c.display_name || c.username || '?')[0].toUpperCase()}</div>
                     <div class="cmt-body">
-                        <div class="cmt-author"><a href="profile.html?user=${c.username}">${c.display_name || c.username}</a></div>
+                    <div class="cmt-author"><a href="/profile/?user=${c.username}">${c.display_name || c.username}</a></div>
                         <div class="cmt-text">${esc(c.content)}</div>
                         <div class="cmt-time">${timeAgo(c.created_at)}</div>
                     </div>
@@ -633,7 +633,7 @@ async function votePoll(pollId, optionId) {
 }
 
 function sharePost(id) {
-    navigator.clipboard?.writeText(`${location.origin}/feed.html?post=${id}`);
+        navigator.clipboard?.writeText(`${location.origin}/feed/?post=${id}`);
     const el = event.currentTarget;
     const orig = el.innerHTML;
     el.innerHTML = '<i class="fas fa-check"></i> Copied!';
@@ -694,12 +694,12 @@ async function loadSuggested() {
                     const isFollowing = followingUserIds.has(String(u.id));
                     const buttonHtml = viewerUser
                         ? `<button class="rs-follow-btn ${isFollowing ? 'is-following' : ''}" onclick="toggleFollowFromFeed('${u.id}', this)">${isFollowing ? 'Following' : 'Follow'}</button>`
-                        : `<a href="profile.html?user=${u.username}" class="rs-follow-btn">View</a>`;
+            : `<a href="/profile/?user=${u.username}" class="rs-follow-btn">View</a>`;
                     return (
                     `<div class="rs-user">
                         <div class="rs-user-avatar" style="background:var(--accent-blue);">${(u.display_name || u.username || '?')[0].toUpperCase()}</div>
                         <div class="rs-user-info">
-                            <div class="rs-user-name"><a href="profile.html?user=${u.username}" style="color:inherit;text-decoration:none;">${u.display_name || u.username}</a></div>
+                    <div class="rs-user-name"><a href="/profile/?user=${u.username}" style="color:inherit;text-decoration:none;">${u.display_name || u.username}</a></div>
                             <div class="rs-user-detail">${u.total_picks || 0} picks${u.roi != null ? ` • ${Number(u.roi).toFixed(1)}% ROI` : ''}</div>
                         </div>
                         ${buttonHtml}

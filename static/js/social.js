@@ -316,10 +316,10 @@ function getUserForumStats(userId) {
 }
 
 /**
- * Show user profile - Redirects to profile.html
+ * Show user profile - Redirects to the canonical profile route
  */
 function showProfile(username) {
-    window.location.href = `profile.html?username=${encodeURIComponent(username)}`;
+    window.location.href = `/profile/?user=${encodeURIComponent(username)}`;
 }
 
 /**

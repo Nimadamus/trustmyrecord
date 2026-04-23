@@ -61,13 +61,13 @@
     }
 
     function findMessagesLinks() {
-        // Find all links pointing to messages.html
-        return document.querySelectorAll('a[href="messages.html"], a[href="/messages.html"]');
+        // Find all links pointing to the canonical messages route
+        return document.querySelectorAll('a[href="messages/"], a[href="/messages/"], a[href="messages.html"], a[href="/messages.html"]');
     }
 
     function findNotificationElements() {
         // Find bell icons or notification links
-        return document.querySelectorAll('.notification-bell, a[href="notifications.html"], .fa-bell');
+        return document.querySelectorAll('.notification-bell, a[href="notifications/"], a[href="/notifications/"], a[href="notifications.html"], .fa-bell');
     }
 
     function setBadge(element, count) {

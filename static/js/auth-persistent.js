@@ -340,7 +340,7 @@ class PersistentAuthSystem {
         
         const username = this.currentUser.username || this.currentUser.displayName || 'User';
         const avatar = this.currentUser.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + username;
-        const profileUrl = 'profile.html?username=' + encodeURIComponent(username);
+        const profileUrl = 'profile/?user=' + encodeURIComponent(username);
         
         // Update main navigation - modify "My Profile" link to show username
         const profileLink = document.querySelector('.profile-link');
@@ -361,7 +361,7 @@ class PersistentAuthSystem {
                     <img src="${avatar}" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--neon-cyan);">
                     <span>${username}</span>
                 </a>
-                <button onclick="auth.logout(); window.location.href='index.html';" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">Logout</button>
+                <button onclick="auth.logout(); window.location.href='/'" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">Logout</button>
             `;
         }
     }
@@ -374,7 +374,7 @@ class PersistentAuthSystem {
             usernameLink.classList.remove('nav-username-link');
             usernameLink.classList.add('profile-link');
             usernameLink.removeAttribute('style');
-            usernameLink.setAttribute('onclick', "if(typeof showSection==='function'){showSection('profile')}else{window.location.href='profile.html'}");
+            usernameLink.setAttribute('onclick', "if(typeof showSection==='function'){showSection('profile')}else{window.location.href='/profile/'}");
             usernameLink.textContent = 'My Profile';
         }
         // Remove user button from header-actions
@@ -384,7 +384,7 @@ class PersistentAuthSystem {
         // Restore header auth buttons to Login
         const headerAuthButtons = document.getElementById('headerAuthButtons');
         if (headerAuthButtons) {
-            headerAuthButtons.innerHTML = '<button onclick="if(typeof showSection===\'function\'){showSection(\'login\')}else{window.location.href=\'index.html\'}" class="btn btn-primary" style="padding: 8px 20px; font-size: 14px;">Login</button>';
+            headerAuthButtons.innerHTML = '<button onclick="if(typeof showSection===\'function\'){showSection(\'login\')}else{window.location.href=\'/sportsbook/#login\'}" class="btn btn-primary" style="padding: 8px 20px; font-size: 14px;">Login</button>';
         }
     }
 

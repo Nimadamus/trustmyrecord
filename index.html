@@ -1684,24 +1684,24 @@
 <body>
     <div class="shell">
         <header class="nav">
-            <a class="brand" href="index.html">
+            <a class="brand" href="/">
                 <span class="brand-mark">TMR</span>
                 <span>TRUST<span>MY</span>RECORD</span>
             </a>
             <nav class="nav-links" aria-label="Primary navigation">
-                <a href="sportsbook.html#picks">Make Picks</a>
-                <a href="arena.html">Arena</a>
-                <a href="feed.html">Feed</a>
-                <a href="polls.html">Polls</a>
-                <a href="trivia.html">Trivia</a>
+                <a href="/picks/">Make Picks</a>
+                <a href="/arena/">Arena</a>
+                <a href="/feed/">Feed</a>
+                <a href="/hangout/">Polls</a>
+                <a href="/trivia/">Trivia</a>
                 <a href="handicappers.html">Handicappers</a>
-                <a href="about.html">About</a>
+                <a href="/about/">About</a>
             </nav>
             <div class="nav-actions">
                 <a class="btn" href="handicappers.html">Find Cappers</a>
-                <a class="btn auth-link" href="sportsbook.html#login" id="homeNavLoginCta">Log In</a>
-                <a class="btn primary auth-link" href="sportsbook.html#register" id="homeNavRegisterCta">Register</a>
-                <a class="btn" href="sportsbook.html" id="homeNavPrimaryCta">Open Sportsbook</a>
+                <a class="btn auth-link" href="/sportsbook/#login" id="homeNavLoginCta">Log In</a>
+                <a class="btn primary auth-link" href="/sportsbook/#register" id="homeNavRegisterCta">Register</a>
+                <a class="btn" href="/sportsbook/" id="homeNavPrimaryCta">Open Sportsbook</a>
             </div>
         </header>
 
@@ -1712,8 +1712,8 @@
                     <h1>The end of fake records.</h1>
                     <p id="homeHeroCopy"><strong>TrustMyRecord turns sports talk into a public profile.</strong> Lock picks, build a verified record, debate in the feed, play polls and trivia, and let the receipts decide who actually knows sports.</p>
                     <div class="hero-actions">
-                        <a class="btn primary" href="sportsbook.html" id="homeHeroPrimaryCta">Make Your First Pick</a>
-                        <a class="btn" href="profile.html" id="homeHeroSecondaryCta">View Records</a>
+                        <a class="btn primary" href="/sportsbook/" id="homeHeroPrimaryCta">Make Your First Pick</a>
+                        <a class="btn" href="/profile/" id="homeHeroSecondaryCta">View Records</a>
                     </div>
                     <div class="hero-points">
                         <div class="hero-point"><b>Locked picks</b><span>No edits after submission.</span></div>
@@ -1841,8 +1841,8 @@
                             <h3>Open challenges</h3>
                             <p id="homepageChallenges"></p>
                             <div class="launch-cta">
-                                <a class="btn primary" href="sportsbook.html#register">Register to claim your record</a>
-                                <a class="btn" href="about.html">See how it works</a>
+                                <a class="btn primary" href="/sportsbook/#register">Register to claim your record</a>
+                                <a class="btn" href="/about/">See how it works</a>
                             </div>
                         </div>
                     </div>
@@ -1880,7 +1880,7 @@
             <section class="final-cta">
                 <h2>Think you know sports? Prove it.</h2>
                 <p id="homeFinalCopy">Start with one locked pick, one public result, and one profile worth checking. TrustMyRecord should feel serious from the first click.</p>
-                <a class="btn primary" href="sportsbook.html" id="homeFinalCta">Enter TrustMyRecord</a>
+                <a class="btn primary" href="/sportsbook/" id="homeFinalCta">Enter TrustMyRecord</a>
             </section>
         </main>
     </div>
@@ -1943,33 +1943,33 @@
 
             if (!user) {
                 navLogin.style.display = 'inline-flex';
-                navLogin.href = 'sportsbook.html#login';
+                navLogin.href = '/sportsbook/#login';
                 navLogin.textContent = 'Log In';
                 navRegister.style.display = 'inline-flex';
-                navRegister.href = 'sportsbook.html#register';
+                navRegister.href = '/sportsbook/#register';
                 navRegister.textContent = 'Register';
                 navPrimary.textContent = 'Open Sportsbook';
-                navPrimary.href = 'sportsbook.html#picks';
+                navPrimary.href = '/picks/';
                 heroPrimary.textContent = 'Make Your First Pick';
-                heroPrimary.href = 'sportsbook.html';
+                heroPrimary.href = '/sportsbook/';
                 heroSecondary.textContent = 'View Records';
-                heroSecondary.href = 'profile.html';
+                heroSecondary.href = '/profile/';
                 heroCopy.innerHTML = '<strong>TrustMyRecord turns sports talk into a public profile.</strong> Lock picks, build a verified record, debate in the feed, play polls and trivia, and let the receipts decide who actually knows sports.';
                 finalCopy.textContent = 'Start with one locked pick, one public result, and one profile worth checking. TrustMyRecord should feel serious from the first click.';
                 finalCta.textContent = 'Create Your Account';
-                finalCta.href = 'sportsbook.html#register';
+                finalCta.href = '/sportsbook/#register';
                 return;
             }
 
             const username = String(user.username || user.displayName || user.email || 'user');
-            const profileHref = 'profile.html?user=' + encodeURIComponent(username);
+            const profileHref = '/profile/?user=' + encodeURIComponent(username);
 
             navLogin.style.display = 'none';
             navRegister.style.display = 'none';
             navPrimary.textContent = 'Open Record';
             navPrimary.href = profileHref;
             heroPrimary.textContent = 'Go To Sportsbook';
-            heroPrimary.href = 'sportsbook.html';
+            heroPrimary.href = '/sportsbook/';
             heroSecondary.textContent = 'Open My Record';
             heroSecondary.href = profileHref;
             heroCopy.innerHTML = '<strong>Your account is live.</strong> Keep locking picks, updating your public record, and using the feed, arena, polls, and trivia to build visible credibility.';
@@ -2039,7 +2039,7 @@
                     const rankClass = index === 0 ? 'top-1' : index === 1 ? 'top-2' : index === 2 ? 'top-3' : '';
                     return '<tr>' +
                         '<td><span class="rank-pill ' + rankClass + '">#' + (index + 1) + '</span></td>' +
-                        '<td><a class="capper-cell" href="profile.html?user=' + encodeURIComponent(username) + '" onclick="homeTrack(\'homepage_capper_opened\', { username: \'' + homeEscape(username).replace(/'/g, "\\'") + '\', source: \'leaderboard\' });">' +
+                '<td><a class="capper-cell" href="/profile/?user=' + encodeURIComponent(username) + '" onclick="homeTrack(\'homepage_capper_opened\', { username: \'' + homeEscape(username).replace(/'/g, "\\'") + '\', source: \'leaderboard\' });">' +
                             '<span class="capper-avatar">' + homeEscape((displayName || '?').charAt(0).toUpperCase()) + '</span>' +
                             '<span class="capper-meta"><b>' + homeEscape(displayName) + '</b><span>@' + homeEscape(username) + '</span></span>' +
                         '</a></td>' +
@@ -2141,7 +2141,7 @@
                 const title = entry.title || entry.game_title || entry.game_slug || 'Open challenge';
                 const status = String(entry.status || 'pending').replace(/_/g, ' ');
                 const labelClass = status === 'in progress' ? 'gold' : '';
-                return '<a class="pulse-row" href="arena.html" onclick="homeTrack(\'homepage_challenge_opened\', { challenge_id: \'' + homeEscape(String(entry.id || 'unknown')).replace(/'/g, "\\'") + '\', status: \'' + homeEscape(status).replace(/'/g, "\\'") + '\' });">' +
+            return '<a class="pulse-row" href="/arena/" onclick="homeTrack(\'homepage_challenge_opened\', { challenge_id: \'' + homeEscape(String(entry.id || 'unknown')).replace(/'/g, "\\'") + '\', status: \'' + homeEscape(status).replace(/'/g, "\\'") + '\' });">' +
                     '<div><b>' + homeEscape(title) + '</b><span>' + homeEscape(challenger) + ' vs ' + homeEscape(challenged) + ' • ' + homeEscape(entry.game_title || entry.game_slug || 'Arena') + ' • ' + homeTimeAgo(entry.created_at || entry.createdAt) + '</span></div>' +
                     '<span class="pulse-tag ' + labelClass + '">' + homeEscape(status) + '</span>' +
                 '</a>';
