@@ -17363,6 +17363,10 @@ document.addEventListener('DOMContentLoaded', function() {
     <script>
     (function() {
         if (window.__tmrInlineBoardHotfix) return;
+        if (typeof window.__tmrSelectSportBoard === 'function') {
+            console.log('[TMR][InlineBoard] skipped; production board runtime active');
+            return;
+        }
         window.__tmrInlineBoardHotfix = true;
         window.__tmrInlineBoardHotfixVersion = '20260422c';
         window.__tmrInlineBoardRuntimeVersion = '20260422e';
