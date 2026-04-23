@@ -1954,8 +1954,8 @@
             forums: 'forum.html',
             arena: 'arena.html',
             trivia: 'trivia.html',
-            'polls-trivia': 'polls.html',
-            predictions: 'polls.html',
+            'polls-trivia': 'hangout.html',
+            predictions: 'hangout.html',
             contests: 'arena.html',
             profile: 'profile.html',
             messages: 'messages.html',
@@ -1969,10 +1969,21 @@
         return true;
     }
 
+    function isPicksBoardVisible() {
+        const picksSection = document.getElementById('picks');
+        const gamesListStep = document.getElementById('gamesListSection');
+        return !!(
+            picksSection &&
+            picksSection.classList.contains('active') &&
+            gamesListStep &&
+            gamesListStep.classList.contains('active')
+        );
+    }
+
     function startLiveRefreshLoop() {
         if (window.__tmrSportsbookRefreshTimer) return;
         window.__tmrSportsbookRefreshTimer = window.setInterval(function() {
-            if (document.hidden || !state.selectedSport) return;
+            if (document.hidden || !state.selectedSport || !isPicksBoardVisible()) return;
             refreshCurrentSport().catch(function() {});
         }, LIVE_REFRESH_MS);
     }
