@@ -1427,6 +1427,20 @@
         container.innerHTML = html;
     }
 
+    function recoverRenderedBoardIfBlank() {
+        const container = document.getElementById('gamesListContainer');
+        if (!container) return;
+        if (!Array.isArray(state.currentBoard) || !state.currentBoard.length) return;
+        const hasCards = !!container.querySelector('.tmr-market-card, .market-card, .game-card');
+        const hasMeaningfulText = (container.innerText || '').trim().length > 0;
+        if (hasCards || hasMeaningfulText) return;
+        recordBoardEvent('board_dom_recovered', {
+            sport: state.selectedSport || '',
+            game_count: state.currentBoard.length
+        });
+        renderBoard({ severity: 'success', message: '' }, state.currentBoard);
+    }
+
     function escapeHtml(value) {
         return String(value == null ? '' : value)
             .replace(/&/g, '&amp;')
@@ -1999,6 +2013,7 @@
         wireSportsbookTabs();
         window.tmrAddPromoNote = addPromoNote;
         window.tmrRenderConsensusPanel = renderConsensusPanel;
+        window.setInterval(recoverRenderedBoardIfBlank, 1000);
 
         window.tmrToggleCard = toggleCard;
         window.tmrSetCardScope = setCardScope;
