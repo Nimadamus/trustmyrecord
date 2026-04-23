@@ -1,21 +1,21 @@
 // Navigation handling for Trust My Record
 
 const legacyRouteTargets = {
-    picks: 'sportsbook.html#picks',
-    mypicks: 'sportsbook.html#mypicks',
-    'my-record': 'sportsbook.html#my-record',
-    promos: 'sportsbook.html#promos',
-    consensus: 'sportsbook.html#consensus',
-    leaderboards: 'sportsbook.html#leaderboards',
-    live: 'sportsbook.html',
-    marketplace: 'premium.html',
-    groups: 'friends.html',
-    messages: 'messages.html',
-    profile: 'profile.html',
-    premium: 'premium.html',
-    forums: 'forum.html',
-    notifications: 'notifications.html',
-    'polls-trivia': 'hangout.html'
+    picks: 'picks/',
+    mypicks: 'mypicks/',
+    'my-record': 'my-record/',
+    promos: 'promos/',
+    consensus: 'consensus/',
+    leaderboards: 'leaderboards/',
+    live: 'live/',
+    marketplace: 'marketplace/',
+    groups: 'groups/',
+    messages: 'messages/',
+    profile: 'profile/',
+    premium: 'premium/',
+    forums: 'forums/',
+    notifications: 'notifications/',
+    'polls-trivia': 'polls-trivia/'
 };
 
 function getCanonicalRoute(route) {

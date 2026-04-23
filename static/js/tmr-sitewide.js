@@ -1,15 +1,15 @@
 (() => {
-    const sportsbookPicksHref = "sportsbook.html#picks";
+    const sportsbookPicksHref = "picks/";
     const routes = [
-        ["index.html", "Home"],
+        ["/", "Home"],
         [sportsbookPicksHref, "Make Picks"],
         ["handicappers.html", "Handicappers"],
-        ["arena.html", "Arena"],
-        ["feed.html", "Feed"],
-        ["hangout.html", "Hangout"],
-        ["trivia.html", "Trivia"],
-        ["forum.html", "Forum"],
-        ["about.html", "About"]
+        ["arena/", "Arena"],
+        ["feed/", "Feed"],
+        ["hangout/", "Hangout"],
+        ["trivia/", "Trivia"],
+        ["forum/", "Forum"],
+        ["about/", "About"]
     ];
 
     const routeMeta = {
@@ -97,8 +97,8 @@
 
     function buildLoggedOutActions() {
         return `
-            <a class="tmr-global-nav__button" href="profile.html"${currentFile === "profile.html" ? ' aria-current="page"' : ""}>Records</a>
-            <a class="tmr-global-nav__button tmr-global-nav__button--primary" href="sportsbook.html">Start Free</a>
+            <a class="tmr-global-nav__button" href="profile/"${currentFile === "profile.html" ? ' aria-current="page"' : ""}>Records</a>
+            <a class="tmr-global-nav__button tmr-global-nav__button--primary" href="sportsbook/">Start Free</a>
         `;
     }
 
@@ -106,7 +106,7 @@
         const username = String(user.username || user.displayName || user.email || "user");
         const displayName = String(user.displayName || user.username || user.email || "User");
         const avatar = getUserAvatar(user);
-        const profileHref = "profile.html?user=" + encodeURIComponent(username);
+        const profileHref = "profile/?user=" + encodeURIComponent(username);
 
         return `
             <a class="tmr-global-nav__user" href="${profileHref}"${currentFile === "profile.html" ? ' aria-current="page"' : ""}>
@@ -116,7 +116,7 @@
                     <span>@${escapeHtml(username)}</span>
                 </span>
             </a>
-            <a class="tmr-global-nav__button" href="notifications.html"${currentFile === "notifications.html" ? ' aria-current="page"' : ""}>Alerts</a>
+            <a class="tmr-global-nav__button" href="notifications/"${currentFile === "notifications.html" ? ' aria-current="page"' : ""}>Alerts</a>
             <button class="tmr-global-nav__button tmr-global-nav__logout" type="button" data-tmr-logout>Log Out</button>
         `;
     }
@@ -165,7 +165,7 @@
     nav.className = "tmr-global-nav";
     nav.innerHTML = `
         <div class="tmr-global-nav__inner">
-            <a class="tmr-global-nav__brand" href="index.html">
+            <a class="tmr-global-nav__brand" href="/">
                 <span class="tmr-global-nav__mark">TMR</span>
                 <span>TRUST<span>MY</span>RECORD</span>
             </a>
@@ -211,7 +211,7 @@
         renderActions();
         window.dispatchEvent(new CustomEvent("tmr-auth-changed", { detail: { loggedIn: false } }));
         if (currentFile === "profile.html" || currentFile === "notifications.html" || currentFile === "messages.html" || currentFile === "friends.html") {
-            window.location.href = "index.html";
+            window.location.href = "/";
         }
     }
 
@@ -243,7 +243,7 @@
         footer.innerHTML = `
             <div class="tmr-global-footer__grid">
                 <div class="tmr-global-footer__brand">
-                    <a class="tmr-global-footer__brand-mark" href="index.html">
+                    <a class="tmr-global-footer__brand-mark" href="/">
                         <span class="tmr-global-nav__mark">TMR</span>
                         <span>TRUST<span>MY</span>RECORD</span>
                     </a>
@@ -252,27 +252,27 @@
                 <div class="tmr-global-footer__section">
                     <h3 class="tmr-global-footer__heading">Platform</h3>
                     <div class="tmr-global-footer__links">
-                        <a href="sportsbook.html#picks">Make Picks</a>
-                        <a href="arena.html">Arena</a>
-                        <a href="premium.html">Premium</a>
-                        <a href="profile.html">Records</a>
+                        <a href="picks/">Make Picks</a>
+                        <a href="arena/">Arena</a>
+                        <a href="premium/">Premium</a>
+                        <a href="profile/">Records</a>
                     </div>
                 </div>
                 <div class="tmr-global-footer__section">
                     <h3 class="tmr-global-footer__heading">Community</h3>
                     <div class="tmr-global-footer__links">
-                        <a href="feed.html">Feed</a>
-                        <a href="forum.html">Forum</a>
-                        <a href="hangout.html">Hangout</a>
-                        <a href="trivia.html">Trivia</a>
+                        <a href="feed/">Feed</a>
+                        <a href="forum/">Forum</a>
+                        <a href="hangout/">Hangout</a>
+                        <a href="trivia/">Trivia</a>
                     </div>
                 </div>
                 <div class="tmr-global-footer__section">
                     <h3 class="tmr-global-footer__heading">Info</h3>
                     <div class="tmr-global-footer__links">
-                        <a href="about.html">About</a>
-                        <a href="terms.html">Terms</a>
-                        <a href="privacy.html">Privacy</a>
+                        <a href="about/">About</a>
+                        <a href="terms/">Terms</a>
+                        <a href="privacy/">Privacy</a>
                         <a href="mailto:support@trustmyrecord.com">Contact</a>
                     </div>
                 </div>
