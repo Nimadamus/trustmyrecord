@@ -7,7 +7,11 @@ let _notifPollTimer = null;
 let _notifCache = { notifications: [], unreadCount: 0 };
 
 function hasBackendNotificationSession() {
-    return !!(window.api && typeof api.isLoggedIn === 'function' && api.isLoggedIn());
+    if (!window.api || typeof api.isLoggedIn !== 'function') return false;
+    if (typeof api.loadTokens === 'function') {
+        try { api.loadTokens(); } catch (error) {}
+    }
+    return !!(api.isLoggedIn() && (api.token || api.refreshToken));
 }
 
 function hasFrontendAuthSession() {
@@ -21,6 +25,13 @@ function hasFrontendAuthSession() {
         setupNotifications();
     }
 })();
+
+function stopNotificationsPolling() {
+    if (_notifPollTimer) {
+        clearInterval(_notifPollTimer);
+        _notifPollTimer = null;
+    }
+}
 
 async function setupNotifications() {
     // Ensure a notifications container exists
@@ -50,7 +61,11 @@ async function setupNotifications() {
         (!window.auth || typeof auth.isLoggedIn !== 'function' || hasFrontendAuthSession());
     if (loggedIn) {
         await fetchNotifications();
-        _notifPollTimer = setInterval(fetchNotifications, TMR_NOTIF_POLL_INTERVAL);
+        if (!_notifPollTimer) {
+            _notifPollTimer = setInterval(fetchNotifications, TMR_NOTIF_POLL_INTERVAL);
+        }
+    } else {
+        stopNotificationsPolling();
     }
 }
 
@@ -233,6 +248,11 @@ async function fetchNotifications() {
             renderNotificationsList(_notifCache.notifications);
         }
     } catch (err) {
+        if (err && (err.status === 401 || err.status === 403)) {
+            stopNotificationsPolling();
+            updateNotifBadge(0);
+            return;
+        }
         console.error('[Notifications] Fetch error:', err);
     }
 }

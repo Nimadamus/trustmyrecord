@@ -261,7 +261,7 @@ class TrustMyRecordAPI {
                 const first = data.errors[0];
                 message = first.msg || first.message || 'Request validation failed';
             }
-            if (response.status === 401) {
+            if (response.status === 401 || response.status === 403) {
                 this.clearTokens();
             }
             const error = new Error(message || `HTTP ${response.status}`);
