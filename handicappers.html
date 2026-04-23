@@ -637,7 +637,7 @@
                         <h2>Live challenge board</h2>
                         <div class="side-note">Keep the rivalry layer visible so discovery leads directly into action.</div>
                     </div>
-                    <a href="arena.html" class="mini-link">Open Arena</a>
+                    <a href="/arena/" class="mini-link">Open Arena</a>
                 </div>
                 <div id="heroChallenges" class="challenge-list">
                     <div class="loading">Loading live competition...</div>
@@ -704,8 +704,8 @@
                             </div>
                         </div>
                         <div class="link-actions">
-                            <a id="previewProfileLink" class="mini-link" href="profile.html">Full profile</a>
-                            <a id="previewChallengeLink" class="mini-link" href="arena.html">Challenge</a>
+                            <a id="previewProfileLink" class="mini-link" href="/profile/">Full profile</a>
+                            <a id="previewChallengeLink" class="mini-link" href="/arena/">Challenge</a>
                         </div>
                     </div>
                     <div class="preview-grid">
@@ -918,7 +918,7 @@
                     '<td><div class="capper">' +
                         '<span class="capper-avatar">' + escapeHtml((entry.displayName || '?').charAt(0).toUpperCase()) + '</span>' +
                         '<div class="capper-meta">' +
-                            '<a class="capper-name" href="profile.html?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">' + escapeHtml(entry.displayName) + '</a>' +
+                            '<a class="capper-name" href="/profile/?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">' + escapeHtml(entry.displayName) + '</a>' +
                             '<span class="capper-sub">@' + escapeHtml(entry.username) + ' • ' + escapeHtml(entry.sport || 'All sports') + ' • streak ' + (entry.streak > 0 ? 'W' + entry.streak : entry.streak < 0 ? 'L' + Math.abs(entry.streak) : '0') + '</span>' +
                         '</div>' +
                     '</div></td>' +
@@ -929,8 +929,8 @@
                     '<td>' + entry.totalPicks + '</td>' +
                     '<td><div class="link-actions">' +
                         '<button type="button" class="mini-link" data-action="inspect-capper" data-username="' + escapeHtml(entry.username) + '">Inspect</button>' +
-                        '<a class="mini-link" href="profile.html?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">Profile</a>' +
-                        '<a class="mini-link" href="arena.html?challenge=' + encodeURIComponent(entry.username) + '" data-action="challenge-capper" data-username="' + escapeHtml(entry.username) + '" data-source="board">Challenge</a>' +
+                        '<a class="mini-link" href="/profile/?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">Profile</a>' +
+                        '<a class="mini-link" href="/arena/?challenge=' + encodeURIComponent(entry.username) + '" data-action="challenge-capper" data-username="' + escapeHtml(entry.username) + '" data-source="board">Challenge</a>' +
                     '</div></td>' +
                 '</tr>';
             }).join('');
@@ -943,7 +943,7 @@
                 return;
             }
             rail.innerHTML = entries.map(function(entry) {
-                return '<a class="rail-item" href="profile.html?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="streak_rail">' +
+                return '<a class="rail-item" href="/profile/?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="streak_rail">' +
                     '<strong>' + escapeHtml(entry.displayName) + '</strong>' +
                     '<span>@' + escapeHtml(entry.username) + ' • ' + entry.winRate.toFixed(1) + '% win rate • ' + signed(entry.units, 'u') + '</span>' +
                     '<span class="badge">W' + entry.streak + ' current run</span>' +
@@ -958,7 +958,7 @@
                 return;
             }
             rail.innerHTML = entries.map(function(entry) {
-                return '<a class="rail-item" href="profile.html?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="volume_rail">' +
+                return '<a class="rail-item" href="/profile/?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="volume_rail">' +
                     '<strong>' + escapeHtml(entry.displayName) + '</strong>' +
                     '<span>' + entry.totalPicks + ' picks • ' + signed(entry.roi, '%') + ' ROI • ' + signed(entry.units, 'u') + '</span>' +
                     '<span class="badge gold">Verified sample</span>' +
@@ -978,7 +978,7 @@
                 const challenger = entry.challenger_display || entry.challenger_username || 'Challenger';
                 const challenged = entry.challenged_display || entry.challenged_username || 'Open';
                 const status = String(entry.status || 'pending').replace(/_/g, ' ');
-                return '<a class="challenge-row" href="arena.html" data-action="open-arena-challenge" data-challenge-id="' + escapeHtml(String(entry.id || 'unknown')) + '" data-source="hero">' +
+                return '<a class="challenge-row" href="/arena/" data-action="open-arena-challenge" data-challenge-id="' + escapeHtml(String(entry.id || 'unknown')) + '" data-source="hero">' +
                     '<span class="badge">' + escapeHtml(status) + '</span>' +
                     '<strong>' + escapeHtml(title) + '</strong>' +
                     '<span>' + escapeHtml(challenger) + ' vs ' + escapeHtml(challenged) + ' • ' + escapeHtml(entry.game_title || entry.game_slug || 'Arena') + ' • ' + timeAgo(entry.created_at || entry.createdAt) + '</span>' +
@@ -1072,8 +1072,8 @@
             document.getElementById('previewAvatar').textContent = (entry.displayName || '?').charAt(0).toUpperCase();
             document.getElementById('previewName').textContent = entry.displayName;
             document.getElementById('previewMeta').textContent = '@' + entry.username + ' • ' + entry.totalPicks + ' picks • ' + escapeHtml(entry.sport || 'All sports');
-            document.getElementById('previewProfileLink').href = 'profile.html?user=' + encodeURIComponent(entry.username);
-            document.getElementById('previewChallengeLink').href = 'arena.html?challenge=' + encodeURIComponent(entry.username);
+            document.getElementById('previewProfileLink').href = '/profile/?user=' + encodeURIComponent(entry.username);
+            document.getElementById('previewChallengeLink').href = '/arena/?challenge=' + encodeURIComponent(entry.username);
             document.getElementById('previewStats').innerHTML = '<div class="loading" style="min-height:120px;">Loading capper snapshot...</div>';
             document.getElementById('previewSplits').innerHTML = '<div class="loading" style="min-height:110px;">Loading split data...</div>';
             document.getElementById('previewPicks').innerHTML = '<div class="loading" style="min-height:110px;">Loading recent picks...</div>';

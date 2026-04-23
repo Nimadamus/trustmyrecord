@@ -6,7 +6,7 @@
     <title>Profile | Trust My Record</title>
     <meta name="description" content="View user profile, verified pick record, and performance stats on Trust My Record.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://trustmyrecord.com/profile.html">
+    <meta property="og:url" content="https://trustmyrecord.com/profile/">
     <meta property="og:title" content="User Profile | Trust My Record">
     <meta property="og:description" content="Check out my verified handicapping record and stats.">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
@@ -436,12 +436,12 @@
     <header>
         <div class="container">
             <div class="header-content">
-                <a href="index.html" class="logo">TRUST<span>MY</span>RECORD</a>
+            <a href="/" class="logo">TRUST<span>MY</span>RECORD</a>
                 <nav>
-                    <a href="index.html">Home</a>
-                    <a href="arena.html">Arena</a>
-                    <a href="forum.html">Forum</a>
-                    <a href="profile.html" class="active">Profile</a>
+                <a href="/">Home</a>
+                <a href="/arena/">Arena</a>
+                <a href="/forum/">Forum</a>
+                <a href="/profile/" class="active">Profile</a>
                 </nav>
             </div>
         </div>
@@ -634,7 +634,7 @@
             }
             if (!profileUsername && currentUser) profileUsername = currentUser.username;
             if (!profileUsername) {
-                document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>Not Logged In</h3><p>Please log in or specify a user.</p><a href="index.html" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
+                document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>Not Logged In</h3><p>Please log in or specify a user.</p><a href="/" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
                 return;
             }
             isOwnProfile = currentUser && currentUser.username.toLowerCase() === profileUsername.toLowerCase();
@@ -665,7 +665,7 @@
             document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>' +
                 (down ? 'Server Unavailable' : nf ? 'User Not Found' : 'Error') + '</h3><p>' +
                 (down ? 'Backend is temporarily unavailable.' : nf ? 'User "' + profileUsername + '" not found.' : error.message) +
-                '</p><a href="index.html" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
+                '</p><a href="/" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
         }
     }
 
@@ -718,7 +718,7 @@
             const fc = isFollowingProfile ? 'btn-secondary' : 'btn-primary';
             const fa = isFollowingProfile ? 'doUnfollow' : 'doFollow';
             actions = '<div class="profile-actions"><button class="btn ' + fc + '" onclick="' + fa + '(' + profileUserId + ')">' + ft + '</button>' +
-                '<button class="btn btn-secondary" onclick="location.href=\'arena.html?challenge=' + p.username + '\'">Challenge</button></div>';
+                '<button class="btn btn-secondary" onclick="location.href=\'/arena/?challenge=' + p.username + '\'">Challenge</button></div>';
         }
 
         el.innerHTML = '<div class="profile-avatar">' + (p.avatar_url ? '<img src="' + p.avatar_url + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + name + '">' : letter) + '</div>' +
