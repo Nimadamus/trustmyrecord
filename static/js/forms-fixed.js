@@ -11,10 +11,15 @@ async function handleLogin(event) {
         const email = document.getElementById('loginEmail')?.value;
         const password = document.getElementById('loginPassword')?.value;
         const loginMessage = document.getElementById('loginFormMessage');
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
 
         if (loginMessage) {
             loginMessage.style.display = 'none';
             loginMessage.textContent = '';
+        }
+        if (forgotPasswordLink) {
+            const loginValue = String(email || '').trim();
+            forgotPasswordLink.href = '/reset-password/' + (loginValue ? ('?login=' + encodeURIComponent(loginValue)) : '');
         }
 
         // Check if auth exists
@@ -75,7 +80,9 @@ async function handleLogin(event) {
             loginMessage.style.borderColor = 'rgba(255, 107, 107, 0.35)';
             loginMessage.style.background = 'rgba(255, 107, 107, 0.08)';
             loginMessage.style.color = '#ffd5d5';
-            loginMessage.textContent = 'That username/email and password do not match a real live account. If this was an old sample or local-only identity, create a real account first.';
+            const loginValue = String(document.getElementById('loginEmail')?.value || '').trim();
+            const resetHref = '/reset-password/' + (loginValue ? ('?login=' + encodeURIComponent(loginValue)) : '');
+            loginMessage.innerHTML = 'That username/email and password do not match. If this is your account, <a href=\"' + resetHref + '\" style=\"color:#ffffff;text-decoration:underline;font-weight:700;\">reset your password here</a>.';
         } else {
             alert('Login failed: ' + error.message);
         }
