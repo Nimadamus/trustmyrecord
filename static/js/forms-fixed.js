@@ -60,7 +60,7 @@ async function handleLogin(event) {
             const email = error.data?.email || '';
             const message = error.message || 'Please verify your email before logging in.';
             alert(message);
-            window.location.href = 'verify-email.html' + (email ? ('?email=' + encodeURIComponent(email)) : '');
+            window.location.href = '/verify-email/' + (email ? ('?email=' + encodeURIComponent(email)) : '');
             return;
         }
         alert('Login failed: ' + error.message);
@@ -146,7 +146,7 @@ async function handleSignup(event) {
             if (modal) modal.style.display = 'none';
 
             alert(user.message || ('Account created. Check ' + user.email + ' to verify your account.'));
-            window.location.href = 'verify-email.html?email=' + encodeURIComponent(user.email || email);
+            window.location.href = '/verify-email/?email=' + encodeURIComponent(user.email || email);
             return;
         }
 

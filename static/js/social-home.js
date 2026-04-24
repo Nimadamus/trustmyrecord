@@ -816,7 +816,7 @@ async function handleLogin() {
             const email = e.data?.email || '';
             showErr('loginError', e.message || 'Please verify your email before logging in.');
             setTimeout(() => {
-                location.href = 'verify-email.html' + (email ? ('?email=' + encodeURIComponent(email)) : '');
+            location.href = '/verify-email/' + (email ? ('?email=' + encodeURIComponent(email)) : '');
             }, 900);
             return;
         }
@@ -836,7 +836,7 @@ async function handleSignup() {
             if (result && result.pendingVerification) {
                 closeModals();
                 alert(result.message || 'Account created. Check your email to verify your account.');
-                location.href = 'verify-email.html?email=' + encodeURIComponent(result.email || email);
+            location.href = '/verify-email/?email=' + encodeURIComponent(result.email || email);
                 return;
             }
             closeModals();

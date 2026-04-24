@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting To Password Reset...</title>
+    <meta http-equiv="refresh" content="0; url=/reset-password.html">
+    <script>
+    (function() {
+        var target = '/reset-password.html';
+        if (window.location.search) {
+            target += window.location.search;
+        }
+        if (window.location.hash) {
+            target += window.location.hash;
+        }
+        window.location.replace(target);
+    })();
+    </script>
+    <style>
+        html, body {
+            margin: 0;
+            min-height: 100%;
+            background: #0b1220;
+            color: #f8fafc;
+            font-family: Inter, sans-serif;
+        }
+        body {
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+        .redirect-card {
+            max-width: 520px;
+            padding: 28px 32px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: linear-gradient(180deg, rgba(18, 24, 38, 0.96), rgba(10, 14, 24, 0.98));
+            box-shadow: 0 24px 60px rgba(0,0,0,0.28);
+            text-align: center;
+        }
+        h1 {
+            margin: 0 0 12px;
+            font-size: 28px;
+            line-height: 1.1;
+        }
+        p {
+            margin: 0;
+            color: rgba(226, 232, 240, 0.82);
+            line-height: 1.5;
+        }
+        a {
+            color: #7dd3fc;
+        }
+    </style>
+</head>
+<body>
+    <div class="redirect-card">
+        <h1>Opening Password Reset</h1>
+        <p>If you are not redirected automatically, <a href="/reset-password.html">continue to reset your password</a>.</p>
+    </div>
+</body>
+</html>
