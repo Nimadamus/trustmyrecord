@@ -28,6 +28,11 @@ function getCanonicalRoute(route) {
     };
 }
 
+function isSportsbookDocumentRoute() {
+    const pathname = window.location.pathname || '';
+    return pathname === '/sportsbook.html' || pathname === '/sportsbook/' || pathname === '/sportsbook';
+}
+
 function isAlreadyAtLegacyTarget(sectionId) {
     const target = getCanonicalRoute(legacyRouteTargets[sectionId]);
     if (!target) return false;
@@ -130,6 +135,13 @@ function handleRouting() {
         // Clean up the URL (remove the query param)
         window.history.replaceState({}, '', '/' + targetSection);
     } else if (hashPath && validSections.includes(hashPath)) {
+        if (isSportsbookDocumentRoute()) {
+            const localSection = document.getElementById(hashPath);
+            if (localSection && localSection.classList.contains('page-section')) {
+                activateCanonicalLegacySection(hashPath, false);
+                return;
+            }
+        }
         if (legacyRouteTargets[hashPath]) {
             if (isAlreadyAtLegacyTarget(hashPath)) {
                 activateCanonicalLegacySection(hashPath, false);
