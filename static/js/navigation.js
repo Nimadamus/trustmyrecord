@@ -93,6 +93,14 @@ function activateCanonicalLegacySection(sectionId, updateHistory = true) {
  * Show a specific section and hide others
  */
 function showSection(sectionId, updateHistory = true) {
+    if (isSportsbookDocumentRoute()) {
+        const localSection = document.getElementById(sectionId);
+        if (localSection && localSection.classList.contains('page-section')) {
+            activateCanonicalLegacySection(sectionId, updateHistory);
+            return;
+        }
+    }
+
     if (legacyRouteTargets[sectionId]) {
         if (isAlreadyAtLegacyTarget(sectionId)) {
             activateCurrentPageSection(sectionId, updateHistory);
