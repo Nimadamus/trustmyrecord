@@ -10,6 +10,12 @@ async function handleLogin(event) {
     try {
         const email = document.getElementById('loginEmail')?.value;
         const password = document.getElementById('loginPassword')?.value;
+        const loginMessage = document.getElementById('loginFormMessage');
+
+        if (loginMessage) {
+            loginMessage.style.display = 'none';
+            loginMessage.textContent = '';
+        }
 
         // Check if auth exists
         if (typeof auth === 'undefined') {
@@ -63,7 +69,16 @@ async function handleLogin(event) {
             window.location.href = '/verify-email/' + (email ? ('?email=' + encodeURIComponent(email)) : '');
             return;
         }
-        alert('Login failed: ' + error.message);
+        const loginMessage = document.getElementById('loginFormMessage');
+        if (loginMessage && error && error.message === 'Invalid credentials') {
+            loginMessage.style.display = 'block';
+            loginMessage.style.borderColor = 'rgba(255, 107, 107, 0.35)';
+            loginMessage.style.background = 'rgba(255, 107, 107, 0.08)';
+            loginMessage.style.color = '#ffd5d5';
+            loginMessage.textContent = 'That username/email and password do not match a real live account. If this was an old sample or local-only identity, create a real account first.';
+        } else {
+            alert('Login failed: ' + error.message);
+        }
     }
 }
 
