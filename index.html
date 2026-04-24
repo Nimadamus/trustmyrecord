@@ -180,7 +180,7 @@
             width: 100%;
             max-width: none;
             justify-self: start;
-            margin-left: -88px;
+            margin-left: 0;
             border: 1px solid var(--line);
             border-radius: 30px;
             padding: clamp(26px, 3.6vw, 42px);
@@ -286,7 +286,7 @@
 
         .hero-media {
             width: 100%;
-            max-width: 480px;
+            max-width: 620px;
             justify-self: end;
             border: 1px solid var(--line);
             border-radius: 28px;
@@ -1435,20 +1435,30 @@
         }
 
         body.tmr-site-shell[data-tmr-route="index"] .shell {
-            width: min(1720px, calc(100% - 64px));
+            width: min(1720px, calc(100% - 44px));
         }
 
         body.tmr-site-shell[data-tmr-route="index"] .hero {
             margin-top: 20px;
-            grid-template-columns: minmax(0, 1fr) minmax(0, 720px);
+            grid-template-columns: minmax(780px, 1.28fr) minmax(560px, 0.96fr);
             justify-content: space-between;
-            column-gap: clamp(96px, 9vw, 180px);
+            column-gap: clamp(64px, 6vw, 108px);
+            align-items: stretch;
+        }
+
+        body.tmr-site-shell[data-tmr-route="index"] .hero-copy {
+            justify-self: stretch;
+            width: 100%;
+            max-width: none;
+            margin-left: 0;
         }
 
         body.tmr-site-shell[data-tmr-route="index"] .hero-media {
             justify-self: end;
-            width: min(100%, 720px);
-            margin-right: -76px;
+            width: min(100%, 620px);
+            max-width: 620px;
+            margin-right: 0;
+            align-self: stretch;
         }
 
         @media (max-width: 620px) {
@@ -1611,7 +1621,7 @@
         }
 
         .shell {
-            width: min(1620px, calc(100% - 56px));
+            width: min(1700px, calc(100% - 44px));
         }
 
         .nav {
@@ -1656,19 +1666,20 @@
         }
 
         .hero {
-            grid-template-columns: minmax(0, 1fr) minmax(0, 720px);
+            grid-template-columns: minmax(780px, 1.28fr) minmax(560px, 0.96fr);
             justify-content: space-between;
-            gap: clamp(96px, 9vw, 180px);
-            padding: 26px 0 18px;
+            gap: clamp(64px, 6vw, 108px);
+            align-items: stretch;
+            padding: 28px 0 18px;
         }
 
         .hero-copy {
             width: 100%;
             max-width: none;
-            justify-self: start;
-            margin-left: -92px;
-            border-radius: 26px;
-            padding: clamp(22px, 3vw, 34px);
+            justify-self: stretch;
+            margin-left: 0;
+            border-radius: 28px;
+            padding: clamp(28px, 3.2vw, 42px);
             box-shadow: 0 22px 56px rgba(0, 0, 0, 0.24);
         }
 
@@ -1679,24 +1690,27 @@
         }
 
         h1 {
-            max-width: 820px;
+            max-width: 960px;
             margin-top: 16px;
-            font-size: clamp(3.2rem, 5.4vw, 5.4rem);
+            font-size: clamp(3.5rem, 5.8vw, 5.8rem);
             line-height: 0.92;
         }
 
         .hero-copy p {
-            max-width: 920px;
-            margin-top: 14px;
-            font-size: clamp(0.98rem, 1vw, 1.06rem);
-            line-height: 1.52;
+            max-width: 980px;
+            margin-top: 16px;
+            font-size: clamp(1rem, 1.05vw, 1.12rem);
+            line-height: 1.56;
         }
 
         .hero-media {
             width: 100%;
-            max-width: 720px;
+            max-width: 620px;
             justify-self: end;
-            margin-right: -84px;
+            margin-right: 0;
+            align-self: stretch;
+            display: flex;
+            flex-direction: column;
         }
 
         .hero-actions {
@@ -1720,7 +1734,8 @@
         }
 
         .hero-media img {
-            height: clamp(520px, 46vw, 660px);
+            width: 100%;
+            height: clamp(620px, 44vw, 760px);
         }
 
         .section {
