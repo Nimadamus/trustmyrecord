@@ -525,7 +525,8 @@
     }
 
     function pinPicksSectionIfRequested() {
-        const wantsPicks = window.location.hash === '#picks' || window.location.pathname === '/picks';
+        const normalizedPath = (window.location.pathname || '/').replace(/\/+$/, '') || '/';
+        const wantsPicks = window.location.hash === '#picks' || normalizedPath === '/picks';
         if (!wantsPicks) return;
         forceSectionActive('picks');
         let attempts = 0;
