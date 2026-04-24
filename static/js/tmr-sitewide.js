@@ -97,8 +97,8 @@
 
     function buildLoggedOutActions() {
         return `
-            <a class="tmr-global-nav__button" href="profile/"${currentFile === "profile.html" ? ' aria-current="page"' : ""}>Records</a>
-            <a class="tmr-global-nav__button tmr-global-nav__button--primary" href="sportsbook/">Start Free</a>
+            <a class="tmr-global-nav__button" href="/sportsbook/#login">Log In</a>
+            <a class="tmr-global-nav__button tmr-global-nav__button--primary" href="/sportsbook/#register">Register</a>
         `;
     }
 
