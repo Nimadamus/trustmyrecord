@@ -97,8 +97,8 @@
 
     function buildLoggedOutActions() {
         return `
-            <a class="tmr-global-nav__button" href="/sportsbook/#login">Log In</a>
-            <a class="tmr-global-nav__button tmr-global-nav__button--primary" href="/sportsbook/#register">Register</a>
+            <a class="tmr-global-nav__button" href="/sportsbook.html#login">Log In</a>
+            <a class="tmr-global-nav__button tmr-global-nav__button--primary" href="/sportsbook.html#register">Register</a>
         `;
     }
 

@@ -6,7 +6,7 @@
     <title>Forum - TrustMyRecord</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260421e">
-<script defer src="static/js/tmr-sitewide.js?v=20260424a"></script>
+<script defer src="static/js/tmr-sitewide.js?v=20260424b"></script>
     <style>
         :root {
             --forum-blue: #4f6b9a;
@@ -1020,8 +1020,8 @@
                 <a href="/profile/" class="nav-link">My Profile</a>
             </nav>
             <div class="nav-auth">
-                <a href="/sportsbook/#login" class="nav-link nav-auth-login" id="forumHeaderLoginBtn">Log In</a>
-                <a href="/sportsbook/#register" class="nav-link nav-auth-register" id="forumHeaderRegisterBtn">Register</a>
+                    <a href="/sportsbook.html#login" class="nav-link nav-auth-login" id="forumHeaderLoginBtn">Log In</a>
+                    <a href="/sportsbook.html#register" class="nav-link nav-auth-register" id="forumHeaderRegisterBtn">Register</a>
             </div>
         </div>
     </header>
@@ -1050,7 +1050,7 @@
             <div class="forum-banner-subline">Browse categories, open threads, and follow real discussion without padded demo accounts, fake record screenshots, or filler posts pretending to be traction.</div>
             <div class="forum-trust-note">Forum talk matters most when it points back to a public ledger. Picks lock on-platform, history stays visible, and the strongest opinions here should survive contact with a verified record.</div>
             <div class="forum-banner-actions">
-                <a href="/sportsbook/#register" class="forum-primary-action">Become a Founding Capper</a>
+                <a href="/sportsbook.html#register" class="forum-primary-action">Become a Founding Capper</a>
                 <a href="/sportsbook/" class="forum-secondary-action">Open Picks Board</a>
             </div>
         </div>
@@ -1643,7 +1643,7 @@ function renderThread() {
         replyAreaEl.innerHTML = '<textarea id="replyText" rows="5" placeholder="Type your reply..."></textarea>' +
             '<button class="btn btn-primary" style="margin-top:10px;" onclick="submitReply()">Post Reply</button>';
     } else {
-        replyAreaEl.innerHTML = '<div class="login-prompt">Replies are tied to real accounts and visible history. <a href="/sportsbook/#login">Log in</a> to respond, or <a href="/sportsbook/#register">register</a> to start building a public record.</div>';
+                replyAreaEl.innerHTML = '<div class="login-prompt">Replies are tied to real accounts and visible history. <a href="/sportsbook.html#login">Log in</a> to respond, or <a href="/sportsbook.html#register">register</a> to start building a public record.</div>';
     }
 }
 
@@ -1683,7 +1683,7 @@ function isUserLoggedIn() {
 
 function openNewThread() {
     if (!isUserLoggedIn()) {
-    window.location.href = '/sportsbook/#login';
+                window.location.href = '/sportsbook.html#login';
         return;
     }
     document.getElementById('newThreadModal').classList.add('active');
@@ -1729,7 +1729,7 @@ function pushForumActivity(type, payload) {
 
 async function submitThread(e) {
     e.preventDefault();
-    if (!isUserLoggedIn()) { window.location.href = '/sportsbook/#login'; return; }
+        if (!isUserLoggedIn()) { window.location.href = '/sportsbook.html#login'; return; }
 
     var title = document.getElementById('ntTitle').value.trim();
     var content = document.getElementById('ntContent').value.trim();
@@ -1770,7 +1770,7 @@ async function submitThread(e) {
 // SUBMIT REPLY
 // ================================================================
 async function submitReply() {
-    if (!isUserLoggedIn()) { window.location.href = '/sportsbook/#login'; return; }
+        if (!isUserLoggedIn()) { window.location.href = '/sportsbook.html#login'; return; }
 
     var textarea = document.getElementById('replyText');
     if (!textarea) return;
