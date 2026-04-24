@@ -731,8 +731,8 @@
 
         .launch-grid {
             display: grid;
-            grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.88fr);
-            gap: 18px;
+            grid-template-columns: minmax(0, 1fr) minmax(360px, 420px);
+            gap: 20px;
             align-items: start;
         }
 
@@ -750,6 +750,42 @@
 
         .launch-board {
             min-height: 100%;
+        }
+
+        .launch-board--clean {
+            display: grid;
+            gap: 18px;
+        }
+
+        .launch-status-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .launch-status-card {
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 18px;
+            padding: 18px;
+            background: rgba(255,255,255,0.04);
+        }
+
+        .launch-status-card strong {
+            display: block;
+            font-size: 1rem;
+            letter-spacing: -0.01em;
+        }
+
+        .launch-status-card p {
+            margin: 8px 0 0;
+            color: var(--muted);
+            font-size: 0.86rem;
+            line-height: 1.55;
+            font-weight: 650;
+        }
+
+        .launch-status-card .launch-tags {
+            margin-top: 12px;
         }
 
         .ticker-shell {
@@ -1831,24 +1867,40 @@
                     <p>This platform is about verified records, so the homepage should surface real leaderboard movement and real public activity when it exists. If a module is empty, it should explain why instead of pretending.</p>
                 </div>
                 <div class="launch-grid">
-                    <div class="launch-board">
-                        <div class="ticker-shell">
-                            <span class="ticker-label">Latest public activity</span>
-                            <div id="homepageTicker" class="live-loading">Loading recent picks and public posts…</div>
-                        </div>
+                    <div class="launch-board launch-board--clean">
                         <div class="launch-board-head">
                             <div>
-                                <h3>Verified leaderboard</h3>
-                                <p>Top records should be sortable, inspectable, and tied back to real profiles with visible history behind every rank.</p>
+                                <h3>Honest launch state</h3>
+                                <p>The homepage should only surface proof that is real, reviewable, and backed by actual user history. Until those modules are trustworthy, this section should explain the standard instead of faking momentum.</p>
                             </div>
-                            <a class="panel-link" href="handicappers.html">Open full leaderboard</a>
+                            <a class="panel-link" href="/about/">Why this matters</a>
                         </div>
-                        <div id="homepageLeaderboard" class="launch-empty"></div>
+                        <div class="launch-status-grid">
+                            <div class="launch-status-card">
+                                <strong>Leaderboard stays hidden</strong>
+                                <p>No fake cappers, no suspicious handles, and no placeholder records. It comes back only when the data is clean.</p>
+                                <div class="launch-tags"><span>Real users only</span><span>No filler rows</span></div>
+                            </div>
+                            <div class="launch-status-card">
+                                <strong>Activity stays honest</strong>
+                                <p>The homepage will not promote junk feed items or made-up momentum. Real activity can surface here once it is trustworthy.</p>
+                                <div class="launch-tags"><span>No fake posts</span><span>No fake picks</span></div>
+                            </div>
+                        </div>
+                        <div class="launch-empty">
+                            <strong>What belongs here later</strong>
+                            <p>Once the live data is trustworthy, this area can show verified leaderboard movement, real public activity, and real open challenges tied back to visible profiles and locked history.</p>
+                            <div class="launch-list">
+                                <div class="launch-list-item"><span class="launch-index">01</span><div class="launch-copy"><strong>Verified leaderboard</strong><span>Real profiles with inspectable record history, ROI, units, and sample size.</span></div></div>
+                                <div class="launch-list-item"><span class="launch-index">02</span><div class="launch-copy"><strong>Public activity</strong><span>Only locked picks and real posts that are safe to put on the homepage.</span></div></div>
+                                <div class="launch-list-item"><span class="launch-index">03</span><div class="launch-copy"><strong>Open challenges</strong><span>Real Arena callouts from actual users instead of placeholder matchups.</span></div></div>
+                            </div>
+                        </div>
                     </div>
                     <div class="launch-sidebar">
                         <div class="launch-module">
-                            <h3>Hot streaks</h3>
-                            <p id="homepageStreaks"></p>
+                            <h3>No fake accounts</h3>
+                            <p>The homepage should not show invented usernames, made-up streaks, or suspicious profile rows. If the data is not ready, the section stays descriptive.</p>
                         </div>
                         <div class="launch-module">
                             <h3>Open challenges</h3>
@@ -2009,72 +2061,6 @@
             return Math.round(diff / day) + 'd ago';
         }
 
-        function renderHomepageLeaderboard(entries) {
-            const container = document.getElementById('homepageLeaderboard');
-            if (!container) return;
-
-            container.className = 'launch-empty';
-            container.innerHTML = '' +
-                '<strong>The verified leaderboard is intentionally hidden until the data is trustworthy.</strong>' +
-                '<p>The homepage will not show made-up cappers, suspicious handles, or placeholder-looking records just to fill the space. When the leaderboard is clean and real, it can surface here.</p>' +
-                '<div class="launch-list">' +
-                    '<div class="launch-list-item"><span class="launch-index">01</span><div class="launch-copy"><strong>Real users only</strong><span>No invented names, no fabricated handles, and no filler rows.</span></div></div>' +
-                    '<div class="launch-list-item"><span class="launch-index">02</span><div class="launch-copy"><strong>Real locked history only</strong><span>Profiles should appear here only when the record is backed by actual submitted picks.</span></div></div>' +
-                    '<div class="launch-list-item"><span class="launch-index">03</span><div class="launch-copy"><strong>Honest until ready</strong><span>An empty board is better than a misleading one.</span></div></div>' +
-                '</div>' +
-                '<div class="launch-tags"><span>No fake accounts</span><span>No fake records</span><span>No placeholder leaderboard</span></div>';
-        }
-
-        function renderHomepageTicker(entries) {
-            const container = document.getElementById('homepageTicker');
-            if (!container) return;
-
-            if (!entries.length) {
-                container.className = 'live-empty';
-                container.textContent = 'Recent public picks and pick-share posts will appear here once the feed has real activity.';
-                return;
-            }
-
-            container.className = 'ticker-list';
-            container.innerHTML = entries.map(function(entry) {
-                const username = entry.username || entry.user_name || 'capper';
-                const displayName = entry.display_name || entry.displayName || username;
-                const selection = entry.pick_selection || entry.content || 'Locked pick';
-                const matchup = [entry.pick_away_team, entry.pick_home_team].filter(Boolean).join(' vs ');
-                const status = String(entry.pick_status || entry.status || 'pending').toLowerCase();
-                const odds = Number(entry.pick_odds);
-                const statusClass = ['won', 'lost', 'pending'].includes(status) ? status : 'pending';
-                const sport = String(entry.pick_sport_key || entry.sport || '').replace(/_/g, ' ').trim();
-                const market = String(entry.pick_market_type || '').replace(/_/g, ' ').trim();
-                const unitValue = homeNumber(entry.pick_units || entry.units || 0);
-                return '' +
-                    '<article class="ticker-item">' +
-                        '<div class="ticker-top">' +
-                            '<div class="ticker-user">' +
-                                '<span class="ticker-avatar">' + homeEscape((displayName || '?').charAt(0).toUpperCase()) + '</span>' +
-                                '<div><b>' + homeEscape(displayName) + '</b><span>@' + homeEscape(username) + ' • ' + homeTimeAgo(entry.created_at || entry.createdAt) + '</span></div>' +
-                            '</div>' +
-                            '<span class="ticker-status ' + homeEscape(statusClass) + '">' + homeEscape(status) + '</span>' +
-                        '</div>' +
-                        '<div class="ticker-pick"><b>' + homeEscape(selection) + '</b><span>' + homeEscape(matchup || 'Public feed activity') + '</span></div>' +
-                        '<div class="ticker-meta">' +
-                            (sport ? '<span>' + homeEscape(sport) + '</span>' : '') +
-                            (market ? '<span>' + homeEscape(market) + '</span>' : '') +
-                            (Number.isFinite(odds) ? '<span>' + homeEscape((odds > 0 ? '+' : '') + String(odds)) + '</span>' : '') +
-                            (unitValue > 0 ? '<span>' + homeEscape(unitValue.toFixed(1) + 'u') + '</span>' : '') +
-                        '</div>' +
-                    '</article>';
-            }).join('');
-        }
-
-        function renderHomepageStreaks(entries) {
-            const container = document.getElementById('homepageStreaks');
-            if (!container) return;
-
-            container.className = '';
-            container.innerHTML = 'Hot streaks are hidden on the homepage until that module is backed by clean real-user data. No more fake-looking handles, suspicious records, or filler streak cards.';
-        }
-
         function renderHomepageChallenges(entries) {
             const container = document.getElementById('homepageChallenges');
             if (!container) return;
@@ -2098,80 +2084,8 @@
             }).join('');
         }
 
-        async function loadHomepageTicker() {
-            if (!window.api || typeof window.api.request !== 'function') {
-                renderHomepageTicker([]);
-                return [];
-            }
-
-            try {
-                const data = await window.api.request('/feed?limit=14');
-                const items = Array.isArray(data && data.feed) ? data.feed : [];
-                const deduped = [];
-                const seen = new Set();
-
-                items.forEach(function(item) {
-                    const key = item.pick_id ? 'pick:' + item.pick_id : 'item:' + item.item_id;
-                    if (seen.has(key)) return;
-                    seen.add(key);
-                    deduped.push(item);
-                });
-
-                renderHomepageTicker(deduped.slice(0, 8));
-                return deduped;
-            } catch (error) {
-                console.warn('Failed to load homepage ticker', error);
-                renderHomepageTicker([]);
-                return [];
-            }
-        }
-
-        async function loadHomepageLeaderboardEntries() {
-            return [];
-        }
-
-        async function loadHomepageStreakEntries(entries) {
-            if (!entries.length || !window.api || typeof window.api.getUserProfile !== 'function') {
-                return [];
-            }
-
-            try {
-                const profiles = await Promise.all(entries.slice(0, 5).map(async function(entry) {
-                    const username = entry.username || entry.user_name || entry.handle;
-                    if (!username) return entry;
-                    try {
-                        const profileData = await window.api.getUserProfile(username);
-                        const user = profileData && profileData.user ? profileData.user : {};
-                        return Object.assign({}, entry, user);
-                    } catch (error) {
-                        return entry;
-                    }
-                }));
-
-                return profiles.sort(function(a, b) {
-                    return Math.abs(homeNumber(b.current_streak || b.currentStreak || 0)) - Math.abs(homeNumber(a.current_streak || a.currentStreak || 0));
-                });
-            } catch (error) {
-                console.warn('Failed to load streak entries', error);
-                return entries.slice(0, 5);
-            }
-        }
-
         async function loadHomepageSignals() {
-            renderHomepageTicker([]);
-            renderHomepageLeaderboard([]);
-            renderHomepageStreaks([]);
             renderHomepageChallenges([]);
-
-            await Promise.all([
-                (async function() {
-                    const leaderboardEntries = await loadHomepageLeaderboardEntries();
-                    renderHomepageLeaderboard(leaderboardEntries);
-                    const streakEntries = await loadHomepageStreakEntries(leaderboardEntries);
-                    renderHomepageStreaks(streakEntries);
-                })(),
-                loadHomepageTicker()
-            ]);
         }
 
         if (document.readyState === 'loading') {
