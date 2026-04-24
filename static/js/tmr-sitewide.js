@@ -97,8 +97,8 @@
 
     function buildLoggedOutActions() {
         return `
-            <a class="tmr-global-nav__button" href="/sportsbook.html#login">Log In</a>
-            <a class="tmr-global-nav__button tmr-global-nav__button--primary" href="/sportsbook.html#register">Register</a>
+            <a class="tmr-global-nav__button" href="/sportsbook.html?auth=login" data-tmr-auth-route="login">Log In</a>
+            <a class="tmr-global-nav__button tmr-global-nav__button--primary" href="/sportsbook.html?auth=register" data-tmr-auth-route="signup">Register</a>
         `;
     }
 
@@ -215,7 +215,23 @@
         }
     }
 
+    function routeToSportsbookAuth(section) {
+        const target = section === "signup" ? "signup" : "login";
+        try {
+            sessionStorage.setItem("tmr_force_section", target);
+        } catch (error) {
+            // Ignore sessionStorage failures and continue with navigation.
+        }
+        window.location.href = "/sportsbook.html?auth=" + (target === "signup" ? "register" : "login");
+    }
+
     nav.addEventListener("click", (event) => {
+        const authRoute = event.target.closest("[data-tmr-auth-route]");
+        if (authRoute) {
+            event.preventDefault();
+            routeToSportsbookAuth(authRoute.getAttribute("data-tmr-auth-route"));
+            return;
+        }
         const logoutButton = event.target.closest("[data-tmr-logout]");
         if (!logoutButton) return;
         event.preventDefault();

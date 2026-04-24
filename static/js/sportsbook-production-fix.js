@@ -539,6 +539,45 @@
         }, 500);
     }
 
+    function pinRequestedAuthSection() {
+        const params = new URLSearchParams(window.location.search || '');
+        const rawHash = (window.location.hash || '').replace(/^#/, '').trim().toLowerCase();
+        const rawQuery = (params.get('auth') || '').trim().toLowerCase();
+        let requested = '';
+
+        if (rawHash === 'login') requested = 'login';
+        if (rawHash === 'register' || rawHash === 'signup') requested = 'signup';
+        if (!requested && rawQuery === 'login') requested = 'login';
+        if (!requested && (rawQuery === 'register' || rawQuery === 'signup')) requested = 'signup';
+        if (!requested) {
+            try {
+                const stored = (sessionStorage.getItem('tmr_force_section') || '').trim().toLowerCase();
+                if (stored === 'login' || stored === 'signup') requested = stored;
+            } catch (error) {}
+        }
+
+        if (!requested) return;
+
+        try {
+            sessionStorage.removeItem('tmr_force_section');
+        } catch (error) {}
+
+        forceSectionActive(requested);
+        let attempts = 0;
+        const interval = window.setInterval(function() {
+            attempts += 1;
+            forceSectionActive(requested);
+            if (typeof window.showSection === 'function') {
+                try {
+                    window.showSection(requested);
+                } catch (error) {}
+            }
+            if (attempts >= 10) {
+                window.clearInterval(interval);
+            }
+        }, 400);
+    }
+
     function renderBoardIfCurrent(requestId, sport, badge, response) {
         if (state.selectedSport !== sport) return false;
         if (requestId !== latestBoardRequestId) {
@@ -2056,6 +2095,7 @@
         injectStyles();
         ensureMetadataFields();
         disableLegacyFeed();
+        pinRequestedAuthSection();
         pinPicksSectionIfRequested();
         wireSportPrefetch();
         wireSportsbookTabs();

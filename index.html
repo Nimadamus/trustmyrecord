@@ -1833,8 +1833,8 @@
             </nav>
             <div class="nav-actions">
                 <a class="btn" href="handicappers.html">Find Cappers</a>
-<a class="btn auth-link" href="/sportsbook.html#login" id="homeNavLoginCta">Log In</a>
-<a class="btn primary auth-link" href="/sportsbook.html#register" id="homeNavRegisterCta">Register</a>
+<a class="btn auth-link" href="/sportsbook.html?auth=login" id="homeNavLoginCta" data-home-auth-route="login">Log In</a>
+<a class="btn primary auth-link" href="/sportsbook.html?auth=register" id="homeNavRegisterCta" data-home-auth-route="signup">Register</a>
                 <a class="btn" href="/sportsbook/" id="homeNavPrimaryCta">Open Sportsbook</a>
             </div>
         </header>
@@ -2022,7 +2022,7 @@
     <script src="static/js/config.js?v=20260330"></script>
     <script src="static/js/backend-api.js?v=20260423a"></script>
     <script src="static/js/auth-persistent.js?v=20260421a"></script>
-    <script defer src="static/js/tmr-sitewide.js?v=20260424b"></script>
+    <script defer src="static/js/tmr-sitewide.js?v=20260424c"></script>
     <script src="static/js/analytics.js?v=20260417"></script>
     <script>
         function homeTrack(eventName, params) {
@@ -2078,10 +2078,10 @@
 
             if (!user) {
                 navLogin.style.display = 'inline-flex';
-            navLogin.href = '/sportsbook.html#login';
+            navLogin.href = '/sportsbook.html?auth=login';
                 navLogin.textContent = 'Log In';
                 navRegister.style.display = 'inline-flex';
-            navRegister.href = '/sportsbook.html#register';
+            navRegister.href = '/sportsbook.html?auth=register';
                 navRegister.textContent = 'Register';
                 navPrimary.textContent = 'Open Sportsbook';
                 navPrimary.href = '/picks/';
@@ -2091,8 +2091,8 @@
                 heroSecondary.href = '/profile/';
                 heroCopy.innerHTML = '<strong>TrustMyRecord turns sports talk into a public profile.</strong> Lock picks, build a verified record, debate in the feed, play polls and trivia, and let the receipts decide who actually knows sports.';
                 finalCopy.textContent = 'Start with one locked pick, one public result, and one profile worth checking. TrustMyRecord should feel serious from the first click.';
-                finalCta.textContent = 'Create Your Account';
-            finalCta.href = '/sportsbook.html#register';
+            finalCta.textContent = 'Create Your Account';
+            finalCta.href = '/sportsbook.html?auth=register';
                 return;
             }
 
@@ -2117,6 +2117,21 @@
             const number = homeNumber(value);
             return (number >= 0 ? '+' : '') + number.toFixed(1) + (suffix || '');
         }
+
+        function routeHomepageAuth(section) {
+            const target = section === 'signup' ? 'signup' : 'login';
+            try {
+                sessionStorage.setItem('tmr_force_section', target);
+            } catch (error) {}
+            window.location.href = '/sportsbook.html?auth=' + (target === 'signup' ? 'register' : 'login');
+        }
+
+        document.querySelectorAll('[data-home-auth-route]').forEach((link) => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                routeHomepageAuth(link.getAttribute('data-home-auth-route'));
+            });
+        });
 
         function homePercent(value) {
             const parsed = Number(value);
