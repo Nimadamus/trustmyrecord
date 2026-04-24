@@ -41,11 +41,59 @@ function isAlreadyAtLegacyTarget(sectionId) {
         (window.location.hash || '') === target.hash;
 }
 
+function normalizeSportsbookSectionId(sectionId) {
+    if (sectionId === 'register') return 'signup';
+    return sectionId;
+}
+
+function isSportsbookLocalSection(sectionId) {
+    if (!isSportsbookDocumentRoute()) return false;
+    const normalizedSectionId = normalizeSportsbookSectionId(sectionId);
+    const targetSection = document.getElementById(normalizedSectionId);
+    return !!(targetSection && targetSection.classList.contains('page-section'));
+}
+
+function getSportsbookLocalUrl(sectionId) {
+    const normalizedSectionId = normalizeSportsbookSectionId(sectionId);
+    if (normalizedSectionId === 'home') {
+        return '/sportsbook.html';
+    }
+    if (normalizedSectionId === 'signup') {
+        return '/sportsbook.html#register';
+    }
+    return '/sportsbook.html#' + normalizedSectionId;
+}
+
+function getRequestedSportsbookSection(params, hashPath) {
+    if (!isSportsbookDocumentRoute()) return '';
+
+    const normalizedHash = normalizeSportsbookSectionId((hashPath || '').trim().toLowerCase());
+    if (normalizedHash && isSportsbookLocalSection(normalizedHash)) {
+        return normalizedHash;
+    }
+
+    const authRoute = String(params.get('auth') || '').trim().toLowerCase();
+    if (authRoute === 'login') return 'login';
+    if (authRoute === 'register' || authRoute === 'signup') return 'signup';
+
+    try {
+        const forcedSection = normalizeSportsbookSectionId((sessionStorage.getItem('tmr_force_section') || '').trim().toLowerCase());
+        if ((forcedSection === 'login' || forcedSection === 'signup') && isSportsbookLocalSection(forcedSection)) {
+            return forcedSection;
+        }
+    } catch (error) {
+        // Ignore storage access failures and fall back to default routing.
+    }
+
+    return '';
+}
+
 function activateCurrentPageSection(sectionId, updateHistory = true) {
+    const normalizedSectionId = normalizeSportsbookSectionId(sectionId);
     const sections = document.querySelectorAll('.page-section');
     sections.forEach(section => section.classList.remove('active'));
 
-    const targetSection = document.getElementById(sectionId);
+    const targetSection = document.getElementById(normalizedSectionId);
     if (targetSection) {
         targetSection.classList.add('active');
     }
@@ -57,9 +105,11 @@ function activateCurrentPageSection(sectionId, updateHistory = true) {
         event.target.classList.add('active');
     }
 
-    if (updateHistory && sectionId !== 'home') {
-        window.history.pushState({ section: sectionId }, '', '/' + sectionId);
-    } else if (updateHistory && sectionId === 'home') {
+    if (updateHistory && isSportsbookLocalSection(normalizedSectionId)) {
+        window.history.pushState({ section: normalizedSectionId }, '', getSportsbookLocalUrl(normalizedSectionId));
+    } else if (updateHistory && normalizedSectionId !== 'home') {
+        window.history.pushState({ section: normalizedSectionId }, '', '/' + normalizedSectionId);
+    } else if (updateHistory && normalizedSectionId === 'home') {
         window.history.pushState({ section: 'home' }, '', '/');
     }
 
@@ -93,28 +143,26 @@ function activateCanonicalLegacySection(sectionId, updateHistory = true) {
  * Show a specific section and hide others
  */
 function showSection(sectionId, updateHistory = true) {
-    if (isSportsbookDocumentRoute()) {
-        const localSection = document.getElementById(sectionId);
-        if (localSection && localSection.classList.contains('page-section')) {
-            activateCanonicalLegacySection(sectionId, updateHistory);
-            return;
-        }
-    }
-
-    if (legacyRouteTargets[sectionId]) {
-        if (isAlreadyAtLegacyTarget(sectionId)) {
-            activateCurrentPageSection(sectionId, updateHistory);
-            return;
-        }
-        window.location.href = legacyRouteTargets[sectionId];
+    const normalizedSectionId = normalizeSportsbookSectionId(sectionId);
+    if (isSportsbookLocalSection(normalizedSectionId)) {
+        activateCanonicalLegacySection(normalizedSectionId, updateHistory);
         return;
     }
 
-    activateCurrentPageSection(sectionId, updateHistory);
+    if (legacyRouteTargets[normalizedSectionId]) {
+        if (isAlreadyAtLegacyTarget(normalizedSectionId)) {
+            activateCurrentPageSection(normalizedSectionId, updateHistory);
+            return;
+        }
+        window.location.href = legacyRouteTargets[normalizedSectionId];
+        return;
+    }
+
+    activateCurrentPageSection(normalizedSectionId, updateHistory);
 }
 
 // Valid section IDs for routing
-const validSections = ['home', 'picks', 'mypicks', 'my-record', 'promos', 'consensus', 'leaderboards', 'live', 'marketplace', 'groups', 'messages', 'profile', 'premium', 'forums', 'notifications', 'polls-trivia'];
+const validSections = ['home', 'picks', 'mypicks', 'my-record', 'promos', 'consensus', 'leaderboards', 'live', 'marketplace', 'groups', 'messages', 'profile', 'premium', 'forums', 'notifications', 'polls-trivia', 'login', 'signup', 'register'];
 
 /**
  * Handle URL-based routing for SPA
@@ -126,6 +174,12 @@ function handleRouting() {
 
     // Also check for hash-based routing
     const hashPath = window.location.hash.replace('#', '');
+
+    const sportsbookRequestedSection = getRequestedSportsbookSection(params, hashPath);
+    if (sportsbookRequestedSection) {
+        activateCanonicalLegacySection(sportsbookRequestedSection, false);
+        return;
+    }
 
     // Determine which section to show
     let targetSection = 'home';
