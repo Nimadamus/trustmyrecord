@@ -788,6 +788,65 @@
             margin-top: 12px;
         }
 
+        .launch-grid--simple {
+            grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+        }
+
+        .launch-panel {
+            display: grid;
+            gap: 16px;
+        }
+
+        .launch-panel-intro {
+            color: var(--muted);
+            font-size: 0.94rem;
+            line-height: 1.6;
+            font-weight: 650;
+        }
+
+        .launch-checklist {
+            display: grid;
+            gap: 12px;
+        }
+
+        .launch-check {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 12px;
+            align-items: start;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 18px;
+            padding: 16px;
+            background: rgba(255,255,255,0.04);
+        }
+
+        .launch-check strong {
+            display: block;
+            font-size: 0.98rem;
+            letter-spacing: -0.01em;
+        }
+
+        .launch-check span {
+            display: block;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 0.84rem;
+            line-height: 1.5;
+            font-weight: 650;
+        }
+
+        .launch-check-mark {
+            width: 32px;
+            height: 32px;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            background: rgba(45, 212, 191, 0.12);
+            color: #d9fffa;
+            font-size: 0.82rem;
+            font-weight: 900;
+        }
+
         .ticker-shell {
             display: grid;
             gap: 12px;
@@ -1866,45 +1925,43 @@
                     </div>
                     <p>This platform is about verified records, so the homepage should surface real leaderboard movement and real public activity when it exists. If a module is empty, it should explain why instead of pretending.</p>
                 </div>
-                <div class="launch-grid">
-                    <div class="launch-board launch-board--clean">
+                <div class="launch-grid launch-grid--simple">
+                    <div class="launch-board launch-panel">
                         <div class="launch-board-head">
                             <div>
-                                <h3>Honest launch state</h3>
-                                <p>The homepage should only surface proof that is real, reviewable, and backed by actual user history. Until those modules are trustworthy, this section should explain the standard instead of faking momentum.</p>
+                                <h3>What this section should become</h3>
+                                <p>The homepage proof board should only exist to surface live proof that is real, reviewable, and attached to actual user history.</p>
                             </div>
                             <a class="panel-link" href="/about/">Why this matters</a>
                         </div>
-                        <div class="launch-status-grid">
-                            <div class="launch-status-card">
-                                <strong>Leaderboard stays hidden</strong>
-                                <p>No fake cappers, no suspicious handles, and no placeholder records. It comes back only when the data is clean.</p>
-                                <div class="launch-tags"><span>Real users only</span><span>No filler rows</span></div>
+                        <div class="launch-checklist">
+                            <div class="launch-check">
+                                <span class="launch-check-mark">01</span>
+                                <div><strong>Verified leaderboard</strong><span>Real profiles only, with real records, real units, and real pick history behind every row.</span></div>
                             </div>
-                            <div class="launch-status-card">
-                                <strong>Activity stays honest</strong>
-                                <p>The homepage will not promote junk feed items or made-up momentum. Real activity can surface here once it is trustworthy.</p>
-                                <div class="launch-tags"><span>No fake posts</span><span>No fake picks</span></div>
+                            <div class="launch-check">
+                                <span class="launch-check-mark">02</span>
+                                <div><strong>Public activity</strong><span>Only locked picks and real public posts that are safe and credible enough to feature on the homepage.</span></div>
                             </div>
-                        </div>
-                        <div class="launch-empty">
-                            <strong>What belongs here later</strong>
-                            <p>Once the live data is trustworthy, this area can show verified leaderboard movement, real public activity, and real open challenges tied back to visible profiles and locked history.</p>
-                            <div class="launch-list">
-                                <div class="launch-list-item"><span class="launch-index">01</span><div class="launch-copy"><strong>Verified leaderboard</strong><span>Real profiles with inspectable record history, ROI, units, and sample size.</span></div></div>
-                                <div class="launch-list-item"><span class="launch-index">02</span><div class="launch-copy"><strong>Public activity</strong><span>Only locked picks and real posts that are safe to put on the homepage.</span></div></div>
-                                <div class="launch-list-item"><span class="launch-index">03</span><div class="launch-copy"><strong>Open challenges</strong><span>Real Arena callouts from actual users instead of placeholder matchups.</span></div></div>
+                            <div class="launch-check">
+                                <span class="launch-check-mark">03</span>
+                                <div><strong>Open challenges</strong><span>Actual Arena callouts from real users, not filler matchups or placeholder challenge cards.</span></div>
                             </div>
                         </div>
                     </div>
                     <div class="launch-sidebar">
                         <div class="launch-module">
-                            <h3>No fake accounts</h3>
-                            <p>The homepage should not show invented usernames, made-up streaks, or suspicious profile rows. If the data is not ready, the section stays descriptive.</p>
+                            <h3>What we are not showing</h3>
+                            <p class="launch-panel-intro">The homepage stays clean until the underlying data is clean. That means no fake cappers, no suspicious handles, no placeholder records, and no junk activity cards.</p>
+                            <div class="launch-tags">
+                                <span>No fake accounts</span>
+                                <span>No fake records</span>
+                                <span>No fake momentum</span>
+                            </div>
                         </div>
                         <div class="launch-module">
-                            <h3>Open challenges</h3>
-                            <p id="homepageChallenges"></p>
+                            <h3>What visitors can do right now</h3>
+                            <p>Create an account, lock in a real pick, and start building an actual public record. That is more valuable than filling the homepage with made-up proof.</p>
                             <div class="launch-cta">
                                 <a class="btn primary" href="/sportsbook/#register">Register to claim your record</a>
                                 <a class="btn" href="/about/">See how it works</a>
@@ -2061,31 +2118,8 @@
             return Math.round(diff / day) + 'd ago';
         }
 
-        function renderHomepageChallenges(entries) {
-            const container = document.getElementById('homepageChallenges');
-            if (!container) return;
-
-            if (!entries.length) {
-                container.innerHTML = 'Arena matchups will surface here when actual users are posting open challenges. Until then, this space is better used to explain the feature and drive early registration.';
-                return;
-            }
-
-            container.className = 'pulse-list';
-            container.innerHTML = entries.map(function(entry) {
-                const challenger = entry.challenger_display || entry.challenger_username || 'Challenger';
-                const challenged = entry.challenged_display || entry.challenged_username || 'Open';
-                const title = entry.title || entry.game_title || entry.game_slug || 'Open challenge';
-                const status = String(entry.status || 'pending').replace(/_/g, ' ');
-                const labelClass = status === 'in progress' ? 'gold' : '';
-            return '<a class="pulse-row" href="/arena/" onclick="homeTrack(\'homepage_challenge_opened\', { challenge_id: \'' + homeEscape(String(entry.id || 'unknown')).replace(/'/g, "\\'") + '\', status: \'' + homeEscape(status).replace(/'/g, "\\'") + '\' });">' +
-                    '<div><b>' + homeEscape(title) + '</b><span>' + homeEscape(challenger) + ' vs ' + homeEscape(challenged) + ' • ' + homeEscape(entry.game_title || entry.game_slug || 'Arena') + ' • ' + homeTimeAgo(entry.created_at || entry.createdAt) + '</span></div>' +
-                    '<span class="pulse-tag ' + labelClass + '">' + homeEscape(status) + '</span>' +
-                '</a>';
-            }).join('');
-        }
-
         async function loadHomepageSignals() {
-            renderHomepageChallenges([]);
+            return Promise.resolve();
         }
 
         if (document.readyState === 'loading') {
