@@ -917,7 +917,7 @@
         const normalizedGames = games.map(function(game, index) {
             const repaired = repairGameTeams(game);
             if (repaired !== game) repairedCount += 1;
-            return appendManualMarketTemplates(repaired, index, repaired && repaired.sport_key ? repaired.sport_key : SPORT_KEY_MAP[sport]);
+            return stripManualMarketTemplates(repaired);
         }).filter(function(game) {
             const unresolved = game && (isPlaceholderTeamName(game.home_team) || isPlaceholderTeamName(game.away_team));
             if (unresolved) {
@@ -953,6 +953,24 @@
                 frontend_dropped_games: droppedCount
             })
         };
+    }
+
+    function stripManualMarketTemplates(game) {
+        if (!game || !Array.isArray(game.market_groups)) return game;
+
+        const marketGroups = game.market_groups.map(function(group) {
+            const items = Array.isArray(group && group.items) ? group.items.filter(function(item) {
+                if (!item) return false;
+                if (item.source === 'manual') return false;
+                if (!item.odds_display && (item.odds == null || Number.isNaN(Number(item.odds)))) return false;
+                return true;
+            }) : [];
+
+            if (!items.length) return null;
+            return Object.assign({}, group, { items: items });
+        }).filter(Boolean);
+
+        return Object.assign({}, game, { market_groups: marketGroups });
     }
 
     function createFallbackOption(game, index, groupLabel, marketType, selection, selectionLabel, odds, line, detailLabel, sourceType) {
@@ -1263,11 +1281,11 @@
                 }
             }
 
-            return appendManualMarketTemplates(Object.assign({}, game, {
+            return Object.assign({}, game, {
                 updated_at: game.updated_at || game.commence_time,
                 has_sportsbook_odds: marketGroups.length > 0,
                 market_groups: marketGroups
-            }), index, sportKey);
+            });
         }).filter(function(game) {
             return game.market_groups && game.market_groups.length > 0;
         });
