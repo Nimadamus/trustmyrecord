@@ -2013,52 +2013,16 @@
             const container = document.getElementById('homepageLeaderboard');
             if (!container) return;
 
-            if (!entries.length) {
-                container.className = 'launch-empty';
-                container.innerHTML = '' +
-                    '<strong>The verified leaderboard is intentionally blank right now.</strong>' +
-                    '<p>When real handicappers join, this area will show live record rankings with ROI, units, sample size, and public profile links. Until then, the honest version is better than fake names and invented records.</p>' +
-                    '<div class="launch-list">' +
-                        '<div class="launch-list-item"><span class="launch-index">01</span><div class="launch-copy"><strong>Locked picks only</strong><span>No one appears here without a real submitted history behind the profile.</span></div></div>' +
-                        '<div class="launch-list-item"><span class="launch-index">02</span><div class="launch-copy"><strong>Public receipts</strong><span>Every leaderboard spot should link back to a profile with visible wins, losses, units, and pick history.</span></div></div>' +
-                        '<div class="launch-list-item"><span class="launch-index">03</span><div class="launch-copy"><strong>Early access opportunity</strong><span>Founding cappers get first-mover visibility when the community board fills in with real records.</span></div></div>' +
-                    '</div>' +
-                    '<div class="launch-tags"><span>Verified picks</span><span>Public ROI</span><span>No fake records</span><span>Founding capper</span></div>';
-                return;
-            }
-
-            container.className = 'live-table-wrap';
-            container.innerHTML = '<table class="ledger-table"><thead><tr>' +
-                '<th style="width:60px;">Rank</th>' +
-                '<th>Capper</th>' +
-                '<th>Record</th>' +
-                '<th>ROI</th>' +
-                '<th>Units</th>' +
-                '<th>Picks</th>' +
-                '</tr></thead><tbody>' +
-                entries.map(function(entry, index) {
-                    const username = entry.username || entry.user_name || entry.handle || 'capper';
-                    const displayName = entry.display_name || entry.displayName || username;
-                    const wins = homeNumber(entry.wins);
-                    const losses = homeNumber(entry.losses);
-                    const pushes = homeNumber(entry.pushes);
-                    const roi = homePercent(entry.roi);
-                    const units = homeNumber(entry.net_units != null ? entry.net_units : entry.units);
-                    const totalPicks = homeNumber(entry.total_picks != null ? entry.total_picks : entry.totalPicks != null ? entry.totalPicks : wins + losses + pushes);
-                    const rankClass = index === 0 ? 'top-1' : index === 1 ? 'top-2' : index === 2 ? 'top-3' : '';
-                    return '<tr>' +
-                        '<td><span class="rank-pill ' + rankClass + '">#' + (index + 1) + '</span></td>' +
-                '<td><a class="capper-cell" href="/profile/?user=' + encodeURIComponent(username) + '" onclick="homeTrack(\'homepage_capper_opened\', { username: \'' + homeEscape(username).replace(/'/g, "\\'") + '\', source: \'leaderboard\' });">' +
-                            '<span class="capper-avatar">' + homeEscape((displayName || '?').charAt(0).toUpperCase()) + '</span>' +
-                            '<span class="capper-meta"><b>' + homeEscape(displayName) + '</b><span>@' + homeEscape(username) + '</span></span>' +
-                        '</a></td>' +
-                        '<td>' + wins + '-' + losses + (pushes ? '-' + pushes : '') + '</td>' +
-                        '<td class="' + (roi >= 0 ? 'stat-pos' : 'stat-neg') + '">' + homeSigned(roi, '%') + '</td>' +
-                        '<td class="' + (units >= 0 ? 'stat-pos' : 'stat-neg') + '">' + homeSigned(units, 'u') + '</td>' +
-                        '<td>' + totalPicks + '</td>' +
-                        '</tr>';
-                }).join('') +
-                '</tbody></table>';
+            container.className = 'launch-empty';
+            container.innerHTML = '' +
+                '<strong>The verified leaderboard is intentionally hidden until the data is trustworthy.</strong>' +
+                '<p>The homepage will not show made-up cappers, suspicious handles, or placeholder-looking records just to fill the space. When the leaderboard is clean and real, it can surface here.</p>' +
+                '<div class="launch-list">' +
+                    '<div class="launch-list-item"><span class="launch-index">01</span><div class="launch-copy"><strong>Real users only</strong><span>No invented names, no fabricated handles, and no filler rows.</span></div></div>' +
+                    '<div class="launch-list-item"><span class="launch-index">02</span><div class="launch-copy"><strong>Real locked history only</strong><span>Profiles should appear here only when the record is backed by actual submitted picks.</span></div></div>' +
+                    '<div class="launch-list-item"><span class="launch-index">03</span><div class="launch-copy"><strong>Honest until ready</strong><span>An empty board is better than a misleading one.</span></div></div>' +
+                '</div>' +
+                '<div class="launch-tags"><span>No fake accounts</span><span>No fake records</span><span>No placeholder leaderboard</span></div>';
         }
 
         function renderHomepageTicker(entries) {
@@ -2107,31 +2071,8 @@
             const container = document.getElementById('homepageStreaks');
             if (!container) return;
 
-            if (!entries.length) {
-                container.innerHTML = 'No streak board is shown until real user history exists. Once members are active, this module will highlight who is actually running hot based on locked results, not homepage filler.';
-                return;
-            }
-
-            container.className = 'pulse-list';
-            container.innerHTML = entries.map(function(entry, index) {
-                const username = entry.username || entry.user_name || entry.handle || 'capper';
-                const displayName = entry.display_name || entry.displayName || username;
-                const streak = homeNumber(entry.current_streak || entry.currentStreak || 0);
-                const units = homeNumber(entry.net_units != null ? entry.net_units : entry.units);
-                const winRate = homePercent(
-                    entry.win_rate != null
-                        ? entry.win_rate
-                        : entry.win_percentage != null
-                            ? entry.win_percentage
-                            : entry.winRate
-                );
-                const streakLabel = streak > 0 ? 'W' + streak : streak < 0 ? 'L' + Math.abs(streak) : 'Even';
-                const tagClass = streak > 0 ? '' : streak < 0 ? 'red' : 'gold';
-                return '<div class="pulse-row">' +
-                    '<div><b>' + homeEscape(displayName) + '</b><span>@' + homeEscape(username) + ' • ' + winRate.toFixed(1) + '% win rate • ' + homeSigned(units, 'u') + '</span></div>' +
-                    '<span class="pulse-tag ' + tagClass + '">' + streakLabel + '</span>' +
-                '</div>';
-            }).join('');
+            container.className = '';
+            container.innerHTML = 'Hot streaks are hidden on the homepage until that module is backed by clean real-user data. No more fake-looking handles, suspicious records, or filler streak cards.';
         }
 
         function renderHomepageChallenges(entries) {
@@ -2186,19 +2127,7 @@
         }
 
         async function loadHomepageLeaderboardEntries() {
-            if (!window.api || typeof window.api.getLeaderboard !== 'function') {
-                return [];
-            }
-
-            try {
-                const data = await window.api.getLeaderboard({ sortBy: 'roi', limit: 8 });
-                if (Array.isArray(data)) return data;
-                if (Array.isArray(data && data.leaderboard)) return data.leaderboard;
-                return [];
-            } catch (error) {
-                console.warn('Failed to load homepage leaderboard', error);
-                return [];
-            }
+            return [];
         }
 
         async function loadHomepageStreakEntries(entries) {
