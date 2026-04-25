@@ -17226,6 +17226,107 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('[TMR] Form handlers loaded');
     </script>
     <script>
+        (function() {
+            function bindInlineLiveLogin() {
+                const form = document.getElementById('login-form');
+                if (!form || form.dataset.tmrInlineLiveLoginBound === 'true') return;
+                form.dataset.tmrInlineLiveLoginBound = 'true';
+
+                form.addEventListener('submit', async function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (typeof event.stopImmediatePropagation === 'function') {
+                        event.stopImmediatePropagation();
+                    }
+
+                    const loginInput = document.getElementById('loginEmail');
+                    const passwordInput = document.getElementById('loginPassword');
+                    const rememberMe = !!document.getElementById('rememberMe')?.checked;
+                    const message = document.getElementById('loginFormMessage');
+                    const submit = form.querySelector('button[type="submit"]');
+                    const login = String(loginInput?.value || '').trim();
+                    const password = passwordInput?.value || '';
+                    const baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.api && CONFIG.api.baseUrl)
+                        ? String(CONFIG.api.baseUrl).replace(/\/+$/, '')
+                        : 'https://trustmyrecord-api.onrender.com/api';
+
+                    if (message) {
+                        message.style.display = 'none';
+                        message.textContent = '';
+                    }
+                    if (submit) {
+                        if (!submit.dataset.originalText) submit.dataset.originalText = submit.textContent || 'LOGIN';
+                        submit.disabled = true;
+                        submit.textContent = 'LOGGING IN...';
+                    }
+
+                    try {
+                        const response = await fetch(baseUrl + '/auth/login', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ login, password })
+                        });
+
+                        const data = await response.json().catch(function() { return {}; });
+                        if (!response.ok) {
+                            throw new Error(data.error || data.message || 'Invalid credentials');
+                        }
+
+                        if (typeof api !== 'undefined' && typeof api.saveTokens === 'function') {
+                            api.saveTokens(data.accessToken || data.access_token, data.refreshToken || data.refresh_token);
+                        }
+
+                        if (typeof auth !== 'undefined') {
+                            const userData = data.user || {};
+                            auth.currentUser = {
+                                id: userData.id || ('user_' + Date.now()),
+                                username: userData.username || login,
+                                email: userData.email || '',
+                                displayName: userData.displayName || userData.username || login,
+                                avatar: userData.avatarUrl || (typeof auth.getDefaultAvatar === 'function' ? auth.getDefaultAvatar(userData.username || login) : ''),
+                                bio: userData.bio || '',
+                                joinedDate: userData.created_at || new Date().toISOString(),
+                                verified: !!userData.emailVerified,
+                                stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
+                                social: { followers: [], following: [], reputation: 0, badges: [] },
+                                isPremium: false,
+                                backendUser: true
+                            };
+                            if (typeof auth.setRememberMe === 'function') auth.setRememberMe(rememberMe);
+                            if (typeof auth.persistSession === 'function') auth.persistSession();
+                            if (typeof auth.updateUIForLoggedInUser === 'function') auth.updateUIForLoggedInUser();
+                        }
+
+                        window.location.href = '/profile.html';
+                    } catch (error) {
+                        if (message) {
+                            const resetHref = '/reset-password/' + (login ? ('?login=' + encodeURIComponent(login)) : '');
+                            message.style.display = 'block';
+                            message.style.borderColor = 'rgba(255, 107, 107, 0.35)';
+                            message.style.background = 'rgba(255, 107, 107, 0.08)';
+                            message.style.color = '#ffd5d5';
+                            message.innerHTML = 'That username/email and password do not match. If this is your account, <a href="' + resetHref + '" style="color:#ffffff;text-decoration:underline;font-weight:700;">reset your password here</a>.';
+                        } else {
+                            alert('Login failed: ' + (error && error.message ? error.message : 'Unknown error'));
+                        }
+                    } finally {
+                        if (submit) {
+                            submit.disabled = false;
+                            submit.textContent = submit.dataset.originalText || 'LOGIN';
+                        }
+                    }
+                }, true);
+            }
+
+            document.addEventListener('DOMContentLoaded', bindInlineLiveLogin);
+            window.addEventListener('load', bindInlineLiveLogin);
+            setTimeout(bindInlineLiveLogin, 1200);
+        })();
+    </script>
+    <script>
         // Notifications System
         function toggleNotifications() {
             const panel = document.getElementById('notificationsPanel');
