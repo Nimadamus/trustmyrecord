@@ -17241,7 +17241,7 @@ document.addEventListener('DOMContentLoaded', function() {
             var authRoute = params.get('auth') || '';
             if ((rawHash === 'login' || rawHash === 'register' || rawHash === 'signup' || authRoute === 'login' || authRoute === 'register') && build !== '20260425a') {
                 var targetAuth = authRoute || (rawHash === 'login' ? 'login' : 'register');
-                window.location.replace('/sportsbook.html?auth=' + targetAuth + '&build=20260425a#' + (targetAuth === 'login' ? 'login' : 'register'));
+                window.location.replace(targetAuth === 'login' ? '/login/' : '/register/');
             }
         })();
     </script>

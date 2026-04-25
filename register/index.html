@@ -2,16 +2,175 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="robots" content="noindex">
-    <meta http-equiv="refresh" content="0; url=/sportsbook.html?auth=register&build=20260425a#register">
-    <title>Redirecting to Register...</title>
+    <title>TrustMyRecord Register</title>
+    <style>
+        :root {
+            --bg: #081522;
+            --panel: #111728;
+            --text: #f5f7fb;
+            --muted: #93a4bf;
+            --border: rgba(91, 214, 220, 0.22);
+            --cyan: #33e6df;
+            --green: #b7e53c;
+            --danger: #ff8f8f;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, system-ui, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(43, 226, 216, 0.16), transparent 32%),
+                linear-gradient(180deg, #0a1624 0%, #081421 100%);
+            color: var(--text);
+            display: grid;
+            place-items: center;
+            padding: 32px 20px;
+        }
+        .shell {
+            width: min(100%, 580px);
+            background: linear-gradient(180deg, rgba(17, 23, 40, 0.98), rgba(12, 18, 31, 0.98));
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            overflow: hidden;
+        }
+        .brand { padding: 28px 32px 18px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .brand a { color: inherit; text-decoration: none; font-weight: 900; font-size: 34px; letter-spacing: -0.04em; }
+        .brand a span { color: var(--cyan); }
+        .content { padding: 30px 32px 34px; }
+        h1 { margin: 0 0 10px; font-size: 42px; line-height: 1; letter-spacing: -0.04em; }
+        h1 .accent { color: var(--green); }
+        p.sub { margin: 0 0 24px; color: var(--muted); font-size: 18px; line-height: 1.5; }
+        .field { margin-bottom: 16px; }
+        label { display:block; margin-bottom:8px; font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; }
+        input { width:100%; border:1px solid rgba(255,255,255,0.1); border-radius:16px; background:#e7eef9; color:#101625; padding:17px 18px; font-size:24px; }
+        .message { display:none; margin:0 0 16px; padding:14px 16px; border-radius:16px; border:1px solid rgba(255,255,255,0.08); color:var(--muted); font-size:14px; line-height:1.5; }
+        .message.error { display:block; border-color: rgba(255, 107, 107, 0.35); background: rgba(255, 107, 107, 0.12); color: #ffd5d5; }
+        .message.success { display:block; border-color: rgba(51, 230, 223, 0.28); background: rgba(51, 230, 223, 0.08); color: #d7ffff; }
+        .submit { width:100%; border:0; border-radius:999px; padding:18px 20px; font-size:17px; font-weight:900; letter-spacing:0.08em; color:#081320; background:linear-gradient(90deg, #ffe800 0%, #32e6df 100%); cursor:pointer; }
+        .submit[disabled] { opacity:0.72; cursor:wait; }
+        .switch { margin-top:22px; text-align:center; color:var(--muted); font-size:15px; }
+        .switch a { color:var(--text); font-weight:800; text-decoration:none; }
+    </style>
 </head>
 <body>
+    <div class="shell">
+        <div class="brand">
+            <a href="/">TRUST<span>MY</span>RECORD</a>
+        </div>
+        <div class="content">
+            <h1>Create <span class="accent">Account</span></h1>
+            <p class="sub">Register from a clean page that talks straight to the real backend.</p>
+
+            <form id="direct-register-form">
+                <div class="field">
+                    <label for="usernameValue">Username</label>
+                    <input id="usernameValue" type="text" autocomplete="username" required>
+                </div>
+                <div class="field">
+                    <label for="emailValue">Email</label>
+                    <input id="emailValue" type="email" autocomplete="email" required>
+                </div>
+                <div class="field">
+                    <label for="passwordValue">Password</label>
+                    <input id="passwordValue" type="password" autocomplete="new-password" required>
+                </div>
+                <div class="field">
+                    <label for="confirmValue">Confirm Password</label>
+                    <input id="confirmValue" type="password" autocomplete="new-password" required>
+                </div>
+                <div id="message" class="message"></div>
+                <button id="submitBtn" class="submit" type="submit">CREATE ACCOUNT</button>
+            </form>
+
+            <div class="switch">Already have an account? <a href="/login/">Log in here</a></div>
+        </div>
+    </div>
+
+    <script src="/static/js/config.js?v=20260317"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+    <script src="/static/js/auth-persistent.js?v=20260424a"></script>
     <script>
-        window.location.replace('/sportsbook.html?auth=register&build=20260425a#register');
+        (function() {
+            function setMessage(text, type) {
+                const message = document.getElementById('message');
+                message.className = 'message' + (type ? ' ' + type : '');
+                message.textContent = text || '';
+                message.style.display = text ? 'block' : 'none';
+            }
+
+            async function persistBackendLogin(userData) {
+                if (!window.auth) return;
+                const loginValue = userData.username || userData.email || '';
+                window.auth.currentUser = {
+                    id: userData.id || ('user_' + Date.now()),
+                    username: userData.username || loginValue,
+                    email: userData.email || '',
+                    displayName: userData.displayName || userData.username || loginValue,
+                    avatar: userData.avatarUrl || (typeof window.auth.getDefaultAvatar === 'function' ? window.auth.getDefaultAvatar(userData.username || loginValue) : ''),
+                    bio: userData.bio || '',
+                    joinedDate: userData.created_at || new Date().toISOString(),
+                    verified: !!userData.emailVerified,
+                    stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
+                    social: { followers: [], following: [], reputation: 0, badges: [] },
+                    isPremium: false,
+                    backendUser: true
+                };
+                if (typeof window.auth.setRememberMe === 'function') window.auth.setRememberMe(true);
+                if (typeof window.auth.persistSession === 'function') window.auth.persistSession();
+            }
+
+            document.getElementById('direct-register-form').addEventListener('submit', async function(event) {
+                event.preventDefault();
+                const username = String(document.getElementById('usernameValue').value || '').trim();
+                const email = String(document.getElementById('emailValue').value || '').trim();
+                const password = document.getElementById('passwordValue').value || '';
+                const confirm = document.getElementById('confirmValue').value || '';
+                const submitBtn = document.getElementById('submitBtn');
+
+                if (password !== confirm) {
+                    setMessage('Passwords do not match.', 'error');
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'CREATING ACCOUNT...';
+                setMessage('', '');
+
+                try {
+                    if (!window.api || typeof window.api.register !== 'function') {
+                        throw new Error('Signup service unavailable. Refresh and try again.');
+                    }
+
+                    if (window.api.ready) {
+                        try { await window.api.ready; } catch (error) {}
+                    }
+
+                    const data = await window.api.register({ username, email, password });
+                    if (data && data.user && (data.accessToken || data.access_token || data.tokens)) {
+                        await persistBackendLogin(data.user);
+                        window.location.replace('/profile.html');
+                        return;
+                    }
+
+                    if (data && data.email) {
+                        setMessage(data.message || ('Account created. Verify ' + data.email + ' to continue.'), 'success');
+                        return;
+                    }
+
+                    window.location.replace('/login/');
+                } catch (error) {
+                    setMessage(error && error.message ? error.message : 'Registration failed.', 'error');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'CREATE ACCOUNT';
+                }
+            });
+        })();
     </script>
 </body>
 </html>

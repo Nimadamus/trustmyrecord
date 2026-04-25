@@ -2,16 +2,292 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta name="robots" content="noindex">
-    <meta http-equiv="refresh" content="0; url=/sportsbook.html?auth=login&build=20260425a#login">
-    <title>Redirecting to Login...</title>
+    <title>TrustMyRecord Login</title>
+    <style>
+        :root {
+            --bg: #081522;
+            --panel: #111728;
+            --panel-2: #161c2f;
+            --text: #f5f7fb;
+            --muted: #93a4bf;
+            --border: rgba(91, 214, 220, 0.22);
+            --cyan: #33e6df;
+            --green: #b7e53c;
+            --danger: #ff8f8f;
+            --danger-bg: rgba(255, 107, 107, 0.12);
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, system-ui, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(43, 226, 216, 0.16), transparent 32%),
+                linear-gradient(180deg, #0a1624 0%, #081421 100%);
+            color: var(--text);
+            display: grid;
+            place-items: center;
+            padding: 32px 20px;
+        }
+
+        .shell {
+            width: min(100%, 540px);
+            background: linear-gradient(180deg, rgba(17, 23, 40, 0.98), rgba(12, 18, 31, 0.98));
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.42);
+            overflow: hidden;
+        }
+
+        .brand {
+            padding: 28px 32px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .brand a {
+            color: inherit;
+            text-decoration: none;
+            font-weight: 900;
+            font-size: 34px;
+            letter-spacing: -0.04em;
+        }
+
+        .brand a span { color: var(--cyan); }
+
+        .content {
+            padding: 30px 32px 34px;
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            font-size: 42px;
+            line-height: 1;
+            letter-spacing: -0.04em;
+        }
+
+        h1 .accent { color: var(--green); }
+
+        p.sub {
+            margin: 0 0 28px;
+            color: var(--muted);
+            font-size: 19px;
+            line-height: 1.5;
+        }
+
+        .field {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        input {
+            width: 100%;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            background: #e7eef9;
+            color: #101625;
+            padding: 17px 18px;
+            font-size: 30px;
+            line-height: 1.1;
+        }
+
+        .meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin: 8px 0 18px;
+        }
+
+        .meta a {
+            color: var(--cyan);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .remember {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .remember input {
+            width: 18px;
+            height: 18px;
+            padding: 0;
+        }
+
+        .message {
+            display: none;
+            margin: 0 0 16px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .message.error {
+            display: block;
+            border-color: rgba(255, 107, 107, 0.35);
+            background: var(--danger-bg);
+            color: #ffd5d5;
+        }
+
+        .message.success {
+            display: block;
+            border-color: rgba(51, 230, 223, 0.28);
+            background: rgba(51, 230, 223, 0.08);
+            color: #d7ffff;
+        }
+
+        .submit {
+            width: 100%;
+            border: 0;
+            border-radius: 999px;
+            padding: 18px 20px;
+            font-size: 17px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            color: #081320;
+            background: linear-gradient(90deg, #ffe800 0%, #32e6df 100%);
+            cursor: pointer;
+        }
+
+        .submit[disabled] {
+            opacity: 0.72;
+            cursor: wait;
+        }
+
+        .switch {
+            margin-top: 22px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 15px;
+        }
+
+        .switch a {
+            color: var(--text);
+            font-weight: 800;
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
+    <div class="shell">
+        <div class="brand">
+            <a href="/">TRUST<span>MY</span>RECORD</a>
+        </div>
+        <div class="content">
+            <h1>Welcome <span class="accent">Back</span></h1>
+            <p class="sub">Log in directly to your real TrustMyRecord account without the sportsbook page getting in the way.</p>
+
+            <form id="direct-login-form">
+                <div class="field">
+                    <label for="loginValue">Email or Username</label>
+                    <input id="loginValue" name="loginValue" type="text" autocomplete="username" required>
+                </div>
+
+                <div class="field">
+                    <label for="passwordValue">Password</label>
+                    <input id="passwordValue" name="passwordValue" type="password" autocomplete="current-password" required>
+                </div>
+
+                <div class="meta">
+                    <label class="remember"><input id="rememberValue" type="checkbox" checked> Remember me</label>
+                    <a id="resetLink" href="/reset-password/">Forgot password?</a>
+                </div>
+
+                <div id="message" class="message"></div>
+
+                <button id="submitBtn" class="submit" type="submit">LOG IN</button>
+            </form>
+
+            <div class="switch">Need an account? <a href="/register/">Create one here</a></div>
+        </div>
+    </div>
+
+    <script src="/static/js/config.js?v=20260317"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+    <script src="/static/js/auth-persistent.js?v=20260424a"></script>
     <script>
-        window.location.replace('/sportsbook.html?auth=login&build=20260425a#login');
+        (function() {
+            function setMessage(text, type) {
+                const message = document.getElementById('message');
+                message.className = 'message' + (type ? ' ' + type : '');
+                message.textContent = text || '';
+                message.style.display = text ? 'block' : 'none';
+            }
+
+            async function persistBackendLogin(userData, rememberMe) {
+                if (!window.auth) return;
+                const loginValue = userData.username || userData.email || '';
+                window.auth.currentUser = {
+                    id: userData.id || ('user_' + Date.now()),
+                    username: userData.username || loginValue,
+                    email: userData.email || '',
+                    displayName: userData.displayName || userData.username || loginValue,
+                    avatar: userData.avatarUrl || (typeof window.auth.getDefaultAvatar === 'function' ? window.auth.getDefaultAvatar(userData.username || loginValue) : ''),
+                    bio: userData.bio || '',
+                    joinedDate: userData.created_at || new Date().toISOString(),
+                    verified: !!userData.emailVerified,
+                    stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
+                    social: { followers: [], following: [], reputation: 0, badges: [] },
+                    isPremium: false,
+                    backendUser: true
+                };
+                if (typeof window.auth.setRememberMe === 'function') window.auth.setRememberMe(rememberMe);
+                if (typeof window.auth.persistSession === 'function') window.auth.persistSession();
+            }
+
+            document.getElementById('direct-login-form').addEventListener('submit', async function(event) {
+                event.preventDefault();
+                const login = String(document.getElementById('loginValue').value || '').trim();
+                const password = document.getElementById('passwordValue').value || '';
+                const rememberMe = !!document.getElementById('rememberValue').checked;
+                const resetLink = document.getElementById('resetLink');
+                const submitBtn = document.getElementById('submitBtn');
+
+                resetLink.href = '/reset-password/?login=' + encodeURIComponent(login);
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'LOGGING IN...';
+                setMessage('', '');
+
+                try {
+                    if (!window.api || typeof window.api.login !== 'function') {
+                        throw new Error('Login service unavailable. Refresh and try again.');
+                    }
+
+                    if (window.api.ready) {
+                        try { await window.api.ready; } catch (error) {}
+                    }
+
+                    const result = await window.api.login(login, password);
+                    await persistBackendLogin(result.user || {}, rememberMe);
+                    window.location.replace('/profile.html');
+                } catch (error) {
+                    setMessage(error && error.message ? error.message : 'Login failed.', 'error');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'LOG IN';
+                }
+            });
+        })();
     </script>
 </body>
 </html>
