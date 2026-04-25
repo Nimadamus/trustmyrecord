@@ -2,6 +2,61 @@
 // v2.0 - Apr 12, 2026
 
 // Wrap everything in try-catch to catch any errors
+async function directBackendLoginFallback(usernameOrEmail, password, rememberMe) {
+    const baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.api && CONFIG.api.baseUrl)
+        ? String(CONFIG.api.baseUrl).replace(/\/+$/, '')
+        : 'https://trustmyrecord-api.onrender.com/api';
+
+    const response = await fetch(baseUrl + '/auth/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            login: usernameOrEmail,
+            password
+        })
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        const error = new Error(data.error || data.message || 'Login failed');
+        error.code = data.code;
+        error.data = data;
+        throw error;
+    }
+
+    if (typeof api !== 'undefined' && typeof api.saveTokens === 'function') {
+        api.saveTokens(data.accessToken || data.access_token, data.refreshToken || data.refresh_token);
+    }
+
+    const userData = data.user || {};
+    const user = {
+        id: userData.id || (typeof auth !== 'undefined' && typeof auth.generateUserId === 'function' ? auth.generateUserId() : ('user_' + Date.now())),
+        username: userData.username || usernameOrEmail,
+        email: userData.email || '',
+        displayName: userData.displayName || userData.username || usernameOrEmail,
+        avatar: userData.avatarUrl || (typeof auth !== 'undefined' && typeof auth.getDefaultAvatar === 'function' ? auth.getDefaultAvatar(userData.username || usernameOrEmail) : ''),
+        bio: userData.bio || '',
+        joinedDate: userData.created_at || new Date().toISOString(),
+        verified: !!userData.emailVerified,
+        stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
+        social: { followers: [], following: [], reputation: 0, badges: [] },
+        isPremium: false,
+        backendUser: true
+    };
+
+    if (typeof auth !== 'undefined') {
+        auth.currentUser = user;
+        if (typeof auth.setRememberMe === 'function') auth.setRememberMe(rememberMe);
+        if (typeof auth.persistSession === 'function') auth.persistSession();
+        if (typeof auth.updateUIForLoggedInUser === 'function') auth.updateUIForLoggedInUser();
+    }
+
+    return user;
+}
+
 async function handleLogin(event) {
     event.preventDefault();
     event.stopPropagation();
@@ -34,7 +89,16 @@ async function handleLogin(event) {
         const rememberMe = rememberMeEl ? rememberMeEl.checked : true;
 
         // Attempt login via backend-aware auth system
-        const user = await auth.login(email, password, rememberMe);
+        let user;
+        try {
+            user = await auth.login(email, password, rememberMe);
+        } catch (error) {
+            if (error && error.message === 'Invalid credentials') {
+                user = await directBackendLoginFallback(email, password, rememberMe);
+            } else {
+                throw error;
+            }
+        }
 
         // Reset form
         const loginForm = document.getElementById('loginForm');
