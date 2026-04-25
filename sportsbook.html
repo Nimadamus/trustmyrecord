@@ -16082,7 +16082,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Navigation functionality
-        function showSection(sectionId) {
+        function getActivePageSectionId() {
+            const activeSection = document.querySelector('.page-section.active');
+            return activeSection ? activeSection.id : '';
+        }
+
+        function showSection(sectionId, options = {}) {
+            const preserveScroll = !!options.preserveScroll;
+            const currentSectionId = getActivePageSectionId();
+            if (currentSectionId === sectionId) {
+                return;
+            }
+
             // Hide all sections
             const sections = document.querySelectorAll('.page-section');
             sections.forEach(section => section.classList.remove('active'));
@@ -16098,8 +16109,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // Add active class to clicked nav item (if it exists)
             try { if (window.event && window.event.target && window.event.target.classList) window.event.target.classList.add('active'); } catch(e) {}
 
-            // Scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Scroll to top only when changing sections intentionally.
+            if (!preserveScroll) {
+                window.scrollTo({ top: 0, behavior: 'auto' });
+            }
 
             // Update stats when showing home
             if (sectionId === 'home') {
@@ -20329,8 +20342,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const hashSection = rawHashSection === 'register' ? 'signup' : rawHashSection;
         const target = document.getElementById(hashSection);
         if (!target || !target.classList.contains('page-section')) return;
+        if (getActivePageSectionId() === hashSection) return;
         if (typeof window.showSection === 'function') {
-            window.showSection(hashSection);
+            window.showSection(hashSection, { preserveScroll: true });
         }
     }
 
