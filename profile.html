@@ -2684,6 +2684,22 @@
             console.error('[Profile] API unavailable for picks loading.');
         }
 
+        if (!picks.length && api && typeof api.request === 'function' && profileData && profileData.username) {
+            let hasMoreByUsername = true, usernameOffset = 0;
+            while (hasMoreByUsername) {
+                try {
+                    const data = await api.request('/picks?username=' + encodeURIComponent(profileData.username) + '&limit=100&offset=' + usernameOffset);
+                    const batch = data && Array.isArray(data.picks) ? data.picks : [];
+                    picks = picks.concat(batch);
+                    hasMoreByUsername = data && data.pagination ? data.pagination.hasMore : (batch.length === 100);
+                    usernameOffset += batch.length;
+                    if (batch.length === 0) hasMoreByUsername = false;
+                } catch (e) {
+                    hasMoreByUsername = false;
+                }
+            }
+        }
+
         const recoveredLocalPicks = !picks.length ? getRecoveredLocalPicks() : [];
         if (!picks.length && recoveredLocalPicks.length) {
             picks = recoveredLocalPicks;
