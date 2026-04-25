@@ -1,5 +1,17 @@
 // Live login hotfix - bypass stale cached auth wrappers when needed
 (function() {
+    function setLoginSubmitState(isBusy) {
+        const loginForm = document.getElementById('loginForm') || document.getElementById('login-form');
+        if (!loginForm) return;
+        const submitButton = loginForm.querySelector('button[type="submit"]');
+        if (!submitButton) return;
+        if (!submitButton.dataset.originalText) {
+            submitButton.dataset.originalText = submitButton.textContent || 'LOGIN';
+        }
+        submitButton.disabled = !!isBusy;
+        submitButton.textContent = isBusy ? 'LOGGING IN...' : submitButton.dataset.originalText;
+    }
+
     async function directBackendLoginFallback(usernameOrEmail, password, rememberMe) {
         const baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.api && CONFIG.api.baseUrl)
             ? String(CONFIG.api.baseUrl).replace(/\/+$/, '')
@@ -58,6 +70,9 @@
     async function enhancedHandleLogin(event) {
         event.preventDefault();
         event.stopPropagation();
+        if (typeof event.stopImmediatePropagation === 'function') {
+            event.stopImmediatePropagation();
+        }
 
         const loginValue = String(document.getElementById('loginEmail')?.value || '').trim();
         const password = document.getElementById('loginPassword')?.value || '';
@@ -72,6 +87,7 @@
         if (forgotPasswordLink) {
             forgotPasswordLink.href = '/reset-password/' + (loginValue ? ('?login=' + encodeURIComponent(loginValue)) : '');
         }
+        setLoginSubmitState(true);
 
         try {
             let user;
@@ -97,9 +113,12 @@
             const postAuthRedirect = sessionStorage.getItem('tmr_post_auth_redirect');
             if (postAuthRedirect) {
                 sessionStorage.removeItem('tmr_post_auth_redirect');
-                if (typeof window.showSection === 'function') window.showSection(postAuthRedirect);
-            } else if (typeof window.showSection === 'function') {
-                window.showSection('profile');
+                if (typeof window.showSection === 'function') {
+                    try { window.showSection(postAuthRedirect); } catch (e) {}
+                }
+            } else {
+                window.location.href = '/profile/';
+                return;
             }
 
             if (typeof updateHeroCta === 'function') updateHeroCta();
@@ -123,20 +142,37 @@
                 return;
             }
             alert('Login failed: ' + (error && error.message ? error.message : 'Unknown error'));
+        } finally {
+            setLoginSubmitState(false);
         }
     }
 
     function bindEnhancedLogin() {
         const loginForm = document.getElementById('loginForm') || document.getElementById('login-form');
         if (!loginForm || loginForm.dataset.tmrEnhancedLoginBound === 'true') return;
+        loginForm.dataset.tmrEnhancedLoginBound = 'true';
         loginForm.onsubmit = null;
-        const newLoginForm = loginForm.cloneNode(true);
-        loginForm.parentNode.replaceChild(newLoginForm, loginForm);
-        newLoginForm.dataset.tmrEnhancedLoginBound = 'true';
-        newLoginForm.addEventListener('submit', enhancedHandleLogin);
+        loginForm.addEventListener('submit', enhancedHandleLogin, true);
     }
 
-    document.addEventListener('DOMContentLoaded', bindEnhancedLogin);
-    window.addEventListener('load', bindEnhancedLogin);
-    setTimeout(bindEnhancedLogin, 1200);
+    function neutralizeLegacyLoginHandler() {
+        if (typeof window.app === 'object' && window.app && typeof window.app.handleLogin === 'function') {
+            window.app.handleLogin = function(event) {
+                return enhancedHandleLogin(event);
+            };
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        neutralizeLegacyLoginHandler();
+        bindEnhancedLogin();
+    });
+    window.addEventListener('load', function() {
+        neutralizeLegacyLoginHandler();
+        bindEnhancedLogin();
+    });
+    setTimeout(function() {
+        neutralizeLegacyLoginHandler();
+        bindEnhancedLogin();
+    }, 1200);
 })();
