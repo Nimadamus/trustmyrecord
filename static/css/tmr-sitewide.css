@@ -45,12 +45,12 @@ body.tmr-site-shell nav.main-nav:not(.tmr-global-nav) {
 }
 
 .tmr-global-nav__inner {
-    width: min(1380px, calc(100% - 32px));
+    width: min(1600px, calc(100% - 32px));
     min-height: 74px;
     margin: 0 auto;
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: 14px;
+    gap: clamp(10px, 0.9vw, 18px);
     align-items: center;
 }
 
@@ -88,7 +88,7 @@ body.tmr-site-shell nav.main-nav:not(.tmr-global-nav) {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: clamp(8px, 1vw, 14px);
+    gap: clamp(6px, 0.8vw, 12px);
     flex-wrap: nowrap;
     min-width: 0;
     white-space: nowrap;
@@ -99,7 +99,7 @@ body.tmr-site-shell nav.main-nav:not(.tmr-global-nav) {
     color: #dce8f5;
     text-decoration: none;
     font-family: var(--tmr-display);
-    font-size: clamp(0.9rem, 0.96vw, 1.05rem);
+    font-size: clamp(0.82rem, 0.84vw, 0.98rem);
     font-weight: 800;
     letter-spacing: 0.055em;
     text-transform: uppercase;
@@ -114,8 +114,10 @@ body.tmr-site-shell nav.main-nav:not(.tmr-global-nav) {
 .tmr-global-nav__actions {
     display: inline-flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 8px;
     flex-wrap: nowrap;
+    min-width: 0;
 }
 
 .tmr-global-nav__button {
@@ -124,7 +126,7 @@ body.tmr-site-shell nav.main-nav:not(.tmr-global-nav) {
     justify-content: center;
     border: 1px solid var(--tmr-line);
     border-radius: 999px;
-    padding: 9px 12px;
+    padding: 9px 11px;
     background: rgba(255, 255, 255, 0.06);
     cursor: pointer;
     white-space: nowrap;
@@ -161,11 +163,47 @@ body.tmr-site-shell nav.main-nav:not(.tmr-global-nav) {
     align-items: center;
     gap: 10px;
     min-width: 0;
-    max-width: 280px;
+    max-width: min(240px, 100%);
     padding: 6px 8px 6px 6px;
     border: 1px solid rgba(45, 212, 191, 0.22);
     border-radius: 999px;
     background: rgba(45, 212, 191, 0.10);
+}
+
+@media (max-width: 1640px) {
+    .tmr-global-nav__inner {
+        width: min(100%, calc(100% - 28px));
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            "brand actions"
+            "links links";
+        row-gap: 10px;
+        align-items: center;
+        padding: 12px 0;
+    }
+
+    .tmr-global-nav__brand {
+        grid-area: brand;
+        min-width: 0;
+    }
+
+    .tmr-global-nav__links {
+        grid-area: links;
+        justify-content: flex-start;
+        overflow-x: auto;
+        padding-bottom: 2px;
+        scrollbar-width: none;
+    }
+
+    .tmr-global-nav__links::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tmr-global-nav__actions {
+        grid-area: actions;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
 }
 
 .tmr-global-nav__user:hover,

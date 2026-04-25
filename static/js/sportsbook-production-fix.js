@@ -791,9 +791,10 @@
             '.tmr-market-body{padding:0 20px 20px;display:none;}',
             '.tmr-market-card.open .tmr-market-body{display:block;}',
             '.tmr-family-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;margin-bottom:6px;}',
-            '.tmr-family-tab{padding:11px 14px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#9aa7b8;font-size:11px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease,transform .15s ease;}',
-            '.tmr-family-tab:hover{transform:translateY(-1px);border-color:rgba(255,255,255,0.16);}',
-            '.tmr-family-tab.active{background:color-mix(in srgb, var(--tmr-accent) 24%, rgba(255,255,255,0.02));border-color:color-mix(in srgb, var(--tmr-accent) 62%, white 38%);color:#f8fafc;box-shadow:0 10px 22px rgba(0,0,0,0.16);}',
+        '.tmr-family-tab{padding:11px 14px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#9aa7b8;font-size:11px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease,transform .15s ease;}',
+        '.tmr-family-tab:hover{transform:translateY(-1px);border-color:rgba(255,255,255,0.16);}',
+        '.tmr-family-tab.active{background:color-mix(in srgb, var(--tmr-accent) 24%, rgba(255,255,255,0.02));border-color:color-mix(in srgb, var(--tmr-accent) 62%, white 38%);color:#f8fafc;box-shadow:0 10px 22px rgba(0,0,0,0.16);}',
+        '.tmr-family-tab:disabled,.tmr-family-tab.disabled{cursor:not-allowed;opacity:0.42;color:#6f7d90;background:rgba(255,255,255,0.02);border-color:rgba(255,255,255,0.06);box-shadow:none;transform:none;}',
             '.tmr-group{margin-top:14px;border:1px solid rgba(255,255,255,0.05);border-radius:16px;background:rgba(255,255,255,0.02);padding:12px;}',
             '.tmr-group[data-scope="f5"]{display:none;}',
             '.tmr-market-card[data-scope="f5"] .tmr-group[data-scope="full"]{display:none;}',
@@ -1356,6 +1357,26 @@
         return labels[category] || 'Markets';
     }
 
+    function getPreferredFilters(game, availableCategories) {
+        const sportKey = String(game && game.sport_key || '').toLowerCase();
+        let preferred = ['game-lines', 'team-totals', 'first-5', 'segments', 'alt-lines', 'specials'];
+        if (sportKey.indexOf('icehockey_nhl') !== -1) {
+            preferred = ['game-lines', 'team-totals', 'segments', 'alt-lines', 'specials'];
+        } else if (sportKey.indexOf('basketball_') !== -1 || sportKey.indexOf('football_') !== -1) {
+            preferred = ['game-lines', 'team-totals', 'segments', 'alt-lines', 'specials'];
+        } else if (sportKey.indexOf('baseball_mlb') !== -1) {
+            preferred = ['game-lines', 'team-totals', 'first-5', 'alt-lines', 'specials'];
+        }
+
+        if (!availableCategories || !availableCategories.size) {
+            return preferred;
+        }
+
+        return preferred.filter(function(filter) {
+            return availableCategories.has(filter) || filter === 'game-lines' || filter === 'team-totals' || filter === 'first-5';
+        });
+    }
+
     function setCardScope(cardId, scope) {
         const card = document.getElementById(cardId);
         if (!card) return;
@@ -1444,15 +1465,20 @@
                 }
             });
 
-            const filterOrder = ['game-lines', 'team-totals', 'first-5', 'segments', 'alt-lines', 'specials'];
             const categorySet = new Set((orderedGroups || []).map(getGroupCategory));
-            const visibleFilters = filterOrder.filter(function(filter) {
+            const tabFilters = getPreferredFilters(game, categorySet);
+            const visibleFilters = tabFilters.filter(function(filter) {
                 return categorySet.has(filter);
             });
             const defaultFilter = visibleFilters.length ? visibleFilters[0] : 'all';
-            const familyTabsHtml = visibleFilters.length > 1
-                ? '<div class="tmr-family-tabs">' + visibleFilters.map(function(filter, filterIndex) {
-                    return '<button class="tmr-family-tab' + (filterIndex === 0 ? ' active' : '') + '" data-filter="' + filter + '" onclick="event.stopPropagation(); window.tmrSetCardFilter(\'' + cardId + '\', \'' + filter + '\')">' + escapeHtml(getFilterLabel(filter)) + '</button>';
+            const familyTabsHtml = tabFilters.length
+                ? '<div class="tmr-family-tabs">' + tabFilters.map(function(filter) {
+                    const available = categorySet.has(filter);
+                    const classes = 'tmr-family-tab' + (available && filter === defaultFilter ? ' active' : '') + (available ? '' : ' disabled');
+                    if (!available) {
+                        return '<button class="' + classes + '" type="button" data-filter="' + filter + '" disabled aria-disabled="true">' + escapeHtml(getFilterLabel(filter)) + '</button>';
+                    }
+                    return '<button class="' + classes + '" data-filter="' + filter + '" onclick="event.stopPropagation(); window.tmrSetCardFilter(\'' + cardId + '\', \'' + filter + '\')">' + escapeHtml(getFilterLabel(filter)) + '</button>';
                 }).join('') + '</div>'
                 : '';
 

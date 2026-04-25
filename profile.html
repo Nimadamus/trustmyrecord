@@ -10,7 +10,7 @@
     <meta property="og:title" content="User Profile | Trust My Record">
     <meta property="og:description" content="Check out my verified handicapping record and stats.">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260421e">
+<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260425b">
 <script defer src="static/js/tmr-sitewide.js?v=20260424b"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1820,10 +1820,42 @@
         body.tmr-site-shell.profile-page .profile-top-strip,
         body.tmr-site-shell.profile-page > header {
             display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            min-height: 0 !important;
+            max-height: 0 !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            box-shadow: none !important;
+        }
+
+        body.tmr-site-shell.profile-page .header-content,
+        body.tmr-site-shell.profile-page .nav-links {
+            display: none !important;
         }
 
         body.tmr-site-shell.profile-page .profile-header-section {
             padding-top: 28px;
+        }
+
+        body.tmr-site-shell.profile-page .profile-empty-ledger {
+            margin-top: 18px;
+            padding: 16px 18px;
+            border-radius: 16px;
+            border: 1px solid rgba(191, 201, 214, 0.72);
+            background: rgba(246, 249, 252, 0.94);
+            color: #41546b;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+        }
+
+        body.tmr-site-shell.profile-page .profile-empty-ledger strong {
+            color: #162231;
+        }
+
+        body.tmr-site-shell.profile-page .profile-empty-ledger p + p {
+            margin-top: 8px;
         }
 
         body.tmr-site-shell.profile-page .tmr-route-note {
@@ -2706,12 +2738,19 @@
         const totalPicks = Number(p.total_picks || p.totalPicks || 0);
         const verifiedText = String(p.verification_status || '').toLowerCase() === 'verified' ? 'Verified' : 'Unverified';
         const recordText = Number(p.wins || 0) + '-' + Number(p.losses || 0) + '-' + Number(p.pushes || 0);
+        const showEmptyLedgerNote = isOwnProfile && totalPicks === 0 && !p.__recoveredFromLocal;
         const trustPills = '<div class="profile-trust-row">' +
             '<span class="profile-trust-pill"><i class="fas fa-user"></i> Member since <strong>' + joinDate + '</strong></span>' +
             '<span class="profile-trust-pill"><i class="fas fa-chart-simple"></i> Record <strong>' + recordText + '</strong></span>' +
             '<span class="profile-trust-pill"><i class="fas fa-database"></i> Ledger <strong>' + totalPicks + ' tracked picks</strong></span>' +
             (p.__recoveredFromLocal ? '<span class="profile-trust-pill"><i class="fas fa-rotate-left"></i> Legacy recovery <strong>Browser ledger restored</strong></span>' : '') +
             '</div>';
+        const emptyLedgerNote = showEmptyLedgerNote
+            ? '<div class="profile-empty-ledger">' +
+                '<p><strong>No live tracked picks are currently tied to this backend account.</strong></p>' +
+                '<p>If your older BetLegend record came from the browser-only build, it can only be restored from the original browser or device that still has that local history.</p>' +
+              '</div>'
+            : '';
         const rail = '<div class="profile-rail">' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Member Since</span><span class="profile-rail-value">' + joinDate + '</span></div>' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Leaderboard Rank</span><span class="profile-rail-value">' + rankText + '</span></div>' +
@@ -2739,6 +2778,7 @@
             '<div class="profile-handle">@' + p.username + '</div>' +
             trustPills +
             (p.bio ? '<div class="profile-bio">' + p.bio + '</div>' : '') +
+            emptyLedgerNote +
             '<div class="profile-meta">' +
             '<span class="profile-meta-item">Followers ' + (Number(p.follower_count) || 0) + '</span>' +
             '<span class="profile-meta-item">Following ' + (Number(p.following_count) || 0) + '</span>' +
