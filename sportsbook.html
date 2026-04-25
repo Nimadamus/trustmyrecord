@@ -17233,6 +17233,18 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('[TMR] Backend API URL:', CONFIG?.api?.baseUrl);
         console.log('[TMR] Backend mode:', CONFIG?.features?.useBackendAPI ? 'ENABLED' : 'DISABLED (localStorage fallback)');
     </script>
+    <script>
+        (function() {
+            var params = new URLSearchParams(window.location.search || '');
+            var build = params.get('build') || '';
+            var rawHash = (window.location.hash || '').replace(/^#/, '').trim().toLowerCase();
+            var authRoute = params.get('auth') || '';
+            if ((rawHash === 'login' || rawHash === 'register' || rawHash === 'signup' || authRoute === 'login' || authRoute === 'register') && build !== '20260425a') {
+                var targetAuth = authRoute || (rawHash === 'login' ? 'login' : 'register');
+                window.location.replace('/sportsbook.html?auth=' + targetAuth + '&build=20260425a#' + (targetAuth === 'login' ? 'login' : 'register'));
+            }
+        })();
+    </script>
 <script src="static/js/forms-fixed.js?v=20260424b"></script>
 <script src="static/js/forms-login-fix.js?v=20260424b"></script>
     <script>

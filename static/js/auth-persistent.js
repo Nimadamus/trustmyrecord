@@ -345,7 +345,7 @@ class PersistentAuthSystem {
         // Restore header auth buttons to Login
         const headerAuthButtons = document.getElementById('headerAuthButtons');
         if (headerAuthButtons) {
-                    headerAuthButtons.innerHTML = '<button onclick="if(typeof showSection===\'function\'){showSection(\'login\')}else{window.location.href=\'/sportsbook.html#login\'}" class="btn btn-primary" style="padding: 8px 20px; font-size: 14px;">Login</button>';
+                    headerAuthButtons.innerHTML = '<button onclick="if(typeof showSection===\'function\'){showSection(\'login\')}else{window.location.href=\'/login/\'}" class="btn btn-primary" style="padding: 8px 20px; font-size: 14px;">Login</button>';
         }
     }
 
