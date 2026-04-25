@@ -1817,6 +1817,15 @@
             color: #162231 !important;
         }
 
+        body.tmr-site-shell.profile-page .profile-top-strip,
+        body.tmr-site-shell.profile-page > header {
+            display: none !important;
+        }
+
+        body.tmr-site-shell.profile-page .profile-header-section {
+            padding-top: 28px;
+        }
+
         body.tmr-site-shell.profile-page .tmr-route-note {
             border-color: rgba(191, 201, 214, 0.72);
             background: rgba(255, 255, 255, 0.92);
@@ -2076,6 +2085,7 @@
     let currentLeaderboardRank = null;
     let currentTableSort = 'date_desc';
     let currentPageSize = 25;
+    let usingRecoveredLocalPicks = false;
     const MARKET_TYPE_GROUPS = [
         { key: 'moneyline', label: 'Moneyline', types: ['h2h', 'moneyline'] },
         { key: 'spreads', label: 'Spread', types: ['spreads', 'spread'] },
@@ -2244,6 +2254,154 @@
     function normalizeStatus(status) {
         const raw = String(status || 'pending').toLowerCase();
         return raw === 'pushed' ? 'push' : raw;
+    }
+
+    function getProfileIdentityCandidates() {
+        const candidates = new Set();
+        const addCandidate = function(value) {
+            const normalized = String(value || '').trim().toLowerCase();
+            if (normalized) candidates.add(normalized);
+        };
+
+        addCandidate(profileUsername);
+        addCandidate(currentUser && currentUser.username);
+        addCandidate(currentUser && currentUser.id);
+        addCandidate(profileData && profileData.username);
+        addCandidate(profileData && profileData.id);
+
+        try {
+            const localCurrentUser = JSON.parse(localStorage.getItem('tmr_user') || 'null');
+            if (localCurrentUser) {
+                addCandidate(localCurrentUser.username);
+                addCandidate(localCurrentUser.id);
+            }
+        } catch (error) {}
+
+        try {
+            const localUsers = JSON.parse(localStorage.getItem('tmr_users') || '[]');
+            localUsers.forEach(function(user) {
+                if (String(user && user.username || '').trim().toLowerCase() === String(profileUsername || '').trim().toLowerCase()) {
+                    addCandidate(user.username);
+                    addCandidate(user.id);
+                }
+            });
+        } catch (error) {}
+
+        try {
+            const legacyUsers = JSON.parse(localStorage.getItem('trustmyrecord_users') || '[]');
+            legacyUsers.forEach(function(user) {
+                if (String(user && user.username || '').trim().toLowerCase() === String(profileUsername || '').trim().toLowerCase()) {
+                    addCandidate(user.username);
+                    addCandidate(user.id);
+                }
+            });
+        } catch (error) {}
+
+        return candidates;
+    }
+
+    function readLegacyPickStorage() {
+        const stored = [];
+        ['tmr_picks', 'trustmyrecord_picks'].forEach(function(key) {
+            try {
+                const parsed = JSON.parse(localStorage.getItem(key) || '[]');
+                if (Array.isArray(parsed) && parsed.length) {
+                    stored.push.apply(stored, parsed);
+                }
+            } catch (error) {}
+        });
+        return stored;
+    }
+
+    function normalizeLegacyProfilePick(rawPick, index) {
+        if (!rawPick || typeof rawPick !== 'object') return null;
+
+        const createdAt = rawPick.locked_at || rawPick.created_at || rawPick.createdAt || rawPick.timestamp || new Date().toISOString();
+        const status = normalizeStatus(rawPick.status || rawPick.result || rawPick.pick_result || rawPick.outcome || 'pending');
+        const unitsValue = Number(
+            rawPick.units != null ? rawPick.units :
+            rawPick.betUnits != null ? rawPick.betUnits :
+            rawPick.unit_size != null ? rawPick.unit_size :
+            1
+        );
+        const oddsValue = Number(
+            rawPick.odds_snapshot != null ? rawPick.odds_snapshot :
+            rawPick.odds != null ? rawPick.odds :
+            rawPick.price != null ? rawPick.price :
+            -110
+        );
+        const resultUnits = rawPick.result_units != null
+            ? Number(rawPick.result_units)
+            : rawPick.unitsWon != null
+                ? Number(rawPick.unitsWon)
+                : null;
+        const awayTeam = rawPick.away_team || rawPick.awayTeam || rawPick.team_away || '';
+        const homeTeam = rawPick.home_team || rawPick.homeTeam || rawPick.team_home || '';
+
+        return {
+            id: rawPick.id || ('legacy_pick_' + index + '_' + createdAt),
+            userId: rawPick.userId || rawPick.user_id || rawPick.user || '',
+            username: rawPick.username || rawPick.user_name || rawPick.authorUsername || profileUsername || '',
+            sport_key: rawPick.sport_key || rawPick.sportKey || rawPick.sport || rawPick.league || 'unknown',
+            away_team: awayTeam,
+            home_team: homeTeam,
+            event_name: rawPick.event_name || rawPick.matchup || rawPick.game || rawPick.gameName || [awayTeam, homeTeam].filter(Boolean).join(' @ '),
+            selection: rawPick.selection || rawPick.pick || rawPick.pickName || rawPick.label || rawPick.team || rawPick.side || 'Tracked pick',
+            market_type: rawPick.market_type || rawPick.marketType || rawPick.pickType || rawPick.betType || 'h2h',
+            line_snapshot: rawPick.line_snapshot != null ? rawPick.line_snapshot : (rawPick.line != null ? rawPick.line : (rawPick.point != null ? rawPick.point : null)),
+            odds_snapshot: Number.isFinite(oddsValue) ? oddsValue : -110,
+            units: Number.isFinite(unitsValue) ? unitsValue : 1,
+            status: status,
+            locked_at: createdAt,
+            created_at: createdAt,
+            result_units: Number.isFinite(resultUnits) ? resultUnits : null,
+            book_title: rawPick.book_title || rawPick.book || rawPick.sportsbook || 'Legacy tracker',
+            notes: rawPick.notes || rawPick.writeup || ''
+        };
+    }
+
+    function getRecoveredLocalPicks() {
+        if (!isOwnProfile) return [];
+        const candidates = getProfileIdentityCandidates();
+        if (!candidates.size) return [];
+
+        return readLegacyPickStorage()
+            .filter(function(rawPick) {
+                const ownerValues = [
+                    rawPick.userId,
+                    rawPick.user_id,
+                    rawPick.username,
+                    rawPick.user_name,
+                    rawPick.authorUsername,
+                    rawPick.user,
+                    rawPick.created_by
+                ].map(function(value) {
+                    return String(value || '').trim().toLowerCase();
+                }).filter(Boolean);
+                return ownerValues.some(function(value) { return candidates.has(value); });
+            })
+            .map(normalizeLegacyProfilePick)
+            .filter(Boolean)
+            .sort(function(a, b) {
+                return new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0);
+            });
+    }
+
+    function applyRecoveredProfileStats(picks) {
+        if (!profileData || !Array.isArray(picks) || !picks.length) return;
+        const stats = computeUnifiedStats(picks);
+        profileData = Object.assign({}, profileData, {
+            total_picks: picks.length,
+            totalPicks: picks.length,
+            wins: stats.wins,
+            losses: stats.losses,
+            pushes: stats.pushes,
+            pending_picks: stats.pending,
+            net_units: stats.netUnits,
+            roi: stats.roi,
+            win_rate: stats.winRate,
+            __recoveredFromLocal: true
+        });
     }
 
     function getClosingLineValue(pick) {
@@ -2465,8 +2623,8 @@
         }
 
         await refreshLeaderboardRank();
-        renderProfileHeader(profileData);
         await loadAllPicks();
+        renderProfileHeader(profileData);
         analyticsTrackPickHistoryView({
             view_type: isOwnProfile ? 'own' : 'public',
             username: profileData.username || profileUsername || '',
@@ -2492,6 +2650,15 @@
             }
         } else {
             console.error('[Profile] API unavailable for picks loading.');
+        }
+
+        const recoveredLocalPicks = !picks.length ? getRecoveredLocalPicks() : [];
+        if (!picks.length && recoveredLocalPicks.length) {
+            picks = recoveredLocalPicks;
+            usingRecoveredLocalPicks = true;
+            applyRecoveredProfileStats(picks);
+        } else {
+            usingRecoveredLocalPicks = false;
         }
 
         picks.sort((a, b) => new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0));
@@ -2543,6 +2710,7 @@
             '<span class="profile-trust-pill"><i class="fas fa-user"></i> Member since <strong>' + joinDate + '</strong></span>' +
             '<span class="profile-trust-pill"><i class="fas fa-chart-simple"></i> Record <strong>' + recordText + '</strong></span>' +
             '<span class="profile-trust-pill"><i class="fas fa-database"></i> Ledger <strong>' + totalPicks + ' tracked picks</strong></span>' +
+            (p.__recoveredFromLocal ? '<span class="profile-trust-pill"><i class="fas fa-rotate-left"></i> Legacy recovery <strong>Browser ledger restored</strong></span>' : '') +
             '</div>';
         const rail = '<div class="profile-rail">' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Member Since</span><span class="profile-rail-value">' + joinDate + '</span></div>' +
@@ -2616,7 +2784,7 @@
             summaryStat('Win %', merged.winRate.toFixed(1) + '%', merged.wins + ' wins / ' + merged.losses + ' losses') +
             summaryStat('Units Won', formatSignedUnits(merged.netUnits), gradedPicks + ' graded picks', nc) +
             summaryStat('ROI', (merged.roi >= 0 ? '+' : '') + merged.roi.toFixed(1) + '%', 'Return on risked units', rc) +
-            summaryStat('Total Picks', String(s.total), ledger.pending ? ledger.pending + ' pending' : 'All visible picks') +
+            summaryStat('Total Picks', String(s.total), usingRecoveredLocalPicks ? 'Recovered from this browser' : (ledger.pending ? ledger.pending + ' pending' : 'All visible picks')) +
             summaryStat('Graded', String(gradedPicks), 'Settled record sample') +
             summaryStat('Pending', String(ledger.pending), 'Open picks awaiting grade') +
             summaryStat('Average Odds', merged.avgOdds != null ? formatOddsValue(merged.avgOdds) : '--', 'Average market price') +
