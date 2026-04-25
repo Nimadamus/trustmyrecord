@@ -563,19 +563,15 @@
         } catch (error) {}
 
         forceSectionActive(requested);
-        let attempts = 0;
-        const interval = window.setInterval(function() {
-            attempts += 1;
-            forceSectionActive(requested);
-            if (typeof window.showSection === 'function') {
-                try {
-                    window.showSection(requested);
-                } catch (error) {}
-            }
-            if (attempts >= 10) {
-                window.clearInterval(interval);
-            }
-        }, 400);
+
+        if (typeof window.showSection === 'function') {
+            try {
+                const activeSection = document.querySelector('.page-section.active');
+                if (!activeSection || activeSection.id !== requested) {
+                    window.showSection(requested, { preserveScroll: true });
+                }
+            } catch (error) {}
+        }
     }
 
     function renderBoardIfCurrent(requestId, sport, badge, response) {
