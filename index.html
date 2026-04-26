@@ -1921,40 +1921,104 @@
             min-width: 0;
         }
 
-        .preview-shell {
-            display: grid;
-            gap: 16px;
+        .hero-showcase {
+            position: relative;
             height: 100%;
+            min-height: 720px;
             border: 1px solid rgba(255,255,255,0.10);
             border-radius: 34px;
-            padding: clamp(24px, 2.8vw, 34px);
+            padding: 26px;
             background:
                 linear-gradient(180deg, rgba(18, 29, 48, 0.96), rgba(8, 14, 26, 0.98)),
                 radial-gradient(circle at 100% 0%, rgba(45, 212, 191, 0.12), transparent 34%);
             box-shadow: 0 34px 90px rgba(0,0,0,0.28);
-            position: relative;
             overflow: hidden;
         }
 
-        .preview-shell::before {
-            content: "";
+        .hero-showcase-glow {
             position: absolute;
-            inset: 0;
+            inset: auto auto -14% -8%;
+            width: 320px;
+            height: 320px;
+            border-radius: 999px;
+            background: radial-gradient(circle, rgba(0, 240, 255, 0.18), transparent 68%);
             pointer-events: none;
-            opacity: 0.35;
+        }
+
+        .hero-showcase-media {
+            position: absolute;
+            inset: 20px 20px 20px 20px;
+            display: grid;
+            place-items: center;
+            border-radius: 28px;
             background:
-                linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
-            background-size: 34px 34px;
-            mask-image: linear-gradient(180deg, black, transparent 92%);
+                radial-gradient(circle at 100% 0%, rgba(255,255,255,0.12), transparent 30%),
+                linear-gradient(180deg, rgba(5, 9, 17, 0.84), rgba(8, 14, 26, 0.96));
+            overflow: hidden;
         }
 
-        .preview-shell > * {
-            position: relative;
-            z-index: 1;
+        .hero-showcase-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center center;
+            display: block;
+            transform: scale(1.02);
         }
 
-        .preview-shell-head,
+        .hero-showcase-card {
+            position: absolute;
+            z-index: 2;
+            max-width: 320px;
+            border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 22px;
+            padding: 16px 18px;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)),
+                rgba(7, 12, 23, 0.88);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 46px rgba(0,0,0,0.24);
+        }
+
+        .hero-showcase-card--top {
+            top: 26px;
+            left: 26px;
+        }
+
+        .hero-showcase-card--bottom {
+            right: 26px;
+            bottom: 26px;
+        }
+
+        .hero-showcase-card small,
+        .preview-module-head,
+        .bento-card-top {
+            display: block;
+            color: #86f2e0;
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .hero-showcase-card strong {
+            display: block;
+            margin-top: 8px;
+            font-family: var(--display);
+            font-size: 1.32rem;
+            line-height: 1.02;
+            letter-spacing: -0.01em;
+        }
+
+        .hero-showcase-card span {
+            display: block;
+            margin-top: 8px;
+            color: #d7e4f2;
+            font-size: 0.86rem;
+            line-height: 1.45;
+            font-weight: 650;
+        }
+
         .preview-module-head,
         .bento-card-top {
             display: flex;
@@ -1963,43 +2027,6 @@
             gap: 12px;
         }
 
-        .preview-tabs {
-            display: inline-flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .preview-tabs span,
-        .preview-status {
-            border-radius: 999px;
-            padding: 9px 12px;
-            font-size: 0.74rem;
-            font-weight: 900;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-
-        .preview-tabs span {
-            color: #b8c7d8;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.10);
-        }
-
-        .preview-tabs .is-active,
-        .preview-status {
-            color: #08121f;
-            border: 1px solid transparent;
-            background: linear-gradient(135deg, #d6fd67, #2dd4bf);
-        }
-
-        .preview-primary-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 1.18fr) minmax(260px, 0.82fr);
-            gap: 14px;
-        }
-
-        .preview-ticket,
-        .preview-rail,
         .preview-module,
         .bento-card {
             border: 1px solid rgba(255,255,255,0.10);
@@ -2010,14 +2037,7 @@
             box-shadow: 0 20px 54px rgba(0,0,0,0.18);
         }
 
-        .preview-ticket {
-            display: grid;
-            gap: 16px;
-            padding: 20px;
-        }
-
         .preview-module-head span,
-        .ticket-matchup strong,
         .bento-card h3 {
             font-family: var(--display);
             letter-spacing: -0.01em;
@@ -2028,9 +2048,6 @@
         }
 
         .preview-module-head small,
-        .ticket-matchup label,
-        .ticket-market small,
-        .preview-kpi small,
         .activity-row b,
         .snapshot-grid small {
             color: #85f4dd;
@@ -2038,80 +2055,6 @@
             font-weight: 900;
             letter-spacing: 0.1em;
             text-transform: uppercase;
-        }
-
-        .ticket-matchup {
-            display: flex;
-            justify-content: space-between;
-            gap: 16px;
-            align-items: end;
-        }
-
-        .ticket-matchup strong {
-            display: block;
-            margin-top: 8px;
-            font-size: 2rem;
-            line-height: 0.98;
-        }
-
-        .ticket-matchup span {
-            color: #d1deec;
-            font-size: 0.86rem;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        .ticket-market-row {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 12px;
-        }
-
-        .ticket-market {
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 18px;
-            padding: 14px;
-            background: rgba(255,255,255,0.04);
-        }
-
-        .ticket-market b {
-            display: block;
-            margin-top: 8px;
-            font-size: 1.18rem;
-        }
-
-        .ticket-footer {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .ticket-footer span {
-            border-radius: 999px;
-            padding: 8px 10px;
-            background: rgba(255,255,255,0.05);
-            color: #d7e4f2;
-            font-size: 0.76rem;
-            font-weight: 800;
-        }
-
-        .preview-rail {
-            display: grid;
-            gap: 12px;
-            padding: 18px;
-        }
-
-        .preview-kpi {
-            border-radius: 18px;
-            padding: 14px;
-            background: rgba(255,255,255,0.04);
-        }
-
-        .preview-kpi strong {
-            display: block;
-            margin-top: 8px;
-            font-size: 0.97rem;
-            line-height: 1.45;
         }
 
         .preview-lower-grid {
@@ -2452,7 +2395,6 @@
         @media (max-width: 1180px) {
             body.tmr-site-shell[data-tmr-route="index"] .hero,
             body:not(.tmr-site-shell) .hero,
-            .preview-primary-grid,
             .preview-lower-grid,
             .bento-grid,
             .social-proof-grid,
@@ -2461,7 +2403,6 @@
             }
 
             .hero-note-grid,
-            .ticket-market-row,
             .snapshot-grid,
             .bento-odds-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2501,7 +2442,6 @@
             }
 
             .hero-note-grid,
-            .ticket-market-row,
             .snapshot-grid,
             .bento-odds-grid {
                 grid-template-columns: 1fr;
@@ -2511,9 +2451,24 @@
                 grid-template-columns: 1fr;
             }
 
-            .ticket-matchup {
-                align-items: start;
-                flex-direction: column;
+            .hero-showcase {
+                min-height: 560px;
+                padding: 16px;
+            }
+
+            .hero-showcase-card {
+                max-width: 240px;
+                padding: 12px 14px;
+            }
+
+            .hero-showcase-card--top {
+                top: 16px;
+                left: 16px;
+            }
+
+            .hero-showcase-card--bottom {
+                right: 16px;
+                bottom: 16px;
             }
         }
     </style>
@@ -2576,91 +2531,21 @@
                     </div>
                 </div>
 
-                <div class="hero-preview" aria-label="TrustMyRecord product preview">
-                    <div class="preview-shell">
-                        <div class="preview-shell-head">
-                            <div class="preview-tabs">
-                                <span class="is-active">Make Picks</span>
-                                <span>Profile Record</span>
-                                <span>Live Feed</span>
-                            </div>
-                            <span class="preview-status">Live board preview</span>
+                <div class="hero-preview" aria-label="TrustMyRecord hero media">
+                    <div class="hero-showcase">
+                        <div class="hero-showcase-glow"></div>
+                        <div class="hero-showcase-card hero-showcase-card--top">
+                            <small>Locked ticket</small>
+                            <strong>Boston Bruins ML · -108</strong>
+                            <span>DraftKings synced · Receipt attached</span>
                         </div>
-
-                        <div class="preview-primary-grid">
-                            <article class="preview-ticket">
-                                <div class="preview-module-head">
-                                    <span>Locked pick receipt</span>
-                                    <small>DraftKings sync</small>
-                                </div>
-                                <div class="ticket-matchup">
-                                    <div>
-                                        <label>NHL</label>
-                                        <strong>Buffalo Sabres @ Boston Bruins</strong>
-                                    </div>
-                                    <span>Apr 26 · 11:00 AM</span>
-                                </div>
-                                <div class="ticket-market-row">
-                                    <div class="ticket-market">
-                                        <small>Market</small>
-                                        <b>Boston Bruins ML</b>
-                                    </div>
-                                    <div class="ticket-market">
-                                        <small>Price</small>
-                                        <b>-108</b>
-                                    </div>
-                                    <div class="ticket-market">
-                                        <small>Units</small>
-                                        <b>1.0u</b>
-                                    </div>
-                                </div>
-                                <div class="ticket-footer">
-                                    <span>Locked 12:42 PM</span>
-                                    <span>Receipt ID attached</span>
-                                    <span>Ready to grade</span>
-                                </div>
-                            </article>
-
-                            <aside class="preview-rail">
-                                <div class="preview-kpi">
-                                    <small>Record sync</small>
-                                    <strong>Win, loss, units, ROI, streak, and CLV stay tied to one profile.</strong>
-                                </div>
-                                <div class="preview-kpi">
-                                    <small>Book-backed markets</small>
-                                    <strong>Game lines, team totals, innings, and alt markets render from the sportsbook feed.</strong>
-                                </div>
-                                <div class="preview-kpi">
-                                    <small>Social pressure</small>
-                                    <strong>Every take has a profile and every profile has a history behind it.</strong>
-                                </div>
-                            </aside>
+                        <div class="hero-showcase-media">
+                            <img src="static/media/steph-curry-hero.gif" alt="Steph Curry animated hero">
                         </div>
-
-                        <div class="preview-lower-grid">
-                            <article class="preview-module">
-                                <div class="preview-module-head">
-                                    <span>Recent locked picks</span>
-                                    <small>Activity rail</small>
-                                </div>
-                                <div class="activity-list">
-                                    <div class="activity-row"><b>MLB</b><span>Arizona Diamondbacks ML</span><small>Locked 2m ago</small></div>
-                                    <div class="activity-row"><b>NHL</b><span>Boston Bruins ML</span><small>Locked 4m ago</small></div>
-                                    <div class="activity-row"><b>NBA</b><span>Over 214.5</span><small>Locked 9m ago</small></div>
-                                </div>
-                            </article>
-                            <article class="preview-module">
-                                <div class="preview-module-head">
-                                    <span>Record snapshot</span>
-                                    <small>Profile dashboard</small>
-                                </div>
-                                <div class="snapshot-grid">
-                                    <div><small>Visible history</small><strong>Every graded play stays attached</strong></div>
-                                    <div><small>Market splits</small><strong>Sport, side, total, team total</strong></div>
-                                    <div><small>Credibility layer</small><strong>Followers can audit the archive</strong></div>
-                                    <div><small>Competitive loop</small><strong>Picks, feed, trivia, arena</strong></div>
-                                </div>
-                            </article>
+                        <div class="hero-showcase-card hero-showcase-card--bottom">
+                            <small>Public record</small>
+                            <strong>Every pick stays attached to the same profile.</strong>
+                            <span>Wins, losses, units, ROI, and streak all stay visible.</span>
                         </div>
                     </div>
                 </div>
