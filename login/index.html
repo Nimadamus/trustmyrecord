@@ -7,66 +7,116 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>TrustMyRecord Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #081522;
-            --panel: #111728;
-            --panel-2: #161c2f;
             --text: #f5f7fb;
             --muted: #93a4bf;
             --border: rgba(91, 214, 220, 0.22);
             --cyan: #33e6df;
             --green: #b7e53c;
-            --danger: #ff8f8f;
             --danger-bg: rgba(255, 107, 107, 0.12);
         }
 
         * { box-sizing: border-box; }
+
         body {
             margin: 0;
             min-height: 100vh;
             font-family: Inter, system-ui, sans-serif;
             background:
                 radial-gradient(circle at top left, rgba(43, 226, 216, 0.16), transparent 32%),
+                radial-gradient(circle at bottom right, rgba(212, 167, 44, 0.10), transparent 28%),
                 linear-gradient(180deg, #0a1624 0%, #081421 100%);
             color: var(--text);
-            display: grid;
-            place-items: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 32px 20px;
         }
 
         .shell {
-            width: min(100%, 540px);
-            background: linear-gradient(180deg, rgba(17, 23, 40, 0.98), rgba(12, 18, 31, 0.98));
+            width: min(100%, 1040px);
+            display: grid;
+            grid-template-columns: minmax(280px, 0.92fr) minmax(0, 1.08fr);
+            background:
+                radial-gradient(circle at top right, rgba(51, 230, 223, 0.08), transparent 34%),
+                linear-gradient(180deg, rgba(17, 23, 40, 0.98), rgba(12, 18, 31, 0.98));
             border: 1px solid var(--border);
-            border-radius: 28px;
+            border-radius: 30px;
             box-shadow: 0 30px 80px rgba(0, 0, 0, 0.42);
             overflow: hidden;
         }
 
+        .side {
+            padding: 34px 30px;
+            border-right: 1px solid rgba(255,255,255,0.06);
+            background:
+                radial-gradient(circle at top left, rgba(51,230,223,0.12), transparent 34%),
+                linear-gradient(180deg, rgba(16, 24, 40, 0.92), rgba(11, 18, 31, 0.96));
+        }
+
         .brand {
-            padding: 28px 32px 18px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding: 0 0 18px;
         }
 
         .brand a {
             color: inherit;
             text-decoration: none;
-            font-weight: 900;
-            font-size: 34px;
+            font: 900 34px/1 "Barlow Condensed", "Inter", sans-serif;
             letter-spacing: -0.04em;
         }
 
         .brand a span { color: var(--cyan); }
 
+        .side h2 {
+            margin: 14px 0 8px;
+            font: 800 clamp(2rem, 4vw, 3rem)/0.95 "Barlow Condensed", "Inter", sans-serif;
+            letter-spacing: -0.04em;
+        }
+
+        .side p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .trust-list {
+            display: grid;
+            gap: 12px;
+            margin-top: 22px;
+        }
+
+        .trust-item {
+            padding: 14px 14px 15px;
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.07);
+            background: rgba(255,255,255,0.04);
+        }
+
+        .trust-item strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 0.95rem;
+        }
+
+        .trust-item span {
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.45;
+        }
+
         .content {
-            padding: 30px 32px 34px;
+            padding: 34px 34px 36px;
         }
 
         h1 {
             margin: 0 0 10px;
-            font-size: 42px;
-            line-height: 1;
+            font: 800 clamp(2.5rem, 4vw, 3.5rem)/1 "Barlow Condensed", "Inter", sans-serif;
             letter-spacing: -0.04em;
         }
 
@@ -75,13 +125,11 @@
         p.sub {
             margin: 0 0 28px;
             color: var(--muted);
-            font-size: 19px;
+            font-size: 1rem;
             line-height: 1.5;
         }
 
-        .field {
-            margin-bottom: 18px;
-        }
+        .field { margin-bottom: 18px; }
 
         label {
             display: block;
@@ -98,8 +146,9 @@
             border-radius: 16px;
             background: #e7eef9;
             color: #101625;
-            padding: 17px 18px;
-            font-size: 30px;
+            padding: 16px 18px;
+            font-size: 1.05rem;
+            font-weight: 600;
             line-height: 1.1;
         }
 
@@ -161,7 +210,7 @@
             border: 0;
             border-radius: 999px;
             padding: 18px 20px;
-            font-size: 17px;
+            font-size: 1rem;
             font-weight: 900;
             letter-spacing: 0.08em;
             color: #081320;
@@ -186,16 +235,33 @@
             font-weight: 800;
             text-decoration: none;
         }
+
+        @media (max-width: 900px) {
+            .shell { grid-template-columns: 1fr; }
+            .side {
+                border-right: 0;
+                border-bottom: 1px solid rgba(255,255,255,0.06);
+            }
+        }
     </style>
 </head>
 <body>
     <div class="shell">
-        <div class="brand">
-            <a href="/">TRUST<span>MY</span>RECORD</a>
-        </div>
+        <aside class="side">
+            <div class="brand">
+                <a href="/">TRUST<span>MY</span>RECORD</a>
+            </div>
+            <h2>Log in to your real record.</h2>
+            <p>Clean auth flow, direct backend session, and no sportsbook screen getting in the way.</p>
+            <div class="trust-list">
+                <div class="trust-item"><strong>Locked history</strong><span>Your record stays tied to the same public profile.</span></div>
+                <div class="trust-item"><strong>Live picks flow</strong><span>Jump back into the board and keep submitting picks from the same account.</span></div>
+                <div class="trust-item"><strong>Public profile</strong><span>Profile, alerts, and receipts all stay connected after login.</span></div>
+            </div>
+        </aside>
         <div class="content">
             <h1>Welcome <span class="accent">Back</span></h1>
-            <p class="sub">Log in directly to your real TrustMyRecord account without the sportsbook page getting in the way.</p>
+            <p class="sub">Log in directly to your real TrustMyRecord account.</p>
 
             <form id="direct-login-form">
                 <div class="field">

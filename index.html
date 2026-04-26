@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260421e">
+<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260425c">
     <style>
         :root {
             --bg: #0b1220;
@@ -1826,15 +1826,15 @@
                 <a href="/picks/">Make Picks</a>
                 <a href="/arena/">Arena</a>
                 <a href="/feed/">Feed</a>
-                <a href="/hangout/">Polls</a>
+                <a href="/hangout/">Hangout</a>
                 <a href="/trivia/">Trivia</a>
                 <a href="handicappers.html">Handicappers</a>
                 <a href="/about/">About</a>
             </nav>
             <div class="nav-actions">
                 <a class="btn" href="handicappers.html">Find Cappers</a>
-<a class="btn auth-link" href="/sportsbook.html?auth=login" id="homeNavLoginCta" data-home-auth-route="login">Log In</a>
-<a class="btn primary auth-link" href="/sportsbook.html?auth=register" id="homeNavRegisterCta" data-home-auth-route="signup">Register</a>
+<a class="btn auth-link" href="/login/" id="homeNavLoginCta" data-home-auth-route="login">Log In</a>
+<a class="btn primary auth-link" href="/register/" id="homeNavRegisterCta" data-home-auth-route="signup">Register</a>
                 <a class="btn" href="/sportsbook/" id="homeNavPrimaryCta">Open Sportsbook</a>
             </div>
         </header>
@@ -1846,7 +1846,7 @@
                     <h1>The end of fake records.</h1>
                     <p id="homeHeroCopy"><strong>TrustMyRecord turns sports talk into a public profile.</strong> Lock picks, build a verified record, debate in the feed, play polls and trivia, and let the receipts decide who actually knows sports.</p>
                     <div class="hero-actions">
-                        <a class="btn primary" href="/sportsbook/" id="homeHeroPrimaryCta">Make Your First Pick</a>
+                        <a class="btn primary" href="/picks/" id="homeHeroPrimaryCta">Make Your First Pick</a>
                         <a class="btn" href="/profile/" id="homeHeroSecondaryCta">View Records</a>
                     </div>
                     <div class="hero-points">
@@ -1980,7 +1980,7 @@
                             <h3>Start your record</h3>
                             <p>Create an account, lock in your first pick, and start building a public sports profile that other people can actually judge.</p>
                             <div class="launch-cta">
-                        <a class="btn primary" href="/sportsbook.html#register">Register to claim your record</a>
+                        <a class="btn primary" href="/register/">Register to claim your record</a>
                                 <a class="btn" href="/about/">See how it works</a>
                             </div>
                         </div>
@@ -2015,7 +2015,7 @@
             <section class="final-cta">
                 <h2>Think you know sports? Prove it.</h2>
                 <p id="homeFinalCopy">Start with one locked pick, one public result, and one profile worth checking. TrustMyRecord should feel serious from the first click.</p>
-                <a class="btn primary" href="/sportsbook/" id="homeFinalCta">Enter TrustMyRecord</a>
+                <a class="btn primary" href="/picks/" id="homeFinalCta">Enter TrustMyRecord</a>
             </section>
         </main>
     </div>
@@ -2078,21 +2078,21 @@
 
             if (!user) {
                 navLogin.style.display = 'inline-flex';
-            navLogin.href = '/sportsbook.html?auth=login';
+                navLogin.href = '/login/';
                 navLogin.textContent = 'Log In';
                 navRegister.style.display = 'inline-flex';
-            navRegister.href = '/sportsbook.html?auth=register';
+                navRegister.href = '/register/';
                 navRegister.textContent = 'Register';
                 navPrimary.textContent = 'Open Sportsbook';
                 navPrimary.href = '/picks/';
                 heroPrimary.textContent = 'Make Your First Pick';
-                heroPrimary.href = '/sportsbook/';
+                heroPrimary.href = '/picks/';
                 heroSecondary.textContent = 'View Records';
                 heroSecondary.href = '/profile/';
                 heroCopy.innerHTML = '<strong>TrustMyRecord turns sports talk into a public profile.</strong> Lock picks, build a verified record, debate in the feed, play polls and trivia, and let the receipts decide who actually knows sports.';
                 finalCopy.textContent = 'Start with one locked pick, one public result, and one profile worth checking. TrustMyRecord should feel serious from the first click.';
-            finalCta.textContent = 'Create Your Account';
-            finalCta.href = '/sportsbook.html?auth=register';
+                finalCta.textContent = 'Create Your Account';
+                finalCta.href = '/register/';
                 return;
             }
 
@@ -2103,8 +2103,8 @@
             navRegister.style.display = 'none';
             navPrimary.textContent = 'Open Record';
             navPrimary.href = profileHref;
-            heroPrimary.textContent = 'Go To Sportsbook';
-            heroPrimary.href = '/sportsbook/';
+            heroPrimary.textContent = 'Go To Picks';
+            heroPrimary.href = '/picks/';
             heroSecondary.textContent = 'Open My Record';
             heroSecondary.href = profileHref;
             heroCopy.innerHTML = '<strong>Your account is live.</strong> Keep locking picks, updating your public record, and using the feed, arena, polls, and trivia to build visible credibility.';
