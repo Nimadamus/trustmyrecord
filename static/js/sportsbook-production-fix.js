@@ -604,6 +604,14 @@
         fetchMarketBoardFast(sportKey, false).catch(function() {});
     }
 
+    function prewarmCoreBoards() {
+        ['MLB', 'NHL', 'NBA', 'NFL', 'NCAAB', 'NCAAF'].forEach(function(sport, index) {
+            window.setTimeout(function() {
+                prefetchSportBoard(sport);
+            }, 280 + (index * 170));
+        });
+    }
+
     function wireSportPrefetch() {
         document.querySelectorAll('.sport-card[data-sport]').forEach(function(card) {
             if (card.dataset.prefetchBound === 'true') return;
@@ -822,9 +830,22 @@
             '.tmr-option-odds-label{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#6f7d90;font-weight:800;}',
             '.tmr-option-odds{font-size:24px;font-weight:900;white-space:nowrap;padding:10px 14px;border-radius:12px;background:linear-gradient(180deg,rgba(56,63,76,0.98),rgba(39,44,53,0.98));border:1px solid rgba(255,255,255,0.08);color:#f8fff9;min-width:82px;text-align:center;letter-spacing:-0.03em;}',
             '.tmr-option-btn.active .tmr-option-odds{background:var(--tmr-accent);border-color:color-mix(in srgb, var(--tmr-accent) 50%, white 50%);}',
-            '.tmr-empty-state{padding:44px 22px;text-align:center;color:#9aa7b8;border:1px dashed rgba(255,255,255,0.1);border-radius:18px;background:linear-gradient(180deg,rgba(24,28,35,0.96),rgba(16,19,24,0.96));}',
-            '.tmr-loading-grid{display:grid;gap:14px;}',
-            '.tmr-loading-card{height:132px;border-radius:20px;background:linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0.07),rgba(255,255,255,0.03));background-size:200% 100%;animation:tmrShimmer 1.35s linear infinite;border:1px solid rgba(255,255,255,0.05);}',
+            '.tmr-empty-state{padding:44px 22px;text-align:center;color:#a8b4c6;border:1px dashed rgba(255,255,255,0.1);border-radius:18px;background:linear-gradient(180deg,rgba(20,24,31,0.98),rgba(13,16,22,0.98));box-shadow:0 20px 40px rgba(0,0,0,0.24);}',
+            '.tmr-loading-slate{display:grid;gap:16px;}',
+            '.tmr-loading-topline{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 18px;border-radius:18px;border:1px solid rgba(255,255,255,0.06);background:linear-gradient(180deg,rgba(18,22,29,0.98),rgba(12,15,21,0.98));box-shadow:0 18px 36px rgba(0,0,0,0.22);}',
+            '.tmr-loading-kicker{height:12px;width:144px;border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0.11),rgba(255,255,255,0.03));background-size:220% 100%;animation:tmrShimmer 1.25s linear infinite;}',
+            '.tmr-loading-meta{height:12px;width:92px;border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0.11),rgba(255,255,255,0.03));background-size:220% 100%;animation:tmrShimmer 1.25s linear infinite;}',
+            '.tmr-loading-tabs{display:flex;gap:10px;flex-wrap:wrap;}',
+            '.tmr-loading-tab{height:40px;min-width:132px;border-radius:14px;border:1px solid rgba(255,255,255,0.05);background:linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0.09),rgba(255,255,255,0.03));background-size:220% 100%;animation:tmrShimmer 1.25s linear infinite;}',
+            '.tmr-loading-grid{display:grid;gap:16px;}',
+            '.tmr-loading-card{padding:18px 18px 16px;border-radius:20px;background:linear-gradient(180deg,rgba(19,23,30,0.99),rgba(11,14,20,0.99));border:1px solid rgba(255,255,255,0.06);box-shadow:0 22px 48px rgba(0,0,0,0.26);}',
+            '.tmr-loading-card-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:16px;}',
+            '.tmr-loading-card-title{height:14px;width:210px;border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0.11),rgba(255,255,255,0.03));background-size:220% 100%;animation:tmrShimmer 1.25s linear infinite;}',
+            '.tmr-loading-card-badge{height:30px;width:84px;border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0.11),rgba(255,255,255,0.03));background-size:220% 100%;animation:tmrShimmer 1.25s linear infinite;}',
+            '.tmr-loading-matchup{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px;}',
+            '.tmr-loading-team{height:62px;border-radius:16px;background:linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0.09),rgba(255,255,255,0.03));background-size:220% 100%;animation:tmrShimmer 1.25s linear infinite;border:1px solid rgba(255,255,255,0.04);}',
+            '.tmr-loading-lines{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}',
+            '.tmr-loading-line{height:88px;border-radius:16px;background:linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0.08),rgba(255,255,255,0.03));background-size:220% 100%;animation:tmrShimmer 1.25s linear infinite;border:1px solid rgba(255,255,255,0.04);}',
             '#picks .sport-cards-grid{grid-template-columns:repeat(auto-fit,minmax(165px,1fr))!important;gap:14px!important;}',
             '#picks .sport-card{min-height:148px;border:1px solid rgba(255,255,255,0.08)!important;border-radius:18px!important;padding:18px 16px!important;background:linear-gradient(180deg,rgba(27,31,38,0.98),rgba(17,20,26,0.98))!important;box-shadow:0 14px 28px rgba(0,0,0,0.18)!important;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;text-align:left;overflow:hidden;}',
             '#picks .sport-card::before{left:auto!important;top:0!important;inset:0 0 auto 0!important;width:100%!important;height:3px!important;background:linear-gradient(90deg,#2f8f53,#4eb66f,#f2c94c)!important;opacity:.95;}',
@@ -857,18 +878,52 @@
             '#picks #pickConfirmation > div{background:linear-gradient(180deg,rgba(35,63,42,0.98),rgba(19,31,23,0.98))!important;border:1px solid rgba(120,255,181,0.26)!important;border-radius:20px!important;box-shadow:0 20px 40px rgba(0,0,0,0.22)!important;}',
             '#picks #confirmPickDetail{font-size:26px!important;line-height:1.15!important;color:#f8fafc!important;}',
             '#picks #confirmPickMeta{font-size:13px!important;letter-spacing:0.04em;color:#b8c2cf!important;}',
+            '#picks #gamesListContainer{display:grid;gap:20px;}',
+            '.tmr-board-filter-bar{padding:16px 18px;border-radius:16px;background:linear-gradient(180deg,rgba(20,24,31,0.99),rgba(12,15,21,0.99));border-color:rgba(255,255,255,0.06);}',
+            '.tmr-board-filter-tabs{display:flex;gap:10px;flex-wrap:wrap;}',
+            '.tmr-board-filter-tab{min-width:140px;padding:12px 16px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015));}',
+            '.tmr-board-filter-tab.active{background:linear-gradient(180deg,rgba(47,143,83,0.28),rgba(18,24,33,0.98));border-color:rgba(98,222,142,0.42);box-shadow:0 14px 30px rgba(7,12,18,0.26);}',
+            '.tmr-market-card{border-radius:18px;box-shadow:0 26px 54px rgba(0,0,0,0.30);background:linear-gradient(180deg,rgba(16,19,25,0.995),rgba(9,12,17,0.995));}',
+            '.tmr-market-card::before{height:3px;background:linear-gradient(90deg,#29c06f,#56f0a3,#f6c851);}',
+            '.tmr-market-head{padding:18px 18px 14px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0));}',
+            '.tmr-market-summary{align-items:center;}',
+            '.tmr-market-count{padding:9px 12px;border-radius:12px;background:rgba(255,255,255,0.035);font-size:10px;letter-spacing:0.14em;}',
+            '.tmr-market-body{padding:0 18px 18px;}',
+            '.tmr-group{border-radius:16px;background:linear-gradient(180deg,rgba(20,24,31,0.98),rgba(15,18,24,0.98));border-color:rgba(255,255,255,0.04);}',
+            '.tmr-group-header{padding:12px 14px;background:rgba(255,255,255,0.018);}',
+            '.tmr-group-title{color:#f4d35e;}',
+            '.tmr-option-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px;}',
+            '.tmr-option-btn{min-height:96px;padding:14px 14px 14px 16px;border-radius:14px;background:linear-gradient(180deg,rgba(35,41,52,0.98),rgba(24,29,37,0.98));border:1px solid rgba(255,255,255,0.05);box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);}',
+            '.tmr-option-btn:hover{transform:translateY(-1px);border-color:rgba(86,240,163,0.18);background:linear-gradient(180deg,rgba(38,45,57,1),rgba(27,32,40,1));}',
+            '.tmr-option-btn.active{border-color:rgba(86,240,163,0.34);box-shadow:0 14px 30px rgba(0,0,0,0.24), inset 0 0 0 1px rgba(86,240,163,0.14);}',
+            '.tmr-option-topline{gap:8px;}',
+            '.tmr-option-tag{background:rgba(255,255,255,0.07);}',
+            '.tmr-option-line{color:#56f0a3;font-weight:900;}',
+            '.tmr-option-market{font-size:15px;font-weight:800;line-height:1.2;}',
+            '.tmr-option-detail{font-size:11px;letter-spacing:0.04em;color:#8fa0b5;}',
+            '.tmr-option-odds-wrap{gap:8px;}',
+            '.tmr-option-odds{min-width:88px;padding:12px 14px;border-radius:12px;background:linear-gradient(180deg,rgba(63,72,88,0.98),rgba(40,46,58,0.98));font-size:28px;letter-spacing:-0.04em;}',
             '@keyframes tmrShimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}',
-            '@media (max-width: 700px){.tmr-market-head{padding:16px;grid-template-columns:1fr;align-items:flex-start;}.tmr-market-body{padding:0 16px 16px;}.tmr-market-summary{width:100%;justify-content:space-between;}.tmr-option-grid{grid-template-columns:1fr;}.tmr-team-name{font-size:16px;}.tmr-team-side{min-width:46px;padding:4px 7px;}.tmr-matchup-divider{padding-left:56px;}.tmr-option-btn{min-height:auto;padding:12px 13px;grid-template-columns:minmax(0,1fr) auto;}.tmr-market-count{width:100%;text-align:center;}.tmr-market-caret{display:none;}.tmr-board-filter-tab{min-width:unset;flex:1 1 calc(50% - 6px);}.tmr-group-header{grid-template-columns:minmax(0,1fr) auto;}.tmr-group-metahead{display:none;}#picks .pick-options{grid-template-columns:1fr;}#picks .games-header{align-items:flex-start;flex-direction:column;}#picks .sport-cards-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}#picks .sport-card{min-height:132px;padding:16px 14px!important;}#picks .sport-name{font-size:16px!important;}#picks .submit-pick-btn{padding:15px 16px;font-size:14px;}}'
+            '@media (max-width: 700px){.tmr-loading-topline{padding:14px 14px 12px;align-items:flex-start;flex-direction:column;}.tmr-loading-tabs{width:100%;}.tmr-loading-tab{flex:1 1 calc(50% - 6px);min-width:unset;}.tmr-loading-matchup,.tmr-loading-lines{grid-template-columns:1fr;}.tmr-market-head{padding:16px;grid-template-columns:1fr;align-items:flex-start;}.tmr-market-body{padding:0 16px 16px;}.tmr-market-summary{width:100%;justify-content:space-between;}.tmr-option-grid{grid-template-columns:1fr;}.tmr-team-name{font-size:16px;}.tmr-team-side{min-width:46px;padding:4px 7px;}.tmr-matchup-divider{padding-left:56px;}.tmr-option-btn{min-height:auto;padding:12px 13px;grid-template-columns:minmax(0,1fr) auto;}.tmr-market-count{width:100%;text-align:center;}.tmr-market-caret{display:none;}.tmr-board-filter-tab{min-width:unset;flex:1 1 calc(50% - 6px);}.tmr-group-header{grid-template-columns:minmax(0,1fr) auto;}.tmr-group-metahead{display:none;}#picks .pick-options{grid-template-columns:1fr;}#picks .games-header{align-items:flex-start;flex-direction:column;}#picks .sport-cards-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}#picks .sport-card{min-height:132px;padding:16px 14px!important;}#picks .sport-name{font-size:16px!important;}#picks .submit-pick-btn{padding:15px 16px;font-size:14px;}}'
         ].join('');
         document.head.appendChild(style);
     }
 
-    function renderBoardLoading(container) {
+    function renderBoardLoading(container, sport) {
         if (!container) return;
-        container.innerHTML = '<div class="tmr-loading-grid">' +
-            '<div class="tmr-loading-card"></div>' +
-            '<div class="tmr-loading-card"></div>' +
-            '<div class="tmr-loading-card"></div>' +
+        const loadingFilters = getPreferredFilters({ sport_key: SPORT_KEY_MAP[sport] || '' }, new Set(['game-lines', 'team-totals', 'first-5', 'segments', 'alt-lines'])).slice(0, 5);
+        const tabsHtml = loadingFilters.map(function(filter) {
+            return '<div class="tmr-loading-tab" aria-hidden="true" title="' + escapeHtml(getFilterLabel(filter)) + '"></div>';
+        }).join('');
+        const cardHtml = '<div class="tmr-loading-card">' +
+            '<div class="tmr-loading-card-head"><div class="tmr-loading-card-title"></div><div class="tmr-loading-card-badge"></div></div>' +
+            '<div class="tmr-loading-matchup"><div class="tmr-loading-team"></div><div class="tmr-loading-team"></div></div>' +
+            '<div class="tmr-loading-lines"><div class="tmr-loading-line"></div><div class="tmr-loading-line"></div><div class="tmr-loading-line"></div></div>' +
+            '</div>';
+        container.innerHTML = '<div class="tmr-loading-slate">' +
+            '<div class="tmr-loading-topline"><div class="tmr-loading-kicker"></div><div class="tmr-loading-meta"></div></div>' +
+            '<div class="tmr-loading-tabs">' + tabsHtml + '</div>' +
+            '<div class="tmr-loading-grid">' + cardHtml + cardHtml + '</div>' +
             '</div>';
     }
 
@@ -1488,7 +1543,7 @@
 
         if (title) title.textContent = sport + ' Markets';
         if (container && !cachedBoard) {
-            renderBoardLoading(container);
+            renderBoardLoading(container, sport);
         }
         if (typeof window.showPickStep === 'function') window.showPickStep('gamesListSection');
 
@@ -2062,9 +2117,7 @@
         }
 
         fetchCurrentUserPicks().then(syncRecordWidgets).catch(function() {});
-        setTimeout(function() {
-            prefetchSportBoard('MLB');
-        }, 1200);
+        prewarmCoreBoards();
     }
 
     document.addEventListener('DOMContentLoaded', boot);
