@@ -1,15 +1,15 @@
 (() => {
-    const sportsbookPicksHref = "picks/";
+    const sportsbookPicksHref = "/picks/";
     const routes = [
         ["/", "Home"],
         [sportsbookPicksHref, "Make Picks"],
-        ["handicappers.html", "Handicappers"],
-        ["arena/", "Arena"],
-        ["feed/", "Feed"],
-        ["hangout/", "Hangout"],
-        ["trivia/", "Trivia"],
-        ["forum/", "Forum"],
-        ["about/", "About"]
+        ["/handicappers.html", "Handicappers"],
+        ["/arena/", "Arena"],
+        ["/feed/", "Feed"],
+        ["/hangout/", "Hangout"],
+        ["/trivia/", "Trivia"],
+        ["/forum/", "Forum"],
+        ["/about/", "About"]
     ];
 
     const routeMeta = {
@@ -106,7 +106,7 @@
         const username = String(user.username || user.displayName || user.email || "user");
         const displayName = String(user.displayName || user.username || user.email || "User");
         const avatar = getUserAvatar(user);
-        const profileHref = "profile/?user=" + encodeURIComponent(username);
+        const profileHref = "/profile/?user=" + encodeURIComponent(username);
 
         return `
             <a class="tmr-global-nav__user" href="${profileHref}"${currentFile === "profile.html" ? ' aria-current="page"' : ""}>
@@ -116,7 +116,7 @@
                     <span>@${escapeHtml(username)}</span>
                 </span>
             </a>
-            <a class="tmr-global-nav__button" href="notifications/"${currentFile === "notifications.html" ? ' aria-current="page"' : ""}>Alerts</a>
+            <a class="tmr-global-nav__button" href="/notifications/"${currentFile === "notifications.html" ? ' aria-current="page"' : ""}>Alerts</a>
             <button class="tmr-global-nav__button tmr-global-nav__logout" type="button" data-tmr-logout>Log Out</button>
         `;
     }

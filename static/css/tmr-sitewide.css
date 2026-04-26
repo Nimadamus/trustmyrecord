@@ -45,13 +45,14 @@ body.tmr-site-shell nav.main-nav:not(.tmr-global-nav) {
 }
 
 .tmr-global-nav__inner {
-    width: min(1600px, calc(100% - 32px));
-    min-height: 74px;
+    width: min(1680px, calc(100% - 34px));
+    min-height: 78px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: clamp(10px, 0.9vw, 18px);
+    grid-template-columns: minmax(240px, auto) minmax(0, 1fr) auto;
+    gap: clamp(10px, 0.9vw, 20px);
     align-items: center;
+    padding: 10px 0;
 }
 
 .tmr-global-nav__brand {
@@ -86,12 +87,12 @@ body.tmr-site-shell nav.main-nav:not(.tmr-global-nav) {
 
 .tmr-global-nav__links {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     gap: clamp(6px, 0.8vw, 12px);
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     min-width: 0;
-    white-space: nowrap;
+    row-gap: 6px;
 }
 
 .tmr-global-nav__links a,
@@ -103,12 +104,25 @@ body.tmr-site-shell nav.main-nav:not(.tmr-global-nav) {
     font-weight: 800;
     letter-spacing: 0.055em;
     text-transform: uppercase;
-    transition: color 0.18s ease, opacity 0.18s ease;
+    transition: color 0.18s ease, opacity 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.tmr-global-nav__links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    white-space: nowrap;
 }
 
 .tmr-global-nav__links a:hover,
 .tmr-global-nav__links a[aria-current="page"] {
     color: var(--tmr-teal);
+    border-color: rgba(45, 212, 191, 0.18);
+    background: rgba(255, 255, 255, 0.04);
 }
 
 .tmr-global-nav__actions {
@@ -116,7 +130,7 @@ body.tmr-site-shell nav.main-nav:not(.tmr-global-nav) {
     align-items: center;
     justify-content: flex-end;
     gap: 8px;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     min-width: 0;
 }
 
@@ -163,14 +177,14 @@ body.tmr-site-shell nav.main-nav:not(.tmr-global-nav) {
     align-items: center;
     gap: 10px;
     min-width: 0;
-    max-width: min(240px, 100%);
+    max-width: min(280px, 100%);
     padding: 6px 8px 6px 6px;
     border: 1px solid rgba(45, 212, 191, 0.22);
     border-radius: 999px;
     background: rgba(45, 212, 191, 0.10);
 }
 
-@media (max-width: 1640px) {
+@media (max-width: 1500px) {
     .tmr-global-nav__inner {
         width: min(100%, calc(100% - 28px));
         grid-template-columns: minmax(0, 1fr) auto;
