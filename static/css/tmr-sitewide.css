@@ -1878,3 +1878,249 @@ body.tmr-site-shell[data-tmr-route="profile"] .tmr-route-note {
     border-color: rgba(120, 146, 176, 0.14) !important;
     color: #d9e8f8 !important;
 }
+
+/* 2026 visual overhaul pass */
+:root {
+    --tmr-bg: #05070d;
+    --tmr-bg-soft: #0b111b;
+    --tmr-panel: rgba(9, 15, 24, 0.94);
+    --tmr-panel-2: rgba(14, 23, 36, 0.9);
+    --tmr-line: rgba(156, 173, 199, 0.13);
+    --tmr-line-strong: rgba(0, 217, 255, 0.28);
+    --tmr-text: #f5f8fc;
+    --tmr-muted: #92a2ba;
+    --tmr-teal: #00d9ff;
+    --tmr-gold: #f1be48;
+    --tmr-green: #26d07c;
+    --tmr-red: #ff5b6e;
+    --tmr-radius: 28px;
+    --tmr-shadow: 0 30px 90px rgba(0, 0, 0, 0.34);
+}
+
+html body.tmr-site-shell {
+    background:
+        radial-gradient(circle at 12% 0%, rgba(0, 217, 255, 0.14), transparent 30%),
+        radial-gradient(circle at 88% 8%, rgba(241, 190, 72, 0.11), transparent 28%),
+        radial-gradient(circle at 50% 120%, rgba(38, 208, 124, 0.08), transparent 24%),
+        linear-gradient(180deg, #05070d 0%, #0b111b 52%, #09111a 100%) !important;
+}
+
+html body.tmr-site-shell::before {
+    display: block !important;
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.22;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: linear-gradient(180deg, black, transparent 72%);
+}
+
+.tmr-global-nav {
+    border-bottom-color: rgba(156, 173, 199, 0.1) !important;
+    background: rgba(5, 9, 16, 0.76) !important;
+    backdrop-filter: blur(20px) saturate(145%) !important;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22) !important;
+}
+
+.tmr-global-nav__inner {
+    width: min(1700px, calc(100% - 36px)) !important;
+    min-height: 82px !important;
+    gap: 14px !important;
+}
+
+.tmr-global-nav__brand {
+    font-size: clamp(1.72rem, 2vw, 2.38rem) !important;
+    letter-spacing: -0.02em !important;
+}
+
+.tmr-global-nav__mark {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 13px !important;
+    color: #041017 !important;
+    background: linear-gradient(135deg, var(--tmr-teal), #7ef7ff 62%, #d7ff59) !important;
+}
+
+.tmr-global-nav__links a,
+.tmr-global-nav__actions a,
+.tmr-global-nav__logout {
+    color: #dce7f7 !important;
+    font-size: clamp(0.82rem, 0.84vw, 0.98rem) !important;
+    letter-spacing: 0.075em !important;
+}
+
+.tmr-global-nav__links a {
+    min-height: 40px !important;
+    padding: 8px 12px !important;
+    border-radius: 999px !important;
+    border: 1px solid rgba(255,255,255,0.02) !important;
+}
+
+.tmr-global-nav__links a:hover,
+.tmr-global-nav__links a[aria-current="page"] {
+    color: var(--tmr-teal) !important;
+    border-color: rgba(0, 217, 255, 0.16) !important;
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,217,255,0.06)) !important;
+}
+
+.tmr-global-nav__button,
+.tmr-global-nav__user {
+    border-color: rgba(156, 173, 199, 0.14) !important;
+    background: linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.03)) !important;
+    box-shadow: none !important;
+}
+
+.tmr-global-nav__button--primary {
+    color: #041017 !important;
+    background: linear-gradient(135deg, var(--tmr-teal), #77f8ff 60%, #d7ff59) !important;
+    box-shadow: 0 16px 34px rgba(0, 217, 255, 0.2) !important;
+}
+
+.tmr-global-nav__button:hover,
+.tmr-global-nav__user:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.2) !important;
+}
+
+.tmr-route-note {
+    border-color: rgba(156, 173, 199, 0.12) !important;
+    border-radius: 22px !important;
+    padding: 16px 20px !important;
+    background:
+        radial-gradient(circle at top right, rgba(0, 217, 255, 0.09), transparent 35%),
+        linear-gradient(180deg, rgba(14, 21, 34, 0.9), rgba(8, 13, 23, 0.96)) !important;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.18) !important;
+    color: #c7d5e5 !important;
+}
+
+.tmr-global-footer {
+    border-color: rgba(156, 173, 199, 0.12) !important;
+    border-radius: 30px !important;
+    background:
+        radial-gradient(circle at top left, rgba(0, 217, 255, 0.14), transparent 24%),
+        radial-gradient(circle at top right, rgba(241, 190, 72, 0.10), transparent 22%),
+        linear-gradient(180deg, rgba(12, 19, 31, 0.96), rgba(6, 10, 18, 0.98)) !important;
+    box-shadow: 0 28px 72px rgba(2, 8, 18, 0.3) !important;
+}
+
+.tmr-site-shell .btn,
+.tmr-site-shell .btn-primary,
+.tmr-site-shell .btn-secondary,
+.tmr-site-shell .btn-outline,
+.tmr-site-shell .btn-ghost,
+.tmr-site-shell .new-message-btn,
+.tmr-site-shell .send-btn,
+.tmr-site-shell .search-btn,
+.tmr-site-shell .create-poll-btn,
+.tmr-site-shell .tab-btn,
+.tmr-site-shell .filter-btn {
+    border-radius: 999px !important;
+    border-color: rgba(156, 173, 199, 0.14) !important;
+    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)) !important;
+    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.tmr-site-shell .btn:hover,
+.tmr-site-shell .btn-primary:hover,
+.tmr-site-shell .btn-secondary:hover,
+.tmr-site-shell .btn-outline:hover,
+.tmr-site-shell .btn-ghost:hover,
+.tmr-site-shell .new-message-btn:hover,
+.tmr-site-shell .send-btn:hover,
+.tmr-site-shell .search-btn:hover,
+.tmr-site-shell .create-poll-btn:hover,
+.tmr-site-shell .tab-btn:hover,
+.tmr-site-shell .filter-btn:hover {
+    transform: translateY(-1px) !important;
+    border-color: rgba(0, 217, 255, 0.18) !important;
+}
+
+.tmr-site-shell .btn-primary,
+.tmr-site-shell button.primary,
+.tmr-site-shell .tab-btn.active,
+.tmr-site-shell .filter-btn.active,
+.tmr-site-shell .tab.active,
+.tmr-site-shell .new-message-btn,
+.tmr-site-shell .send-btn,
+.tmr-site-shell .search-btn,
+.tmr-site-shell .create-poll-btn {
+    color: #041017 !important;
+    background: linear-gradient(135deg, var(--tmr-teal), #77f8ff 60%, #d7ff59) !important;
+    box-shadow: 0 16px 34px rgba(0, 217, 255, 0.18) !important;
+}
+
+.tmr-site-shell .hero,
+.tmr-site-shell .feed-hero,
+.tmr-site-shell .about-hero,
+.tmr-site-shell .premium-hero,
+.tmr-site-shell .profile-header,
+.tmr-site-shell .user-stats-card,
+.tmr-site-shell .summary-grid,
+.tmr-site-shell .search-section,
+.tmr-site-shell .workspace-nav-card,
+.tmr-site-shell .stats-table-card,
+.tmr-site-shell .sidebar-nav,
+.tmr-site-shell .sidebar-card,
+.tmr-site-shell .composer-card,
+.tmr-site-shell .rs-card,
+.tmr-site-shell .feed-item,
+.tmr-site-shell .feed-tabs,
+.tmr-site-shell .poll-card,
+.tmr-site-shell .trivia-card,
+.tmr-site-shell .challenge-card,
+.tmr-site-shell .friend-card,
+.tmr-site-shell .analytics-card,
+.tmr-site-shell .conversations-sidebar,
+.tmr-site-shell .chat-area,
+.tmr-site-shell .modal,
+.tmr-site-shell .verify-container,
+.tmr-site-shell .reset-container,
+.tmr-site-shell .content-wrapper,
+.tmr-site-shell .feature-card,
+.tmr-site-shell .creed-card,
+.tmr-site-shell .match-item,
+.tmr-site-shell .stat-card,
+.tmr-site-shell .profile-card,
+.tmr-site-shell .summary-card,
+.tmr-site-shell .page-card,
+.tmr-site-shell .thread-card,
+.tmr-site-shell .profile-header-section {
+    border: 1px solid rgba(156, 173, 199, 0.12) !important;
+    border-radius: 28px !important;
+    background:
+        radial-gradient(circle at top right, rgba(0, 217, 255, 0.065), transparent 28%),
+        linear-gradient(180deg, rgba(14, 21, 34, 0.95), rgba(8, 13, 23, 0.99)) !important;
+    box-shadow: 0 28px 72px rgba(2, 8, 18, 0.32) !important;
+}
+
+.tmr-site-shell .hero::before,
+.tmr-site-shell .feed-hero::before,
+.tmr-site-shell .about-hero::before,
+.tmr-site-shell .premium-hero::before,
+.tmr-site-shell .profile-header::before,
+.tmr-site-shell .summary-grid::before,
+.tmr-site-shell .workspace-nav-card::before,
+.tmr-site-shell .stats-table-card::before,
+.tmr-site-shell .picks-table-wrapper::before,
+.tmr-site-shell .analytics-card::before,
+.tmr-site-shell .feature-card::before,
+.tmr-site-shell .support-module::before,
+.tmr-site-shell .support-callout::before,
+.tmr-site-shell .profile-card::before,
+.tmr-site-shell .summary-card::before,
+.tmr-site-shell .page-card::before,
+.tmr-site-shell .thread-card::before {
+    height: 2px !important;
+    background: linear-gradient(90deg, rgba(0, 217, 255, 0.96), rgba(241, 190, 72, 0.56), transparent 82%) !important;
+}
+
+.tmr-site-shell h1,
+.tmr-site-shell h2,
+.tmr-site-shell .section-title,
+.tmr-site-shell .page-title {
+    letter-spacing: -0.03em !important;
+}
