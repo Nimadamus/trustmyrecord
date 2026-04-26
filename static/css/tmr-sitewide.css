@@ -249,15 +249,35 @@ body.tmr-site-shell nav.main-nav:not(.tmr-global-nav) {
     font: 700 0.72rem/1 var(--tmr-font);
 }
 
+.tmr-global-nav__brand,
+.tmr-global-nav__links a,
+.tmr-global-nav__button,
+.tmr-global-nav__user {
+    transition: transform 0.18s ease, color 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.tmr-global-nav__brand:hover {
+    transform: translateY(-1px);
+}
+
+.tmr-global-nav__button:hover,
+.tmr-global-nav__user:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.18);
+}
+
 .tmr-route-note {
-    width: min(1380px, calc(100% - 32px));
+    width: min(1480px, calc(100% - 32px));
     margin: 18px auto 0;
-    padding: 14px 16px;
-    border: 1px solid var(--tmr-line);
-    border-radius: 18px;
-    color: var(--tmr-muted);
-    background: rgba(255, 255, 255, 0.045);
-    font: 700 0.92rem/1.45 var(--tmr-font);
+    padding: 16px 18px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 20px;
+    color: #b7c4d6;
+    background:
+        radial-gradient(circle at top right, rgba(45, 212, 191, 0.08), transparent 35%),
+        linear-gradient(180deg, rgba(15, 23, 42, 0.84), rgba(10, 18, 31, 0.92));
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+    font: 700 0.92rem/1.5 var(--tmr-font);
 }
 
 .tmr-route-note strong {
@@ -733,6 +753,100 @@ html body.tmr-site-shell::after {
         linear-gradient(180deg, rgba(16, 24, 40, 0.94), rgba(10, 18, 31, 0.98)) !important;
     box-shadow: 0 24px 60px rgba(2, 8, 18, 0.28) !important;
     backdrop-filter: blur(16px);
+}
+
+.tmr-site-shell .hero,
+.tmr-site-shell .feed-hero,
+.tmr-site-shell .about-hero,
+.tmr-site-shell .premium-hero,
+.tmr-site-shell .profile-header,
+.tmr-site-shell .summary-grid,
+.tmr-site-shell .workspace-nav-card,
+.tmr-site-shell .stats-table-card,
+.tmr-site-shell .picks-table-wrapper,
+.tmr-site-shell .analytics-card,
+.tmr-site-shell .feature-card,
+.tmr-site-shell .support-module,
+.tmr-site-shell .support-callout {
+    position: relative;
+    overflow: hidden;
+}
+
+.tmr-site-shell .hero::before,
+.tmr-site-shell .feed-hero::before,
+.tmr-site-shell .about-hero::before,
+.tmr-site-shell .premium-hero::before,
+.tmr-site-shell .profile-header::before,
+.tmr-site-shell .summary-grid::before,
+.tmr-site-shell .workspace-nav-card::before,
+.tmr-site-shell .stats-table-card::before,
+.tmr-site-shell .picks-table-wrapper::before,
+.tmr-site-shell .analytics-card::before,
+.tmr-site-shell .feature-card::before,
+.tmr-site-shell .support-module::before,
+.tmr-site-shell .support-callout::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(45, 212, 191, 0.8), rgba(212, 167, 44, 0.45), transparent 82%);
+    pointer-events: none;
+}
+
+.tmr-site-shell .page-header,
+.tmr-site-shell .profile-header-section,
+.tmr-site-shell .summary-bar,
+.tmr-site-shell .profile-workspace-section,
+.tmr-site-shell .analytics-section,
+.tmr-site-shell .analytics-preview,
+.tmr-site-shell .cta-section {
+    width: min(1480px, calc(100% - 32px));
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+.tmr-site-shell .page-header,
+.tmr-site-shell .profile-header-section,
+.tmr-site-shell .summary-bar,
+.tmr-site-shell .profile-workspace-section,
+.tmr-site-shell .analytics-section,
+.tmr-site-shell .analytics-preview,
+.tmr-site-shell .cta-section {
+    padding-top: 8px;
+    padding-bottom: 18px;
+}
+
+.tmr-site-shell h1,
+.tmr-site-shell h2,
+.tmr-site-shell h3,
+.tmr-site-shell .page-title,
+.tmr-site-shell .section-title {
+    text-wrap: balance;
+}
+
+.tmr-site-shell .btn,
+.tmr-site-shell .btn-primary,
+.tmr-site-shell .btn-secondary,
+.tmr-site-shell .btn-outline,
+.tmr-site-shell .btn-ghost,
+.tmr-site-shell .new-message-btn,
+.tmr-site-shell .send-btn,
+.tmr-site-shell .search-btn,
+.tmr-site-shell .create-poll-btn {
+    letter-spacing: 0.01em;
+    font-weight: 800 !important;
+}
+
+.tmr-site-shell .btn:hover,
+.tmr-site-shell .btn-primary:hover,
+.tmr-site-shell .btn-secondary:hover,
+.tmr-site-shell .btn-outline:hover,
+.tmr-site-shell .btn-ghost:hover,
+.tmr-site-shell .new-message-btn:hover,
+.tmr-site-shell .send-btn:hover,
+.tmr-site-shell .search-btn:hover,
+.tmr-site-shell .create-poll-btn:hover {
+    transform: translateY(-1px);
 }
 
 .tmr-site-shell .page-header,

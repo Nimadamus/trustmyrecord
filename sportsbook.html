@@ -21473,7 +21473,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <script src="static/js/platform-production-fix.js?v=20260415d"></script>
     <script src="static/js/sportsbook-dashboard-sync.js?v=20260415d"></script>
-<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260425b">
+<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260425c">
 <script defer src="static/js/tmr-sitewide.js?v=20260424c"></script>
     <style>
         /* Make Your Picks polish: visual-only overrides, no pick-flow logic changes. */
@@ -21485,15 +21485,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         .picks-container-modern {
-            width: min(1220px, calc(100% - 32px));
+            width: min(1320px, calc(100% - 32px));
             margin: 0 auto 56px;
-            padding: clamp(20px, 3vw, 34px);
-            border: 1px solid rgba(148,163,184,0.18);
-            border-radius: 30px;
+            padding: clamp(24px, 3vw, 38px);
+            border: 1px solid rgba(148,163,184,0.16);
+            border-radius: 32px;
             background:
-                radial-gradient(circle at 82% 0%, rgba(45,212,191,0.12), transparent 34%),
-                linear-gradient(145deg, rgba(15,23,42,0.94), rgba(9,15,27,0.98));
-            box-shadow: 0 28px 80px rgba(0,0,0,0.24);
+                radial-gradient(circle at 82% 0%, rgba(45,212,191,0.10), transparent 32%),
+                radial-gradient(circle at 0% 100%, rgba(212,167,44,0.08), transparent 26%),
+                linear-gradient(145deg, rgba(15,23,42,0.96), rgba(9,15,27,0.99));
+            box-shadow: 0 34px 90px rgba(0,0,0,0.26);
         }
 
         #picks .section-header {
@@ -21525,9 +21526,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         #picks .pick-step {
             border: 1px solid rgba(148,163,184,0.16);
-            border-radius: 24px;
-            padding: clamp(18px, 2.4vw, 28px);
-            background: rgba(255,255,255,0.035);
+            border-radius: 26px;
+            padding: clamp(20px, 2.6vw, 30px);
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)),
+                rgba(255,255,255,0.02);
         }
 
         #picks .pick-step h3,
@@ -21640,6 +21643,54 @@ document.addEventListener('DOMContentLoaded', function() {
             padding-bottom: 16px;
             border-bottom: 1px solid rgba(148,163,184,0.14);
             margin-bottom: 18px !important;
+        }
+
+        #picks #gamesListContainer .tmr-market-card {
+            border-radius: 24px !important;
+            border: 1px solid rgba(148,163,184,0.14) !important;
+            background:
+                radial-gradient(circle at top right, rgba(45,212,191,0.07), transparent 28%),
+                linear-gradient(180deg, rgba(12,19,31,0.98), rgba(9,15,26,1)) !important;
+            box-shadow: 0 20px 48px rgba(0,0,0,0.22) !important;
+            overflow: hidden;
+        }
+
+        #picks #gamesListContainer .tmr-market-head {
+            padding: 22px 22px 18px !important;
+        }
+
+        #picks #gamesListContainer .tmr-market-body {
+            padding: 0 22px 22px !important;
+        }
+
+        #picks #gamesListContainer .tmr-market-topline,
+        #picks #gamesListContainer .tmr-group-title {
+            letter-spacing: 0.1em !important;
+        }
+
+        #picks #gamesListContainer .tmr-market-matchup {
+            margin-top: 14px;
+        }
+
+        #picks #gamesListContainer .tmr-team-name {
+            font-size: clamp(1.15rem, 1.8vw, 1.55rem) !important;
+            line-height: 1.05 !important;
+            letter-spacing: -0.03em !important;
+        }
+
+        #picks #gamesListContainer .tmr-group {
+            border-radius: 18px !important;
+            background: rgba(255,255,255,0.025) !important;
+        }
+
+        #picks #gamesListContainer .tmr-option-btn {
+            border-radius: 18px !important;
+            min-height: 92px;
+        }
+
+        #picks #gamesListContainer .tmr-option-market {
+            font-size: 1.03rem !important;
+            letter-spacing: -0.02em !important;
         }
 
         #picks .games-count {
