@@ -1814,10 +1814,10 @@
 
         body.tmr-site-shell[data-tmr-route="index"] .hero,
         body:not(.tmr-site-shell) .hero {
-            grid-template-columns: minmax(0, 1.02fr) minmax(0, 1.08fr);
-            gap: clamp(28px, 3.5vw, 54px);
+            grid-template-columns: minmax(0, 0.98fr) minmax(0, 1.08fr);
+            gap: clamp(48px, 5vw, 84px);
             align-items: stretch;
-            padding: 36px 0 24px;
+            padding: 46px 0 30px;
         }
 
         body.tmr-site-shell[data-tmr-route="index"] .hero-copy,
@@ -1825,12 +1825,11 @@
             display: grid;
             align-content: start;
             gap: 18px;
-            padding: clamp(28px, 3.3vw, 42px);
-            border-radius: 34px;
-            background:
-                radial-gradient(circle at 0% 0%, rgba(212, 167, 44, 0.14), transparent 34%),
-                radial-gradient(circle at 100% 0%, rgba(45, 212, 191, 0.18), transparent 36%),
-                linear-gradient(160deg, rgba(8, 14, 25, 0.98), rgba(11, 22, 38, 0.98));
+            padding: 14px 0 14px;
+            border-radius: 0;
+            background: none;
+            box-shadow: none;
+            border: 0;
         }
 
         body.tmr-site-shell[data-tmr-route="index"] .hero-copy::after,
@@ -1857,9 +1856,10 @@
             max-width: none;
             margin-top: 0;
             font-family: var(--headline);
-            font-size: clamp(4.2rem, 8vw, 6.8rem);
-            line-height: 0.92;
+            font-size: clamp(4.6rem, 8.4vw, 7.4rem);
+            line-height: 0.88;
             letter-spacing: 0.01em;
+            text-wrap: balance;
         }
 
         body.tmr-site-shell[data-tmr-route="index"] .hero-copy p,
@@ -1934,6 +1934,213 @@
                 radial-gradient(circle at 100% 0%, rgba(241, 190, 72, 0.12), transparent 36%),
                 linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025)),
                 rgba(8, 13, 22, 0.92);
+        }
+
+        .board-slab {
+            display: grid;
+            gap: 18px;
+            padding: 28px;
+            border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 30px;
+            background:
+                radial-gradient(circle at 100% 0%, rgba(0, 217, 255, 0.10), transparent 32%),
+                linear-gradient(180deg, rgba(13, 20, 32, 0.96), rgba(8, 13, 23, 0.98));
+            box-shadow: 0 28px 76px rgba(0, 0, 0, 0.24);
+        }
+
+        .board-slab-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .board-slab-top h3,
+        .lane-card h3,
+        .step-card h3 {
+            margin: 0;
+            font-family: var(--display);
+            font-size: 1.65rem;
+            line-height: 1;
+            letter-spacing: -0.02em;
+        }
+
+        .board-slab-top p,
+        .lane-card p,
+        .step-card p {
+            margin: 0;
+            color: #d7e4f2;
+            font-size: 0.94rem;
+            line-height: 1.55;
+            font-weight: 650;
+        }
+
+        .board-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .board-tabs span {
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(255,255,255,0.04);
+            color: #dbe8f7;
+            font-size: 0.76rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .board-tabs span.is-active {
+            color: #041017;
+            background: linear-gradient(135deg, var(--tmr-teal), #77f8ff 60%, #d7ff59);
+            border-color: transparent;
+        }
+
+        .board-grid {
+            display: grid;
+            grid-template-columns: 1.12fr 0.88fr;
+            gap: 16px;
+        }
+
+        .board-table,
+        .lane-card,
+        .step-card {
+            border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 24px;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)),
+                rgba(10, 16, 27, 0.94);
+            box-shadow: 0 20px 52px rgba(0,0,0,0.18);
+        }
+
+        .board-table {
+            overflow: hidden;
+        }
+
+        .board-table-header,
+        .board-row {
+            display: grid;
+            grid-template-columns: minmax(190px, 1.2fr) repeat(3, minmax(120px, 0.85fr));
+            gap: 12px;
+            align-items: center;
+            padding: 16px 18px;
+        }
+
+        .board-table-header {
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            color: #8af0df;
+            font-size: 0.74rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .board-row + .board-row {
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .board-team {
+            display: grid;
+            gap: 4px;
+        }
+
+        .board-team strong {
+            color: #f8fbff;
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        .board-team span {
+            color: #9fb1c6;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .board-price {
+            display: grid;
+            justify-items: stretch;
+        }
+
+        .board-price b {
+            display: block;
+            padding: 12px 14px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(255,255,255,0.04);
+            color: #f8fbff;
+            text-align: center;
+            font-family: var(--display);
+            font-size: 1.38rem;
+            line-height: 1;
+            letter-spacing: -0.02em;
+        }
+
+        .board-price small {
+            display: block;
+            margin-top: 7px;
+            color: #87f2dd;
+            text-align: center;
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+        }
+
+        .lane-stack,
+        .step-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .lane-card,
+        .step-card {
+            padding: 20px;
+        }
+
+        .lane-list {
+            display: grid;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .lane-item {
+            display: grid;
+            grid-template-columns: 72px minmax(0, 1fr);
+            gap: 12px;
+            align-items: center;
+            padding: 12px 14px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            background: rgba(255,255,255,0.04);
+        }
+
+        .lane-item b,
+        .step-number {
+            color: #8af0df;
+            font-size: 0.76rem;
+            font-weight: 900;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+        }
+
+        .lane-item span {
+            color: #d7e4f2;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .homepage-lanes {
+            display: grid;
+            grid-template-columns: 1.08fr 0.92fr;
+            gap: 16px;
+        }
+
+        .step-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
         }
 
         .hero-live-strip small {
@@ -2712,55 +2919,81 @@
             <section class="section homepage-bento">
                 <div class="section-head section-head--wide">
                     <div>
-                        <span class="section-kicker">What people see first</span>
-                        <h2>The whole product should read in one scan.</h2>
+                        <span class="section-kicker">Board preview</span>
+                        <h2>The homepage should feel like a real board, not a pitch deck.</h2>
                     </div>
-                    <p class="homepage-section-copy">A visitor should instantly understand the loop: a locked ticket hits the board, the result stays on the profile, and the community has something real to react to.</p>
+                    <p class="homepage-section-copy">The first scroll should show the actual shape of the product: market tabs, visible odds, profile accountability, and the community orbiting around those receipts.</p>
                 </div>
-                <div class="bento-grid">
-                    <article class="bento-card bento-card--wide">
-                        <div class="bento-card-top">
-                            <span class="record-badge">Sportsbook board</span>
-                            <span class="record-badge">Fast market switch</span>
+                <div class="board-slab">
+                    <div class="board-slab-top">
+                        <div>
+                            <h3>Switch markets fast. See the price. Lock the pick.</h3>
+                            <p>Game lines, team totals, first 5, periods, and alt markets should feel like tabs in a real sportsbook, not hidden sections in a blog layout.</p>
                         </div>
-                        <h3>Lead with the board, not a lecture.</h3>
-                        <p>Core markets should be immediate, odds should dominate each row, and the board should feel like something you can attack in seconds.</p>
-                        <div class="bento-odds-grid">
-                            <div class="bento-odds-cell"><small>Moneyline</small><strong>-108</strong><span>Boston Bruins</span></div>
-                            <div class="bento-odds-cell"><small>Puck Line</small><strong>+225</strong><span>Bruins -1.5</span></div>
-                            <div class="bento-odds-cell"><small>Total</small><strong>+110</strong><span>Under 5.5</span></div>
+                        <div class="board-tabs" aria-label="Homepage market tabs preview">
+                            <span class="is-active">Game Lines</span>
+                            <span>Team Totals</span>
+                            <span>5 Innings</span>
+                            <span>Alt Lines</span>
                         </div>
-                    </article>
-
-                    <article class="bento-card">
-                        <div class="bento-card-top">
-                            <span class="record-badge">Profile</span>
+                    </div>
+                    <div class="board-grid">
+                        <div class="board-table">
+                            <div class="board-table-header">
+                                <span>Matchup</span>
+                                <span>Moneyline</span>
+                                <span>Spread</span>
+                                <span>Total</span>
+                            </div>
+                            <div class="board-row">
+                                <div class="board-team">
+                                    <strong>Buffalo Sabres @ Boston Bruins</strong>
+                                    <span>NHL · Starts in 14h 32m</span>
+                                </div>
+                                <div class="board-price"><b>-108</b><small>Bruins ML</small></div>
+                                <div class="board-price"><b>+225</b><small>Bruins -1.5</small></div>
+                                <div class="board-price"><b>+110</b><small>Under 5.5</small></div>
+                            </div>
+                            <div class="board-row">
+                                <div class="board-team">
+                                    <strong>San Diego Padres @ Arizona Diamondbacks</strong>
+                                    <span>MLB · Starts in 1h 0m</span>
+                                </div>
+                                <div class="board-price"><b>-118</b><small>DBacks ML</small></div>
+                                <div class="board-price"><b>+128</b><small>Padres -1.5</small></div>
+                                <div class="board-price"><b>-112</b><small>Over 16</small></div>
+                            </div>
+                            <div class="board-row">
+                                <div class="board-team">
+                                    <strong>Knicks @ Celtics</strong>
+                                    <span>NBA · Starts in 38m</span>
+                                </div>
+                                <div class="board-price"><b>-142</b><small>Celtics ML</small></div>
+                                <div class="board-price"><b>-4.5</b><small>Celtics Spread</small></div>
+                                <div class="board-price"><b>221.5</b><small>Game Total</small></div>
+                            </div>
                         </div>
-                        <h3>Your record is the credibility layer.</h3>
-                        <p>Tracked picks, units, ROI, streaks, and splits should make every profile feel earned, inspectable, and hard to fake.</p>
-                    </article>
-
-                    <article class="bento-card">
-                        <div class="bento-card-top">
-                            <span class="record-badge">Feed</span>
+                        <div class="lane-stack">
+                            <article class="lane-card">
+                                <h3>Public record</h3>
+                                <p>Every ticket feeds one profile that keeps win rate, ROI, units, streak, and grading history visible instead of letting posts vanish after the result.</p>
+                                <div class="lane-list">
+                                    <div class="lane-item"><b>Win rate</b><span>57-31 · 64.8% on visible history</span></div>
+                                    <div class="lane-item"><b>Units</b><span>+18.4u tied to settled tickets</span></div>
+                                    <div class="lane-item"><b>Ledger</b><span>Every post keeps its time, price, and final grade</span></div>
+                                </div>
+                            </article>
+                            <article class="lane-card">
+                                <h3>Community pressure</h3>
+                                <p>Feed posts, leaderboard moves, hangout debates, and arena callouts should all revolve around the same locked history.</p>
+                                <div class="lane-list">
+                                    <div class="lane-item"><b>Feed</b><span>Recent locks and reactions hit in real time</span></div>
+                                    <div class="lane-item"><b>Hangout</b><span>Polls and takes stay connected to profiles</span></div>
+                                    <div class="lane-item"><b>Arena</b><span>Rivalries matter more when receipts are visible</span></div>
+                                </div>
+                            </article>
                         </div>
-                        <h3>The site should feel alive, not explained.</h3>
-                        <p>Locked picks, reactions, rivalries, and heat checks should make the platform feel like game night, not a startup brochure.</p>
-                    </article>
-
-                    <article class="bento-card bento-card--tall">
-                        <div class="bento-card-top">
-                            <span class="record-badge">Community pressure</span>
-                        </div>
-                        <h3>Polls, trivia, and arena should all raise the stakes.</h3>
-                        <p>Every extra mode should feed the same public identity, so the whole site feels like one competitive ecosystem instead of loose pages glued together.</p>
-                        <div class="bento-tags">
-                            <span>Polls</span>
-                            <span>Trivia</span>
-                            <span>Arena</span>
-                            <span>Public record</span>
-                        </div>
-                    </article>
+                    </div>
                 </div>
             </section>
 
@@ -2799,60 +3032,26 @@
             <section class="section homepage-product-grid">
                 <div class="section-head section-head--wide">
                     <div>
-                        <span class="section-kicker">Inside the network</span>
-                        <h2>One product. Three loops: board, profile, community.</h2>
+                        <span class="section-kicker">How it works</span>
+                        <h2>Three simple moves: post it, lock it, live with it.</h2>
                     </div>
-                    <p class="homepage-section-copy">This shouldn’t feel like a static landing page. It should feel like you’re standing in the middle of a sports conversation with receipts attached.</p>
+                    <p class="homepage-section-copy">The homepage should explain the product through motion and structure, not by dumping six nearly identical feature cards above the fold.</p>
                 </div>
-                <div class="product-grid">
-                    <article class="product-card product-card--wide">
-                        <div class="product-card-head">
-                            <span class="record-badge">Live feed</span>
-                            <span class="record-badge">Recent locks</span>
-                        </div>
-                        <h3>Recent action should look busy, opinionated, and impossible to fake.</h3>
-                        <div class="mini-feed">
-                            <div class="mini-feed-row">
-                                <b>@sharpaction</b>
-                                <span>Locked Knicks ML -118 · 1.5u</span>
-                                <small>3m ago</small>
-                            </div>
-                            <div class="mini-feed-row">
-                                <b>@doghunter</b>
-                                <span>Called out a fade after a graded loss</span>
-                                <small>7m ago</small>
-                            </div>
-                            <div class="mini-feed-row">
-                                <b>@unitgrinder</b>
-                                <span>Won trivia round, then posted an MLB total</span>
-                                <small>11m ago</small>
-                            </div>
-                        </div>
+                <div class="step-grid">
+                    <article class="step-card">
+                        <div class="product-card-head"><span class="step-number">01</span></div>
+                        <h3>Make the pick.</h3>
+                        <p>Choose the market, take the price, and let the board hold onto the number that was actually available when you posted it.</p>
                     </article>
-
-                    <article class="product-card">
-                        <div class="product-card-head">
-                            <span class="record-badge">Leaderboard</span>
-                        </div>
-                        <h3>Top records should feel inspectable.</h3>
-                        <div class="leader-mini">
-                            <div><b>#1</b><span>SharpAction</span><small>57-31 · +18.4u</small></div>
-                            <div><b>#2</b><span>LocksOnly</span><small>44-25 · +13.1u</small></div>
-                            <div><b>#3</b><span>DogHunter</span><small>39-28 · +9.7u</small></div>
-                        </div>
+                    <article class="step-card">
+                        <div class="product-card-head"><span class="step-number">02</span></div>
+                        <h3>Lock the receipt.</h3>
+                        <p>The ticket gets a timestamp, source, and grading path so it can’t turn into a rewritten story after the result lands.</p>
                     </article>
-
-                    <article class="product-card">
-                        <div class="product-card-head">
-                            <span class="record-badge">Community</span>
-                        </div>
-                        <h3>Hangout, trivia, and arena should feel like fuel, not extras.</h3>
-                        <div class="community-pills">
-                            <span>Polls with receipts</span>
-                            <span>Trivia with bragging rights</span>
-                            <span>Arena rivalries</span>
-                            <span>Profile-based debate</span>
-                        </div>
+                    <article class="step-card">
+                        <div class="product-card-head"><span class="step-number">03</span></div>
+                        <h3>Build the public record.</h3>
+                        <p>Wins, losses, units, leaderboard movement, feed reactions, and community arguments all stack on the same public identity.</p>
                     </article>
                 </div>
             </section>
