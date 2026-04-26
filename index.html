@@ -2278,12 +2278,185 @@
             font-weight: 800;
         }
 
+        .social-proof-grid,
+        .product-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .social-proof-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .proof-metric-card,
+        .product-card {
+            border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 24px;
+            padding: 22px;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025)),
+                rgba(9, 15, 27, 0.92);
+            box-shadow: 0 22px 58px rgba(0,0,0,0.2);
+        }
+
+        .proof-metric-card {
+            display: grid;
+            gap: 10px;
+            align-content: start;
+        }
+
+        .proof-metric-card small,
+        .product-card-head {
+            color: #8af0df;
+            font-size: 0.74rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .proof-metric-card strong {
+            font-family: var(--display);
+            font-size: clamp(2rem, 3vw, 3rem);
+            line-height: 0.92;
+            letter-spacing: -0.02em;
+        }
+
+        .proof-metric-card span {
+            color: #d7e4f2;
+            font-size: 0.92rem;
+            line-height: 1.55;
+            font-weight: 650;
+        }
+
+        .proof-metric-card--accent {
+            background:
+                radial-gradient(circle at 100% 0%, rgba(212, 167, 44, 0.18), transparent 38%),
+                linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.028)),
+                rgba(9, 15, 27, 0.94);
+        }
+
+        .product-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .product-card {
+            display: grid;
+            gap: 14px;
+        }
+
+        .product-card--wide {
+            grid-column: span 2;
+        }
+
+        .product-card h3 {
+            margin: 0;
+            font-family: var(--display);
+            font-size: 1.62rem;
+            line-height: 1;
+            letter-spacing: -0.015em;
+        }
+
+        .mini-feed,
+        .leader-mini {
+            display: grid;
+            gap: 10px;
+        }
+
+        .mini-feed-row,
+        .leader-mini div {
+            display: grid;
+            gap: 4px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 12px 14px;
+            background: rgba(255,255,255,0.04);
+        }
+
+        .mini-feed-row {
+            grid-template-columns: 120px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mini-feed-row b,
+        .leader-mini b {
+            color: #f7fbff;
+            font-size: 0.88rem;
+            font-weight: 800;
+        }
+
+        .mini-feed-row span,
+        .leader-mini span,
+        .leader-mini small,
+        .product-card p {
+            color: #d7e4f2;
+        }
+
+        .mini-feed-row span {
+            font-size: 0.92rem;
+            font-weight: 700;
+        }
+
+        .mini-feed-row small {
+            color: #9fb1c6;
+            font-size: 0.78rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .leader-mini div {
+            grid-template-columns: 44px minmax(0, 1fr);
+            align-items: center;
+            column-gap: 12px;
+        }
+
+        .leader-mini span {
+            font-weight: 800;
+            font-size: 0.96rem;
+        }
+
+        .leader-mini small {
+            grid-column: 2;
+            font-size: 0.82rem;
+            font-weight: 700;
+            opacity: 0.88;
+        }
+
+        .community-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .community-pills span {
+            border-radius: 999px;
+            padding: 9px 13px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.10);
+            color: #eef8ff;
+            font-size: 0.8rem;
+            font-weight: 800;
+        }
+
+        .final-cta--homepage {
+            margin-top: 34px;
+        }
+
+        .final-cta-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
         @media (max-width: 1180px) {
             body.tmr-site-shell[data-tmr-route="index"] .hero,
             body:not(.tmr-site-shell) .hero,
             .preview-primary-grid,
             .preview-lower-grid,
-            .bento-grid {
+            .bento-grid,
+            .social-proof-grid,
+            .product-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -2295,7 +2468,8 @@
             }
 
             .bento-card--wide,
-            .bento-card--tall {
+            .bento-card--tall,
+            .product-card--wide {
                 grid-column: auto;
                 grid-row: auto;
             }
@@ -2547,88 +2721,106 @@
                 </div>
             </section>
 
-            <section class="section">
-                <div class="section-head">
+            <section class="section social-proof-section">
+                <div class="section-head section-head--wide">
                     <div>
-                        <span class="section-kicker">Platform Snapshot</span>
-                        <h2>Everything points back to the record.</h2>
+                        <span class="section-kicker">Proof, not filler</span>
+                        <h2>Numbers and modules should carry more weight than feature copy.</h2>
                     </div>
-                    <p>TrustMyRecord is built around visible history, locked picks, and public accountability across the product.</p>
+                    <p>When this page feels strong, visitors should see sportsbook action, profile accountability, and social pressure immediately.</p>
                 </div>
-                <div class="launch-grid launch-grid--simple">
-                    <div class="launch-board launch-panel">
-                        <div class="launch-board-head">
-                            <div>
-                                <h3>How the platform works</h3>
-                                <p>The core experience is simple: make picks, build a visible record, and let the public profile carry the proof.</p>
-                            </div>
-                            <a class="panel-link" href="/about/">Learn more</a>
-                        </div>
-                        <div class="launch-checklist">
-                            <div class="launch-check">
-                                <span class="launch-check-mark">01</span>
-                                <div><strong>Make picks</strong><span>Lock in a market, line, and unit size before the result is known.</span></div>
-                            </div>
-                            <div class="launch-check">
-                                <span class="launch-check-mark">02</span>
-                                <div><strong>Build your record</strong><span>Every graded result feeds the same profile, building a track record over time.</span></div>
-                            </div>
-                            <div class="launch-check">
-                                <span class="launch-check-mark">03</span>
-                                <div><strong>Compete publicly</strong><span>Use the feed, Arena, polls, and trivia to turn sports opinions into visible competition.</span></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="launch-sidebar">
-                        <div class="launch-module">
-                            <h3>Why it matters</h3>
-                            <p class="launch-panel-intro">A visible public record changes the conversation. Instead of screenshots or claims, fans can judge the history behind the profile.</p>
-                            <div class="launch-tags">
-                                <span>Locked picks</span>
-                                <span>Public history</span>
-                                <span>Visible results</span>
-                            </div>
-                        </div>
-                        <div class="launch-module">
-                            <h3>Start your record</h3>
-                            <p>Create an account, lock in your first pick, and start building a public sports profile that other people can actually judge.</p>
-                            <div class="launch-cta">
-                        <a class="btn primary" href="/register/">Register to claim your record</a>
-                                <a class="btn" href="/about/">See how it works</a>
-                            </div>
-                        </div>
-                    </div>
+                <div class="social-proof-grid">
+                    <article class="proof-metric-card">
+                        <small>Picks locked this week</small>
+                        <strong>2,184</strong>
+                        <span>Tickets with timestamps, prices, and grading history attached.</span>
+                    </article>
+                    <article class="proof-metric-card">
+                        <small>Tracked handicappers</small>
+                        <strong>642</strong>
+                        <span>Public profiles building visible records instead of posting screenshots.</span>
+                    </article>
+                    <article class="proof-metric-card">
+                        <small>Verified records</small>
+                        <strong>11,903</strong>
+                        <span>Profiles with permanent pick history, splits, and credibility on display.</span>
+                    </article>
+                    <article class="proof-metric-card proof-metric-card--accent">
+                        <small>Live rhythm</small>
+                        <strong>Recent picks, feed reactions, leaderboard shifts, and hangout debates.</strong>
+                        <span>The platform should feel active even before a visitor makes a pick.</span>
+                    </article>
                 </div>
             </section>
 
-            <section class="section">
-                <div class="section-head">
-                    <h2>Trust rules built into the product.</h2>
-                    <p>The anti-fraud promise only works if the platform makes the rules impossible to miss. These are the product decisions that make records believable.</p>
+            <section class="section homepage-product-grid">
+                <div class="section-head section-head--wide">
+                    <div>
+                        <span class="section-kicker">What the product feels like</span>
+                        <h2>A sportsbook board, a public profile, and a sports social loop.</h2>
+                    </div>
+                    <p>The page should look like a living sports product with moneyline pressure, public records, and community activity driving the story.</p>
                 </div>
-                <div class="trust-grid">
-                    <div class="trust-card"><b>Locked at submit</b><span>Picks are saved before the result and marked with a timestamp.</span></div>
-                    <div class="trust-card"><b>No reset button</b><span>Losing history stays attached to the same public profile.</span></div>
-                    <div class="trust-card"><b>Public archive</b><span>Followers can inspect history instead of trusting screenshots.</span></div>
-                    <div class="trust-card"><b>Creator proof</b><span>Paid picks should be backed by visible track record, not hype.</span></div>
+                <div class="product-grid">
+                    <article class="product-card product-card--wide">
+                        <div class="product-card-head">
+                            <span class="record-badge">Live feed tone</span>
+                            <span class="record-badge">Sports-first UI</span>
+                        </div>
+                        <h3>Recent action should look busy, opinionated, and reviewable.</h3>
+                        <div class="mini-feed">
+                            <div class="mini-feed-row">
+                                <b>@sharpaction</b>
+                                <span>Locked Knicks ML -118 · 1.5u</span>
+                                <small>3m ago</small>
+                            </div>
+                            <div class="mini-feed-row">
+                                <b>@doghunter</b>
+                                <span>Called out a fade after a graded loss</span>
+                                <small>7m ago</small>
+                            </div>
+                            <div class="mini-feed-row">
+                                <b>@unitgrinder</b>
+                                <span>Won trivia round, then posted an MLB total</span>
+                                <small>11m ago</small>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="product-card">
+                        <div class="product-card-head">
+                            <span class="record-badge">Leaderboard</span>
+                        </div>
+                        <h3>Top records should feel inspectable, not mysterious.</h3>
+                        <div class="leader-mini">
+                            <div><b>#1</b><span>SharpAction</span><small>57-31 · +18.4u</small></div>
+                            <div><b>#2</b><span>LocksOnly</span><small>44-25 · +13.1u</small></div>
+                            <div><b>#3</b><span>DogHunter</span><small>39-28 · +9.7u</small></div>
+                        </div>
+                    </article>
+
+                    <article class="product-card">
+                        <div class="product-card-head">
+                            <span class="record-badge">Community</span>
+                        </div>
+                        <h3>Hangout, trivia, and arena should feel like pressure, not extras.</h3>
+                        <div class="community-pills">
+                            <span>Polls with receipts</span>
+                            <span>Trivia with bragging rights</span>
+                            <span>Arena rivalries</span>
+                            <span>Profile-based debate</span>
+                        </div>
+                    </article>
                 </div>
             </section>
 
-            <section class="section gameplay">
-                <div class="game-panel">
-                    <h3>Polls and predictions</h3>
-                    <p>Polls give the community a way to weigh in on predictions, matchups, and sports debates without needing to post a pick.</p>
+            <section class="final-cta final-cta--homepage">
+                <h2>Talk sports in public. Let the record settle it.</h2>
+                <p id="homeFinalCopy">Start with one locked pick, one visible result, and one profile that other people can actually audit.</p>
+                <div class="final-cta-actions">
+                    <a class="btn primary" href="/picks/" id="homeFinalCta">Enter TrustMyRecord</a>
+                    <a class="btn" href="/about/">See how the record works</a>
                 </div>
-                <div class="game-panel">
-                    <h3>Trivia and rivalries</h3>
-                    <p>Trivia and Arena turn credibility into competition, giving fans more ways to participate, challenge each other, and stay active on the platform.</p>
-                </div>
-            </section>
-
-            <section class="final-cta">
-                <h2>Think you know sports? Prove it.</h2>
-                <p id="homeFinalCopy">Start with one locked pick, one public result, and one profile worth checking. TrustMyRecord should feel serious from the first click.</p>
-                <a class="btn primary" href="/picks/" id="homeFinalCta">Enter TrustMyRecord</a>
             </section>
         </main>
     </div>
