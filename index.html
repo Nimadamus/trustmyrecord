@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TrustMyRecord | Prove It In Public</title>
-<meta name="description" content="TrustMyRecord is a sports social platform for locked picks, public records, polls, trivia, and verified sports credibility. Track every pick free. Compete for cash.">
-<meta property="og:title" content="TrustMyRecord | Think You Know Sports. Prove It.">
-<meta property="og:description" content="Free advanced stats. Real cash prizes. The social network for handicappers and fans. Locked picks, public records, forums, trivia, polls, and 2K/Madden/Show/NHL money matches.">
+<meta name="description" content="TrustMyRecord is the sports social network for public pick records, handicapping competition, forums, polls, trivia, and PS5 challenge matches in 2K, Madden, MLB The Show, and NHL.">
+<meta property="og:title" content="TrustMyRecord | Do You Think You Know Sports? Prove It.">
+<meta property="og:description" content="Track picks, build a public record, sell or buy picks, talk in the feed, and challenge rivals in sports debates and PS5 matchups.">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -272,8 +272,11 @@ button{font:inherit;cursor:pointer}
    4. ARENA SECTION — dark navy scoreboard hub
    ============================================================ */
 .arena{
-  position:relative;background:var(--navy);color:#e8edf7;border-top:3px solid var(--orange);
+  position:relative;color:#e8edf7;
   overflow:hidden;
+  background:
+    linear-gradient(180deg,var(--navy-3) 0%,var(--navy) 8%,var(--navy) 100%);
+  margin-top:-1px;
 }
 .arena::before{
   content:"";position:absolute;inset:0;pointer-events:none;opacity:.7;
@@ -640,13 +643,14 @@ button{font:inherit;cursor:pointer}
    ============================================================ */
 .combined-hero{
   position:relative;overflow:hidden;
-  border-bottom:3px solid var(--orange);
-  padding:42px 24px 32px;
+  padding:22px 24px 18px;
+  min-height:calc(100vh - 78px);
+  display:flex;flex-direction:column;justify-content:flex-start;gap:16px;
   background:
-    radial-gradient(700px 380px at 85% 0%,rgba(255,106,61,.22),transparent 60%),
-    radial-gradient(600px 320px at 0% 100%,rgba(42,89,184,.22),transparent 60%),
-    radial-gradient(500px 260px at 50% 100%,rgba(202,160,36,.10),transparent 70%),
-    linear-gradient(135deg,var(--navy) 0%,var(--navy-3) 100%);
+    radial-gradient(800px 420px at 88% 38%,rgba(255,106,61,.22),transparent 60%),
+    radial-gradient(700px 380px at 4% 78%,rgba(42,89,184,.22),transparent 60%),
+    radial-gradient(560px 280px at 50% 100%,rgba(202,160,36,.10),transparent 70%),
+    linear-gradient(180deg,var(--navy) 0%,var(--navy-3) 100%);
 }
 .combined-hero::before{
   content:"";position:absolute;inset:0;pointer-events:none;opacity:.7;
@@ -661,8 +665,8 @@ button{font:inherit;cursor:pointer}
   background-repeat:no-repeat;background-size:contain;
 }
 .combined-inner{
-  position:relative;z-index:1;max-width:1240px;margin:0 auto;
-  display:grid;grid-template-columns:1.45fr 1fr;gap:36px;align-items:center;
+  position:relative;z-index:1;max-width:1240px;margin:0 auto;width:100%;flex:1;
+  display:grid;grid-template-columns:1.35fr 1.08fr;gap:28px;align-items:center;
 }
 .combined-left .ch-eyebrow{
   display:inline-flex;align-items:center;gap:8px;
@@ -673,24 +677,24 @@ button{font:inherit;cursor:pointer}
 }
 .combined-left .ch-eyebrow .pip{width:7px;height:7px;border-radius:50%;background:var(--orange);box-shadow:0 0 0 3px rgba(255,106,61,.22);animation:pulse 1.4s infinite}
 .combined-left h1{
-  font-size:48px;font-weight:900;letter-spacing:-.035em;line-height:.94;
+  font-size:clamp(40px,5vw,62px);font-weight:900;letter-spacing:-.035em;line-height:.92;
   margin:0;color:#fff;
 }
 .combined-left h1 .accent{
-  display:block;font-size:78px;letter-spacing:-.045em;margin-top:4px;
+  display:block;font-size:clamp(60px,8vw,108px);letter-spacing:-.045em;margin-top:2px;
   background:linear-gradient(135deg,#ff8b66 0%,var(--orange) 50%,#e85a30 100%);
   -webkit-background-clip:text;background-clip:text;color:transparent;
   text-shadow:0 4px 30px rgba(255,106,61,.34);
 }
 .combined-left p.lead{
-  font-size:14.5px;line-height:1.55;color:#cbd2e0;margin:18px 0 14px;max-width:600px;
+  font-size:clamp(15px,1.15vw,17px);line-height:1.5;color:#cbd2e0;margin:14px 0 14px;max-width:670px;
 }
 .combined-left p.lead b{color:#fff;font-weight:700}
 .combined-left .ch-warning{
   display:flex;align-items:center;gap:12px;
   padding:10px 14px;border-radius:7px;
   background:rgba(193,39,29,.12);border:1px solid rgba(193,39,29,.48);
-  font-size:12.5px;color:#ffd5d2;line-height:1.45;margin:0 0 16px;max-width:600px;
+  font-size:12.5px;color:#ffd5d2;line-height:1.45;margin:0 0 12px;max-width:670px;
 }
 .combined-left .ch-warning b{color:#fff;font-weight:800;letter-spacing:.02em}
 .combined-left .ch-warning .ic{
@@ -702,19 +706,22 @@ button{font:inherit;cursor:pointer}
 .combined-left .ch-cta .btn.lg{height:46px;padding:0 20px;font-size:14px}
 .combined-left .ch-cta .meta{font-size:12px;color:#8b95a8;margin-left:4px}
 
-/* Curry card (right) — adapted to dark parent */
+/* Curry visual (right) — integrated into the hero, not a boxed card */
 .ch-card{
-  background:#fff;border:1px solid #2a3148;border-radius:10px;overflow:hidden;
-  box-shadow:0 18px 44px rgba(0,0,0,.45);
+  background:transparent;border:none;border-radius:0;overflow:visible;
+  box-shadow:none;
 }
 .ch-card-head{
-  background:#0a0d18;color:#fff;padding:9px 13px;
-  font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  display:flex;justify-content:space-between;align-items:center;
+  display:none;
 }
 .ch-card-head .pip{display:inline-flex;align-items:center;gap:7px;color:var(--orange-2)}
 .ch-card-head .pip::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--orange);box-shadow:0 0 0 3px rgba(255,106,61,.22);animation:pulse 1.4s infinite}
-.ch-photo{position:relative;background:#000;aspect-ratio:16/10;overflow:hidden}
+.ch-photo{
+  position:relative;background:#000;aspect-ratio:4/3;overflow:hidden;
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 28px 60px rgba(0,0,0,.42);
+}
 .ch-photo img{width:100%;height:100%;object-fit:cover}
 .ch-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,0,0,.84) 100%)}
 .ch-photo .label{position:absolute;left:12px;right:12px;bottom:10px;z-index:2;color:#fff;display:flex;justify-content:space-between;align-items:flex-end;gap:8px}
@@ -722,22 +729,32 @@ button{font:inherit;cursor:pointer}
 .ch-photo .label span{font-size:11px;opacity:.85}
 .ch-photo .label .badge{font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;background:var(--gold);color:var(--navy);padding:3px 7px;border-radius:3px;display:inline-flex;align-items:center;gap:4px}
 .ch-photo .label .badge::before{content:"★"}
-.ch-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border-top:1px solid var(--line)}
-.ch-stat{padding:10px 12px;background:var(--panel);display:flex;flex-direction:column;gap:2px}
-.ch-stat .lbl{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:5px}
+.ch-stats{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
+  margin-top:14px;
+}
+.ch-stat{
+  padding:12px 14px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:16px;
+  backdrop-filter:blur(10px);
+  display:flex;flex-direction:column;gap:3px;
+}
+.ch-stat .lbl{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#cbd2e0;display:flex;align-items:center;gap:5px}
 .ch-stat .lbl::before{content:"";width:5px;height:5px;border-radius:50%}
 .ch-stat.green .lbl::before{background:var(--green)}
 .ch-stat.blue .lbl::before{background:var(--blue)}
 .ch-stat.orange .lbl::before{background:var(--orange)}
 .ch-stat.gold .lbl::before{background:var(--gold)}
-.ch-stat b{font-size:17px;font-weight:800;letter-spacing:-.018em;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.05}
-.ch-stat .sub{font-size:10px;color:var(--muted)}
+.ch-stat b{font-size:18px;font-weight:800;letter-spacing:-.018em;color:#fff;font-variant-numeric:tabular-nums;line-height:1.05}
+.ch-stat .sub{font-size:10px;color:#a8b2c7}
 .ch-stat.green b{color:var(--green)}
 .ch-stat.gold b{color:var(--gold)}
 
 /* Compact feature pill row below */
 .ch-features{
-  position:relative;z-index:1;max-width:1240px;margin:22px auto 0;padding:18px 0 0;
+  position:relative;z-index:1;max-width:1240px;margin:12px auto 0;padding:12px 0 0;
   border-top:1px solid #2a3148;
   display:flex;gap:8px;flex-wrap:wrap;justify-content:center;
 }
@@ -941,15 +958,55 @@ button{font:inherit;cursor:pointer}
   .header-search{display:none}
   .ticker-right{display:none}
 }
+@media(max-width:760px){
+  .roles{grid-template-columns:1fr}
+  .fanzone{grid-template-columns:1fr}
+  .footer-cols{grid-template-columns:1fr}
+  .signup .form{flex-direction:column;align-items:stretch}
+  .signup input{min-width:0;width:100%}
+  .signup .btn{width:100%}
+  .trust{grid-template-columns:1fr 1fr;gap:8px 0}
+  .trust > div{border-right:none;padding:8px 0;border-bottom:1px solid var(--line)}
+  .trust > div:nth-child(2),.trust > div:last-child{border-bottom:none}
+  .arena-inner{padding:32px 18px 36px}
+  .arena-head h2{font-size:22px}
+  .podium{grid-template-columns:1fr;border-bottom:none}
+  .podium > div{border-right:none;border-bottom:1px solid var(--line);text-align:left;flex-direction:row;justify-content:flex-start;gap:14px;padding:11px 14px}
+  .podium > div:last-child{border-bottom:none}
+  .receipt{grid-template-columns:auto 1fr;gap:8px}
+  .receipt-pl{grid-column:1 / -1;text-align:right;padding-top:6px;border-top:1px dashed #2a3148}
+  .ch-features{padding:14px 12px 0;gap:6px}
+  .ch-fp{font-size:11.5px;padding:6px 10px}
+  .pricing,.market{grid-template-columns:1fr}
+  .feed-post{grid-template-columns:1fr}
+  .feed-post .av{display:none}
+  .header-search{display:none}
+  .header-inner{padding:12px 16px}
+  .container,.wrap{padding:18px 14px}
+  .section-h{flex-direction:column;align-items:flex-start;gap:6px}
+  .lb-controls{flex-direction:column;align-items:flex-start;gap:8px}
+  .lb-controls .right{display:none}
+  .compose-row,.composer{padding-left:12px;padding-right:12px}
+}
 @media(max-width:560px){
-  .hero h1{font-size:34px}
-  .header-right .btn:not(.accent){display:none}
+  .combined-left h1{font-size:30px}
+  .combined-left h1 .accent{font-size:48px}
+  .combined-hero{padding:28px 16px 32px}
+  .ch-warning{padding:9px 12px;font-size:11.5px}
+  .ch-warning .ic{width:26px;height:26px;font-size:13px}
+  .ch-cta{flex-direction:column;align-items:stretch}
+  .ch-cta .btn.lg{width:100%}
   .quote-card{padding:24px;flex-direction:column;align-items:flex-start;text-align:left}
   .quote-mark{font-size:60px}
   .quote-text p{font-size:20px}
+  .ch-stats{grid-template-columns:1fr 1fr}
+  .prove-it h2{font-size:30px}
+  .prove-it h2 .accent{font-size:48px}
+  .tagstrip{font-size:14px;padding:14px 16px}
+  .tagstrip .sep{display:none}
+  .featured-info h1{font-size:18px}
+  .featured-stats{grid-template-columns:1fr 1fr}
   .hero-card-stats{grid-template-columns:1fr 1fr}
-  .prove-it h2{font-size:32px}
-  .prove-it h2 .accent{font-size:54px}
 }
 </style>
 </head>
@@ -983,8 +1040,8 @@ button{font:inherit;cursor:pointer}
   <div class="combined-inner">
     <div class="combined-left">
       <span class="ch-eyebrow"><span class="pip"></span>The Receipt-Based Sports Network</span>
-      <h1>THINK YOU KNOW SPORTS.<span class="accent">PROVE IT.</span></h1>
-      <p class="lead"><b>Free advanced stats. Real cash prizes. The social network for handicappers AND fans.</b> Track picks, sell winners, climb the leaderboard — or just talk shit on the forums, smoke trivia, vote on polls, and run it back in 2K, Madden, The Show, and NHL.</p>
+      <h1>DO YOU THINK YOU KNOW SPORTS?<span class="accent">PROVE IT.</span></h1>
+      <p class="lead"><b>TrustMyRecord is the sports social network where every pick, argument, challenge, and result lives on a public profile.</b> Track picks for free, build a verified record, buy and sell picks, climb leaderboards, talk in the feed and forums, vote in polls, play trivia, and challenge people head-to-head on PS5 in 2K, Madden, MLB The Show, and NHL.</p>
       <div class="ch-warning">
         <div class="ic">⚠</div>
         <div><b>NO DELETES. NO RESETS. NO DO-OVERS.</b> Once you lock a pick, it's on your record forever. Pick carefully.</div>
@@ -1039,13 +1096,13 @@ button{font:inherit;cursor:pointer}
 
   <!-- Compact feature-pill row, all on one band -->
   <div class="ch-features">
-    <span class="ch-fp green"><span class="ck">✓</span><b>Free advanced stats</b> · ROI, BTCL, win %, sample</span>
-    <span class="ch-fp gold"><span class="ck">$</span><b>Cash prize tournaments</b></span>
-    <span class="ch-fp orange"><span class="ck">🔒</span>Locked picks · <b>auto-graded</b></span>
-    <span class="ch-fp red"><span class="ck">⚔</span><b>Handicapping money matches</b> · challenge for cash</span>
-    <span class="ch-fp red"><span class="ck">⚔</span>Head-to-head + <b>2K · Madden · Show · NHL</b></span>
-    <span class="ch-fp blue"><span class="ck">⊞</span>Public leaderboard · forums · trivia · polls</span>
-    <span class="ch-fp gold"><span class="ck">$</span>Buy + sell picks marketplace · keep 100%</span>
+    <span class="ch-fp orange"><span class="ck">🔒</span><b>Track picks free</b> · locked picks · auto-graded</span>
+    <span class="ch-fp blue"><span class="ck">⊞</span><b>Sports social</b> · feed · forums · polls · trivia</span>
+    <span class="ch-fp green"><span class="ck">✓</span><b>Public records</b> · ROI, units, win %, sample size</span>
+    <span class="ch-fp red"><span class="ck">⚔</span><b>Competition</b> · head-to-head handicapping battles</span>
+    <span class="ch-fp red"><span class="ck">🎮</span><b>PS5 challenge arena</b> · 2K · Madden · Show · NHL</span>
+    <span class="ch-fp gold"><span class="ck">$</span><b>Buy + sell picks</b> · marketplace · keep 100%</span>
+    <span class="ch-fp gold"><span class="ck">🏆</span><b>Cash prize tournaments</b> · climb the board</span>
   </div>
 </section>
 

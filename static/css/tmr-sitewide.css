@@ -39,7 +39,7 @@ body.tmr-site-shell nav.main-nav:not(.tmr-global-nav) {
     position: sticky;
     top: 0;
     z-index: 99999;
-    border-bottom: 1px solid var(--tmr-line);
+    border-bottom: none;
     background: rgba(8, 14, 25, 0.92);
     backdrop-filter: blur(18px);
 }
@@ -87,12 +87,14 @@ body.tmr-site-shell nav.main-nav:not(.tmr-global-nav) {
 
 .tmr-global-nav__links {
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-evenly;
     align-items: center;
     gap: clamp(6px, 0.8vw, 12px);
     flex-wrap: wrap;
     min-width: 0;
     row-gap: 6px;
+    padding-left: clamp(16px, 2vw, 36px);
+    padding-right: clamp(8px, 1vw, 18px);
 }
 
 .tmr-global-nav__links a,
@@ -138,18 +140,32 @@ body.tmr-site-shell nav.main-nav:not(.tmr-global-nav) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--tmr-line);
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.32);
     border-radius: 999px;
-    padding: 9px 11px;
-    background: rgba(255, 255, 255, 0.06);
+    padding: 9px 16px;
+    background: rgba(255, 255, 255, 0.10);
     cursor: pointer;
     white-space: nowrap;
+    font-weight: 800;
+}
+
+.tmr-global-nav__button:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: #ffffff;
 }
 
 .tmr-global-nav__button--primary {
-    color: #06120f !important;
+    color: #ffffff !important;
     border-color: transparent;
-    background: linear-gradient(135deg, var(--tmr-teal), #b9fff1);
+    background: linear-gradient(135deg, #ff6a3d 0%, #e85a30 100%);
+    font-weight: 900;
+    letter-spacing: 0.06em;
+}
+
+.tmr-global-nav__button--primary:hover {
+    background: linear-gradient(135deg, #ff8b66 0%, #e85a30 100%);
+    transform: translateY(-1px);
 }
 
 .tmr-global-nav__button[aria-current="page"] {
@@ -1614,7 +1630,8 @@ html body.tmr-site-shell::after {
 
     .tmr-global-nav__inner {
         width: min(100%, calc(100% - 20px)) !important;
-        grid-template-columns: 1fr !important;
+        grid-template-columns: 1fr auto !important;
+        align-items: center !important;
         gap: 10px !important;
         padding: 12px 0 !important;
     }
@@ -1623,13 +1640,29 @@ html body.tmr-site-shell::after {
         font-size: 1.7rem;
     }
 
+    .tmr-global-nav__toggle {
+        display: inline-flex;
+    }
+
+    .tmr-global-nav__panel {
+        display: none;
+        grid-column: 1 / -1;
+        gap: 10px;
+    }
+
+    .tmr-global-nav.is-open .tmr-global-nav__panel {
+        display: grid;
+    }
+
     .tmr-global-nav__links {
         display: grid !important;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px !important;
         justify-content: stretch !important;
         overflow: visible !important;
         white-space: normal !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
 
     .tmr-global-nav__links a {
@@ -1653,6 +1686,7 @@ html body.tmr-site-shell::after {
         width: 100%;
         gap: 8px !important;
         overflow: visible !important;
+        justify-content: stretch !important;
     }
 
     .tmr-global-nav__button,
@@ -1715,11 +1749,15 @@ html body.tmr-site-shell::after {
 
 @media (max-width: 440px) {
     .tmr-global-nav__links {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: 1fr;
     }
 
     .tmr-global-nav__links a {
         font-size: 0.68rem !important;
+    }
+
+    .tmr-global-nav__actions {
+        grid-template-columns: 1fr !important;
     }
 }
 
@@ -1935,6 +1973,32 @@ html body.tmr-site-shell::before {
 .tmr-global-nav__brand {
     font-size: clamp(1.72rem, 2vw, 2.38rem) !important;
     letter-spacing: -0.02em !important;
+}
+
+.tmr-global-nav__toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    border: 1px solid rgba(156, 173, 199, 0.14);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.03));
+}
+
+.tmr-global-nav__toggle span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    border-radius: 999px;
+    background: #dce7f7;
+}
+
+.tmr-global-nav__panel {
+    display: contents;
 }
 
 .tmr-global-nav__mark {
