@@ -8612,17 +8612,21 @@
                 <div class="ticket-card-footer">Tap a board price above, confirm the number, then submit the ticket.</div>
             </div>
 
+            <div class="ticket-fields-header">
+                <span class="ticket-fields-kicker">Ticket Details</span>
+                <span class="ticket-fields-note">Enter the exact number and price from the book you played.</span>
+            </div>
             <div class="pick-options">
                 <div class="option-group" id="lineInputGroup" style="display: none;">
                     <label>Line / Spread</label>
 <input type="text" id="pickLineInput" placeholder="e.g. -3.5, 220.5" oninput="window.updatePickSummary()" style="width: 100%; padding: 12px 14px; background: var(--card-bg); border: 2px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 16px; font-family: 'Inter', sans-serif;" />
-                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px;">Enter the line from your sportsbook</p>
+                    <p class="ticket-input-help">Enter the line from your sportsbook</p>
                 </div>
 
                 <div class="option-group">
                     <label>Odds</label>
 <input type="text" id="pickOddsInput" placeholder="e.g. -110, +150" oninput="window.updatePickSummary()" style="width: 100%; padding: 12px 14px; background: var(--card-bg); border: 2px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 16px; font-family: 'Inter', sans-serif;" />
-                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px;">Enter American odds from your sportsbook</p>
+                    <p class="ticket-input-help">Enter American odds from your sportsbook</p>
                 </div>
 
                 <div class="option-group">
@@ -8634,7 +8638,7 @@
                             <button type="button" id="modeToWin" class="units-mode-btn" onclick="setUnitsMode('towin')" style="padding: 12px 18px; background: var(--card-bg); border: none; color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s;">TO WIN</button>
                         </div>
                     </div>
-                    <p id="unitsExplanation" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 8px;">Enter units you want to RISK (0.5 - 5). Winnings calculated from odds.</p>
+                    <p id="unitsExplanation" class="ticket-input-help">Enter units you want to RISK (0.5 - 5). Winnings calculated from odds.</p>
                 </div>
 
                 <div class="option-group">
@@ -18177,7 +18181,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 <!-- More Markets Toggle -->
                 <button class="more-markets-btn" onclick="toggleMoreMarkets(${index})">
-                    <span>Open team totals, alt lines, halves and more</span>
+                    <span>More Markets</span>
                     <span>▼</span>
                 </button>
 
@@ -22262,11 +22266,13 @@ document.addEventListener('DOMContentLoaded', function() {
             letter-spacing: 0.12em;
             text-transform: uppercase;
             font-size: 0.72rem;
+            justify-content: space-between;
         }
 
         #picks .expanded-markets {
             border-top: 1px solid rgba(148,163,184,0.14) !important;
             background: linear-gradient(180deg, rgba(8,12,18,0.58), rgba(10,14,20,0.8)) !important;
+            padding: 16px !important;
         }
 
         #picks .market-section.preview-only {
@@ -22411,6 +22417,30 @@ document.addEventListener('DOMContentLoaded', function() {
             gap: 12px 12px !important;
         }
 
+        #picks .ticket-fields-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 16px 0 10px;
+            padding: 0 2px;
+            flex-wrap: wrap;
+        }
+
+        #picks .ticket-fields-kicker {
+            color: #7c8ba1;
+            font-size: 0.64rem;
+            font-weight: 900;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        #picks .ticket-fields-note {
+            color: #8ea0b7;
+            font-size: 0.74rem;
+            font-weight: 800;
+        }
+
         #picks .option-group {
             margin: 0 !important;
             padding: 14px 14px 12px !important;
@@ -22418,6 +22448,17 @@ document.addEventListener('DOMContentLoaded', function() {
             border-radius: 12px !important;
             background: linear-gradient(180deg, rgba(22,27,35,0.98), rgba(15,19,26,0.98)) !important;
             box-shadow: none !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #picks .option-group::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(45,212,191,0.32), rgba(255,255,255,0));
+            pointer-events: none;
         }
 
         #picks .option-group label {
@@ -22457,6 +22498,14 @@ document.addEventListener('DOMContentLoaded', function() {
         #picks #pickReasoning {
             min-height: 88px !important;
             resize: vertical;
+        }
+
+        #picks .ticket-input-help {
+            color: #6f8197 !important;
+            font-size: 0.73rem !important;
+            margin-top: 6px !important;
+            font-weight: 700;
+            letter-spacing: 0.02em;
         }
 
         #picks #betScopeSelector,
@@ -22597,6 +22646,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         #picks .market-section {
             padding-top: 2px;
+            display: grid;
+            gap: 12px;
         }
 
         #picks .team-totals-grid {
@@ -23392,6 +23443,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             #picks .sport-card-copy {
                 font-size: 0.8rem;
+            }
+
+            #picks .ticket-fields-note,
+            #picks .ticket-input-help {
+                font-size: 0.7rem !important;
             }
 
             #picks .ticket-card-header,
