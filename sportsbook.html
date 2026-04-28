@@ -8590,6 +8590,13 @@
             </div>
 
             <div class="pick-summary-card">
+                <div class="ticket-card-header">
+                    <div class="ticket-card-header-main">
+                        <span class="ticket-card-kicker">Bet Ticket</span>
+                        <strong>Ready To Submit</strong>
+                    </div>
+                    <div class="ticket-card-status">Open</div>
+                </div>
                 <div class="summary-section">
                     <div class="summary-label">Game</div>
                     <div class="summary-value" id="summaryGame">-</div>
@@ -8602,6 +8609,7 @@
                     <div class="summary-label">Odds</div>
                     <div class="summary-value" id="summaryOdds">-</div>
                 </div>
+                <div class="ticket-card-footer">Tap a board price above, confirm the number, then submit the ticket.</div>
             </div>
 
             <div class="pick-options">
@@ -18086,8 +18094,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         <span class="game-status">Upcoming</span>
                     </div>
                     <div class="game-card-board-meta">
-                        <span>${bookmakerTitle}</span>
-                        <span>${marketCount} markets</span>
+                        <span class="board-meta-chip">${bookmakerTitle}</span>
+                        <span class="board-meta-chip">${marketCount} markets</span>
                     </div>
                 </div>
 
@@ -18165,7 +18173,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </button>
                 </div>
 
-                <div class="sportsbook-board-tip">Tap any price to load the pick slip below and lock it into your record.</div>
+                <div class="sportsbook-board-tip">Tap a price to drop it into the ticket, then confirm the line and stake below.</div>
 
                 <!-- More Markets Toggle -->
                 <button class="more-markets-btn" onclick="toggleMoreMarkets(${index})">
@@ -22065,6 +22073,18 @@ document.addEventListener('DOMContentLoaded', function() {
             font-weight: 800;
             letter-spacing: 0.14em;
             text-transform: uppercase;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+
+        #picks .board-meta-chip {
+            display: inline-flex;
+            align-items: center;
+            min-height: 26px;
+            padding: 0 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.12);
+            background: rgba(255,255,255,0.04);
         }
 
         #picks .game-time-new {
@@ -22132,7 +22152,7 @@ document.addEventListener('DOMContentLoaded', function() {
         #picks .team-row {
             gap: 12px;
             align-items: center;
-            padding: 10px 0;
+            padding: 12px 0;
             border-bottom: 1px solid rgba(148,163,184,0.08);
         }
 
@@ -22171,6 +22191,10 @@ document.addEventListener('DOMContentLoaded', function() {
             min-width: 0;
         }
 
+        #picks .team-info-left {
+            gap: 14px;
+        }
+
         #picks .team-record-small {
             color: #8ea0b7 !important;
             font-size: 0.78rem;
@@ -22183,8 +22207,8 @@ document.addEventListener('DOMContentLoaded', function() {
         #picks .bet-pick-btn,
         #picks .total-btn {
             border: 1px solid rgba(82, 94, 113, 0.72) !important;
-            border-radius: 10px !important;
-            background: linear-gradient(180deg, #232a35 0%, #1a212b 100%) !important;
+            border-radius: 12px !important;
+            background: linear-gradient(180deg, #232a35 0%, #171e27 100%) !important;
             color: #f8fafc !important;
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.03) !important;
         }
@@ -22295,6 +22319,53 @@ document.addEventListener('DOMContentLoaded', function() {
             background: linear-gradient(180deg, rgba(11,15,21,0.96), rgba(8,11,16,0.98)) !important;
         }
 
+        #picks .ticket-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px 12px;
+            border-bottom: 1px solid rgba(148,163,184,0.08);
+            background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+        }
+
+        #picks .ticket-card-header-main {
+            display: grid;
+            gap: 4px;
+        }
+
+        #picks .ticket-card-kicker {
+            color: #7c8ba1;
+            font-size: 0.62rem;
+            font-weight: 900;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        #picks .ticket-card-header strong {
+            color: #f8fafc;
+            font-size: 1rem;
+            font-weight: 900;
+            line-height: 1.15;
+        }
+
+        #picks .ticket-card-status {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 28px;
+            padding: 0 11px;
+            border-radius: 999px;
+            border: 1px solid rgba(74, 222, 128, 0.24);
+            background: rgba(74, 222, 128, 0.10);
+            color: #c8ffd8;
+            font-size: 0.66rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
         #picks .pick-summary-card .summary-section {
             padding: 14px 16px !important;
             border-bottom: 1px solid rgba(148,163,184,0.08) !important;
@@ -22318,6 +22389,16 @@ document.addEventListener('DOMContentLoaded', function() {
             font-size: 1rem !important;
             font-weight: 800 !important;
             text-align: right;
+        }
+
+        #picks .ticket-card-footer {
+            padding: 12px 16px 14px;
+            border-top: 1px solid rgba(148,163,184,0.08);
+            color: #8ea0b7;
+            font-size: 0.69rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
         }
 
         #picks #summaryOdds {
@@ -22433,14 +22514,14 @@ document.addEventListener('DOMContentLoaded', function() {
         #picks .bet-buttons-row {
             display: grid;
             grid-template-columns: repeat(2, minmax(118px, 1fr));
-            gap: 8px;
+            gap: 10px;
             flex: 0 0 auto;
         }
 
         #picks .bet-pick-btn,
         #picks .total-btn {
-            min-height: 72px;
-            padding: 9px 10px 10px !important;
+            min-height: 78px;
+            padding: 10px 10px 11px !important;
         }
 
         #picks .sportsbook-price-cell {
@@ -22453,15 +22534,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         #picks .price-label {
             color: #7c8ba1;
-            font-size: 0.56rem;
+            font-size: 0.54rem;
             font-weight: 900;
-            letter-spacing: 0.14em;
+            letter-spacing: 0.18em;
             text-transform: uppercase;
         }
 
         #picks .bet-pick-btn .line,
         #picks .total-btn .value {
-            font-size: 1.1rem;
+            font-size: 1.18rem;
             line-height: 1;
             letter-spacing: -0.03em;
         }
@@ -22475,8 +22556,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         #picks .bet-pick-btn .odds,
         #picks .total-btn .odds {
-            margin-top: 2px;
-            font-size: 0.88rem;
+            margin-top: 3px;
+            font-size: 0.9rem;
         }
 
         #picks .totals-row {
@@ -22501,11 +22582,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         #picks .sportsbook-board-tip {
-            padding: 0 16px 12px;
-            color: #75859b;
-            font-size: 0.7rem;
+            padding: 4px 16px 14px;
+            color: #8ea0b7;
+            font-size: 0.68rem;
             font-weight: 800;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.11em;
             text-transform: uppercase;
         }
 
@@ -23244,6 +23325,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 padding: 15px !important;
             }
 
+            #picks .ticket-card-header {
+                align-items: flex-start;
+            }
+
             .market-chip-row span {
                 width: auto;
             }
@@ -23307,6 +23392,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
             #picks .sport-card-copy {
                 font-size: 0.8rem;
+            }
+
+            #picks .ticket-card-header,
+            #picks .summary-section {
+                padding-left: 14px !important;
+                padding-right: 14px !important;
+            }
+
+            #picks .ticket-card-header {
+                flex-wrap: wrap;
+            }
+
+            #picks .ticket-card-status {
+                min-height: 26px;
+            }
+
+            #picks .bet-pick-btn,
+            #picks .total-btn {
+                min-height: 72px;
             }
 
             #picks #betScopeSelector,
