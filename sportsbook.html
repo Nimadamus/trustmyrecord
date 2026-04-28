@@ -8403,33 +8403,36 @@
 <div id="picks" class="page-section">
     <div class="picks-container-modern">
         <div class="section-header">
-            <h2>Make Your <span class="highlight">Picks</span></h2>
-            <p>Select a sport, scan a real sportsbook-style board, choose from sides, totals, team totals, and extra market types, then lock the pick into your public record.</p>
-            <div style="margin-top: 14px; padding: 14px 16px; border-radius: 14px; background: rgba(255, 190, 92, 0.1); border: 1px solid rgba(255, 190, 92, 0.3); color: #ffe7bf; line-height: 1.65; max-width: 840px;">
-                Picks are permanent once they are locked. Records do not reset and losing picks cannot be deleted later, so confirm the side, market, line, and units before you submit.
-            </div>
-            <div style="margin-top: 10px; padding: 12px 16px; border-radius: 14px; background: rgba(45, 212, 191, 0.08); border: 1px solid rgba(45, 212, 191, 0.22); color: #d9fff8; line-height: 1.65; max-width: 840px;">
-                This board is meant to create receipts, not just opinions. Every locked play can flow into your profile, record views, feed activity, and leaderboard math, so treat submission as a permanent public statement.
-            </div>
-            <div class="picks-onboarding-grid">
-                <div class="picks-onboarding-card">
-                    <strong>Pick a sport first</strong>
-                    <span>Game counts load by sport so you can see where real action is available before diving into the board.</span>
+            <div class="sportsbook-hero-shell">
+                <div class="sportsbook-hero-copy">
+                    <div class="sportsbook-kicker">TMR Sportsbook</div>
+                    <h2>Make Your <span class="highlight">Picks</span></h2>
+                    <p>Browse the board, tap a price, and build a clean ticket. The flow is set up like a real sportsbook so you can move from league selection to slip entry without the page fighting you.</p>
                 </div>
-                <div class="picks-onboarding-card">
-                    <strong>Use your own number when needed</strong>
-                    <span>If a book line is unavailable, the form stays flexible so you can enter the number you actually played.</span>
-                </div>
-                <div class="picks-onboarding-card">
-                    <strong>Submit like it will be audited later</strong>
-                    <span>Because it will. The whole point is that your record still makes sense when someone checks it weeks later.</span>
+                <div class="sportsbook-hero-panels">
+                    <div class="sportsbook-status-card">
+                        <span class="status-label">Live board</span>
+                        <strong>Sides, totals, team totals, alt markets</strong>
+                        <small>Lines load by league so the board stays focused instead of reading like a generic form.</small>
+                    </div>
+                    <div class="sportsbook-status-card sportsbook-status-card--warn">
+                        <span class="status-label">Locked picks</span>
+                        <strong>Submissions are permanent</strong>
+                        <small>Confirm the market, number, price, and unit size before you post it to your public record.</small>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Step 1: Sport Selection -->
         <div id="sportSelection" class="pick-step active">
-            <h3>Select Sport</h3>
+            <div class="sportsbook-lobby-header">
+                <div>
+                    <span class="sportsbook-lobby-label">Sportsbook lobby</span>
+                    <h3>Choose League</h3>
+                </div>
+                <div class="sportsbook-lobby-note">Tap a league to load its board</div>
+            </div>
             <div class="market-chip-row" aria-label="Available wager types">
                 <span>Moneyline</span>
                 <span>Spread / Run Line / Puck Line</span>
@@ -8441,48 +8444,66 @@
             </div>
             <div class="sport-cards-grid">
                 <div class="sport-card" data-sport="NBA" onclick="window.selectSportAndShowGames('NBA')" style="cursor:pointer;">
+                    <div class="sport-card-topline"><span class="sport-league-tag">Pro Hoops</span><span class="sport-card-arrow">Open</span></div>
                     <div class="sport-icon">🏀</div>
                     <div class="sport-name">NBA</div>
+                    <div class="sport-card-copy">Daily sides, totals, and player-facing board flow.</div>
                     <div class="sport-games" id="nba-game-count">Loading...</div>
                 </div>
                 <div class="sport-card" data-sport="WNBA" onclick="window.selectSportAndShowGames('WNBA')" style="cursor:pointer;">
+                    <div class="sport-card-topline"><span class="sport-league-tag">Pro Hoops</span><span class="sport-card-arrow">Open</span></div>
                     <div class="sport-icon">🏀</div>
                     <div class="sport-name">WNBA</div>
+                    <div class="sport-card-copy">Compact board with fast side and total selection.</div>
                     <div class="sport-games" id="wnba-game-count">Loading...</div>
                 </div>
                 <div class="sport-card" data-sport="NFL" onclick="window.selectSportAndShowGames('NFL')" style="cursor:pointer;">
+                    <div class="sport-card-topline"><span class="sport-league-tag">Pro Football</span><span class="sport-card-arrow">Open</span></div>
                     <div class="sport-icon">🏈</div>
                     <div class="sport-name">NFL</div>
+                    <div class="sport-card-copy">Spreads, moneylines, totals, and board extras.</div>
                     <div class="sport-games" id="nfl-game-count">Loading...</div>
                 </div>
                 <div class="sport-card" data-sport="NHL" onclick="window.selectSportAndShowGames('NHL')" style="cursor:pointer;">
+                    <div class="sport-card-topline"><span class="sport-league-tag">Pro Hockey</span><span class="sport-card-arrow">Open</span></div>
                     <div class="sport-icon">🏒</div>
                     <div class="sport-name">NHL</div>
+                    <div class="sport-card-copy">Puck lines, totals, and quick board entry.</div>
                     <div class="sport-games" id="nhl-game-count">Loading...</div>
                 </div>
                 <div class="sport-card" data-sport="NCAAB" onclick="window.selectSportAndShowGames('NCAAB')" style="cursor:pointer;">
+                    <div class="sport-card-topline"><span class="sport-league-tag">College</span><span class="sport-card-arrow">Open</span></div>
                     <div class="sport-icon">🏫</div>
                     <div class="sport-name">College Hoops</div>
+                    <div class="sport-card-copy">Board-style college basketball market view.</div>
                     <div class="sport-games" id="ncaab-game-count">Loading...</div>
                 </div>
                 <div class="sport-card" data-sport="NCAAF" onclick="window.selectSportAndShowGames('NCAAF')" style="cursor:pointer;">
+                    <div class="sport-card-topline"><span class="sport-league-tag">College</span><span class="sport-card-arrow">Open</span></div>
                     <div class="sport-icon">🎓</div>
                     <div class="sport-name">College Football</div>
+                    <div class="sport-card-copy">Main board plus alternate game market access.</div>
                     <div class="sport-games" id="ncaaf-game-count">Loading...</div>
                 </div>
                 <div class="sport-card" data-sport="MLB" onclick="window.selectSportAndShowGames('MLB')" style="cursor:pointer;">
+                    <div class="sport-card-topline"><span class="sport-league-tag">Baseball</span><span class="sport-card-arrow">Open</span></div>
                     <div class="sport-icon">⚾</div>
                     <div class="sport-name">MLB</div>
+                    <div class="sport-card-copy">Moneyline, run line, totals, and F5 markets.</div>
                     <div class="sport-games" id="mlb-game-count">Loading...</div>
                 </div>
                 <div class="sport-card" data-sport="Soccer" onclick="window.selectSportAndShowGames('Soccer')" style="cursor:pointer;">
+                    <div class="sport-card-topline"><span class="sport-league-tag">Soccer</span><span class="sport-card-arrow">Open</span></div>
                     <div class="sport-icon">⚽</div>
                     <div class="sport-name">EPL</div>
+                    <div class="sport-card-copy">3-way pricing and totals in a compact board.</div>
                     <div class="sport-games" id="soccer-game-count">Loading...</div>
                 </div>
                 <div class="sport-card" data-sport="MLS" onclick="window.selectSportAndShowGames('MLS')" style="cursor:pointer;">
+                    <div class="sport-card-topline"><span class="sport-league-tag">Soccer</span><span class="sport-card-arrow">Open</span></div>
                     <div class="sport-icon">⚽</div>
                     <div class="sport-name">MLS</div>
+                    <div class="sport-card-copy">3-way markets and match totals built for mobile.</div>
                     <div class="sport-games" id="mls-game-count">Loading...</div>
                 </div>
                 <div class="sport-card" data-sport="UCL" onclick="window.selectSportAndShowGames('UCL')" style="cursor:pointer;">
@@ -21598,6 +21619,29 @@ document.addEventListener('DOMContentLoaded', function() {
             margin-bottom: 24px;
         }
 
+        #picks .sportsbook-hero-shell {
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
+            gap: 18px;
+            align-items: stretch;
+        }
+
+        #picks .sportsbook-kicker {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            padding: 0 12px;
+            border-radius: 999px;
+            background: rgba(45,212,191,0.12);
+            border: 1px solid rgba(45,212,191,0.28);
+            color: #89fff0;
+            font-size: 0.78rem;
+            font-weight: 900;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
         #picks .section-header h2 {
             color: #f8fafc !important;
             font-family: "Barlow Condensed", "Inter", sans-serif !important;
@@ -21618,6 +21662,54 @@ document.addEventListener('DOMContentLoaded', function() {
             font-size: 1rem;
             line-height: 1.55;
             font-weight: 650;
+        }
+
+        #picks .sportsbook-hero-panels {
+            display: grid;
+            gap: 12px;
+        }
+
+        #picks .sportsbook-status-card {
+            padding: 16px 18px;
+            border-radius: 18px;
+            border: 1px solid rgba(45,212,191,0.18);
+            background:
+                linear-gradient(180deg, rgba(45,212,191,0.10), rgba(255,255,255,0.025)),
+                rgba(7,13,24,0.88);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+
+        #picks .sportsbook-status-card--warn {
+            border-color: rgba(245,158,11,0.26);
+            background:
+                linear-gradient(180deg, rgba(245,158,11,0.10), rgba(255,255,255,0.02)),
+                rgba(7,13,24,0.88);
+        }
+
+        #picks .status-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #7dd3c7;
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        #picks .sportsbook-status-card strong {
+            display: block;
+            color: #f8fafc;
+            font-size: 1rem;
+            font-weight: 900;
+            line-height: 1.2;
+            margin-bottom: 6px;
+        }
+
+        #picks .sportsbook-status-card small {
+            display: block;
+            color: #9aa8bc;
+            font-size: 0.83rem;
+            line-height: 1.5;
         }
 
         #picks .pick-step {
@@ -21641,43 +21733,74 @@ document.addEventListener('DOMContentLoaded', function() {
             margin-bottom: 14px;
         }
 
+        #picks .sportsbook-lobby-header {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        #picks .sportsbook-lobby-label {
+            display: inline-flex;
+            margin-bottom: 8px;
+            color: #7dd3c7;
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        #picks .sportsbook-lobby-note {
+            color: #9aa8bc;
+            font-size: 0.82rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
         .market-chip-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 9px;
-            margin: 0 0 20px;
+            gap: 10px;
+            margin: 0 0 22px;
         }
 
         .market-chip-row span {
             display: inline-flex;
             align-items: center;
-            min-height: 34px;
-            border: 1px solid rgba(45,212,191,0.25);
-            border-radius: 999px;
-            padding: 8px 12px;
-            color: #d9fffa;
-            background: rgba(45,212,191,0.09);
-            font-size: 0.82rem;
+            justify-content: center;
+            min-height: 38px;
+            border: 1px solid rgba(148,163,184,0.16);
+            border-radius: 12px;
+            padding: 8px 13px;
+            color: #dce7f8;
+            background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+            font-size: 0.77rem;
             font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         #picks .sport-cards-grid {
             display: grid !important;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)) !important;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important;
             gap: 14px !important;
         }
 
         #picks .sport-card {
-            min-height: 158px;
+            min-height: 194px;
             border: 1px solid rgba(148,163,184,0.18) !important;
             border-radius: 22px !important;
             padding: 18px !important;
             background:
+                radial-gradient(circle at top right, rgba(45,212,191,0.10), transparent 30%),
                 linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.028)),
-                rgba(15,23,42,0.90) !important;
+                rgba(15,23,42,0.94) !important;
             box-shadow: 0 16px 42px rgba(0,0,0,0.16) !important;
             transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease !important;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         #picks .sport-card::before {
@@ -21720,6 +21843,39 @@ document.addEventListener('DOMContentLoaded', function() {
             font-size: 1.45rem !important;
         }
 
+        #picks .sport-card-topline {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        #picks .sport-league-tag,
+        #picks .sport-card-arrow {
+            display: inline-flex;
+            align-items: center;
+            min-height: 24px;
+            padding: 0 9px;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        #picks .sport-league-tag {
+            color: #7dd3c7;
+            background: rgba(45,212,191,0.11);
+            border: 1px solid rgba(45,212,191,0.18);
+        }
+
+        #picks .sport-card-arrow {
+            color: #dce7f8;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(148,163,184,0.16);
+        }
+
         #picks .sport-name {
             color: #f8fafc !important;
             font-family: "Inter", sans-serif !important;
@@ -21729,11 +21885,22 @@ document.addEventListener('DOMContentLoaded', function() {
             line-height: 1.15;
         }
 
-        #picks .sport-games {
+        #picks .sport-card-copy {
             margin-top: 8px;
-            color: #9aa8bc !important;
-            font-size: 0.84rem !important;
+            color: #9aa8bc;
+            font-size: 0.82rem;
+            line-height: 1.45;
             font-weight: 700;
+        }
+
+        #picks .sport-games {
+            margin-top: auto;
+            padding-top: 16px;
+            color: #dce7f8 !important;
+            font-size: 0.78rem !important;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
         }
 
         #picks .games-header {
@@ -23058,18 +23225,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         @media (max-width: 720px) {
+            #picks .sportsbook-hero-shell,
+            #picks .sportsbook-lobby-header {
+                grid-template-columns: 1fr;
+                display: grid;
+            }
+
+            #picks .sportsbook-lobby-note {
+                white-space: normal;
+            }
+
             #picks .sport-cards-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
             }
 
             #picks .sport-card {
-                min-height: 145px;
+                min-height: 186px;
                 padding: 15px !important;
             }
 
             .market-chip-row span {
-                width: 100%;
-                justify-content: center;
+                width: auto;
             }
 
             .sportsbook-workflow-grid,
@@ -23098,6 +23274,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         @media (max-width: 480px) {
+            #picks .section-header {
+                margin-bottom: 18px;
+            }
+
+            #picks .sportsbook-kicker {
+                margin-bottom: 12px;
+            }
+
+            #picks .section-header p {
+                font-size: 0.94rem;
+            }
+
             #picks .sport-cards-grid,
             #picks .picks-onboarding-grid {
                 grid-template-columns: 1fr !important;
@@ -23106,6 +23294,19 @@ document.addEventListener('DOMContentLoaded', function() {
             #picks .market-chip-row span {
                 width: 100%;
                 justify-content: center;
+            }
+
+            #picks .sportsbook-status-card,
+            #picks .sport-card {
+                border-radius: 18px !important;
+            }
+
+            #picks .sport-card {
+                min-height: 0;
+            }
+
+            #picks .sport-card-copy {
+                font-size: 0.8rem;
             }
 
             #picks #betScopeSelector,
