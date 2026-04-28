@@ -18082,17 +18082,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     <!-- Away Team Row -->
                     <div class="team-row">
                         <div class="team-info-left">
+                            <span class="team-side-badge">AWAY</span>
                             <div class="team-meta-stack">
                                 <span class="team-name-large">${game.away_team}</span>
                                 ${awayRecord}
                             </div>
                         </div>
                         <div class="bet-buttons-row">
-                            <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'spread', '${game.away_team}', '${awaySpread}', '${awaySpreadOdds}', '${game.away_team}', '${game.home_team}')">
+                            <button class="bet-pick-btn sportsbook-price-cell" onclick="selectGameBet(${index}, 'spread', '${game.away_team}', '${awaySpread}', '${awaySpreadOdds}', '${game.away_team}', '${game.home_team}')">
+                                <span class="price-label">Spread</span>
                                 <span class="line">${awaySpread}</span>
                                 <span class="odds">${awaySpreadOdds}</span>
                             </button>
-                            <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'ml', '${game.away_team}', 'ML', '${awayML}', '${game.away_team}', '${game.home_team}')">
+                            <button class="bet-pick-btn sportsbook-price-cell" onclick="selectGameBet(${index}, 'ml', '${game.away_team}', 'ML', '${awayML}', '${game.away_team}', '${game.home_team}')">
+                                <span class="price-label">Moneyline</span>
                                 <span class="line">ML</span>
                                 <span class="odds">${awayML}</span>
                             </button>
@@ -18102,17 +18105,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     <!-- Home Team Row -->
                     <div class="team-row">
                         <div class="team-info-left">
+                            <span class="team-side-badge">HOME</span>
                             <div class="team-meta-stack">
                                 <span class="team-name-large">${game.home_team}</span>
                                 ${homeRecord}
                             </div>
                         </div>
                         <div class="bet-buttons-row">
-                            <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'spread', '${game.home_team}', '${homeSpread}', '${homeSpreadOdds}', '${game.away_team}', '${game.home_team}')">
+                            <button class="bet-pick-btn sportsbook-price-cell" onclick="selectGameBet(${index}, 'spread', '${game.home_team}', '${homeSpread}', '${homeSpreadOdds}', '${game.away_team}', '${game.home_team}')">
+                                <span class="price-label">Spread</span>
                                 <span class="line">${homeSpread}</span>
                                 <span class="odds">${homeSpreadOdds}</span>
                             </button>
-                            <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'ml', '${game.home_team}', 'ML', '${homeML}', '${game.away_team}', '${game.home_team}')">
+                            <button class="bet-pick-btn sportsbook-price-cell" onclick="selectGameBet(${index}, 'ml', '${game.home_team}', 'ML', '${homeML}', '${game.away_team}', '${game.home_team}')">
+                                <span class="price-label">Moneyline</span>
                                 <span class="line">ML</span>
                                 <span class="odds">${homeML}</span>
                             </button>
@@ -18123,12 +18129,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 <!-- Totals Row -->
                 <div class="totals-row">
                     <div class="totals-row-label">Game Total</div>
-                    <button class="total-btn" onclick="selectGameBet(${index}, 'over', 'Over', '${total}', '${overOdds}', '${game.away_team}', '${game.home_team}')">
+                    <button class="total-btn sportsbook-price-cell" onclick="selectGameBet(${index}, 'over', 'Over', '${total}', '${overOdds}', '${game.away_team}', '${game.home_team}')">
+                        <span class="price-label">Total</span>
                         <span class="label">OVER</span>
                         <span class="value">${total}</span>
                         <span class="odds">${overOdds}</span>
                     </button>
-                    <button class="total-btn" onclick="selectGameBet(${index}, 'under', 'Under', '${total}', '${underOdds}', '${game.away_team}', '${game.home_team}')">
+                    <button class="total-btn sportsbook-price-cell" onclick="selectGameBet(${index}, 'under', 'Under', '${total}', '${underOdds}', '${game.away_team}', '${game.home_team}')">
+                        <span class="price-label">Total</span>
                         <span class="label">UNDER</span>
                         <span class="value">${total}</span>
                         <span class="odds">${underOdds}</span>
@@ -21846,15 +21854,15 @@ document.addEventListener('DOMContentLoaded', function() {
         #picks .game-card-new:hover,
         #picks .game-row:hover,
         #picks .pick-summary-card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(45,212,191,0.24) !important;
-            box-shadow: 0 24px 54px rgba(0,0,0,0.22) !important;
+            transform: translateY(-1px);
+            border-color: rgba(74, 222, 128, 0.26) !important;
+            box-shadow: 0 18px 34px rgba(0,0,0,0.24) !important;
         }
 
         #picks .game-card-header {
-            padding: 14px 18px !important;
-            background: linear-gradient(135deg, rgba(45,212,191,0.08), rgba(255,255,255,0.04)) !important;
-            border-bottom: 1px solid rgba(148,163,184,0.12) !important;
+            padding: 12px 16px !important;
+            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)) !important;
+            border-bottom: 1px solid rgba(148,163,184,0.10) !important;
         }
 
         #picks .game-card-header-main,
@@ -21867,64 +21875,64 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         #picks .game-card-board-meta {
-            margin-top: 10px;
-            color: #8ea0b7;
-            font-size: 0.74rem;
-            font-weight: 700;
-            letter-spacing: 0.08em;
+            margin-top: 8px;
+            color: #7f8da3;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
             text-transform: uppercase;
         }
 
         #picks .game-time-new {
-            color: #f8fafc !important;
+            color: #eef4fb !important;
             font-weight: 800 !important;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.08em;
             text-transform: uppercase;
-            font-size: 0.76rem !important;
+            font-size: 0.72rem !important;
         }
 
         #picks .game-status {
-            border: 1px solid rgba(45,212,191,0.24);
-            background: rgba(45,212,191,0.10) !important;
-            color: #b6fff4 !important;
-            letter-spacing: 0.08em;
+            border: 1px solid rgba(74, 222, 128, 0.22);
+            background: rgba(74, 222, 128, 0.10) !important;
+            color: #c8ffd8 !important;
+            letter-spacing: 0.1em;
             text-transform: uppercase;
         }
 
         #picks .sportsbook-market-rail {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            padding: 14px 18px 0;
+            gap: 6px;
+            padding: 10px 16px 0;
         }
 
         #picks .sportsbook-market-rail span {
             display: inline-flex;
             align-items: center;
-            min-height: 34px;
+            min-height: 28px;
             border-radius: 999px;
-            border: 1px solid rgba(148,163,184,0.18);
-            background: rgba(255,255,255,0.05);
-            color: #d6e2f1;
-            padding: 8px 12px;
-            font-size: 0.76rem;
+            border: 1px solid rgba(148,163,184,0.12);
+            background: rgba(255,255,255,0.03);
+            color: #b9c6d7;
+            padding: 6px 10px;
+            font-size: 0.64rem;
             font-weight: 800;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.1em;
             text-transform: uppercase;
         }
 
         #picks .game-teams-section {
-            padding: 18px !important;
+            padding: 14px 16px 12px !important;
         }
 
         #picks .sportsbook-board-columns {
-            margin-bottom: 14px;
-            padding: 0 0 10px;
-            border-bottom: 1px solid rgba(148,163,184,0.10);
-            color: #8ea0b7;
-            font-size: 0.72rem;
-            font-weight: 800;
-            letter-spacing: 0.12em;
+            margin-bottom: 10px;
+            padding: 0 0 8px;
+            border-bottom: 1px solid rgba(148,163,184,0.08);
+            color: #728198;
+            font-size: 0.63rem;
+            font-weight: 900;
+            letter-spacing: 0.16em;
             text-transform: uppercase;
         }
 
@@ -21938,13 +21946,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         #picks .team-row {
-            gap: 14px;
+            gap: 12px;
             align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(148,163,184,0.08);
+        }
+
+        #picks .team-row:last-child {
+            border-bottom: 0;
         }
 
         #picks .team-name-large {
             color: #f8fafc !important;
             letter-spacing: -0.02em;
+            font-size: 1.12rem;
+            font-weight: 800;
+        }
+
+        #picks .team-side-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 48px;
+            min-height: 24px;
+            padding: 0 8px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(148,163,184,0.12);
+            color: #8ea0b7;
+            font-size: 0.58rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            flex: 0 0 auto;
         }
 
         #picks .team-meta-stack {
@@ -21964,18 +21998,18 @@ document.addEventListener('DOMContentLoaded', function() {
         #picks .odds-btn,
         #picks .bet-pick-btn,
         #picks .total-btn {
-            border: 1px solid rgba(148,163,184,0.18) !important;
-            border-radius: 14px !important;
-            background: rgba(255,255,255,0.055) !important;
+            border: 1px solid rgba(82, 94, 113, 0.72) !important;
+            border-radius: 10px !important;
+            background: linear-gradient(180deg, #232a35 0%, #1a212b 100%) !important;
             color: #f8fafc !important;
-            box-shadow: none !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03) !important;
         }
 
         #picks .odds-btn:hover,
         #picks .bet-pick-btn:hover,
         #picks .total-btn:hover {
-            border-color: rgba(45,212,191,0.48) !important;
-            background: rgba(45,212,191,0.10) !important;
+            border-color: rgba(74, 222, 128, 0.55) !important;
+            background: linear-gradient(180deg, #28313c 0%, #1d2631 100%) !important;
             transform: translateY(-1px) !important;
         }
 
@@ -21988,16 +22022,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
         #picks .odds-value,
         #picks .odds {
-            color: #2dd4bf !important;
-            font-weight: 850 !important;
+            color: #7CFC8A !important;
+            font-weight: 900 !important;
         }
 
         #picks .odds-btn.selected,
         #picks .bet-pick-btn.selected,
         #picks .total-btn.selected {
-            border-color: rgba(45,212,191,0.72) !important;
-            background: linear-gradient(135deg, rgba(45,212,191,0.18), rgba(13,148,136,0.16)) !important;
-            box-shadow: inset 0 0 0 1px rgba(185,255,241,0.18), 0 16px 32px rgba(10,17,31,0.26) !important;
+            border-color: rgba(74, 222, 128, 0.88) !important;
+            background: linear-gradient(180deg, #24422a 0%, #1b3220 100%) !important;
+            box-shadow: inset 0 0 0 1px rgba(142,255,162,0.16), 0 10px 22px rgba(10,17,31,0.22) !important;
         }
 
         #picks .odds-btn.selected .odds-line,
@@ -22013,17 +22047,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         #picks .more-markets-btn {
-            border-top: 1px solid rgba(148,163,184,0.14) !important;
-            color: #2dd4bf !important;
-            background: rgba(255,255,255,0.025) !important;
+            border-top: 1px solid rgba(148,163,184,0.10) !important;
+            color: #dce8f5 !important;
+            background: rgba(255,255,255,0.018) !important;
             font-weight: 900 !important;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.12em;
             text-transform: uppercase;
+            font-size: 0.72rem;
         }
 
         #picks .expanded-markets {
             border-top: 1px solid rgba(148,163,184,0.14) !important;
-            background: rgba(5,13,22,0.38) !important;
+            background: linear-gradient(180deg, rgba(8,12,18,0.58), rgba(10,14,20,0.8)) !important;
         }
 
         #picks .market-section.preview-only {
@@ -22051,9 +22086,9 @@ document.addEventListener('DOMContentLoaded', function() {
             gap: 10px;
             min-width: 220px;
             min-height: 46px;
-            border-radius: 16px;
-            border: 1px solid rgba(148,163,184,0.18);
-            background: rgba(255,255,255,0.045);
+            border-radius: 10px;
+            border: 1px solid rgba(82, 94, 113, 0.72);
+            background: linear-gradient(180deg, #202733 0%, #171e28 100%);
             padding: 12px 14px;
             font-size: 0.82rem;
         }
@@ -22076,57 +22111,81 @@ document.addEventListener('DOMContentLoaded', function() {
 
         #picks .bet-buttons-row {
             display: grid;
-            grid-template-columns: repeat(2, minmax(112px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(2, minmax(118px, 1fr));
+            gap: 8px;
             flex: 0 0 auto;
         }
 
         #picks .bet-pick-btn,
         #picks .total-btn {
-            min-height: 74px;
-            padding: 12px 12px 10px !important;
+            min-height: 72px;
+            padding: 9px 10px 10px !important;
+        }
+
+        #picks .sportsbook-price-cell {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 3px;
+            align-content: center;
+            justify-items: center;
+        }
+
+        #picks .price-label {
+            color: #7c8ba1;
+            font-size: 0.56rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
         }
 
         #picks .bet-pick-btn .line,
         #picks .total-btn .value {
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             line-height: 1;
             letter-spacing: -0.03em;
         }
 
+        #picks .total-btn .label {
+            color: #f8fafc;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+        }
+
         #picks .bet-pick-btn .odds,
         #picks .total-btn .odds {
-            margin-top: 6px;
-            font-size: 0.92rem;
+            margin-top: 2px;
+            font-size: 0.88rem;
         }
 
         #picks .totals-row {
             display: grid;
             grid-template-columns: minmax(120px, 0.7fr) repeat(2, minmax(140px, 1fr));
             align-items: stretch;
-            gap: 12px;
-            padding: 16px 18px;
-            border-top: 1px solid rgba(148,163,184,0.10);
-            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+            gap: 8px;
+            padding: 12px 16px 14px;
+            border-top: 1px solid rgba(148,163,184,0.08);
+            background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
         }
 
         #picks .totals-row-label {
             display: flex;
             align-items: center;
             justify-content: flex-start;
-            color: #dce8f5;
-            font-size: 0.76rem;
+            color: #9aa8bc;
+            font-size: 0.66rem;
             font-weight: 900;
             letter-spacing: 0.16em;
             text-transform: uppercase;
         }
 
         #picks .sportsbook-board-tip {
-            padding: 0 18px 14px;
-            color: #8ea0b7;
-            font-size: 0.78rem;
-            font-weight: 700;
-            letter-spacing: 0.04em;
+            padding: 0 16px 12px;
+            color: #75859b;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
         }
 
         #picks .expanded-markets.show {
