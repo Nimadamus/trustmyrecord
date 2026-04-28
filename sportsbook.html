@@ -8543,6 +8543,7 @@
         <div id="pickDetails" class="pick-step">
             <div class="back-button" onclick="goBackToGames()">&#8592; Back to Games</div>
             <h3>Confirm Your Pick</h3>
+            <div class="pick-slip-kicker">Bet Slip</div>
 
             <div id="betScopeSelector" style="display: none; gap: 0; margin-bottom: 12px; border-radius: 10px; overflow: hidden; border: 2px solid var(--glass-border);">
                 <button type="button" class="bt-scope-btn active" data-scope="full" onclick="window.setBetScope('full')" style="flex: 1; padding: 10px 14px; background: var(--gradient-gold); border: none; color: var(--dark-bg); font-weight: 700; cursor: pointer; font-size: 13px; transition: all 0.2s;" id="btScopeFull">Full Game</button>
@@ -21834,6 +21835,22 @@ document.addEventListener('DOMContentLoaded', function() {
             font-weight: 900;
         }
 
+        #picks .pick-slip-kicker {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            margin: 0 0 12px;
+            padding: 0 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(74, 222, 128, 0.22);
+            background: rgba(74, 222, 128, 0.08);
+            color: #c8ffd8;
+            font-size: 0.64rem;
+            font-weight: 900;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
         #picks .market-headers {
             border: 1px solid rgba(148,163,184,0.14);
             border-radius: 16px;
@@ -22107,6 +22124,143 @@ document.addEventListener('DOMContentLoaded', function() {
         #picks .pick-summary-card {
             position: relative;
             overflow: hidden;
+            padding: 0 !important;
+            background: linear-gradient(180deg, rgba(11,15,21,0.96), rgba(8,11,16,0.98)) !important;
+        }
+
+        #picks .pick-summary-card .summary-section {
+            padding: 14px 16px !important;
+            border-bottom: 1px solid rgba(148,163,184,0.08) !important;
+            align-items: center;
+        }
+
+        #picks .pick-summary-card .summary-section:last-child {
+            border-bottom: 0 !important;
+        }
+
+        #picks .summary-label {
+            color: #7c8ba1 !important;
+            font-size: 0.62rem !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.16em !important;
+            text-transform: uppercase;
+        }
+
+        #picks .summary-value {
+            color: #f8fafc !important;
+            font-size: 1rem !important;
+            font-weight: 800 !important;
+            text-align: right;
+        }
+
+        #picks #summaryOdds {
+            color: #7CFC8A !important;
+            font-size: 1.14rem !important;
+        }
+
+        #picks .pick-options {
+            margin: 18px 0 20px !important;
+            gap: 12px 12px !important;
+        }
+
+        #picks .option-group {
+            margin: 0 !important;
+            padding: 14px 14px 12px !important;
+            border: 1px solid rgba(82, 94, 113, 0.72) !important;
+            border-radius: 12px !important;
+            background: linear-gradient(180deg, rgba(22,27,35,0.98), rgba(15,19,26,0.98)) !important;
+            box-shadow: none !important;
+        }
+
+        #picks .option-group label {
+            color: #8fa0b5 !important;
+            font-size: 0.62rem !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.15em !important;
+            text-transform: uppercase;
+            margin-bottom: 8px !important;
+        }
+
+        #picks #pickLineInput,
+        #picks #pickOddsInput,
+        #picks #unitsInput,
+        #picks #pickReasoning {
+            background: linear-gradient(180deg, #0f141c, #0c1017) !important;
+            border: 1px solid rgba(82, 94, 113, 0.78) !important;
+            border-radius: 10px !important;
+            color: #f8fafc !important;
+            font-size: 0.98rem !important;
+        }
+
+        #picks #pickLineInput::placeholder,
+        #picks #pickOddsInput::placeholder,
+        #picks #pickReasoning::placeholder {
+            color: #718096 !important;
+        }
+
+        #picks #pickLineInput:focus,
+        #picks #pickOddsInput:focus,
+        #picks #unitsInput:focus,
+        #picks #pickReasoning:focus {
+            border-color: rgba(74, 222, 128, 0.58) !important;
+            box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.10) !important;
+        }
+
+        #picks #pickReasoning {
+            min-height: 88px !important;
+            resize: vertical;
+        }
+
+        #picks #betScopeSelector,
+        #picks #betTypeSelector,
+        #picks #betTypeSelector2,
+        #picks #betTypeSelectorF5,
+        #picks #unitsModeToggle {
+            border: 1px solid rgba(82, 94, 113, 0.78) !important;
+            border-radius: 12px !important;
+            background: #121821 !important;
+            overflow: hidden;
+        }
+
+        #picks .bt-toggle-btn,
+        #picks .bt-scope-btn,
+        #picks .units-mode-btn {
+            background: #1a212b !important;
+            color: #dbe4f0 !important;
+            font-size: 0.72rem !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.12em !important;
+            text-transform: uppercase;
+        }
+
+        #picks .bt-toggle-btn.active,
+        #picks .bt-scope-btn.active,
+        #picks .units-mode-btn.active {
+            background: linear-gradient(180deg, #7CFC8A, #54d563) !important;
+            color: #09110d !important;
+        }
+
+        #picks .submit-pick-btn {
+            width: 100%;
+            min-height: 54px;
+            border-radius: 12px !important;
+            border: 1px solid rgba(74, 222, 128, 0.72) !important;
+            background: linear-gradient(180deg, #66e878, #3ecb57) !important;
+            color: #08110d !important;
+            font-size: 0.88rem !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.14em !important;
+            text-transform: uppercase;
+            box-shadow: 0 12px 28px rgba(12, 24, 14, 0.28) !important;
+        }
+
+        #picks .submit-pick-btn .btn-icon {
+            font-size: 1rem;
+        }
+
+        #picks .submit-pick-btn:hover {
+            background: linear-gradient(180deg, #74f387, #47d760) !important;
+            transform: translateY(-1px);
         }
 
         #picks .bet-buttons-row {
