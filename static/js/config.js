@@ -1,4 +1,8 @@
-// Configuration for Trust My Record
+// Configuration for TrustMyRecord
+
+const TMR_IS_LOCAL_HOST =
+    typeof window !== "undefined" &&
+    ["localhost", "127.0.0.1"].includes(window.location.hostname);
 
 const CONFIG = {
     // ESPN API Configuration (FREE - no API key needed!)
@@ -9,12 +13,12 @@ const CONFIG = {
     },
 
     // API Configuration
-    // The frontend tries these URLs in order until one responds
+    // Only expose localhost fallbacks when the site is actually running locally.
     api: {
         baseUrl: "https://trustmyrecord-api.onrender.com/api",
-        fallbackUrls: [
+        fallbackUrls: TMR_IS_LOCAL_HOST ? [
             "http://localhost:3000/api",
-        ],
+        ] : [],
         timeout: 8000
     },
 
