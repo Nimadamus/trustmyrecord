@@ -8065,7 +8065,7 @@
                                 </div>
                                 <div class="journey-step">
                                     <div class="journey-icon">Markets</div>
-                                    <div class="journey-label">Moneyline, spreads, totals, halves</div>
+                                    <div class="journey-label">Moneyline, spreads, totals, team totals, halves, periods</div>
                                 </div>
                                 <div class="journey-step">
                                     <div class="journey-icon">Picks</div>
@@ -8404,7 +8404,7 @@
     <div class="picks-container-modern">
         <div class="section-header">
             <h2>Make Your <span class="highlight">Picks</span></h2>
-            <p>Select a sport, see the board, choose your market, and lock the pick into your public record.</p>
+            <p>Select a sport, scan a real sportsbook-style board, choose from sides, totals, team totals, and extra market types, then lock the pick into your public record.</p>
             <div style="margin-top: 14px; padding: 14px 16px; border-radius: 14px; background: rgba(255, 190, 92, 0.1); border: 1px solid rgba(255, 190, 92, 0.3); color: #ffe7bf; line-height: 1.65; max-width: 840px;">
                 Picks are permanent once they are locked. Records do not reset and losing picks cannot be deleted later, so confirm the side, market, line, and units before you submit.
             </div>
@@ -17824,7 +17824,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ===== CORE FUNCTIONS DEFINED AND EXPORTED IMMEDIATELY =====
     // These MUST be available before onclick handlers fire
 
-    function showPickStep(stepId) {
+    function modernShowPickStep(stepId) {
         console.log('[TMR] showPickStep:', stepId);
         const allSteps = document.querySelectorAll('.pick-step');
         allSteps.forEach(s => s.classList.remove('active'));
@@ -17834,12 +17834,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // window.showPickStep - DEFINED EARLY in <head>, do not overwrite
 
     function goBackToSports() {
-        showPickStep('sportSelection');
+        window.showPickStep('sportSelection');
     }
     window.goBackToSports = goBackToSports;
 
     function goBackToGames() {
-        showPickStep('gamesListSection');
+        window.showPickStep('gamesListSection');
     }
     window.goBackToGames = goBackToGames;
 
@@ -17914,6 +17914,38 @@ document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('gamesListContainer');
         if (!container) return;
 
+        const groupTitles = {
+            team_totals: 'Team Totals',
+            first_5: 'First 5 Innings',
+            first_half: '1st Half',
+            second_half: '2nd Half',
+            period_1: '1st Period',
+            alt_spreads: 'Alternate Spreads',
+            alt_totals: 'Alternate Totals',
+            player_props: 'Player Props',
+            props: 'Props'
+        };
+
+        const previewGroupKeys = ['first_half', 'second_half', 'period_1', 'alt_spreads', 'alt_totals', 'player_props', 'props'];
+
+        function fmtBoardOdds(value) {
+            if (value == null || value === '') return '--';
+            if (typeof value === 'number') return value > 0 ? '+' + value : String(value);
+            return String(value);
+        }
+
+        function escBoard(value) {
+            return String(value == null ? '' : value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        }
+
+        function renderPreviewPills(items) {
+            return items.slice(0, 6).map(item => {
+                const label = item.selection_label || item.selection || item.label || 'Market';
+                const line = item.line != null && item.line !== '' ? ' ' + item.line : '';
+                return `<div class="sportsbook-market-pill"><span class="market-name">${label}${line}</span><span class="market-odds">${fmtBoardOdds(item.odds)}</span></div>`;
+            }).join('');
+        }
+
         let html = '';
 
         games.forEach((game, index) => {
@@ -17961,49 +17993,90 @@ document.addEventListener('DOMContentLoaded', function() {
             const gameTime = new Date(game.commence_time);
             const timeStr = gameTime.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 
+            const marketGroups = Array.isArray(game.market_groups) ? game.market_groups : [];
             const teamTotalGroup = Array.isArray(game.market_groups) ? game.market_groups.find(group => group && group.key === 'team_totals') : null;
             const teamTotalItems = teamTotalGroup && Array.isArray(teamTotalGroup.items) ? teamTotalGroup.items : [];
+            const marketTags = ['Moneyline', 'Spread', 'Game Total'];
+            if (teamTotalItems.length) marketTags.push('Team Totals');
 
             // Build F5 HTML for MLB games only
             const selSport = window.TMR && window.TMR.selectedSport;
             const isMLBGame = selSport === 'MLB' || (game.sport_key && game.sport_key.indexOf('baseball') !== -1);
+            let first5Items = [];
             let f5Html = '';
             if (isMLBGame) {
                 const first5Group = Array.isArray(game.market_groups) ? game.market_groups.find(group => group && group.key === 'first_5') : null;
-                const first5Items = first5Group && Array.isArray(first5Group.items) ? first5Group.items : [];
+                first5Items = first5Group && Array.isArray(first5Group.items) ? first5Group.items : [];
                 const escAway = game.away_team.replace(/'/g, "\\'");
                 const escHome = game.home_team.replace(/'/g, "\\'");
-                const escJs = value => String(value == null ? '' : value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
                 const f5Buttons = first5Items.map(item => {
                     const type = item.market_type === 'f5_h2h' ? 'f5ml' : (item.market_type === 'f5_totals' && item.selection === 'Over' ? 'f5over' : (item.market_type === 'f5_totals' ? 'f5under' : 'f5spread'));
                     const line = item.line != null ? item.line : '';
                     const odds = item.odds != null ? item.odds : '';
                     const label = item.selection_label || item.selection || 'First 5';
-                    return `<button class="bet-pick-btn" onclick="selectGameBet(${index}, '${type}', '${escJs(item.selection || label)}', '${escJs(line)}', '${escJs(odds)}', '${escAway}', '${escHome}')"><span class="line">${label}</span><span class="odds">${odds}</span></button>`;
+                    return `<button class="bet-pick-btn" onclick="selectGameBet(${index}, '${type}', '${escBoard(item.selection || label)}', '${escBoard(line)}', '${escBoard(odds)}', '${escAway}', '${escHome}')"><span class="line">${label}</span><span class="odds">${odds}</span></button>`;
                 }).join('');
+                if (first5Items.length) marketTags.push('First 5');
                 f5Html = `<div class="market-section"><div class="market-title">First 5 Innings</div>
                     <div style="display:flex;gap:10px;flex-wrap:wrap;">
                         ${f5Buttons || '<div style="color:var(--text-muted,#aaa);font-size:12px;">No verified first-5 lines available for this game.</div>'}
                     </div></div>`;
             }
 
-            const escMarketJs = value => String(value == null ? '' : value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
             const teamTotalsHtml = teamTotalItems.length ? teamTotalItems.map(item => {
                 const type = item.market_type === 'team_totals' && item.selection_label && item.selection_label.toLowerCase().indexOf('under') !== -1 ? 'teamunder' : 'teamover';
                 const label = item.selection_label || item.selection || 'Team Total';
                 const line = item.line != null ? item.line : '';
                 const odds = item.odds != null ? item.odds : '';
-                return `<button class="bet-pick-btn" onclick="selectGameBet(${index}, '${type}', '${escMarketJs(item.selection || label)}', '${escMarketJs(line)}', '${escMarketJs(odds)}', '${game.away_team.replace(/'/g, "\\'")}', '${game.home_team.replace(/'/g, "\\'")}')"><span class="line">${label}</span><span class="odds">${odds}</span></button>`;
+                return `<button class="bet-pick-btn" onclick="selectGameBet(${index}, '${type}', '${escBoard(item.selection || label)}', '${escBoard(line)}', '${escBoard(odds)}', '${game.away_team.replace(/'/g, "\\'")}', '${game.home_team.replace(/'/g, "\\'")}')"><span class="line">${label}</span><span class="odds">${odds}</span></button>`;
             }).join('') : '<div style="color:var(--text-muted,#aaa);font-size:12px;">No verified team-total lines available for this game.</div>';
+
+            const extraMarketSections = [];
+            previewGroupKeys.forEach(key => {
+                const group = marketGroups.find(item => item && item.key === key);
+                const items = group && Array.isArray(group.items) ? group.items : [];
+                if (!items.length) return;
+                marketTags.push(groupTitles[key] || key);
+                extraMarketSections.push(`
+                    <div class="market-section preview-only">
+                        <div class="market-title">${groupTitles[key] || key}</div>
+                        <div class="sportsbook-market-pills">
+                            ${renderPreviewPills(items)}
+                        </div>
+                    </div>
+                `);
+            });
+
+            const marketTagsHtml = marketTags.map(tag => `<span>${tag}</span>`).join('');
+            const marketCount = marketGroups.reduce((totalCount, group) => {
+                if (!group || !Array.isArray(group.items)) return totalCount;
+                return totalCount + group.items.length;
+            }, 0) + 6;
+            const bookmakerTitle = bookmaker && bookmaker.title ? bookmaker.title : 'Sportsbook board';
 
             html += `
             <div class="game-card-new" data-game-index="${index}">
                 <div class="game-card-header">
-                    <span class="game-time-new">${timeStr}</span>
-                    <span class="game-status">Upcoming</span>
+                    <div class="game-card-header-main">
+                        <span class="game-time-new">${timeStr}</span>
+                        <span class="game-status">Upcoming</span>
+                    </div>
+                    <div class="game-card-board-meta">
+                        <span>${bookmakerTitle}</span>
+                        <span>${marketCount} markets</span>
+                    </div>
+                </div>
+
+                <div class="sportsbook-market-rail">
+                    ${marketTagsHtml}
                 </div>
 
                 <div class="game-teams-section">
+                    <div class="sportsbook-board-columns">
+                        <span>Matchup</span>
+                        <span>Line</span>
+                        <span>Moneyline</span>
+                    </div>
                     <!-- Away Team Row -->
                     <div class="team-row">
                         <div class="team-info-left">
@@ -18055,7 +18128,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 <!-- More Markets Toggle -->
                 <button class="more-markets-btn" onclick="toggleMoreMarkets(${index})">
-                    <span>More Markets</span>
+                    <span>Open team totals, alt lines, halves and more</span>
                     <span>▼</span>
                 </button>
 
@@ -18067,6 +18140,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                     ${f5Html}
+                    ${extraMarketSections.join('')}
                 </div>
             </div>
             `;
@@ -18082,7 +18156,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (el) el.classList.toggle('show');
     }
 
-    function selectGameBet(gameIndex, betType, team, line, odds, awayTeam, homeTeam) {
+    function selectGameBetModern(gameIndex, betType, team, line, odds, awayTeam, homeTeam) {
         console.log('selectGameBet called:', { gameIndex, betType, team, line, odds });
 
         // Get game time from stored games
@@ -18131,7 +18205,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         // Go to confirmation
-        showPickStep('pickDetails');
+        window.showPickStep('pickDetails');
     }
     // window.selectGameBet - DEFINED EARLY in <head>, do not overwrite
     // submitPickNew / lockInPick - DEFINED EARLY in <head>, do not overwrite
@@ -21482,6 +21556,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 radial-gradient(circle at 12% 0%, rgba(45,212,191,0.10), transparent 34%),
                 linear-gradient(180deg, #0b1220 0%, #101827 100%);
             padding-top: 26px;
+            overflow-x: clip;
         }
 
         .picks-container-modern {
@@ -21495,6 +21570,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 radial-gradient(circle at 0% 100%, rgba(212,167,44,0.08), transparent 26%),
                 linear-gradient(145deg, rgba(15,23,42,0.96), rgba(9,15,27,0.99));
             box-shadow: 0 34px 90px rgba(0,0,0,0.26);
+            overflow: clip;
         }
 
         #picks .section-header {
@@ -21531,6 +21607,7 @@ document.addEventListener('DOMContentLoaded', function() {
             background:
                 linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)),
                 rgba(255,255,255,0.02);
+            overflow: hidden;
         }
 
         #picks .pick-step h3,
@@ -21769,6 +21846,24 @@ document.addEventListener('DOMContentLoaded', function() {
             border-bottom: 1px solid rgba(148,163,184,0.12) !important;
         }
 
+        #picks .game-card-header-main,
+        #picks .game-card-board-meta,
+        #picks .sportsbook-board-columns {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        #picks .game-card-board-meta {
+            margin-top: 10px;
+            color: #8ea0b7;
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
         #picks .game-time-new {
             color: #f8fafc !important;
             font-weight: 800 !important;
@@ -21785,8 +21880,50 @@ document.addEventListener('DOMContentLoaded', function() {
             text-transform: uppercase;
         }
 
+        #picks .sportsbook-market-rail {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 14px 18px 0;
+        }
+
+        #picks .sportsbook-market-rail span {
+            display: inline-flex;
+            align-items: center;
+            min-height: 34px;
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.18);
+            background: rgba(255,255,255,0.05);
+            color: #d6e2f1;
+            padding: 8px 12px;
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
         #picks .game-teams-section {
             padding: 18px !important;
+        }
+
+        #picks .sportsbook-board-columns {
+            margin-bottom: 14px;
+            padding: 0 0 10px;
+            border-bottom: 1px solid rgba(148,163,184,0.10);
+            color: #8ea0b7;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        #picks .sportsbook-board-columns span:first-child {
+            flex: 1;
+        }
+
+        #picks .sportsbook-board-columns span:not(:first-child) {
+            width: 102px;
+            text-align: center;
         }
 
         #picks .team-row {
@@ -21858,11 +21995,17 @@ document.addEventListener('DOMContentLoaded', function() {
             color: #2dd4bf !important;
             background: rgba(255,255,255,0.025) !important;
             font-weight: 900 !important;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
         }
 
         #picks .expanded-markets {
             border-top: 1px solid rgba(148,163,184,0.14) !important;
             background: rgba(5,13,22,0.38) !important;
+        }
+
+        #picks .market-section.preview-only {
+            padding-top: 4px;
         }
 
         #picks .market-title {
@@ -21871,6 +22014,37 @@ document.addEventListener('DOMContentLoaded', function() {
             font-weight: 900 !important;
             letter-spacing: 0.12em;
             text-transform: uppercase;
+        }
+
+        #picks .sportsbook-market-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        #picks .sportsbook-market-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            min-width: 220px;
+            min-height: 46px;
+            border-radius: 16px;
+            border: 1px solid rgba(148,163,184,0.18);
+            background: rgba(255,255,255,0.045);
+            padding: 12px 14px;
+            font-size: 0.82rem;
+        }
+
+        #picks .sportsbook-market-pill .market-name {
+            color: #f8fafc;
+            font-weight: 800;
+        }
+
+        #picks .sportsbook-market-pill .market-odds {
+            color: #2dd4bf;
+            font-weight: 900;
+            font-size: 0.9rem;
         }
 
         #picks .pick-summary-card {
@@ -22070,6 +22244,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 padding: 14px !important;
             }
 
+            #picks .game-card-header-main,
+            #picks .game-card-board-meta {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            #picks .sportsbook-board-columns {
+                display: none;
+            }
+
             #picks .bet-buttons-row {
                 width: 100%;
                 justify-content: flex-end;
@@ -22093,6 +22277,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 align-items: flex-start;
             }
 
+            #picks .sportsbook-market-rail {
+                padding: 12px 14px 0;
+            }
+
+            #picks .sportsbook-market-rail span {
+                font-size: 0.7rem;
+            }
+
             #picks .bet-buttons-row {
                 width: 100%;
                 display: grid;
@@ -22104,6 +22296,10 @@ document.addEventListener('DOMContentLoaded', function() {
             #picks .total-btn {
                 min-width: 0;
                 width: 100%;
+            }
+
+            #picks .sportsbook-market-pill {
+                min-width: 100%;
             }
         }
 
@@ -22412,6 +22608,109 @@ document.addEventListener('DOMContentLoaded', function() {
             font-size: 1.05rem;
         }
 
+        @media (max-width: 860px) {
+            #picks .picks-container-modern {
+                width: min(100%, calc(100% - 20px));
+                margin-bottom: 28px;
+                padding: 18px;
+                border-radius: 24px;
+            }
+
+            #picks .pick-step {
+                padding: 18px;
+                border-radius: 20px;
+            }
+
+            #picks .pick-options {
+                grid-template-columns: 1fr !important;
+                gap: 14px !important;
+            }
+
+            #picks .option-group:last-child {
+                grid-column: auto;
+            }
+
+            #picks #selectedSportTitle,
+            #picks #pickDetails > h3,
+            #picks #picksList > h3 {
+                font-size: clamp(1.8rem, 7vw, 2.35rem) !important;
+                line-height: 1.06 !important;
+            }
+
+            #picks #betScopeSelector,
+            #picks #betTypeSelector,
+            #picks #betTypeSelector2,
+            #picks #betTypeSelectorF5,
+            #picks #unitsModeToggle {
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                width: 100%;
+            }
+
+            #picks .bt-toggle-btn,
+            #picks .bt-scope-btn,
+            #picks .units-mode-btn {
+                min-width: 0;
+                min-height: 48px;
+                padding: 11px 10px !important;
+                white-space: normal;
+                line-height: 1.2;
+                text-align: center;
+            }
+
+            #picks .pick-summary-card .summary-section {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+
+            #picks .pick-summary-card .summary-value {
+                max-width: 100%;
+                text-align: left;
+                overflow-wrap: anywhere;
+            }
+
+            #picks #unitsInput {
+                width: 100% !important;
+                max-width: none;
+                min-width: 0;
+            }
+
+            #picks #unitsInput + #unitsModeToggle {
+                flex: 1 1 100%;
+            }
+
+            #picks .option-group > div[style*="align-items: center"] {
+                flex-wrap: wrap;
+            }
+
+            #picks #gamesListContainer .tmr-market-head,
+            #picks #gamesListContainer .tmr-market-summary,
+            #picks #gamesListContainer .tmr-group-header {
+                gap: 10px !important;
+            }
+
+            #picks #gamesListContainer .tmr-option-btn {
+                grid-template-columns: 1fr !important;
+                gap: 12px !important;
+            }
+
+            #picks #gamesListContainer .tmr-option-odds-wrap {
+                width: 100%;
+                align-items: flex-start !important;
+            }
+
+            #picks #gamesListContainer .tmr-option-odds {
+                width: 100%;
+                min-width: 0 !important;
+                font-size: 1.45rem !important;
+            }
+
+            #picks #gamesListContainer .tmr-board-filter-tab {
+                min-width: 0 !important;
+            }
+        }
+
         @media (max-width: 720px) {
             #picks .sport-cards-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -22438,6 +22737,44 @@ document.addEventListener('DOMContentLoaded', function() {
             .promo-tool-grid,
             .consensus-row {
                 grid-template-columns: 1fr;
+            }
+
+            #picks .games-count,
+            #picks .back-button,
+            #picks .submit-pick-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            #picks #picksStatsBar {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #picks .sport-cards-grid,
+            #picks .picks-onboarding-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            #picks .market-chip-row span {
+                width: 100%;
+                justify-content: center;
+            }
+
+            #picks #betScopeSelector,
+            #picks #betTypeSelector,
+            #picks #betTypeSelector2,
+            #picks #betTypeSelectorF5,
+            #picks #unitsModeToggle,
+            #picks .bet-buttons-row {
+                grid-template-columns: 1fr !important;
+            }
+
+            #picks #gamesListContainer .tmr-market-head,
+            #picks #gamesListContainer .tmr-market-body {
+                padding-left: 14px !important;
+                padding-right: 14px !important;
             }
         }
     </style>
