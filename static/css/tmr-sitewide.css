@@ -2311,3 +2311,66 @@ html body.tmr-site-shell::before {
 .tmr-site-shell .page-title {
     letter-spacing: -0.03em !important;
 }
+
+@media (max-width: 768px) {
+    body:not(.tmr-site-shell) > header,
+    body:not(.tmr-site-shell) > nav.nav {
+        position: static !important;
+        top: auto !important;
+    }
+
+    body:not(.tmr-site-shell) > header .header-content,
+    body:not(.tmr-site-shell) > header .header-inner,
+    body:not(.tmr-site-shell) > nav.nav,
+    body:not(.tmr-site-shell) > header nav,
+    body:not(.tmr-site-shell) > header .nav-links,
+    body:not(.tmr-site-shell) > nav.nav .nav-links {
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    body:not(.tmr-site-shell) > header .header-content,
+    body:not(.tmr-site-shell) > header .header-inner,
+    body:not(.tmr-site-shell) > nav.nav {
+        gap: 12px !important;
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+    }
+
+    body:not(.tmr-site-shell) > header nav,
+    body:not(.tmr-site-shell) > header .nav-links,
+    body:not(.tmr-site-shell) > nav.nav .nav-links {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        white-space: nowrap !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 2px !important;
+    }
+
+    body:not(.tmr-site-shell) > header nav::-webkit-scrollbar,
+    body:not(.tmr-site-shell) > header .nav-links::-webkit-scrollbar,
+    body:not(.tmr-site-shell) > nav.nav .nav-links::-webkit-scrollbar {
+        display: none;
+    }
+
+    body:not(.tmr-site-shell) > header nav a,
+    body:not(.tmr-site-shell) > header .nav-links a,
+    body:not(.tmr-site-shell) > nav.nav .nav-links a {
+        flex: 0 0 auto !important;
+    }
+
+    body:not(.tmr-site-shell) > header .hamburger {
+        display: none !important;
+    }
+
+    body:not(.tmr-site-shell) > header .nav-right,
+    body:not(.tmr-site-shell) > nav.nav .nav-right {
+        width: 100% !important;
+        justify-content: flex-start !important;
+        flex-wrap: wrap !important;
+        margin-left: 0 !important;
+    }
+}
