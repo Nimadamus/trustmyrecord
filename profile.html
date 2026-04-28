@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile | Trust My Record</title>
-    <meta name="description" content="View user profile, verified pick record, and performance stats on Trust My Record.">
+    <title>Profile | TrustMyRecord</title>
+    <meta name="description" content="View user profile, verified pick record, and performance stats on TrustMyRecord.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://trustmyrecord.com/profile/">
-    <meta property="og:title" content="User Profile | Trust My Record">
+    <meta property="og:title" content="User Profile | TrustMyRecord">
     <meta property="og:description" content="Check out my verified handicapping record and stats.">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260426b">
@@ -971,13 +971,13 @@
 
     <section class="picks-section">
         <div class="container">
-            <div class="section-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+            <div class="section-header records-section-head" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
                 <div>
                     <div class="section-title">Records Table</div>
                     <div class="section-subtitle" id="picksCount"></div>
                     <div class="table-note">The records table is the source of truth. Filters, ribbon stats, and breakdowns all resolve from this ledger.</div>
                 </div>
-                <div style="display:flex;gap:8px;">
+                <div class="section-header-actions">
                     <button class="btn btn-secondary" onclick="exportCSV()" style="padding:6px 14px;font-size:.8rem;" title="Download pick history as CSV">Export CSV</button>
                     <button class="btn btn-secondary" onclick="showEmbedModal()" style="padding:6px 14px;font-size:.8rem;" title="Get embeddable widget code">Embed Widget</button>
                 </div>
@@ -1880,24 +1880,24 @@
         body.tmr-site-shell.profile-page .support-callout,
         body.tmr-site-shell.profile-page .support-strip,
         body.tmr-site-shell.profile-page .empty-state {
-            border: 1px solid rgba(120, 146, 176, 0.16) !important;
-            background: linear-gradient(180deg, rgba(15, 22, 36, 0.98), rgba(9, 14, 24, 0.96)) !important;
-            box-shadow: 0 24px 56px rgba(2, 8, 18, 0.32) !important;
+            border: 1px solid rgba(183, 197, 213, 0.72) !important;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 253, 0.98)) !important;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08) !important;
             backdrop-filter: none !important;
         }
 
         body.tmr-site-shell.profile-page .profile-header {
             display: grid;
-            grid-template-columns: auto minmax(0, 1fr) minmax(260px, 320px);
+            grid-template-columns: minmax(0, 1.55fr) minmax(260px, 340px);
             align-items: start;
-            gap: 26px;
+            gap: 28px;
             border-radius: 28px !important;
             padding: 32px !important;
-            color: #e7eef8 !important;
+            color: #172435 !important;
             background:
-                radial-gradient(circle at top right, rgba(31, 122, 224, 0.14), transparent 32%),
-                radial-gradient(circle at bottom left, rgba(45, 212, 191, 0.10), transparent 28%),
-                linear-gradient(180deg, rgba(16, 24, 40, 0.98), rgba(10, 16, 28, 0.98)) !important;
+                radial-gradient(circle at top right, rgba(32, 104, 182, 0.10), transparent 34%),
+                radial-gradient(circle at bottom left, rgba(245, 130, 32, 0.10), transparent 28%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(246, 249, 252, 0.99)) !important;
         }
 
         body.tmr-site-shell.profile-page .profile-header::before {
@@ -1905,14 +1905,34 @@
         }
 
         body.tmr-site-shell.profile-page .profile-avatar {
-            width: 96px !important;
-            height: 96px !important;
-            border: 1px solid rgba(148, 163, 184, 0.18) !important;
-            box-shadow: 0 20px 38px rgba(0, 0, 0, 0.26) !important;
+            width: 92px !important;
+            height: 92px !important;
+            border: 3px solid rgba(255, 255, 255, 0.92) !important;
+            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12) !important;
         }
 
         body.tmr-site-shell.profile-page .profile-info {
             min-width: 0;
+        }
+
+        .profile-identity-row {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 14px;
+        }
+
+        .profile-identity-copy {
+            min-width: 0;
+        }
+
+        .profile-eyebrow {
+            margin-bottom: 8px;
+            color: #5f7084;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
         }
 
         body.tmr-site-shell.profile-page .profile-name,
@@ -1921,7 +1941,7 @@
         body.tmr-site-shell.profile-page .analytics-card-value,
         body.tmr-site-shell.profile-page .analytics-card h3,
         body.tmr-site-shell.profile-page .support-module h3 {
-            color: #f8fbff !important;
+            color: #162231 !important;
         }
 
         body.tmr-site-shell.profile-page .profile-handle,
@@ -1932,40 +1952,84 @@
         body.tmr-site-shell.profile-page .analytics-card p,
         body.tmr-site-shell.profile-page .support-module-note,
         body.tmr-site-shell.profile-page .empty-state p {
-            color: #9fb0c5 !important;
+            color: #5f7084 !important;
         }
 
         body.tmr-site-shell.profile-page .profile-trust-pill,
         body.tmr-site-shell.profile-page .profile-meta-item,
         body.tmr-site-shell.profile-page .workspace-tab {
-            border-color: rgba(148, 163, 184, 0.16) !important;
-            background: rgba(255,255,255,0.04) !important;
-            color: #dbe8f7 !important;
+            border-color: rgba(189, 202, 216, 0.9) !important;
+            background: rgba(248, 250, 252, 0.96) !important;
+            color: #314255 !important;
         }
 
         body.tmr-site-shell.profile-page .profile-trust-pill strong {
-            color: #f8fbff !important;
+            color: #162231 !important;
+        }
+
+        .profile-bio {
+            margin-top: 2px;
+            max-width: 760px;
+            line-height: 1.65;
+        }
+
+        .profile-bio-empty {
+            font-style: italic;
+        }
+
+        .profile-overview-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .profile-overview-card {
+            padding: 14px 16px;
+            border: 1px solid rgba(219, 228, 236, 0.9);
+            border-radius: 18px;
+            background: linear-gradient(180deg, #ffffff, #f8fbfd);
+        }
+
+        .profile-overview-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #6a7c91;
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .profile-overview-value {
+            display: block;
+            color: #182635;
+            font-size: 0.96rem;
+            font-weight: 700;
+            line-height: 1.35;
+            word-break: break-word;
         }
 
         .profile-rail {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px;
+            gap: 12px;
             min-width: 0;
+            align-self: stretch;
         }
 
         .profile-rail-card {
-            padding: 14px 15px;
+            padding: 16px 16px;
             border-radius: 18px;
-            border: 1px solid rgba(148, 163, 184, 0.14);
-            background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+            border: 1px solid rgba(219, 228, 236, 0.95);
+            background: linear-gradient(180deg, #ffffff, #f8fbfd);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
         }
 
         .profile-rail-label {
             display: block;
             margin-bottom: 6px;
-            color: #8ea0b5;
+            color: #6a7c91;
             font-size: 0.68rem;
             font-weight: 800;
             letter-spacing: 0.12em;
@@ -1973,7 +2037,7 @@
         }
 
         .profile-rail-value {
-            color: #f8fbff;
+            color: #182635;
             font-family: 'Barlow', 'Inter', sans-serif;
             font-size: 1.02rem;
             font-weight: 800;
@@ -1984,14 +2048,14 @@
             grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
             border-radius: 24px !important;
             overflow: hidden !important;
-            background: linear-gradient(180deg, rgba(15, 22, 36, 0.98) 0%, rgba(9, 14, 24, 0.96) 100%) !important;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(247, 250, 253, 0.99) 100%) !important;
         }
 
         body.tmr-site-shell.profile-page .summary-stat {
             min-height: 94px !important;
             padding: 18px 18px 16px !important;
-            border-right: 1px solid rgba(120, 146, 176, 0.14) !important;
-            border-bottom: 1px solid rgba(120, 146, 176, 0.14) !important;
+            border-right: 1px solid rgba(214, 223, 232, 0.9) !important;
+            border-bottom: 1px solid rgba(214, 223, 232, 0.9) !important;
             background: transparent !important;
         }
 
@@ -2004,23 +2068,27 @@
         }
 
         body.tmr-site-shell.profile-page .summary-stat-label {
-            color: #8ea0b5 !important;
+            color: #6a7c91 !important;
             font-size: 0.64rem !important;
             letter-spacing: 0.16em !important;
         }
 
         body.tmr-site-shell.profile-page .summary-stat-note {
-            color: #9aaec4 !important;
+            color: #6e8094 !important;
         }
 
         body.tmr-site-shell.profile-page .workspace-nav-head {
             align-items: center;
         }
 
+        .workspace-nav-card {
+            padding: 24px 26px;
+        }
+
         body.tmr-site-shell.profile-page .workspace-tab.active,
         body.tmr-site-shell.profile-page .btn-primary,
         body.tmr-site-shell.profile-page .filter-button.active {
-            background: linear-gradient(135deg, #2dd4bf, #89f7e4) !important;
+            background: linear-gradient(135deg, #102338, #21486d) !important;
             color: #ffffff !important;
             border-color: transparent !important;
         }
@@ -2028,38 +2096,107 @@
         body.tmr-site-shell.profile-page .btn-secondary,
         body.tmr-site-shell.profile-page .filter-button,
         body.tmr-site-shell.profile-page .ledger-sort-button {
-            background: rgba(255,255,255,0.05) !important;
-            color: #dce8f5 !important;
-            border-color: rgba(148, 163, 184, 0.16) !important;
+            background: #f8fafc !important;
+            color: #28415b !important;
+            border-color: rgba(189, 202, 216, 0.9) !important;
         }
 
         body.tmr-site-shell.profile-page .filter-toolbar {
-            background: linear-gradient(180deg, rgba(15, 22, 36, 0.94), rgba(10, 16, 28, 0.94)) !important;
-            border-color: rgba(120, 146, 176, 0.16) !important;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            background: transparent !important;
+            border-color: transparent !important;
+        }
+
+        .filter-search-wrap {
+            grid-column: 1 / -1;
+        }
+
+        #pickFilters {
+            padding: 0;
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .filter-control,
+        .filter-button {
+            min-height: 42px;
+            border-radius: 12px;
+            background: #ffffff;
+            color: #203041;
+            border: 1px solid #d5dee7;
+        }
+
+        .filter-search-input {
+            background: #ffffff;
+        }
+
+        .ledger-filter-card {
+            border-radius: 22px;
+            padding: 18px;
+        }
+
+        .ledger-filter-actions {
+            margin-top: 2px;
+            padding-top: 12px;
+            border-top: 1px solid #e3eaf1;
+        }
+
+        .section-header-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .records-section-head {
+            margin-bottom: 14px;
+        }
+
+        .records-section-head .section-title,
+        .stats-table-head .section-title {
+            font-size: 1.1rem;
+        }
+
+        .ledger-toolbar-meta {
+            color: #647589;
+        }
+
+        .table-note {
+            color: #6f8194;
+            max-width: 640px;
         }
 
         body.tmr-site-shell.profile-page .picks-table th {
-            background: rgba(255,255,255,0.03);
-            color: #8ea0b5;
+            background: #f5f8fb;
+            color: #6a7c91;
         }
 
         body.tmr-site-shell.profile-page .picks-table td {
-            color: #e7eef8;
-            border-color: rgba(120, 146, 176, 0.12);
+            color: #203041;
+            border-color: #e4ebf2;
         }
 
         body.tmr-site-shell.profile-page .picks-table tr:hover td {
-            background: #f4f9fd;
+            background: #f4f8fc;
         }
 
         @media (max-width: 1100px) {
             body.tmr-site-shell.profile-page .profile-header {
-                grid-template-columns: auto minmax(0, 1fr);
+                grid-template-columns: 1fr;
             }
 
             .profile-rail {
-                grid-column: 1 / -1;
-                grid-template-columns: repeat(4, minmax(0, 1fr));
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .profile-overview-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            body.tmr-site-shell.profile-page .filter-toolbar {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
             }
         }
 
@@ -2069,8 +2206,26 @@
                 text-align: left;
             }
 
+            .profile-identity-row {
+                align-items: flex-start;
+            }
+
+            .profile-overview-grid,
             .profile-rail {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            body.tmr-site-shell.profile-page .filter-toolbar {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header-actions,
+            .ledger-filter-actions {
+                width: 100%;
+            }
+
+            .section-header-actions {
+                justify-content: flex-start;
             }
 
             body.tmr-site-shell.profile-page .summary-grid {
@@ -2610,12 +2765,12 @@
             }
 
             if (!profileUsername && currentUser) profileUsername = currentUser.username;
-            
+
             if (!profileUsername) {
                 document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>Not Logged In</h3><p>Please log in or specify a user.</p><a href="/" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
                 return;
             }
-            
+
             isOwnProfile = currentUser && currentUser.username && currentUser.username.toLowerCase() === profileUsername.toLowerCase();
             await loadProfile();
         } catch (e) {
@@ -2633,7 +2788,7 @@
             const data = await api.getUserProfile(profileUsername);
             profileData = data.user || data;
             profileUserId = profileData.id;
-            
+
             if (currentUser && !isOwnProfile) {
                 isFollowingProfile = !!profileData.is_following;
             }
@@ -2646,7 +2801,7 @@
                     teamsData.favorite_teams.forEach(t => { profileData._fav_teams[t.sport] = t.team_name; });
                 }
             } catch(e) { profileData._fav_teams = {}; }
-            
+
             try {
                 const gamerData = await api.request('/gaming/profile/' + profileUsername);
                 if (gamerData && gamerData.gamer_profile) profileData._gamer = gamerData.gamer_profile;
@@ -2763,10 +2918,14 @@
         const totalPicks = Number(p.total_picks || p.totalPicks || 0);
         const verifiedText = String(p.verification_status || '').toLowerCase() === 'verified' ? 'Verified' : 'Unverified';
         const recordText = Number(p.wins || 0) + '-' + Number(p.losses || 0) + '-' + Number(p.pushes || 0);
+        const derivedWinRate = Number(p.win_rate || ((Number(p.wins || 0) + Number(p.losses || 0)) > 0
+            ? (Number(p.wins || 0) / (Number(p.wins || 0) + Number(p.losses || 0))) * 100
+            : 0));
+        const roiValue = Number(p.roi || 0);
         const showEmptyLedgerNote = isOwnProfile && totalPicks === 0 && !p.__recoveredFromLocal;
         const trustPills = '<div class="profile-trust-row">' +
+            '<span class="profile-trust-pill"><i class="fas fa-check-circle"></i> Status <strong>' + verifiedText + '</strong></span>' +
             '<span class="profile-trust-pill"><i class="fas fa-user"></i> Member since <strong>' + joinDate + '</strong></span>' +
-            '<span class="profile-trust-pill"><i class="fas fa-chart-simple"></i> Record <strong>' + recordText + '</strong></span>' +
             '<span class="profile-trust-pill"><i class="fas fa-database"></i> Ledger <strong>' + totalPicks + ' tracked picks</strong></span>' +
             (p.__recoveredFromLocal ? '<span class="profile-trust-pill"><i class="fas fa-rotate-left"></i> Legacy recovery <strong>Browser ledger restored</strong></span>' : '') +
             '</div>';
@@ -2777,10 +2936,18 @@
               '</div>'
             : '';
         const rail = '<div class="profile-rail">' +
-            '<div class="profile-rail-card"><span class="profile-rail-label">Member Since</span><span class="profile-rail-value">' + joinDate + '</span></div>' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Leaderboard Rank</span><span class="profile-rail-value">' + rankText + '</span></div>' +
-            '<div class="profile-rail-card"><span class="profile-rail-label">Verification Status</span><span class="profile-rail-value">' + verifiedText + '</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">Member Since</span><span class="profile-rail-value">' + joinDate + '</span></div>' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Tracked Picks</span><span class="profile-rail-value">' + totalPicks + '</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">Record</span><span class="profile-rail-value">' + recordText + '</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">Win Rate</span><span class="profile-rail-value">' + derivedWinRate.toFixed(1) + '%</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">ROI</span><span class="profile-rail-value">' + (roiValue >= 0 ? '+' : '') + roiValue.toFixed(1) + '%</span></div>' +
+            '</div>';
+        const overview = '<div class="profile-overview-grid">' +
+            '<div class="profile-overview-card"><span class="profile-overview-label">Followers</span><span class="profile-overview-value">' + (Number(p.follower_count) || 0) + '</span></div>' +
+            '<div class="profile-overview-card"><span class="profile-overview-label">Following</span><span class="profile-overview-value">' + (Number(p.following_count) || 0) + '</span></div>' +
+            '<div class="profile-overview-card"><span class="profile-overview-label">Location</span><span class="profile-overview-value">' + (p.location || 'Not listed') + '</span></div>' +
+            '<div class="profile-overview-card"><span class="profile-overview-label">Profile Type</span><span class="profile-overview-value">' + (verifiedText === 'Verified' ? 'Verified capper' : 'Community member') + '</span></div>' +
             '</div>';
 
         let actions = '';
@@ -2797,20 +2964,25 @@
                 '<button class="btn btn-secondary" onclick="location.href=\'arena/?challenge=' + encodeURIComponent(p.username) + '\'">Challenge</button></div>';
         }
 
-        el.innerHTML = '<div class="profile-avatar">' + (p.avatar_url ? '<img src="' + p.avatar_url + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + name + '">' : letter) + '</div>' +
-            '<div class="profile-info">' +
+        el.innerHTML = '<div class="profile-info">' +
+            '<div class="profile-identity-row">' +
+            '<div class="profile-avatar">' + (p.avatar_url ? '<img src="' + p.avatar_url + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + name + '">' : letter) + '</div>' +
+            '<div class="profile-identity-copy">' +
+            '<div class="profile-eyebrow">Trust My Record profile</div>' +
             '<div class="profile-name">' + name + '</div>' +
             '<div class="profile-handle">@' + p.username + '</div>' +
+            '</div>' +
+            '</div>' +
             trustPills +
-            (p.bio ? '<div class="profile-bio">' + p.bio + '</div>' : '') +
-            emptyLedgerNote +
+            (p.bio ? '<div class="profile-bio">' + p.bio + '</div>' : '<div class="profile-bio profile-bio-empty">No bio added yet.</div>') +
+            overview +
             '<div class="profile-meta">' +
-            '<span class="profile-meta-item">Followers ' + (Number(p.follower_count) || 0) + '</span>' +
-            '<span class="profile-meta-item">Following ' + (Number(p.following_count) || 0) + '</span>' +
-            (p.location ? '<span class="profile-meta-item">' + p.location + '</span>' : '') +
             '<button type="button" class="profile-meta-item" style="cursor:pointer;" onclick="openSocialList(\'followers\')">View followers</button>' +
             '<button type="button" class="profile-meta-item" style="cursor:pointer;" onclick="openSocialList(\'following\')">View following</button>' +
-            '</div>' + actions + '</div>' + rail;
+            '</div>' +
+            actions +
+            emptyLedgerNote +
+            '</div>' + rail;
 
         updateWorkspaceLinks(p.username);
     }
@@ -4584,5 +4756,4 @@
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  8:02:00 PM -->
-
 
