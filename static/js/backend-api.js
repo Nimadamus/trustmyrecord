@@ -5,7 +5,7 @@
 
 class TrustMyRecordAPI {
     constructor() {
-        this.baseUrl = CONFIG?.api?.baseUrl || 'http://localhost:3000/api';
+        this.baseUrl = CONFIG?.api?.baseUrl || 'https://trustmyrecord-api.onrender.com/api';
         this.token = null;
         this.refreshToken = null;
         this.backendAvailable = null; // null = not checked, true/false
