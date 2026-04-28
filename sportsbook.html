@@ -18053,6 +18053,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 return totalCount + group.items.length;
             }, 0) + 6;
             const bookmakerTitle = bookmaker && bookmaker.title ? bookmaker.title : 'Sportsbook board';
+            const awayRecord = game.away_record ? `<span class="team-record-small">${game.away_record}</span>` : '';
+            const homeRecord = game.home_record ? `<span class="team-record-small">${game.home_record}</span>` : '';
 
             html += `
             <div class="game-card-new" data-game-index="${index}">
@@ -18074,13 +18076,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="game-teams-section">
                     <div class="sportsbook-board-columns">
                         <span>Matchup</span>
-                        <span>Line</span>
+                        <span>Spread</span>
                         <span>Moneyline</span>
                     </div>
                     <!-- Away Team Row -->
                     <div class="team-row">
                         <div class="team-info-left">
-                            <span class="team-name-large">${game.away_team}</span>
+                            <div class="team-meta-stack">
+                                <span class="team-name-large">${game.away_team}</span>
+                                ${awayRecord}
+                            </div>
                         </div>
                         <div class="bet-buttons-row">
                             <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'spread', '${game.away_team}', '${awaySpread}', '${awaySpreadOdds}', '${game.away_team}', '${game.home_team}')">
@@ -18097,7 +18102,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     <!-- Home Team Row -->
                     <div class="team-row">
                         <div class="team-info-left">
-                            <span class="team-name-large">${game.home_team}</span>
+                            <div class="team-meta-stack">
+                                <span class="team-name-large">${game.home_team}</span>
+                                ${homeRecord}
+                            </div>
                         </div>
                         <div class="bet-buttons-row">
                             <button class="bet-pick-btn" onclick="selectGameBet(${index}, 'spread', '${game.home_team}', '${homeSpread}', '${homeSpreadOdds}', '${game.away_team}', '${game.home_team}')">
@@ -18114,6 +18122,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 <!-- Totals Row -->
                 <div class="totals-row">
+                    <div class="totals-row-label">Game Total</div>
                     <button class="total-btn" onclick="selectGameBet(${index}, 'over', 'Over', '${total}', '${overOdds}', '${game.away_team}', '${game.home_team}')">
                         <span class="label">OVER</span>
                         <span class="value">${total}</span>
@@ -18125,6 +18134,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         <span class="odds">${underOdds}</span>
                     </button>
                 </div>
+
+                <div class="sportsbook-board-tip">Tap any price to load the pick slip below and lock it into your record.</div>
 
                 <!-- More Markets Toggle -->
                 <button class="more-markets-btn" onclick="toggleMoreMarkets(${index})">
@@ -21928,6 +21939,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         #picks .team-row {
             gap: 14px;
+            align-items: center;
         }
 
         #picks .team-name-large {
@@ -21935,8 +21947,18 @@ document.addEventListener('DOMContentLoaded', function() {
             letter-spacing: -0.02em;
         }
 
+        #picks .team-meta-stack {
+            display: grid;
+            gap: 4px;
+            min-width: 0;
+        }
+
         #picks .team-record-small {
             color: #8ea0b7 !important;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
         }
 
         #picks .odds-btn,
@@ -22050,6 +22072,76 @@ document.addEventListener('DOMContentLoaded', function() {
         #picks .pick-summary-card {
             position: relative;
             overflow: hidden;
+        }
+
+        #picks .bet-buttons-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(112px, 1fr));
+            gap: 10px;
+            flex: 0 0 auto;
+        }
+
+        #picks .bet-pick-btn,
+        #picks .total-btn {
+            min-height: 74px;
+            padding: 12px 12px 10px !important;
+        }
+
+        #picks .bet-pick-btn .line,
+        #picks .total-btn .value {
+            font-size: 1.15rem;
+            line-height: 1;
+            letter-spacing: -0.03em;
+        }
+
+        #picks .bet-pick-btn .odds,
+        #picks .total-btn .odds {
+            margin-top: 6px;
+            font-size: 0.92rem;
+        }
+
+        #picks .totals-row {
+            display: grid;
+            grid-template-columns: minmax(120px, 0.7fr) repeat(2, minmax(140px, 1fr));
+            align-items: stretch;
+            gap: 12px;
+            padding: 16px 18px;
+            border-top: 1px solid rgba(148,163,184,0.10);
+            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+        }
+
+        #picks .totals-row-label {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            color: #dce8f5;
+            font-size: 0.76rem;
+            font-weight: 900;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        #picks .sportsbook-board-tip {
+            padding: 0 18px 14px;
+            color: #8ea0b7;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+
+        #picks .expanded-markets.show {
+            display: grid;
+            gap: 16px;
+        }
+
+        #picks .market-section {
+            padding-top: 2px;
+        }
+
+        #picks .team-totals-grid {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px !important;
         }
 
         #picks .pick-summary-card::before {
@@ -22259,6 +22351,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 justify-content: flex-end;
                 flex-wrap: wrap;
             }
+
+            #picks .totals-row {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            #picks .totals-row-label {
+                grid-column: 1 / -1;
+                justify-content: flex-start;
+            }
         }
 
         @media (max-width: 640px) {
@@ -22300,6 +22401,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
             #picks .sportsbook-market-pill {
                 min-width: 100%;
+            }
+
+            #picks .totals-row {
+                grid-template-columns: 1fr;
+                padding: 14px;
+            }
+
+            #picks .totals-row-label {
+                margin-bottom: -2px;
+            }
+
+            #picks .sportsbook-board-tip {
+                padding: 0 14px 14px;
             }
         }
 
@@ -22708,6 +22822,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
             #picks #gamesListContainer .tmr-board-filter-tab {
                 min-width: 0 !important;
+            }
+
+            #picks .game-card-header {
+                gap: 8px;
+            }
+
+            #picks .game-card-board-meta {
+                width: 100%;
+                justify-content: space-between;
+                font-size: 0.72rem;
+            }
+
+            #picks .team-row {
+                align-items: stretch;
+            }
+
+            #picks .bet-buttons-row {
+                width: 100%;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
 
