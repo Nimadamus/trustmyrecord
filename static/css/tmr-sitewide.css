@@ -1476,6 +1476,31 @@ html body.tmr-site-shell::after {
     word-break: normal;
 }
 
+html body.tmr-site-shell {
+    overflow-x: clip;
+}
+
+.tmr-site-shell iframe,
+.tmr-site-shell img,
+.tmr-site-shell video,
+.tmr-site-shell canvas,
+.tmr-site-shell svg {
+    max-width: 100%;
+}
+
+.tmr-site-shell .page-layout > *,
+.tmr-site-shell .content-shell > *,
+.tmr-site-shell .profile-shell > *,
+.tmr-site-shell .sportsbook-shell > *,
+.tmr-site-shell .messages-wrapper > *,
+.tmr-site-shell .feed-hero > *,
+.tmr-site-shell .profile-header > *,
+.tmr-site-shell .section-header > *,
+.tmr-site-shell .action-bar > *,
+.tmr-site-shell .profile-actions > * {
+    min-width: 0;
+}
+
 @media (max-width: 860px) {
     .tmr-global-nav__inner {
         grid-template-columns: 1fr;
@@ -1588,6 +1613,13 @@ html body.tmr-site-shell::after {
     .tmr-site-shell .hero,
     .tmr-site-shell .about-hero,
     .tmr-site-shell .premium-hero {
+        width: min(100%, calc(100% - 20px)) !important;
+    }
+
+    .tmr-site-shell .page-shell,
+    .tmr-site-shell .content-shell,
+    .tmr-site-shell .profile-shell,
+    .tmr-site-shell .sportsbook-shell {
         width: min(100%, calc(100% - 20px)) !important;
     }
 
@@ -1735,6 +1767,30 @@ html body.tmr-site-shell::after {
 
     .tmr-site-shell .chat-input-area > * {
         width: 100% !important;
+    }
+
+    .tmr-site-shell .section-header,
+    .tmr-site-shell .action-bar,
+    .tmr-site-shell .profile-actions,
+    .tmr-site-shell .messages-shell-actions,
+    .tmr-site-shell .search-box,
+    .tmr-site-shell .billing-toggle,
+    .tmr-site-shell .chat-header,
+    .tmr-site-shell .gp-header {
+        gap: 10px !important;
+        flex-wrap: wrap !important;
+    }
+
+    .tmr-site-shell .stats-table-card,
+    .tmr-site-shell .picks-table-wrapper,
+    .tmr-site-shell .analytics-card,
+    .tmr-site-shell .workspace-nav-card {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .tmr-site-shell .picks-table {
+        min-width: 640px;
     }
 
     .tmr-route-note {
