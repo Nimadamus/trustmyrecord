@@ -859,1615 +859,495 @@
     </script>
     <style>
         /* ============================================================
-           TRUSTMYRECORD FORUMS - CLASSIC MESSAGE-BOARD REDESIGN
-           Light-gray board background, dark charcoal header, white
-           thread cards, sticky left category sidebar.
+           TRUSTMYRECORD FORUM - CLASSIC vBULLETIN / TWO PLUS TWO
+           From-scratch rebuild. Cream page, navy chrome, Verdana 11/12.
            ============================================================ */
-        :root {
-            --tmr-fb-bg: #EEF1F5;
-            --tmr-fb-bg-deep: #E4E8EE;
-            --tmr-fb-content: #FFFFFF;
-            --tmr-fb-row-alt: #F6F8FB;
-            --tmr-fb-row-hover: #EEF3FA;
-            --tmr-fb-sidebar: #F2F4F8;
-            --tmr-fb-sidebar-active: #DCE6F4;
-            --tmr-fb-header: #14181F;
-            --tmr-fb-header-2: #1C2230;
-            --tmr-fb-text: #1A1F27;
-            --tmr-fb-muted: #5A6473;
-            --tmr-fb-link: #1F4FA8;
-            --tmr-fb-link-hover: #0F2D6E;
-            --tmr-fb-border: #D2D7DF;
-            --tmr-fb-border-strong: #B8BFC9;
-            --tmr-fb-banner: #1A2030;
-            --tmr-fb-banner-2: #232B40;
-            --tmr-fb-cyan: #22D3EE;
-            --tmr-fb-blue: #2563EB;
-            --tmr-fb-green: #16A34A;
-            --tmr-fb-amber: #B58200;
-            --tmr-fb-red: #B91C1C;
-        }
-
-        html body {
-            font-family: 'Inter', 'Segoe UI', Arial, sans-serif !important;
-            background: var(--tmr-fb-bg) !important;
-            color: var(--tmr-fb-text) !important;
-            font-size: 14px;
-        }
-
-        /* Hide legacy site header — replaced by forum-only top bar below */
-        body.tmr-site-shell > header { display: none !important; }
-
-        a { color: var(--tmr-fb-link); text-decoration: none; }
-        a:hover { color: var(--tmr-fb-link-hover); text-decoration: underline; }
-
-        /* ============== TOP FORUM TOOLBAR ============== */
-        .tmr-fb-topbar {
-            background: var(--tmr-fb-header);
-            color: #F1F5F9;
-            border-bottom: 2px solid #0B0E14;
-        }
-        .tmr-fb-topbar-inner {
-            max-width: 1340px;
-            margin: 0 auto;
-            padding: 10px 20px;
-            display: flex;
-            align-items: center;
-            gap: 18px;
-            flex-wrap: wrap;
-        }
-        .tmr-fb-brand {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: #FFFFFF;
-            font-weight: 800;
-            font-size: 1.02rem;
-            text-decoration: none;
-            letter-spacing: 0.01em;
-            white-space: nowrap;
-        }
-        .tmr-fb-brand:hover { color: #FFFFFF; text-decoration: none; }
-        .tmr-fb-brand-mark {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            background: linear-gradient(135deg, var(--tmr-fb-blue), var(--tmr-fb-cyan));
-            color: #0B0E14;
-            font-weight: 900;
-            font-size: 0.78rem;
-        }
-        .tmr-fb-brand small { color: #94A3B8; font-weight: 600; font-size: 0.78rem; margin-left: 2px; }
-
-        .tmr-fb-search {
-            flex: 1 1 320px;
-            min-width: 200px;
-            position: relative;
-        }
-        .tmr-fb-search input {
-            width: 100%;
-            height: 36px;
-            padding: 0 14px 0 36px;
-            border-radius: 8px;
-            border: 1px solid #2A3142;
-            background: #0F141C;
-            color: #F1F5F9;
-            font-size: 0.86rem;
-            outline: none;
-            transition: border-color 0.15s ease;
-        }
-        .tmr-fb-search input::placeholder { color: #6B7484; }
-        .tmr-fb-search input:focus { border-color: var(--tmr-fb-cyan); }
-        .tmr-fb-search::before {
-            content: "\f002";
-            font-family: 'Font Awesome 6 Free', 'Font Awesome 5 Free', sans-serif;
-            font-weight: 900;
-            position: absolute;
-            left: 13px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #6B7484;
-            font-size: 0.84rem;
-            pointer-events: none;
-        }
-
-        .tmr-fb-topnav {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            flex-wrap: wrap;
-        }
-        .tmr-fb-topnav a,
-        .tmr-fb-topnav button {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 12px;
-            border-radius: 6px;
-            color: #CBD5E1;
-            font-size: 0.82rem;
-            font-weight: 600;
-            background: transparent;
-            border: 1px solid transparent;
-            cursor: pointer;
-            font-family: inherit;
-            text-decoration: none;
-            white-space: nowrap;
-        }
-        .tmr-fb-topnav a:hover,
-        .tmr-fb-topnav button:hover {
-            color: #FFFFFF;
-            background: rgba(255, 255, 255, 0.06);
-            text-decoration: none;
-        }
-        .tmr-fb-topnav .tmr-fb-cta {
-            background: var(--tmr-fb-blue);
-            color: #FFFFFF;
-            border-color: var(--tmr-fb-blue);
-        }
-        .tmr-fb-topnav .tmr-fb-cta:hover {
-            background: #1E4FCD;
-            border-color: #1E4FCD;
-        }
-
-        /* ============== BODY GRID: SIDEBAR + MAIN ============== */
-        .tmr-fb-shell {
-            max-width: 1340px;
-            margin: 0 auto;
-            padding: 18px 20px 60px;
-            display: grid;
-            grid-template-columns: 248px minmax(0, 1fr);
-            gap: 22px;
-            align-items: start;
-        }
-
-        /* ============== LEFT SIDEBAR ============== */
-        .tmr-fb-sidebar {
-            position: sticky;
-            top: 14px;
-            background: var(--tmr-fb-sidebar);
-            border: 1px solid var(--tmr-fb-border);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .tmr-fb-sidebar-toggle {
-            display: none;
-            width: 100%;
-            padding: 10px 14px;
-            background: var(--tmr-fb-header);
-            color: #F1F5F9;
-            border: none;
-            font-family: inherit;
-            font-weight: 700;
-            font-size: 0.88rem;
-            text-align: left;
-            cursor: pointer;
-        }
-        .tmr-fb-sidebar-toggle::after {
-            content: "\25BC";
-            float: right;
-            font-size: 0.72rem;
-            opacity: 0.7;
-        }
-        .tmr-fb-sidebar-section {
-            padding: 14px 14px 10px;
-        }
-        .tmr-fb-sidebar-label {
-            color: var(--tmr-fb-muted);
-            font-size: 0.66rem;
-            font-weight: 800;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
-        .tmr-fb-sidebar-list {
-            list-style: none;
-            margin: 0 0 6px;
-            padding: 0;
-        }
-        .tmr-fb-sidebar-list li { margin: 0; }
-        .tmr-fb-sidebar-list a {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            padding: 7px 12px;
-            border-radius: 6px;
-            color: var(--tmr-fb-text);
-            font-size: 0.86rem;
-            font-weight: 600;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .tmr-fb-sidebar-list a:hover {
-            background: #E6EAF1;
-            color: var(--tmr-fb-link-hover);
-            text-decoration: none;
-        }
-        .tmr-fb-sidebar-list a.is-active {
-            background: var(--tmr-fb-sidebar-active);
-            color: var(--tmr-fb-link-hover);
-            font-weight: 800;
-            box-shadow: inset 3px 0 0 var(--tmr-fb-blue);
-        }
-        .tmr-fb-sidebar-list .tmr-fb-sidebar-count {
-            font-size: 0.74rem;
-            color: var(--tmr-fb-muted);
-            font-weight: 700;
-            background: #E6EAF1;
-            padding: 1px 8px;
-            border-radius: 999px;
-        }
-        .tmr-fb-sidebar-list a.is-active .tmr-fb-sidebar-count {
-            background: #C8D6EC;
-            color: var(--tmr-fb-link-hover);
-        }
-        .tmr-fb-sidebar-divider {
-            height: 1px;
-            background: var(--tmr-fb-border);
-            margin: 4px 0 0;
-        }
-
-        /* ============== MAIN COLUMN ============== */
-        .tmr-fb-main { min-width: 0; }
-
-        .tmr-fb-breadcrumb {
-            color: var(--tmr-fb-muted);
-            font-size: 0.84rem;
-            margin-bottom: 8px;
-        }
-        .tmr-fb-breadcrumb a {
-            color: var(--tmr-fb-link);
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .tmr-fb-breadcrumb .sep {
-            margin: 0 6px;
-            color: var(--tmr-fb-muted);
-        }
-
-        .tmr-fb-page-title {
-            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-            font-size: 1.78rem;
-            font-weight: 800;
-            color: var(--tmr-fb-text);
-            letter-spacing: -0.02em;
-            margin-bottom: 14px;
-        }
-
-        /* ============== BANNER ============== */
-        .tmr-fb-banner {
-            position: relative;
-            padding: 18px 22px;
-            border-radius: 8px;
-            background:
-                linear-gradient(135deg, var(--tmr-fb-banner) 0%, var(--tmr-fb-banner-2) 100%);
-            color: #F1F5F9;
-            border: 1px solid #0B0E14;
-            margin-bottom: 16px;
-            overflow: hidden;
-        }
-        .tmr-fb-banner::after {
-            content: "";
-            position: absolute;
-            right: -60px;
-            top: -40px;
-            width: 220px;
-            height: 220px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(34, 211, 238, 0.18), transparent 70%);
-            pointer-events: none;
-        }
-        .tmr-fb-banner-eyebrow {
-            display: inline-block;
-            color: var(--tmr-fb-cyan);
-            font-size: 0.7rem;
-            font-weight: 800;
-            letter-spacing: 0.16em;
-            text-transform: uppercase;
-            margin-bottom: 6px;
-        }
-        .tmr-fb-banner-headline {
-            font-size: 1.18rem;
-            font-weight: 800;
-            line-height: 1.35;
-            color: #FFFFFF;
-            margin-bottom: 4px;
-            position: relative;
-        }
-        .tmr-fb-banner-sub {
-            color: #B8C2D1;
-            font-size: 0.86rem;
-            line-height: 1.5;
-            max-width: 720px;
-            position: relative;
-        }
-
-        /* ============== THREAD ACTION ROW ============== */
-        .tmr-fb-actionrow {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-            padding: 10px 12px;
-            background: var(--tmr-fb-content);
-            border: 1px solid var(--tmr-fb-border);
-            border-radius: 6px 6px 0 0;
-            border-bottom: none;
-        }
-        .tmr-fb-action-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 7px 12px;
-            border-radius: 4px;
-            border: 1px solid var(--tmr-fb-border-strong);
-            background: linear-gradient(180deg, #FFFFFF 0%, #EFF2F7 100%);
-            color: var(--tmr-fb-text);
-            font-family: inherit;
-            font-size: 0.82rem;
-            font-weight: 700;
-            cursor: pointer;
-            text-decoration: none;
-        }
-        .tmr-fb-action-btn:hover {
-            background: linear-gradient(180deg, #FFFFFF 0%, #E2E8F2 100%);
-            color: var(--tmr-fb-link-hover);
-            text-decoration: none;
-        }
-        .tmr-fb-action-btn.is-primary {
-            background: var(--tmr-fb-blue);
-            color: #FFFFFF;
-            border-color: var(--tmr-fb-link-hover);
-        }
-        .tmr-fb-action-btn.is-primary:hover {
-            background: #1E4FCD;
-            color: #FFFFFF;
-        }
-        .tmr-fb-action-btn i { font-size: 0.78rem; }
-        .tmr-fb-actionrow-spacer { flex: 1; }
-        .tmr-fb-action-search {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .tmr-fb-action-search input {
-            width: 200px;
-            height: 32px;
-            padding: 0 10px;
-            border: 1px solid var(--tmr-fb-border-strong);
-            border-radius: 4px;
-            font-size: 0.82rem;
-            background: #FFFFFF;
-            color: var(--tmr-fb-text);
-        }
-
-        /* ============== THREAD TABLE ============== */
-        .tmr-fb-table-wrap {
-            border: 1px solid var(--tmr-fb-border);
-            background: var(--tmr-fb-content);
-            border-radius: 0 0 6px 6px;
-            overflow-x: auto;
-        }
-        .thread-table,
-        .cat-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.86rem;
-            color: var(--tmr-fb-text);
-            background: var(--tmr-fb-content) !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-            border: none !important;
-        }
-        .thread-table thead th,
-        .cat-table thead th {
-            background: linear-gradient(180deg, #2A3142 0%, #1C2230 100%) !important;
-            color: #E2E8F0 !important;
-            text-align: left;
-            padding: 9px 14px !important;
-            font-size: 0.7rem !important;
-            font-weight: 700;
-            letter-spacing: 0.08em !important;
-            text-transform: uppercase;
-            border: none !important;
-            border-bottom: 1px solid #0B0E14 !important;
-            white-space: nowrap;
-        }
-        .thread-table thead th.col-num,
-        .cat-table thead th.col-num,
-        .thread-table thead th.col-rating,
-        .thread-table thead th.col-last,
-        .cat-table thead th.col-last { text-align: center; width: 110px; }
-        .thread-table thead th.col-last,
-        .cat-table thead th.col-last { width: 220px; text-align: left; }
-
-        .thread-table tbody tr,
-        .cat-table tbody tr {
-            cursor: pointer;
-            border-bottom: 1px solid #E5E9F0;
-            background: #FFFFFF !important;
-            transition: background 0.12s ease;
-        }
-        .thread-table tbody tr:nth-child(even),
-        .cat-table tbody tr:nth-child(even) { background: var(--tmr-fb-row-alt) !important; }
-        .thread-table tbody tr:hover,
-        .cat-table tbody tr:hover { background: var(--tmr-fb-row-hover) !important; }
-        .thread-table tbody tr:last-child,
-        .cat-table tbody tr:last-child { border-bottom: none; }
-
-        .thread-table td,
-        .cat-table td {
-            padding: 11px 14px !important;
-            color: var(--tmr-fb-text) !important;
-            vertical-align: middle;
-            border: none !important;
-            font-size: 0.86rem;
-        }
-        .thread-table td.col-num,
-        .cat-table td.col-num { text-align: center; font-weight: 700; color: var(--tmr-fb-muted) !important; }
-        .thread-table td.col-rating { text-align: center; color: var(--tmr-fb-amber); }
-        .thread-table td.col-last,
-        .cat-table td.col-last { color: var(--tmr-fb-muted) !important; font-size: 0.8rem; }
-
-        /* Thread row layout */
-        .tmr-fb-thread-cell {
-            display: flex;
-            gap: 10px;
-            align-items: flex-start;
-        }
-        .tmr-fb-thread-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            border-radius: 4px;
-            background: #DDE3ED;
-            color: var(--tmr-fb-link);
-            font-size: 0.84rem;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-        .tmr-fb-thread-icon.is-pinned {
-            background: #FEF3C7;
-            color: #92400E;
-        }
-        .tmr-fb-thread-icon.is-hot {
-            background: #FEE2E2;
-            color: #B91C1C;
-        }
-        .tmr-fb-thread-icon.is-locked {
-            background: #E5E7EB;
-            color: #4B5563;
-        }
-        .tmr-fb-thread-body { min-width: 0; flex: 1; }
-        .tmr-fb-thread-title {
-            color: var(--tmr-fb-link);
-            font-weight: 700;
-            font-size: 0.94rem;
-            line-height: 1.3;
-            display: inline-block;
-            margin-right: 6px;
-        }
-        .tmr-fb-thread-title:hover { color: var(--tmr-fb-link-hover); text-decoration: underline; }
-        .tmr-fb-pin-tag {
-            display: inline-block;
-            padding: 1px 6px;
-            border-radius: 3px;
-            background: #FEF3C7;
-            color: #92400E;
-            font-size: 0.62rem;
-            font-weight: 800;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            margin-right: 6px;
-            vertical-align: middle;
-        }
-        .tmr-fb-sample-tag {
-            display: inline-block;
-            padding: 1px 6px;
-            border-radius: 3px;
-            background: #E0E7FF;
-            color: #3730A3;
-            font-size: 0.6rem;
-            font-weight: 800;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            margin-right: 6px;
-            vertical-align: middle;
-        }
-        .tmr-fb-thread-meta {
-            color: var(--tmr-fb-muted);
-            font-size: 0.78rem;
-            margin-top: 2px;
-        }
-        .tmr-fb-thread-meta strong { color: var(--tmr-fb-text); font-weight: 700; }
-        .tmr-fb-rating-stars { color: var(--tmr-fb-amber); letter-spacing: 1px; }
-
-        .tmr-fb-lastpost {
-            font-size: 0.78rem;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            background: #F4F2E8;
+            color: #000;
+            font-family: Verdana, Geneva, Tahoma, Arial, sans-serif;
+            font-size: 12px;
             line-height: 1.4;
+            min-height: 100vh;
         }
-        .tmr-fb-lastpost-title {
-            color: var(--tmr-fb-link);
-            font-weight: 700;
-            display: block;
-            max-width: 220px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .tmr-fb-lastpost-meta { color: var(--tmr-fb-muted); }
+        a { color: #2A4D7C; text-decoration: none; }
+        a:hover { color: #B12704; text-decoration: underline; }
 
-        /* Empty / loading states inside table */
-        .empty-msg {
-            padding: 32px 20px !important;
-            text-align: center;
-            color: var(--tmr-fb-muted) !important;
-            background: var(--tmr-fb-content);
-        }
-        .empty-msg .icon { font-size: 2rem; margin-bottom: 8px; opacity: 0.5; }
+        /* sitewide injected nav: hide it on the forum (this is a vB shell) */
+        body.tmr-site-shell > header,
+        body.tmr-site-shell .tmr-global-nav,
+        body.tmr-site-shell .tmr-global-footer { display: none !important; }
+        body { padding: 0 !important; margin: 0 !important; }
 
-        /* ============== CATEGORY GROUP HEADERS (forum index) ============== */
+        /* ===== TOP HEADER BAR ===== */
+        .vb-topbar { background: #2A4D7C; border-bottom: 1px solid #1B3D5F; color: #FFF; }
+        .vb-topbar-inner { max-width: 980px; margin: 0 auto; padding: 6px 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+        .vb-logo { color: #FFF; font-weight: 700; font-size: 14px; letter-spacing: 0.02em; text-decoration: none; }
+        .vb-logo:hover { color: #FFD000; text-decoration: none; }
+        .vb-logo span { color: #FFD000; }
+        .vb-topnav { display: flex; gap: 1px; flex-wrap: wrap; }
+        .vb-topnav a, .vb-topnav button {
+            padding: 4px 10px; font-size: 11px; color: #DCE6F4; background: transparent;
+            text-decoration: none; border: none; font-family: inherit; cursor: pointer; font-weight: 600;
+        }
+        .vb-topnav a:hover, .vb-topnav button:hover { color: #FFD000; text-decoration: none; }
+        .vb-topnav .vb-cta { background: #B12704; color: #FFF; padding: 4px 12px; }
+        .vb-topnav .vb-cta:hover { background: #7A1A03; color: #FFF; }
+        .vb-search { display: flex; align-items: center; gap: 4px; }
+        .vb-search input { height: 22px; width: 200px; padding: 0 8px; border: 1px solid #1B3D5F; background: #FFF; color: #000; font-size: 11px; font-family: inherit; }
+        .vb-search button { height: 22px; padding: 0 10px; background: linear-gradient(180deg,#FFFFFF 0%,#DDD 100%); border: 1px solid #888; color: #2A4D7C; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+        /* ===== SECONDARY TAB STRIP ===== */
+        .vb-subnav { background: #4F7AB0; border-bottom: 1px solid #1B3D5F; }
+        .vb-subnav-inner { max-width: 980px; margin: 0 auto; display: flex; gap: 1px; flex-wrap: wrap; }
+        .vb-subnav a, .vb-subnav button {
+            padding: 5px 14px; font-size: 11px; color: #FFF; background: linear-gradient(180deg,#6E97C7 0%,#4F7AB0 100%);
+            text-decoration: none; font-weight: 700; border: none; border-right: 1px solid #2A4D7C;
+            font-family: inherit; cursor: pointer;
+        }
+        .vb-subnav a:hover, .vb-subnav button:hover { background: linear-gradient(180deg,#82A6CF 0%,#6386B6 100%); color: #FFF; text-decoration: none; }
+
+        /* ===== PAGE WRAPPER ===== */
+        .vb-shell { max-width: 980px; margin: 0 auto; padding: 8px; }
+
+        /* ===== BREADCRUMB ===== */
+        .breadcrumb {
+            font-size: 11px; color: #555; padding: 4px 2px 6px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 0;
+        }
+        .breadcrumb a { color: #2A4D7C; font-weight: 700; cursor: pointer; }
+        .breadcrumb .sep { margin: 0 5px; color: #888; }
+        .breadcrumb span { color: #000; font-weight: 700; }
+
+        /* ===== PAGE TITLE STRIP ===== */
+        .vb-title-strip {
+            background: #6B1F1F; color: #FFF;
+            border: 1px solid #4A1414; border-bottom: none;
+            padding: 6px 10px;
+            font-size: 13px; font-weight: 700;
+        }
+        .vb-title-strip-sub { font-size: 11px; color: #F5DCDC; font-weight: 400; margin-top: 1px; }
+
+        /* ===== ACTION ROW (New Thread / Subscribe / Tools / Search) ===== */
+        .vb-actionrow {
+            background: linear-gradient(180deg,#DEDED2 0%,#C8C8B8 100%);
+            border: 1px solid #8E96A0; border-bottom: none;
+            padding: 4px 6px;
+            display: flex; gap: 4px; flex-wrap: wrap; align-items: center;
+        }
+        .vb-actionrow-spacer { flex: 1; }
+        .vb-action-btn {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 9px; font-size: 11px; font-weight: 700;
+            background: linear-gradient(180deg,#FFFFFF 0%,#E0E0D0 100%);
+            border: 1px solid #8E96A0; color: #2A4D7C;
+            font-family: inherit; cursor: pointer; text-decoration: none;
+            border-radius: 0;
+        }
+        .vb-action-btn:hover { background: linear-gradient(180deg,#FFFFFF 0%,#D0D0C0 100%); color: #B12704; text-decoration: none; }
+        .vb-action-btn.is-primary { background: linear-gradient(180deg,#6E97C7 0%,#2A4D7C 100%); color: #FFF; border-color: #1B3D5F; }
+        .vb-action-btn.is-primary:hover { background: linear-gradient(180deg,#4F7AB0 0%,#1B3D5F 100%); color: #FFF; }
+        .vb-actionrow input[type="search"] { height: 22px; padding: 0 6px; border: 1px solid #8E96A0; font-size: 11px; font-family: inherit; }
+
+        /* ===== CATEGORY GROUP HEADER (between tables on the index) ===== */
         .group-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 14px;
-            flex-wrap: wrap;
-            padding: 10px 14px;
-            background: linear-gradient(180deg, #2A3142 0%, #1C2230 100%);
-            color: #F1F5F9;
-            border: 1px solid #0B0E14;
-            border-bottom: none;
-            margin-top: 12px;
+            background: linear-gradient(180deg,#4F7AB0 0%,#2A4D7C 100%);
+            color: #FFF;
+            border: 1px solid #1B3D5F; border-bottom: none;
+            padding: 4px 10px;
+            margin-top: 8px;
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
         }
         .group-header:first-child { margin-top: 0; }
-        .group-header-title {
-            font-weight: 800;
-            font-size: 0.94rem;
-            letter-spacing: 0.02em;
-        }
-        .group-header-meta {
-            color: #B8C2D1;
-            font-size: 0.78rem;
-        }
-        .group-header + .cat-table {
-            border-radius: 0 0 6px 6px;
-            border: 1px solid var(--tmr-fb-border);
-            margin-bottom: 12px;
-            overflow: hidden;
-        }
-        .cat-table .cat-info {
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-        }
-        .cat-table .cat-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 38px;
-            height: 38px;
-            border-radius: 6px;
-            background: #E0E7F2;
-            color: var(--tmr-fb-link);
-            font-size: 1.1rem;
-            flex-shrink: 0;
-        }
-        .cat-table .cat-name {
-            color: var(--tmr-fb-link);
-            font-weight: 800;
-            font-size: 0.96rem;
-        }
-        .cat-table .cat-desc {
-            color: var(--tmr-fb-muted);
-            font-size: 0.82rem;
-            margin-top: 2px;
-            line-height: 1.4;
-        }
+        .group-header-title { font-size: 12px; font-weight: 700; color: #FFF; }
+        .group-header-meta { font-size: 11px; color: #DCE6F4; }
 
-        /* ============== STATS BAR (compact under banner if shown) ============== */
-        .stats-bar {
-            display: flex !important;
-            gap: 0 !important;
-            padding: 0 !important;
-            margin: 0 0 16px !important;
-            background: var(--tmr-fb-content) !important;
-            border: 1px solid var(--tmr-fb-border) !important;
-            border-radius: 6px !important;
-            color: var(--tmr-fb-text) !important;
-            box-shadow: none !important;
-            overflow: hidden;
-        }
-        .stats-bar > div {
-            flex: 1;
-            padding: 10px 14px;
-            border-right: 1px solid var(--tmr-fb-border);
-            font-size: 0.84rem;
-        }
-        .stats-bar > div:last-child { border-right: none; }
-        .stats-bar strong { color: var(--tmr-fb-text); font-weight: 800; margin-right: 6px; }
-        .stats-bar .stats-label { color: var(--tmr-fb-muted) !important; font-weight: 600; font-size: 0.8rem; }
-
-        /* ============== THREAD DETAIL VIEW ============== */
-        .toolbar {
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            gap: 10px !important;
-            padding: 10px 14px !important;
-            background: var(--tmr-fb-content) !important;
-            border: 1px solid var(--tmr-fb-border) !important;
-            border-radius: 6px 6px 0 0 !important;
-            border-bottom: none !important;
-            color: var(--tmr-fb-text) !important;
-            box-shadow: none !important;
-            flex-wrap: wrap;
-        }
-        .toolbar-label { color: var(--tmr-fb-muted) !important; font-size: 0.8rem; }
-        .toolbar strong { color: var(--tmr-fb-text); font-weight: 800; }
-        .toolbar-right { display: flex; gap: 8px; flex-wrap: wrap; }
-
-        .post-shell {
-            background: var(--tmr-fb-content);
-            border: 1px solid var(--tmr-fb-border);
-            border-radius: 6px;
-            margin-bottom: 12px;
-            overflow: hidden;
-        }
-        .post-shell.op-card { border-color: #B5C4DE; }
-        .post-top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 14px;
-            background: linear-gradient(180deg, #F4F6FA 0%, #E7ECF3 100%);
-            border-bottom: 1px solid var(--tmr-fb-border);
-            color: var(--tmr-fb-muted);
-            font-size: 0.8rem;
-        }
-        .post-author-name { color: var(--tmr-fb-text); font-weight: 800; }
-        .post-number { font-family: 'JetBrains Mono', 'Consolas', monospace; }
-        .post-layout {
-            display: grid;
-            grid-template-columns: 180px 1fr;
-        }
-        .post-user-pane {
-            padding: 14px;
-            background: var(--tmr-fb-row-alt);
-            border-right: 1px solid var(--tmr-fb-border);
-        }
-        .post-user-name {
-            font-weight: 800;
-            color: var(--tmr-fb-link);
+        /* ===== FORUM/THREAD TABLES ===== */
+        .cat-table, .thread-table {
+            width: 100%; border-collapse: collapse;
+            background: #FFF;
+            border: 1px solid #8E96A0;
             margin-bottom: 8px;
+            font-size: 11px;
         }
-        .post-user-avatar {
-            display: block;
-            width: 80px;
-            height: 80px;
-            border-radius: 6px;
-            object-fit: cover;
-            border: 1px solid var(--tmr-fb-border);
-            margin-bottom: 10px;
+        .cat-table thead th, .thread-table thead th {
+            background: #DEDED2;
+            color: #333;
+            font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+            border-bottom: 1px solid #8E96A0;
+            padding: 4px 10px;
+            text-align: left;
         }
-        .post-user-stats { color: var(--tmr-fb-muted); font-size: 0.78rem; line-height: 1.55; }
-        .post-user-stats strong { color: var(--tmr-fb-text); }
-        .post-main-pane { padding: 16px; }
-        .post-body {
-            color: var(--tmr-fb-text);
-            font-size: 0.92rem;
-            line-height: 1.6;
-            white-space: pre-wrap;
-        }
-        .post-body h2 {
-            font-size: 1.15rem;
-            color: var(--tmr-fb-text);
-            margin-bottom: 10px;
-        }
-        .post-footer-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            margin-top: 14px;
-            padding-top: 12px;
-            border-top: 1px solid #E5E9F0;
-        }
-        .vote-btns {
-            display: flex;
-            gap: 6px;
-        }
-        .vote-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 5px 10px;
-            border-radius: 4px;
-            border: 1px solid var(--tmr-fb-border-strong);
-            background: #FFFFFF;
-            color: var(--tmr-fb-text);
-            font-size: 0.78rem;
-            font-weight: 700;
+        .cat-table thead th.col-num, .thread-table thead th.col-num { width: 60px; text-align: center; }
+        .cat-table thead th.col-last, .thread-table thead th.col-last { width: 220px; }
+        .thread-table thead th.col-rating { width: 60px; text-align: center; }
+        .cat-table tbody tr, .thread-table tbody tr {
+            background: #FFF;
+            border-bottom: 1px solid #D0D0C0;
             cursor: pointer;
-            text-decoration: none;
         }
-        .vote-btn:hover {
-            background: var(--tmr-fb-row-hover);
-            color: var(--tmr-fb-link-hover);
-            text-decoration: none;
+        .cat-table tbody tr:nth-child(even), .thread-table tbody tr:nth-child(even) { background: #F7F5EC; }
+        .cat-table tbody tr:hover, .thread-table tbody tr:hover { background: #FFFCEA; }
+        .cat-table tbody tr:last-child, .thread-table tbody tr:last-child { border-bottom: none; }
+        .cat-table td, .thread-table td { padding: 6px 10px; vertical-align: middle; font-size: 11px; color: #000; }
+        .cat-table td.col-num, .thread-table td.col-num { text-align: center; font-size: 11px; color: #333; font-weight: 600; }
+        .cat-table td.col-last, .thread-table td.col-last { font-size: 11px; color: #555; }
+
+        /* Folder icons (CSS-only manila folder, classic vB) */
+        .cat-info, .tmr-fb-thread-cell { display: flex; align-items: flex-start; gap: 8px; }
+        .cat-icon, .tmr-fb-thread-icon {
+            position: relative;
+            width: 24px; height: 18px;
+            background: linear-gradient(180deg,#FFE8A8 0%,#E2C36C 100%);
+            border: 1px solid #8B6914;
+            border-radius: 1px 4px 1px 1px;
+            flex-shrink: 0;
+            margin-top: 1px;
+            color: transparent;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
         }
+        .cat-icon::before, .tmr-fb-thread-icon::before {
+            content: ""; position: absolute; top: -3px; left: 0;
+            width: 10px; height: 4px;
+            background: #E2C36C; border: 1px solid #8B6914; border-bottom: none;
+            border-radius: 1px 4px 0 0;
+        }
+        .tmr-fb-thread-icon.is-pinned { background: linear-gradient(180deg,#FFE0A0 0%,#E2A040 100%); border-color: #8B5A14; }
+        .tmr-fb-thread-icon.is-pinned::before { background: #E2A040; border-color: #8B5A14; }
+        .tmr-fb-thread-icon.is-hot { background: linear-gradient(180deg,#FFC4B0 0%,#D85040 100%); border-color: #7A1A03; }
+        .tmr-fb-thread-icon.is-hot::before { background: #D85040; border-color: #7A1A03; }
+
+        .cat-name, .tmr-fb-thread-title {
+            color: #2A4D7C; font-weight: 700; font-size: 12px;
+            font-family: Verdana, Geneva, Tahoma, Arial, sans-serif; text-decoration: none;
+        }
+        .cat-name:hover, .tmr-fb-thread-title:hover { color: #B12704; text-decoration: underline; }
+        .cat-desc, .tmr-fb-thread-meta { color: #555; font-size: 11px; margin-top: 1px; line-height: 1.4; }
+        .cat-desc { max-width: 480px; }
+        .tmr-fb-thread-meta strong { color: #2A4D7C; font-weight: 700; }
+        .tmr-fb-pin-tag {
+            display: inline-block; padding: 1px 5px;
+            background: #FFD000; color: #2A4D7C;
+            font-size: 9px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+            margin-right: 6px; vertical-align: middle;
+        }
+        .tmr-fb-sample-tag {
+            display: inline-block; padding: 1px 5px;
+            background: #DCE6F4; color: #2A4D7C;
+            font-size: 9px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+            margin-right: 6px; vertical-align: middle;
+        }
+        .tmr-fb-rating-stars { color: #C2A444; }
+
+        /* Last post column block (used by both index and thread list) */
+        .last-post-info { line-height: 1.35; }
+        .last-post-info .last-post-title, .tmr-fb-lastpost-title {
+            color: #2A4D7C; font-weight: 700; font-size: 11px; display: block;
+            max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .last-post-info .last-post-meta, .tmr-fb-lastpost-meta { color: #555; font-size: 10px; }
+        .no-posts { color: #888; font-size: 11px; font-style: italic; }
+        .tmr-fb-lastpost { line-height: 1.35; }
+
+        /* Empty / loading rows */
+        .empty-msg {
+            padding: 30px 16px; text-align: center;
+            color: #555; font-size: 11px;
+            background: #FFF;
+        }
+        .empty-msg .icon { font-size: 24px; opacity: 0.5; margin-bottom: 4px; }
+
+        /* ===== THREAD VIEW ===== */
+        .vb-thread-toolbar {
+            background: linear-gradient(180deg,#DEDED2 0%,#C8C8B8 100%);
+            border: 1px solid #8E96A0;
+            padding: 4px 8px;
+            display: flex; justify-content: space-between; align-items: center; gap: 8px;
+            font-size: 11px; flex-wrap: wrap;
+        }
+        .vb-thread-toolbar strong { color: #2A4D7C; font-size: 12px; }
+        .toolbar-left { display: flex; align-items: center; gap: 8px; }
+        .toolbar-right { display: flex; gap: 4px; flex-wrap: wrap; }
+        .toolbar-label { color: #555; }
+
+        .post-shell { background: #FFF; border: 1px solid #8E96A0; margin-bottom: 6px; }
+        .post-shell.op-card { border-color: #2A4D7C; }
+        .post-top-bar {
+            background: linear-gradient(180deg,#DEDED2 0%,#C8C8B8 100%);
+            border-bottom: 1px solid #8E96A0;
+            padding: 4px 10px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            font-size: 11px; color: #555;
+        }
+        .post-author-name { color: #2A4D7C; font-weight: 700; font-size: 12px; }
+        .post-number { font-family: Consolas, 'Courier New', monospace; font-size: 11px; color: #555; }
+        .post-layout { display: grid; grid-template-columns: 160px 1fr; }
+        .post-user-pane {
+            padding: 8px 10px; background: #F7F5EC; border-right: 1px solid #D0D0C0;
+            font-size: 11px; color: #555;
+        }
+        .post-user-name { color: #2A4D7C; font-weight: 700; font-size: 12px; margin-bottom: 4px; display: block; }
+        .post-user-avatar { width: 70px; height: 70px; object-fit: cover; border: 1px solid #8E96A0; display: block; margin-bottom: 6px; }
+        .post-user-stats { font-size: 10px; line-height: 1.5; }
+        .post-user-stats strong { color: #000; font-weight: 700; }
+        .post-main-pane { padding: 10px 12px; }
+        .post-body { font-size: 12px; line-height: 1.55; color: #000; white-space: pre-wrap; }
+        .post-body h2 { font-size: 14px; font-weight: 700; margin-bottom: 8px; color: #000; }
+        .post-footer-bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 12px; padding-top: 8px; border-top: 1px solid #D0D0C0; }
+        .vote-btns { display: flex; gap: 4px; }
+        .vote-btn {
+            padding: 3px 8px; font-size: 11px; font-weight: 700;
+            background: linear-gradient(180deg,#FFFFFF 0%,#E0E0D0 100%);
+            border: 1px solid #8E96A0; color: #2A4D7C;
+            cursor: pointer; text-decoration: none; font-family: inherit;
+        }
+        .vote-btn:hover { color: #B12704; text-decoration: none; }
 
         .reply-box {
-            background: var(--tmr-fb-content) !important;
-            border: 1px solid var(--tmr-fb-border) !important;
-            border-radius: 6px !important;
-            padding: 16px !important;
-            color: var(--tmr-fb-text) !important;
-            box-shadow: none !important;
-            margin-top: 14px;
+            background: #FFF; border: 1px solid #8E96A0; padding: 10px;
+            margin-top: 6px;
         }
-        .reply-box h3 { color: var(--tmr-fb-text); font-size: 1rem; margin-bottom: 10px; }
+        .reply-box h3 { font-size: 12px; font-weight: 700; color: #2A4D7C; margin-bottom: 6px; }
         .reply-box textarea {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--tmr-fb-border-strong);
-            border-radius: 6px;
-            font-family: inherit;
-            font-size: 0.88rem;
-            color: var(--tmr-fb-text);
-            background: #FFFFFF;
-            resize: vertical;
-            outline: none;
+            width: 100%; padding: 6px 8px;
+            border: 1px solid #8E96A0; font-size: 12px; font-family: inherit;
+            color: #000; background: #FFF; resize: vertical; outline: none;
         }
-        .reply-box textarea:focus { border-color: var(--tmr-fb-blue); }
         .login-prompt {
-            padding: 14px;
-            background: var(--tmr-fb-row-alt);
-            border: 1px dashed var(--tmr-fb-border-strong);
-            border-radius: 6px;
-            color: var(--tmr-fb-muted);
-            font-size: 0.88rem;
-            text-align: center;
+            padding: 8px 10px; background: #F7F5EC; border: 1px dashed #8E96A0;
+            font-size: 11px; color: #555; text-align: center;
         }
 
-        /* ============== BUTTONS (modal etc.) ============== */
+        /* ===== FORUM JUMP ROW ===== */
+        .forum-jump-row {
+            background: linear-gradient(180deg,#DEDED2 0%,#C8C8B8 100%);
+            border: 1px solid #8E96A0;
+            padding: 5px 10px;
+            display: flex; justify-content: space-between; align-items: center; gap: 8px;
+            font-size: 11px; color: #555; flex-wrap: wrap;
+        }
+        .forum-jump-row select {
+            padding: 2px 6px; border: 1px solid #8E96A0; background: #FFF; font-size: 11px; font-family: inherit;
+        }
+
+        /* ===== STATS STRIP ===== */
+        .vb-stats {
+            display: flex; flex-wrap: wrap;
+            background: #F7F5EC; border: 1px solid #8E96A0; border-top: none;
+            padding: 0; margin-bottom: 8px;
+            font-size: 11px;
+        }
+        .vb-stats > div { padding: 4px 10px; border-right: 1px solid #D0D0C0; color: #555; }
+        .vb-stats > div:last-child { border-right: none; }
+        .vb-stats strong { color: #000; font-weight: 700; }
+
+        /* ===== BUTTONS (modals etc.) ===== */
         .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 14px !important;
-            border-radius: 6px !important;
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 4px 10px; font-size: 11px; font-weight: 700;
+            border: 1px solid #8E96A0;
+            background: linear-gradient(180deg,#FFFFFF 0%,#E0E0D0 100%);
+            color: #2A4D7C; cursor: pointer; text-decoration: none;
             font-family: inherit;
-            font-size: 0.84rem;
-            font-weight: 700;
-            cursor: pointer;
-            border: 1px solid transparent;
-            text-decoration: none;
-            box-shadow: none !important;
         }
+        .btn-sm { padding: 3px 8px; font-size: 11px; }
         .btn-primary {
-            background: var(--tmr-fb-blue) !important;
-            color: #FFFFFF !important;
-            border-color: var(--tmr-fb-link-hover) !important;
+            background: linear-gradient(180deg,#6E97C7 0%,#2A4D7C 100%);
+            color: #FFF; border-color: #1B3D5F;
         }
-        .btn-primary:hover { background: #1E4FCD !important; color: #FFFFFF !important; }
-        .btn-outline {
-            background: #FFFFFF !important;
-            color: var(--tmr-fb-text) !important;
-            border-color: var(--tmr-fb-border-strong) !important;
-        }
-        .btn-outline:hover { background: var(--tmr-fb-row-alt) !important; color: var(--tmr-fb-link-hover) !important; }
-        .btn-sm { padding: 6px 12px !important; font-size: 0.78rem !important; }
+        .btn-primary:hover { background: linear-gradient(180deg,#4F7AB0 0%,#1B3D5F 100%); color: #FFF; text-decoration: none; }
+        .btn-outline:hover { color: #B12704; text-decoration: none; }
 
-        /* ============== MODAL ============== */
+        /* ===== MODAL (new thread) ===== */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(20, 24, 31, 0.6);
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
             z-index: 9000;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            align-items: flex-start; justify-content: center;
+            padding: 40px 20px; overflow-y: auto;
         }
         .modal-overlay.active { display: flex; }
         .modal-box {
-            width: 100%;
-            max-width: 580px;
-            background: var(--tmr-fb-content);
-            border: 1px solid var(--tmr-fb-border);
-            border-radius: 10px;
-            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
-            overflow: hidden;
+            width: 100%; max-width: 600px; background: #FFF;
+            border: 1px solid #1B3D5F;
         }
         .modal-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 18px;
-            background: linear-gradient(180deg, #2A3142 0%, #1C2230 100%);
-            color: #F1F5F9;
+            background: linear-gradient(180deg,#4F7AB0 0%,#2A4D7C 100%);
+            color: #FFF;
+            padding: 6px 12px;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .modal-head h3 { color: #FFFFFF; font-size: 1.02rem; font-weight: 800; }
-        .close-btn {
-            background: transparent;
-            border: none;
-            color: #CBD5E1;
-            font-size: 1.6rem;
-            line-height: 1;
-            cursor: pointer;
-            padding: 0 4px;
+        .modal-head h3 { font-size: 13px; font-weight: 700; color: #FFF; }
+        .close-btn { background: transparent; border: none; color: #FFF; font-size: 20px; line-height: 1; cursor: pointer; padding: 0 4px; }
+        .modal-body { padding: 14px; }
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; font-size: 11px; font-weight: 700; color: #2A4D7C; margin-bottom: 4px; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 5px 8px; font-size: 12px; font-family: inherit;
+            border: 1px solid #8E96A0; background: #FFF; color: #000;
         }
-        .modal-body { padding: 18px; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label {
-            display: block;
-            color: var(--tmr-fb-text);
-            font-weight: 700;
-            font-size: 0.84rem;
-            margin-bottom: 6px;
-        }
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 9px 12px;
-            border: 1px solid var(--tmr-fb-border-strong);
-            border-radius: 6px;
-            font-family: inherit;
-            font-size: 0.88rem;
-            color: var(--tmr-fb-text);
-            background: #FFFFFF;
-        }
-        .form-group input:focus,
-        .form-group textarea:focus { border-color: var(--tmr-fb-blue); outline: none; }
+        .form-group input:focus, .form-group textarea:focus { border-color: #2A4D7C; outline: none; }
 
-        /* Loading spinner */
-        .tmr-loading-state { padding: 50px 20px !important; }
+        /* ===== LOADING STATE ===== */
+        .tmr-loading-state { padding: 24px 16px; text-align: center; }
         .tmr-loading-state .tmr-spinner {
-            border-color: rgba(37, 99, 235, 0.18) !important;
-            border-top-color: var(--tmr-fb-blue) !important;
+            width: 24px; height: 24px;
+            border: 3px solid rgba(42,77,124,0.18); border-top-color: #2A4D7C;
+            border-radius: 50%; animation: vb-spin 0.8s linear infinite;
+            margin: 0 auto 8px;
         }
-        .tmr-loading-state p { color: var(--tmr-fb-muted) !important; }
-
-        /* Search results pill on a thread row */
-        .tag-pill {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 999px;
-            background: #E0E7F2;
-            color: var(--tmr-fb-link-hover);
-            font-size: 0.7rem;
-            font-weight: 800;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            margin-bottom: 6px;
-        }
-        .pin-badge { display: none; }
-        .thread-prefix { display: none; }
-        .thread-title-line { display: contents; }
-        .thread-title-link { display: inline; }
-        .thread-meta { color: var(--tmr-fb-muted); font-size: 0.78rem; margin-top: 3px; }
-        .last-post-info .last-post-title { color: var(--tmr-fb-link); font-weight: 700; }
-        .last-post-info .last-post-meta { color: var(--tmr-fb-muted); font-size: 0.78rem; }
-        .no-posts { color: var(--tmr-fb-muted); font-size: 0.78rem; font-style: italic; }
-
-        /* Forum jump row */
-        .forum-jump-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 14px;
-            background: var(--tmr-fb-content);
-            border: 1px solid var(--tmr-fb-border);
-            border-radius: 6px;
-            margin-top: 14px;
-            color: var(--tmr-fb-muted);
-            font-size: 0.84rem;
-            flex-wrap: wrap;
-        }
-        .forum-jump-row select {
-            padding: 7px 10px;
-            border: 1px solid var(--tmr-fb-border-strong);
-            border-radius: 6px;
-            background: #FFFFFF;
-            color: var(--tmr-fb-text);
-            font-family: inherit;
-            font-size: 0.82rem;
+        @keyframes vb-spin { to { transform: rotate(360deg); } }
+        .tmr-loading-state p { color: #555; font-size: 11px; margin: 4px 0; }
+        .tmr-loading-slow { display: none; color: #735400; }
+        .tmr-loading-retry { display: none; }
+        .tmr-loading-retry button {
+            background: linear-gradient(180deg,#6E97C7 0%,#2A4D7C 100%);
+            color: #FFF; border: 1px solid #1B3D5F;
+            padding: 5px 16px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
+            margin-top: 6px;
         }
 
-        /* Hide legacy elements that don't fit the new layout */
-        .forum-utility-bar,
-        .forum-banner,
-        .search-row,
-        .forum-bottom-panel { display: none !important; }
+        /* Hide things from older overlay that we don't want anymore */
+        .pin-badge, .thread-prefix { display: none; }
 
-        /* ============== RESPONSIVE ============== */
-        @media (max-width: 960px) {
-            .tmr-fb-shell {
-                grid-template-columns: 1fr;
-                padding: 14px 14px 40px;
-            }
-            .tmr-fb-sidebar {
-                position: static;
-            }
-            .tmr-fb-sidebar-toggle { display: block; }
-            .tmr-fb-sidebar-collapsible {
-                display: none;
-                padding-top: 4px;
-                padding-bottom: 8px;
-            }
-            .tmr-fb-sidebar.is-open .tmr-fb-sidebar-collapsible { display: block; }
-            .tmr-fb-sidebar.is-open .tmr-fb-sidebar-toggle::after { content: "\25B2"; }
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 720px) {
+            .vb-shell, .vb-topbar-inner, .vb-subnav-inner { max-width: 100%; }
+            .vb-topbar-inner { gap: 6px; }
+            .vb-search input { width: 130px; }
+            .cat-desc { max-width: none; }
+            .cat-table thead th.col-last, .thread-table thead th.col-last { display: none; }
+            .cat-table tbody td.col-last, .thread-table tbody td.col-last { display: none; }
             .post-layout { grid-template-columns: 1fr; }
-            .post-user-pane {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                border-right: none;
-                border-bottom: 1px solid var(--tmr-fb-border);
-            }
-            .post-user-avatar { width: 48px; height: 48px; margin-bottom: 0; }
-            .tmr-fb-action-search input { width: 140px; }
-            .thread-table thead th.col-num,
-            .cat-table thead th.col-num { display: none; }
-            .thread-table tbody td.col-num,
-            .cat-table tbody td.col-num { display: none; }
-        }
-
-        @media (max-width: 640px) {
-            .tmr-fb-page-title { font-size: 1.4rem; }
-            .tmr-fb-banner { padding: 14px; }
-            .tmr-fb-banner-headline { font-size: 1rem; }
-            .tmr-fb-table-wrap { overflow-x: auto; }
-            .thread-table, .cat-table { min-width: 560px; }
-            .stats-bar { flex-direction: column; }
-            .stats-bar > div { border-right: none; border-bottom: 1px solid var(--tmr-fb-border); }
-            .stats-bar > div:last-child { border-bottom: none; }
-        }
-
-        /* ============================================================
-           VBULLETIN / TWO PLUS TWO PASS  (Apr 29, 2026)
-           Tighter density, classic forum palette, navy group bars,
-           folder-icon row leads, slimmer banner.  Wins by source order.
-           ============================================================ */
-        :root {
-            --tmr-fb-bg: #E1E4E6 !important;
-            --tmr-fb-content: #FFFFFF !important;
-            --tmr-fb-row-alt: #F0F3F5 !important;
-            --tmr-fb-row-hover: #E6EEF7 !important;
-            --tmr-fb-sidebar: #ECEFF1 !important;
-            --tmr-fb-sidebar-active: #D4E0EE !important;
-            --tmr-fb-header: #14528A !important;       /* classic 2+2 navy header */
-            --tmr-fb-header-2: #103E6B !important;
-            --tmr-fb-text: #000000 !important;
-            --tmr-fb-muted: #5A6473 !important;
-            --tmr-fb-link: #14528A !important;
-            --tmr-fb-link-hover: #B12704 !important;   /* vBulletin red hover */
-            --tmr-fb-border: #B7BEC4 !important;
-            --tmr-fb-border-strong: #8E96A0 !important;
-            --tmr-fb-banner: #14528A !important;
-            --tmr-fb-banner-2: #1C6AA8 !important;
-        }
-
-        html body { font-family: Verdana, Tahoma, Arial, sans-serif !important; font-size: 12px !important; line-height: 1.45 !important; color: #000 !important; background: #E1E4E6 !important; }
-
-        a { text-decoration: none; }
-        a:hover { text-decoration: underline; }
-
-        /* === Top toolbar: thinner, classic === */
-        .tmr-fb-topbar { background: #1B3D5F !important; border-bottom: 1px solid #0B1F33 !important; }
-        .tmr-fb-topbar-inner { padding: 6px 16px !important; gap: 12px !important; }
-        .tmr-fb-brand { font-size: 13px !important; }
-        .tmr-fb-brand-mark { width: 22px !important; height: 22px !important; border-radius: 3px !important; font-size: 10px !important; background: #FFD000 !important; color: #14528A !important; }
-        .tmr-fb-brand small { font-size: 11px !important; color: #B8C2D1 !important; }
-        .tmr-fb-search input { height: 26px !important; padding: 0 10px 0 28px !important; border-radius: 3px !important; background: #FFFFFF !important; color: #000 !important; border: 1px solid #0B1F33 !important; font-size: 11px !important; }
-        .tmr-fb-search::before { font-size: 10px !important; left: 9px !important; color: #5A6473 !important; }
-        .tmr-fb-topnav a, .tmr-fb-topnav button { padding: 5px 9px !important; font-size: 11px !important; border-radius: 3px !important; color: #DCE6F4 !important; }
-        .tmr-fb-cta { background: #14528A !important; color: #FFFFFF !important; border: 1px solid #0B1F33 !important; padding: 5px 11px !important; }
-        .tmr-fb-cta:hover { background: #B12704 !important; border-color: #7A1A03 !important; }
-
-        /* === Body grid: tighter gutter === */
-        .tmr-fb-shell { padding: 10px 12px 30px !important; gap: 10px !important; grid-template-columns: 200px minmax(0, 1fr) !important; max-width: 1100px !important; }
-
-        /* === Sidebar: vBulletin compact === */
-        .tmr-fb-sidebar { background: #ECEFF1 !important; border: 1px solid #B7BEC4 !important; border-radius: 3px !important; }
-        .tmr-fb-sidebar-section { padding: 8px 8px 6px !important; }
-        .tmr-fb-sidebar-label { font-size: 10px !important; letter-spacing: 0.08em !important; color: #14528A !important; padding-bottom: 4px; border-bottom: 1px solid #C8CED4; margin-bottom: 6px !important; }
-        .tmr-fb-sidebar-list a { padding: 3px 6px !important; font-size: 11px !important; font-weight: 600 !important; border-radius: 0 !important; color: #14528A !important; }
-        .tmr-fb-sidebar-list a:hover { background: #D4E0EE !important; color: #B12704 !important; text-decoration: underline; }
-        .tmr-fb-sidebar-list a.is-active { background: #14528A !important; color: #FFFFFF !important; box-shadow: none !important; font-weight: 700 !important; }
-        .tmr-fb-sidebar-list .tmr-fb-sidebar-count { background: transparent !important; color: inherit !important; font-size: 10px !important; padding: 0 !important; }
-
-        /* === Breadcrumb + page title === */
-        .tmr-fb-breadcrumb { font-size: 11px !important; padding: 4px 8px !important; background: #F8F9FB; border: 1px solid #B7BEC4; border-radius: 3px; margin-bottom: 6px !important; }
-        .tmr-fb-breadcrumb a { color: #14528A !important; }
-        .tmr-fb-breadcrumb .sep { margin: 0 4px !important; color: #5A6473 !important; }
-        .tmr-fb-page-title { font-size: 18px !important; font-weight: 700 !important; color: #000 !important; margin-bottom: 8px !important; padding-bottom: 6px; border-bottom: 2px solid #14528A; letter-spacing: 0; font-family: Verdana, Tahoma, Arial, sans-serif !important; }
-
-        /* === Banner: slim utility strip, not hero === */
-        .tmr-fb-banner { padding: 8px 12px !important; border-radius: 3px !important; background: linear-gradient(180deg, #1B3D5F 0%, #14528A 100%) !important; border: 1px solid #0B1F33 !important; margin-bottom: 8px !important; }
-        .tmr-fb-banner::after { display: none !important; }
-        .tmr-fb-banner-eyebrow { font-size: 10px !important; letter-spacing: 0.12em !important; color: #FFD000 !important; margin-bottom: 1px !important; }
-        .tmr-fb-banner-headline { font-size: 13px !important; line-height: 1.3 !important; margin-bottom: 1px !important; }
-        .tmr-fb-banner-sub { font-size: 11px !important; color: #DCE6F4 !important; max-width: none !important; }
-
-        /* === Action row (thin secondary toolbar) === */
-        .tmr-fb-actionrow { padding: 4px 6px !important; background: #DEE3E8 !important; border: 1px solid #B7BEC4 !important; border-radius: 3px 3px 0 0 !important; gap: 4px !important; }
-        .tmr-fb-action-btn { padding: 3px 9px !important; font-size: 11px !important; border-radius: 3px !important; background: linear-gradient(180deg, #FFFFFF 0%, #E0E5EA 100%) !important; border: 1px solid #8E96A0 !important; color: #14528A !important; font-weight: 700 !important; }
-        .tmr-fb-action-btn:hover { color: #B12704 !important; background: linear-gradient(180deg, #FFFFFF 0%, #D4DAE0 100%) !important; }
-        .tmr-fb-action-btn.is-primary { background: linear-gradient(180deg, #1C6AA8 0%, #14528A 100%) !important; color: #FFFFFF !important; border-color: #0B1F33 !important; }
-        .tmr-fb-action-btn.is-primary:hover { background: linear-gradient(180deg, #14528A 0%, #103E6B 100%) !important; color: #FFFFFF !important; }
-        .tmr-fb-action-search input { height: 24px !important; padding: 0 8px !important; font-size: 11px !important; border-radius: 3px !important; border: 1px solid #8E96A0 !important; }
-
-        /* === Tables (forum index + thread list) === */
-        .tmr-fb-table-wrap { border: 1px solid #B7BEC4 !important; border-radius: 0 0 3px 3px !important; background: #FFFFFF !important; }
-        .thread-table, .cat-table { font-size: 12px !important; }
-        .thread-table thead th, .cat-table thead th {
-            background: linear-gradient(180deg, #1C6AA8 0%, #14528A 100%) !important;
-            color: #FFFFFF !important;
-            font-size: 11px !important;
-            padding: 5px 10px !important;
-            letter-spacing: 0.04em !important;
-            border-bottom: 1px solid #0B1F33 !important;
-            font-weight: 700 !important;
-        }
-        .thread-table thead th.col-num, .cat-table thead th.col-num { width: 70px !important; text-align: center; }
-        .thread-table thead th.col-rating { width: 80px !important; text-align: center; }
-        .thread-table thead th.col-last, .cat-table thead th.col-last { width: 200px !important; }
-        .thread-table tbody tr, .cat-table tbody tr { border-bottom: 1px solid #C8CED4 !important; }
-        .thread-table tbody tr:nth-child(even), .cat-table tbody tr:nth-child(even) { background: #F0F3F5 !important; }
-        .thread-table tbody tr:nth-child(odd), .cat-table tbody tr:nth-child(odd) { background: #FFFFFF !important; }
-        .thread-table tbody tr:hover, .cat-table tbody tr:hover { background: #E6EEF7 !important; }
-        .thread-table td, .cat-table td { padding: 6px 10px !important; font-size: 12px !important; vertical-align: top !important; color: #000 !important; }
-
-        /* Folder-icon row lead (vBulletin look) */
-        .tmr-fb-thread-icon, .cat-table .cat-icon {
-            width: 22px !important; height: 22px !important;
-            border-radius: 0 !important;
-            background: transparent !important;
-            border: 1px solid #8E96A0 !important;
-            color: #14528A !important;
-            font-size: 11px !important;
-            font-weight: 800 !important;
-            display: inline-flex; align-items: center; justify-content: center;
-            box-shadow: inset 0 -2px 0 rgba(0,0,0,0.05);
-        }
-        .tmr-fb-thread-icon.is-pinned { background: #FFF6D6 !important; color: #92400E !important; border-color: #C2A444 !important; }
-        .tmr-fb-thread-icon.is-hot    { background: #FFE5DD !important; color: #B12704 !important; border-color: #B12704 !important; }
-        .cat-table .cat-icon { background: linear-gradient(180deg, #FFFFFF 0%, #E0E5EA 100%) !important; }
-
-        .tmr-fb-thread-cell, .cat-info { gap: 8px !important; }
-        .tmr-fb-thread-title, .cat-table .cat-name {
-            color: #14528A !important;
-            font-weight: 700 !important;
-            font-size: 12px !important;
-            font-family: Verdana, Tahoma, Arial, sans-serif !important;
-        }
-        .tmr-fb-thread-title:hover, .cat-table .cat-name:hover { color: #B12704 !important; text-decoration: underline; }
-        .tmr-fb-thread-meta, .cat-table .cat-desc {
-            color: #4A5260 !important;
-            font-size: 11px !important;
-            margin-top: 1px !important;
-            line-height: 1.4;
-        }
-        .tmr-fb-thread-meta strong { color: #000 !important; }
-
-        .tmr-fb-pin-tag { background: #FFD000 !important; color: #14528A !important; font-size: 10px !important; padding: 1px 5px !important; border-radius: 2px !important; }
-        .tmr-fb-sample-tag { background: #DCE6F4 !important; color: #14528A !important; font-size: 10px !important; padding: 1px 5px !important; border-radius: 2px !important; }
-        .tmr-fb-rating-stars { color: #C2A444 !important; }
-
-        /* Last Post column: stacked, vBulletin-style */
-        .tmr-fb-lastpost { line-height: 1.35 !important; }
-        .tmr-fb-lastpost-title { color: #14528A !important; font-weight: 700; font-size: 11px !important; max-width: 180px; }
-        .tmr-fb-lastpost-meta { color: #4A5260 !important; font-size: 11px !important; }
-        .last-post-info .last-post-title { color: #14528A !important; font-weight: 700; font-size: 11px !important; }
-        .last-post-info .last-post-meta { color: #4A5260 !important; font-size: 11px !important; }
-
-        /* Numeric columns: compact and centered */
-        .thread-table td.col-num, .cat-table td.col-num { text-align: center !important; font-size: 11px !important; color: #000 !important; font-weight: 700; padding: 6px 6px !important; }
-        .thread-table td.col-rating { text-align: center !important; }
-        .thread-table td.col-last, .cat-table td.col-last { padding: 6px 10px !important; }
-
-        /* === Group header bars (between forum sub-categories on the index) === */
-        .group-header {
-            background: linear-gradient(180deg, #1C6AA8 0%, #14528A 100%) !important;
-            color: #FFFFFF !important;
-            border: 1px solid #0B1F33 !important;
-            padding: 5px 12px !important;
-            margin-top: 10px !important;
-            border-radius: 0 !important;
-        }
-        .group-header:first-child { margin-top: 0 !important; }
-        .group-header-title { font-size: 12px !important; font-weight: 700 !important; }
-        .group-header-meta { font-size: 11px !important; color: #DCE6F4 !important; }
-        .group-header + .cat-table { border-radius: 0 !important; border-top: none !important; }
-
-        /* === Stats strip === */
-        .stats-bar { border: 1px solid #B7BEC4 !important; border-radius: 3px !important; background: #F0F3F5 !important; margin: 0 0 8px !important; }
-        .stats-bar > div { padding: 6px 12px !important; font-size: 11px !important; border-right: 1px solid #C8CED4 !important; }
-        .stats-bar strong { font-size: 12px !important; }
-
-        /* === Thread detail / posts === */
-        .toolbar { padding: 5px 8px !important; border-radius: 3px 3px 0 0 !important; background: #DEE3E8 !important; border-color: #B7BEC4 !important; }
-        .toolbar-label { font-size: 11px !important; color: #4A5260 !important; }
-        .post-shell { border-radius: 3px !important; border-color: #B7BEC4 !important; margin-bottom: 8px !important; }
-        .post-top-bar { background: linear-gradient(180deg, #F0F3F5 0%, #DEE3E8 100%) !important; border-bottom-color: #B7BEC4 !important; padding: 5px 10px !important; font-size: 11px !important; }
-        .post-author-name { color: #14528A !important; font-size: 12px !important; }
-        .post-number { font-size: 11px !important; color: #4A5260; }
-        .post-layout { grid-template-columns: 160px 1fr !important; }
-        .post-user-pane { padding: 10px !important; background: #F0F3F5 !important; border-right-color: #B7BEC4 !important; font-size: 11px; }
-        .post-user-name { color: #14528A !important; font-size: 12px; margin-bottom: 6px; }
-        .post-user-avatar { width: 70px; height: 70px; border-radius: 0; }
-        .post-main-pane { padding: 10px 12px !important; }
-        .post-body { font-size: 12px !important; line-height: 1.55 !important; }
-        .post-body h2 { font-size: 14px !important; font-weight: 700; margin-bottom: 8px; }
-        .vote-btn { padding: 3px 8px !important; font-size: 11px !important; border-radius: 2px !important; border-color: #8E96A0 !important; color: #14528A !important; }
-        .vote-btn:hover { color: #B12704 !important; }
-
-        .reply-box { border-radius: 0 0 3px 3px !important; border-color: #B7BEC4 !important; padding: 10px !important; margin-top: 8px !important; }
-        .reply-box h3 { font-size: 12px !important; font-weight: 700; margin-bottom: 6px; }
-        .reply-box textarea { border-radius: 3px !important; font-size: 12px !important; }
-        .login-prompt { font-size: 11px !important; padding: 8px !important; border-radius: 3px !important; }
-
-        /* Buttons + modal */
-        .btn { border-radius: 3px !important; padding: 5px 10px !important; font-size: 11px !important; }
-        .btn-primary { background: linear-gradient(180deg, #1C6AA8 0%, #14528A 100%) !important; color: #FFFFFF !important; border: 1px solid #0B1F33 !important; }
-        .btn-primary:hover { background: linear-gradient(180deg, #B12704 0%, #7A1A03 100%) !important; color: #FFFFFF !important; }
-        .btn-outline { background: linear-gradient(180deg, #FFFFFF 0%, #E0E5EA 100%) !important; border: 1px solid #8E96A0 !important; color: #14528A !important; }
-        .btn-outline:hover { color: #B12704 !important; }
-        .modal-box { border-radius: 4px !important; }
-        .modal-head { background: linear-gradient(180deg, #1C6AA8 0%, #14528A 100%) !important; padding: 8px 12px !important; }
-        .modal-head h3 { font-size: 13px !important; }
-        .modal-body { padding: 12px !important; }
-        .form-group label { font-size: 11px !important; }
-        .form-group input, .form-group textarea { font-size: 12px !important; padding: 6px 8px !important; border-radius: 3px !important; }
-
-        /* Forum jump row */
-        .forum-jump-row { padding: 6px 10px !important; font-size: 11px !important; border-radius: 0 0 3px 3px !important; background: #F0F3F5 !important; border-color: #B7BEC4 !important; margin-top: 0 !important; border-top: none !important; }
-        .forum-jump-row select { font-size: 11px !important; padding: 3px 6px !important; border-radius: 3px !important; border-color: #8E96A0 !important; }
-
-        /* Empty / loading */
-        .empty-msg { font-size: 11px !important; color: #4A5260 !important; padding: 18px 12px !important; }
-        .tmr-loading-state { padding: 24px 12px !important; }
-
-        @media (max-width: 960px) {
-            .tmr-fb-shell { grid-template-columns: 1fr !important; max-width: 100% !important; }
-        }
-
-        /* ============================================================
-           AUTHENTIC TWO PLUS TWO REBUILD  (Apr 29, 2026)
-           Real 2+2 has no left sidebar, no hero banner, no tab bar.
-           Just a centered stack of vBulletin category tables on a
-           cream/tan page. Strip the chrome, lock in the look.
-           ============================================================ */
-        html body { background: #EFEDE2 !important; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif !important; }
-
-        /* Kill the left sidebar entirely — JS still references it but display:none keeps it out of the layout */
-        .tmr-fb-sidebar { display: none !important; }
-        .tmr-fb-shell { grid-template-columns: 1fr !important; max-width: 980px !important; padding: 8px 8px 30px !important; gap: 0 !important; }
-
-        /* Replace the marketing banner with a thin red maroon page title strip (a la 2+2's dark-red category header) */
-        .tmr-fb-banner {
-            background: #6B1F1F !important;
-            border: 1px solid #4A1414 !important;
-            border-radius: 0 !important;
-            padding: 6px 10px !important;
-            margin: 0 0 1px !important;
-        }
-        .tmr-fb-banner-eyebrow { display: none !important; }
-        .tmr-fb-banner-headline { font-size: 13px !important; font-weight: 700 !important; color: #FFFFFF !important; margin: 0 !important; }
-        .tmr-fb-banner-sub { font-size: 11px !important; color: #F5DCDC !important; margin-top: 2px !important; }
-
-        /* Drop the colored breadcrumb chip — 2+2 uses tiny plain breadcrumb text */
-        .tmr-fb-breadcrumb {
-            background: transparent !important;
-            border: none !important;
-            padding: 4px 2px !important;
-            font-size: 11px !important;
-            color: #555 !important;
-            margin-bottom: 4px !important;
-        }
-        .tmr-fb-breadcrumb a { color: #2A4D7C !important; font-weight: 700 !important; }
-
-        /* Hide the bold page title between breadcrumb and banner — 2+2 puts the title INSIDE the maroon header strip */
-        .tmr-fb-page-title { display: none !important; }
-
-        /* Hide the action toolbar + sample-thread section on the index — they don't belong on 2+2's forum home */
-        #viewCategories .tmr-fb-actionrow,
-        #viewCategories > .group-header[style*="margin-top:18px"],
-        #viewCategories > .group-header + .tmr-fb-table-wrap { display: none !important; }
-        #viewCategories #sampleSampleTable { display: none !important; }
-
-        /* Sub-nav strip (User CP / Today's Posts / FAQ / Members) — fake 2+2 secondary tab bar */
-        .tmr-fb-banner + .stats-bar {
-            background: #4F7AB0 !important;
-            border: 1px solid #2A4D7C !important;
-            border-top: none !important;
-            border-radius: 0 !important;
-            margin: 0 0 8px !important;
-            padding: 0 !important;
-        }
-        .stats-bar > div {
-            color: #FFFFFF !important;
-            border-right: 1px solid #2A4D7C !important;
-            padding: 4px 12px !important;
-            font-size: 11px !important;
-            background: linear-gradient(180deg, #6E97C7 0%, #4F7AB0 100%) !important;
-        }
-        .stats-bar > div:hover { background: linear-gradient(180deg, #82A6CF 0%, #6386B6 100%) !important; }
-        .stats-bar strong { color: #FFFFFF !important; font-weight: 700 !important; }
-        .stats-bar .stats-label { color: #DCE6F4 !important; font-weight: 600 !important; }
-
-        /* === The vBulletin "category table" stack === */
-        /* Group header: deep navy bar with white "Sports Betting" text */
-        .group-header {
-            background: linear-gradient(180deg, #4F7AB0 0%, #2A4D7C 100%) !important;
-            color: #FFFFFF !important;
-            border: 1px solid #1B3D5F !important;
-            border-bottom: none !important;
-            padding: 5px 10px !important;
-            margin-top: 10px !important;
-            border-radius: 0 !important;
-            display: flex !important;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-        .group-header:first-child { margin-top: 0 !important; }
-        .group-header-title { font-size: 12px !important; font-weight: 700 !important; text-transform: none !important; letter-spacing: 0 !important; }
-        .group-header-meta { display: none !important; }
-
-        /* Sub-header row of column labels under the group bar */
-        .group-header + .cat-table { border-radius: 0 !important; border: 1px solid #8E96A0 !important; border-top: none !important; margin-bottom: 12px !important; background: #FFFFFF !important; overflow: hidden !important; }
-        .group-header + .cat-table thead th {
-            background: #DEDED2 !important;
-            color: #333 !important;
-            border-bottom: 1px solid #8E96A0 !important;
-            font-size: 10px !important;
-            font-weight: 700 !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.04em !important;
-            padding: 4px 10px !important;
-        }
-        .group-header + .cat-table thead th.col-num { width: 60px !important; text-align: center !important; }
-        .group-header + .cat-table thead th.col-last { width: 220px !important; text-align: left !important; }
-
-        /* Forum rows */
-        .cat-table tbody tr { background: #FFFFFF !important; border-bottom: 1px solid #D0D0C0 !important; }
-        .cat-table tbody tr:nth-child(even) { background: #F7F5EC !important; }
-        .cat-table tbody tr:hover { background: #FFFCEA !important; }
-        .cat-table tbody tr:last-child { border-bottom: none !important; }
-        .cat-table td { padding: 6px 10px !important; vertical-align: middle !important; font-size: 11px !important; }
-
-        /* Folder-icon for forum rows: classic manila-folder look */
-        .cat-table .cat-icon {
-            width: 28px !important; height: 22px !important;
-            background: linear-gradient(180deg, #FFE8A8 0%, #E2C36C 100%) !important;
-            border: 1px solid #8B6914 !important;
-            border-radius: 1px 4px 1px 1px !important;
-            color: transparent !important;
-            position: relative;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
-        }
-        .cat-table .cat-icon::before {
-            content: "";
-            position: absolute;
-            top: -3px; left: 0;
-            width: 12px; height: 4px;
-            background: #E2C36C;
-            border: 1px solid #8B6914;
-            border-bottom: none;
-            border-radius: 1px 4px 0 0;
-        }
-        .cat-table .cat-name {
-            color: #2A4D7C !important;
-            font-size: 12px !important;
-            font-weight: 700 !important;
-            font-family: Verdana, Geneva, Arial, sans-serif !important;
-        }
-        .cat-table .cat-name:hover { color: #B12704 !important; text-decoration: underline; }
-        .cat-table .cat-desc { color: #555 !important; font-size: 11px !important; margin-top: 1px !important; line-height: 1.4; }
-        .cat-table td.col-num { font-size: 11px !important; color: #333 !important; font-weight: 600 !important; text-align: center !important; }
-        .cat-table td.col-last { font-size: 11px !important; color: #333 !important; }
-        .cat-table .last-post-info .last-post-title { color: #2A4D7C !important; font-weight: 700; font-size: 11px !important; }
-        .cat-table .last-post-info .last-post-meta { color: #555 !important; font-size: 10px !important; }
-        .cat-table .no-posts { color: #888 !important; font-size: 11px !important; font-style: italic; }
-
-        /* Thread-list view: keep the shell tighter and shed the Rating column visually so it matches 2+2 default */
-        #viewThreads .tmr-fb-table-wrap { border: 1px solid #8E96A0 !important; border-radius: 0 !important; }
-        #viewThreads .thread-table thead th {
-            background: linear-gradient(180deg, #4F7AB0 0%, #2A4D7C 100%) !important;
-            color: #FFFFFF !important;
-            font-size: 11px !important;
-            padding: 5px 10px !important;
-            border-bottom: 1px solid #1B3D5F !important;
-        }
-        #viewThreads .thread-table thead th.col-rating { width: 60px !important; }
-        #viewThreads .thread-table tbody tr { background: #FFFFFF !important; border-bottom: 1px solid #D0D0C0 !important; }
-        #viewThreads .thread-table tbody tr:nth-child(even) { background: #F7F5EC !important; }
-        #viewThreads .thread-table tbody tr:hover { background: #FFFCEA !important; }
-        #viewThreads .thread-table td { padding: 5px 10px !important; font-size: 11px !important; }
-
-        /* Thread-row folder/dot icon */
-        .tmr-fb-thread-icon {
-            width: 22px !important; height: 18px !important;
-            background: linear-gradient(180deg, #E8E4D0 0%, #C8C0A4 100%) !important;
-            border: 1px solid #6E6648 !important;
-            border-radius: 1px 4px 1px 1px !important;
-            color: transparent !important;
-            position: relative;
-        }
-        .tmr-fb-thread-icon::before {
-            content: "";
-            position: absolute;
-            top: -3px; left: 0;
-            width: 9px; height: 3px;
-            background: #C8C0A4;
-            border: 1px solid #6E6648;
-            border-bottom: none;
-            border-radius: 1px 3px 0 0;
-        }
-        .tmr-fb-thread-icon.is-pinned { background: linear-gradient(180deg, #FFE0A0 0%, #E2A040 100%) !important; border-color: #8B5A14 !important; }
-        .tmr-fb-thread-icon.is-pinned::before { background: #E2A040; border-color: #8B5A14; }
-        .tmr-fb-thread-icon.is-hot    { background: linear-gradient(180deg, #FFC4B0 0%, #D85040 100%) !important; border-color: #7A1A03 !important; }
-        .tmr-fb-thread-icon.is-hot::before    { background: #D85040; border-color: #7A1A03; }
-
-        .tmr-fb-thread-title { color: #2A4D7C !important; font-size: 12px !important; }
-        .tmr-fb-thread-title:hover { color: #B12704 !important; }
-        .tmr-fb-thread-meta { color: #555 !important; font-size: 10px !important; }
-        .tmr-fb-thread-meta strong { color: #2A4D7C !important; }
-
-        .tmr-fb-lastpost-title { color: #2A4D7C !important; font-size: 11px !important; }
-        .tmr-fb-lastpost-meta { color: #555 !important; font-size: 10px !important; }
-        .last-post-info .last-post-title { color: #2A4D7C !important; font-size: 11px !important; }
-        .last-post-info .last-post-meta { color: #555 !important; font-size: 10px !important; }
-
-        /* Top toolbar (TR brand bar) — keep but de-emphasize, classic 2+2 dark navy */
-        .tmr-fb-topbar { background: #2A4D7C !important; border-bottom: 1px solid #1B3D5F !important; }
-        .tmr-fb-topbar-inner { padding: 4px 10px !important; max-width: 980px !important; }
-        .tmr-fb-brand { font-size: 13px !important; }
-        .tmr-fb-search input { height: 22px !important; font-size: 11px !important; padding: 0 8px 0 24px !important; }
-        .tmr-fb-search::before { font-size: 10px !important; left: 7px !important; }
-        .tmr-fb-topnav a, .tmr-fb-topnav button { padding: 3px 8px !important; font-size: 11px !important; }
-        .tmr-fb-cta { background: #B12704 !important; border: 1px solid #7A1A03 !important; }
-        .tmr-fb-cta:hover { background: #7A1A03 !important; }
-
-        /* Toolbar above thread list (vBulletin "New Thread / Subscribe / Tools" bar) */
-        .toolbar { background: linear-gradient(180deg, #DEDED2 0%, #C8C8B8 100%) !important; border: 1px solid #8E96A0 !important; padding: 4px 8px !important; border-radius: 0 !important; font-size: 11px !important; }
-        .toolbar strong { font-size: 12px; color: #2A4D7C !important; }
-
-        /* Action row on thread-list view stays but classic-styled */
-        #viewThreads .tmr-fb-actionrow { background: #DEDED2 !important; border: 1px solid #8E96A0 !important; padding: 3px 6px !important; border-radius: 0 !important; }
-
-        /* Stats bar text content tweaks (the secondary toolbar uses this) */
-        .stats-bar > div:nth-child(1)::before { content: "Today's Posts \00a0\00a0|"; margin-right: 6px; opacity: 0.55; }
-
-        /* Forum jump row at the bottom of thread list */
-        .forum-jump-row { background: #DEDED2 !important; border: 1px solid #8E96A0 !important; border-top: none !important; padding: 5px 10px !important; font-size: 11px !important; }
-
-        @media (max-width: 980px) {
-            .tmr-fb-shell { padding: 6px !important; }
-            .group-header + .cat-table thead th.col-last { display: none !important; }
-            .group-header + .cat-table tbody td.col-last { display: none !important; }
+            .post-user-pane { display: flex; align-items: center; gap: 10px; border-right: none; border-bottom: 1px solid #D0D0C0; }
+            .post-user-avatar { width: 40px; height: 40px; margin: 0; }
         }
     </style>
 </head>
 <body>
 
-<!-- LEGACY HEADER (hidden via CSS, IDs preserved for JS) -->
-    <header>
-        <div class="header-content">
-            <a href="/" class="logo">TRUST<span>MY</span>RECORD</a>
-            <nav class="nav-links">
-                <a href="/forum/" class="nav-link active">Forum</a>
-            </nav>
-            <div class="nav-auth">
-                <a href="/sportsbook.html#login" class="nav-link nav-auth-login" id="forumHeaderLoginBtn">Log In</a>
-                <a href="/sportsbook.html#register" class="nav-link nav-auth-register" id="forumHeaderRegisterBtn">Register</a>
-            </div>
+<!-- LEGACY HIDDEN HEADER (preserved for IDs the JS still references) -->
+<header style="display:none;">
+    <div class="header-content">
+        <a href="/" class="logo">TRUSTMYRECORD</a>
+        <nav class="nav-links"><a href="/forum/" class="nav-link active">Forum</a></nav>
+        <div class="nav-auth">
+            <a href="/sportsbook.html#login" class="nav-link" id="forumHeaderLoginBtn">Log In</a>
+            <a href="/sportsbook.html#register" class="nav-link" id="forumHeaderRegisterBtn">Register</a>
         </div>
-    </header>
+    </div>
+</header>
 
-<!-- ================= TOP FORUM TOOLBAR ================= -->
-<div class="tmr-fb-topbar">
-    <div class="tmr-fb-topbar-inner">
-        <a href="/forum/" class="tmr-fb-brand" onclick="event.preventDefault();showCategories();">
-            <span class="tmr-fb-brand-mark">TR</span>
-            TrustMyRecord <small>Forums</small>
-        </a>
-
-        <div class="tmr-fb-search">
-            <input type="search" id="searchInput" placeholder="Search threads, posts, members..." onkeyup="handleSearch(this.value)" autocomplete="off">
+<!-- ================= TOP HEADER BAR ================= -->
+<div class="vb-topbar">
+    <div class="vb-topbar-inner">
+        <a class="vb-logo" href="/">TRUST<span>MY</span>RECORD</a>
+        <div class="vb-search">
+            <input type="search" id="searchInput" placeholder="Search forums" onkeyup="handleSearch(this.value)" autocomplete="off">
+            <button type="button" onclick="handleSearch(document.getElementById('searchInput').value)">Search</button>
         </div>
-
-        <nav class="tmr-fb-topnav" aria-label="Forum top nav">
-            <a href="#" onclick="event.preventDefault();showCategories();"><i class="fas fa-newspaper"></i> New Posts</a>
-            <a href="/notifications/"><i class="fas fa-bell"></i> Subscribed</a>
-            <a href="/messages/"><i class="fas fa-envelope"></i> Messages</a>
-            <a href="/profile/"><i class="fas fa-user"></i> Profile</a>
-            <button type="button" class="tmr-fb-cta" onclick="openNewThread()"><i class="fas fa-plus"></i> Create Thread</button>
+        <nav class="vb-topnav">
+            <a href="/profile/">User CP</a>
+            <a href="/messages/">Messages</a>
+            <a href="/notifications/">Alerts</a>
+            <a href="/profile/">Profile</a>
+            <button type="button" onclick="openNewThread()" class="vb-cta">New Thread</button>
         </nav>
     </div>
 </div>
 
-<!-- ================= BODY GRID: SIDEBAR + MAIN ================= -->
-<div class="tmr-fb-shell">
-
-    <!-- LEFT SIDEBAR -->
-    <aside class="tmr-fb-sidebar" id="forumSidebar" aria-label="Forum categories">
-        <button type="button" class="tmr-fb-sidebar-toggle" onclick="document.getElementById('forumSidebar').classList.toggle('is-open');">Browse Forums</button>
-        <div class="tmr-fb-sidebar-collapsible">
-
-            <div class="tmr-fb-sidebar-section">
-                <div class="tmr-fb-sidebar-label">Sports Betting</div>
-                <ul class="tmr-fb-sidebar-list">
-                    <li><a data-cat-slug="sports-betting" class="is-active" onclick="onSidebarPick(this,'sports-betting','Sports Betting')">Sports Betting</a></li>
-                    <li><a data-cat-slug="betting-strategy" onclick="onSidebarPick(this,'betting-strategy','Betting Strategy')">Betting Strategy</a></li>
-                    <li><a data-cat-slug="verified-picks" onclick="onSidebarPick(this,'verified-picks','Verified Picks')">Verified Picks</a></li>
-                    <li><a data-cat-slug="pick-selling" onclick="onSidebarPick(this,'pick-selling','Sell Picks')">Sell Picks</a></li>
-                </ul>
-            </div>
-
-            <div class="tmr-fb-sidebar-divider"></div>
-            <div class="tmr-fb-sidebar-section">
-                <div class="tmr-fb-sidebar-label">Sports Forums</div>
-                <ul class="tmr-fb-sidebar-list">
-                    <li><a data-cat-slug="nfl" onclick="onSidebarPick(this,'nfl','NFL')">NFL</a></li>
-                    <li><a data-cat-slug="nba" onclick="onSidebarPick(this,'nba','NBA')">NBA</a></li>
-                    <li><a data-cat-slug="mlb" onclick="onSidebarPick(this,'mlb','MLB')">MLB</a></li>
-                    <li><a data-cat-slug="nhl" onclick="onSidebarPick(this,'nhl','NHL')">NHL</a></li>
-                    <li><a data-cat-slug="college-football" onclick="onSidebarPick(this,'college-football','College Football')">College Football</a></li>
-                    <li><a data-cat-slug="college-basketball" onclick="onSidebarPick(this,'college-basketball','College Basketball')">College Basketball</a></li>
-                    <li><a data-cat-slug="soccer" onclick="onSidebarPick(this,'soccer','Soccer')">Soccer</a></li>
-                    <li><a data-cat-slug="fantasy-sports" onclick="onSidebarPick(this,'fantasy-sports','Fantasy Sports')">Fantasy Sports</a></li>
-                </ul>
-            </div>
-
-            <div class="tmr-fb-sidebar-divider"></div>
-            <div class="tmr-fb-sidebar-section">
-                <div class="tmr-fb-sidebar-label">Competition</div>
-                <ul class="tmr-fb-sidebar-list">
-                    <li><a data-cat-slug="leagues-seasons" onclick="onSidebarPick(this,'leagues-seasons','Leagues and Seasons')">Leagues and Seasons</a></li>
-                    <li><a data-cat-slug="head-to-head" onclick="onSidebarPick(this,'head-to-head','Head to Head Challenges')">Head to Head Challenges</a></li>
-                    <li><a data-cat-slug="polls-trivia" onclick="onSidebarPick(this,'polls-trivia','Polls and Trivia')">Polls and Trivia</a></li>
-                </ul>
-            </div>
-
-            <div class="tmr-fb-sidebar-divider"></div>
-            <div class="tmr-fb-sidebar-section">
-                <div class="tmr-fb-sidebar-label">Community</div>
-                <ul class="tmr-fb-sidebar-list">
-                    <li><a data-cat-slug="general-discussion" onclick="onSidebarPick(this,'general-discussion','General Discussion')">General Discussion</a></li>
-                    <li><a data-cat-slug="site-announcements" onclick="onSidebarPick(this,'site-announcements','Site Announcements')">Site Announcements</a></li>
-                </ul>
-            </div>
-        </div>
-    </aside>
-
-    <!-- MAIN COLUMN -->
-    <main class="tmr-fb-main">
-
-        <div class="tmr-fb-breadcrumb breadcrumb" id="breadcrumb">
-            <a onclick="showCategories()">TrustMyRecord Forums</a>
-            <span class="sep">&rsaquo;</span>
-            <span id="forumPageTitleLabel">Sports Betting</span>
-        </div>
-
-        <h1 class="tmr-fb-page-title" id="forumPageTitle">Sports Betting</h1>
-
-        <div class="tmr-fb-banner">
-            <span class="tmr-fb-banner-eyebrow">TrustMyRecord Forums</span>
-            <div class="tmr-fb-banner-headline">Sports Betting &mdash; discuss the board, post picks, talk records.</div>
-            <div class="tmr-fb-banner-sub">Threads here tie back to your public profile and locked pick history. Be civil, no spam, no fake records.</div>
-        </div>
-
-        <div class="tmr-fb-actionrow">
-            <button type="button" class="tmr-fb-action-btn is-primary" onclick="openNewThread()"><i class="fas fa-plus"></i> New Thread</button>
-            <button type="button" class="tmr-fb-action-btn" onclick="alert('Subscribed to this forum.');"><i class="fas fa-bell"></i> Subscribe</button>
-            <button type="button" class="tmr-fb-action-btn" onclick="document.getElementById('forumJumpSelect') && document.getElementById('forumJumpSelect').focus();"><i class="fas fa-tools"></i> Forum Tools</button>
-            <span class="tmr-fb-actionrow-spacer"></span>
-            <span class="tmr-fb-action-search">
-                <input type="search" id="forumScopedSearch" placeholder="Search This Forum" onkeyup="handleSearch(this.value)">
-                <button type="button" class="tmr-fb-action-btn" onclick="handleSearch(document.getElementById('forumScopedSearch').value)"><i class="fas fa-search"></i> Search</button>
-            </span>
-        </div>
-
-        <!-- ================= CATEGORIES VIEW (forum index) ================= -->
-        <div id="viewCategories">
-            <div class="stats-bar" aria-label="Board stats">
-                <div><strong id="statThreads">0</strong> <span class="stats-label">threads</span></div>
-                <div><strong id="statPosts">0</strong> <span class="stats-label">posts</span></div>
-                <div><strong id="statUsers">0</strong> <span class="stats-label">forums</span></div>
-                <div><strong id="statOnline">0</strong> <span class="stats-label">active forums</span></div>
-            </div>
-
-            <div class="tmr-fb-table-wrap" id="categoriesContainer"></div>
-
-            <!-- Sample sticky/recent threads listing on the index, structured like a real thread table.
-                 Tagged "Sample" so it's clear this is template content until real threads appear. -->
-            <div class="group-header" style="margin-top:18px;">
-                <div class="group-header-title">Sticky &amp; Recent Threads</div>
-                <div class="group-header-meta">Sample layout &mdash; replaced by live threads when posted</div>
-            </div>
-            <div class="tmr-fb-table-wrap">
-                <table class="thread-table" id="sampleSampleTable">
-                    <thead>
-                        <tr>
-                            <th>Thread / Thread Starter</th>
-                            <th class="col-rating">Rating</th>
-                            <th class="col-last">Last Post</th>
-                            <th class="col-num">Replies</th>
-                            <th class="col-num">Views</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sampleThreadBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- ================= THREADS VIEW (one category) ================= -->
-        <div id="viewThreads" style="display:none;">
-            <div class="toolbar">
-                <div class="toolbar-left">
-                    <span class="toolbar-label">Viewing:</span>
-                    <strong id="threadsCategoryLabel">Forum</strong>
-                </div>
-                <div class="toolbar-right">
-                    <button class="btn btn-primary btn-sm" type="button" onclick="openNewThread()">Start New Thread</button>
-                    <button class="btn btn-outline btn-sm" type="button" onclick="showCategories()">Back to Forum Home</button>
-                </div>
-            </div>
-
-            <div class="tmr-fb-table-wrap">
-                <table class="thread-table">
-                    <thead>
-                        <tr>
-                            <th>Thread / Thread Starter</th>
-                            <th class="col-rating">Rating</th>
-                            <th class="col-last">Last Post</th>
-                            <th class="col-num">Replies</th>
-                            <th class="col-num">Views</th>
-                        </tr>
-                    </thead>
-                    <tbody id="threadsBody"></tbody>
-                </table>
-            </div>
-
-            <div class="forum-jump-row">
-                <div>Jump to a different forum:</div>
-                <select id="forumJumpSelect" onchange="handleForumJump(this.value)"></select>
-            </div>
-        </div>
-
-        <!-- ================= THREAD DETAIL VIEW ================= -->
-        <div id="viewThread" style="display:none;">
-            <div class="toolbar">
-                <div class="toolbar-left">
-                    <button class="btn btn-outline btn-sm" type="button" onclick="backToThreads()">Back to Thread List</button>
-                </div>
-                <div class="toolbar-right">
-                    <button class="btn btn-primary btn-sm" type="button" onclick="openNewThread()">Start New Thread</button>
-                </div>
-            </div>
-
-            <div id="postsContainer"></div>
-
-            <div class="reply-box">
-                <h3>Quick Reply</h3>
-                <div id="replyArea"></div>
-            </div>
-        </div>
-
-    </main>
+<!-- ================= SECONDARY TAB STRIP ================= -->
+<div class="vb-subnav">
+    <div class="vb-subnav-inner">
+        <a href="#" onclick="event.preventDefault();showCategories();">Forum Home</a>
+        <a href="#" onclick="event.preventDefault();showCategories();">Today's Posts</a>
+        <a href="#" onclick="event.preventDefault();showCategories();">Mark Forums Read</a>
+        <a href="/notifications/">Subscribed Threads</a>
+        <a href="/handicappers.html">Members</a>
+        <a href="/about/">FAQ</a>
+        <button type="button" onclick="openNewThread()">New Thread</button>
+    </div>
 </div>
+
+<!-- ================= MAIN PAGE ================= -->
+<div class="vb-shell">
+
+    <div class="breadcrumb" id="breadcrumb">
+        <a onclick="showCategories()">TrustMyRecord Forums</a>
+        <span class="sep">&rsaquo;</span>
+        <span id="forumPageTitleLabel">Sports Betting</span>
+    </div>
+
+    <div class="vb-title-strip">
+        <div id="forumPageTitle">Sports Betting</div>
+        <div class="vb-title-strip-sub">Threads tie back to your public profile and locked pick history. Be civil. No spam. No fake records.</div>
+    </div>
+
+    <!-- ================= CATEGORIES VIEW ================= -->
+    <div id="viewCategories">
+        <div class="vb-stats" aria-label="Board stats">
+            <div><strong id="statThreads">0</strong> threads</div>
+            <div><strong id="statPosts">0</strong> posts</div>
+            <div><strong id="statUsers">0</strong> forums</div>
+            <div><strong id="statOnline">0</strong> active</div>
+        </div>
+        <div id="categoriesContainer"></div>
+    </div>
+
+    <!-- ================= THREADS VIEW ================= -->
+    <div id="viewThreads" style="display:none;">
+        <div class="vb-thread-toolbar">
+            <div class="toolbar-left">
+                <span class="toolbar-label">Forum:</span>
+                <strong id="threadsCategoryLabel">Forum</strong>
+            </div>
+            <div class="toolbar-right">
+                <button class="btn btn-primary btn-sm" type="button" onclick="openNewThread()">New Thread</button>
+                <button class="btn btn-sm" type="button" onclick="showCategories()">Forum Home</button>
+            </div>
+        </div>
+
+        <table class="thread-table">
+            <thead>
+                <tr>
+                    <th>Thread / Thread Starter</th>
+                    <th class="col-rating">Rating</th>
+                    <th class="col-last">Last Post</th>
+                    <th class="col-num">Replies</th>
+                    <th class="col-num">Views</th>
+                </tr>
+            </thead>
+            <tbody id="threadsBody"></tbody>
+        </table>
+
+        <div class="forum-jump-row">
+            <div>Forum Jump:</div>
+            <select id="forumJumpSelect" onchange="handleForumJump(this.value)"></select>
+        </div>
+    </div>
+
+    <!-- ================= THREAD DETAIL VIEW ================= -->
+    <div id="viewThread" style="display:none;">
+        <div class="vb-thread-toolbar">
+            <div class="toolbar-left">
+                <button class="btn btn-sm" type="button" onclick="backToThreads()">&laquo; Back to Thread List</button>
+            </div>
+            <div class="toolbar-right">
+                <button class="btn btn-primary btn-sm" type="button" onclick="openNewThread()">New Thread</button>
+            </div>
+        </div>
+
+        <div id="postsContainer"></div>
+
+        <div class="reply-box">
+            <h3>Quick Reply</h3>
+            <div id="replyArea"></div>
+        </div>
+    </div>
+
+</div>
+
 
 <!-- NEW THREAD MODAL -->
 <div class="modal-overlay" id="newThreadModal">
