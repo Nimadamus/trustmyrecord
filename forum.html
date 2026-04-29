@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Forum - TrustMyRecord</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 <link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260429a">
 <script defer src="static/js/tmr-sitewide.js?v=20260429b"></script>
     <style>
@@ -857,292 +858,1189 @@
       gtag('config', 'G-V5MCVXS2HE');
     </script>
     <style>
-        /* Premium refinement pass */
-        body {
-            font-family: 'Segoe UI', sans-serif !important;
-            background:
-                radial-gradient(circle at top left, rgba(45, 212, 191, 0.1), transparent 26%),
-                radial-gradient(circle at top right, rgba(212, 167, 44, 0.07), transparent 20%),
-                linear-gradient(180deg, #07111d 0%, #0b1523 52%, #0d1828 100%) !important;
-            color: #edf4fb !important;
+        /* ============================================================
+           TRUSTMYRECORD FORUMS - CLASSIC MESSAGE-BOARD REDESIGN
+           Light-gray board background, dark charcoal header, white
+           thread cards, sticky left category sidebar.
+           ============================================================ */
+        :root {
+            --tmr-fb-bg: #EEF1F5;
+            --tmr-fb-bg-deep: #E4E8EE;
+            --tmr-fb-content: #FFFFFF;
+            --tmr-fb-row-alt: #F6F8FB;
+            --tmr-fb-row-hover: #EEF3FA;
+            --tmr-fb-sidebar: #F2F4F8;
+            --tmr-fb-sidebar-active: #DCE6F4;
+            --tmr-fb-header: #14181F;
+            --tmr-fb-header-2: #1C2230;
+            --tmr-fb-text: #1A1F27;
+            --tmr-fb-muted: #5A6473;
+            --tmr-fb-link: #1F4FA8;
+            --tmr-fb-link-hover: #0F2D6E;
+            --tmr-fb-border: #D2D7DF;
+            --tmr-fb-border-strong: #B8BFC9;
+            --tmr-fb-banner: #1A2030;
+            --tmr-fb-banner-2: #232B40;
+            --tmr-fb-cyan: #22D3EE;
+            --tmr-fb-blue: #2563EB;
+            --tmr-fb-green: #16A34A;
+            --tmr-fb-amber: #B58200;
+            --tmr-fb-red: #B91C1C;
         }
 
-        header {
-            background: rgba(7, 15, 27, 0.86) !important;
-            border: 1px solid rgba(45, 212, 191, 0.16) !important;
-            border-radius: 22px;
-            margin: 14px auto 0;
-            max-width: 1380px;
-            box-shadow: 0 24px 54px rgba(0, 0, 0, 0.28);
+        html body {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif !important;
+            background: var(--tmr-fb-bg) !important;
+            color: var(--tmr-fb-text) !important;
+            font-size: 14px;
         }
 
-        .header-content {
-            max-width: none;
-            padding: 0 22px;
-            min-height: 72px;
+        /* Hide legacy site header — replaced by forum-only top bar below */
+        body.tmr-site-shell > header { display: none !important; }
+
+        a { color: var(--tmr-fb-link); text-decoration: none; }
+        a:hover { color: var(--tmr-fb-link-hover); text-decoration: underline; }
+
+        /* ============== TOP FORUM TOOLBAR ============== */
+        .tmr-fb-topbar {
+            background: var(--tmr-fb-header);
+            color: #F1F5F9;
+            border-bottom: 2px solid #0B0E14;
+        }
+        .tmr-fb-topbar-inner {
+            max-width: 1340px;
+            margin: 0 auto;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .tmr-fb-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #FFFFFF;
+            font-weight: 800;
+            font-size: 1.02rem;
+            text-decoration: none;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+        }
+        .tmr-fb-brand:hover { color: #FFFFFF; text-decoration: none; }
+        .tmr-fb-brand-mark {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, var(--tmr-fb-blue), var(--tmr-fb-cyan));
+            color: #0B0E14;
+            font-weight: 900;
+            font-size: 0.78rem;
+        }
+        .tmr-fb-brand small { color: #94A3B8; font-weight: 600; font-size: 0.78rem; margin-left: 2px; }
+
+        .tmr-fb-search {
+            flex: 1 1 320px;
+            min-width: 200px;
+            position: relative;
+        }
+        .tmr-fb-search input {
+            width: 100%;
+            height: 36px;
+            padding: 0 14px 0 36px;
+            border-radius: 8px;
+            border: 1px solid #2A3142;
+            background: #0F141C;
+            color: #F1F5F9;
+            font-size: 0.86rem;
+            outline: none;
+            transition: border-color 0.15s ease;
+        }
+        .tmr-fb-search input::placeholder { color: #6B7484; }
+        .tmr-fb-search input:focus { border-color: var(--tmr-fb-cyan); }
+        .tmr-fb-search::before {
+            content: "\f002";
+            font-family: 'Font Awesome 6 Free', 'Font Awesome 5 Free', sans-serif;
+            font-weight: 900;
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6B7484;
+            font-size: 0.84rem;
+            pointer-events: none;
         }
 
-        .logo {
-            font-size: 1.4rem !important;
-            letter-spacing: 0.06em;
+        .tmr-fb-topnav {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .tmr-fb-topnav a,
+        .tmr-fb-topnav button {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            color: #CBD5E1;
+            font-size: 0.82rem;
+            font-weight: 600;
+            background: transparent;
+            border: 1px solid transparent;
+            cursor: pointer;
+            font-family: inherit;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .tmr-fb-topnav a:hover,
+        .tmr-fb-topnav button:hover {
+            color: #FFFFFF;
+            background: rgba(255, 255, 255, 0.06);
+            text-decoration: none;
+        }
+        .tmr-fb-topnav .tmr-fb-cta {
+            background: var(--tmr-fb-blue);
+            color: #FFFFFF;
+            border-color: var(--tmr-fb-blue);
+        }
+        .tmr-fb-topnav .tmr-fb-cta:hover {
+            background: #1E4FCD;
+            border-color: #1E4FCD;
         }
 
-        .nav-link {
-            padding: 10px 14px !important;
-            border-radius: 999px;
-            color: #9fb0c6 !important;
+        /* ============== BODY GRID: SIDEBAR + MAIN ============== */
+        .tmr-fb-shell {
+            max-width: 1340px;
+            margin: 0 auto;
+            padding: 18px 20px 60px;
+            display: grid;
+            grid-template-columns: 248px minmax(0, 1fr);
+            gap: 22px;
+            align-items: start;
         }
 
-        .nav-link:hover,
-        .nav-link.active {
-            color: #f4f7fb !important;
-            background: rgba(45, 212, 191, 0.1) !important;
-        }
-
-        .nav-auth .nav-link {
-            border: 1px solid rgba(148, 163, 184, 0.18);
-        }
-
-        .nav-link.nav-auth-login {
-            color: #d9e3ef !important;
-            background: rgba(15, 23, 42, 0.52) !important;
-        }
-
-        .nav-link.nav-auth-register {
-            color: #07111d !important;
-            background: linear-gradient(180deg, #f8fbff 0%, #dce9f7 100%) !important;
-            border-color: rgba(148, 163, 184, 0.3) !important;
-        }
-
-        .nav-link.nav-auth-register:hover {
-            color: #07111d !important;
-            background: linear-gradient(180deg, #ffffff 0%, #e7f1fb 100%) !important;
-        }
-
-        .forum-wrap { max-width: 1280px; }
-
-        .forum-utility-bar,
-        .forum-banner,
-        .stats-bar,
-        .search-row,
-        .toolbar,
-        .reply-box,
-        .forum-bottom-panel,
-        .thread-table {
-            background: linear-gradient(180deg, rgba(12, 23, 39, 0.94), rgba(8, 16, 28, 0.92)) !important;
-            border: 1px solid rgba(148, 163, 184, 0.14) !important;
-            color: #edf4fb !important;
-            box-shadow: 0 24px 44px rgba(0, 0, 0, 0.24);
-        }
-
-        .forum-utility-bar,
-        .forum-banner,
-        .search-row,
-        .toolbar,
-        .reply-box,
-        .forum-bottom-panel { border-radius: 24px !important; }
-
-        .forum-banner { padding: 28px !important; }
-
-        .forum-banner h1 {
-            font-size: clamp(2rem, 4vw, 3rem) !important;
-            line-height: 0.95;
-        }
-
-        .forum-banner-actions .forum-primary-action {
-            background: linear-gradient(180deg, #1a4f93 0%, #123866 100%) !important;
-            border-color: rgba(45, 212, 191, 0.24) !important;
-        }
-
-        .forum-banner-actions .forum-secondary-action {
-            background: rgba(15, 23, 42, 0.76) !important;
-            color: #d7e4f4 !important;
-            border-color: rgba(148, 163, 184, 0.2) !important;
-        }
-
-        .forum-banner-subline,
-        .forum-trust-note,
-        .toolbar-label,
-        .stats-label { color: #97abc1 !important; }
-
-        .stats-bar { border-radius: 20px !important; }
-
-        .btn,
-        .btn-primary,
-        .btn-outline {
-            border-radius: 999px !important;
-            box-shadow: none !important;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #1dbaa8, #159e8f) !important;
-            border-color: transparent !important;
-        }
-
-        .btn-outline {
-            background: rgba(255, 255, 255, 0.03) !important;
-            border-color: rgba(148, 163, 184, 0.16) !important;
-            color: #edf4fb !important;
-        }
-
-        .thread-table {
-            border-radius: 24px;
+        /* ============== LEFT SIDEBAR ============== */
+        .tmr-fb-sidebar {
+            position: sticky;
+            top: 14px;
+            background: var(--tmr-fb-sidebar);
+            border: 1px solid var(--tmr-fb-border);
+            border-radius: 8px;
             overflow: hidden;
         }
-
-        .thread-table th,
-        .thread-table td { border-color: rgba(148, 163, 184, 0.1) !important; }
-
-        .thread-table thead th {
-            background: rgba(255, 255, 255, 0.03) !important;
-            color: #7f92aa !important;
+        .tmr-fb-sidebar-toggle {
+            display: none;
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--tmr-fb-header);
+            color: #F1F5F9;
+            border: none;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 0.88rem;
+            text-align: left;
+            cursor: pointer;
+        }
+        .tmr-fb-sidebar-toggle::after {
+            content: "\25BC";
+            float: right;
+            font-size: 0.72rem;
+            opacity: 0.7;
+        }
+        .tmr-fb-sidebar-section {
+            padding: 14px 14px 10px;
+        }
+        .tmr-fb-sidebar-label {
+            color: var(--tmr-fb-muted);
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
-            font-size: 0.72rem !important;
+            margin-bottom: 8px;
+        }
+        .tmr-fb-sidebar-list {
+            list-style: none;
+            margin: 0 0 6px;
+            padding: 0;
+        }
+        .tmr-fb-sidebar-list li { margin: 0; }
+        .tmr-fb-sidebar-list a {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 7px 12px;
+            border-radius: 6px;
+            color: var(--tmr-fb-text);
+            font-size: 0.86rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .tmr-fb-sidebar-list a:hover {
+            background: #E6EAF1;
+            color: var(--tmr-fb-link-hover);
+            text-decoration: none;
+        }
+        .tmr-fb-sidebar-list a.is-active {
+            background: var(--tmr-fb-sidebar-active);
+            color: var(--tmr-fb-link-hover);
+            font-weight: 800;
+            box-shadow: inset 3px 0 0 var(--tmr-fb-blue);
+        }
+        .tmr-fb-sidebar-list .tmr-fb-sidebar-count {
+            font-size: 0.74rem;
+            color: var(--tmr-fb-muted);
+            font-weight: 700;
+            background: #E6EAF1;
+            padding: 1px 8px;
+            border-radius: 999px;
+        }
+        .tmr-fb-sidebar-list a.is-active .tmr-fb-sidebar-count {
+            background: #C8D6EC;
+            color: var(--tmr-fb-link-hover);
+        }
+        .tmr-fb-sidebar-divider {
+            height: 1px;
+            background: var(--tmr-fb-border);
+            margin: 4px 0 0;
         }
 
-        .thread-table tbody tr:hover { background: rgba(255, 255, 255, 0.03) !important; }
+        /* ============== MAIN COLUMN ============== */
+        .tmr-fb-main { min-width: 0; }
+
+        .tmr-fb-breadcrumb {
+            color: var(--tmr-fb-muted);
+            font-size: 0.84rem;
+            margin-bottom: 8px;
+        }
+        .tmr-fb-breadcrumb a {
+            color: var(--tmr-fb-link);
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .tmr-fb-breadcrumb .sep {
+            margin: 0 6px;
+            color: var(--tmr-fb-muted);
+        }
+
+        .tmr-fb-page-title {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            font-size: 1.78rem;
+            font-weight: 800;
+            color: var(--tmr-fb-text);
+            letter-spacing: -0.02em;
+            margin-bottom: 14px;
+        }
+
+        /* ============== BANNER ============== */
+        .tmr-fb-banner {
+            position: relative;
+            padding: 18px 22px;
+            border-radius: 8px;
+            background:
+                linear-gradient(135deg, var(--tmr-fb-banner) 0%, var(--tmr-fb-banner-2) 100%);
+            color: #F1F5F9;
+            border: 1px solid #0B0E14;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .tmr-fb-banner::after {
+            content: "";
+            position: absolute;
+            right: -60px;
+            top: -40px;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(34, 211, 238, 0.18), transparent 70%);
+            pointer-events: none;
+        }
+        .tmr-fb-banner-eyebrow {
+            display: inline-block;
+            color: var(--tmr-fb-cyan);
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .tmr-fb-banner-headline {
+            font-size: 1.18rem;
+            font-weight: 800;
+            line-height: 1.35;
+            color: #FFFFFF;
+            margin-bottom: 4px;
+            position: relative;
+        }
+        .tmr-fb-banner-sub {
+            color: #B8C2D1;
+            font-size: 0.86rem;
+            line-height: 1.5;
+            max-width: 720px;
+            position: relative;
+        }
+
+        /* ============== THREAD ACTION ROW ============== */
+        .tmr-fb-actionrow {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 10px 12px;
+            background: var(--tmr-fb-content);
+            border: 1px solid var(--tmr-fb-border);
+            border-radius: 6px 6px 0 0;
+            border-bottom: none;
+        }
+        .tmr-fb-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 12px;
+            border-radius: 4px;
+            border: 1px solid var(--tmr-fb-border-strong);
+            background: linear-gradient(180deg, #FFFFFF 0%, #EFF2F7 100%);
+            color: var(--tmr-fb-text);
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .tmr-fb-action-btn:hover {
+            background: linear-gradient(180deg, #FFFFFF 0%, #E2E8F2 100%);
+            color: var(--tmr-fb-link-hover);
+            text-decoration: none;
+        }
+        .tmr-fb-action-btn.is-primary {
+            background: var(--tmr-fb-blue);
+            color: #FFFFFF;
+            border-color: var(--tmr-fb-link-hover);
+        }
+        .tmr-fb-action-btn.is-primary:hover {
+            background: #1E4FCD;
+            color: #FFFFFF;
+        }
+        .tmr-fb-action-btn i { font-size: 0.78rem; }
+        .tmr-fb-actionrow-spacer { flex: 1; }
+        .tmr-fb-action-search {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tmr-fb-action-search input {
+            width: 200px;
+            height: 32px;
+            padding: 0 10px;
+            border: 1px solid var(--tmr-fb-border-strong);
+            border-radius: 4px;
+            font-size: 0.82rem;
+            background: #FFFFFF;
+            color: var(--tmr-fb-text);
+        }
+
+        /* ============== THREAD TABLE ============== */
+        .tmr-fb-table-wrap {
+            border: 1px solid var(--tmr-fb-border);
+            background: var(--tmr-fb-content);
+            border-radius: 0 0 6px 6px;
+            overflow-x: auto;
+        }
+        .thread-table,
+        .cat-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.86rem;
+            color: var(--tmr-fb-text);
+            background: var(--tmr-fb-content) !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
+        .thread-table thead th,
+        .cat-table thead th {
+            background: linear-gradient(180deg, #2A3142 0%, #1C2230 100%) !important;
+            color: #E2E8F0 !important;
+            text-align: left;
+            padding: 9px 14px !important;
+            font-size: 0.7rem !important;
+            font-weight: 700;
+            letter-spacing: 0.08em !important;
+            text-transform: uppercase;
+            border: none !important;
+            border-bottom: 1px solid #0B0E14 !important;
+            white-space: nowrap;
+        }
+        .thread-table thead th.col-num,
+        .cat-table thead th.col-num,
+        .thread-table thead th.col-rating,
+        .thread-table thead th.col-last,
+        .cat-table thead th.col-last { text-align: center; width: 110px; }
+        .thread-table thead th.col-last,
+        .cat-table thead th.col-last { width: 220px; text-align: left; }
+
+        .thread-table tbody tr,
+        .cat-table tbody tr {
+            cursor: pointer;
+            border-bottom: 1px solid #E5E9F0;
+            background: #FFFFFF !important;
+            transition: background 0.12s ease;
+        }
+        .thread-table tbody tr:nth-child(even),
+        .cat-table tbody tr:nth-child(even) { background: var(--tmr-fb-row-alt) !important; }
+        .thread-table tbody tr:hover,
+        .cat-table tbody tr:hover { background: var(--tmr-fb-row-hover) !important; }
+        .thread-table tbody tr:last-child,
+        .cat-table tbody tr:last-child { border-bottom: none; }
+
+        .thread-table td,
+        .cat-table td {
+            padding: 11px 14px !important;
+            color: var(--tmr-fb-text) !important;
+            vertical-align: middle;
+            border: none !important;
+            font-size: 0.86rem;
+        }
+        .thread-table td.col-num,
+        .cat-table td.col-num { text-align: center; font-weight: 700; color: var(--tmr-fb-muted) !important; }
+        .thread-table td.col-rating { text-align: center; color: var(--tmr-fb-amber); }
+        .thread-table td.col-last,
+        .cat-table td.col-last { color: var(--tmr-fb-muted) !important; font-size: 0.8rem; }
+
+        /* Thread row layout */
+        .tmr-fb-thread-cell {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        .tmr-fb-thread-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            background: #DDE3ED;
+            color: var(--tmr-fb-link);
+            font-size: 0.84rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .tmr-fb-thread-icon.is-pinned {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+        .tmr-fb-thread-icon.is-hot {
+            background: #FEE2E2;
+            color: #B91C1C;
+        }
+        .tmr-fb-thread-icon.is-locked {
+            background: #E5E7EB;
+            color: #4B5563;
+        }
+        .tmr-fb-thread-body { min-width: 0; flex: 1; }
+        .tmr-fb-thread-title {
+            color: var(--tmr-fb-link);
+            font-weight: 700;
+            font-size: 0.94rem;
+            line-height: 1.3;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        .tmr-fb-thread-title:hover { color: var(--tmr-fb-link-hover); text-decoration: underline; }
+        .tmr-fb-pin-tag {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 3px;
+            background: #FEF3C7;
+            color: #92400E;
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+        .tmr-fb-sample-tag {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 3px;
+            background: #E0E7FF;
+            color: #3730A3;
+            font-size: 0.6rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+        .tmr-fb-thread-meta {
+            color: var(--tmr-fb-muted);
+            font-size: 0.78rem;
+            margin-top: 2px;
+        }
+        .tmr-fb-thread-meta strong { color: var(--tmr-fb-text); font-weight: 700; }
+        .tmr-fb-rating-stars { color: var(--tmr-fb-amber); letter-spacing: 1px; }
+
+        .tmr-fb-lastpost {
+            font-size: 0.78rem;
+            line-height: 1.4;
+        }
+        .tmr-fb-lastpost-title {
+            color: var(--tmr-fb-link);
+            font-weight: 700;
+            display: block;
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .tmr-fb-lastpost-meta { color: var(--tmr-fb-muted); }
+
+        /* Empty / loading states inside table */
+        .empty-msg {
+            padding: 32px 20px !important;
+            text-align: center;
+            color: var(--tmr-fb-muted) !important;
+            background: var(--tmr-fb-content);
+        }
+        .empty-msg .icon { font-size: 2rem; margin-bottom: 8px; opacity: 0.5; }
+
+        /* ============== CATEGORY GROUP HEADERS (forum index) ============== */
+        .group-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+            padding: 10px 14px;
+            background: linear-gradient(180deg, #2A3142 0%, #1C2230 100%);
+            color: #F1F5F9;
+            border: 1px solid #0B0E14;
+            border-bottom: none;
+            margin-top: 12px;
+        }
+        .group-header:first-child { margin-top: 0; }
+        .group-header-title {
+            font-weight: 800;
+            font-size: 0.94rem;
+            letter-spacing: 0.02em;
+        }
+        .group-header-meta {
+            color: #B8C2D1;
+            font-size: 0.78rem;
+        }
+        .group-header + .cat-table {
+            border-radius: 0 0 6px 6px;
+            border: 1px solid var(--tmr-fb-border);
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .cat-table .cat-info {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .cat-table .cat-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 6px;
+            background: #E0E7F2;
+            color: var(--tmr-fb-link);
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        .cat-table .cat-name {
+            color: var(--tmr-fb-link);
+            font-weight: 800;
+            font-size: 0.96rem;
+        }
+        .cat-table .cat-desc {
+            color: var(--tmr-fb-muted);
+            font-size: 0.82rem;
+            margin-top: 2px;
+            line-height: 1.4;
+        }
+
+        /* ============== STATS BAR (compact under banner if shown) ============== */
+        .stats-bar {
+            display: flex !important;
+            gap: 0 !important;
+            padding: 0 !important;
+            margin: 0 0 16px !important;
+            background: var(--tmr-fb-content) !important;
+            border: 1px solid var(--tmr-fb-border) !important;
+            border-radius: 6px !important;
+            color: var(--tmr-fb-text) !important;
+            box-shadow: none !important;
+            overflow: hidden;
+        }
+        .stats-bar > div {
+            flex: 1;
+            padding: 10px 14px;
+            border-right: 1px solid var(--tmr-fb-border);
+            font-size: 0.84rem;
+        }
+        .stats-bar > div:last-child { border-right: none; }
+        .stats-bar strong { color: var(--tmr-fb-text); font-weight: 800; margin-right: 6px; }
+        .stats-bar .stats-label { color: var(--tmr-fb-muted) !important; font-weight: 600; font-size: 0.8rem; }
+
+        /* ============== THREAD DETAIL VIEW ============== */
+        .toolbar {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 10px 14px !important;
+            background: var(--tmr-fb-content) !important;
+            border: 1px solid var(--tmr-fb-border) !important;
+            border-radius: 6px 6px 0 0 !important;
+            border-bottom: none !important;
+            color: var(--tmr-fb-text) !important;
+            box-shadow: none !important;
+            flex-wrap: wrap;
+        }
+        .toolbar-label { color: var(--tmr-fb-muted) !important; font-size: 0.8rem; }
+        .toolbar strong { color: var(--tmr-fb-text); font-weight: 800; }
+        .toolbar-right { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .post-shell {
+            background: var(--tmr-fb-content);
+            border: 1px solid var(--tmr-fb-border);
+            border-radius: 6px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .post-shell.op-card { border-color: #B5C4DE; }
+        .post-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            background: linear-gradient(180deg, #F4F6FA 0%, #E7ECF3 100%);
+            border-bottom: 1px solid var(--tmr-fb-border);
+            color: var(--tmr-fb-muted);
+            font-size: 0.8rem;
+        }
+        .post-author-name { color: var(--tmr-fb-text); font-weight: 800; }
+        .post-number { font-family: 'JetBrains Mono', 'Consolas', monospace; }
+        .post-layout {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+        }
+        .post-user-pane {
+            padding: 14px;
+            background: var(--tmr-fb-row-alt);
+            border-right: 1px solid var(--tmr-fb-border);
+        }
+        .post-user-name {
+            font-weight: 800;
+            color: var(--tmr-fb-link);
+            margin-bottom: 8px;
+        }
+        .post-user-avatar {
+            display: block;
+            width: 80px;
+            height: 80px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 1px solid var(--tmr-fb-border);
+            margin-bottom: 10px;
+        }
+        .post-user-stats { color: var(--tmr-fb-muted); font-size: 0.78rem; line-height: 1.55; }
+        .post-user-stats strong { color: var(--tmr-fb-text); }
+        .post-main-pane { padding: 16px; }
+        .post-body {
+            color: var(--tmr-fb-text);
+            font-size: 0.92rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        .post-body h2 {
+            font-size: 1.15rem;
+            color: var(--tmr-fb-text);
+            margin-bottom: 10px;
+        }
+        .post-footer-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid #E5E9F0;
+        }
+        .vote-btns {
+            display: flex;
+            gap: 6px;
+        }
+        .vote-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid var(--tmr-fb-border-strong);
+            background: #FFFFFF;
+            color: var(--tmr-fb-text);
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .vote-btn:hover {
+            background: var(--tmr-fb-row-hover);
+            color: var(--tmr-fb-link-hover);
+            text-decoration: none;
+        }
+
+        .reply-box {
+            background: var(--tmr-fb-content) !important;
+            border: 1px solid var(--tmr-fb-border) !important;
+            border-radius: 6px !important;
+            padding: 16px !important;
+            color: var(--tmr-fb-text) !important;
+            box-shadow: none !important;
+            margin-top: 14px;
+        }
+        .reply-box h3 { color: var(--tmr-fb-text); font-size: 1rem; margin-bottom: 10px; }
+        .reply-box textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--tmr-fb-border-strong);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.88rem;
+            color: var(--tmr-fb-text);
+            background: #FFFFFF;
+            resize: vertical;
+            outline: none;
+        }
+        .reply-box textarea:focus { border-color: var(--tmr-fb-blue); }
+        .login-prompt {
+            padding: 14px;
+            background: var(--tmr-fb-row-alt);
+            border: 1px dashed var(--tmr-fb-border-strong);
+            border-radius: 6px;
+            color: var(--tmr-fb-muted);
+            font-size: 0.88rem;
+            text-align: center;
+        }
+
+        /* ============== BUTTONS (modal etc.) ============== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px !important;
+            border-radius: 6px !important;
+            font-family: inherit;
+            font-size: 0.84rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid transparent;
+            text-decoration: none;
+            box-shadow: none !important;
+        }
+        .btn-primary {
+            background: var(--tmr-fb-blue) !important;
+            color: #FFFFFF !important;
+            border-color: var(--tmr-fb-link-hover) !important;
+        }
+        .btn-primary:hover { background: #1E4FCD !important; color: #FFFFFF !important; }
+        .btn-outline {
+            background: #FFFFFF !important;
+            color: var(--tmr-fb-text) !important;
+            border-color: var(--tmr-fb-border-strong) !important;
+        }
+        .btn-outline:hover { background: var(--tmr-fb-row-alt) !important; color: var(--tmr-fb-link-hover) !important; }
+        .btn-sm { padding: 6px 12px !important; font-size: 0.78rem !important; }
+
+        /* ============== MODAL ============== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(20, 24, 31, 0.6);
+            z-index: 9000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            width: 100%;
+            max-width: 580px;
+            background: var(--tmr-fb-content);
+            border: 1px solid var(--tmr-fb-border);
+            border-radius: 10px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+            overflow: hidden;
+        }
+        .modal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            background: linear-gradient(180deg, #2A3142 0%, #1C2230 100%);
+            color: #F1F5F9;
+        }
+        .modal-head h3 { color: #FFFFFF; font-size: 1.02rem; font-weight: 800; }
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: #CBD5E1;
+            font-size: 1.6rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+        .modal-body { padding: 18px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label {
+            display: block;
+            color: var(--tmr-fb-text);
+            font-weight: 700;
+            font-size: 0.84rem;
+            margin-bottom: 6px;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid var(--tmr-fb-border-strong);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.88rem;
+            color: var(--tmr-fb-text);
+            background: #FFFFFF;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus { border-color: var(--tmr-fb-blue); outline: none; }
+
+        /* Loading spinner */
+        .tmr-loading-state { padding: 50px 20px !important; }
+        .tmr-loading-state .tmr-spinner {
+            border-color: rgba(37, 99, 235, 0.18) !important;
+            border-top-color: var(--tmr-fb-blue) !important;
+        }
+        .tmr-loading-state p { color: var(--tmr-fb-muted) !important; }
+
+        /* Search results pill on a thread row */
+        .tag-pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #E0E7F2;
+            color: var(--tmr-fb-link-hover);
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .pin-badge { display: none; }
+        .thread-prefix { display: none; }
+        .thread-title-line { display: contents; }
+        .thread-title-link { display: inline; }
+        .thread-meta { color: var(--tmr-fb-muted); font-size: 0.78rem; margin-top: 3px; }
+        .last-post-info .last-post-title { color: var(--tmr-fb-link); font-weight: 700; }
+        .last-post-info .last-post-meta { color: var(--tmr-fb-muted); font-size: 0.78rem; }
+        .no-posts { color: var(--tmr-fb-muted); font-size: 0.78rem; font-style: italic; }
+
+        /* Forum jump row */
+        .forum-jump-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            background: var(--tmr-fb-content);
+            border: 1px solid var(--tmr-fb-border);
+            border-radius: 6px;
+            margin-top: 14px;
+            color: var(--tmr-fb-muted);
+            font-size: 0.84rem;
+            flex-wrap: wrap;
+        }
+        .forum-jump-row select {
+            padding: 7px 10px;
+            border: 1px solid var(--tmr-fb-border-strong);
+            border-radius: 6px;
+            background: #FFFFFF;
+            color: var(--tmr-fb-text);
+            font-family: inherit;
+            font-size: 0.82rem;
+        }
+
+        /* Hide legacy elements that don't fit the new layout */
+        .forum-utility-bar,
+        .forum-banner,
+        .search-row,
+        .forum-bottom-panel { display: none !important; }
+
+        /* ============== RESPONSIVE ============== */
+        @media (max-width: 960px) {
+            .tmr-fb-shell {
+                grid-template-columns: 1fr;
+                padding: 14px 14px 40px;
+            }
+            .tmr-fb-sidebar {
+                position: static;
+            }
+            .tmr-fb-sidebar-toggle { display: block; }
+            .tmr-fb-sidebar-collapsible {
+                display: none;
+                padding-top: 4px;
+                padding-bottom: 8px;
+            }
+            .tmr-fb-sidebar.is-open .tmr-fb-sidebar-collapsible { display: block; }
+            .tmr-fb-sidebar.is-open .tmr-fb-sidebar-toggle::after { content: "\25B2"; }
+            .post-layout { grid-template-columns: 1fr; }
+            .post-user-pane {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                border-right: none;
+                border-bottom: 1px solid var(--tmr-fb-border);
+            }
+            .post-user-avatar { width: 48px; height: 48px; margin-bottom: 0; }
+            .tmr-fb-action-search input { width: 140px; }
+            .thread-table thead th.col-num,
+            .cat-table thead th.col-num { display: none; }
+            .thread-table tbody td.col-num,
+            .cat-table tbody td.col-num { display: none; }
+        }
+
+        @media (max-width: 640px) {
+            .tmr-fb-page-title { font-size: 1.4rem; }
+            .tmr-fb-banner { padding: 14px; }
+            .tmr-fb-banner-headline { font-size: 1rem; }
+            .tmr-fb-table-wrap { overflow-x: auto; }
+            .thread-table, .cat-table { min-width: 560px; }
+            .stats-bar { flex-direction: column; }
+            .stats-bar > div { border-right: none; border-bottom: 1px solid var(--tmr-fb-border); }
+            .stats-bar > div:last-child { border-bottom: none; }
+        }
     </style>
 </head>
 <body>
 
-<!-- NAV BAR -->
+<!-- LEGACY HEADER (hidden via CSS, IDs preserved for JS) -->
     <header>
         <div class="header-content">
             <a href="/" class="logo">TRUST<span>MY</span>RECORD</a>
             <nav class="nav-links">
-                <a href="/" class="nav-link">Home</a>
-                <a href="/sportsbook/" class="nav-link">Sportsbook</a>
-                <a href="/feed/" class="nav-link">Feed</a>
-                <a href="/arena/" class="nav-link">Arena</a>
                 <a href="/forum/" class="nav-link active">Forum</a>
-                <a href="/messages/" class="nav-link">Messages</a>
-                <a href="/profile/" class="nav-link">My Profile</a>
             </nav>
             <div class="nav-auth">
-                    <a href="/sportsbook.html#login" class="nav-link nav-auth-login" id="forumHeaderLoginBtn">Log In</a>
-                    <a href="/sportsbook.html#register" class="nav-link nav-auth-register" id="forumHeaderRegisterBtn">Register</a>
+                <a href="/sportsbook.html#login" class="nav-link nav-auth-login" id="forumHeaderLoginBtn">Log In</a>
+                <a href="/sportsbook.html#register" class="nav-link nav-auth-register" id="forumHeaderRegisterBtn">Register</a>
             </div>
         </div>
     </header>
 
-<!-- MAIN WRAP -->
-<div class="forum-wrap">
+<!-- ================= TOP FORUM TOOLBAR ================= -->
+<div class="tmr-fb-topbar">
+    <div class="tmr-fb-topbar-inner">
+        <a href="/forum/" class="tmr-fb-brand" onclick="event.preventDefault();showCategories();">
+            <span class="tmr-fb-brand-mark">TR</span>
+            TrustMyRecord <small>Forums</small>
+        </a>
 
-    <div class="forum-utility-bar">
-        <div class="forum-utility-actions">
-            <button type="button" onclick="showCategories()">Forum Home</button>
-            <a href="/">Site Home</a>
+        <div class="tmr-fb-search">
+            <input type="search" id="searchInput" placeholder="Search threads, posts, members..." onkeyup="handleSearch(this.value)" autocomplete="off">
         </div>
-        <div class="forum-utility-status">Live Data Only</div>
-    </div>
 
-    <!-- BREADCRUMB -->
-    <div class="breadcrumb" id="breadcrumb">
-        <a onclick="showCategories()">Forums</a>
+        <nav class="tmr-fb-topnav" aria-label="Forum top nav">
+            <a href="#" onclick="event.preventDefault();showCategories();"><i class="fas fa-newspaper"></i> New Posts</a>
+            <a href="/notifications/"><i class="fas fa-bell"></i> Subscribed</a>
+            <a href="/messages/"><i class="fas fa-envelope"></i> Messages</a>
+            <a href="/profile/"><i class="fas fa-user"></i> Profile</a>
+            <button type="button" class="tmr-fb-cta" onclick="openNewThread()"><i class="fas fa-plus"></i> Create Thread</button>
+        </nav>
     </div>
+</div>
 
-    <!-- ================= CATEGORIES VIEW ================= -->
-    <div id="viewCategories">
-        <div class="forum-banner">
-            <h1>TrustMyRecord <span>Forums</span></h1>
-            <p>A sharper message board for bettors who want history, context, and receipts in the same place.</p>
-            <div class="forum-banner-subline">Browse categories, open threads, and follow real discussion without padded demo accounts, fake record screenshots, or filler posts pretending to be traction.</div>
-            <div class="forum-trust-note">Forum talk matters most when it points back to a public ledger. Picks lock on-platform, history stays visible, and the strongest opinions here should survive contact with a verified record.</div>
-            <div class="forum-banner-actions">
-                <a href="/sportsbook.html#register" class="forum-primary-action">Become a Founding Capper</a>
-                <a href="/sportsbook/" class="forum-secondary-action">Open Picks Board</a>
+<!-- ================= BODY GRID: SIDEBAR + MAIN ================= -->
+<div class="tmr-fb-shell">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="tmr-fb-sidebar" id="forumSidebar" aria-label="Forum categories">
+        <button type="button" class="tmr-fb-sidebar-toggle" onclick="document.getElementById('forumSidebar').classList.toggle('is-open');">Browse Forums</button>
+        <div class="tmr-fb-sidebar-collapsible">
+
+            <div class="tmr-fb-sidebar-section">
+                <div class="tmr-fb-sidebar-label">Sports Betting</div>
+                <ul class="tmr-fb-sidebar-list">
+                    <li><a data-cat-slug="sports-betting" class="is-active" onclick="onSidebarPick(this,'sports-betting','Sports Betting')">Sports Betting</a></li>
+                    <li><a data-cat-slug="betting-strategy" onclick="onSidebarPick(this,'betting-strategy','Betting Strategy')">Betting Strategy</a></li>
+                    <li><a data-cat-slug="verified-picks" onclick="onSidebarPick(this,'verified-picks','Verified Picks')">Verified Picks</a></li>
+                    <li><a data-cat-slug="pick-selling" onclick="onSidebarPick(this,'pick-selling','Pick Selling')">Pick Selling</a></li>
+                </ul>
+            </div>
+
+            <div class="tmr-fb-sidebar-divider"></div>
+            <div class="tmr-fb-sidebar-section">
+                <div class="tmr-fb-sidebar-label">Sports Forums</div>
+                <ul class="tmr-fb-sidebar-list">
+                    <li><a data-cat-slug="nfl" onclick="onSidebarPick(this,'nfl','NFL')">NFL</a></li>
+                    <li><a data-cat-slug="nba" onclick="onSidebarPick(this,'nba','NBA')">NBA</a></li>
+                    <li><a data-cat-slug="mlb" onclick="onSidebarPick(this,'mlb','MLB')">MLB</a></li>
+                    <li><a data-cat-slug="nhl" onclick="onSidebarPick(this,'nhl','NHL')">NHL</a></li>
+                    <li><a data-cat-slug="college-football" onclick="onSidebarPick(this,'college-football','College Football')">College Football</a></li>
+                    <li><a data-cat-slug="college-basketball" onclick="onSidebarPick(this,'college-basketball','College Basketball')">College Basketball</a></li>
+                    <li><a data-cat-slug="soccer" onclick="onSidebarPick(this,'soccer','Soccer')">Soccer</a></li>
+                    <li><a data-cat-slug="fantasy-sports" onclick="onSidebarPick(this,'fantasy-sports','Fantasy Sports')">Fantasy Sports</a></li>
+                </ul>
+            </div>
+
+            <div class="tmr-fb-sidebar-divider"></div>
+            <div class="tmr-fb-sidebar-section">
+                <div class="tmr-fb-sidebar-label">Competition</div>
+                <ul class="tmr-fb-sidebar-list">
+                    <li><a data-cat-slug="leagues-seasons" onclick="onSidebarPick(this,'leagues-seasons','Leagues and Seasons')">Leagues and Seasons</a></li>
+                    <li><a data-cat-slug="head-to-head" onclick="onSidebarPick(this,'head-to-head','Head to Head Challenges')">Head to Head Challenges</a></li>
+                    <li><a data-cat-slug="polls-trivia" onclick="onSidebarPick(this,'polls-trivia','Polls and Trivia')">Polls and Trivia</a></li>
+                </ul>
+            </div>
+
+            <div class="tmr-fb-sidebar-divider"></div>
+            <div class="tmr-fb-sidebar-section">
+                <div class="tmr-fb-sidebar-label">Community</div>
+                <ul class="tmr-fb-sidebar-list">
+                    <li><a data-cat-slug="general-discussion" onclick="onSidebarPick(this,'general-discussion','General Discussion')">General Discussion</a></li>
+                    <li><a data-cat-slug="site-announcements" onclick="onSidebarPick(this,'site-announcements','Site Announcements')">Site Announcements</a></li>
+                </ul>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN COLUMN -->
+    <main class="tmr-fb-main">
+
+        <div class="tmr-fb-breadcrumb breadcrumb" id="breadcrumb">
+            <a onclick="showCategories()">TrustMyRecord Forums</a>
+            <span class="sep">&rsaquo;</span>
+            <span id="forumPageTitleLabel">Sports Betting</span>
+        </div>
+
+        <h1 class="tmr-fb-page-title" id="forumPageTitle">Sports Betting</h1>
+
+        <div class="tmr-fb-banner">
+            <span class="tmr-fb-banner-eyebrow">TrustMyRecord</span>
+            <div class="tmr-fb-banner-headline">Build Your Record. Challenge the Board. Sell Your Edge.</div>
+            <div class="tmr-fb-banner-sub">Where sports bettors build verified records, run leagues, sell picks with receipts, and compete head-to-head for respect. Every thread here ties back to a public profile and locked pick history.</div>
+        </div>
+
+        <div class="tmr-fb-actionrow">
+            <button type="button" class="tmr-fb-action-btn is-primary" onclick="openNewThread()"><i class="fas fa-plus"></i> New Thread</button>
+            <button type="button" class="tmr-fb-action-btn" onclick="alert('Subscribed to this forum.');"><i class="fas fa-bell"></i> Subscribe</button>
+            <button type="button" class="tmr-fb-action-btn" onclick="document.getElementById('forumJumpSelect') && document.getElementById('forumJumpSelect').focus();"><i class="fas fa-tools"></i> Forum Tools</button>
+            <span class="tmr-fb-actionrow-spacer"></span>
+            <span class="tmr-fb-action-search">
+                <input type="search" id="forumScopedSearch" placeholder="Search This Forum" onkeyup="handleSearch(this.value)">
+                <button type="button" class="tmr-fb-action-btn" onclick="handleSearch(document.getElementById('forumScopedSearch').value)"><i class="fas fa-search"></i> Search</button>
+            </span>
+        </div>
+
+        <!-- ================= CATEGORIES VIEW (forum index) ================= -->
+        <div id="viewCategories">
+            <div class="stats-bar" aria-label="Board stats">
+                <div><strong id="statThreads">0</strong> <span class="stats-label">threads</span></div>
+                <div><strong id="statPosts">0</strong> <span class="stats-label">posts</span></div>
+                <div><strong id="statUsers">0</strong> <span class="stats-label">forums</span></div>
+                <div><strong id="statOnline">0</strong> <span class="stats-label">active forums</span></div>
+            </div>
+
+            <div class="tmr-fb-table-wrap" id="categoriesContainer"></div>
+
+            <!-- Sample sticky/recent threads listing on the index, structured like a real thread table.
+                 Tagged "Sample" so it's clear this is template content until real threads appear. -->
+            <div class="group-header" style="margin-top:18px;">
+                <div class="group-header-title">Sticky &amp; Recent Threads</div>
+                <div class="group-header-meta">Sample layout &mdash; replaced by live threads when posted</div>
+            </div>
+            <div class="tmr-fb-table-wrap">
+                <table class="thread-table" id="sampleSampleTable">
+                    <thead>
+                        <tr>
+                            <th>Thread / Thread Starter</th>
+                            <th class="col-rating">Rating</th>
+                            <th class="col-last">Last Post</th>
+                            <th class="col-num">Replies</th>
+                            <th class="col-num">Views</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sampleThreadBody"></tbody>
+                </table>
             </div>
         </div>
 
-        <div class="stats-bar">
-            <div><strong id="statThreads">0</strong> <span class="stats-label">threads</span></div>
-            <div><strong id="statPosts">0</strong> <span class="stats-label">posts</span></div>
-            <div><strong id="statUsers">0</strong> <span class="stats-label">forums</span></div>
-            <div><strong id="statOnline">0</strong> <span class="stats-label">active forums</span></div>
-        </div>
-
-        <div class="search-row">
-            <input type="text" id="searchInput" placeholder="Search all forums..." onkeyup="handleSearch(this.value)">
-        </div>
-
-        <div id="categoriesContainer"></div>
-    </div>
-
-    <!-- ================= THREADS VIEW ================= -->
-    <div id="viewThreads" style="display:none;">
-        <div class="toolbar">
-            <div class="toolbar-left">
-                <span class="toolbar-label">Viewing:</span>
-                <strong id="threadsCategoryLabel">Forum</strong>
-            </div>
-            <div class="toolbar-right">
-                <button class="btn btn-primary btn-sm" type="button" onclick="openNewThread()">Start New Thread</button>
-                <button class="btn btn-outline btn-sm" type="button" onclick="showCategories()">Back to Categories</button>
-            </div>
-        </div>
-
-        <table class="thread-table">
-            <thead>
-                <tr>
-                    <th>Thread / Author</th>
-                    <th class="col-num">Replies</th>
-                    <th class="col-num">Views</th>
-                    <th class="col-last">Last Post</th>
-                </tr>
-            </thead>
-            <tbody id="threadsBody"></tbody>
-        </table>
-
-        <div class="forum-jump-row">
-            <div>Use the board below to move between live forum categories without filler data.</div>
-            <select id="forumJumpSelect" onchange="handleForumJump(this.value)"></select>
-        </div>
-    </div>
-
-    <!-- ================= THREAD DETAIL VIEW ================= -->
-    <div id="viewThread" style="display:none;">
-        <div class="toolbar">
-            <div class="toolbar-left">
-                <button class="btn btn-outline btn-sm" type="button" onclick="backToThreads()">Back to Thread List</button>
-            </div>
-            <div class="toolbar-right">
-                <button class="btn btn-primary btn-sm" type="button" onclick="openNewThread()">Start New Thread</button>
-            </div>
-        </div>
-
-        <div id="postsContainer"></div>
-
-        <div class="reply-box">
-            <h3>Quick Reply</h3>
-            <div id="replyArea"></div>
-        </div>
-    </div>
-
-    <div class="forum-bottom-panel">
-        <div class="forum-bottom-head">How this forum should work</div>
-        <div class="forum-bottom-body">
-            <div class="forum-bottom-grid">
-                <div class="forum-bottom-card">
-                    <strong>Record first</strong>
-                    Strong threads should connect back to a visible capper profile and locked pick history.
+        <!-- ================= THREADS VIEW (one category) ================= -->
+        <div id="viewThreads" style="display:none;">
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <span class="toolbar-label">Viewing:</span>
+                    <strong id="threadsCategoryLabel">Forum</strong>
                 </div>
-                <div class="forum-bottom-card">
-                    <strong>No fake traction</strong>
-                    Empty categories are better than made-up usernames, padded threads, or fake community noise.
-                </div>
-                <div class="forum-bottom-card">
-                    <strong>Receipts matter</strong>
-                    The best posts here should age against the board, the ledger, and the public scoreboard.
-                </div>
-                <div class="forum-bottom-card">
-                    <strong>Start early</strong>
-                    If you join early, your record and your forum footprint both begin from zero in public.
+                <div class="toolbar-right">
+                    <button class="btn btn-primary btn-sm" type="button" onclick="openNewThread()">Start New Thread</button>
+                    <button class="btn btn-outline btn-sm" type="button" onclick="showCategories()">Back to Forum Home</button>
                 </div>
             </div>
-        </div>
-    </div>
 
+            <div class="tmr-fb-table-wrap">
+                <table class="thread-table">
+                    <thead>
+                        <tr>
+                            <th>Thread / Thread Starter</th>
+                            <th class="col-rating">Rating</th>
+                            <th class="col-last">Last Post</th>
+                            <th class="col-num">Replies</th>
+                            <th class="col-num">Views</th>
+                        </tr>
+                    </thead>
+                    <tbody id="threadsBody"></tbody>
+                </table>
+            </div>
+
+            <div class="forum-jump-row">
+                <div>Jump to a different forum:</div>
+                <select id="forumJumpSelect" onchange="handleForumJump(this.value)"></select>
+            </div>
+        </div>
+
+        <!-- ================= THREAD DETAIL VIEW ================= -->
+        <div id="viewThread" style="display:none;">
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <button class="btn btn-outline btn-sm" type="button" onclick="backToThreads()">Back to Thread List</button>
+                </div>
+                <div class="toolbar-right">
+                    <button class="btn btn-primary btn-sm" type="button" onclick="openNewThread()">Start New Thread</button>
+                </div>
+            </div>
+
+            <div id="postsContainer"></div>
+
+            <div class="reply-box">
+                <h3>Quick Reply</h3>
+                <div id="replyArea"></div>
+            </div>
+        </div>
+
+    </main>
 </div>
 
 <!-- NEW THREAD MODAL -->
@@ -1348,11 +2246,97 @@ function showCategories() {
     document.getElementById('viewThreads').style.display = 'none';
     document.getElementById('viewThread').style.display = 'none';
 
-    document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">Forums</a>';
+    setForumPageHeader('Sports Betting');
+    setActiveSidebar('sports-betting');
+    document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span id="forumPageTitleLabel">Sports Betting</span>';
     window.history.replaceState({}, '', '/forum/');
     renderCategories();
+    renderSampleThreads();
     updateStats();
     updateForumJump();
+}
+
+function setForumPageHeader(title) {
+    var titleEl = document.getElementById('forumPageTitle');
+    if (titleEl) titleEl.textContent = title;
+    var crumbLabel = document.getElementById('forumPageTitleLabel');
+    if (crumbLabel) crumbLabel.textContent = title;
+}
+
+function setActiveSidebar(slug) {
+    var links = document.querySelectorAll('.tmr-fb-sidebar-list a[data-cat-slug]');
+    links.forEach(function(a) {
+        a.classList.toggle('is-active', a.getAttribute('data-cat-slug') === slug);
+    });
+}
+
+function onSidebarPick(el, slug, name) {
+    setActiveSidebar(slug);
+    setForumPageHeader(name);
+    var match = (categories || []).find(function(c) { return (c.slug || '') === slug; });
+    if (match) {
+        showThreadsList(match.slug, match.name, match.id);
+    } else {
+        // Slug not present in live category list yet — show categories index with title swapped.
+        currentCategorySlug = null;
+        currentCategoryId = null;
+        currentCategoryName = name;
+        document.getElementById('viewCategories').style.display = '';
+        document.getElementById('viewThreads').style.display = 'none';
+        document.getElementById('viewThread').style.display = 'none';
+        document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span>' + escHtml(name) + '</span>';
+        window.history.replaceState({}, '', '/forum/#cat-' + encodeURIComponent(slug));
+        renderSampleThreads();
+    }
+}
+
+// Sample sticky/recent threads used as a layout demonstration on the index.
+// Marked SAMPLE so users can see the table shape until live threads are posted.
+var TMR_FORUM_SAMPLE_THREADS = [
+    { title: 'TrustMyRecord Forum Rules and Posting Guidelines', sticky: true, hot: false, sample: true, starter: 'TrustMyRecord', stars: 5, lastPoster: 'TrustMyRecord', lastTitle: 'Rules and Posting Guidelines', lastTime: 'Today', replies: 0, views: 0 },
+    { title: 'How Verified Records Work', sticky: true, hot: false, sample: true, starter: 'TrustMyRecord', stars: 5, lastPoster: 'TrustMyRecord', lastTitle: 'How Verified Records Work', lastTime: 'Today', replies: 0, views: 0 },
+    { title: 'Official Sports Betting Discussion Thread', sticky: false, hot: true, sample: true, starter: 'Handicapper', stars: 0, lastPoster: '—', lastTitle: 'Discussion', lastTime: '—', replies: 0, views: 0 },
+    { title: '2026 MLB Picks', sticky: false, hot: false, sample: true, starter: 'Handicapper', stars: 0, lastPoster: '—', lastTitle: '2026 MLB Picks', lastTime: '—', replies: 0, views: 0 },
+    { title: 'NBA Game Board Discussion', sticky: false, hot: false, sample: true, starter: 'Handicapper', stars: 0, lastPoster: '—', lastTitle: 'NBA Game Board', lastTime: '—', replies: 0, views: 0 },
+    { title: 'NFL Futures and Season Long Bets', sticky: false, hot: false, sample: true, starter: 'Handicapper', stars: 0, lastPoster: '—', lastTitle: 'NFL Futures', lastTime: '—', replies: 0, views: 0 },
+    { title: 'Pick Seller Questions and Marketplace Rules', sticky: false, hot: false, sample: true, starter: 'TrustMyRecord', stars: 0, lastPoster: '—', lastTitle: 'Marketplace Rules', lastTime: '—', replies: 0, views: 0 },
+    { title: 'Head to Head Challenge Requests', sticky: false, hot: false, sample: true, starter: 'Handicapper', stars: 0, lastPoster: '—', lastTitle: 'Challenge Requests', lastTime: '—', replies: 0, views: 0 },
+    { title: 'Create a League or Season', sticky: false, hot: false, sample: true, starter: 'Handicapper', stars: 0, lastPoster: '—', lastTitle: 'Leagues', lastTime: '—', replies: 0, views: 0 },
+    { title: 'Polls, Trivia, and Community Bets', sticky: false, hot: false, sample: true, starter: 'TrustMyRecord', stars: 0, lastPoster: '—', lastTitle: 'Polls and Trivia', lastTime: '—', replies: 0, views: 0 }
+];
+
+function renderSampleThreads() {
+    var body = document.getElementById('sampleThreadBody');
+    if (!body) return;
+    body.innerHTML = TMR_FORUM_SAMPLE_THREADS.map(function(t) {
+        var iconClass = 'tmr-fb-thread-icon';
+        var iconChar = 'T';
+        if (t.sticky) { iconClass += ' is-pinned'; iconChar = '★'; }
+        else if (t.hot) { iconClass += ' is-hot'; iconChar = ''; }
+        var stars = '';
+        if (t.stars) {
+            for (var i = 0; i < t.stars; i++) stars += '★';
+        }
+        var stickyTag = t.sticky ? '<span class="tmr-fb-pin-tag">Sticky</span>' : '';
+        var sampleTag = t.sample ? '<span class="tmr-fb-sample-tag">Sample</span>' : '';
+        return '<tr onclick="openNewThread()">' +
+            '<td><div class="tmr-fb-thread-cell">' +
+                '<span class="' + iconClass + '">' + (t.sticky ? '★' : (t.hot ? '\u{1F525}' : 'T')) + '</span>' +
+                '<div class="tmr-fb-thread-body">' +
+                    stickyTag + sampleTag +
+                    '<a class="tmr-fb-thread-title" href="#" onclick="event.preventDefault();event.stopPropagation();openNewThread();">' + escHtml(t.title) + '</a>' +
+                    '<div class="tmr-fb-thread-meta">Started by <strong>' + escHtml(t.starter) + '</strong></div>' +
+                '</div>' +
+            '</div></td>' +
+            '<td class="col-rating"><span class="tmr-fb-rating-stars">' + stars + '</span></td>' +
+            '<td class="col-last"><div class="tmr-fb-lastpost">' +
+                '<span class="tmr-fb-lastpost-title">' + escHtml(t.lastTitle) + '</span>' +
+                '<span class="tmr-fb-lastpost-meta">' + escHtml(t.lastTime) + ' &middot; by <strong>' + escHtml(t.lastPoster) + '</strong></span>' +
+            '</div></td>' +
+            '<td class="col-num">' + t.replies + '</td>' +
+            '<td class="col-num">' + t.views + '</td>' +
+        '</tr>';
+    }).join('');
 }
 
 async function showThreadsList(slug, name, id) {
@@ -1366,7 +2350,9 @@ async function showThreadsList(slug, name, id) {
     document.getElementById('viewThreads').style.display = '';
     document.getElementById('viewThread').style.display = 'none';
     document.getElementById('threadsCategoryLabel').textContent = currentCategoryName || 'Forum';
-    document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">Forums</a><span class="sep">&raquo;</span><span>' + escHtml(currentCategoryName || slug || 'Forum') + '</span>';
+    setForumPageHeader(currentCategoryName || 'Forum');
+    setActiveSidebar(slug);
+    document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span>' + escHtml(currentCategoryName || slug || 'Forum') + '</span>';
     if (slug) {
         window.history.replaceState({}, '', '/forum/#cat-' + encodeURIComponent(slug));
     }
@@ -1489,7 +2475,7 @@ function handleForumJump(slug) {
 // ================================================================
 async function loadThreads() {
     var body = document.getElementById('threadsBody');
-    body.innerHTML = '<tr><td colspan="4" class="empty-msg">Loading threads...</td></tr>';
+    body.innerHTML = '<tr><td colspan="5" class="empty-msg">Loading threads...</td></tr>';
 
     try {
         var isFallbackCategory = fallbackCategories.some(function(cat) {
@@ -1520,23 +2506,34 @@ function renderThreads() {
     var body = document.getElementById('threadsBody');
 
     if (cachedThreads.length === 0) {
-        body.innerHTML = '<tr><td colspan="4" class="empty-msg"><div class="icon">&#x1F4AC;</div><div>No threads yet. Be the first to start a discussion backed by a real pick angle, receipt, or record-based opinion.</div></td></tr>';
+        body.innerHTML = '<tr><td colspan="5" class="empty-msg"><div class="icon">&#x1F4AC;</div><div>No threads yet. Be the first to start a discussion backed by a real pick angle, receipt, or record-based opinion.</div></td></tr>';
         return;
     }
 
     body.innerHTML = cachedThreads.map(function(t) {
         var lastUser = t.last_post_username || t.username || '';
         var lastTime = t.last_post_at || t.created_at;
-        var pinHtml = t.is_pinned ? '<span class="pin-badge">PINNED</span>' : '';
         var replyCount = parseInt(t.post_count) || parseInt(t.reply_count) || 0;
         var viewCount = parseInt(t.view_count) || 0;
-        var prefix = t.is_pinned ? '!' : 'T';
+        var iconClass = 'tmr-fb-thread-icon' + (t.is_pinned ? ' is-pinned' : (replyCount >= 50 ? ' is-hot' : ''));
+        var iconChar = t.is_pinned ? '★' : (replyCount >= 50 ? '\u{1F525}' : 'T');
+        var stickyTag = t.is_pinned ? '<span class="tmr-fb-pin-tag">Sticky</span>' : '';
 
         return '<tr class="' + (t.is_pinned ? 'pinned' : '') + '" onclick="showThreadDetail(' + t.id + ')">' +
-            '<td><div class="thread-title-line"><span class="thread-prefix">' + prefix + '</span>' + pinHtml + '<span class="thread-title-link">' + escHtml(t.title) + '</span></div><div class="thread-meta">Started by <strong>' + escHtml(t.username || '') + '</strong>, ' + timeAgo(t.created_at) + '</div></td>' +
+            '<td><div class="tmr-fb-thread-cell">' +
+                '<span class="' + iconClass + '">' + iconChar + '</span>' +
+                '<div class="tmr-fb-thread-body">' +
+                    stickyTag +
+                    '<a class="tmr-fb-thread-title" href="#" onclick="event.preventDefault();event.stopPropagation();showThreadDetail(' + t.id + ');">' + escHtml(t.title) + '</a>' +
+                    '<div class="tmr-fb-thread-meta">Started by <strong>' + escHtml(t.username || '') + '</strong> &middot; ' + timeAgo(t.created_at) + '</div>' +
+                '</div>' +
+            '</div></td>' +
+            '<td class="col-rating"></td>' +
+            '<td class="col-last"><div class="tmr-fb-lastpost">' +
+                '<span class="tmr-fb-lastpost-meta">' + timeAgo(lastTime) + ' &middot; by <strong>' + escHtml(lastUser) + '</strong></span>' +
+            '</div></td>' +
             '<td class="col-num">' + replyCount + '</td>' +
             '<td class="col-num">' + viewCount + '</td>' +
-            '<td class="col-last"><div class="last-post-info"><div class="last-post-meta">by <strong>' + escHtml(lastUser) + '</strong><br>' + timeAgo(lastTime) + '</div></div></td>' +
             '</tr>';
     }).join('');
 }
@@ -1829,14 +2826,14 @@ async function performSearch(query) {
     bc.innerHTML = '<a onclick="showCategories()">Forums</a><span class="sep">&raquo;</span><span>Search: "' + escHtml(query) + '"</span>';
 
     var body = document.getElementById('threadsBody');
-    body.innerHTML = '<tr><td colspan="4" class="empty-msg">Searching...</td></tr>';
+    body.innerHTML = '<tr><td colspan="5" class="empty-msg">Searching...</td></tr>';
 
     try {
         var data = await api.request('/forum/search?q=' + encodeURIComponent(query));
         var results = data.results || [];
 
         if (results.length === 0) {
-            body.innerHTML = '<tr><td colspan="4" class="empty-msg"><div>No threads match your search.</div></td></tr>';
+            body.innerHTML = '<tr><td colspan="5" class="empty-msg"><div>No threads match your search.</div></td></tr>';
             return;
         }
 
@@ -1844,14 +2841,19 @@ async function performSearch(query) {
             var catName = t.category_name || '';
             var catSlug = t.category_slug || '';
             return '<tr onclick="currentCategorySlug=\'' + escHtml(catSlug) + '\';currentCategoryName=\'' + escHtml(catName) + '\';showThreadDetail(' + t.id + ')">' +
-                '<td><span class="tag-pill">' + escHtml(catName) + '</span><div class="thread-title-link">' + escHtml(t.title) + '</div><div class="thread-meta">Started by <strong>' + escHtml(t.username || '') + '</strong> ' + timeAgo(t.created_at) + '</div></td>' +
+                '<td><div class="tmr-fb-thread-cell"><span class="tmr-fb-thread-icon">T</span><div class="tmr-fb-thread-body">' +
+                    '<span class="tag-pill">' + escHtml(catName) + '</span>' +
+                    '<a class="tmr-fb-thread-title" href="#" onclick="event.preventDefault();event.stopPropagation();currentCategorySlug=\'' + escHtml(catSlug) + '\';currentCategoryName=\'' + escHtml(catName) + '\';showThreadDetail(' + t.id + ');">' + escHtml(t.title) + '</a>' +
+                    '<div class="tmr-fb-thread-meta">Started by <strong>' + escHtml(t.username || '') + '</strong> &middot; ' + timeAgo(t.created_at) + '</div>' +
+                '</div></div></td>' +
+                '<td class="col-rating"></td>' +
+                '<td class="col-last"><div class="tmr-fb-lastpost-meta">' + timeAgo(t.created_at) + '</div></td>' +
                 '<td class="col-num">' + (t.reply_count || 0) + '</td>' +
                 '<td class="col-num">' + (t.view_count || 0) + '</td>' +
-                '<td class="col-last"><div class="last-post-meta">' + timeAgo(t.created_at) + '</div></td>' +
                 '</tr>';
         }).join('');
     } catch (err) {
-        body.innerHTML = '<tr><td colspan="4" class="empty-msg"><div style="color:var(--danger);">Search failed. Please try again.</div></td></tr>';
+        body.innerHTML = '<tr><td colspan="5" class="empty-msg"><div style="color:var(--danger);">Search failed. Please try again.</div></td></tr>';
         console.error('Search error:', err);
     }
 }
