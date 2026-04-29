@@ -10,7 +10,7 @@
         ["/polls/", "Polls"],
         ["/trivia/", "Trivia"],
         ["/forum/", "Forums"],
-        ["/premium/", "Marketplace"]
+        ["/marketplace/", "Marketplace"]
     ];
 
     const routeMeta = {
@@ -24,7 +24,8 @@
         "trivia.html": ["Trivia", "Sports trivia, custom questions, leaderboards, and reputation."],
         "profile.html": ["Profile", "Verified pick record, posts, splits, marketplace, polls, trivia, and challenges."],
         "forum.html": ["Forums", "Hardcore sports discussion. Threads tied to verified profiles and locked records."],
-        "premium.html": ["Marketplace", "Buy and sell picks once a record is built to back them up."],
+        "premium.html": ["Premium", "Optional membership tiers with extra analytics and limits beyond the free public-record product."],
+        "marketplace.html": ["Marketplace", "Buy and sell picks once a public record is built to back them up."],
         "about.html": ["About", "Why TrustMyRecord exists: no edits, no deletions, no record resets."],
         "friends.html": ["Friends", "Follow real records. Build a sports social graph tied to public performance."],
         "messages.html": ["Messages", "Direct messages for matchups, picks, rivalries, and follow-up receipts."],
