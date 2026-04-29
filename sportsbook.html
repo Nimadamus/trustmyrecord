@@ -8409,12 +8409,6 @@
                     <h2>Sportsbook Pick Board</h2>
                     <p>Select a board, choose a market, and lock a verified receipt.</p>
                 </div>
-                <div class="sportsbook-page-meta">
-                    <span>Live Boards</span>
-                    <span>Markets</span>
-                    <span>Locked Receipts</span>
-                    <span>Auto Grading</span>
-                </div>
             </div>
             <div class="sportsbook-sport-tabs" aria-label="Sportsbook tabs">
                 <button type="button" class="sportsbook-sport-tab is-active" onclick="window.selectSportAndShowGames('NBA')">NBA</button>
@@ -8439,9 +8433,9 @@
                     </div>
 
                     <div class="sportsbook-sport-select-wrap">
-                        <label for="sportQuickSelect">Quick Select</label>
+                        <label for="sportQuickSelect">All Sports</label>
                         <select id="sportQuickSelect" onchange="if(this.value){window.selectSportAndShowGames(this.value);this.selectedIndex=0;}">
-                            <option value="">Choose a league...</option>
+                            <option value="">Jump to board...</option>
                             <option value="NBA">NBA</option>
                             <option value="WNBA">WNBA</option>
                             <option value="NFL">NFL</option>
@@ -8464,27 +8458,27 @@
                     <div class="sportsbook-rail-list">
                         <button class="sportsbook-rail-board" data-sport="NBA" onclick="window.selectSportAndShowGames('NBA')">
                             <span class="sportsbook-rail-board-main"><b>NBA</b><small><i></i> Pro Hoops</small></span>
-                            <span class="sportsbook-rail-board-count" id="nba-game-count">Loading...</span>
+                            <span class="sportsbook-rail-board-count" id="nba-game-count">Live</span>
                         </button>
                         <button class="sportsbook-rail-board" data-sport="NFL" onclick="window.selectSportAndShowGames('NFL')">
                             <span class="sportsbook-rail-board-main"><b>NFL</b><small><i></i> Pro Football</small></span>
-                            <span class="sportsbook-rail-board-count" id="nfl-game-count">Loading...</span>
+                            <span class="sportsbook-rail-board-count" id="nfl-game-count">Live</span>
                         </button>
                         <button class="sportsbook-rail-board" data-sport="MLB" onclick="window.selectSportAndShowGames('MLB')">
                             <span class="sportsbook-rail-board-main"><b>MLB</b><small><i></i> Baseball</small></span>
-                            <span class="sportsbook-rail-board-count" id="mlb-game-count">Loading...</span>
+                            <span class="sportsbook-rail-board-count" id="mlb-game-count">Live</span>
                         </button>
                         <button class="sportsbook-rail-board" data-sport="NHL" onclick="window.selectSportAndShowGames('NHL')">
                             <span class="sportsbook-rail-board-main"><b>NHL</b><small><i></i> Hockey</small></span>
-                            <span class="sportsbook-rail-board-count" id="nhl-game-count">Loading...</span>
+                            <span class="sportsbook-rail-board-count" id="nhl-game-count">Live</span>
                         </button>
                         <button class="sportsbook-rail-board" data-sport="NCAAB" onclick="window.selectSportAndShowGames('NCAAB')">
                             <span class="sportsbook-rail-board-main"><b>NCAAB</b><small><i></i> College Hoops</small></span>
-                            <span class="sportsbook-rail-board-count" id="ncaab-game-count">Loading...</span>
+                            <span class="sportsbook-rail-board-count" id="ncaab-game-count">Live</span>
                         </button>
                         <button class="sportsbook-rail-board" data-sport="NCAAF" onclick="window.selectSportAndShowGames('NCAAF')">
                             <span class="sportsbook-rail-board-main"><b>NCAAF</b><small><i></i> College Football</small></span>
-                            <span class="sportsbook-rail-board-count" id="ncaaf-game-count">Loading...</span>
+                            <span class="sportsbook-rail-board-count" id="ncaaf-game-count">Live</span>
                         </button>
                         <button class="sportsbook-rail-board" type="button" onclick="window.toggleSportFamily && window.toggleSportFamily('soccer')">
                             <span class="sportsbook-rail-board-main"><b>Soccer</b><small><i></i> League Group</small></span>
@@ -8502,7 +8496,7 @@
                         <div>
                             <span class="sportsbook-lobby-label">Odds Board</span>
                             <h3>Board Selection</h3>
-                            <p class="sportsbook-selector-copy">Main lines, moneyline, totals, team totals, and open-board access.</p>
+                            <p class="sportsbook-selector-copy">Choose a sport and hit a price box or open the full board.</p>
                         </div>
                         <button class="sportsbook-lobby-secondary-btn" onclick="window.showPickStep('picksList')">View Your Picks</button>
                     </div>
@@ -8517,7 +8511,7 @@
                             <span>1st 5</span>
                             <span>Props</span>
                         </div>
-                        <div class="sportsbook-board-toolbar-note">Open any league to load the live board.</div>
+                        <div class="sportsbook-board-toolbar-note">Select a price or open the full board.</div>
                     </div>
 
                     <div class="sportsbook-board-table">
@@ -8644,7 +8638,7 @@
                     <div class="sportsbook-ticket-preview-head">
                         <span class="sportsbook-lobby-label">Pick Slip</span>
                         <h3>Verified Slip</h3>
-                        <p class="sportsbook-selector-copy">Selections lock after submission and update automatically.</p>
+                        <p class="sportsbook-selector-copy">Select an odds box to build your verified pick slip.</p>
                     </div>
 
                     <div class="sportsbook-ticket-preview-card">
@@ -8654,7 +8648,7 @@
                         </div>
                         <div class="sportsbook-ticket-preview-row">
                             <span>Slip</span>
-                            <strong>Choose a board to add a pick</strong>
+                            <strong>Select odds from the board</strong>
                         </div>
                         <div class="sportsbook-ticket-preview-row">
                             <span>Market</span>
@@ -8668,7 +8662,12 @@
                             <span>Grading</span>
                             <strong>Automatic results update</strong>
                         </div>
+                        <div class="sportsbook-ticket-preview-row">
+                            <span>Submit</span>
+                            <strong>Disabled until selection</strong>
+                        </div>
                         <div class="sportsbook-ticket-preview-note">Open a board, select the exact price you played, then confirm it into your verified record.</div>
+                        <button type="button" class="sportsbook-ticket-preview-submit" disabled>Submit Pick</button>
                     </div>
 
                     <button class="sportsbook-lobby-secondary-btn sportsbook-lobby-secondary-btn--wide" onclick="window.showPickStep('picksList')">Open Your Pick History</button>
@@ -24225,13 +24224,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         #picks .picks-container-modern {
-            max-width: 1520px;
-            padding: 18px 18px 48px;
+            max-width: none;
+            width: calc(100vw - 24px);
+            padding: 12px 12px 40px;
         }
 
         #picks .sportsbook-page-shell {
             margin: 0 0 12px !important;
-            padding: 12px 14px !important;
+            padding: 10px 12px !important;
             border: 1px solid rgba(34, 51, 77, 0.82) !important;
             border-radius: 10px !important;
             background: linear-gradient(180deg, #0e1624, #0a111c) !important;
@@ -24268,7 +24268,7 @@ document.addEventListener('DOMContentLoaded', function() {
         #picks .sportsbook-page-shell h2 {
             margin: 0 0 2px;
             color: #f8fbff !important;
-            font-size: clamp(1.28rem, 1.7vw, 1.75rem) !important;
+            font-size: clamp(1.32rem, 1.8vw, 1.9rem) !important;
             line-height: 1.06 !important;
             letter-spacing: -0.02em !important;
             text-transform: none !important;
@@ -24277,30 +24277,8 @@ document.addEventListener('DOMContentLoaded', function() {
         #picks .sportsbook-page-shell p {
             margin: 0;
             color: #8ea0b9 !important;
-            font-size: 0.72rem;
-            line-height: 1.35;
-        }
-
-        #picks .sportsbook-page-meta {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-            gap: 8px;
-        }
-
-        #picks .sportsbook-page-meta span {
-            display: inline-flex;
-            align-items: center;
-            min-height: 28px;
-            padding: 0 10px;
-            border-radius: 999px;
-            border: 1px solid rgba(35, 51, 76, 0.86);
-            background: linear-gradient(180deg, #152131, #101927);
-            color: #dce7f5;
-            font-size: 0.58rem;
-            font-weight: 800;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
+            font-size: 0.74rem;
+            line-height: 1.32;
         }
 
         #picks .sportsbook-sport-tabs {
@@ -24348,7 +24326,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         #picks .sportsbook-picks-layout {
             display: grid;
-            grid-template-columns: 236px minmax(0, 1fr) 324px;
+            grid-template-columns: 240px minmax(0, 1fr) 332px;
             gap: 12px;
             align-items: start;
         }
@@ -24369,7 +24347,7 @@ document.addEventListener('DOMContentLoaded', function() {
         #picks .sportsbook-league-rail {
             padding: 12px;
             position: sticky;
-            top: 84px;
+            top: 78px;
         }
 
         #picks .sportsbook-stage-panel,
@@ -24448,7 +24426,7 @@ document.addEventListener('DOMContentLoaded', function() {
             grid-template-columns: minmax(0, 1fr) auto;
             align-items: center;
             gap: 10px;
-            min-height: 46px;
+            min-height: 44px;
             padding: 0 10px;
             border: 1px solid rgba(38, 56, 83, 0.76);
             border-radius: 8px;
@@ -24520,7 +24498,7 @@ document.addEventListener('DOMContentLoaded', function() {
             align-items: end;
             justify-content: space-between;
             gap: 12px;
-            padding-bottom: 10px;
+            padding-bottom: 8px;
             border-bottom: 1px solid rgba(36, 53, 80, 0.54);
         }
 
@@ -24559,13 +24537,13 @@ document.addEventListener('DOMContentLoaded', function() {
         #picks .sportsbook-market-strip span {
             display: inline-flex;
             align-items: center;
-            min-height: 30px;
+            min-height: 28px;
             padding: 0 10px;
-            border-radius: 7px;
+            border-radius: 6px;
             border: 1px solid rgba(37, 53, 79, 0.82);
             background: linear-gradient(180deg, #162335, #101827);
             color: #d7e5f5;
-            font-size: 0.58rem;
+            font-size: 0.56rem;
             font-weight: 800;
             letter-spacing: 0.08em;
             text-transform: uppercase;
@@ -24608,7 +24586,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         #picks .sportsbook-board-table-row {
             width: 100%;
-            min-height: 78px;
+            min-height: 84px;
             padding: 10px 12px;
             border: 0;
             border-top: 1px solid rgba(36, 53, 81, 0.38);
@@ -24647,11 +24625,18 @@ document.addEventListener('DOMContentLoaded', function() {
             display: grid;
             align-content: center;
             gap: 3px;
-            min-height: 56px;
-            padding: 8px 9px;
+            min-height: 60px;
+            padding: 9px 10px;
             border-radius: 8px;
             border: 1px solid rgba(40, 58, 85, 0.82);
             background: linear-gradient(180deg, #1a2637, #131c2a);
+            transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+        }
+
+        #picks .sportsbook-board-odds-cell:hover {
+            border-color: rgba(118, 220, 255, 0.34);
+            background: linear-gradient(180deg, #223146, #172334);
+            transform: translateY(-1px);
         }
 
         #picks .sportsbook-board-odds-cell em {
@@ -24665,7 +24650,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         #picks .sportsbook-board-odds-cell strong {
             color: #f8fbff;
-            font-size: 0.86rem;
+            font-size: 0.94rem;
             font-weight: 900;
             line-height: 1;
             letter-spacing: -0.02em;
@@ -24683,7 +24668,7 @@ document.addEventListener('DOMContentLoaded', function() {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-height: 56px;
+            min-height: 60px;
             padding: 0 10px;
             border-radius: 8px;
             border: 1px solid rgba(118, 220, 255, 0.34);
@@ -24826,6 +24811,24 @@ document.addEventListener('DOMContentLoaded', function() {
             line-height: 1.34;
         }
 
+        #picks .sportsbook-ticket-preview-submit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: calc(100% - 24px);
+            min-height: 42px;
+            margin: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(44, 57, 76, 0.82);
+            background: linear-gradient(180deg, #18212e, #121925);
+            color: #7388a3;
+            font-size: 0.64rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            cursor: not-allowed;
+        }
+
         #picks .games-header {
             align-items: end;
         }
@@ -24849,12 +24852,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             #picks .sportsbook-page-topbar {
                 display: grid;
-                gap: 10px;
+                gap: 8px;
                 align-items: start;
-            }
-
-            #picks .sportsbook-page-meta {
-                justify-content: flex-start;
             }
 
             #picks .sportsbook-league-rail {
@@ -24872,8 +24871,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             #picks .picks-container-modern {
-                padding-left: 14px;
-                padding-right: 14px;
+                width: calc(100vw - 16px);
+                padding-left: 8px;
+                padding-right: 8px;
             }
 
             #picks .sportsbook-sport-tabs {
