@@ -1526,236 +1526,87 @@ button{font:inherit;cursor:pointer}
     margin: 0;
 }
 
-/* SECTIONS 3 & 4: Audience splits (handicappers / fans) */
-.tmr-audience {
-    padding: var(--tmr-section-pad) 0;
-    background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.02) 50%, transparent 100%);
-}
-.tmr-audience--cappers {
-    background: linear-gradient(180deg, transparent 0%, rgba(0, 229, 199, 0.04) 50%, transparent 100%);
-}
-.tmr-audience--fans {
-    background: linear-gradient(180deg, transparent 0%, rgba(255, 107, 71, 0.04) 50%, transparent 100%);
-}
-.tmr-audience-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-    gap: 56px;
-    align-items: center;
-}
-.tmr-audience-grid--reverse {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-}
-.tmr-audience-tag {
-    display: inline-flex;
-    align-items: center;
-    font-family: 'JetBrains Mono', 'Menlo', monospace;
-    font-size: 10.5px;
-    font-weight: 800;
-    letter-spacing: 2.2px;
-    color: var(--tmr-cyan-bright);
-    background: rgba(0, 229, 199, 0.1);
-    border: 1px solid rgba(0, 229, 199, 0.32);
-    padding: 5px 11px;
-    border-radius: 999px;
-    text-transform: uppercase;
-    margin-bottom: 18px;
-}
-.tmr-audience--fans .tmr-audience-tag {
-    color: var(--orange, #FF6B47);
-    background: rgba(255, 107, 71, 0.1);
-    border-color: rgba(255, 107, 71, 0.32);
-}
-.tmr-audience-copy h2 {
-    font-family: 'Barlow Condensed', 'Inter', sans-serif;
-    font-size: clamp(28px, 3.4vw, 44px);
-    font-weight: 900;
-    line-height: 1.05;
-    letter-spacing: -0.5px;
-    color: #fff;
-    margin: 0 0 16px;
-    text-transform: none;
-}
-.tmr-audience-copy p {
-    font-size: 15px;
-    line-height: 1.6;
-    color: #c5cee0;
-    margin: 0 0 28px;
-    max-width: 480px;
-}
-.tmr-audience-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-}
-.tmr-audience-list li {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    padding: 16px 18px;
-    background: linear-gradient(180deg, rgba(13, 22, 38, 0.85) 0%, rgba(8, 14, 25, 0.85) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 12px;
-}
-.tmr-audience-num {
-    flex-shrink: 0;
-    width: 26px;
-    height: 26px;
-    border-radius: 7px;
-    background: rgba(0, 229, 199, 0.12);
-    color: var(--tmr-cyan-bright);
-    border: 1px solid rgba(0, 229, 199, 0.32);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'JetBrains Mono', 'Menlo', monospace;
-    font-size: 12px;
-    font-weight: 800;
-}
-.tmr-audience--fans .tmr-audience-num {
-    color: var(--orange, #FF6B47);
-    background: rgba(255, 107, 71, 0.12);
-    border-color: rgba(255, 107, 71, 0.32);
-}
-.tmr-audience-list li > div {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    min-width: 0;
-}
-.tmr-audience-list strong {
-    color: #fff;
-    font-size: 13.5px;
-    font-weight: 800;
-    letter-spacing: 0.05px;
-    line-height: 1.25;
-}
-.tmr-audience-list span {
-    color: #94a3b8;
-    font-size: 12px;
-    line-height: 1.4;
-}
 
-/* SECTION 5: Competition layer */
-.tmr-compete { padding: var(--tmr-section-pad) 0; }
-.tmr-compete-grid {
+/* SECTION 3: Everything Sports Fans Do — 6-card feature grid */
+.tmr-features { padding: var(--tmr-section-pad) 0; }
+.tmr-features-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 18px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 22px;
 }
-.tmr-compete-card {
+.tmr-feature-card {
     position: relative;
     background: linear-gradient(180deg, rgba(13, 22, 38, 0.92) 0%, rgba(8, 14, 25, 0.92) 100%);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    border-top: 2px solid rgba(0, 229, 199, 0.45);
-    border-radius: 16px;
-    padding: 26px 22px;
-    transition: transform 0.2s ease, border-color 0.2s ease;
+    border-top: 2px solid rgba(0, 229, 199, 0.5);
+    border-radius: 18px;
+    padding: 30px 28px 28px;
+    transition: transform 0.2s ease, border-top-color 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
 }
-.tmr-compete-card:hover {
-    transform: translateY(-2px);
+.tmr-feature-card:hover {
+    transform: translateY(-3px);
     border-top-color: var(--tmr-cyan-bright);
+    box-shadow: 0 22px 50px rgba(0, 0, 0, 0.42);
 }
-.tmr-compete-icon {
-    font-size: 24px;
-    width: 46px;
-    height: 46px;
-    border-radius: 12px;
+.tmr-feature-num {
+    position: absolute;
+    top: 24px;
+    right: 26px;
+    font-family: 'JetBrains Mono', 'Menlo', monospace;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.6px;
+    color: rgba(255, 255, 255, 0.18);
+}
+.tmr-feature-icon {
+    font-size: 26px;
+    width: 52px;
+    height: 52px;
+    border-radius: 13px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     background: rgba(0, 229, 199, 0.08);
     border: 1px solid rgba(0, 229, 199, 0.28);
-    margin-bottom: 14px;
+    margin-bottom: 18px;
 }
-.tmr-compete-card h3 {
+.tmr-feature-card--feed .tmr-feature-icon  { background: rgba(255, 107, 71, 0.08); border-color: rgba(255, 107, 71, 0.32); }
+.tmr-feature-card--polls .tmr-feature-icon { background: rgba(37, 99, 235, 0.1); border-color: rgba(37, 99, 235, 0.36); }
+.tmr-feature-card--h2h .tmr-feature-icon   { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.32); }
+.tmr-feature-card--tournaments .tmr-feature-icon { background: rgba(255, 209, 102, 0.1); border-color: rgba(255, 209, 102, 0.36); }
+.tmr-feature-card--sell .tmr-feature-icon  { background: rgba(53, 220, 128, 0.1); border-color: rgba(53, 220, 128, 0.32); }
+.tmr-feature-card h3 {
     font-family: 'Barlow Condensed', 'Inter', sans-serif;
-    font-size: 19px;
+    font-size: 22px;
     font-weight: 800;
     color: #fff;
-    margin: 0 0 8px;
-    letter-spacing: -0.1px;
-    line-height: 1.25;
+    margin: 0 0 10px;
+    letter-spacing: -0.2px;
+    line-height: 1.2;
 }
-.tmr-compete-card p {
+.tmr-feature-card p {
     color: #a5b1c6;
-    font-size: 13.5px;
-    line-height: 1.5;
+    font-size: 14px;
+    line-height: 1.55;
     margin: 0;
 }
 
-/* SECTION 6: Selling picks */
-.tmr-sell {
-    padding: var(--tmr-section-pad) 0;
-    background: linear-gradient(180deg, transparent 0%, rgba(0, 229, 199, 0.03) 50%, transparent 100%);
-}
-.tmr-sell-card {
-    max-width: 760px;
-    margin: 0 auto;
-    background: linear-gradient(180deg, rgba(13, 22, 38, 0.92) 0%, rgba(8, 14, 25, 0.92) 100%);
-    border: 1px solid rgba(0, 229, 199, 0.32);
-    border-top: 2px solid var(--tmr-cyan-bright);
-    border-radius: 20px;
-    padding: 40px 44px;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
-}
-.tmr-sell-tag {
+/* Final CTA eyebrow (Built for Competition pill) */
+.tmr-final-eyebrow {
     display: inline-flex;
     align-items: center;
     font-family: 'JetBrains Mono', 'Menlo', monospace;
     font-size: 10.5px;
     font-weight: 800;
-    letter-spacing: 2.2px;
+    letter-spacing: 2.4px;
     color: var(--tmr-cyan-bright);
     background: rgba(0, 229, 199, 0.1);
     border: 1px solid rgba(0, 229, 199, 0.32);
-    padding: 5px 11px;
+    padding: 6px 14px;
     border-radius: 999px;
     text-transform: uppercase;
-    margin-bottom: 16px;
-}
-.tmr-sell-card h2 {
-    font-family: 'Barlow Condensed', 'Inter', sans-serif;
-    font-size: clamp(28px, 3.4vw, 42px);
-    font-weight: 900;
-    color: #fff;
-    margin: 0 0 14px;
-    letter-spacing: -0.5px;
-    line-height: 1.05;
-}
-.tmr-sell-card p {
-    color: #c5cee0;
-    font-size: 14.5px;
-    line-height: 1.6;
-    margin: 0 0 22px;
-}
-.tmr-sell-list {
-    list-style: none;
-    margin: 0 0 28px;
-    padding: 0;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px 24px;
-}
-.tmr-sell-list li {
-    position: relative;
-    padding-left: 20px;
-    color: #dde4ef;
-    font-size: 13.5px;
-    font-weight: 600;
-    line-height: 1.45;
-}
-.tmr-sell-list li::before {
-    content: '✓';
-    position: absolute;
-    left: 0;
-    top: 0;
-    color: var(--tmr-cyan-bright);
-    font-weight: 900;
-    font-size: 13px;
+    margin-bottom: 18px;
 }
 
 /* SECTION 7: Final CTA */
@@ -1816,20 +1667,11 @@ button{font:inherit;cursor:pointer}
 @media (max-width: 980px) {
     .tmr-what-grid { grid-template-columns: 1fr; }
     .tmr-how-grid { grid-template-columns: 1fr; }
-    .tmr-compete-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .tmr-audience-grid,
-    .tmr-audience-grid--reverse {
-        grid-template-columns: 1fr;
-        gap: 32px;
-    }
-    .tmr-audience-grid--reverse .tmr-audience-copy { order: -1; }
+    .tmr-features-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .hero-sales-list { grid-template-columns: 1fr; }
-    .tmr-sell-list { grid-template-columns: 1fr; }
-    .tmr-sell-card { padding: 32px 28px; }
 }
 @media (max-width: 640px) {
-    .tmr-compete-grid { grid-template-columns: 1fr; }
-    .tmr-audience-list { grid-template-columns: 1fr; }
+    .tmr-features-grid { grid-template-columns: 1fr; }
     .tmr-section-inner { width: calc(100% - 32px); }
     .tmr-final-cta { flex-direction: column; }
     .tmr-final-cta .btn { width: 100%; }
@@ -2005,117 +1847,73 @@ button{font:inherit;cursor:pointer}
   </div>
 </section>
 
-<!-- ===========================================================
-     SECTION 3: FOR HANDICAPPERS
-=========================================================== -->
-<section class="tmr-audience tmr-audience--cappers" aria-label="For handicappers">
-  <div class="tmr-section-inner">
-    <div class="tmr-audience-grid">
-      <div class="tmr-audience-copy">
-        <span class="tmr-audience-tag">FOR HANDICAPPERS</span>
-        <h2>Build credibility before you sell.</h2>
-        <p>Before people pay for picks, they want proof. TrustMyRecord gives cappers a public profile, verified record, social following, and competition history they can use to build credibility.</p>
-        <a class="btn accent auth-link" href="register/">Start Your Free Record →</a>
-      </div>
-      <ul class="tmr-audience-list" role="list">
-        <li><span class="tmr-audience-num">1</span><div><strong>Create a public profile</strong><span>Locked handle, sport mix, history.</span></div></li>
-        <li><span class="tmr-audience-num">2</span><div><strong>Track every pick</strong><span>Auto graded, time stamped, undeletable.</span></div></li>
-        <li><span class="tmr-audience-num">3</span><div><strong>Build trust before selling</strong><span>Receipts unlock seller tools.</span></div></li>
-        <li><span class="tmr-audience-num">4</span><div><strong>Show long term performance</strong><span>ROI, units, win rate, sample size.</span></div></li>
-        <li><span class="tmr-audience-num">5</span><div><strong>Gain followers through content and competition</strong><span>Posts, polls, trivia, head to head.</span></div></li>
-        <li><span class="tmr-audience-num">6</span><div><strong>Compete for ranking visibility</strong><span>Sport leaderboards, weekly ladders.</span></div></li>
-      </ul>
-    </div>
-  </div>
-</section>
 
 <!-- ===========================================================
-     SECTION 4: FOR SPORTS FANS
+     SECTION 3: EVERYTHING SPORTS FANS DO, FINALLY CONNECTED
 =========================================================== -->
-<section class="tmr-audience tmr-audience--fans" aria-label="For sports fans">
-  <div class="tmr-section-inner">
-    <div class="tmr-audience-grid tmr-audience-grid--reverse">
-      <ul class="tmr-audience-list" role="list">
-        <li><span class="tmr-audience-num">1</span><div><strong>Follow verified records</strong><span>Subscribe to handles with real history.</span></div></li>
-        <li><span class="tmr-audience-num">2</span><div><strong>Join polls and trivia</strong><span>Vote, answer, climb ladders.</span></div></li>
-        <li><span class="tmr-audience-num">3</span><div><strong>Debate picks and games</strong><span>Threaded replies, every word stamped.</span></div></li>
-        <li><span class="tmr-audience-num">4</span><div><strong>Challenge friends</strong><span>Best of five duels with public scoring.</span></div></li>
-        <li><span class="tmr-audience-num">5</span><div><strong>Compare users by sport</strong><span>Side by side splits and rankings.</span></div></li>
-        <li><span class="tmr-audience-num">6</span><div><strong>Find voices with real history</strong><span>Filter by record, not by hype.</span></div></li>
-      </ul>
-      <div class="tmr-audience-copy">
-        <span class="tmr-audience-tag">FOR SPORTS FANS</span>
-        <h2>More than a timeline.</h2>
-        <p>Follow people who actually post receipts, vote in polls, answer trivia, join debates, compare records, and compete around the sports they watch every day.</p>
-        <a class="btn ghost-light" href="hangout.html">Tour the Hangout →</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===========================================================
-     SECTION 5: COMPETITION LAYER
-=========================================================== -->
-<section class="tmr-compete" aria-label="Competition layer">
+<section class="tmr-features" aria-label="Platform features">
   <div class="tmr-section-inner">
     <header class="tmr-section-head">
-      <h2>TURN SPORTS TALK INTO COMPETITION</h2>
-      <p class="tmr-section-sub">TrustMyRecord turns sports opinions into games, rivalries, and public scoreboards.</p>
+      <h2>EVERYTHING SPORTS FANS DO, FINALLY CONNECTED</h2>
+      <p class="tmr-section-sub">TrustMyRecord combines picks, records, polls, trivia, challenges, rankings, and sports conversation into one public competition platform.</p>
     </header>
-    <div class="tmr-compete-grid">
-      <article class="tmr-compete-card">
-        <div class="tmr-compete-icon" aria-hidden="true">⚔️</div>
-        <h3>Head to Head Challenges</h3>
-        <p>Challenge another user and let the record decide.</p>
+    <div class="tmr-features-grid">
+
+      <article class="tmr-feature-card tmr-feature-card--picks">
+        <div class="tmr-feature-icon" aria-hidden="true">🔒</div>
+        <span class="tmr-feature-num">01</span>
+        <h3>Verified Picks</h3>
+        <p>Lock picks before games start and build a public record.</p>
       </article>
-      <article class="tmr-compete-card">
-        <div class="tmr-compete-icon" aria-hidden="true">🏆</div>
-        <h3>Tournaments</h3>
-        <p>Compete in bracket style or leaderboard contests.</p>
+
+      <article class="tmr-feature-card tmr-feature-card--feed">
+        <div class="tmr-feature-icon" aria-hidden="true">💬</div>
+        <span class="tmr-feature-num">02</span>
+        <h3>Sports Feed</h3>
+        <p>Post takes, react to games, follow users, and talk sports with receipts attached.</p>
       </article>
-      <article class="tmr-compete-card">
-        <div class="tmr-compete-icon" aria-hidden="true">📊</div>
+
+      <article class="tmr-feature-card tmr-feature-card--polls">
+        <div class="tmr-feature-icon" aria-hidden="true">📊</div>
+        <span class="tmr-feature-num">03</span>
         <h3>Polls and Trivia</h3>
-        <p>Create interactive sports content that the community can vote on and play.</p>
+        <p>Create questions, vote on debates, and run sports trivia with the community.</p>
       </article>
-      <article class="tmr-compete-card">
-        <div class="tmr-compete-icon" aria-hidden="true">📈</div>
-        <h3>Rankings</h3>
-        <p>Climb leaderboards built from public verified performance.</p>
+
+      <article class="tmr-feature-card tmr-feature-card--h2h">
+        <div class="tmr-feature-icon" aria-hidden="true">⚔️</div>
+        <span class="tmr-feature-num">04</span>
+        <h3>Head to Head Challenges</h3>
+        <p>Challenge another user and let locked picks decide who wins.</p>
       </article>
+
+      <article class="tmr-feature-card tmr-feature-card--tournaments">
+        <div class="tmr-feature-icon" aria-hidden="true">🏆</div>
+        <span class="tmr-feature-num">05</span>
+        <h3>Tournaments</h3>
+        <p>Join contests, ladders, and leaderboard competitions across sports.</p>
+      </article>
+
+      <article class="tmr-feature-card tmr-feature-card--sell">
+        <div class="tmr-feature-icon" aria-hidden="true">💼</div>
+        <span class="tmr-feature-num">06</span>
+        <h3>Sell Picks</h3>
+        <p>Build credibility through public performance before charging followers.</p>
+      </article>
+
     </div>
   </div>
 </section>
 
 <!-- ===========================================================
-     SECTION 6: SELLING PICKS
+     SECTION 4: BUILT FOR COMPETITION (final CTA)
 =========================================================== -->
-<section class="tmr-sell" aria-label="Selling picks">
-  <div class="tmr-section-inner">
-    <div class="tmr-sell-card">
-      <span class="tmr-sell-tag">FOR CREATORS</span>
-      <h2>Earn trust before you sell.</h2>
-      <p>TrustMyRecord gives creators a way to build credibility before charging for picks. The stronger the record and community presence, the easier it is to earn trust.</p>
-      <ul class="tmr-sell-list" role="list">
-        <li>Public pick history</li>
-        <li>Transparent units and ROI</li>
-        <li>Follower growth</li>
-        <li>Profile credibility</li>
-        <li>Optional seller tools</li>
-      </ul>
-      <a class="btn accent auth-link" href="register/">Start building your record →</a>
-    </div>
-  </div>
-</section>
-
-<!-- ===========================================================
-     SECTION 7: FINAL CTA
-=========================================================== -->
-<section class="tmr-final" aria-label="Final call to action">
+<section class="tmr-final" aria-label="Built for competition">
   <div class="tmr-final-glow" aria-hidden="true"></div>
   <div class="tmr-section-inner tmr-final-inner">
-    <h2>READY TO PROVE IT IN PUBLIC?</h2>
-    <p>Start posting, competing, creating, and building a sports record people can actually trust.</p>
+    <span class="tmr-final-eyebrow">BUILT FOR COMPETITION</span>
+    <h2>TURN SPORTS OPINIONS INTO PUBLIC COMPETITION.</h2>
+    <p>Every pick, poll, challenge, and tournament is designed to turn sports opinions into public competition. Users can build reputation through verified records, rankings, and community activity.</p>
     <div class="tmr-final-cta">
       <a class="btn accent xl auth-link" href="register/">Start Your Free Record →</a>
       <a class="btn ghost-light xl" href="sportsbook.html#picks">Make Picks</a>
@@ -2124,6 +1922,7 @@ button{font:inherit;cursor:pointer}
     <p class="tmr-final-fineprint">No fake numbers. No edited screenshots. Just receipts.</p>
   </div>
 </section>
+
 
 <footer class="footer">
   <div class="footer-inner">
