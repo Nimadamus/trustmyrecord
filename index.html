@@ -1229,29 +1229,32 @@ button{font:inherit;cursor:pointer}
 }
 .hero-sales-cta .btn { padding: 11px 18px; font-size: 13.5px; }
 
-/* Right-column SAMPLE locked-pick card (replaces the rotating quote / sales panel) */
+/* Right-column SAMPLE locked-pick card — straight, premium receipt presentation */
 .hero-sample-card {
     position: relative;
-    background: rgba(15, 20, 40, 0.85);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(0, 229, 199, 0.55);
-    border-radius: 16px;
-    padding: 20px 22px;
+    background:
+        linear-gradient(180deg, rgba(15, 20, 40, 0.92) 0%, rgba(7, 11, 24, 0.94) 100%);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-top: 1px solid rgba(0, 229, 199, 0.45);
+    border-radius: 14px;
+    padding: 18px 20px;
     box-shadow:
-        0 0 0 1px rgba(0, 229, 199, 0.12),
-        0 0 30px rgba(0, 229, 199, 0.18),
-        0 30px 70px rgba(0, 0, 0, 0.55);
-    transform: rotate(2deg);
-    transform-origin: center center;
-    max-width: 480px;
+        inset 0 1px 0 rgba(255, 255, 255, 0.04),
+        0 1px 0 rgba(0, 0, 0, 0.4),
+        0 24px 56px rgba(0, 0, 0, 0.55);
+    /* No rotation. Straight, intentional placement on the right of the hero. */
+    transform: none;
+    max-width: 420px;
     width: 100%;
     justify-self: end;
+    align-self: center;
     color: #e8eef9;
     font-family: 'Inter', system-ui, sans-serif;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
 }
 .hero-sample-card-top {
     display: flex;
@@ -1483,9 +1486,6 @@ button{font:inherit;cursor:pointer}
     .hero-sample-card {
         max-width: 100%;
         justify-self: stretch;
-    }
-    .hero-sample-card {
-        transform: none; /* no tilt on mobile per brief */
     }
     .combined-hero.hero-v2 .hero-zone-b-inner {
         grid-template-columns: 1fr;
@@ -1726,8 +1726,13 @@ button{font:inherit;cursor:pointer}
     margin-bottom: 18px;
 }
 .tmr-feature-card--feed .tmr-feature-icon  { background: rgba(255, 107, 71, 0.08); border-color: rgba(255, 107, 71, 0.32); }
+.tmr-feature-card--forum .tmr-feature-icon { background: rgba(34, 211, 238, 0.08); border-color: rgba(34, 211, 238, 0.32); }
 .tmr-feature-card--polls .tmr-feature-icon { background: rgba(37, 99, 235, 0.1); border-color: rgba(37, 99, 235, 0.36); }
+.tmr-feature-card--trivia .tmr-feature-icon { background: rgba(192, 132, 252, 0.10); border-color: rgba(192, 132, 252, 0.32); }
+.tmr-feature-card--marketplace .tmr-feature-icon { background: rgba(53, 220, 128, 0.10); border-color: rgba(53, 220, 128, 0.32); }
 .tmr-feature-card--h2h .tmr-feature-icon   { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.32); }
+.tmr-feature-card--console .tmr-feature-icon { background: rgba(251, 146, 60, 0.10); border-color: rgba(251, 146, 60, 0.32); }
+.tmr-feature-card--leaderboards .tmr-feature-icon { background: rgba(255, 209, 102, 0.1); border-color: rgba(255, 209, 102, 0.36); }
 .tmr-feature-card--tournaments .tmr-feature-icon { background: rgba(255, 209, 102, 0.1); border-color: rgba(255, 209, 102, 0.36); }
 .tmr-feature-card--sell .tmr-feature-icon  { background: rgba(53, 220, 128, 0.1); border-color: rgba(53, 220, 128, 0.32); }
 .tmr-feature-card h3 {
@@ -1745,6 +1750,20 @@ button{font:inherit;cursor:pointer}
     line-height: 1.55;
     margin: 0;
 }
+.tmr-feature-card p strong { color: #f4f7fb; font-weight: 700; }
+.tmr-feature-link {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 14px;
+    color: var(--tmr-cyan-bright, #2dd4bf);
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: color .15s ease;
+}
+.tmr-feature-link:hover { color: #67e8f9; text-decoration: none; }
 
 /* Final CTA eyebrow (Built for Competition pill) */
 .tmr-final-eyebrow {
@@ -2011,51 +2030,81 @@ button{font:inherit;cursor:pointer}
 <section class="tmr-features" aria-label="Platform features">
   <div class="tmr-section-inner">
     <header class="tmr-section-head">
-      <h2>EVERYTHING SPORTS FANS DO, FINALLY CONNECTED</h2>
-      <p class="tmr-section-sub">TrustMyRecord combines picks, records, polls, trivia, challenges, rankings, and sports conversation into one public competition platform.</p>
+      <h2>A SPORTSBOOK + SOCIAL NETWORK + COMPETITION PLATFORM</h2>
+      <p class="tmr-section-sub">Make picks. Build a public record. Talk shit in 2+2 style forums. Sell picks once the numbers back you up. Challenge rivals in MLB The Show, Madden, NBA 2K, EA FC, and NHL. Climb leaderboards and build a real sports reputation.</p>
     </header>
     <div class="tmr-features-grid">
 
       <article class="tmr-feature-card tmr-feature-card--picks">
         <div class="tmr-feature-icon" aria-hidden="true">🔒</div>
         <span class="tmr-feature-num">01</span>
-        <h3>Verified Picks</h3>
-        <p>Lock picks before games start and build a public record.</p>
+        <h3>Make Picks</h3>
+        <p>Lock picks before games start. Sportsbook-style ticket flow with a permanent public record behind every play.</p>
+        <a class="tmr-feature-link" href="/sportsbook.html">Open ticket →</a>
       </article>
 
       <article class="tmr-feature-card tmr-feature-card--feed">
         <div class="tmr-feature-icon" aria-hidden="true">💬</div>
         <span class="tmr-feature-num">02</span>
-        <h3>Sports Feed</h3>
-        <p>Post takes, react to games, follow users, and talk sports with receipts attached.</p>
+        <h3>Sports Social Feed</h3>
+        <p>Post takes, talk trash, react to games, follow rivals. Every opinion shows the record behind it. No anonymous heat.</p>
+        <a class="tmr-feature-link" href="/feed/">Open feed →</a>
+      </article>
+
+      <article class="tmr-feature-card tmr-feature-card--forum">
+        <div class="tmr-feature-icon" aria-hidden="true">🗂</div>
+        <span class="tmr-feature-num">03</span>
+        <h3>2+2 Style Forums</h3>
+        <p>Classic dense message-board discussion. Sport categories, sticky threads, replies and views columns, last-post receipts &mdash; tied to public profiles.</p>
+        <a class="tmr-feature-link" href="/forum/">Open forums →</a>
       </article>
 
       <article class="tmr-feature-card tmr-feature-card--polls">
         <div class="tmr-feature-icon" aria-hidden="true">📊</div>
-        <span class="tmr-feature-num">03</span>
-        <h3>Polls and Trivia</h3>
-        <p>Create questions, vote on debates, and run sports trivia with the community.</p>
+        <span class="tmr-feature-num">04</span>
+        <h3>Polls</h3>
+        <p>Create polls, vote on debates, see what the board is calling. Every vote ties back to an account, so consensus has receipts.</p>
+        <a class="tmr-feature-link" href="/polls/">Open polls →</a>
+      </article>
+
+      <article class="tmr-feature-card tmr-feature-card--trivia">
+        <div class="tmr-feature-icon" aria-hidden="true">🧠</div>
+        <span class="tmr-feature-num">05</span>
+        <h3>Trivia</h3>
+        <p>Build trivia, answer trivia, climb the trivia ladder. Earn sports knowledge status that lives on your profile.</p>
+        <a class="tmr-feature-link" href="/trivia/">Open trivia →</a>
+      </article>
+
+      <article class="tmr-feature-card tmr-feature-card--marketplace">
+        <div class="tmr-feature-icon" aria-hidden="true">💼</div>
+        <span class="tmr-feature-num">06</span>
+        <h3>Marketplace</h3>
+        <p>Sell picks once the numbers back you up. Buyers see your full public ledger before they pay. Your record is your storefront.</p>
+        <a class="tmr-feature-link" href="/marketplace/">Open marketplace →</a>
       </article>
 
       <article class="tmr-feature-card tmr-feature-card--h2h">
         <div class="tmr-feature-icon" aria-hidden="true">⚔️</div>
-        <span class="tmr-feature-num">04</span>
-        <h3>Head to Head Challenges</h3>
-        <p>Challenge another user and let locked picks decide who wins.</p>
+        <span class="tmr-feature-num">07</span>
+        <h3>Pick Duels</h3>
+        <p>Head-to-head sports pick challenges. Call a rival out, lock both picks, let the boards decide who wins.</p>
+        <a class="tmr-feature-link" href="/arena/">Open arena →</a>
       </article>
 
-      <article class="tmr-feature-card tmr-feature-card--tournaments">
+      <article class="tmr-feature-card tmr-feature-card--console">
+        <div class="tmr-feature-icon" aria-hidden="true">🎮</div>
+        <span class="tmr-feature-num">08</span>
+        <h3>Console Arena</h3>
+        <p>Challenge rivals in <strong>MLB The Show</strong>, <strong>Madden</strong>, <strong>NBA 2K</strong>, <strong>EA FC</strong>, and <strong>NHL</strong>. Console matchups with results that count toward your reputation.</p>
+        <a class="tmr-feature-link" href="/arena/">Open console arena →</a>
+      </article>
+
+      <article class="tmr-feature-card tmr-feature-card--leaderboards">
         <div class="tmr-feature-icon" aria-hidden="true">🏆</div>
-        <span class="tmr-feature-num">05</span>
-        <h3>Tournaments</h3>
-        <p>Join contests, ladders, and leaderboard competitions across sports.</p>
-      </article>
-
-      <article class="tmr-feature-card tmr-feature-card--sell">
-        <div class="tmr-feature-icon" aria-hidden="true">💼</div>
-        <span class="tmr-feature-num">06</span>
-        <h3>Sell Picks</h3>
-        <p>Build credibility through public performance before charging followers.</p>
+        <span class="tmr-feature-num">09</span>
+        <h3>Leaderboards &amp; Reputation</h3>
+        <p>Sortable rankings by ROI, units, sample size, market splits, trust score. Climb the board, build a name, prove you actually know sports.</p>
+        <a class="tmr-feature-link" href="/handicappers.html">Open leaderboards →</a>
       </article>
 
     </div>
