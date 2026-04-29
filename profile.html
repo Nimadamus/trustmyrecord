@@ -10,8 +10,8 @@
     <meta property="og:title" content="User Profile | TrustMyRecord">
     <meta property="og:description" content="Check out my verified handicapping record and stats.">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260426b">
-<script defer src="static/js/tmr-sitewide.js?v=20260425d"></script>
+<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260429a">
+<script defer src="static/js/tmr-sitewide.js?v=20260429a"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -983,6 +983,13 @@
                 </div>
             </div>
             <div class="ledger-filter-card">
+                <div class="ledger-filter-head">
+                    <div>
+                        <div class="ledger-filter-title">Filter And Sort Ledger</div>
+                        <div class="ledger-filter-subtitle">Narrow the visible record by sport, market, result, price, unit size, and date range.</div>
+                    </div>
+                    <div class="ledger-filter-status" id="ledgerFilterStatus">All picks shown</div>
+                </div>
                 <div id="pickFilters" class="filter-toolbar">
                     <div class="filter-search-wrap">
                         <span class="filter-search-icon"><i class="fas fa-search"></i></span>
@@ -2138,6 +2145,43 @@
             padding: 18px;
         }
 
+        .ledger-filter-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+
+        .ledger-filter-title {
+            color: #162231;
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 4px;
+        }
+
+        .ledger-filter-subtitle {
+            color: #6f8194;
+            font-size: 0.8rem;
+            max-width: 620px;
+            line-height: 1.5;
+        }
+
+        .ledger-filter-status {
+            flex-shrink: 0;
+            min-height: 38px;
+            padding: 9px 14px;
+            border: 1px solid #d8e1ea;
+            border-radius: 999px;
+            background: #f8fbfd;
+            color: #4b6177;
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
         .ledger-filter-actions {
             margin-top: 2px;
             padding-top: 12px;
@@ -2198,6 +2242,10 @@
             body.tmr-site-shell.profile-page .filter-toolbar {
                 grid-template-columns: repeat(3, minmax(0, 1fr));
             }
+
+            .ledger-filter-head {
+                flex-direction: column;
+            }
         }
 
         @media (max-width: 760px) {
@@ -2226,6 +2274,11 @@
 
             .section-header-actions {
                 justify-content: flex-start;
+            }
+
+            .ledger-filter-status {
+                width: 100%;
+                text-align: center;
             }
 
             body.tmr-site-shell.profile-page .summary-grid {
@@ -4148,6 +4201,7 @@
         const hasFilter = search || sport || type || result || odds || units || dateFrom || dateTo || (period && period !== 'all') || activeQuickFilter || sort !== 'date_desc';
         const filterState = getActiveFilterState();
         currentTablePage = 1;
+        const statusEl = document.getElementById('ledgerFilterStatus');
 
         // Update filter banner (FIX 5)
         const banner = document.getElementById('filterBanner');
@@ -4176,9 +4230,11 @@
             if (sort && sort !== 'date_desc') parts.push(sortLabel(sort));
             if (activeQuickFilter === 'fav') parts.push('Favorites Only');
             if (activeQuickFilter === 'dog') parts.push('Underdogs Only');
-            document.getElementById('filterBannerText').textContent = 'Showing: ' + parts.join(' | ') + ' | ' + filtered.length + ' picks';
+            document.getElementById('filterBannerText').textContent = 'Active filters: ' + parts.join(' | ') + ' | ' + filtered.length + ' picks shown';
+            if (statusEl) statusEl.textContent = parts.length + ' filter' + (parts.length === 1 ? '' : 's') + ' active';
             banner.style.display = 'flex';
         } else {
+            if (statusEl) statusEl.textContent = 'All picks shown';
             banner.style.display = 'none';
         }
 
@@ -4190,7 +4246,7 @@
         const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
         let netUnitsFiltered = 0;
         graded.forEach(p => { netUnitsFiltered += pickPL(p); });
-        el.textContent = 'Showing ' + filtered.length + ' picks | ' + w + '-' + l + ' | ' + wr + '% | ' + (netUnitsFiltered >= 0 ? '+' : '') + netUnitsFiltered.toFixed(2) + 'u';
+        el.textContent = 'Visible record: ' + filtered.length + ' picks | ' + w + '-' + l + ' | ' + wr + '% win rate | ' + (netUnitsFiltered >= 0 ? '+' : '') + netUnitsFiltered.toFixed(2) + 'u';
 
         // Update picks table
         renderPicksTable(filtered);
@@ -4756,4 +4812,3 @@
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  8:02:00 PM -->
-
