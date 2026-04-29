@@ -1114,35 +1114,57 @@ button{font:inherit;cursor:pointer}
     margin: 0;
     max-width: 580px;
 }
-.combined-hero.hero-v2 .hero-pill-row {
-    list-style: none;
-    margin: 2px 0 0;
-    padding: 0;
+/* Hero action row - 3 stronger CTAs replacing the old chip row */
+.combined-hero.hero-v2 .hero-action-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 10px;
+    margin: 4px 0 0;
 }
-.combined-hero.hero-v2 .hero-pill-row li { margin: 0; }
-.combined-hero.hero-v2 .hero-pill-row a {
+.combined-hero.hero-v2 .hero-action {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 5px 10px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.045);
-    border: 1px solid rgba(148, 163, 184, 0.22);
-    color: #d8e0ec;
-    font-size: 11.5px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
+    justify-content: center;
+    padding: 14px 22px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(148, 163, 184, 0.30);
+    color: #ffffff;
+    font-family: 'Barlow Condensed', 'Inter', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
     text-decoration: none;
-    transition: background .15s ease, border-color .15s ease, color .15s ease;
+    line-height: 1;
+    transition: background .15s ease, border-color .15s ease, transform .15s ease, box-shadow .15s ease;
     white-space: nowrap;
 }
-.combined-hero.hero-v2 .hero-pill-row a:hover {
-    background: rgba(45, 212, 191, 0.10);
-    border-color: rgba(45, 212, 191, 0.45);
+.combined-hero.hero-v2 .hero-action:hover {
+    background: rgba(45, 212, 191, 0.12);
+    border-color: rgba(45, 212, 191, 0.65);
     color: #ffffff;
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+.combined-hero.hero-v2 .hero-action--primary {
+    background: linear-gradient(135deg, var(--tmr-cyan-bright, #2dd4bf) 0%, #67e8f9 100%);
+    border-color: transparent;
+    color: #04111A;
+    box-shadow: 0 12px 28px rgba(45, 212, 191, 0.28), 0 0 0 1px rgba(45, 212, 191, 0.45);
+}
+.combined-hero.hero-v2 .hero-action--primary:hover {
+    background: linear-gradient(135deg, #67e8f9 0%, var(--tmr-cyan-bright, #2dd4bf) 100%);
+    border-color: transparent;
+    color: #04111A;
+    box-shadow: 0 16px 36px rgba(45, 212, 191, 0.36), 0 0 0 1px rgba(45, 212, 191, 0.55);
+}
+@media (max-width: 640px) {
+    .combined-hero.hero-v2 .hero-action {
+        flex: 1 1 100%;
+        padding: 13px 18px;
+        font-size: 16px;
+    }
 }
 .combined-hero.hero-v2 .hero-headline .ch-warning {
     margin: 0;
@@ -1950,24 +1972,15 @@ button{font:inherit;cursor:pointer}
       <div class="hero-headline">
         <span class="ch-eyebrow"><span class="pip"></span>The Sports Network Where Opinions Get Receipts</span>
         <h1>DO YOU THINK YOU KNOW SPORTS?<span class="accent">PROVE IT.</span></h1>
-        <p class="lead">A sports community where every pick, poll, take, and trivia answer goes on a public profile and gets auto-graded forever. Lock your picks. Prove your fandom on the record. Challenge rivals in NBA 2K, Madden, and MLB The Show. Sell picks once the numbers say you should.</p>
-        <ul class="hero-pill-row" aria-label="What is on TrustMyRecord">
-          <li><a href="/sportsbook.html"><span aria-hidden="true">🔒</span> Make Picks</a></li>
-          <li><a href="/feed/"><span aria-hidden="true">💬</span> Feed</a></li>
-          <li><a href="/forum/"><span aria-hidden="true">🗂</span> Forums</a></li>
-          <li><a href="/polls/"><span aria-hidden="true">📊</span> Polls</a></li>
-          <li><a href="/trivia/"><span aria-hidden="true">🧠</span> Trivia</a></li>
-          <li><a href="/marketplace/"><span aria-hidden="true">💼</span> Sell Your Picks</a></li>
-          <li><a href="/arena/"><span aria-hidden="true">🎮</span> Console Arena</a></li>
-          <li><a href="/handicappers.html"><span aria-hidden="true">🏆</span> Leaderboards</a></li>
-        </ul>
+        <p class="lead">Build a public sports record that cannot be deleted, edited, or faked. Post picks, talk trash, climb leaderboards, challenge other fans, create polls, play trivia, and sell picks once your record proves you are worth following.</p>
+        <div class="hero-action-row" role="group" aria-label="Get started">
+          <a class="hero-action hero-action--primary auth-link" href="register/">Start Your Record</a>
+          <a class="hero-action" href="/feed/">Explore the Feed</a>
+          <a class="hero-action" href="/arena/">Enter the Arena</a>
+        </div>
         <div class="ch-warning">
           <div class="ic">⚠</div>
           <div><b>NO DELETES. NO RESETS. NO DO-OVERS.</b> Once you lock a pick, it's on your record forever. Pick carefully.</div>
-        </div>
-        <div class="ch-cta">
-          <a class="btn accent lg auth-link" href="register/">Start Your Free Record →</a>
-          <a class="btn ghost-light lg" href="#how-it-works" data-tour-cta>Tour the Site</a>
         </div>
       </div>
 
