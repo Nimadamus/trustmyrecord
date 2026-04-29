@@ -1,38 +1,51 @@
-/* TrustMyRecord — Sportsbook Pro Layer
+/* TrustMyRecord — Sportsbook Pro Layer (v2: spacing + scale + palette pass)
  * Overrides the sportsbook page chrome + #picks workflow into a real
- * sportsbook caliber UI: dark navy palette, compact app shell, three-column
- * board layout, clean odds buttons, real pick slip.
+ * sportsbook caliber UI. v2 widens the shell, increases scale, deepens the
+ * blue palette, and spreads the top nav.
  */
 
 :root {
-    --sb-bg: #0b1320;
-    --sb-bg-deep: #060b14;
-    --sb-surface: #111c2e;
-    --sb-surface-2: #16243a;
-    --sb-surface-3: #1c2c47;
-    --sb-row: #142036;
-    --sb-row-hover: #1a2a44;
-    --sb-border: #1e2c47;
-    --sb-border-strong: #2a3c5b;
+    /* Deep navy stack — sharper black/blue contrast */
+    --sb-bg-deep: #03070f;        /* page void around the shell */
+    --sb-bg: #060d1c;             /* main page surface */
+    --sb-header: #04081a;         /* near-black header */
+    --sb-surface: #0e1a30;        /* dark blue panels (rail / board / slip) */
+    --sb-surface-2: #122340;      /* slightly brighter — panel headers */
+    --sb-surface-3: #182d52;      /* hover / active panel surface */
+    --sb-row: #0e1a30;            /* board row base */
+    --sb-row-alt: #112038;        /* board row alt stripe */
+    --sb-row-hover: #1a2c4d;      /* row hover */
+    --sb-cell: #0a1426;           /* odds cell base */
+    --sb-cell-hover: #122644;     /* odds cell hover */
+    --sb-border: #1a2a45;         /* subtle blue divider */
+    --sb-border-strong: #28406a;  /* stronger blue border */
+    --sb-divider: #142340;        /* horizontal dividers */
     --sb-text: #ffffff;
-    --sb-text-2: #cfd9e7;
-    --sb-text-3: #8896aa;
-    --sb-text-4: #5d6b80;
-    --sb-accent: #2dd4bf;
+    --sb-text-2: #d6e0ee;         /* primary content */
+    --sb-text-3: #8b9bb6;         /* muted steel blue */
+    --sb-text-4: #5d6f8c;         /* labels */
+    --sb-accent: #2dd4bf;         /* teal action */
     --sb-accent-2: #14b8a6;
-    --sb-accent-soft: rgba(45, 212, 191, 0.12);
-    --sb-accent-glow: rgba(45, 212, 191, 0.22);
+    --sb-accent-soft: rgba(45, 212, 191, 0.14);
+    --sb-accent-glow: rgba(45, 212, 191, 0.30);
+    --sb-blue-glow: rgba(56, 119, 220, 0.18);
     --sb-warn: #f5a524;
     --sb-good: #22c55e;
     --sb-bad: #ef4444;
-    --sb-radius: 10px;
-    --sb-radius-sm: 6px;
-    --sb-radius-lg: 14px;
-    --sb-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+    --sb-radius: 12px;
+    --sb-radius-sm: 8px;
+    --sb-radius-lg: 16px;
+    --sb-shadow-card: 0 1px 0 rgba(255,255,255,0.02), 0 8px 24px rgba(0,0,0,0.35);
+    --sb-shadow-soft: 0 4px 16px rgba(0,0,0,0.28);
+
+    /* Global header heights — used by sticky offsets and scroll-margin */
+    --sb-header-h: 64px;
+    --sb-tabs-h: 52px;
+    --sb-shell-max: 1640px;
 }
 
 /* ==========================================================================
-   Global page background — kill the animated grid + cyan glow on this page
+   Page foundation
    ========================================================================== */
 body {
     background: var(--sb-bg-deep) !important;
@@ -40,219 +53,151 @@ body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
 }
-body .animated-grid {
-    display: none !important;
-}
+body .animated-grid { display: none !important; }
+
+/* The legacy .container is capped at 1360px in inline CSS — break that and
+   let the sportsbook shell fill the viewport up to 1640px. */
+body.tmr-site-shell[data-tmr-route="sportsbook"] > .container,
 body > .container {
     max-width: 100% !important;
     width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
-    background: var(--sb-bg-deep);
+    background: var(--sb-bg) !important;
 }
 
-/* Hide redundant chrome — the JS-injected .tmr-global-nav already provides
-   the canonical app header. Drop the inline ticker, the inline <header> dup,
-   and the route-note marketing strip on the sportsbook page. */
-.sportsbook-top-strip {
-    display: none !important;
-}
-body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-route-note {
-    display: none !important;
-}
-body.tmr-site-shell[data-tmr-route="sportsbook"] body > .container > header,
-body.tmr-site-shell > .container > header:not(.tmr-global-nav) {
-    display: none !important;
-}
+/* Hide redundant chrome — the JS-injected .tmr-global-nav is canonical. */
+.sportsbook-top-strip { display: none !important; }
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-route-note { display: none !important; }
+body.tmr-site-shell > .container > header:not(.tmr-global-nav) { display: none !important; }
 
 /* ==========================================================================
-   Top header — compact app-style nav
+   Top global app nav — widen + spread, premium feel
    ========================================================================== */
-body > .container > header {
-    background: var(--sb-bg);
-    border-bottom: 1px solid var(--sb-border);
-    padding: 0;
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav {
+    background: var(--sb-header) !important;
+    border-bottom: 1px solid var(--sb-border) !important;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.02), 0 8px 24px rgba(0,0,0,0.35) !important;
 }
-body > .container > header .header-content {
-    display: flex;
-    align-items: center;
-    gap: 28px;
-    height: 56px;
-    padding: 0 24px;
-    max-width: 1600px;
-    margin: 0 auto;
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__inner {
+    width: min(var(--sb-shell-max), calc(100% - 64px)) !important;
+    min-height: 76px !important;
+    padding: 14px 0 !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 24px !important;
+    grid-template-columns: none !important;
 }
-body > .container > header .logo {
-    font-family: 'Barlow', 'Inter', sans-serif;
-    font-weight: 800;
-    font-size: 18px;
-    letter-spacing: 0.4px;
-    color: var(--sb-text);
-    cursor: pointer;
-    white-space: nowrap;
+/* Re-layer the contents-promoted children as flex items (desktop only) */
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__brand {
+    flex: 0 0 auto !important;
 }
-body > .container > header .logo span {
-    color: var(--sb-accent) !important;
+@media (min-width: 901px) {
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__panel {
+        display: flex !important;
+        flex: 1 1 auto !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        min-width: 0 !important;
+        gap: 16px !important;
+    }
 }
-
-body > .container > header .main-nav {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin: 0;
-    flex: 1;
-    order: 2;
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__brand {
+    font-size: 1.55rem !important;
+    letter-spacing: -0.015em !important;
+    gap: 12px !important;
 }
-body > .container > header .main-nav .nav-link {
-    padding: 8px 14px;
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--sb-text-2);
-    text-decoration: none;
-    border-radius: 6px;
-    letter-spacing: 0.2px;
-    transition: background 0.15s ease, color 0.15s ease;
-    white-space: nowrap;
-    background: transparent;
-    border: none;
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__mark {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 12px !important;
+    font-size: 0.82rem !important;
 }
-body > .container > header .main-nav .nav-link:hover {
-    color: var(--sb-text);
-    background: var(--sb-surface-2);
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__panel {
+    gap: 28px !important;
 }
-body > .container > header .main-nav .nav-link.is-active,
-body > .container > header .main-nav .nav-link.active {
-    color: var(--sb-accent);
-    background: var(--sb-accent-soft);
-}
-
-body > .container > header .header-actions {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    order: 3;
-}
-body > .container > header .header-icon-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    background: transparent;
-    border: 1px solid var(--sb-border);
-    color: var(--sb-text-2);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    position: relative;
-    padding: 0;
-}
-body > .container > header .header-icon-btn:hover {
-    background: var(--sb-surface-2);
-    border-color: var(--sb-border-strong);
-    color: var(--sb-text);
-}
-body > .container > header .header-icon-btn .icon { font-size: 14px; }
-body > .container > header .header-icon-btn .badge {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    background: var(--sb-bad);
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 1px 5px;
-    border-radius: 8px;
-    min-width: 16px;
-    line-height: 14px;
-    text-align: center;
-}
-
-body > .container > header #headerAuthButtons {
-    margin-left: 6px;
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links {
+    justify-content: center !important;
     gap: 8px !important;
+    padding: 0 24px !important;
+    flex-wrap: nowrap !important;
 }
-body > .container > header #sportsbookHeaderLoginBtn,
-body > .container > header #sportsbookHeaderRegisterBtn {
-    padding: 7px 14px !important;
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    border-radius: 7px !important;
-    letter-spacing: 0.15px !important;
-    line-height: 1 !important;
-    cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-}
-body > .container > header #sportsbookHeaderLoginBtn {
-    background: transparent !important;
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links a {
+    font-size: 0.86rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    padding: 10px 18px !important;
+    min-height: 44px !important;
+    border-radius: 8px !important;
     color: var(--sb-text-2) !important;
-    border: 1px solid var(--sb-border-strong) !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease !important;
 }
-body > .container > header #sportsbookHeaderLoginBtn:hover {
-    background: var(--sb-surface-2) !important;
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links a:hover {
+    background: rgba(255,255,255,0.04) !important;
     color: var(--sb-text) !important;
 }
-body > .container > header #sportsbookHeaderRegisterBtn {
-    background: var(--sb-accent) !important;
-    color: #07111f !important;
-    border: 1px solid var(--sb-accent) !important;
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links a[aria-current="page"] {
+    background: var(--sb-accent-soft) !important;
+    color: var(--sb-accent) !important;
+    border-color: var(--sb-accent-glow) !important;
 }
-body > .container > header #sportsbookHeaderRegisterBtn:hover {
-    background: var(--sb-accent-2) !important;
-    border-color: var(--sb-accent-2) !important;
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions {
+    gap: 10px !important;
+}
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions a,
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions button {
+    padding: 10px 20px !important;
+    font-size: 0.86rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.05em !important;
+    border-radius: 8px !important;
+    min-height: 44px !important;
+    line-height: 1 !important;
 }
 
 /* ==========================================================================
-   Sport tab strip — directly under header, sticky below the global nav
+   Sport tab strip — directly under header, sticky, breathable
    ========================================================================== */
 .sportsbook-sports-nav {
-    background: var(--sb-bg);
-    border-bottom: 1px solid var(--sb-border);
-    padding: 0 24px;
+    background: var(--sb-header) !important;
+    border-bottom: 1px solid var(--sb-border) !important;
+    padding: 0 !important;
     display: flex !important;
     align-items: center;
-    gap: 4px;
-    height: 44px;
-    max-width: none !important;
-    width: 100%;
-    margin: 0 0 14px 0 !important;
+    gap: 6px;
+    height: var(--sb-tabs-h);
+    width: min(var(--sb-shell-max), calc(100% - 64px)) !important;
+    margin: 0 auto 24px !important;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     position: sticky;
-    top: 78px;
+    top: 76px;
     z-index: 40;
-}
-/* Cancel the inline negative margins added in tmr-sitewide.css overrides */
-body.tmr-site-shell[data-tmr-route="sportsbook"] .sportsbook-sports-nav {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-}
-/* Scroll-anchor offset so the SPA hash router doesn't bury the sport tabs */
-#picks.page-section {
-    scroll-margin-top: 130px;
 }
 .sportsbook-sports-nav::-webkit-scrollbar { display: none; }
 .sportsbook-sports-nav button {
     background: transparent;
     border: 1px solid transparent;
     color: var(--sb-text-3);
-    padding: 6px 14px;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-    border-radius: 6px;
+    padding: 9px 18px;
+    font-size: 13.5px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    border-radius: 8px;
     cursor: pointer;
     white-space: nowrap;
-    transition: all 0.15s ease;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
     text-transform: none;
+    height: 36px;
+    line-height: 1;
 }
 .sportsbook-sports-nav button:hover {
-    background: var(--sb-surface-2);
+    background: rgba(255,255,255,0.04);
     color: var(--sb-text);
 }
 .sportsbook-sports-nav button.active,
@@ -260,24 +205,35 @@ body.tmr-site-shell[data-tmr-route="sportsbook"] .sportsbook-sports-nav {
     background: var(--sb-accent-soft);
     color: var(--sb-accent);
     border-color: var(--sb-accent-glow);
+    box-shadow: 0 0 0 1px var(--sb-accent-glow) inset;
+}
+/* Cancel the inline negative margins added in tmr-sitewide.css */
+body.tmr-site-shell[data-tmr-route="sportsbook"] .sportsbook-sports-nav {
+    margin-left: auto !important;
+    margin-right: auto !important;
 }
 
 /* ==========================================================================
-   Main content shell — full width, three columns on desktop
+   Main content shell — wider, breathable
    ========================================================================== */
 body > .container > main {
-    background: var(--sb-bg-deep);
-    max-width: 1600px;
-    margin: 0 auto;
-    padding: 0;
-    width: 100%;
+    background: var(--sb-bg) !important;
+    width: min(var(--sb-shell-max), calc(100% - 64px)) !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
 }
 
-/* The picks SPA section — neutralize inline-style chunky look */
+/* The picks SPA section */
 #picks.page-section {
-    padding: 16px 24px 40px !important;
-    background: var(--sb-bg-deep) !important;
+    padding: 4px 0 56px !important;
+    background: var(--sb-bg) !important;
     overflow: visible !important;
+    scroll-margin-top: calc(var(--sb-header-h) + var(--sb-tabs-h) + 24px);
+}
+#picks .picks-container-modern {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 #picks .pick-step {
     border: none !important;
@@ -286,92 +242,79 @@ body > .container > main {
     background: transparent !important;
     overflow: visible !important;
 }
-#picks .pick-step.active {
-    display: block;
+#picks .pick-step.active { display: block; }
+
+/* Page intro topbar */
+#picks .section-header.sportsbook-page-shell {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 0 22px !important;
 }
-#picks #gamesListSection.pick-step.active,
-#picks #pickDetails.pick-step.active,
-#picks #pickConfirmation.pick-step.active,
-#picks #picksList.pick-step.active {
-    background: var(--sb-surface) !important;
-    border: 1px solid var(--sb-border) !important;
-    border-radius: var(--sb-radius) !important;
-    padding: 18px 20px !important;
-    margin-top: 6px !important;
+#picks .sportsbook-page-topbar {
+    display: flex !important;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 8px 0 22px !important;
+    border-bottom: 1px solid var(--sb-border) !important;
+    margin-bottom: 24px !important;
 }
-/* Kill the chunky cyan glow and oversized intro text inside #picks */
-#picks .section-header h2 {
-    font-size: 22px !important;
-    font-family: 'Inter', 'Barlow', sans-serif !important;
-    line-height: 1.2 !important;
+#picks .sportsbook-kicker {
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 1.6px;
+    color: var(--sb-accent);
+    font-weight: 800;
+    margin-bottom: 8px;
+    display: inline-block;
+    padding: 4px 10px;
+    background: var(--sb-accent-soft);
+    border: 1px solid var(--sb-accent-glow);
+    border-radius: 6px;
+}
+#picks .sportsbook-page-intro h2 {
+    font-size: 30px !important;
+    font-weight: 800 !important;
     color: var(--sb-text) !important;
-    margin: 0 0 4px !important;
+    margin: 0 0 6px !important;
+    letter-spacing: -0.4px !important;
+    line-height: 1.15 !important;
+    font-family: 'Inter', 'Barlow', sans-serif !important;
+    text-transform: none !important;
 }
+#picks .sportsbook-page-intro p,
 #picks .section-header p {
     color: var(--sb-text-3) !important;
-    font-size: 13px !important;
+    font-size: 14.5px !important;
+    margin: 0 !important;
+    max-width: 620px !important;
     font-weight: 500 !important;
-    line-height: 1.5 !important;
-    max-width: 560px !important;
+    line-height: 1.55 !important;
 }
+#picks .section-header h2 {
+    font-size: 30px !important;
+    font-family: 'Inter', 'Barlow', sans-serif !important;
+    line-height: 1.15 !important;
+    color: var(--sb-text) !important;
+    margin: 0 0 6px !important;
+    text-transform: none !important;
+}
+
+/* Hide any leftover decorative strips inside #picks */
 #picks .market-chip-row { display: none !important; }
 #picks .sportsbook-sport-toolbar { display: none !important; }
 #picks .sportsbook-lobby-header { display: none !important; }
-#picks .picks-container-modern {
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-#picks .section-header.sportsbook-page-shell {
-    background: transparent;
-    border: none;
-    padding: 0;
-    margin: 0 0 14px;
-}
-#picks .sportsbook-page-topbar {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 4px 0 14px;
-    border-bottom: 1px solid var(--sb-border);
-    margin-bottom: 14px;
-}
-#picks .sportsbook-kicker {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    color: var(--sb-accent);
-    font-weight: 700;
-    margin-bottom: 4px;
-}
-#picks .sportsbook-page-intro h2 {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--sb-text);
-    margin: 0 0 4px;
-    letter-spacing: -0.2px;
-}
-#picks .sportsbook-page-intro p {
-    color: var(--sb-text-3);
-    font-size: 13px;
-    margin: 0;
-    max-width: 560px;
-}
-
-/* Inline duplicate sport-tab strip inside #picks header — hide the second one,
-   the global sports-nav above already handles tabs */
-#picks .sportsbook-sport-tabs {
-    display: none !important;
-}
+#picks .sportsbook-sport-tabs { display: none !important; }
+#picks .sportsbook-sport-select-wrap { display: none !important; }
 
 /* ==========================================================================
-   Three-column picks layout
+   Three-column picks layout — wider, with real gutters
    ========================================================================== */
 #picks .sportsbook-picks-layout {
     display: grid !important;
-    grid-template-columns: 240px minmax(0, 1fr) 340px !important;
-    gap: 16px !important;
+    grid-template-columns: 264px minmax(0, 1fr) 380px !important;
+    gap: 28px !important;
     align-items: stretch !important;
     max-width: none !important;
     margin: 0 !important;
@@ -380,61 +323,60 @@ body > .container > main {
 
 /* ----- Left rail: Sports list ----- */
 #picks .sportsbook-league-rail {
-    background: var(--sb-surface);
-    border: 1px solid var(--sb-border);
-    border-radius: var(--sb-radius);
-    padding: 0;
-    height: fit-content;
-    position: sticky;
-    top: 110px;
-    overflow: hidden;
+    background: var(--sb-surface) !important;
+    border: 1px solid var(--sb-border) !important;
+    border-radius: var(--sb-radius) !important;
+    padding: 0 !important;
+    height: fit-content !important;
+    position: sticky !important;
+    top: calc(var(--sb-header-h) + var(--sb-tabs-h) + 16px) !important;
+    overflow: hidden !important;
+    box-shadow: var(--sb-shadow-card) !important;
 }
 #picks .sportsbook-rail-head {
-    padding: 14px 16px 10px;
+    padding: 18px 20px 16px;
     border-bottom: 1px solid var(--sb-border);
     background: var(--sb-surface-2);
 }
 #picks .sportsbook-rail-head .sportsbook-lobby-label {
-    font-size: 10px;
+    font-size: 10.5px;
     text-transform: uppercase;
-    letter-spacing: 1.4px;
+    letter-spacing: 1.6px;
     color: var(--sb-text-4);
-    font-weight: 700;
+    font-weight: 800;
     display: block;
-    margin-bottom: 2px;
+    margin-bottom: 6px;
 }
 #picks .sportsbook-rail-head h3 {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--sb-text);
-    margin: 0 0 4px;
+    font-size: 17px !important;
+    font-weight: 800 !important;
+    color: var(--sb-text) !important;
+    margin: 0 0 6px !important;
+    text-transform: none !important;
+    font-family: 'Inter', sans-serif !important;
+    line-height: 1.2 !important;
 }
 #picks .sportsbook-rail-head .sportsbook-selector-copy {
-    font-size: 11.5px;
+    font-size: 12.5px;
     color: var(--sb-text-3);
     margin: 0;
-    line-height: 1.4;
+    line-height: 1.5;
 }
-#picks .sportsbook-sport-select-wrap {
-    display: none !important;
-}
-
 #picks .sportsbook-rail-list {
     display: flex;
     flex-direction: column;
-    padding: 6px 0;
-    gap: 0;
+    padding: 10px 8px;
+    gap: 2px;
 }
 #picks .sportsbook-rail-board {
     background: transparent;
-    border: none;
-    border-left: 2px solid transparent;
-    border-radius: 0;
-    padding: 10px 16px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 14px 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    gap: 12px;
     color: var(--sb-text-2);
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
@@ -450,28 +392,30 @@ body > .container > main {
 #picks .sportsbook-rail-board[aria-selected="true"] {
     background: var(--sb-accent-soft);
     color: var(--sb-text);
-    border-left-color: var(--sb-accent);
+    border-color: var(--sb-accent-glow);
 }
 #picks .sportsbook-rail-board-main {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
     min-width: 0;
     flex: 1;
 }
 #picks .sportsbook-rail-board-main b {
-    font-size: 13.5px;
-    font-weight: 700;
+    font-size: 14.5px;
+    font-weight: 800;
     color: inherit;
     letter-spacing: 0.2px;
 }
 #picks .sportsbook-rail-board-main small {
-    font-size: 11px;
+    font-size: 11.5px;
     color: var(--sb-text-3);
-    font-weight: 500;
+    font-weight: 600;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
 }
 #picks .sportsbook-rail-board-main small i {
     width: 6px;
@@ -483,22 +427,24 @@ body > .container > main {
 }
 #picks .sportsbook-rail-board[data-live="true"] .sportsbook-rail-board-main small i {
     background: var(--sb-good);
-    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
 }
 #picks .sportsbook-rail-board-count {
-    font-size: 11px;
+    font-size: 10.5px;
     color: var(--sb-text-3);
-    font-weight: 600;
-    background: var(--sb-surface-2);
-    padding: 3px 8px;
-    border-radius: 4px;
-    min-width: 38px;
+    font-weight: 700;
+    background: var(--sb-cell);
+    padding: 5px 10px;
+    border-radius: 5px;
+    min-width: 50px;
     text-align: center;
     border: 1px solid var(--sb-border);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
 }
 #picks .sportsbook-rail-board.is-active .sportsbook-rail-board-count {
     background: var(--sb-accent);
-    color: #07111f;
+    color: #03131a;
     border-color: var(--sb-accent);
 }
 
@@ -507,98 +453,98 @@ body > .container > main {
     display: none;
     border-top: 1px solid var(--sb-border);
     background: var(--sb-surface-2);
-    padding: 10px 12px 12px;
+    padding: 12px 14px 14px;
 }
-#picks .sportsbook-subleague-panel.show {
-    display: block;
-}
+#picks .sportsbook-subleague-panel.show { display: block; }
 #picks .sportsbook-subleague-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 #picks .sportsbook-subleague-head strong {
     font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.2px;
     color: var(--sb-text-3);
+    font-weight: 800;
 }
 #picks .sportsbook-subleague-head button {
     background: transparent;
     border: 1px solid var(--sb-border);
     color: var(--sb-text-3);
     font-size: 11px;
-    padding: 3px 8px;
-    border-radius: 4px;
+    padding: 4px 10px;
+    border-radius: 5px;
     cursor: pointer;
 }
 #picks .sportsbook-subleague-grid {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
 }
 #picks .sportsbook-subleague-grid button {
     background: transparent;
     border: 1px solid var(--sb-border);
     color: var(--sb-text-2);
-    font-size: 12px;
-    font-weight: 600;
-    padding: 7px 10px;
-    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 9px 12px;
+    border-radius: 7px;
     cursor: pointer;
     text-align: left;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 10px;
 }
 #picks .sportsbook-subleague-grid button:hover {
     background: var(--sb-row-hover);
     color: var(--sb-text);
     border-color: var(--sb-border-strong);
 }
-#picks .sportsbook-subleague-grid button span {
-    font-size: 10.5px;
-    color: var(--sb-text-4);
-    font-weight: 500;
-}
 
 /* ----- Center: odds board ----- */
 #picks .sportsbook-selector-shell {
-    background: var(--sb-surface);
-    border: 1px solid var(--sb-border);
-    border-radius: var(--sb-radius);
-    padding: 0;
-    overflow: hidden;
-    min-width: 0;
+    background: var(--sb-surface) !important;
+    border: 1px solid var(--sb-border) !important;
+    border-radius: var(--sb-radius) !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    min-width: 0 !important;
+    box-shadow: var(--sb-shadow-card) !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 #picks .sportsbook-selector-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--sb-border);
-    background: var(--sb-surface-2);
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 14px !important;
+    padding: 18px 24px !important;
+    border-bottom: 1px solid var(--sb-border) !important;
+    background: var(--sb-surface-2) !important;
 }
 #picks .sportsbook-selector-head .sportsbook-lobby-label {
-    font-size: 10px;
+    font-size: 10.5px;
     text-transform: uppercase;
-    letter-spacing: 1.4px;
+    letter-spacing: 1.6px;
     color: var(--sb-text-4);
-    font-weight: 700;
+    font-weight: 800;
     display: block;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
 }
 #picks .sportsbook-selector-head h3 {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--sb-text);
-    margin: 0 0 2px;
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    color: var(--sb-text) !important;
+    margin: 0 0 4px !important;
+    text-transform: none !important;
+    font-family: 'Inter', sans-serif !important;
+    line-height: 1.2 !important;
 }
 #picks .sportsbook-selector-head .sportsbook-selector-copy {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--sb-text-3);
     margin: 0;
 }
@@ -606,13 +552,15 @@ body > .container > main {
     background: transparent;
     border: 1px solid var(--sb-border-strong);
     color: var(--sb-text-2);
-    padding: 7px 14px;
-    font-size: 12.5px;
-    font-weight: 600;
-    border-radius: 6px;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.15s ease;
     white-space: nowrap;
+    letter-spacing: 0.3px;
+    height: 40px;
 }
 #picks .sportsbook-lobby-secondary-btn:hover {
     background: var(--sb-surface-3);
@@ -620,356 +568,368 @@ body > .container > main {
     border-color: var(--sb-accent);
 }
 
-/* Market filter strip across the top of the board */
+/* Market filter strip */
 #picks .sportsbook-board-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 10px 18px;
-    border-bottom: 1px solid var(--sb-border);
-    background: var(--sb-surface);
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 14px !important;
+    padding: 14px 24px !important;
+    border-bottom: 1px solid var(--sb-border) !important;
+    background: var(--sb-surface) !important;
 }
 #picks .sportsbook-market-strip {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
 }
 #picks .sportsbook-market-strip span {
-    font-size: 11.5px;
-    font-weight: 600;
-    color: var(--sb-text-3);
-    padding: 5px 10px;
-    border-radius: 5px;
-    background: var(--sb-surface-2);
-    border: 1px solid var(--sb-border);
-    cursor: default;
-    text-transform: none;
-    letter-spacing: 0.2px;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: var(--sb-text-3) !important;
+    padding: 8px 14px !important;
+    border-radius: 7px !important;
+    background: var(--sb-cell) !important;
+    border: 1px solid var(--sb-border) !important;
+    cursor: default !important;
+    text-transform: none !important;
+    letter-spacing: 0.2px !important;
+    min-height: auto !important;
 }
 #picks .sportsbook-market-strip span:first-child {
-    color: var(--sb-accent);
-    background: var(--sb-accent-soft);
-    border-color: var(--sb-accent-glow);
-}
-#picks .sportsbook-board-toolbar-note {
-    font-size: 11.5px;
-    color: var(--sb-text-4);
-    font-weight: 500;
+    color: var(--sb-accent) !important;
+    background: var(--sb-accent-soft) !important;
+    border-color: var(--sb-accent-glow) !important;
 }
 
-/* The board table — sport tiles. We treat each row as a sport entry tile,
-   with sportsbook-style click-through (no fake hardcoded prices). */
+/* The board table — sport tiles with real odds-button cells */
 #picks .sportsbook-board-table {
-    display: flex;
-    flex-direction: column;
+    display: flex !important;
+    flex-direction: column !important;
 }
 #picks .sportsbook-board-table-head {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr 110px;
-    gap: 0;
-    padding: 10px 18px;
-    background: var(--sb-surface-2);
-    border-bottom: 1px solid var(--sb-border);
+    display: grid !important;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr 130px !important;
+    gap: 12px !important;
+    padding: 14px 24px !important;
+    background: var(--sb-surface-2) !important;
+    border-bottom: 1px solid var(--sb-border) !important;
 }
 #picks .sportsbook-board-table-head span {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    color: var(--sb-text-4);
+    font-size: 10.5px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1.4px !important;
+    color: var(--sb-text-4) !important;
 }
-#picks .sportsbook-board-table-head span:last-child { text-align: right; }
+#picks .sportsbook-board-table-head span:last-child { text-align: right !important; }
 
 #picks .sportsbook-board-table-row {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr 110px;
-    gap: 8px;
-    align-items: stretch;
-    padding: 10px 18px;
-    border: none;
-    border-top: 1px solid var(--sb-border);
-    background: var(--sb-surface);
-    color: var(--sb-text-2);
-    cursor: pointer;
-    text-align: left;
-    transition: background 0.12s ease;
-    font-family: inherit;
-    width: 100%;
+    display: grid !important;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr 130px !important;
+    gap: 12px !important;
+    align-items: stretch !important;
+    padding: 16px 24px !important;
+    border: none !important;
+    border-top: 1px solid var(--sb-border) !important;
+    background: var(--sb-row) !important;
+    color: var(--sb-text-2) !important;
+    cursor: pointer !important;
+    text-align: left !important;
+    transition: background 0.15s ease !important;
+    font-family: inherit !important;
+    width: 100% !important;
+    min-height: 78px !important;
+}
+#picks .sportsbook-board-table-row:nth-child(even) {
+    background: var(--sb-row-alt) !important;
 }
 #picks .sportsbook-board-table-row:hover {
-    background: var(--sb-row-hover);
+    background: var(--sb-row-hover) !important;
 }
-#picks .sportsbook-board-table-row:first-of-type { border-top: none; }
+#picks .sportsbook-board-table-row:first-of-type { border-top: none !important; }
 
 #picks .sportsbook-board-table-league {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    justify-content: center;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    justify-content: center !important;
+    padding-right: 8px !important;
 }
 #picks .sportsbook-board-table-league b {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--sb-text);
-    letter-spacing: 0.2px;
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    color: var(--sb-text) !important;
+    letter-spacing: 0.2px !important;
+    line-height: 1.2 !important;
 }
 #picks .sportsbook-board-table-league small {
-    font-size: 11px;
-    color: var(--sb-text-3);
-    font-weight: 500;
+    font-size: 11.5px !important;
+    color: var(--sb-text-3) !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.6px !important;
 }
 
-/* Real sportsbook odds button — even when used as a preview cell */
+/* Sportsbook odds button cell */
 #picks .sportsbook-board-odds-cell {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 1px;
-    padding: 6px 8px;
-    background: var(--sb-row);
-    border: 1px solid var(--sb-border);
-    border-radius: var(--sb-radius-sm);
-    transition: background 0.12s ease, border-color 0.12s ease;
-    min-width: 0;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 3px !important;
+    padding: 10px 8px !important;
+    background: var(--sb-cell) !important;
+    border: 1px solid var(--sb-border) !important;
+    border-radius: var(--sb-radius-sm) !important;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease !important;
+    min-width: 0 !important;
+    min-height: 56px !important;
 }
 #picks .sportsbook-board-table-row:hover .sportsbook-board-odds-cell {
-    border-color: var(--sb-border-strong);
+    border-color: var(--sb-border-strong) !important;
+    background: var(--sb-cell-hover) !important;
 }
 #picks .sportsbook-board-odds-cell em {
-    font-size: 9.5px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--sb-text-4);
-    font-style: normal;
-    font-weight: 600;
+    font-size: 10px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1.1px !important;
+    color: var(--sb-text-4) !important;
+    font-style: normal !important;
+    font-weight: 700 !important;
 }
 #picks .sportsbook-board-odds-cell strong {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--sb-text);
-    letter-spacing: 0.1px;
-    line-height: 1.1;
+    font-size: 17px !important;
+    font-weight: 800 !important;
+    color: var(--sb-text) !important;
+    letter-spacing: 0.1px !important;
+    line-height: 1.1 !important;
+    font-family: 'Inter', 'Barlow', sans-serif !important;
 }
 #picks .sportsbook-board-odds-cell small {
-    font-size: 10.5px;
-    color: var(--sb-text-3);
-    font-weight: 600;
-    letter-spacing: 0.1px;
+    font-size: 11px !important;
+    color: var(--sb-text-3) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px !important;
+    text-transform: uppercase !important;
 }
 
 /* Action button on the right of each row */
 #picks .sportsbook-board-table-action {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    align-self: center;
-    background: var(--sb-accent);
-    color: #07111f;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-    padding: 8px 12px;
-    border-radius: var(--sb-radius-sm);
-    border: 1px solid var(--sb-accent);
-    transition: background 0.12s ease;
-    text-align: center;
-    justify-self: end;
-    width: 100px;
-    height: 30px;
-    line-height: 1;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    align-self: center !important;
+    background: var(--sb-accent) !important;
+    color: #03131a !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.6px !important;
+    padding: 0 16px !important;
+    border-radius: var(--sb-radius-sm) !important;
+    border: 1px solid var(--sb-accent) !important;
+    transition: background 0.15s ease, transform 0.1s ease !important;
+    text-align: center !important;
+    justify-self: end !important;
+    width: 130px !important;
+    height: 44px !important;
+    line-height: 1 !important;
+    text-transform: uppercase !important;
 }
 #picks .sportsbook-board-table-row:hover .sportsbook-board-table-action {
-    background: var(--sb-accent-2);
-    border-color: var(--sb-accent-2);
+    background: var(--sb-accent-2) !important;
+    border-color: var(--sb-accent-2) !important;
 }
 
 /* ----- Right column: Pick slip ----- */
 #picks .sportsbook-ticket-preview {
-    background: var(--sb-surface);
-    border: 1px solid var(--sb-border);
-    border-radius: var(--sb-radius);
-    padding: 0;
-    height: fit-content;
-    position: sticky;
-    top: 110px;
-    overflow: hidden;
+    background: var(--sb-surface) !important;
+    border: 1px solid var(--sb-border) !important;
+    border-radius: var(--sb-radius) !important;
+    padding: 0 !important;
+    height: fit-content !important;
+    position: sticky !important;
+    top: calc(var(--sb-header-h) + var(--sb-tabs-h) + 16px) !important;
+    overflow: hidden !important;
+    box-shadow: var(--sb-shadow-card) !important;
 }
 #picks .sportsbook-ticket-preview-head {
-    padding: 14px 16px 12px;
-    border-bottom: 1px solid var(--sb-border);
-    background: var(--sb-surface-2);
+    padding: 18px 22px 16px !important;
+    border-bottom: 1px solid var(--sb-border) !important;
+    background: var(--sb-surface-2) !important;
 }
 #picks .sportsbook-ticket-preview-head .sportsbook-lobby-label {
-    font-size: 10px;
+    font-size: 10.5px;
     text-transform: uppercase;
-    letter-spacing: 1.4px;
+    letter-spacing: 1.6px;
     color: var(--sb-text-4);
-    font-weight: 700;
+    font-weight: 800;
     display: block;
-    margin-bottom: 2px;
+    margin-bottom: 6px;
 }
 #picks .sportsbook-ticket-preview-head h3 {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--sb-text);
-    margin: 0 0 4px;
+    font-size: 17px !important;
+    font-weight: 800 !important;
+    color: var(--sb-text) !important;
+    margin: 0 0 6px !important;
+    text-transform: none !important;
+    font-family: 'Inter', sans-serif !important;
+    line-height: 1.2 !important;
 }
 #picks .sportsbook-ticket-preview-head .sportsbook-selector-copy {
-    font-size: 11.5px;
+    font-size: 12.5px;
     color: var(--sb-text-3);
     margin: 0;
-    line-height: 1.4;
+    line-height: 1.5;
 }
 
 #picks .sportsbook-ticket-preview-card {
-    padding: 14px 16px 16px;
-    background: var(--sb-surface);
-    border: none;
-    border-radius: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    padding: 18px 22px 22px !important;
+    background: var(--sb-surface) !important;
+    border: none !important;
+    border-radius: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
 }
 #picks .sportsbook-ticket-preview-topline {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 10px;
-    border-bottom: 1px dashed var(--sb-border);
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 4px 0 14px !important;
+    border-bottom: 1px dashed var(--sb-border) !important;
+    margin-bottom: 6px !important;
 }
 #picks .sportsbook-ticket-preview-topline strong {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--sb-text);
-    letter-spacing: 0.2px;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    color: var(--sb-text) !important;
+    letter-spacing: 0.2px !important;
 }
 #picks .sportsbook-ticket-preview-topline span {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    color: var(--sb-text-3);
-    font-weight: 700;
-    background: var(--sb-surface-2);
-    padding: 3px 8px;
-    border-radius: 4px;
-    border: 1px solid var(--sb-border);
+    font-size: 10.5px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1.4px !important;
+    color: var(--sb-text-3) !important;
+    font-weight: 800 !important;
+    background: var(--sb-cell) !important;
+    padding: 5px 10px !important;
+    border-radius: 5px !important;
+    border: 1px solid var(--sb-border) !important;
 }
 
 #picks .sportsbook-ticket-preview-row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--sb-border);
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    padding: 11px 0 !important;
+    border-bottom: 1px solid var(--sb-divider) !important;
 }
-#picks .sportsbook-ticket-preview-row:last-of-type { border-bottom: none; }
+#picks .sportsbook-ticket-preview-row:last-of-type { border-bottom: none !important; }
 #picks .sportsbook-ticket-preview-row span {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--sb-text-4);
-    font-weight: 600;
-    white-space: nowrap;
-    flex-shrink: 0;
+    font-size: 11.5px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    color: var(--sb-text-4) !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
 }
 #picks .sportsbook-ticket-preview-row strong {
-    font-size: 12px;
-    color: var(--sb-text-2);
-    font-weight: 600;
-    text-align: right;
-    line-height: 1.4;
+    font-size: 13px !important;
+    color: var(--sb-text-2) !important;
+    font-weight: 700 !important;
+    text-align: right !important;
+    line-height: 1.4 !important;
 }
 
 #picks .sportsbook-ticket-preview-note {
-    font-size: 11.5px;
-    color: var(--sb-text-3);
-    line-height: 1.5;
-    padding: 10px 12px;
-    background: var(--sb-surface-2);
-    border-radius: var(--sb-radius-sm);
-    border: 1px solid var(--sb-border);
-    margin-top: 4px;
+    font-size: 12.5px !important;
+    color: var(--sb-text-3) !important;
+    line-height: 1.55 !important;
+    padding: 14px 16px !important;
+    background: var(--sb-surface-2) !important;
+    border-radius: var(--sb-radius-sm) !important;
+    border: 1px solid var(--sb-border) !important;
+    margin: 14px 0 14px !important;
 }
 
 #picks .sportsbook-ticket-preview-submit {
-    width: 100%;
-    padding: 11px 14px;
-    background: var(--sb-surface-3);
-    color: var(--sb-text-3);
-    border: 1px solid var(--sb-border);
-    border-radius: var(--sb-radius-sm);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.4px;
-    cursor: not-allowed;
-    transition: all 0.15s ease;
-    text-transform: uppercase;
-    margin-top: 8px;
+    width: 100% !important;
+    padding: 14px 16px !important;
+    background: var(--sb-surface-3) !important;
+    color: var(--sb-text-3) !important;
+    border: 1px solid var(--sb-border-strong) !important;
+    border-radius: var(--sb-radius-sm) !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.6px !important;
+    cursor: not-allowed !important;
+    transition: all 0.15s ease !important;
+    text-transform: uppercase !important;
+    margin-top: 4px !important;
+    height: 50px !important;
 }
 #picks .sportsbook-ticket-preview-submit:not(:disabled) {
-    background: var(--sb-accent);
-    color: #07111f;
-    border-color: var(--sb-accent);
-    cursor: pointer;
+    background: var(--sb-accent) !important;
+    color: #03131a !important;
+    border-color: var(--sb-accent) !important;
+    cursor: pointer !important;
 }
 #picks .sportsbook-ticket-preview-submit:not(:disabled):hover {
-    background: var(--sb-accent-2);
-    border-color: var(--sb-accent-2);
+    background: var(--sb-accent-2) !important;
+    border-color: var(--sb-accent-2) !important;
 }
 
 #picks .sportsbook-lobby-secondary-btn--wide {
-    width: calc(100% - 32px);
-    margin: 0 16px 16px;
-    text-align: center;
-    justify-content: center;
-    display: block;
-    padding: 9px 14px;
+    width: calc(100% - 44px) !important;
+    margin: 0 22px 22px !important;
+    text-align: center !important;
+    justify-content: center !important;
+    display: block !important;
+    padding: 12px 16px !important;
+    height: 48px !important;
+    line-height: 24px !important;
+    font-size: 13px !important;
 }
 
 /* ==========================================================================
    Internal pick steps (games list, pick details, confirmation, picks list)
-   These previously lived inside .picks-container-modern with cyan glow boxes.
-   Make them feel app-native instead.
    ========================================================================== */
-#picks .pick-step {
-    background: transparent;
-}
 #picks #gamesListSection.pick-step.active,
 #picks #pickDetails.pick-step.active,
 #picks #pickConfirmation.pick-step.active,
 #picks #picksList.pick-step.active {
-    background: var(--sb-surface);
-    border: 1px solid var(--sb-border);
-    border-radius: var(--sb-radius);
-    padding: 18px 20px;
-    margin-top: 6px;
+    background: var(--sb-surface) !important;
+    border: 1px solid var(--sb-border) !important;
+    border-radius: var(--sb-radius) !important;
+    padding: 24px 28px !important;
+    margin-top: 12px !important;
 }
 #picks .back-button {
-    color: var(--sb-accent);
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 14px;
-    padding: 4px 0;
+    color: var(--sb-accent) !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    margin-bottom: 18px !important;
+    padding: 4px 0 !important;
 }
-#picks .back-button:hover { color: var(--sb-accent-2); transform: none; }
-#picks .games-header h3 { color: var(--sb-text); font-weight: 700; font-size: 18px; }
+#picks .back-button:hover { color: var(--sb-accent-2) !important; transform: none !important; }
+#picks .games-header h3 { color: var(--sb-text) !important; font-weight: 800 !important; font-size: 22px !important; }
 #picks .games-count {
-    background: var(--sb-accent-soft);
-    color: var(--sb-accent);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 4px;
-    border: 1px solid var(--sb-accent-glow);
+    background: var(--sb-accent-soft) !important;
+    color: var(--sb-accent) !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    padding: 5px 12px !important;
+    border-radius: 5px !important;
+    border: 1px solid var(--sb-accent-glow) !important;
 }
-#picks .loading-games { color: var(--sb-text-3); font-size: 13px; padding: 28px; }
+#picks .loading-games { color: var(--sb-text-3) !important; font-size: 14px !important; padding: 36px !important; }
 
-/* Game cards inside #gamesListSection — match dark sportsbook palette */
+/* Game cards inside #gamesListSection */
 #picks .game-card-new {
-    background: var(--sb-surface) !important;
+    background: var(--sb-surface-2) !important;
     border: 1px solid var(--sb-border) !important;
     border-radius: var(--sb-radius) !important;
     box-shadow: none !important;
@@ -982,22 +942,22 @@ body > .container > main {
 /* Submit-pick / lock-in button */
 #picks .submit-pick-btn {
     background: var(--sb-accent) !important;
-    color: #07111f !important;
+    color: #03131a !important;
     border: 1px solid var(--sb-accent) !important;
     border-radius: var(--sb-radius) !important;
-    padding: 13px 20px !important;
+    padding: 15px 22px !important;
     font-weight: 800 !important;
-    font-size: 14px !important;
-    letter-spacing: 0.6px !important;
+    font-size: 15px !important;
+    letter-spacing: 0.7px !important;
     box-shadow: none !important;
-    text-transform: uppercase;
+    text-transform: uppercase !important;
 }
 #picks .submit-pick-btn:hover {
     background: var(--sb-accent-2) !important;
     border-color: var(--sb-accent-2) !important;
     transform: none !important;
 }
-#picks .submit-pick-btn .btn-icon { margin-right: 6px; }
+#picks .submit-pick-btn .btn-icon { margin-right: 8px; }
 
 /* Pick summary card */
 #picks .pick-summary-card {
@@ -1018,28 +978,29 @@ body > .container > main {
 #picks .pick-options input[type="text"],
 #picks .pick-options input[type="number"],
 #picks .pick-options textarea {
-    background: var(--sb-bg) !important;
+    background: var(--sb-cell) !important;
     border: 1px solid var(--sb-border) !important;
     color: var(--sb-text) !important;
-    font-size: 14px !important;
+    font-size: 14.5px !important;
     border-radius: var(--sb-radius-sm) !important;
+    padding: 12px 14px !important;
 }
 #picks .pick-options input:focus,
 #picks .pick-options textarea:focus {
     border-color: var(--sb-accent) !important;
-    outline: none;
+    outline: none !important;
 }
 #picks .pick-options label {
-    color: var(--sb-text-2);
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
+    color: var(--sb-text-2) !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.7px !important;
 }
 #picks .ticket-input-help {
-    color: var(--sb-text-4);
-    font-size: 11px;
-    margin-top: 4px;
+    color: var(--sb-text-4) !important;
+    font-size: 11.5px !important;
+    margin-top: 6px !important;
 }
 
 /* Bet type / scope toggle buttons inside #pickDetails */
@@ -1049,13 +1010,13 @@ body > .container > main {
     background: var(--sb-surface) !important;
     border: 1px solid var(--sb-border) !important;
     color: var(--sb-text-2) !important;
-    transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease !important;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease !important;
 }
 #picks .bt-toggle-btn.active,
 #picks .bt-scope-btn.active,
 #picks .units-mode-btn.active {
     background: var(--sb-accent) !important;
-    color: #07111f !important;
+    color: #03131a !important;
     border-color: var(--sb-accent) !important;
 }
 #picks #betScopeSelector,
@@ -1068,35 +1029,71 @@ body > .container > main {
 }
 
 /* ==========================================================================
-   Global helpers — keep other page sections readable when navigated to
+   Helpers
    ========================================================================== */
-.page-section {
-    color: var(--sb-text);
-}
+.page-section { color: var(--sb-text); }
 .page-section h2,
 .page-section h3,
-.page-section h4 {
-    color: var(--sb-text);
-}
+.page-section h4 { color: var(--sb-text); }
 section.hero { background: var(--sb-bg-deep); }
 
 /* ==========================================================================
    Responsive
    ========================================================================== */
-@media (max-width: 1240px) {
+@media (max-width: 1500px) {
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__inner,
+    body > .container > main,
+    .sportsbook-sports-nav {
+        width: min(var(--sb-shell-max), calc(100% - 40px)) !important;
+    }
+    /* Tighten nav so it stays one row down to ~1280 */
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__inner {
+        gap: 18px !important;
+        grid-template-columns: minmax(180px, auto) minmax(0, 1fr) auto !important;
+    }
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__brand {
+        font-size: 1.35rem !important;
+    }
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__panel {
+        gap: 16px !important;
+    }
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links {
+        gap: 4px !important;
+        padding: 0 12px !important;
+    }
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links a {
+        padding: 9px 13px !important;
+        font-size: 0.78rem !important;
+        letter-spacing: 0.04em !important;
+    }
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions a,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions button {
+        padding: 9px 16px !important;
+        font-size: 0.78rem !important;
+    }
     #picks .sportsbook-picks-layout {
-        grid-template-columns: 220px minmax(0, 1fr) 300px !important;
+        grid-template-columns: 244px minmax(0, 1fr) 340px !important;
+        gap: 22px !important;
     }
     #picks .sportsbook-board-table-head,
     #picks .sportsbook-board-table-row {
-        grid-template-columns: 1.3fr 1fr 1fr 1fr 1fr 100px;
+        grid-template-columns: 1.3fr 1fr 1fr 1fr 1fr 120px !important;
     }
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 1180px) {
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links a {
+        padding: 8px 10px !important;
+        font-size: 0.74rem !important;
+    }
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions a,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions button {
+        padding: 8px 13px !important;
+        font-size: 0.74rem !important;
+    }
     #picks .sportsbook-picks-layout {
         grid-template-columns: 1fr !important;
-        gap: 12px !important;
+        gap: 18px !important;
     }
     #picks .sportsbook-league-rail,
     #picks .sportsbook-ticket-preview {
@@ -1105,57 +1102,55 @@ section.hero { background: var(--sb-bg-deep); }
     #picks .sportsbook-rail-list {
         flex-direction: row;
         flex-wrap: wrap;
-        padding: 8px;
-        gap: 6px;
+        padding: 12px;
+        gap: 8px;
     }
     #picks .sportsbook-rail-board {
-        flex: 1 1 calc(33.333% - 4px);
-        border-left: none;
-        border-bottom: 2px solid transparent;
-        border-radius: 6px;
-        padding: 8px 12px;
-        min-width: 140px;
+        flex: 1 1 calc(33.333% - 6px);
+        border-radius: 8px;
+        padding: 10px 14px;
+        min-width: 160px;
     }
     #picks .sportsbook-rail-board.is-active {
         background: var(--sb-accent-soft);
-        border-bottom-color: var(--sb-accent);
-        border-left-color: transparent;
+        border-color: var(--sb-accent);
     }
-    /* Slip moves below board on tablet */
     #picks .sportsbook-ticket-preview {
-        max-width: 540px;
+        max-width: 600px;
         margin: 0 auto;
         width: 100%;
     }
 }
 
-@media (max-width: 720px) {
-    body > .container > header .header-content {
-        height: 52px;
-        padding: 0 14px;
-        gap: 12px;
+@media (max-width: 900px) and (min-width: 641px) {
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__inner {
+        display: grid !important;
+        grid-template-columns: auto 1fr auto !important;
+        flex-wrap: nowrap !important;
+        width: calc(100% - 24px) !important;
+        gap: 14px !important;
+        min-height: 60px !important;
+        padding: 8px 0 !important;
     }
-    body > .container > header .main-nav {
-        display: none;
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__brand {
+        font-size: 1.1rem !important;
     }
-    body > .container > header #headerAuthButtons {
-        gap: 6px !important;
-    }
-    body > .container > header #sportsbookHeaderLoginBtn,
-    body > .container > header #sportsbookHeaderRegisterBtn {
-        padding: 6px 10px !important;
-        font-size: 12px !important;
-    }
+}
+@media (max-width: 900px) {
     .sportsbook-sports-nav {
-        padding: 0 14px;
-        height: 40px;
+        width: calc(100% - 24px) !important;
+        height: 48px;
+        margin-bottom: 16px !important;
     }
     .sportsbook-sports-nav button {
-        padding: 5px 10px;
-        font-size: 12px;
+        padding: 7px 14px;
+        font-size: 12.5px;
     }
-    #picks.page-section { padding: 10px 14px 32px; }
-    #picks .sportsbook-picks-layout { gap: 12px; }
+    body > .container > main {
+        width: calc(100% - 24px) !important;
+    }
+    #picks.page-section { padding: 0 0 32px !important; }
+    #picks .sportsbook-page-intro h2 { font-size: 24px !important; }
 
     /* Force-scroll the odds rows horizontally so labels stay readable */
     #picks .sportsbook-selector-shell {
