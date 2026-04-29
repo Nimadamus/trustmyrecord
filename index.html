@@ -1075,17 +1075,17 @@ button{font:inherit;cursor:pointer}
 .combined-hero.hero-v2 .hero-zone-a {
     position: relative;
     z-index: 2;
-    flex: 1 1 65%;
+    flex: 1 1 60%;
     display: flex;
     align-items: center;
-    padding: 32px 0 24px;
+    padding: 22px 0 16px;
 }
 .combined-hero.hero-v2 .hero-zone-a-inner {
     width: min(1240px, calc(100% - 48px));
     margin: 0 auto;
     display: grid;
-    grid-template-columns: minmax(0, 55%) minmax(0, 45%);
-    gap: 48px;
+    grid-template-columns: minmax(0, 58%) minmax(0, 42%);
+    gap: 36px;
     align-items: center;
 }
 
@@ -1094,12 +1094,12 @@ button{font:inherit;cursor:pointer}
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 18px;
+    gap: 14px;
 }
-.combined-hero.hero-v2 .hero-headline .ch-eyebrow { margin-bottom: 4px; }
+.combined-hero.hero-v2 .hero-headline .ch-eyebrow { margin-bottom: 2px; }
 .combined-hero.hero-v2 .hero-headline h1 {
-    font-size: clamp(40px, 5.4vw, 78px); /* shrunk ~15% */
-    line-height: 0.96;
+    font-size: clamp(34px, 4.4vw, 64px); /* tighter so the pill row + 6-tile strip fit ATF */
+    line-height: 0.97;
     margin: 0;
 }
 .combined-hero.hero-v2 .hero-headline h1 .accent {
@@ -1108,11 +1108,41 @@ button{font:inherit;cursor:pointer}
     margin-top: 4px;
 }
 .combined-hero.hero-v2 .hero-headline .lead {
-    font-size: clamp(15px, 1.15vw, 17px);
+    font-size: clamp(13.5px, 1vw, 15.5px);
     line-height: 1.5;
     color: #c5cee0;
     margin: 0;
-    max-width: 560px;
+    max-width: 580px;
+}
+.combined-hero.hero-v2 .hero-pill-row {
+    list-style: none;
+    margin: 2px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.combined-hero.hero-v2 .hero-pill-row li { margin: 0; }
+.combined-hero.hero-v2 .hero-pill-row a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    color: #d8e0ec;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
+    white-space: nowrap;
+}
+.combined-hero.hero-v2 .hero-pill-row a:hover {
+    background: rgba(45, 212, 191, 0.10);
+    border-color: rgba(45, 212, 191, 0.45);
+    color: #ffffff;
 }
 .combined-hero.hero-v2 .hero-headline .ch-warning {
     margin: 0;
@@ -1362,83 +1392,110 @@ button{font:inherit;cursor:pointer}
     font-size: 16px;
 }
 
-/* Zone B: value strip pinned at the bottom of the hero */
+/* Zone B: 6-tile platform strip pinned at the bottom of the hero */
 .combined-hero.hero-v2 .hero-zone-b {
     position: relative;
     z-index: 2;
     flex: 0 0 auto;
-    padding: 22px 0 28px;
-    background: linear-gradient(180deg, rgba(5, 7, 13, 0) 0%, rgba(5, 7, 13, 0.7) 38%, rgba(5, 7, 13, 0.92) 100%);
+    padding: 14px 0 18px;
+    background: linear-gradient(180deg, rgba(5, 7, 13, 0) 0%, rgba(5, 7, 13, 0.78) 38%, rgba(5, 7, 13, 0.95) 100%);
     border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 .combined-hero.hero-v2 .hero-zone-b-inner {
     width: min(1240px, calc(100% - 48px));
     margin: 0 auto;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
 }
 .hero-tile {
     position: relative;
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 14px 18px;
-    border-radius: 12px;
-    background: rgba(13, 22, 38, 0.72);
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(13, 22, 38, 0.78);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    min-width: 0;
 }
 .hero-tile:hover {
     transform: translateY(-2px);
-    background: rgba(13, 22, 38, 0.92);
+    background: rgba(13, 22, 38, 0.95);
     border-color: var(--tile-accent, rgba(255,255,255,0.16));
+    text-decoration: none;
 }
-.hero-tile--track   { --tile-accent: rgba(0, 229, 199, 0.55); }
-.hero-tile--talk    { --tile-accent: rgba(255, 107, 71, 0.55); }
-.hero-tile--compete { --tile-accent: rgba(53, 220, 128, 0.55); }
+.hero-tile--track       { --tile-accent: rgba(0, 229, 199, 0.55); }
+.hero-tile--talk        { --tile-accent: rgba(255, 107, 71, 0.55); }
+.hero-tile--compete     { --tile-accent: rgba(53, 220, 128, 0.55); }
+.hero-tile--picks       { --tile-accent: rgba(0, 229, 199, 0.55); }
+.hero-tile--social      { --tile-accent: rgba(255, 107, 71, 0.55); }
+.hero-tile--forums      { --tile-accent: rgba(34, 211, 238, 0.55); }
+.hero-tile--polls       { --tile-accent: rgba(96, 165, 250, 0.55); }
+.hero-tile--marketplace { --tile-accent: rgba(53, 220, 128, 0.55); }
+.hero-tile--arena       { --tile-accent: rgba(251, 146, 60, 0.55); }
 .hero-tile-icon {
     flex-shrink: 0;
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid var(--tile-accent, rgba(255,255,255,0.08));
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 16px;
 }
 .hero-tile-body {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
     min-width: 0;
 }
 .hero-tile-label {
     font-family: 'JetBrains Mono', 'Menlo', monospace;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 800;
-    letter-spacing: 2px;
+    letter-spacing: 1.6px;
     color: var(--tile-accent-text, #6f7a8e);
     text-transform: uppercase;
 }
-.hero-tile--track   .hero-tile-label { color: var(--tmr-cyan-bright); }
-.hero-tile--talk    .hero-tile-label { color: #FF6B47; }
-.hero-tile--compete .hero-tile-label { color: #35dc80; }
+.hero-tile--track       .hero-tile-label,
+.hero-tile--picks       .hero-tile-label { color: var(--tmr-cyan-bright, #2dd4bf); }
+.hero-tile--talk        .hero-tile-label,
+.hero-tile--social      .hero-tile-label { color: #FF6B47; }
+.hero-tile--compete     .hero-tile-label,
+.hero-tile--marketplace .hero-tile-label { color: #35dc80; }
+.hero-tile--forums      .hero-tile-label { color: #22d3ee; }
+.hero-tile--polls       .hero-tile-label { color: #60a5fa; }
+.hero-tile--arena       .hero-tile-label { color: #fb923c; }
 .hero-tile-body strong {
     font-family: 'Barlow Condensed', 'Inter', sans-serif;
-    font-size: 16.5px;
+    font-size: 13.5px;
     font-weight: 800;
     color: #fff;
-    line-height: 1.2;
+    line-height: 1.15;
     letter-spacing: -0.1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .hero-tile-sub {
-    font-size: 12px;
+    font-size: 10.5px;
     color: #94a3b8;
     font-weight: 500;
-    line-height: 1.4;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Tablet: collapse the 6-tile strip into 3 columns. Mobile rule below stacks to 1. */
+@media (max-width: 1100px) {
+    .combined-hero.hero-v2 .hero-zone-b-inner { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 .hero-scroll-cue {
@@ -1889,9 +1946,19 @@ button{font:inherit;cursor:pointer}
   <div class="hero-zone-a">
     <div class="hero-zone-a-inner">
       <div class="hero-headline">
-        <span class="ch-eyebrow"><span class="pip"></span>The Receipt-Based Sports Network</span>
+        <span class="ch-eyebrow"><span class="pip"></span>The Sports Social Network Built on Receipts</span>
         <h1>DO YOU THINK YOU KNOW SPORTS?<span class="accent">PROVE IT.</span></h1>
-        <p class="lead">Every pick, take, vote, and challenge lives on a public profile. Lock your record. Talk your shit. Climb the board.</p>
+        <p class="lead">Sportsbook + sports social media + competition platform. Every pick, take, vote, and challenge lives on a public profile. Lock your record. Talk your shit. Sell picks once the numbers back you up. Challenge rivals in MLB The Show, Madden, NBA 2K, EA FC, and NHL. Climb the board.</p>
+        <ul class="hero-pill-row" aria-label="What is on TrustMyRecord">
+          <li><a href="/sportsbook.html"><span aria-hidden="true">🔒</span> Make Picks</a></li>
+          <li><a href="/feed/"><span aria-hidden="true">💬</span> Feed</a></li>
+          <li><a href="/forum/"><span aria-hidden="true">🗂</span> 2+2 Forums</a></li>
+          <li><a href="/polls/"><span aria-hidden="true">📊</span> Polls</a></li>
+          <li><a href="/trivia/"><span aria-hidden="true">🧠</span> Trivia</a></li>
+          <li><a href="/marketplace/"><span aria-hidden="true">💼</span> Marketplace</a></li>
+          <li><a href="/arena/"><span aria-hidden="true">🎮</span> Console Arena</a></li>
+          <li><a href="/handicappers.html"><span aria-hidden="true">🏆</span> Leaderboards</a></li>
+        </ul>
         <div class="ch-warning">
           <div class="ic">⚠</div>
           <div><b>NO DELETES. NO RESETS. NO DO-OVERS.</b> Once you lock a pick, it's on your record forever. Pick carefully.</div>
@@ -1927,39 +1994,64 @@ button{font:inherit;cursor:pointer}
     </div>
   </div>
 
-  <!-- Zone B: above-the-fold value strip -->
-  <div class="hero-zone-b">
+  <!-- Zone B: 6-tile platform strip — packs the full platform above the fold -->
+  <div class="hero-zone-b hero-zone-b--six">
     <div class="hero-zone-b-inner">
-      <div class="hero-tile hero-tile--track">
+      <a class="hero-tile hero-tile--picks" href="/sportsbook.html">
         <div class="hero-tile-icon" aria-hidden="true">🔒</div>
         <div class="hero-tile-body">
-          <span class="hero-tile-label">TRACK</span>
+          <span class="hero-tile-label">Make Picks</span>
           <strong>Lock picks. Build a record.</strong>
-          <span class="hero-tile-sub">Free, verified, public forever.</span>
+          <span class="hero-tile-sub">Sportsbook ticket flow. Public ledger.</span>
         </div>
-      </div>
-      <div class="hero-tile hero-tile--talk">
+      </a>
+      <a class="hero-tile hero-tile--social" href="/feed/">
         <div class="hero-tile-icon" aria-hidden="true">💬</div>
         <div class="hero-tile-body">
-          <span class="hero-tile-label">TALK</span>
+          <span class="hero-tile-label">Social Feed</span>
           <strong>Talk shit on the record.</strong>
-          <span class="hero-tile-sub">Forums, polls, takes, trivia.</span>
+          <span class="hero-tile-sub">Posts, takes, tail/fade, follow rivals.</span>
         </div>
-      </div>
-      <div class="hero-tile hero-tile--compete">
-        <div class="hero-tile-icon" aria-hidden="true">🏆</div>
+      </a>
+      <a class="hero-tile hero-tile--forums" href="/forum/">
+        <div class="hero-tile-icon" aria-hidden="true">🗂</div>
         <div class="hero-tile-body">
-          <span class="hero-tile-label">COMPETE</span>
-          <strong>Real cash. Real rivals.</strong>
-          <span class="hero-tile-sub">Duels, tournaments, console matches.</span>
+          <span class="hero-tile-label">2+2 Forums</span>
+          <strong>Hardcore sports threads.</strong>
+          <span class="hero-tile-sub">Classic message-board, sport categories.</span>
         </div>
-      </div>
+      </a>
+      <a class="hero-tile hero-tile--polls" href="/polls/">
+        <div class="hero-tile-icon" aria-hidden="true">📊</div>
+        <div class="hero-tile-body">
+          <span class="hero-tile-label">Polls &amp; Trivia</span>
+          <strong>Vote, debate, climb trivia.</strong>
+          <span class="hero-tile-sub">Sports polls, trivia ladder, reputation.</span>
+        </div>
+      </a>
+      <a class="hero-tile hero-tile--marketplace" href="/marketplace/">
+        <div class="hero-tile-icon" aria-hidden="true">💼</div>
+        <div class="hero-tile-body">
+          <span class="hero-tile-label">Marketplace</span>
+          <strong>Sell picks. Buy picks.</strong>
+          <span class="hero-tile-sub">After your record backs the price tag.</span>
+        </div>
+      </a>
+      <a class="hero-tile hero-tile--arena" href="/arena/">
+        <div class="hero-tile-icon" aria-hidden="true">🎮</div>
+        <div class="hero-tile-body">
+          <span class="hero-tile-label">Console Arena</span>
+          <strong>Pick duels + console matchups.</strong>
+          <span class="hero-tile-sub">MLB The Show · Madden · NBA 2K · EA FC · NHL.</span>
+        </div>
+      </a>
     </div>
     <a class="hero-scroll-cue" href="#how-it-works" data-tour-cta>
-      <span>Scroll to see the feed</span>
+      <span>See how it works</span>
       <i aria-hidden="true">↓</i>
     </a>
   </div>
+
 </section>
 
 
