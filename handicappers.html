@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Handicappers | TrustMyRecord</title>
-    <meta name="description" content="Discover verified handicappers by ROI, units, sample size, and current streak on TrustMyRecord.">
+    <title>Leaderboards | TrustMyRecord</title>
+    <meta name="description" content="Ranked cappers by ROI, units, sample size, current streak, and advanced capper analytics on TrustMyRecord.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://trustmyrecord.com/handicappers.html">
-    <meta property="og:title" content="Handicappers | TrustMyRecord">
-    <meta property="og:description" content="Ranked cappers, recent verified picks, and open sports competition in one discovery board.">
+    <meta property="og:title" content="Leaderboards | TrustMyRecord">
+    <meta property="og:description" content="Ranked cappers, advanced capper analytics, and open sports competition in one discovery board.">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -17,8 +17,8 @@
       gtag('config', 'G-V5MCVXS2HE');
     </script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260426b">
-<script defer src="static/js/tmr-sitewide.js?v=20260425d"></script>
+<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260429c">
+<script defer src="static/js/tmr-sitewide.js?v=20260429c"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -621,9 +621,9 @@
     <main class="page">
         <section class="hero">
             <div class="hero-panel">
-                <span class="hero-kicker">Verified capper discovery</span>
+                <span class="hero-kicker">Leaderboards</span>
                 <h1>Find the people actually beating the board.</h1>
-                <p>TrustMyRecord surfaces handicappers through verified results, not screenshots or vague claims. Scan ROI, units, sample size, and current form in one sharper board, then move straight into competition.</p>
+                <p>TrustMyRecord surfaces handicappers through public results, not screenshots or vague claims. Sort by ROI, units, sample size, current form, market splits, and trust score, then move straight from leaderboard to challenge.</p>
                 <div class="hero-metrics">
                     <div class="hero-metric"><b id="heroCapperCount">0</b><span>Ranked cappers</span></div>
                     <div class="hero-metric"><b id="heroPositiveRoi">0</b><span>Positive ROI</span></div>
@@ -671,6 +671,7 @@
                                 <option value="NCAAB">NCAAB</option>
                                 <option value="NCAAF">NCAAF</option>
                                 <option value="Soccer">Soccer</option>
+                                <option value="UFC">UFC</option>
                             </select>
                         </div>
                         <div class="field">
@@ -680,6 +681,17 @@
                                 <option value="units">Net units</option>
                                 <option value="winRate">Win rate</option>
                                 <option value="totalPicks">Sample size</option>
+                                <option value="avgOdds">Average odds</option>
+                                <option value="streak">Current streak</option>
+                                <option value="bestSport">Best sport ROI</option>
+                                <option value="bestMarket">Best market ROI</option>
+                                <option value="underdogRoi">Underdog ROI</option>
+                                <option value="favoriteRoi">Favorite ROI</option>
+                                <option value="totalsRoi">Totals ROI</option>
+                                <option value="spreadRoi">Spread ROI</option>
+                                <option value="moneylineRoi">Moneyline ROI</option>
+                                <option value="consistency">Consistency score</option>
+                                <option value="trust">Trust score</option>
                             </select>
                         </div>
                         <div class="field">
@@ -689,9 +701,35 @@
                                 <option value="10">10 picks</option>
                                 <option value="25">25 picks</option>
                                 <option value="50">50 picks</option>
+                                <option value="100">100 picks</option>
+                                <option value="250">250 picks</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="periodFilter">Time period</label>
+                            <select id="periodFilter">
+                                <option value="all">All time</option>
+                                <option value="7">Last 7 days</option>
+                                <option value="14">Last 14 days</option>
+                                <option value="30">Last 30 days</option>
+                                <option value="60">Last 60 days</option>
+                                <option value="90">Last 90 days</option>
+                                <option value="180">Last 180 days</option>
+                                <option value="365">Last 365 days</option>
+                                <option value="season">Current season</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="roleFilter">Role</label>
+                            <select id="roleFilter">
+                                <option value="all">All cappers</option>
+                                <option value="sellers">Marketplace sellers only</option>
+                                <option value="positive">Positive ROI only</option>
+                                <option value="hot">Active hot streaks</option>
                             </select>
                         </div>
                     </div>
+                    <p class="filters-foot" style="color: var(--muted); font-size: 11.5px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line);">Sorts that need data the platform does not yet expose for a given capper (market splits, consistency, trust score) keep that capper in the visible list and show a placeholder cell instead of fabricating a number.</p>
                 </div>
 
                 <div id="capperPreviewCard" class="preview-card" style="display:none;">
@@ -899,9 +937,18 @@
             count.textContent = entries.length + ' cappers';
             if (!entries.length) {
                 wrap.style.display = 'none';
-                state.style.display = 'grid';
-                state.className = 'empty';
-                state.textContent = 'No handicappers match the current filters.';
+                state.style.display = 'block';
+                state.className = '';
+                state.innerHTML = ''
+                    + '<div class="tmr-empty">'
+                    + '  <div class="tmr-empty__icon">★</div>'
+                    + '  <div class="tmr-empty__title">No ranked cappers yet</div>'
+                    + '  <p class="tmr-empty__body">Lock your first pick to start a public record. Once a capper has graded picks behind their name, they show up here ranked by ROI, units, sample size, current streak, and the rest of the metrics in the sort menu.</p>'
+                    + '  <div class="tmr-empty__cta">'
+                    + '    <a class="btn btn-primary" href="/sportsbook.html">Lock Your First Pick</a>'
+                    + '    <a class="btn btn-outline" href="/arena/">Invite A Rival</a>'
+                    + '  </div>'
+                    + '</div>';
                 return;
             }
 

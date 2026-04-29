@@ -1,34 +1,37 @@
 (() => {
-    const sportsbookPicksHref = "/picks/";
+    // Canonical sitewide nav (one set of labels, one set of paths).
+    const sportsbookPicksHref = "/sportsbook.html";
     const routes = [
         ["/", "Home"],
         [sportsbookPicksHref, "Make Picks"],
-        ["/handicappers.html", "Handicappers"],
-        ["/arena/", "Arena"],
         ["/feed/", "Feed"],
-        ["/hangout/", "Hangout"],
-        ["/forum/", "Forum"]
+        ["/handicappers.html", "Leaderboards"],
+        ["/arena/", "Arena"],
+        ["/polls/", "Polls"],
+        ["/trivia/", "Trivia"],
+        ["/forum/", "Forums"],
+        ["/premium/", "Marketplace"]
     ];
 
     const routeMeta = {
-        "sportsbook.html": ["Make Picks", "Live markets, pick submission, odds boards, and permanent locked receipts."],
-        "handicappers.html": ["Handicappers", "Discover ranked cappers by ROI, sample size, units, streaks, and open challenge paths."],
-        "arena.html": ["Arena", "Head-to-head contests, rival callouts, public challenges, and competition loops."],
-        "challenges.html": ["Arena", "Legacy arena route. Public competition and challenge traffic belongs on the Arena page."],
-        "feed.html": ["Social Feed", "Posts, reactions, sports debate, locked picks, and activity from the community."],
-        "hangout.html": ["Hangout", "Life polls, social questions, opinion threads, and everyday community conversation."],
-        "polls.html": ["Hangout", "Legacy polls route. Prediction polls and opinion polls now live in Hangout."],
-        "trivia.html": ["Trivia", "Sports knowledge games, custom questions, and scored fan status."],
-        "profile.html": ["Verified Records", "Public profile history, pick ledger, advanced splits, and credibility markers."],
-        "forum.html": ["Forum", "Long-form sports discussion and community threads."],
-        "about.html": ["Our Creed", "Why TrustMyRecord exists: no edits, no deletions, no record resets."],
-        "friends.html": ["Friends", "Find rivals, follow records, and keep the sports social graph tied to public performance."],
-        "messages.html": ["Messages", "Direct conversations for matchups, picks, rivalries, and follow-up receipts."],
-        "notifications.html": ["Notifications", "Account alerts, social activity, pick updates, and platform signals in one place."],
-        "premium.html": ["Premium", "Advanced record tools and platform upgrades without changing the public record standard."],
-        "terms.html": ["Terms", "The rules for using TrustMyRecord as a social sports record platform."],
+        "sportsbook.html": ["Make Picks", "Lock picks before games start. Build a public, permanent record."],
+        "handicappers.html": ["Leaderboards", "Ranked cappers by ROI, units, sample size, streaks, and verified record."],
+        "arena.html": ["Arena", "Challenge rivals in sports picks, MLB The Show, Madden, NBA 2K, EA FC, and NHL."],
+        "challenges.html": ["Arena", "Public competition, head-to-head challenges, and rivalry loops."],
+        "feed.html": ["Feed", "Locked picks, hot takes, polls, trivia, and challenges from people with a record."],
+        "hangout.html": ["Polls", "Sports polls, debate threads, and community predictions."],
+        "polls.html": ["Polls", "Create polls, vote on debates, see what the community is calling."],
+        "trivia.html": ["Trivia", "Sports trivia, custom questions, leaderboards, and reputation."],
+        "profile.html": ["Profile", "Verified pick record, posts, splits, marketplace, polls, trivia, and challenges."],
+        "forum.html": ["Forums", "Hardcore sports discussion. Threads tied to verified profiles and locked records."],
+        "premium.html": ["Marketplace", "Buy and sell picks once a record is built to back them up."],
+        "about.html": ["About", "Why TrustMyRecord exists: no edits, no deletions, no record resets."],
+        "friends.html": ["Friends", "Follow real records. Build a sports social graph tied to public performance."],
+        "messages.html": ["Messages", "Direct messages for matchups, picks, rivalries, and follow-up receipts."],
+        "notifications.html": ["Notifications", "Replies, follows, pick grades, challenge alerts, and platform signals."],
+        "terms.html": ["Terms", "The rules for using TrustMyRecord as a sports social record platform."],
         "privacy.html": ["Privacy", "How TrustMyRecord handles account, profile, and platform data."],
-        "reset-password.html": ["Reset Password", "Recover account access without leaving the TrustMyRecord product shell."],
+        "reset-password.html": ["Reset Password", "Recover account access without leaving the product shell."],
         "verify-email.html": ["Verify Email", "Confirm account ownership before using record and social features."]
     };
 
@@ -122,10 +125,19 @@
         return `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23${color}%22/><text x=%2250%22 y=%2264%22 font-size=%2248%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial,sans-serif%22>${letter}</text></svg>`;
     }
 
+    function buildSearchAction() {
+        return `
+            <button class="tmr-global-nav__icon" type="button" data-tmr-search aria-label="Search">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+            </button>
+        `;
+    }
+
     function buildLoggedOutActions() {
         return `
+                ${buildSearchAction()}
                 <a class="tmr-global-nav__button" href="/login/" data-tmr-auth-route="login">Log In</a>
-                <a class="tmr-global-nav__button tmr-global-nav__button--primary" href="/register/" data-tmr-auth-route="signup">Register</a>
+                <a class="tmr-global-nav__button tmr-global-nav__button--primary" href="/register/" data-tmr-auth-route="signup">Join Free</a>
         `;
     }
 
@@ -136,6 +148,13 @@
         const profileHref = "/profile/?user=" + encodeURIComponent(username);
 
         return `
+            ${buildSearchAction()}
+            <a class="tmr-global-nav__icon" href="/notifications/" aria-label="Notifications"${currentFile === "notifications.html" ? ' aria-current="page"' : ""}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10 21a2 2 0 0 0 4 0"></path></svg>
+            </a>
+            <a class="tmr-global-nav__icon" href="/messages/" aria-label="Messages"${currentFile === "messages.html" ? ' aria-current="page"' : ""}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            </a>
             <a class="tmr-global-nav__user" href="${profileHref}"${currentFile === "profile.html" ? ' aria-current="page"' : ""}>
                 <img class="tmr-global-nav__user-avatar" src="${avatar}" alt="${escapeHtml(displayName)} avatar">
                 <span class="tmr-global-nav__user-copy">
@@ -143,7 +162,6 @@
                     <span>@${escapeHtml(username)}</span>
                 </span>
             </a>
-            <a class="tmr-global-nav__button" href="/notifications/"${currentFile === "notifications.html" ? ' aria-current="page"' : ""}>Alerts</a>
             <button class="tmr-global-nav__button tmr-global-nav__logout" type="button" data-tmr-logout>Log Out</button>
         `;
     }
@@ -286,9 +304,102 @@
             handleLogout();
             return;
         }
+        const searchBtn = event.target.closest("[data-tmr-search]");
+        if (searchBtn) {
+            event.preventDefault();
+            openSearchOverlay();
+            return;
+        }
         const navLink = event.target.closest(".tmr-global-nav__links a, .tmr-global-nav__actions a");
         if (navLink) {
             setNavOpen(false);
+        }
+    });
+
+    // Lightweight sitewide search overlay (Cmd+K / Ctrl+K to open)
+    function openSearchOverlay() {
+        let overlay = document.getElementById("tmr-search-overlay");
+        if (!overlay) {
+            overlay = document.createElement("div");
+            overlay.id = "tmr-search-overlay";
+            overlay.className = "tmr-search-overlay";
+            overlay.innerHTML = `
+                <div class="tmr-search-modal" role="dialog" aria-label="Search TrustMyRecord">
+                    <div class="tmr-search-head">
+                        <input type="search" id="tmrSearchInput" placeholder="Search picks, cappers, threads, polls, trivia..." autocomplete="off" autocapitalize="off" autocorrect="off">
+                        <button type="button" class="tmr-search-close" aria-label="Close">&times;</button>
+                    </div>
+                    <div class="tmr-search-body" id="tmrSearchBody">
+                        <div class="tmr-search-section">
+                            <div class="tmr-search-label">Quick jumps</div>
+                            <div class="tmr-search-grid">
+                                <a href="/sportsbook.html"><strong>Make Picks</strong><span>Lock picks before games start</span></a>
+                                <a href="/feed/"><strong>Feed</strong><span>Posts, takes, locked picks</span></a>
+                                <a href="/handicappers.html"><strong>Leaderboards</strong><span>Ranked cappers by ROI, units</span></a>
+                                <a href="/arena/"><strong>Arena</strong><span>Head-to-head challenges</span></a>
+                                <a href="/polls/"><strong>Polls</strong><span>Sports debates, predictions</span></a>
+                                <a href="/trivia/"><strong>Trivia</strong><span>Sports knowledge games</span></a>
+                                <a href="/forum/"><strong>Forums</strong><span>Hardcore discussion threads</span></a>
+                                <a href="/premium/"><strong>Marketplace</strong><span>Buy and sell picks</span></a>
+                            </div>
+                        </div>
+                        <div class="tmr-search-section" id="tmrSearchResults" hidden></div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            overlay.addEventListener("click", (e) => {
+                if (e.target === overlay || e.target.closest(".tmr-search-close")) closeSearchOverlay();
+            });
+            const input = overlay.querySelector("#tmrSearchInput");
+            input.addEventListener("input", debounceSearch);
+            input.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSearchOverlay(); });
+        }
+        overlay.classList.add("is-open");
+        const inp = overlay.querySelector("#tmrSearchInput");
+        if (inp) setTimeout(() => inp.focus(), 30);
+    }
+
+    function closeSearchOverlay() {
+        const overlay = document.getElementById("tmr-search-overlay");
+        if (overlay) overlay.classList.remove("is-open");
+    }
+
+    let _searchTimer = null;
+    function debounceSearch(e) {
+        clearTimeout(_searchTimer);
+        const q = (e.target.value || "").trim();
+        const results = document.getElementById("tmrSearchResults");
+        if (!q || q.length < 2) { if (results) { results.hidden = true; results.innerHTML = ""; } return; }
+        _searchTimer = setTimeout(() => runSearch(q), 220);
+    }
+
+    async function runSearch(q) {
+        const results = document.getElementById("tmrSearchResults");
+        if (!results) return;
+        results.hidden = false;
+        results.innerHTML = `<div class="tmr-search-label">Searching for "${escapeHtml(q)}"...</div>`;
+        try {
+            const baseUrl = (window.api && window.api.baseUrl) || "https://trustmyrecord-api.onrender.com/api";
+            const res = await fetch(`${baseUrl}/forum/search?q=${encodeURIComponent(q)}`);
+            const data = await res.json().catch(() => ({}));
+            const threads = (data.results || data.threads || []).slice(0, 8);
+            if (!threads.length) {
+                results.innerHTML = `<div class="tmr-search-label">No matches yet</div><div class="tmr-search-empty">Search runs across forum threads. As polls, trivia, and capper search come online, results will widen here.</div>`;
+                return;
+            }
+            results.innerHTML = `<div class="tmr-search-label">Forum threads</div>` + threads.map(t => {
+                return `<a class="tmr-search-result" href="/forum/?thread=${t.id}"><strong>${escapeHtml(t.title || "Thread")}</strong><span>${escapeHtml(t.category_name || t.username || "")}</span></a>`;
+            }).join("");
+        } catch (err) {
+            results.innerHTML = `<div class="tmr-search-label">Search unavailable</div><div class="tmr-search-empty">Could not reach the search backend. Try again in a moment.</div>`;
+        }
+    }
+
+    document.addEventListener("keydown", (e) => {
+        if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
+            e.preventDefault();
+            openSearchOverlay();
         }
     });
 
