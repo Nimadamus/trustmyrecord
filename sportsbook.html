@@ -22639,6 +22639,60 @@ document.addEventListener('DOMContentLoaded', function() {
             text-transform: uppercase;
         }
 
+        #picks .tmr-board-filter-tab {
+            min-height: 52px !important;
+            padding: 14px 20px !important;
+            border-radius: 16px !important;
+            font-size: 0.86rem !important;
+            letter-spacing: 0.11em !important;
+        }
+
+        #picks .tmr-card-filter-bar {
+            margin-bottom: 14px;
+        }
+
+        #picks .tmr-card-filter-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        #picks .tmr-card-filter-tab {
+            min-height: 48px;
+            padding: 13px 18px;
+            border-radius: 14px;
+            border: 1px solid rgba(148,163,184,0.18);
+            background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.018));
+            color: #dce8f5;
+            font-size: 0.84rem;
+            font-weight: 900;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        #picks .tmr-card-filter-tab:hover {
+            transform: translateY(-1px);
+            border-color: rgba(45,212,191,0.28);
+            background: linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.03));
+        }
+
+        #picks .tmr-card-filter-tab.active {
+            color: #06120f;
+            border-color: transparent;
+            background: linear-gradient(135deg, #8ef9eb, #2dd4bf);
+            box-shadow: 0 12px 26px rgba(7,12,18,0.24);
+        }
+
+        #picks .tmr-market-card[data-market-filter="game-lines"] .tmr-group:not([data-category="game-lines"]),
+        #picks .tmr-market-card[data-market-filter="team-totals"] .tmr-group:not([data-category="team-totals"]),
+        #picks .tmr-market-card[data-market-filter="first-5"] .tmr-group:not([data-category="first-5"]),
+        #picks .tmr-market-card[data-market-filter="segments"] .tmr-group:not([data-category="segments"]),
+        #picks .tmr-market-card[data-market-filter="alt-lines"] .tmr-group:not([data-category="alt-lines"]),
+        #picks .tmr-market-card[data-market-filter="specials"] .tmr-group:not([data-category="specials"]) {
+            display: none;
+        }
+
         #picks .expanded-markets.show {
             display: grid;
             gap: 16px;
@@ -22913,6 +22967,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
             #picks .sportsbook-market-pill {
                 min-width: 100%;
+            }
+
+            #picks .tmr-board-filter-tab,
+            #picks .tmr-card-filter-tab {
+                flex: 1 1 calc(50% - 6px);
+                min-width: 0 !important;
+                justify-content: center;
             }
 
             #picks .totals-row {
