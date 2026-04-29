@@ -202,6 +202,101 @@
             background: var(--primary);
             color: #000;
         }
+        /* Make the Create tab visually distinct so users see it as a real action */
+        .view-tab--create {
+            color: var(--neon-cyan, #2dd4bf);
+            border: 1px dashed rgba(45, 212, 191, 0.55);
+        }
+        .view-tab--create:hover {
+            color: #000;
+            background: var(--neon-cyan, #2dd4bf);
+            border-color: transparent;
+        }
+        .view-tab--create.active {
+            background: var(--neon-cyan, #2dd4bf);
+            color: #000;
+            border-color: transparent;
+        }
+        .view-tab--create span { font-weight: 900; margin-right: 4px; }
+
+        /* Page-header CTA "Create Trivia Question" */
+        .trivia-page-header { text-align: left; }
+        .trivia-page-header-row {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .trivia-page-header-copy { flex: 1 1 360px; }
+        .trivia-page-header-copy h1 { text-align: left; margin-bottom: 8px; }
+        .trivia-page-header-copy p { text-align: left; max-width: 620px; margin: 0; }
+        .trivia-create-cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 13px 22px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--neon-cyan, #2dd4bf) 0%, var(--neon-purple, #a855f7) 100%);
+            color: #000;
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            border: 0;
+            cursor: pointer;
+            box-shadow: 0 12px 28px rgba(45, 212, 191, 0.30);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .trivia-create-cta:hover { transform: translateY(-1px); box-shadow: 0 16px 36px rgba(45, 212, 191, 0.42); }
+        .trivia-create-cta span { font-size: 18px; line-height: 1; font-weight: 900; }
+        .trivia-create-cta--inline { padding: 10px 18px; font-size: 13.5px; }
+
+        /* "Build The Trivia Pool" explainer card — accent border so it stands apart */
+        .trivia-pool-card {
+            border: 1px solid rgba(45, 212, 191, 0.32) !important;
+            background:
+                linear-gradient(180deg, rgba(45, 212, 191, 0.08) 0%, rgba(168, 85, 247, 0.05) 100%),
+                var(--bg-card, rgba(15, 20, 40, 0.85)) !important;
+        }
+
+        /* Helper + moderation note inside the create form */
+        .trivia-create-helper {
+            color: var(--text-muted);
+            font-size: 13.5px;
+            line-height: 1.55;
+            margin: 0 0 6px;
+        }
+        .trivia-create-mod-note {
+            color: var(--text-muted);
+            font-size: 12px;
+            line-height: 1.5;
+            font-style: italic;
+            margin: 0 0 14px;
+            opacity: 0.85;
+        }
+        .trivia-loggedout-prompt {
+            text-align: center;
+            padding: 36px 22px;
+            border: 1px dashed rgba(45, 212, 191, 0.5);
+            border-radius: 14px;
+            background: rgba(45, 212, 191, 0.05);
+        }
+        .trivia-loggedout-prompt h2 { margin-bottom: 8px; }
+        .trivia-loggedout-prompt p { color: var(--text-muted); margin: 0 0 14px; }
+        .trivia-loggedout-actions { display: inline-flex; gap: 10px; flex-wrap: wrap; }
+        .trivia-loggedout-actions a {
+            padding: 10px 18px; border-radius: 10px;
+            text-decoration: none; font-weight: 800;
+            background: var(--neon-cyan, #2dd4bf); color: #000;
+        }
+        .trivia-loggedout-actions a.is-secondary {
+            background: rgba(255,255,255,0.06); color: var(--text-primary, #fff);
+            border: 1px solid rgba(148, 163, 184, 0.32);
+        }
+        .trivia-loggedout-actions a:hover { filter: brightness(1.08); }
 
         /* ===== VIEW PANELS ===== */
         .view-panel { display: none; }
@@ -719,6 +814,8 @@
                 width: 100%;
             }
             .categories-grid { grid-template-columns: 1fr; }
+            .trivia-page-header-row { flex-direction: column; align-items: stretch; gap: 14px; }
+            .trivia-create-cta { width: 100%; }
             .quiz-container { border-radius: 16px; }
             .quiz-body { padding: 20px 16px; }
             .quiz-question-text { font-size: 17px; }
@@ -876,9 +973,16 @@
 <div class="main-container">
 
     <!-- Page Header -->
-    <div class="page-header">
-        <h1>SPORTS TRIVIA</h1>
-        <p>Test your knowledge across NFL, NBA, MLB, NHL, and Soccer. Climb the leaderboard.</p>
+    <div class="page-header trivia-page-header">
+        <div class="trivia-page-header-row">
+            <div class="trivia-page-header-copy">
+                <h1>SPORTS TRIVIA</h1>
+                <p>Test your knowledge across NFL, NBA, MLB, NHL, and Soccer. Climb the leaderboard. Or contribute your own questions to the community pool.</p>
+            </div>
+            <button type="button" class="trivia-create-cta" onclick="openCreateTrivia()">
+                <span aria-hidden="true">＋</span> Create Trivia Question
+            </button>
+        </div>
     </div>
 
     <!-- Stats Bar -->
@@ -908,12 +1012,24 @@
         </p>
     </div>
 
+    <div class="glass-card trivia-pool-card" style="margin-bottom: 24px;">
+        <h2 style="margin-bottom: 10px;">Build The Trivia Pool</h2>
+        <p style="color: var(--text-muted); line-height: 1.7; margin: 0 0 14px;">
+            TrustMyRecord trivia is community driven, not just preloaded quizzes. Users can submit NFL, NBA, MLB, NHL, soccer, betting history, stats, and pop culture sports questions. Approved questions can appear in public quizzes, leaderboards, and user profiles.
+        </p>
+        <button type="button" class="trivia-create-cta trivia-create-cta--inline" onclick="openCreateTrivia()">
+            <span aria-hidden="true">＋</span> Create Trivia Question
+        </button>
+    </div>
+
     <!-- View Tabs -->
-    <div class="view-tabs">
-        <button class="view-tab active" onclick="switchView('play')">Play</button>
-        <button class="view-tab" onclick="switchView('leaderboard')">Leaderboard</button>
-        <button class="view-tab" onclick="switchView('history')">History</button>
-        <button class="view-tab" onclick="switchView('create')">Create</button>
+    <div class="view-tabs" role="tablist" aria-label="Trivia modes">
+        <button class="view-tab active" role="tab" onclick="switchView('play')">Play</button>
+        <button class="view-tab" role="tab" onclick="switchView('leaderboard')">Leaderboard</button>
+        <button class="view-tab" role="tab" onclick="switchView('history')">History</button>
+        <button class="view-tab view-tab--create" role="tab" id="triviaTabCreate" onclick="switchView('create')">
+            <span aria-hidden="true">＋</span> Create
+        </button>
     </div>
 
     <!-- ===== PLAY VIEW ===== -->
@@ -1601,21 +1717,31 @@ function renderCreateView() {
         : '<option value="">Loading categories...</option>';
 
     if (!isLoggedIn()) {
-        card.innerHTML = '<div class="login-prompt">' +
-            '<div style="font-size:48px;margin-bottom:16px;opacity:0.4;">&#128274;</div>' +
-            '<h2 style="margin-bottom:8px;">Login Required</h2>' +
-            '<p>You need to be logged in to create custom trivia questions.</p>' +
-                '<p><a href="/">Go to homepage to log in</a></p></div>';
+        card.innerHTML =
+            '<div class="trivia-loggedout-prompt">' +
+                '<div style="font-size:42px;margin-bottom:10px;opacity:0.6;">&#128274;</div>' +
+                '<h2>Log in or join free to create trivia questions.</h2>' +
+                '<p>Submitted questions can appear in public quizzes, leaderboards, and user profiles.</p>' +
+                '<div class="trivia-loggedout-actions">' +
+                    '<a href="/login/">Log In</a>' +
+                    '<a class="is-secondary" href="/register/">Join Free</a>' +
+                '</div>' +
+            '</div>';
         renderCustomQuestionsList();
         return;
     }
 
     card.innerHTML =
         '<h2>&#9998; Create a Trivia Question</h2>' +
-        '<div class="subtitle">Submit a live trivia question to the shared TrustMyRecord question pool.</div>' +
+        '<p class="trivia-create-helper">Create sports trivia for the community. Approved questions can appear in public quizzes, leaderboards, and user profiles.</p>' +
+        '<p class="trivia-create-mod-note">Submitted questions may be reviewed before going live.</p>' +
         '<form id="createQuestionForm" onsubmit="handleCreateQuestion(event)">' +
             '<div class="form-group">' +
-                '<label>Category</label>' +
+                '<label>Question</label>' +
+                '<textarea class="form-textarea" id="cqQuestion" placeholder="What is your trivia question?" maxlength="300" required></textarea>' +
+            '</div>' +
+            '<div class="form-group">' +
+                '<label>Sport / Category</label>' +
                 '<select class="form-select" id="cqCategory"' + (backendCategories.length ? '' : ' disabled') + '>' +
                     categoryOptions +
                 '</select>' +
@@ -1624,16 +1750,12 @@ function renderCreateView() {
                 '<label>Difficulty</label>' +
                 '<select class="form-select" id="cqDifficulty">' +
                     '<option value="easy">Easy</option>' +
-                    '<option value="medium">Medium</option>' +
+                    '<option value="medium" selected>Medium</option>' +
                     '<option value="hard">Hard</option>' +
                 '</select>' +
             '</div>' +
             '<div class="form-group">' +
-                '<label>Question</label>' +
-                '<textarea class="form-textarea" id="cqQuestion" placeholder="Enter your trivia question..." maxlength="300"></textarea>' +
-            '</div>' +
-            '<div class="form-group">' +
-                '<label>Answers (click the letter button to mark the correct one)</label>' +
+                '<label>Four Answer Choices <span style="color:var(--text-muted);font-weight:500;">(click A/B/C/D to mark the correct one)</span></label>' +
                 '<div class="answer-row">' +
                     '<button type="button" class="correct-radio-btn" id="cqCorrectBtn0" onclick="setCorrectAnswer(0)">A</button>' +
                     '<input type="text" class="form-input" id="cqAnswer0" placeholder="Answer A" maxlength="120">' +
@@ -1651,13 +1773,35 @@ function renderCreateView() {
                     '<input type="text" class="form-input" id="cqAnswer3" placeholder="Answer D" maxlength="120">' +
                 '</div>' +
             '</div>' +
+            '<div class="form-group">' +
+                '<label>Explanation <span style="color:var(--text-muted);font-weight:500;">(optional &mdash; shown after the answer is revealed)</span></label>' +
+                '<textarea class="form-textarea" id="cqExplanation" placeholder="Why is this the correct answer? Add context, source, or trivia color." maxlength="600"></textarea>' +
+            '</div>' +
+            '<div class="form-group">' +
+                '<label>Tags <span style="color:var(--text-muted);font-weight:500;">(optional &mdash; comma-separated, e.g. playoffs, mvp, betting)</span></label>' +
+                '<input type="text" class="form-input" id="cqTags" placeholder="finals, dynasty, prop bets" maxlength="160">' +
+            '</div>' +
             '<div class="form-error" id="cqError"></div>' +
-            '<button type="submit" class="form-submit-btn">Add Question</button>' +
+            '<button type="submit" class="form-submit-btn">Submit Trivia Question</button>' +
         '</form>';
 
     selectedCorrectAnswer = -1;
     renderCustomQuestionsList();
 }
+
+// Public entry point used by the page-header + Build-the-Pool buttons.
+// Switches to the Create tab, scrolls into view, and (when logged out)
+// the renderCreateView() call paints the join prompt instead of the form.
+function openCreateTrivia() {
+    if (typeof switchView === 'function') {
+        switchView('create');
+    }
+    var anchor = document.getElementById('view-create');
+    if (anchor && anchor.scrollIntoView) {
+        anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+window.openCreateTrivia = openCreateTrivia;
 
 var selectedCorrectAnswer = -1;
 
@@ -1681,12 +1825,23 @@ async function handleCreateQuestion(e) {
     for (var i = 0; i < 4; i++) answers.push(document.getElementById('cqAnswer' + i).value.trim());
     var categoryId = parseInt(document.getElementById('cqCategory').value, 10);
     var difficulty = document.getElementById('cqDifficulty').value;
+    var explanationEl = document.getElementById('cqExplanation');
+    var tagsEl = document.getElementById('cqTags');
+    var explanation = explanationEl ? explanationEl.value.trim() : '';
+    var tagsRaw = tagsEl ? tagsEl.value.trim() : '';
+    var tags = tagsRaw ? tagsRaw.split(',').map(function(t){ return t.trim(); }).filter(Boolean) : [];
+    // Soft-tag layer: prefix the explanation with [tags: ...] so tags round-trip
+    // even before the backend exposes a dedicated tags column.
+    var combinedExplanation = explanation;
+    if (tags.length) {
+        combinedExplanation = '[tags: ' + tags.join(', ') + ']' + (explanation ? '\n\n' + explanation : '');
+    }
     var submitBtn = document.querySelector('.form-submit-btn');
 
     if (!question) { errEl.textContent = 'Please enter a question.'; errEl.style.display = 'block'; return; }
     if (answers.some(function(a) { return !a; })) { errEl.textContent = 'Please fill in all 4 answers.'; errEl.style.display = 'block'; return; }
     if (selectedCorrectAnswer < 0) { errEl.textContent = 'Click the letter button (A/B/C/D) next to the correct answer.'; errEl.style.display = 'block'; return; }
-    if (!categoryId) { errEl.textContent = 'Please choose a trivia category.'; errEl.style.display = 'block'; return; }
+    if (!categoryId) { errEl.textContent = 'Please choose a sport / category.'; errEl.style.display = 'block'; return; }
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
@@ -1701,6 +1856,7 @@ async function handleCreateQuestion(e) {
                 difficulty: difficulty,
                 points: difficulty === 'hard' ? 150 : difficulty === 'medium' ? 125 : 100,
                 time_limit_seconds: 30,
+                explanation: combinedExplanation || undefined,
                 answers: answers.map(function(answerText, idx) {
                     return {
                         answer_text: answerText,
@@ -1715,14 +1871,16 @@ async function handleCreateQuestion(e) {
             document.getElementById('cqAnswer' + j).value = '';
             document.getElementById('cqCorrectBtn' + j).classList.remove('selected');
         }
+        if (explanationEl) explanationEl.value = '';
+        if (tagsEl) tagsEl.value = '';
         selectedCorrectAnswer = -1;
         await loadCategories();
         await renderCustomQuestionsList();
 
-        submitBtn.textContent = 'Question Added!';
+        submitBtn.textContent = 'Question Submitted!';
         submitBtn.style.background = 'var(--success)';
         setTimeout(function() {
-            submitBtn.textContent = 'Add Question';
+            submitBtn.textContent = 'Submit Trivia Question';
             submitBtn.style.background = '';
             submitBtn.disabled = false;
         }, 2000);
@@ -1730,7 +1888,7 @@ async function handleCreateQuestion(e) {
         errEl.textContent = err.message || 'Failed to create question.';
         errEl.style.display = 'block';
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Add Question';
+        submitBtn.textContent = 'Submit Trivia Question';
     }
 }
 
@@ -1768,7 +1926,10 @@ async function renderCustomQuestionsList() {
         }
 
         if (!createdQuestions.length) {
-            container.innerHTML = '<div class="empty-state"><div class="big-icon">&#128221;</div><p>No live trivia questions created yet.</p></div>';
+            container.innerHTML = '<div class="empty-state"><div class="big-icon">&#128221;</div>' +
+                '<p style="margin-bottom:8px;">No trivia questions submitted yet. Create the first one.</p>' +
+                '<button type="button" class="trivia-create-cta trivia-create-cta--inline" onclick="openCreateTrivia()"><span aria-hidden="true">&#65291;</span> Create Trivia Question</button>' +
+                '</div>';
             return;
         }
 
