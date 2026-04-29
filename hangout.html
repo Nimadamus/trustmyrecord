@@ -1158,17 +1158,13 @@
             const data = await api.request('/polls/active?limit=100');
             const activePolls = data.polls || [];
 
-            // For each poll, fetch its full details (options + vote counts)
-            const detailed = [];
-            for (const p of activePolls) {
+            const detailed = await Promise.all(activePolls.map(async function(p) {
                 try {
-                    const full = await api.request('/polls/' + p.id);
-                    detailed.push(full);
+                    return await api.request('/polls/' + p.id);
                 } catch (err) {
-                    // If individual fetch fails, build a minimal entry
-                    detailed.push({ poll: p, options: [], total_votes: parseInt(p.vote_count) || 0, user_vote: null, comments: [] });
+                    return { poll: p, options: [], total_votes: parseInt(p.vote_count) || 0, user_vote: null, comments: [] };
                 }
-            }
+            }));
             pollsCache = detailed;
         } catch (e) {
             console.error('Failed to fetch polls:', e);
@@ -1641,7 +1637,16 @@
         var _pollsSlowTimer = setTimeout(function() { var el = document.getElementById('pollsLoadingSlow'); if (el) el.style.display = 'block'; }, 5000);
         var _pollsRetryTimer = setTimeout(function() { var el = document.getElementById('pollsLoadingRetry'); var sl = document.getElementById('pollsLoadingSlow'); if (el) el.style.display = 'block'; if (sl) sl.style.display = 'none'; }, 30000);
 
-        await api.ready;
+        if (!window.api) {
+            clearTimeout(_pollsSlowTimer); clearTimeout(_pollsRetryTimer);
+            pollsGrid.innerHTML =
+                '<div class="tmr-loading-state"><div style="font-size:2.5rem;margin-bottom:12px;opacity:0.5;">&#x1F50C;</div><p>Could not connect to the Hangout server.</p><p class="tmr-loading-slow" style="display:block;">The shared API client did not initialize on this page.</p><div class="tmr-loading-retry" style="display:block;"><button onclick="location.reload()">Try Again</button></div></div>';
+            return;
+        }
+
+        if (window.api.ready && typeof window.api.ready.then === 'function') {
+            await window.api.ready;
+        }
         clearTimeout(_pollsSlowTimer); clearTimeout(_pollsRetryTimer);
 
         if (!api || typeof api.request !== 'function') {
