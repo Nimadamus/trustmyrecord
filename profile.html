@@ -3107,10 +3107,78 @@
         await refreshLeaderboardRank();
         await loadAllPicks();
         renderProfileHeader(profileData);
+        loadAdvancedMetrics(profileData.username || profileUsername || '');
         analyticsTrackPickHistoryView({
             view_type: isOwnProfile ? 'own' : 'public',
             username: profileData.username || profileUsername || '',
             display_name: profileData.display_name || profileData.username || ''
+        });
+    }
+
+    // ======================== ADVANCED METRICS ========================
+    // Calls the new /api/users/:username/metrics aggregator and fills the
+    // Advanced Metrics tab placeholders. Anything the aggregator returns
+    // null for stays as the '—' placeholder per the no-fake-data rule.
+    async function loadAdvancedMetrics(username) {
+        if (!username || !api || typeof api.request !== 'function') return;
+        let data;
+        try {
+            data = await api.request('/users/' + encodeURIComponent(username) + '/metrics');
+        } catch (err) {
+            console.warn('[Profile] /metrics aggregator unavailable:', err && err.message ? err.message : err);
+            return;
+        }
+        if (!data) return;
+        const set = (id, value, opts) => {
+            const el = document.getElementById(id);
+            if (!el || value == null) return;
+            opts = opts || {};
+            el.textContent = value;
+            el.classList.remove('is-placeholder');
+            if (opts.signed != null) {
+                el.classList.toggle('is-pos', opts.signed > 0);
+                el.classList.toggle('is-neg', opts.signed < 0);
+            }
+        };
+        const s = data.summary || {};
+        if (s.total_picks > 0) {
+            set('advRecord', s.record);
+            set('advTotal', String(s.total_picks));
+            set('advPushes', String(s.pushes || 0));
+            set('advPending', String(s.pending_picks || 0));
+            set('advWinPct', (s.win_rate || 0).toFixed(1) + '%');
+            const roi = Number(s.roi || 0);
+            set('advRoi', (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%', { signed: roi });
+            const u = Number(s.net_units || 0);
+            set('advUnits', (u >= 0 ? '+' : '') + u.toFixed(1) + 'u', { signed: u });
+            set('advPlUnits', (u >= 0 ? '+' : '') + u.toFixed(1) + 'u', { signed: u });
+            const flat = Number(s.pl_flat_dollars || 0);
+            set('advPlFlat', (flat >= 0 ? '+$' : '-$') + Math.abs(flat).toFixed(0), { signed: flat });
+            if (s.avg_odds != null) set('advAvgOdds', String(s.avg_odds));
+            if (s.avg_units != null) set('advAvgUnit', Number(s.avg_units).toFixed(2) + 'u');
+            if (s.largest_unit != null) set('advMaxUnit', Number(s.largest_unit).toFixed(2) + 'u');
+        }
+        const st = data.streaks || {};
+        if (st.current != null) {
+            const cs = Number(st.current);
+            set('advStreak', cs > 0 ? cs + 'W' : cs < 0 ? Math.abs(cs) + 'L' : '0', { signed: cs });
+        }
+        if (st.best != null) set('advBestStreak', Math.abs(Number(st.best)) + 'W', { signed: 1 });
+        if (st.worst != null) set('advWorstStreak', Math.abs(Number(st.worst)) + 'L', { signed: -1 });
+        const sc = data.scores || {};
+        if (sc.consistency != null) set('advTrust', Number(sc.consistency).toFixed(1));
+        // Period rollups: fill any matching `data-period="..."` slots if present
+        const periods = data.periods || {};
+        document.querySelectorAll('[data-period]').forEach(el => {
+            const key = el.getAttribute('data-period');
+            const p = periods[key];
+            if (p && p.total > 0) {
+                el.classList.remove('is-placeholder');
+                const r = Number(p.roi || 0);
+                el.textContent = (r >= 0 ? '+' : '') + r.toFixed(1) + '%';
+                el.classList.toggle('is-pos', r > 0);
+                el.classList.toggle('is-neg', r < 0);
+            }
         });
     }
 

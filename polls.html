@@ -335,12 +335,39 @@
                         <textarea id="pollDescription" maxlength="1500" placeholder="Context, betting angle, line, deadline reasoning..."></textarea>
                     </div>
                     <div class="tmr-form-row">
+                        <label for="pollScoringMode">Scoring mode</label>
+                        <select id="pollScoringMode" onchange="onScoringModeChange()">
+                            <option value="binary" selected>Binary &mdash; one correct answer, all-or-nothing points</option>
+                            <option value="partial">Partial credit &mdash; rarer correct picks earn more points</option>
+                            <option value="weighted">Weighted by odds &mdash; underdog picks earn more</option>
+                            <option value="confidence">Confidence weighted &mdash; voter sets 1&ndash;100 confidence</option>
+                            <option value="closest">Closest answer &mdash; free-form numeric prediction (1st = most points, then 70/50/30/15/10%)</option>
+                        </select>
+                        <div class="tmr-form-hint" id="pollScoringHint">Default. Each voter picks one option; correct answer wins full points.</div>
+                    </div>
+                    <div class="tmr-form-row" id="pollOptionsRow">
                         <label>Answer Choices <span style="color:var(--tmr-fb-muted);font-weight:600;">(minimum 2)</span></label>
                         <div id="pollOptions">
                             <div class="tmr-option-row"><input type="text" maxlength="200" placeholder="Option 1"><button type="button" class="tmr-option-remove" onclick="removeOptionRow(this)" title="Remove">&times;</button></div>
                             <div class="tmr-option-row"><input type="text" maxlength="200" placeholder="Option 2"><button type="button" class="tmr-option-remove" onclick="removeOptionRow(this)" title="Remove">&times;</button></div>
                         </div>
                         <button type="button" class="tmr-add-option-btn" onclick="addOptionRow('pollOptions')"><i class="fas fa-plus"></i> Add Choice</button>
+                    </div>
+                    <div class="tmr-form-row" id="pollNumericRow" style="display:none;">
+                        <label for="pollNumericTarget">Numeric truth (optional &mdash; can be set at resolution time)</label>
+                        <input id="pollNumericTarget" type="number" step="any" placeholder="e.g. 247.5 (final game total), 32 (team rebounds)">
+                        <div class="tmr-form-hint">For closest-numeric polls. Voters submit a number; whoever's closest to the truth wins.</div>
+                    </div>
+                    <div class="tmr-form-row">
+                        <label class="tmr-form-toggle">
+                            <input id="pollIsSeason" type="checkbox" onchange="onSeasonToggle()"><span>Multi-question / season-long poll (1&ndash;10 sub-questions)</span>
+                        </label>
+                        <div class="tmr-form-hint">Bundle multiple predictions under one parent poll. Each voter answers every sub-question; per-question points sum into the parent leaderboard.</div>
+                    </div>
+                    <div class="tmr-form-row" id="pollSubQuestionsRow" style="display:none;">
+                        <label>Sub-questions <span style="color:var(--tmr-fb-muted);font-weight:600;">(1&ndash;10)</span></label>
+                        <div id="pollSubQuestions"></div>
+                        <button type="button" class="tmr-add-option-btn" onclick="addSubQuestion()"><i class="fas fa-plus"></i> Add Sub-Question</button>
                     </div>
                     <div class="tmr-form-row is-inline">
                         <div>
@@ -731,6 +758,84 @@
         btn.parentElement.remove();
     }
 
+    function onScoringModeChange() {
+        var mode = document.getElementById('pollScoringMode').value;
+        var hint = document.getElementById('pollScoringHint');
+        var hints = {
+            binary: 'Each voter picks one option. Correct answer wins full points; wrong answers earn the configured penalty (default 0).',
+            partial: 'Rarer correct picks earn more points (popularity-adjusted). Best for guess-the-upset polls.',
+            weighted: 'Picks scale by odds: underdog calls earn more points than chalk when right.',
+            confidence: 'Voter sets a 1-100 confidence on their pick. Points scale by confidence in both directions.',
+            closest: '1st place gets full points. Then 70 / 50 / 30 / 15 / 10 percent falloff by rank. Ties share buckets.'
+        };
+        hint.textContent = hints[mode] || '';
+        var optionsRow = document.getElementById('pollOptionsRow');
+        var numericRow = document.getElementById('pollNumericRow');
+        if (mode === 'closest') {
+            optionsRow.style.display = 'none';
+            numericRow.style.display = '';
+        } else {
+            optionsRow.style.display = '';
+            numericRow.style.display = 'none';
+        }
+    }
+
+    function onSeasonToggle() {
+        var on = document.getElementById('pollIsSeason').checked;
+        var row = document.getElementById('pollSubQuestionsRow');
+        row.style.display = on ? '' : 'none';
+        if (on && document.querySelectorAll('#pollSubQuestions .tmr-subq').length === 0) {
+            addSubQuestion();
+        }
+    }
+
+    function addSubQuestion() {
+        var container = document.getElementById('pollSubQuestions');
+        var existing = container.querySelectorAll('.tmr-subq').length;
+        if (existing >= 10) { showToast('Maximum 10 sub-questions per parent poll.', 'error'); return; }
+        var idx = existing + 1;
+        var div = document.createElement('div');
+        div.className = 'tmr-subq';
+        div.style.cssText = 'border:1px solid var(--tmr-fb-border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--tmr-fb-row-alt);';
+        div.innerHTML =
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+                '<strong style="color:var(--tmr-fb-text);font-size:0.86rem;">Sub-question ' + idx + '</strong>' +
+                '<button type="button" class="tmr-option-remove" onclick="this.parentElement.parentElement.remove();renumberSubQuestions();" title="Remove">&times;</button>' +
+            '</div>' +
+            '<input type="text" maxlength="200" class="tmr-subq-title" placeholder="Sub-question title (e.g. \'Who scores first?\')" style="width:100%;margin-bottom:6px;padding:7px 10px;border:1px solid var(--tmr-fb-border-strong);border-radius:6px;font-family:inherit;font-size:13px;">' +
+            '<select class="tmr-subq-mode" onchange="onSubQModeChange(this)" style="width:100%;margin-bottom:6px;padding:7px 10px;border:1px solid var(--tmr-fb-border-strong);border-radius:6px;font-family:inherit;font-size:13px;">' +
+                '<option value="binary">Binary scoring</option>' +
+                '<option value="partial">Partial credit</option>' +
+                '<option value="weighted">Weighted by odds</option>' +
+                '<option value="confidence">Confidence weighted</option>' +
+                '<option value="closest">Closest numeric answer</option>' +
+            '</select>' +
+            '<div class="tmr-subq-options" style="display:flex;flex-direction:column;gap:4px;">' +
+                '<input type="text" class="tmr-subq-opt" maxlength="160" placeholder="Option 1" style="padding:6px 9px;border:1px solid var(--tmr-fb-border-strong);border-radius:5px;font-family:inherit;font-size:12.5px;">' +
+                '<input type="text" class="tmr-subq-opt" maxlength="160" placeholder="Option 2" style="padding:6px 9px;border:1px solid var(--tmr-fb-border-strong);border-radius:5px;font-family:inherit;font-size:12.5px;">' +
+            '</div>' +
+            '<input type="number" step="any" class="tmr-subq-numeric" placeholder="Numeric truth (optional, set at resolve time)" style="width:100%;margin-top:6px;padding:6px 9px;border:1px solid var(--tmr-fb-border-strong);border-radius:5px;font-family:inherit;font-size:12.5px;display:none;">';
+        container.appendChild(div);
+    }
+
+    function onSubQModeChange(sel) {
+        var subq = sel.parentElement;
+        var optsBox = subq.querySelector('.tmr-subq-options');
+        var numericBox = subq.querySelector('.tmr-subq-numeric');
+        if (sel.value === 'closest') {
+            optsBox.style.display = 'none';
+            numericBox.style.display = '';
+        } else {
+            optsBox.style.display = '';
+            numericBox.style.display = 'none';
+        }
+    }
+
+    function renumberSubQuestions() {
+        var nodes = document.querySelectorAll('#pollSubQuestions .tmr-subq strong');
+        for (var i = 0; i < nodes.length; i++) nodes[i].textContent = 'Sub-question ' + (i + 1);
+    }
+
     async function submitNewPoll(e) {
         e.preventDefault();
         var errorEl = document.getElementById('createPollError');
@@ -744,14 +849,50 @@
         var publicResults = document.getElementById('pollPublicResults').checked;
         var allowMultiple = document.getElementById('pollAllowMultiple').checked;
         var anonymous = document.getElementById('pollAnonymous').checked;
+        var scoringMode = document.getElementById('pollScoringMode').value;
+        var isSeason = document.getElementById('pollIsSeason').checked;
+        var numericTargetRaw = document.getElementById('pollNumericTarget').value;
 
-        var optionInputs = document.querySelectorAll('#pollOptions input[type="text"]');
         var options = [];
-        optionInputs.forEach(function(inp) { var v = inp.value.trim(); if (v) options.push({ text: v }); });
+        if (scoringMode !== 'closest') {
+            var optionInputs = document.querySelectorAll('#pollOptions input[type="text"]');
+            optionInputs.forEach(function(inp) { var v = inp.value.trim(); if (v) options.push({ text: v }); });
+        }
 
         if (title.length < 5) { errorEl.textContent = 'Title must be at least 5 characters.'; errorEl.classList.add('is-shown'); return; }
         if (question.length < 5) { errorEl.textContent = 'Question must be at least 5 characters.'; errorEl.classList.add('is-shown'); return; }
-        if (options.length < 2) { errorEl.textContent = 'Provide at least 2 answer choices.'; errorEl.classList.add('is-shown'); return; }
+        if (scoringMode !== 'closest' && options.length < 2) {
+            errorEl.textContent = 'Provide at least 2 answer choices (or switch to Closest-numeric scoring).'; errorEl.classList.add('is-shown'); return;
+        }
+
+        // Build sub-questions if season-long mode is on
+        var subQuestions = [];
+        if (isSeason) {
+            var nodes = document.querySelectorAll('#pollSubQuestions .tmr-subq');
+            for (var i = 0; i < nodes.length; i++) {
+                var n = nodes[i];
+                var t = n.querySelector('.tmr-subq-title').value.trim();
+                if (t.length < 5) continue;
+                var m = n.querySelector('.tmr-subq-mode').value;
+                var sq = { title: t, scoring_mode: m };
+                if (m === 'closest') {
+                    var nv = n.querySelector('.tmr-subq-numeric').value;
+                    if (nv) sq.numeric_target = Number(nv);
+                } else {
+                    var subOpts = [];
+                    n.querySelectorAll('.tmr-subq-opt').forEach(function(inp) { var v = inp.value.trim(); if (v) subOpts.push({ text: v }); });
+                    if (subOpts.length < 2) continue;
+                    sq.options = subOpts;
+                }
+                subQuestions.push(sq);
+            }
+            if (subQuestions.length === 0) {
+                errorEl.textContent = 'Multi-question poll needs at least 1 valid sub-question (title >= 5 chars + 2 options or numeric truth).'; errorEl.classList.add('is-shown'); return;
+            }
+            if (subQuestions.length > 10) {
+                errorEl.textContent = 'Maximum 10 sub-questions per parent poll.'; errorEl.classList.add('is-shown'); return;
+            }
+        }
 
         // Embed UX flags into description so backend round-trips them without a schema change
         var descParts = [];
@@ -764,8 +905,12 @@
         var payload = {
             title: title + ' — ' + question,
             description: fullDescription,
-            options: options
+            scoring_mode: scoringMode,
         };
+        if (scoringMode !== 'closest') payload.options = options;
+        else payload.options = []; // backend allows empty options on closest-numeric parents
+        if (numericTargetRaw && scoringMode === 'closest') payload.numeric_target = Number(numericTargetRaw);
+        if (subQuestions.length) payload.sub_questions = subQuestions;
         if (categoryId) payload.category_id = parseInt(categoryId);
         if (expiresAt) payload.voting_deadline = new Date(expiresAt).toISOString();
 
