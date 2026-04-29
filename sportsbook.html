@@ -8467,106 +8467,87 @@
                     </div>
                 </aside>
 
-                <section class="sportsbook-selector-shell sportsbook-stage-panel">
+                <section class="sportsbook-selector-shell sportsbook-stage-panel sportsbook-lobby">
                     <div class="sportsbook-selector-head">
                         <div>
-                            <span class="sportsbook-lobby-label">Odds Board</span>
-                            <h3>Main Board</h3>
-                            <p class="sportsbook-selector-copy">Tap a price box or open the full board for that sport.</p>
+                            <span class="sportsbook-lobby-label">Board Selection</span>
+                            <h3>Available Sportsbooks</h3>
+                            <p class="sportsbook-selector-copy">Choose a sport to load its live games and markets.</p>
                         </div>
-                        <button class="sportsbook-lobby-secondary-btn" onclick="window.showPickStep('picksList')">History</button>
+                        <button class="sportsbook-lobby-secondary-btn" onclick="window.showPickStep('picksList')">Pick History</button>
                     </div>
 
-                    <div class="sportsbook-board-toolbar">
-                        <div class="sportsbook-market-strip" aria-label="Available markets">
-                            <span>Spread</span>
-                            <span>Moneyline</span>
-                            <span>Total</span>
-                            <span>Team Total</span>
-                            <span>Props</span>
-                        </div>
-                    </div>
-
-                    <div class="sportsbook-board-table">
-                        <div class="sportsbook-board-table-head">
-                            <span>League</span>
-                            <span>Spread</span>
-                            <span>Moneyline</span>
-                            <span>Total</span>
-                            <span>Team Total</span>
-                            <span>Board</span>
+                    <div class="sportsbook-lobby-table">
+                        <div class="sportsbook-lobby-table-head">
+                            <span>Sport / League</span>
+                            <span>Markets Available</span>
+                            <span>Boards Live</span>
+                            <span>Status</span>
+                            <span>Action</span>
                         </div>
 
-                        <button class="sportsbook-board-table-row" data-sport="NBA" onclick="window.selectSportAndShowGames('NBA')">
-                            <span class="sportsbook-board-table-league"><b>NBA</b><small>Pro Basketball</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Spread</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-table-action">Open Board</span>
+                        <button class="sportsbook-lobby-row" data-sport="NBA" onclick="window.selectSportAndShowGames('NBA')">
+                            <span class="sportsbook-lobby-league"><b>NBA</b><small>Pro Basketball</small></span>
+                            <span class="sportsbook-lobby-markets">Spreads · Moneylines · Totals · Team Totals · Props</span>
+                            <span class="sportsbook-lobby-count" id="nba-board-count" data-sport-count="NBA">Live boards</span>
+                            <span class="sportsbook-lobby-status sportsbook-lobby-status--open"><i></i>Open</span>
+                            <span class="sportsbook-lobby-action">Open Board</span>
                         </button>
 
-                        <button class="sportsbook-board-table-row" data-sport="NHL" onclick="window.selectSportAndShowGames('NHL')">
-                            <span class="sportsbook-board-table-league"><b>NHL</b><small>Hockey</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Puck Line</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-table-action">Open Board</span>
+                        <button class="sportsbook-lobby-row" data-sport="NHL" onclick="window.selectSportAndShowGames('NHL')">
+                            <span class="sportsbook-lobby-league"><b>NHL</b><small>Hockey</small></span>
+                            <span class="sportsbook-lobby-markets">Puck Lines · Moneylines · Totals · Props</span>
+                            <span class="sportsbook-lobby-count" id="nhl-board-count" data-sport-count="NHL">Live boards</span>
+                            <span class="sportsbook-lobby-status sportsbook-lobby-status--open"><i></i>Open</span>
+                            <span class="sportsbook-lobby-action">Open Board</span>
                         </button>
 
-                        <button class="sportsbook-board-table-row" data-sport="NFL" onclick="window.selectSportAndShowGames('NFL')">
-                            <span class="sportsbook-board-table-league"><b>NFL</b><small>Pro Football</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Spread</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-table-action">Open Board</span>
+                        <button class="sportsbook-lobby-row" data-sport="NFL" onclick="window.selectSportAndShowGames('NFL')">
+                            <span class="sportsbook-lobby-league"><b>NFL</b><small>Pro Football</small></span>
+                            <span class="sportsbook-lobby-markets">Spreads · Moneylines · Totals · Team Totals · Props</span>
+                            <span class="sportsbook-lobby-count" id="nfl-board-count" data-sport-count="NFL">Live boards</span>
+                            <span class="sportsbook-lobby-status sportsbook-lobby-status--open"><i></i>Open</span>
+                            <span class="sportsbook-lobby-action">Open Board</span>
                         </button>
 
-                        <button class="sportsbook-board-table-row" data-sport="MLB" onclick="window.selectSportAndShowGames('MLB')">
-                            <span class="sportsbook-board-table-league"><b>MLB</b><small>Baseball</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Run Line</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-table-action">Open Board</span>
+                        <button class="sportsbook-lobby-row" data-sport="MLB" onclick="window.selectSportAndShowGames('MLB')">
+                            <span class="sportsbook-lobby-league"><b>MLB</b><small>Baseball</small></span>
+                            <span class="sportsbook-lobby-markets">Moneylines · Run Lines · Totals · First 5 · Props</span>
+                            <span class="sportsbook-lobby-count" id="mlb-board-count" data-sport-count="MLB">Live boards</span>
+                            <span class="sportsbook-lobby-status sportsbook-lobby-status--open"><i></i>Open</span>
+                            <span class="sportsbook-lobby-action">Open Board</span>
                         </button>
 
-                        <button class="sportsbook-board-table-row" data-sport="NCAAB" onclick="window.selectSportAndShowGames('NCAAB')">
-                            <span class="sportsbook-board-table-league"><b>NCAAB</b><small>College Basketball</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Spread</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-table-action">Open Board</span>
+                        <button class="sportsbook-lobby-row" data-sport="NCAAB" onclick="window.selectSportAndShowGames('NCAAB')">
+                            <span class="sportsbook-lobby-league"><b>NCAAB</b><small>College Basketball</small></span>
+                            <span class="sportsbook-lobby-markets">Spreads · Moneylines · Totals</span>
+                            <span class="sportsbook-lobby-count" id="ncaab-board-count" data-sport-count="NCAAB">Live boards</span>
+                            <span class="sportsbook-lobby-status sportsbook-lobby-status--open"><i></i>Open</span>
+                            <span class="sportsbook-lobby-action">Open Board</span>
                         </button>
 
-                        <button class="sportsbook-board-table-row" data-sport="NCAAF" onclick="window.selectSportAndShowGames('NCAAF')">
-                            <span class="sportsbook-board-table-league"><b>NCAAF</b><small>College Football</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Spread</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-table-action">Open Board</span>
+                        <button class="sportsbook-lobby-row" data-sport="NCAAF" onclick="window.selectSportAndShowGames('NCAAF')">
+                            <span class="sportsbook-lobby-league"><b>NCAAF</b><small>College Football</small></span>
+                            <span class="sportsbook-lobby-markets">Spreads · Moneylines · Totals · Team Totals</span>
+                            <span class="sportsbook-lobby-count" id="ncaaf-board-count" data-sport-count="NCAAF">Live boards</span>
+                            <span class="sportsbook-lobby-status sportsbook-lobby-status--open"><i></i>Open</span>
+                            <span class="sportsbook-lobby-action">Open Board</span>
                         </button>
 
-                        <button class="sportsbook-board-table-row" type="button" onclick="window.toggleSportFamily && window.toggleSportFamily('soccer')">
-                            <span class="sportsbook-board-table-league"><b>Soccer</b><small>EPL · MLS · UCL · La Liga · Serie A</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Result</em><strong>—</strong><small>3-Way</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>—</strong><small>Goals</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>—</strong><small>Goals</small></span>
-                            <span class="sportsbook-board-table-action">View Leagues</span>
+                        <button class="sportsbook-lobby-row" type="button" onclick="window.toggleSportFamily && window.toggleSportFamily('soccer')">
+                            <span class="sportsbook-lobby-league"><b>Soccer</b><small>EPL · MLS · UCL · La Liga · Serie A · Bundesliga · Ligue 1</small></span>
+                            <span class="sportsbook-lobby-markets">3-Way · Moneylines · Totals · Goal Lines · League Boards</span>
+                            <span class="sportsbook-lobby-count">7 leagues</span>
+                            <span class="sportsbook-lobby-status sportsbook-lobby-status--group"><i></i>League Group</span>
+                            <span class="sportsbook-lobby-action">View Leagues</span>
                         </button>
 
-                        <button class="sportsbook-board-table-row" type="button" onclick="window.toggleSportFamily && window.toggleSportFamily('tennis')">
-                            <span class="sportsbook-board-table-league"><b>Tennis</b><small>ATP · WTA</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Set Spread</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>—</strong><small>Live</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>—</strong><small>Games</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Set Total</em><strong>—</strong><small>Games</small></span>
-                            <span class="sportsbook-board-table-action">View Tours</span>
+                        <button class="sportsbook-lobby-row" type="button" onclick="window.toggleSportFamily && window.toggleSportFamily('tennis')">
+                            <span class="sportsbook-lobby-league"><b>Tennis</b><small>ATP · WTA</small></span>
+                            <span class="sportsbook-lobby-markets">Match Winner · Set Spread · Game Totals · Set Totals</span>
+                            <span class="sportsbook-lobby-count">2 tours</span>
+                            <span class="sportsbook-lobby-status sportsbook-lobby-status--group"><i></i>Tour Group</span>
+                            <span class="sportsbook-lobby-action">View Tours</span>
                         </button>
                     </div>
 
@@ -19010,6 +18991,51 @@ document.addEventListener('DOMContentLoaded', function() {
                 gamesSpan.style.color = 'var(--text-muted)';
             });
         });
+
+        // Also populate the new Board Selection lobby + rail counts. We pull
+        // game counts from the same /games/board/<sportKey> endpoint and flip
+        // the row Status to Closed when the league has nothing scheduled.
+        var lobbyTargets = document.querySelectorAll('[data-sport-count]');
+        var apiBase2 = (window.api && window.api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+        lobbyTargets.forEach(function(cell) {
+            var sport = cell.getAttribute('data-sport-count');
+            var sportKey = sportMap[sport];
+            if (!sportKey) { cell.textContent = 'No data'; return; }
+            var row = cell.closest('.sportsbook-lobby-row');
+            var statusEl = row ? row.querySelector('.sportsbook-lobby-status') : null;
+            var railCell = document.getElementById((sport.toLowerCase()) + '-game-count');
+            cell.textContent = 'Checking…';
+            fetch(String(apiBase2).replace(/\/$/, '') + '/games/board/' + encodeURIComponent(sportKey)).then(function(r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            }).then(function(data) {
+                var games = (data && data.games) || [];
+                if (games.length > 0) {
+                    cell.textContent = games.length + ' Board' + (games.length !== 1 ? 's' : '') + ' Live';
+                    if (railCell) railCell.textContent = games.length;
+                    if (statusEl) {
+                        statusEl.classList.remove('sportsbook-lobby-status--closed');
+                        statusEl.classList.add('sportsbook-lobby-status--open');
+                        statusEl.innerHTML = '<i></i>Open';
+                    }
+                } else {
+                    cell.textContent = 'No Board Today';
+                    if (railCell) railCell.textContent = '—';
+                    if (statusEl) {
+                        statusEl.classList.remove('sportsbook-lobby-status--open');
+                        statusEl.classList.add('sportsbook-lobby-status--closed');
+                        statusEl.innerHTML = '<i></i>Closed';
+                    }
+                }
+            }).catch(function() {
+                cell.textContent = 'Check schedule';
+                if (statusEl) {
+                    statusEl.classList.remove('sportsbook-lobby-status--open');
+                    statusEl.classList.add('sportsbook-lobby-status--closed');
+                    statusEl.innerHTML = '<i></i>Offline';
+                }
+            });
+        });
     }
 
     // Export functions - only export the <head> inline system functions
@@ -24873,7 +24899,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     </style>
-    <link rel="stylesheet" href="static/css/sportsbook-pro.css?v=20260428c">
+    <link rel="stylesheet" href="static/css/sportsbook-pro.css?v=20260429a">
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  7:32:00 PM -->
