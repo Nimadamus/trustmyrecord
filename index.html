@@ -1008,6 +1008,854 @@ button{font:inherit;cursor:pointer}
   .featured-stats{grid-template-columns:1fr 1fr}
   .hero-card-stats{grid-template-columns:1fr 1fr}
 }
+
+/* ============================================================
+   2026-04-29 redesign — homepage sections 2 through 7
+============================================================ */
+
+:root {
+    --tmr-cyan-bright: #00E5C7;
+    --tmr-coral: #FF6B47;
+    --tmr-section-pad: clamp(64px, 9vw, 120px);
+}
+
+/* Hero quote overlay — replaces the placeholder stats card */
+.hero-photo { position: relative; }
+.hero-quote-overlay {
+    position: absolute;
+    left: 18px;
+    right: 18px;
+    bottom: 18px;
+    background: linear-gradient(180deg, rgba(8, 14, 25, 0.65) 0%, rgba(4, 8, 16, 0.92) 100%);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 18px 20px 18px 22px;
+    min-height: 86px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+.hero-quote-pulse {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+    color: var(--tmr-cyan-bright);
+}
+.hero-quote-pulse i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--tmr-cyan-bright);
+    box-shadow: 0 0 0 0 rgba(0, 229, 199, 0.5);
+    animation: tmrPulse 1.6s ease-out infinite;
+}
+@keyframes tmrPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(0, 229, 199, 0.5); }
+    70%  { box-shadow: 0 0 0 10px rgba(0, 229, 199, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 229, 199, 0); }
+}
+.hero-quote-line {
+    margin: 0;
+    font-family: 'Barlow Condensed', 'Inter', sans-serif;
+    font-size: clamp(15px, 1.3vw, 19px);
+    font-weight: 700;
+    line-height: 1.3;
+    color: #f1f5fb;
+    letter-spacing: 0.1px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    position: absolute;
+    left: 22px;
+    right: 22px;
+    pointer-events: none;
+}
+.hero-quote-line.is-active {
+    opacity: 1;
+    transform: translateY(0);
+    position: relative;
+}
+
+/* Shared section chrome */
+.tmr-section-inner {
+    width: min(1240px, calc(100% - 48px));
+    margin: 0 auto;
+}
+.tmr-section-head {
+    margin-bottom: 56px;
+    text-align: center;
+}
+.tmr-section-head--left { text-align: left; }
+.tmr-section-head h2 {
+    font-family: 'Barlow Condensed', 'Inter', sans-serif;
+    font-size: clamp(28px, 3.6vw, 48px);
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    line-height: 1.05;
+    text-transform: uppercase;
+    margin: 0 0 12px;
+    color: #fff;
+}
+.tmr-section-sub {
+    font-size: clamp(14px, 1.05vw, 16px);
+    line-height: 1.6;
+    color: #9ca8be;
+    max-width: 680px;
+    margin: 0 auto;
+}
+.tmr-section-head--left .tmr-section-sub { margin: 0; }
+.tmr-section-head--with-tag {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+    text-align: left;
+    flex-wrap: wrap;
+}
+.tmr-section-head--with-tag h2 { text-align: left; }
+.tmr-section-head--with-tag .tmr-section-sub { margin: 0; max-width: 520px; }
+.tmr-preview-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+    color: var(--tmr-cyan-bright);
+    background: rgba(0, 229, 199, 0.08);
+    border: 1px solid rgba(0, 229, 199, 0.32);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* SECTION 2: League ticker */
+.tmr-ticker-section {
+    background: linear-gradient(180deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0.01) 100%);
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    padding: 56px 0 60px;
+    overflow: hidden;
+}
+.tmr-ticker-eyebrow {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2.4px;
+    color: #6f7a8e;
+    text-transform: uppercase;
+    margin: 0 0 26px;
+}
+.tmr-ticker {
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+}
+.tmr-ticker-track {
+    display: flex;
+    width: max-content;
+    animation: tmrMarquee 64s linear infinite;
+}
+.tmr-ticker:hover .tmr-ticker-track { animation-play-state: paused; }
+.tmr-ticker-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 26px;
+    padding: 0 24px;
+    font-family: 'Barlow Condensed', 'Inter', sans-serif;
+    font-size: clamp(20px, 2vw, 28px);
+    font-weight: 900;
+    letter-spacing: 1.4px;
+    color: #f1f5fb;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.tmr-ticker-row > i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--orange, #FF6B47);
+    flex-shrink: 0;
+    display: inline-block;
+}
+@keyframes tmrMarquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+
+/* SECTION 3: How it works */
+.tmr-how { padding: var(--tmr-section-pad) 0; }
+.tmr-how-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+}
+.tmr-how-card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(13, 22, 38, 0.92) 0%, rgba(8, 14, 25, 0.92) 100%);
+    border-radius: 20px;
+    padding: 34px 32px 30px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+}
+.tmr-how-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    padding: 1px;
+    background: linear-gradient(180deg, var(--card-accent, rgba(0,229,199,0.4)) 0%, transparent 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.7;
+}
+.tmr-how-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+}
+.tmr-how-card--track   { --card-accent: rgba(0, 229, 199, 0.65); }
+.tmr-how-card--talk    { --card-accent: rgba(255, 107, 71, 0.65); }
+.tmr-how-card--compete { --card-accent: rgba(53, 220, 128, 0.65); }
+.tmr-how-icon {
+    font-size: 28px;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 18px;
+}
+.tmr-how-eyebrow {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.6px;
+    color: #7a8aa3;
+    margin-bottom: 10px;
+    font-family: 'JetBrains Mono', 'Menlo', monospace;
+}
+.tmr-how-card h3 {
+    font-family: 'Barlow Condensed', 'Inter', sans-serif;
+    font-size: clamp(20px, 1.8vw, 26px);
+    font-weight: 800;
+    color: #fff;
+    margin: 0 0 12px;
+    line-height: 1.2;
+    letter-spacing: -0.2px;
+}
+.tmr-how-card p {
+    color: #a5b1c6;
+    font-size: 14.5px;
+    line-height: 1.6;
+    margin: 0 0 20px;
+}
+.tmr-how-link {
+    color: var(--tmr-cyan-bright);
+    font-weight: 700;
+    font-size: 13.5px;
+    text-decoration: none;
+    letter-spacing: 0.3px;
+}
+.tmr-how-card--talk .tmr-how-link { color: var(--orange, #FF6B47); }
+.tmr-how-card--compete .tmr-how-link { color: #35dc80; }
+.tmr-how-link:hover { filter: brightness(1.15); }
+
+/* SECTION 4: Feed preview */
+.tmr-feed-preview {
+    padding: var(--tmr-section-pad) 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.02) 50%, transparent 100%);
+}
+.tmr-feed-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    max-width: 760px;
+    margin: 0 auto;
+}
+.tmr-post {
+    position: relative;
+    background: rgba(13, 22, 38, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 18px;
+    padding: 22px 26px;
+    overflow: hidden;
+}
+.tmr-post-watermark {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.18);
+    border: 1px dashed rgba(255, 255, 255, 0.16);
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: 2;
+}
+.tmr-post-head {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+}
+.tmr-post-avatar {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Barlow Condensed', 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    color: #fff;
+    background: linear-gradient(135deg, #1f3866 0%, #0a1428 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.tmr-avatar-jm  { background: linear-gradient(135deg, #FF6B47 0%, #b34020 100%); }
+.tmr-avatar-rc  { background: linear-gradient(135deg, #2563EB 0%, #122d70 100%); }
+.tmr-avatar-tmr { background: linear-gradient(135deg, #00E5C7 0%, #0c7a6c 100%); color: #04141a; }
+.tmr-avatar-ks  { background: linear-gradient(135deg, #ef4444 0%, #7c1d1d 100%); }
+.tmr-post-id { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+.tmr-post-id strong {
+    font-size: 14.5px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.1px;
+}
+.tmr-post-meta {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 11.5px;
+}
+.tmr-post-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.tmr-post-badge--locked    { background: rgba(0, 229, 199, 0.14); color: var(--tmr-cyan-bright); border: 1px solid rgba(0,229,199,0.32); }
+.tmr-post-badge--take      { background: rgba(255, 107, 71, 0.14); color: var(--tmr-coral); border: 1px solid rgba(255,107,71,0.32); }
+.tmr-post-badge--poll      { background: rgba(37, 99, 235, 0.18); color: #6ea1ff; border: 1px solid rgba(37,99,235,0.36); }
+.tmr-post-badge--challenge { background: rgba(239, 68, 68, 0.14); color: #ff7373; border: 1px solid rgba(239,68,68,0.36); }
+.tmr-post-tag {
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    color: #c5cee0;
+    text-transform: uppercase;
+}
+.tmr-post-time {
+    color: #6f7a8e;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+.tmr-post-text {
+    color: #dde4ef;
+    font-size: 15px;
+    line-height: 1.55;
+    margin: 0 0 4px;
+}
+.tmr-post-receipt {
+    background: linear-gradient(180deg, rgba(0, 229, 199, 0.04) 0%, rgba(0, 229, 199, 0.01) 100%);
+    border: 1px solid rgba(0, 229, 199, 0.22);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 24px;
+    margin-bottom: 4px;
+}
+.tmr-post-receipt-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.tmr-post-receipt-row > span {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 1.3px;
+    color: #6f7a8e;
+    text-transform: uppercase;
+}
+.tmr-post-receipt-row > strong {
+    font-family: 'JetBrains Mono', 'Menlo', monospace;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #fff;
+}
+.tmr-post-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+.tmr-post-act {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #a5b1c6;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-family: inherit;
+}
+.tmr-post-act:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.16);
+}
+.tmr-act-tail   { color: #35dc80; border-color: rgba(53, 220, 128, 0.32); }
+.tmr-act-fade   { color: #ff7373; border-color: rgba(239, 68, 68, 0.32); }
+.tmr-act-accept { color: #35dc80; border-color: rgba(53, 220, 128, 0.32); background: rgba(53,220,128,0.08); }
+
+.tmr-poll {
+    list-style: none;
+    margin: 14px 0 12px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.tmr-poll-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    padding: 10px 14px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #fff;
+}
+.tmr-poll-bar {
+    position: absolute;
+    inset: 0;
+    width: var(--pct, 0%);
+    background: linear-gradient(90deg, rgba(37, 99, 235, 0.22) 0%, rgba(37, 99, 235, 0.05) 100%);
+    border-right: 1px solid rgba(37, 99, 235, 0.4);
+    z-index: 0;
+}
+.tmr-poll-label, .tmr-poll-val { position: relative; z-index: 1; }
+.tmr-poll-val {
+    font-family: 'JetBrains Mono', 'Menlo', monospace;
+    color: var(--tmr-cyan-bright);
+}
+.tmr-poll-foot {
+    margin: 0;
+    color: #6f7a8e;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.tmr-feed-cta {
+    margin-top: 32px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: center;
+}
+.tmr-feed-cta > span {
+    color: #9ca8be;
+    font-size: 14.5px;
+}
+
+/* SECTION 5: Pick receipt showcase */
+.tmr-receipt-showcase {
+    padding: var(--tmr-section-pad) 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(0, 229, 199, 0.025) 50%, transparent 100%);
+}
+.tmr-receipt-stage {
+    position: relative;
+    margin: 64px auto 56px;
+    max-width: 1080px;
+    min-height: 460px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.tmr-receipt-card {
+    position: relative;
+    width: min(620px, 100%);
+    background: linear-gradient(180deg, #0e1a30 0%, #0a1426 100%);
+    border: 1px solid rgba(0, 229, 199, 0.32);
+    border-radius: 20px;
+    padding: 28px 32px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 229, 199, 0.08), 0 0 60px rgba(0, 229, 199, 0.08);
+    z-index: 2;
+}
+.tmr-receipt-card::before,
+.tmr-receipt-card::after {
+    content: '';
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    background: #05070D;
+    border-radius: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.tmr-receipt-card::before { left: -11px; }
+.tmr-receipt-card::after  { right: -11px; }
+.tmr-receipt-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 16px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
+    margin-bottom: 20px;
+}
+.tmr-receipt-state {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.6px;
+    color: var(--tmr-cyan-bright);
+    text-transform: uppercase;
+    background: rgba(0, 229, 199, 0.08);
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 229, 199, 0.32);
+}
+.tmr-receipt-meta {
+    font-family: 'JetBrains Mono', 'Menlo', monospace;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #c5cee0;
+    letter-spacing: 0.5px;
+}
+.tmr-receipt-pick {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+}
+.tmr-receipt-side {
+    font-family: 'Barlow Condensed', 'Inter', sans-serif;
+    font-size: clamp(28px, 3vw, 38px);
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -0.5px;
+}
+.tmr-receipt-line {
+    font-family: 'JetBrains Mono', 'Menlo', monospace;
+    font-size: clamp(20px, 2vw, 26px);
+    font-weight: 800;
+    color: var(--tmr-cyan-bright);
+    background: rgba(0, 229, 199, 0.08);
+    padding: 4px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 229, 199, 0.24);
+}
+.tmr-receipt-rows {
+    list-style: none;
+    margin: 0 0 18px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.tmr-receipt-rows li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    font-size: 13px;
+}
+.tmr-receipt-rows span {
+    color: #6f7a8e;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    font-size: 11px;
+}
+.tmr-receipt-rows strong {
+    font-family: 'JetBrains Mono', 'Menlo', monospace;
+    color: #f1f5fb;
+    font-weight: 700;
+    text-align: right;
+}
+.tmr-receipt-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 16px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.12);
+    font-size: 11.5px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+    color: var(--gold, #ffd166);
+    text-transform: uppercase;
+}
+.tmr-receipt-pulse {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--gold, #ffd166);
+    box-shadow: 0 0 0 0 rgba(255, 209, 102, 0.5);
+    animation: tmrPulse 1.6s ease-out infinite;
+    display: inline-block;
+}
+
+.tmr-callout {
+    position: absolute;
+    width: 220px;
+    background: rgba(13, 22, 38, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: #c5cee0;
+    backdrop-filter: blur(10px);
+    z-index: 3;
+}
+.tmr-callout-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--tmr-cyan-bright);
+    color: #04141a;
+    font-weight: 900;
+    font-size: 11.5px;
+    margin-bottom: 6px;
+}
+.tmr-callout p { margin: 0; }
+.tmr-callout--tl { top: -10px; left: 0; }
+.tmr-callout--tr { top: -10px; right: 0; }
+.tmr-callout--bl { bottom: 0; left: 0; }
+.tmr-callout--br { bottom: 0; right: 0; }
+
+.tmr-principle {
+    text-align: center;
+    margin-top: 72px;
+}
+.tmr-principle p {
+    font-family: 'Barlow Condensed', 'Inter', sans-serif;
+    font-size: clamp(26px, 3.4vw, 42px);
+    font-weight: 900;
+    letter-spacing: -0.3px;
+    margin: 0 0 12px;
+    line-height: 1.15;
+}
+.tmr-principle-strike {
+    color: #6f7a8e;
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+    text-decoration-color: rgba(239, 68, 68, 0.6);
+    margin-right: 12px;
+}
+.tmr-principle-truth {
+    color: var(--tmr-cyan-bright);
+    text-transform: uppercase;
+}
+.tmr-principle-by {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2.4px;
+    color: #6f7a8e;
+    text-transform: uppercase;
+}
+
+/* SECTION 6: Not a handicapper */
+.tmr-fan { padding: var(--tmr-section-pad) 0; }
+.tmr-fan-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 22px;
+}
+.tmr-fan-card {
+    position: relative;
+    background: linear-gradient(180deg, rgba(13, 22, 38, 0.92) 0%, rgba(8, 14, 25, 0.92) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 18px;
+    padding: 28px 24px 26px;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.tmr-fan-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--card-accent, rgba(255,255,255,0.16));
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.4);
+}
+.tmr-fan-card--forums { --card-accent: rgba(239, 68, 68, 0.55); }
+.tmr-fan-card--polls  { --card-accent: rgba(37, 99, 235, 0.6); }
+.tmr-fan-card--trivia { --card-accent: rgba(255, 209, 102, 0.55); }
+.tmr-fan-card--gaming { --card-accent: rgba(255, 107, 71, 0.6); }
+.tmr-fan-icon {
+    font-size: 32px;
+    width: 60px;
+    height: 60px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--card-accent, rgba(255,255,255,0.08));
+    margin-bottom: 18px;
+}
+.tmr-fan-card h3 {
+    font-family: 'Barlow Condensed', 'Inter', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    margin: 0 0 10px;
+    line-height: 1.2;
+    letter-spacing: -0.2px;
+}
+.tmr-fan-card p {
+    color: #a5b1c6;
+    font-size: 14px;
+    line-height: 1.55;
+    margin: 0 0 22px;
+    flex: 1;
+}
+.tmr-fan-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 18px;
+}
+.tmr-fan-tags span {
+    font-family: 'JetBrains Mono', 'Menlo', monospace;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #c5cee0;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 4px 8px;
+    border-radius: 5px;
+    text-transform: uppercase;
+}
+.tmr-fan-card .btn {
+    align-self: stretch;
+    text-align: center;
+}
+
+/* SECTION 7: Final CTA */
+.tmr-final {
+    position: relative;
+    padding: calc(var(--tmr-section-pad) + 16px) 0;
+    overflow: hidden;
+    background: linear-gradient(180deg, transparent 0%, rgba(0, 229, 199, 0.04) 50%, transparent 100%);
+}
+.tmr-final-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(60% 60% at 50% 50%, rgba(0, 229, 199, 0.18) 0%, transparent 70%);
+    pointer-events: none;
+}
+.tmr-final-inner {
+    position: relative;
+    text-align: center;
+}
+.tmr-final h2 {
+    font-family: 'Barlow Condensed', 'Inter', sans-serif;
+    font-size: clamp(36px, 5vw, 72px);
+    font-weight: 900;
+    letter-spacing: -0.8px;
+    line-height: 1;
+    margin: 0 0 22px;
+    color: #fff;
+    text-transform: uppercase;
+}
+.tmr-final > .tmr-final-inner > p {
+    font-size: clamp(15px, 1.2vw, 18px);
+    color: #dde4ef;
+    margin: 0 auto 36px;
+    max-width: 560px;
+    line-height: 1.55;
+}
+.tmr-final-cta {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+}
+.btn.xl {
+    font-size: 16px;
+    padding: 16px 32px;
+    border-radius: 999px;
+}
+.tmr-final-fineprint {
+    color: #6f7a8e;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 980px) {
+    .tmr-how-grid { grid-template-columns: 1fr; }
+    .tmr-fan-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tmr-section-head--with-tag { flex-direction: column; align-items: flex-start; }
+    .tmr-receipt-stage {
+        min-height: 0;
+        flex-direction: column;
+        gap: 18px;
+    }
+    .tmr-callout {
+        position: static;
+        width: 100%;
+    }
+    .tmr-callout--tl, .tmr-callout--tr,
+    .tmr-callout--bl, .tmr-callout--br { position: static; }
+}
+@media (max-width: 640px) {
+    .tmr-fan-grid { grid-template-columns: 1fr; }
+    .tmr-ticker-track { animation-duration: 90s; }
+    .tmr-section-inner { width: calc(100% - 32px); }
+    .tmr-post { padding: 18px 18px; }
+    .tmr-post-receipt { grid-template-columns: 1fr; gap: 10px; }
+    .tmr-receipt-card { padding: 22px 22px; }
+    .tmr-receipt-card::before, .tmr-receipt-card::after { display: none; }
+    .tmr-final-cta { flex-direction: column; }
+    .tmr-final-cta .btn { width: 100%; }
+}
 </style>
 </head>
 <body>
@@ -1041,554 +1889,392 @@ button{font:inherit;cursor:pointer}
     <div class="combined-left">
       <span class="ch-eyebrow"><span class="pip"></span>The Receipt-Based Sports Network</span>
       <h1>DO YOU THINK YOU KNOW SPORTS?<span class="accent">PROVE IT.</span></h1>
-      <p class="lead"><b>TrustMyRecord is the sports social network where every pick, argument, challenge, and result lives on a public profile.</b> Track picks for free, build a verified record, buy and sell picks, climb leaderboards, talk in the feed and forums, vote in polls, play trivia, and challenge people head-to-head on PS5 in 2K, Madden, MLB The Show, and NHL.</p>
+      <p class="lead">TrustMyRecord is where every pick, hot take, vote, and challenge lives on a public profile. Lock your record. Talk your shit. Climb the board. No deletes. No edits. No do-overs.</p>
       <div class="ch-warning">
         <div class="ic">⚠</div>
         <div><b>NO DELETES. NO RESETS. NO DO-OVERS.</b> Once you lock a pick, it's on your record forever. Pick carefully.</div>
       </div>
       <div class="ch-cta">
         <a class="btn accent lg auth-link" href="register/">Start Your Free Record →</a>
-        <a class="btn ghost-light lg" href="arena.html">See This Week&#39;s Prize Pool</a>
+        <a class="btn ghost-light lg" href="#how-it-works" data-tour-cta>Tour the Site</a>
       </div>
     </div>
 
     <div class="combined-right">
       <div class="ch-card">
-        <div class="ch-card-head">
-          <span class="pip">Live Tracking</span>
-          <span>Updated continuously</span>
-        </div>
-        <div class="ch-photo">
-          <img src="static/media/steph-curry-hero.gif" alt="Featured handicapper">
-          <div class="label">
-            <div>
-              <b>[Featured Handicapper]</b>
-              <span>Sport · Member since —</span>
-            </div>
-            <span class="badge">Top Ranked</span>
-          </div>
-        </div>
-        <div class="ch-stats">
-          <div class="ch-stat green">
-            <span class="lbl">7-Day ROI</span>
-            <b>—%</b>
-            <span class="sub">Verified · auto-graded</span>
-          </div>
-          <div class="ch-stat blue">
-            <span class="lbl">30-Day Record</span>
-            <b>0-0-0</b>
-            <span class="sub">Locked picks only</span>
-          </div>
-          <div class="ch-stat orange">
-            <span class="lbl">Current Streak</span>
-            <b>—</b>
-            <span class="sub">Live · updating</span>
-          </div>
-          <div class="ch-stat gold">
-            <span class="lbl">All-Time Rank</span>
-            <b>#—</b>
-            <span class="sub">Of — handicappers</span>
+        <div class="ch-photo hero-photo">
+          <img src="static/media/steph-curry-hero.gif" alt="Sports celebration" loading="lazy">
+          <div class="hero-quote-overlay" id="heroQuoteOverlay" aria-live="polite">
+            <span class="hero-quote-pulse"><i></i>LIVE</span>
+            <p class="hero-quote-line is-active" data-quote="0">Last guy who said he knew ball is now 2 and 14 in public.</p>
+            <p class="hero-quote-line" data-quote="1">Talk on the record or don't talk at all.</p>
+            <p class="hero-quote-line" data-quote="2">Receipts settle every argument.</p>
           </div>
         </div>
       </div>
     </div>
   </div>
+</section>
 
-  <!-- Compact feature-pill row, all on one band -->
-  <div class="ch-features">
-    <span class="ch-fp orange"><span class="ck">🔒</span><b>Track picks free</b> · locked picks · auto-graded</span>
-    <span class="ch-fp blue"><span class="ck">⊞</span><b>Sports social</b> · feed · forums · polls · trivia</span>
-    <span class="ch-fp green"><span class="ck">✓</span><b>Public records</b> · ROI, units, win %, sample size</span>
-    <span class="ch-fp red"><span class="ck">⚔</span><b>Competition</b> · head-to-head handicapping battles</span>
-    <span class="ch-fp red"><span class="ck">🎮</span><b>PS5 challenge arena</b> · 2K · Madden · Show · NHL</span>
-    <span class="ch-fp gold"><span class="ck">$</span><b>Buy + sell picks</b> · marketplace · keep 100%</span>
-    <span class="ch-fp gold"><span class="ck">🏆</span><b>Cash prize tournaments</b> · climb the board</span>
+
+<!-- ===========================================================
+     SECTION 2: LEAGUE TICKER
+=========================================================== -->
+<section class="tmr-ticker-section" aria-label="Sports we cover">
+  <p class="tmr-ticker-eyebrow">EVERY SPORT. EVERY ARGUMENT. ONE RECORD.</p>
+  <div class="tmr-ticker" role="presentation">
+    <div class="tmr-ticker-track">
+      <span class="tmr-ticker-row">
+        <span>NFL</span><i></i>
+        <span>NBA</span><i></i>
+        <span>MLB</span><i></i>
+        <span>NHL</span><i></i>
+        <span>EPL</span><i></i>
+        <span>UFC</span><i></i>
+        <span>NCAAFB</span><i></i>
+        <span>NCAAMB</span><i></i>
+        <span>MLS</span><i></i>
+        <span>CHAMPIONS LEAGUE</span><i></i>
+        <span>TENNIS</span><i></i>
+        <span>GOLF</span><i></i>
+        <span>NASCAR</span><i></i>
+        <span>WNBA</span><i></i>
+        <span>BUNDESLIGA</span><i></i>
+        <span>LA LIGA</span><i></i>
+        <span>SERIE A</span><i></i>
+        <span>LIGUE 1</span><i></i>
+        <span>CRICKET</span><i></i>
+        <span>MMA</span><i></i>
+      </span>
+      <span class="tmr-ticker-row" aria-hidden="true">
+        <span>NFL</span><i></i>
+        <span>NBA</span><i></i>
+        <span>MLB</span><i></i>
+        <span>NHL</span><i></i>
+        <span>EPL</span><i></i>
+        <span>UFC</span><i></i>
+        <span>NCAAFB</span><i></i>
+        <span>NCAAMB</span><i></i>
+        <span>MLS</span><i></i>
+        <span>CHAMPIONS LEAGUE</span><i></i>
+        <span>TENNIS</span><i></i>
+        <span>GOLF</span><i></i>
+        <span>NASCAR</span><i></i>
+        <span>WNBA</span><i></i>
+        <span>BUNDESLIGA</span><i></i>
+        <span>LA LIGA</span><i></i>
+        <span>SERIE A</span><i></i>
+        <span>LIGUE 1</span><i></i>
+        <span>CRICKET</span><i></i>
+        <span>MMA</span><i></i>
+      </span>
+    </div>
   </div>
 </section>
 
-<!-- 4. ARENA SECTION (dark navy scoreboard hub) -->
-<section class="arena">
-  <div class="arena-inner">
-    <div class="arena-head">
+<!-- ===========================================================
+     SECTION 3: HOW IT WORKS
+=========================================================== -->
+<section class="tmr-how" id="how-it-works" aria-label="Three things you can do here">
+  <div class="tmr-section-inner">
+    <header class="tmr-section-head">
+      <h2>THREE THINGS YOU CAN DO HERE</h2>
+    </header>
+    <div class="tmr-how-grid">
+      <article class="tmr-how-card tmr-how-card--track">
+        <div class="tmr-how-icon" aria-hidden="true">🔒</div>
+        <span class="tmr-how-eyebrow">01 · TRACK</span>
+        <h3>Lock picks. Build a record.</h3>
+        <p>Every pick is sealed at submission and graded automatically. Your ROI, win rate, sample size, and streaks are public. Free forever.</p>
+        <a class="tmr-how-link" href="sportsbook.html#picks">See how grading works →</a>
+      </article>
+      <article class="tmr-how-card tmr-how-card--talk">
+        <div class="tmr-how-icon" aria-hidden="true">💬</div>
+        <span class="tmr-how-eyebrow">02 · TALK</span>
+        <h3>Talk shit on the record.</h3>
+        <p>Forums, polls, hot takes, trivia, replies. Every word stamps to your handle. The crowd has receipts too.</p>
+        <a class="tmr-how-link" href="hangout.html">Tour the Hangout →</a>
+      </article>
+      <article class="tmr-how-card tmr-how-card--compete">
+        <div class="tmr-how-icon" aria-hidden="true">🏆</div>
+        <span class="tmr-how-eyebrow">03 · COMPETE</span>
+        <h3>Real cash. Real rivals.</h3>
+        <p>Head to head pick duels. Weekly tournaments. 2K, Madden, The Show, and NHL money matches. Loser wears the cold streak badge.</p>
+        <a class="tmr-how-link" href="arena.html">Browse the Arena →</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===========================================================
+     SECTION 4: FEED PREVIEW
+=========================================================== -->
+<section class="tmr-feed-preview" aria-label="Feed preview">
+  <div class="tmr-section-inner">
+    <header class="tmr-section-head tmr-section-head--with-tag">
       <div>
-        <h2>The <span class="accent">Arena</span></h2>
-        <div class="sub">Live competition hub. Top of the board, locked-pick receipts, and head-to-head action — all in real time.</div>
+        <h2>THIS IS WHAT THE FEED LOOKS LIKE</h2>
+        <p class="tmr-section-sub">A preview of how picks, takes, polls, and challenges show up on TMR. Every post is timestamped, locked, and tied to a public handle.</p>
       </div>
-      <a class="more" href="#">Open the Arena →</a>
+      <span class="tmr-preview-tag">PREVIEW · SAMPLE POSTS</span>
+    </header>
+
+    <div class="tmr-feed-stack">
+
+      <!-- Sample 1: locked pick -->
+      <article class="tmr-post tmr-post--locked" data-sample="true">
+        <span class="tmr-post-watermark">SAMPLE</span>
+        <header class="tmr-post-head">
+          <span class="tmr-post-avatar tmr-avatar-jm">JM</span>
+          <div class="tmr-post-id">
+            <strong>@jaymoneyball</strong>
+            <span class="tmr-post-meta">
+              <span class="tmr-post-badge tmr-post-badge--locked">🔒 LOCKED PICK</span>
+              <span class="tmr-post-tag">NBA</span>
+              <span class="tmr-post-time">2 minutes ago</span>
+            </span>
+          </div>
+        </header>
+        <div class="tmr-post-body">
+          <div class="tmr-post-receipt">
+            <div class="tmr-post-receipt-row">
+              <span>Pick</span><strong>Lakers ML</strong>
+            </div>
+            <div class="tmr-post-receipt-row">
+              <span>Line</span><strong>+135</strong>
+            </div>
+            <div class="tmr-post-receipt-row">
+              <span>Stake</span><strong>1.5 units</strong>
+            </div>
+            <div class="tmr-post-receipt-row">
+              <span>Sealed at</span><strong>10:32 AM PT</strong>
+            </div>
+          </div>
+        </div>
+        <footer class="tmr-post-actions">
+          <button type="button" class="tmr-post-act tmr-act-tail">▲ Tail (47)</button>
+          <button type="button" class="tmr-post-act tmr-act-fade">▽ Fade (12)</button>
+          <button type="button" class="tmr-post-act">💬 Reply (8)</button>
+          <button type="button" class="tmr-post-act">↗ Share</button>
+        </footer>
+      </article>
+
+      <!-- Sample 2: hot take -->
+      <article class="tmr-post tmr-post--take" data-sample="true">
+        <span class="tmr-post-watermark">SAMPLE</span>
+        <header class="tmr-post-head">
+          <span class="tmr-post-avatar tmr-avatar-rc">RC</span>
+          <div class="tmr-post-id">
+            <strong>@rcfromqueens</strong>
+            <span class="tmr-post-meta">
+              <span class="tmr-post-badge tmr-post-badge--take">🔥 HOT TAKE</span>
+              <span class="tmr-post-tag">NFL</span>
+              <span class="tmr-post-time">18 minutes ago</span>
+            </span>
+          </div>
+        </header>
+        <div class="tmr-post-body">
+          <p class="tmr-post-text">If your starting QB has more interceptions than touchdowns in November, that's not a slump. That's the whole personality.</p>
+        </div>
+        <footer class="tmr-post-actions">
+          <button type="button" class="tmr-post-act">❤️ 312</button>
+          <button type="button" class="tmr-post-act">💬 84 replies</button>
+          <button type="button" class="tmr-post-act">↗ Share</button>
+        </footer>
+      </article>
+
+      <!-- Sample 3: poll -->
+      <article class="tmr-post tmr-post--poll" data-sample="true">
+        <span class="tmr-post-watermark">SAMPLE</span>
+        <header class="tmr-post-head">
+          <span class="tmr-post-avatar tmr-avatar-tmr">TMR</span>
+          <div class="tmr-post-id">
+            <strong>@tmr_official</strong>
+            <span class="tmr-post-meta">
+              <span class="tmr-post-badge tmr-post-badge--poll">📊 POLL</span>
+              <span class="tmr-post-tag">NBA</span>
+              <span class="tmr-post-time">1 hour ago</span>
+            </span>
+          </div>
+        </header>
+        <div class="tmr-post-body">
+          <p class="tmr-post-text">Who actually wins a Game 7 on the road this postseason?</p>
+          <ul class="tmr-poll" role="list">
+            <li class="tmr-poll-row" style="--pct:41%"><span class="tmr-poll-bar"></span><span class="tmr-poll-label">Celtics</span><span class="tmr-poll-val">41%</span></li>
+            <li class="tmr-poll-row" style="--pct:28%"><span class="tmr-poll-bar"></span><span class="tmr-poll-label">Nuggets</span><span class="tmr-poll-val">28%</span></li>
+            <li class="tmr-poll-row" style="--pct:19%"><span class="tmr-poll-bar"></span><span class="tmr-poll-label">Thunder</span><span class="tmr-poll-val">19%</span></li>
+            <li class="tmr-poll-row" style="--pct:12%"><span class="tmr-poll-bar"></span><span class="tmr-poll-label">Knicks</span><span class="tmr-poll-val">12%</span></li>
+          </ul>
+          <p class="tmr-poll-foot">2,847 votes · 6 hours left</p>
+        </div>
+      </article>
+
+      <!-- Sample 4: head to head challenge -->
+      <article class="tmr-post tmr-post--challenge" data-sample="true">
+        <span class="tmr-post-watermark">SAMPLE</span>
+        <header class="tmr-post-head">
+          <span class="tmr-post-avatar tmr-avatar-ks">KS</span>
+          <div class="tmr-post-id">
+            <strong>@killshot_kelly</strong>
+            <span class="tmr-post-meta">
+              <span class="tmr-post-badge tmr-post-badge--challenge">⚔️ CHALLENGE ISSUED</span>
+              <span class="tmr-post-tag">MLB</span>
+              <span class="tmr-post-time">3 hours ago</span>
+            </span>
+          </div>
+        </header>
+        <div class="tmr-post-body">
+          <p class="tmr-post-text">Best of 5 MLB picks vs @donnybets. Loser wears the cold streak badge for 30 days. First to lock 5 wins the duel.</p>
+        </div>
+        <footer class="tmr-post-actions">
+          <button type="button" class="tmr-post-act tmr-act-accept">✅ Accept</button>
+          <button type="button" class="tmr-post-act">💬 Reply</button>
+          <button type="button" class="tmr-post-act">↗ Share</button>
+        </footer>
+      </article>
+
     </div>
 
-    <div class="court-arc"></div>
-
-    <div class="arena-grid">
-      <!-- 5. Mini leaderboard preview -->
-      <div class="mini-lb">
-        <div class="mini-lb-head">
-          <h3>Top of the Board</h3>
-          <div class="filt">
-            <a href="#">7D</a><a href="#" class="on">30D</a><a href="#">YTD</a><a href="#">All</a>
-          </div>
-        </div>
-        <div class="mini-lb-row">
-          <span class="rank-badge t1">1</span>
-          <div class="mini-lb-cap"><span class="av">—</span><div><b>[Handicapper]</b><span>Sport · Member since —</span></div></div>
-          <span class="mini-lb-rec">0-0-0</span>
-          <span class="mini-lb-units">+— u</span>
-        </div>
-        <div class="mini-lb-row">
-          <span class="rank-badge t2">2</span>
-          <div class="mini-lb-cap"><span class="av">—</span><div><b>[Handicapper]</b><span>Sport · Member since —</span></div></div>
-          <span class="mini-lb-rec">0-0-0</span>
-          <span class="mini-lb-units">+— u</span>
-        </div>
-        <div class="mini-lb-row">
-          <span class="rank-badge t3">3</span>
-          <div class="mini-lb-cap"><span class="av">—</span><div><b>[Handicapper]</b><span>Sport · Member since —</span></div></div>
-          <span class="mini-lb-rec">0-0-0</span>
-          <span class="mini-lb-units">+— u</span>
-        </div>
-        <div class="mini-lb-row">
-          <span class="rank-badge">4</span>
-          <div class="mini-lb-cap"><span class="av">—</span><div><b>[Handicapper]</b><span>Sport · Member since —</span></div></div>
-          <span class="mini-lb-rec">0-0-0</span>
-          <span class="mini-lb-units">+— u</span>
-        </div>
-        <div class="mini-lb-row">
-          <span class="rank-badge">5</span>
-          <div class="mini-lb-cap"><span class="av">—</span><div><b>[Handicapper]</b><span>Sport · Member since —</span></div></div>
-          <span class="mini-lb-rec">0-0-0</span>
-          <span class="mini-lb-units l">— u</span>
-        </div>
-        <div class="mini-lb-foot"><a href="#">View full rankings →</a></div>
-      </div>
-
-      <!-- 6. Receipt cards with state colors -->
-      <div class="receipts">
-        <h3>Live Receipts · How a pick travels</h3>
-
-        <div class="receipt locked">
-          <span class="receipt-state">Locked Pick</span>
-          <div class="receipt-body">
-            <div class="top"><b>[Handicapper]</b><span class="sport">Sport</span><span class="time">just now</span></div>
-            <div class="meta">[Pick · Line · Stake] · sealed at submission</div>
-          </div>
-          <div class="receipt-pl">— u<span>Stake</span></div>
-        </div>
-
-        <div class="receipt line">
-          <span class="receipt-state">Line Locked</span>
-          <div class="receipt-body">
-            <div class="top"><b>[Handicapper]</b><span class="sport">Sport</span><span class="time">— ago</span></div>
-            <div class="meta">[Line] sealed before market move · CLV tracked</div>
-          </div>
-          <div class="receipt-pl">— u<span>Stake</span></div>
-        </div>
-
-        <div class="receipt pending">
-          <span class="receipt-state">Result Pending</span>
-          <div class="receipt-body">
-            <div class="top"><b>[Handicapper]</b><span class="sport">Sport</span><span class="time">in progress</span></div>
-            <div class="meta">[Game state] · awaiting final · auto-grade queued</div>
-          </div>
-          <div class="receipt-pl">— u<span>To win</span></div>
-        </div>
-
-        <div class="receipt win">
-          <span class="receipt-state">Win</span>
-          <div class="receipt-body">
-            <div class="top"><b>[Handicapper]</b><span class="sport">Sport</span><span class="time">— ago</span></div>
-            <div class="meta">[Final score] · settled automatically</div>
-          </div>
-          <div class="receipt-pl">+— u<span>Profit</span></div>
-        </div>
-
-        <div class="receipt loss">
-          <span class="receipt-state">Loss</span>
-          <div class="receipt-body">
-            <div class="top"><b>[Handicapper]</b><span class="sport">Sport</span><span class="time">— ago</span></div>
-            <div class="meta">[Final score] · stays on the record forever</div>
-          </div>
-          <div class="receipt-pl">−— u<span>P/L</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 8. Dark quote card -->
-    <div class="quote-card">
-      <div class="quote-mark">"</div>
-      <div class="quote-text">
-        <p><span class="strike">Screenshots can lie.</span> <span class="accent">Locked records cannot.</span></p>
-        <span class="by">The TrustMyRecord operating principle</span>
-      </div>
+    <div class="tmr-feed-cta">
+      <span>Want your handle in the feed?</span>
+      <a class="btn accent lg auth-link" href="register/">Create your account →</a>
     </div>
   </div>
 </section>
 
-<!-- Tagline strip -->
-<div class="tagstrip">
-  No fake numbers. <span>No edited screenshots.</span> <span class="sep">·</span> Just <span>receipts.</span>
-</div>
+<!-- ===========================================================
+     SECTION 5: PICK RECEIPT SHOWCASE
+=========================================================== -->
+<section class="tmr-receipt-showcase" aria-label="Pick receipt showcase">
+  <div class="tmr-section-inner">
+    <header class="tmr-section-head tmr-section-head--left">
+      <h2>THIS IS WHAT TRUST LOOKS LIKE</h2>
+      <p class="tmr-section-sub">Every pick is sealed at submission. The line, stake, and timestamp are locked the second you tap submit. No edits. No deletes. No moving the goalposts after the fact.</p>
+    </header>
 
-<div class="wrap">
+    <div class="tmr-receipt-stage">
 
-  <!-- Three value props -->
-  <div class="props">
-    <div class="prop">
-      <div class="num">01 · Track</div>
-      <h3>Free advanced stats for everyone.</h3>
-      <p>Pros, amateurs, and casual fans all get the same treatment: ROI, win %, sample size, followability, volatility, sport mix, streak history, head-to-head splits, and console rankings — automatically tracked, free forever.</p>
-    </div>
-    <div class="prop">
-      <div class="num">02 · Sell</div>
-      <h3>A breath of fresh air.</h3>
-      <p>No over-the-top sales pitches. No counterfeited numbers. No 95%-winner promises. Sellers price their own picks, set their own payout method, and keep 100% of the sales.</p>
-    </div>
-    <div class="prop">
-      <div class="num">03 · Compete</div>
-      <h3>Real cash. Real prizes.</h3>
-      <p>Challenge any handicapper or fan to a best-of-5. Enter weekly tournaments and money matches with cash prize pools. 2K, Madden, The Show, NHL, picks, and trivia — all eligible.</p>
-    </div>
-  </div>
-
-  <!-- Full Handicapper Rankings table -->
-  <div class="section-h">
-    <div>
-      <h2>Handicapper <span class="accent">Rankings</span></h2>
-      <div class="sub">The leaderboard runs on locked picks only. No fluff, no claims — just the math.</div>
-    </div>
-    <a class="more" href="#">View full rankings →</a>
-  </div>
-  <div class="lb">
-    <div class="lb-tabs">
-      <a href="#">7 Day</a>
-      <a href="#" class="on">30 Day</a>
-      <a href="#">90 Day</a>
-      <a href="#">1 Year</a>
-      <a href="#">All Time</a>
-    </div>
-    <div class="lb-controls">
-      <label>Sport</label>
-      <select><option>All Sports</option><option>NBA</option><option>MLB</option><option>NHL</option><option>NFL</option><option>NCAAB</option><option>UFC</option><option>Soccer</option><option>Tennis</option><option>Golf</option></select>
-      <label>Sort by</label>
-      <select><option>Profit</option><option>ROI</option><option>Win %</option><option>Followability</option><option>Sample size</option></select>
-      <label>Min picks</label>
-      <select><option>20+</option><option>50+</option><option>100+</option></select>
-      <span class="right">Pulled from real locked-pick log</span>
-    </div>
-    <div class="lb-empty-note"><b>Note:</b> Rankings populate from real locked picks only — no demo data is shown. Once handicappers begin tracking, this table fills automatically.</div>
-    <table>
-      <thead>
-        <tr>
-          <th>#</th><th>Handicapper</th><th>Sport</th>
-          <th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th>
-          <th class="num">Profit</th><th class="num">ROI</th>
-          <th class="num">Followability</th><th class="num">Sample</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><span class="rank t1">1</span></td>
-          <td><div class="capper"><span class="av">—</span><div><b><a href="#">[Handicapper]</a></b><span>Member since —</span></div></div></td>
-          <td><span class="sport">—</span></td>
-          <td class="num placeholder">—</td><td class="num placeholder">0-0-0</td><td class="num placeholder">—%</td>
-          <td class="num placeholder">$—</td><td class="num placeholder">—%</td>
-          <td class="num placeholder">—</td><td class="num placeholder">—</td>
-        </tr>
-        <tr>
-          <td><span class="rank">2</span></td>
-          <td><div class="capper"><span class="av">—</span><div><b><a href="#">[Handicapper]</a></b><span>Member since —</span></div></div></td>
-          <td><span class="sport">—</span></td>
-          <td class="num placeholder">—</td><td class="num placeholder">0-0-0</td><td class="num placeholder">—%</td>
-          <td class="num placeholder">$—</td><td class="num placeholder">—%</td>
-          <td class="num placeholder">—</td><td class="num placeholder">—</td>
-        </tr>
-        <tr>
-          <td><span class="rank">3</span></td>
-          <td><div class="capper"><span class="av">—</span><div><b><a href="#">[Handicapper]</a></b><span>Member since —</span></div></div></td>
-          <td><span class="sport">—</span></td>
-          <td class="num placeholder">—</td><td class="num placeholder">0-0-0</td><td class="num placeholder">—%</td>
-          <td class="num placeholder">$—</td><td class="num placeholder">—%</td>
-          <td class="num placeholder">—</td><td class="num placeholder">—</td>
-        </tr>
-        <tr>
-          <td><span class="rank">4</span></td>
-          <td><div class="capper"><span class="av">—</span><div><b><a href="#">[Handicapper]</a></b><span>Member since —</span></div></div></td>
-          <td><span class="sport">—</span></td>
-          <td class="num placeholder">—</td><td class="num placeholder">0-0-0</td><td class="num placeholder">—%</td>
-          <td class="num placeholder">$—</td><td class="num placeholder">—%</td>
-          <td class="num placeholder">—</td><td class="num placeholder">—</td>
-        </tr>
-        <tr>
-          <td><span class="rank">5</span></td>
-          <td><div class="capper"><span class="av">—</span><div><b><a href="#">[Handicapper]</a></b><span>Member since —</span></div></div></td>
-          <td><span class="sport">—</span></td>
-          <td class="num placeholder">—</td><td class="num placeholder">0-0-0</td><td class="num placeholder">—%</td>
-          <td class="num placeholder">$—</td><td class="num placeholder">—%</td>
-          <td class="num placeholder">—</td><td class="num placeholder">—</td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="lb-foot"><a href="#">View all ranked handicappers →</a></div>
-  </div>
-
-  <!-- Two col: Live Feed + Compete -->
-  <div class="section-h">
-    <div>
-      <h2>The <span class="accent">Live Feed</span></h2>
-      <div class="sub">Talk sports. React to picks. Tail or fade. The social side of TMR — every interaction is on the record.</div>
-    </div>
-    <a class="more" href="#">Open feed →</a>
-  </div>
-
-  <div class="two-col">
-    <div class="feed">
-      <div class="feed-head">
-        <h3>Latest Activity</h3>
-        <div class="filt"><a href="#" class="on">All</a><a href="#">Following</a><a href="#">Just Locked</a><a href="#">Just Graded</a></div>
+      <!-- callout: timestamp -->
+      <div class="tmr-callout tmr-callout--tl" data-callout="time">
+        <span class="tmr-callout-num">1</span>
+        <p>Locked to the second. Cannot be backdated.</p>
       </div>
-      <div class="feed-post">
-        <span class="av">—</span>
-        <div>
-          <div class="top"><b>[Handicapper]</b><span class="verb">locked a new pick</span><span>· — minutes ago</span></div>
-          <div class="body"><span class="pick-inline locked">[Sport — Pick — Line]</span> Pick details populate from the live log. No examples are pre-filled.</div>
-          <div class="actions"><a href="#" class="tail">▲ Tail (—)</a><a href="#" class="fade">▽ Fade (—)</a><a href="#">💬 Reply (—)</a><a href="#">↗ Share</a></div>
+      <!-- callout: line -->
+      <div class="tmr-callout tmr-callout--tr" data-callout="line">
+        <span class="tmr-callout-num">2</span>
+        <p>Line frozen at submission. CLV tracked.</p>
+      </div>
+      <!-- callout: hash -->
+      <div class="tmr-callout tmr-callout--bl" data-callout="hash">
+        <span class="tmr-callout-num">3</span>
+        <p>Cryptographic stamp. Tamper proof.</p>
+      </div>
+      <!-- callout: status -->
+      <div class="tmr-callout tmr-callout--br" data-callout="status">
+        <span class="tmr-callout-num">4</span>
+        <p>Auto graded by the platform. Not by the user.</p>
+      </div>
+
+      <!-- the receipt -->
+      <article class="tmr-receipt-card" data-sample="true">
+        <span class="tmr-post-watermark">SAMPLE</span>
+        <header class="tmr-receipt-head">
+          <span class="tmr-receipt-state">🔒 LOCKED PICK</span>
+          <span class="tmr-receipt-meta">NBA · 1.5u</span>
+        </header>
+        <div class="tmr-receipt-pick">
+          <span class="tmr-receipt-side">Lakers ML</span>
+          <span class="tmr-receipt-line">+135</span>
         </div>
-      </div>
-      <div class="feed-post">
-        <span class="av">—</span>
-        <div>
-          <div class="top"><b>[Handicapper]</b><span class="verb">had a pick graded</span><span>· — hour ago</span></div>
-          <div class="body"><span class="grade w">W</span> Result and final score appear here once the pick settles.</div>
-          <div class="actions"><a href="#">♥ — likes</a><a href="#">💬 — replies</a><a href="#">↗ Share</a></div>
+        <ul class="tmr-receipt-rows" role="list">
+          <li><span>Sealed at</span><strong data-receipt-time>10:32:14 AM PT · Apr 29, 2026</strong></li>
+          <li><span>Submitted by</span><strong>@jaymoneyball</strong></li>
+          <li><span>Receipt hash</span><strong data-receipt-hash>7f3a...e2c1</strong></li>
+        </ul>
+        <footer class="tmr-receipt-status" data-receipt-status>
+          <span class="tmr-receipt-pulse"><i></i></span>
+          STATUS: PENDING · auto grade queued
+        </footer>
+      </article>
+
+    </div>
+
+    <div class="tmr-principle">
+      <p>
+        <span class="tmr-principle-strike">Screenshots can lie.</span>
+        <span class="tmr-principle-truth">LOCKED RECORDS CANNOT.</span>
+      </p>
+      <span class="tmr-principle-by">THE TRUSTMYRECORD OPERATING PRINCIPLE</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===========================================================
+     SECTION 6: NOT A HANDICAPPER
+=========================================================== -->
+<section class="tmr-fan" aria-label="Not a handicapper section">
+  <div class="tmr-section-inner">
+    <header class="tmr-section-head">
+      <h2>NOT A HANDICAPPER? DOESN'T MATTER.</h2>
+      <p class="tmr-section-sub">Half the action on TMR is people who never lock a pick. Forums, polls, trivia, console gaming, hot takes. The crowd has receipts too.</p>
+    </header>
+
+    <div class="tmr-fan-grid">
+
+      <article class="tmr-fan-card tmr-fan-card--forums">
+        <div class="tmr-fan-icon" aria-hidden="true">💬</div>
+        <h3>Talk shit. Get owned in public.</h3>
+        <p>Game threads, hot take wars, regional rivalries. Every reply stamps to your handle.</p>
+        <a class="btn primary" href="forum.html">Open Forum →</a>
+      </article>
+
+      <article class="tmr-fan-card tmr-fan-card--polls">
+        <div class="tmr-fan-icon" aria-hidden="true">📊</div>
+        <h3>The crowd has receipts too.</h3>
+        <p>Daily polls on every sport. Your vote is public and permanent.</p>
+        <a class="btn primary" href="hangout.html">Vote Now →</a>
+      </article>
+
+      <article class="tmr-fan-card tmr-fan-card--trivia">
+        <div class="tmr-fan-icon" aria-hidden="true">❓</div>
+        <h3>Prove what you actually know.</h3>
+        <p>Daily sport by sport ladders. Streaks, badges, all time leaderboard.</p>
+        <a class="btn primary" href="trivia.html">Start Today's Trivia →</a>
+      </article>
+
+      <article class="tmr-fan-card tmr-fan-card--gaming">
+        <div class="tmr-fan-icon" aria-hidden="true">🎮</div>
+        <h3>2K. Madden. The Show. NHL.</h3>
+        <p>Console challenges with verified results. Money matches. Custom duels.</p>
+        <div class="tmr-fan-tags">
+          <span>NBA 2K</span>
+          <span>MADDEN</span>
+          <span>MLB THE SHOW</span>
+          <span>NHL</span>
         </div>
-      </div>
-      <div class="feed-post">
-        <span class="av">—</span>
-        <div>
-          <div class="top"><b>[Handicapper]</b><span class="verb">issued a head-to-head challenge</span><span>· — hours ago</span></div>
-          <div class="body">"Best-of-5 [Sport] picks vs [Handicapper]. Loser wears a cold-streak badge for 30 days. First taker wins."</div>
-          <div class="actions"><a href="#" class="tail">⚔ Accept</a><a href="#">💬 Reply</a><a href="#">↗ Share</a></div>
-        </div>
-      </div>
-      <div class="feed-post">
-        <span class="av">—</span>
-        <div>
-          <div class="top"><b>[Handicapper]</b><span class="verb">had a pick graded</span><span>· — hours ago</span></div>
-          <div class="body"><span class="grade l">L</span> Loss and final score appear here once the pick settles.</div>
-          <div class="actions"><a href="#">♥ — likes</a><a href="#">💬 — replies</a><a href="#">↗ Share</a></div>
-        </div>
-      </div>
-      <div class="feed-foot"><a href="#">Load more activity →</a></div>
-    </div>
+        <a class="btn accent" href="arena.html">Find a Match →</a>
+      </article>
 
-    <aside class="compete">
-      <div class="compete-card">
-        <div class="compete-card-head"><h3>Head-to-Head</h3><span class="meta">— active duels</span></div>
-        <div class="compete-body">
-          <div class="compete-tag">Live Challenge</div>
-          <h4>Pick a rival. Best record wins.</h4>
-          <p>Stack any two handicappers in a duel. Each side locks N picks, the platform settles, the loser wears a cold-streak badge.</p>
-          <div class="compete-row">
-            <div class="compete-slot"><span class="av">—</span><b>[You]</b><span>Sport · L30</span></div>
-            <span class="compete-vs">VS</span>
-            <div class="compete-slot"><span class="av">—</span><b>[Rival]</b><span>Sport · L30</span></div>
-          </div>
-          <a class="btn primary" style="width:100%" href="handicappers.html">Open Compare Tool →</a>
-        </div>
-      </div>
-      <div class="compete-card">
-        <div class="compete-card-head" style="background:linear-gradient(135deg,var(--blue) 0%,var(--blue-strong) 100%)"><h3>Tournaments</h3><span class="meta">— open</span></div>
-        <div class="compete-body">
-          <div class="tournament-list">
-            <div class="tour-row"><div class="tour-icon">🏆</div><div><b>Weekly NBA Showdown</b><span>— entries · cash pool <b style="color:var(--green)">$—</b></span></div><span class="pill open">Open</span></div>
-            <div class="tour-row"><div class="tour-icon">⚾</div><div><b>MLB Season-Long Ladder</b><span>— entries · cash pool <b style="color:var(--green)">$—</b></span></div><span class="pill live">Live</span></div>
-            <div class="tour-row"><div class="tour-icon">🏒</div><div><b>NHL Playoff Bracket</b><span>— entries · cash pool <b style="color:var(--green)">$—</b></span></div><span class="pill open">Open</span></div>
-            <div class="tour-row"><div class="tour-icon">🎮</div><div><b>2K / Madden Money Match</b><span>— entries · cash pool <b style="color:var(--green)">$—</b></span></div><span class="pill live">Live</span></div>
-            <div class="tour-row"><div class="tour-icon">?</div><div><b>Daily Trivia Cup</b><span>— entries · cash pool <b style="color:var(--green)">$—</b></span></div><span class="pill open">Open</span></div>
-          </div>
-          <a class="btn primary" style="width:100%;margin-top:14px" href="arena.html">Browse all tournaments →</a>
-        </div>
-      </div>
-    </aside>
-  </div>
-
-  <!-- THE FAN ZONE — social/casual hub -->
-  <div class="section-h">
-    <div>
-      <h2>The <span class="accent">Fan Zone</span></h2>
-      <div class="sub">Not a handicapper? Doesn't matter. Talk shit on the forums, vote on polls, smoke trivia, and run it back in 2K, Madden, MLB The Show, and NHL.</div>
-    </div>
-    <a class="more" href="#">Open the Hangout →</a>
-  </div>
-
-  <div class="fanzone">
-    <article class="fz-card forum">
-      <div class="fz-icon">💬</div>
-      <span class="fz-tag">Forums</span>
-      <h3>Talk shit. Take takes. Get owned in public.</h3>
-      <p>Game threads, hot-take wars, league-by-league rooms, regional rivalry boards. Every reply stamps to your profile — same record as your picks.</p>
-      <div class="fz-meta">
-        <span><b>—</b> active threads</span>
-        <span><b>—</b> online now</span>
-      </div>
-      <a class="btn primary" href="forum.html">Open Forum →</a>
-    </article>
-
-    <article class="fz-card polls">
-      <div class="fz-icon">▤</div>
-      <span class="fz-tag">Polls</span>
-      <h3>The crowd has receipts too.</h3>
-      <p>Daily community polls on every sport. MVP picks, GOAT debates, weekly upsets, dumbest takes of the week. Your vote stamps to your handle — public, permanent.</p>
-      <div class="fz-meta">
-        <span><b>—</b> polls open</span>
-        <span><b>—</b> votes today</span>
-      </div>
-      <a class="btn primary" href="polls.html">Vote Now →</a>
-    </article>
-
-    <article class="fz-card trivia">
-      <div class="fz-icon">?</div>
-      <span class="fz-tag">Trivia</span>
-      <h3>Prove what you actually know.</h3>
-      <p>Daily sport-by-sport trivia ladders with streaks, badges, and an all-time leaderboard. The trivia king at the bar finally has a public scoreboard.</p>
-      <div class="fz-meta">
-        <span><b>—</b> rounds today</span>
-        <span>Your rank <b>—</b></span>
-      </div>
-      <a class="btn primary" href="trivia.html">Start Today&#39;s Trivia →</a>
-    </article>
-
-    <article class="fz-card gaming">
-      <div class="fz-icon">🎮</div>
-      <span class="fz-tag">Gaming Arena</span>
-      <h3>2K. Madden. The Show. NHL.</h3>
-      <p>Console challenges with verified results. Rank up across the big four — or run a custom money-match against any rival.</p>
-      <div class="consoles">
-        <span class="console-badge"><span class="dot"></span>NBA 2K</span>
-        <span class="console-badge"><span class="dot"></span>Madden</span>
-        <span class="console-badge"><span class="dot"></span>MLB The Show</span>
-        <span class="console-badge"><span class="dot"></span>NHL</span>
-      </div>
-      <div class="fz-meta">
-        <span><b>—</b> matches live</span>
-        <span><b>—</b> open challenges</span>
-      </div>
-      <a class="btn accent" href="arena.html">Find a Match →</a>
-    </article>
-  </div>
-
-  <!-- Marketplace -->
-  <div class="section-h">
-    <div>
-      <h2>The <span class="accent">Marketplace</span></h2>
-      <div class="sub">Pros sell. Buyers buy. Trackers track. Receipts decide.</div>
     </div>
   </div>
-  <div class="market">
-    <div class="market-card">
-      <span class="badge">For Buyers</span>
-      <h3>Buy picks from real records.</h3>
-      <p>Every seller's profile is a public ledger. No screenshots, no marketing claims, no edited tweets — just the math behind every pick they've ever locked.</p>
-      <ul>
-        <li>Free account: pay-per-pick from any seller</li>
-        <li>Gold: every non-seller pick, included</li>
-        <li>Verified records on every handicapper</li>
-        <li>Filter by sport, ROI, sample size, followability</li>
-      </ul>
-      <a class="btn primary lg" href="handicappers.html">Browse Sellers →</a>
-    </div>
-    <div class="market-card sell">
-      <span class="badge">For Sellers</span>
-      <h3>Sell your picks. Keep 100%.</h3>
-      <p>Set your own prices, choose your own payment method, and lock your personal bets first so your sales never move the line against you. Direct payments — TMR doesn't take a cut.</p>
-      <ul>
-        <li>Set your prices · choose your payout</li>
-        <li>Direct payments — no middleman</li>
-        <li>Lock your own bets first to protect line value</li>
-        <li>Public profile + receipt-based marketing</li>
-      </ul>
-      <a class="btn accent lg auth-link" href="register/">Become a Seller →</a>
-    </div>
-  </div>
+</section>
 
-  <!-- Three roles -->
-  <div class="section-h">
-    <div>
-      <h2>So what can we do <span class="accent">for you?</span></h2>
-      <div class="sub">Three kinds of users, one platform.</div>
+<!-- ===========================================================
+     SECTION 7: FINAL CTA
+=========================================================== -->
+<section class="tmr-final" aria-label="Final call to action">
+  <div class="tmr-final-glow" aria-hidden="true"></div>
+  <div class="tmr-section-inner tmr-final-inner">
+    <h2>THE RECEIPTS START NOW.</h2>
+    <p>Free forever. No credit card. No catch. Be one of the first to build a record on TMR.</p>
+    <div class="tmr-final-cta">
+      <a class="btn accent xl auth-link" href="register/">Create Your Free Record →</a>
+      <a class="btn ghost-light xl" href="feed.html">Browse the Feed First</a>
     </div>
+    <p class="tmr-final-fineprint">No fake numbers. No edited screenshots. Just receipts.</p>
   </div>
-  <div class="roles">
-    <div class="role">
-      <span class="badge"><span class="dot"></span>The Buyer</span>
-      <h3>Looking for top-notch picks.</h3>
-      <p>Sign up for a free account and purchase picks from any seller at their asking price. Or upgrade to gold and access every pick made by all the handicappers who aren't selling.</p>
-      <ul><li>Free account: pay-per-pick</li><li>Gold: every non-seller pick included</li><li>Tail / fade buttons on every pick</li></ul>
-      <div class="cta"><a class="btn primary" href="handicappers.html">Browse Handicappers</a></div>
-    </div>
-    <div class="role">
-      <span class="badge"><span class="dot"></span>The Seller</span>
-      <h3>Capitalize off your handicapping.</h3>
-      <p>Sign up for a Platinum membership and sell picks directly through the site. You set your prices, choose your payment method, and keep 100% of the sales — payments go straight to you.</p>
-      <ul><li>Set your own prices</li><li>Direct payments — no middleman cut</li><li>Lock your own bets first to protect line value</li></ul>
-      <div class="cta"><a class="btn accent auth-link" href="register/">Become a Seller</a></div>
-    </div>
-    <div class="role">
-      <span class="badge"><span class="dot"></span>The Tracker</span>
-      <h3>Just here to track and have fun.</h3>
-      <p>Free account, no intentions of ever spending a dime — and that's okay. Use the fantasy sportsbook just like everyone else. Maybe you're trying to perfect your skills, or maybe you're just having a good time.</p>
-      <ul><li>Track every pick for free</li><li>Climb the leaderboard on units & ROI</li><li>Tail / fade buttons on every pick</li></ul>
-      <div class="cta"><a class="btn green auth-link" href="register/">Start Tracking Free</a></div>
-    </div>
-    <div class="role">
-      <span class="badge"><span class="dot"></span>The Fan</span>
-      <h3>Here for the trash talk.</h3>
-      <p>Don't bet a nickel? Doesn't matter. Talk shit on the forums, smoke daily trivia, vote in community polls, and challenge friends in 2K, Madden, MLB The Show, and NHL. Every reply, vote, and match goes on the record.</p>
-      <ul><li>Forums · polls · trivia ladders</li><li>Console challenges · 2K / Madden / Show / NHL</li><li>Public trash-talk receipts forever</li></ul>
-      <div class="cta"><a class="btn auth-link" href="register/" style="border-color:var(--red);color:var(--red);font-weight:700">Join the Hangout</a></div>
-    </div>
-  </div>
+</section>
 
-  <!-- TMR 101 -->
-  <section class="explainer">
-    <h2>TrustMyRecord <span class="accent">101</span></h2>
-    <p><b>TrustMyRecord started, just as you could probably guess by the name, exclusively as a sports monitor</b> with one job: bring some transparency to the sports handicapping industry. What we noticed, however, was that very few handicapping websites had any interest in having their picks monitored — even for free.</p>
-    <p>At the same time, we ended up drawing in tons of absolutely amazing "amateur" handicappers who were great at predicting games but just didn't have the business sense or inclination to run their own handicapping website. With the obvious talent of our handicapper pool — and the general consensus that running a successful sports handicapping service is more about marketing than how good of a handicapper you actually are — we decided to offer a platform for the average Joe to sell picks.</p>
-    <p>That leads us to where we are today: <b>a sports social network with receipts.</b> Built for handicappers AND fans — track every pick, sell winners, compete head-to-head, talk shit on the forums, smoke daily trivia, vote on polls, and challenge anyone in 2K, Madden, MLB The Show, or NHL. Whatever you do here, it's on the record.</p>
-  </section>
-
-  <!-- Sport hub -->
-  <div class="sports">
-    <h3>Browse by Sport</h3>
-    <ul>
-      <li><a href="#">Basketball Handicappers</a></li>
-      <li><a href="#">Football Handicappers</a></li>
-      <li><a href="#">Baseball Handicappers</a></li>
-      <li><a href="#">Hockey Handicappers</a></li>
-      <li><a href="#">Soccer Handicappers</a></li>
-      <li><a href="#">Tennis Handicappers</a></li>
-      <li><a href="#">Golf Handicappers</a></li>
-      <li><a href="#">UFC Handicappers</a></li>
-      <li><a href="#">College Basketball</a></li>
-      <li><a href="#">College Football</a></li>
-    </ul>
-  </div>
-
-  <!-- Sign-up band -->
-  <section class="signup">
-    <div>
-      <span class="eb">Free Forever</span>
-      <h3>Talk less. <span class="accent">Lock more.</span></h3>
-      <p>Track every pick, climb the leaderboard, sell winners, challenge rivals. One free account does it all — no credit card, no upsell pop-up.</p>
-    </div>
-    <div>
-      <form class="form" onsubmit="event.preventDefault()">
-        <input type="email" placeholder="your@email.com">
-        <button class="btn accent lg" type="submit">Join Free →</button>
-      </form>
-      <span class="small">No spam. Unsubscribe anytime.</span>
-    </div>
-  </section>
-</div>
 
 <footer class="footer">
   <div class="footer-inner">
@@ -1601,7 +2287,7 @@ button{font:inherit;cursor:pointer}
             <span class="tagline" style="color:#9aa3b5">Receipts over rhetoric</span>
           </div>
         </a>
-        <p>The free sports monitor and marketplace where handicappers prove their record in public. Track, sell, and compete on receipts — not claims.</p>
+        <p>The free sports monitor and marketplace where handicappers prove their record in public. Track, sell, and compete on receipts, not claims.</p>
       </div>
       <div><h4>Site</h4><ul><li><a href="#">Home</a></li><li><a href="#">Leaderboard</a></li><li><a href="#">Handicappers</a></li><li><a href="#">Buy Picks</a></li><li><a href="#">Sell Picks</a></li><li><a href="#">Compete</a></li><li><a href="#">Feed</a></li><li><a href="#">Forum</a></li></ul></div>
       <div><h4>Sports</h4><ul><li><a href="#">Basketball</a></li><li><a href="#">Football</a></li><li><a href="#">Baseball</a></li><li><a href="#">Hockey</a></li><li><a href="#">Soccer</a></li><li><a href="#">Tennis</a></li><li><a href="#">Golf</a></li><li><a href="#">UFC</a></li></ul></div>
@@ -1619,5 +2305,29 @@ button{font:inherit;cursor:pointer}
 <script src="static/js/auth-persistent.js?v=20260421a"></script>
 <script defer src="static/js/tmr-sitewide.js?v=20260429b"></script>
 <script src="static/js/analytics.js?v=20260417"></script>
+<script>
+// Hero quote rotation (replaces the placeholder stats card overlay)
+(function () {
+    var lines = document.querySelectorAll('.hero-quote-line');
+    if (lines.length < 2) return;
+    var i = 0;
+    setInterval(function () {
+        lines[i].classList.remove('is-active');
+        i = (i + 1) % lines.length;
+        lines[i].classList.add('is-active');
+    }, 4000);
+})();
+// Smooth scroll for the "Tour the Site" CTA
+(function () {
+    var btn = document.querySelector('[data-tour-cta]');
+    if (!btn) return;
+    btn.addEventListener('click', function (e) {
+        var target = document.getElementById('how-it-works');
+        if (!target) return;
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+})();
+</script>
 </body>
 </html>
