@@ -911,7 +911,7 @@
       gtag('config', 'G-V5MCVXS2HE');
     </script>
 </head>
-<body class="profile-page">
+<body class="profile-page tmr-social-profile">
     <div class="profile-top-strip">
         <strong>Today:</strong>
         <span>Verified records</span>
@@ -937,6 +937,16 @@
         </div>
     </header>
 
+    <!-- ==================== COVER BANNER ==================== -->
+    <section class="profile-cover-section">
+        <div class="container">
+            <div class="profile-cover" id="profileCover" aria-hidden="true">
+                <div class="profile-cover-glow"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== PROFILE HEADER ==================== -->
     <section class="profile-header-section">
         <div class="container">
             <div class="profile-header" id="profileHeader">
@@ -945,29 +955,66 @@
         </div>
     </section>
 
-    <section class="summary-bar" id="summaryBar" style="display:none;">
+    <!-- ==================== TAB BAR ==================== -->
+    <section class="profile-tabs-section">
         <div class="container">
-            <div class="summary-grid" id="summaryGrid"></div>
-        </div>
-    </section>
-
-    <section class="profile-workspace-section">
-        <div class="container">
-            <div class="workspace-nav-card">
-                <div class="workspace-nav-head">
-                    <div>
-                        <div class="section-title">Performance Profile</div>
-                        <div class="section-subtitle">Transparent ledger, sortable records table, and advanced audit splits built around the pick history.</div>
-                    </div>
-                    <div class="workspace-tabs">
-                        <a class="workspace-tab active" id="profilePerformanceTab" href="profile/">Record</a>
-                        <a class="workspace-tab" id="profileTriviaTab" href="trivia/">Trivia</a>
-                        <a class="workspace-tab" id="profilePollsTab" href="hangout/">Polls</a>
-                    </div>
-                </div>
+            <div class="profile-tabs" role="tablist" id="profileTabsBar">
+                <button type="button" class="profile-tab active" data-tab="picks" role="tab" aria-selected="true">Picks</button>
+                <button type="button" class="profile-tab" data-tab="posts" role="tab">Posts</button>
+                <button type="button" class="profile-tab" data-tab="record" id="profilePerformanceTab" role="tab">Record</button>
+                <button type="button" class="profile-tab" data-tab="challenges" role="tab">Challenges</button>
+                <button type="button" class="profile-tab" data-tab="polls" id="profilePollsTab" role="tab">Polls</button>
+                <button type="button" class="profile-tab" data-tab="trivia" id="profileTriviaTab" role="tab">Trivia</button>
+                <button type="button" class="profile-tab" data-tab="tournaments" role="tab">Tournaments</button>
+                <button type="button" class="profile-tab" data-tab="store" role="tab">Store</button>
             </div>
         </div>
     </section>
+
+    <!-- ==================== BODY GRID: MAIN + SIDEBAR ==================== -->
+    <section class="profile-body-section">
+        <div class="container profile-body-grid">
+            <main class="profile-main">
+
+                <!-- TAB: PICKS (default) -->
+                <div class="profile-tab-panel active" data-panel="picks">
+                    <div class="profile-feed-card">
+                        <div class="profile-feed-head">
+                            <div>
+                                <div class="section-title">Locked Picks</div>
+                                <div class="section-subtitle">Public picks appear here as social posts with timestamp, odds, units, and live grading.</div>
+                            </div>
+                        </div>
+                        <div class="profile-feed-empty">
+                            <div class="profile-empty-icon"><i class="fas fa-bullseye"></i></div>
+                            <p class="profile-empty-title">No locked picks yet</p>
+                            <p class="profile-empty-body">Once this user posts a pick, it will appear here with timestamp, odds, units, and grading.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: POSTS -->
+                <div class="profile-tab-panel" data-panel="posts">
+                    <div class="profile-feed-card">
+                        <div class="profile-feed-head">
+                            <div>
+                                <div class="section-title">Social Posts</div>
+                                <div class="section-subtitle">Reactions, takes, debates, and replies from this profile.</div>
+                            </div>
+                        </div>
+                        <div class="profile-feed-empty">
+                            <div class="profile-empty-icon"><i class="fas fa-comment-dots"></i></div>
+                            <p class="profile-empty-title">No posts yet</p>
+                            <p class="profile-empty-body">Game reactions, hot takes, and replies will show up here once this user starts posting.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: RECORD (existing analytics) -->
+                <div class="profile-tab-panel" data-panel="record">
+                    <section class="summary-bar" id="summaryBar" style="display:none;">
+                        <div class="summary-grid" id="summaryGrid"></div>
+                    </section>
 
     <section class="picks-section">
         <div class="container">
@@ -1269,658 +1316,270 @@
             </div>
         </div>
     </section>
+                </div><!-- /panel record -->
+
+                <!-- TAB: CHALLENGES -->
+                <div class="profile-tab-panel" data-panel="challenges">
+                    <div class="profile-grid-2">
+                        <div class="profile-feed-card">
+                            <div class="section-title">Active Challenges</div>
+                            <div class="section-subtitle">Live head-to-head and public callouts.</div>
+                            <div class="profile-feed-empty profile-feed-empty-compact">
+                                <div class="profile-empty-icon"><i class="fas fa-handshake"></i></div>
+                                <p class="profile-empty-title">No active challenges</p>
+                                <p class="profile-empty-body">Challenge invites and live H2H matchups will land here.</p>
+                            </div>
+                        </div>
+                        <div class="profile-feed-card">
+                            <div class="section-title">Completed Challenges</div>
+                            <div class="section-subtitle">Settled head-to-head results.</div>
+                            <div class="profile-feed-empty profile-feed-empty-compact">
+                                <div class="profile-empty-icon"><i class="fas fa-trophy"></i></div>
+                                <p class="profile-empty-title">No completed challenges yet</p>
+                                <p class="profile-empty-body">Once challenges settle, full results appear here.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: POLLS -->
+                <div class="profile-tab-panel" data-panel="polls">
+                    <div class="profile-feed-card">
+                        <div class="section-title">Polls</div>
+                        <div class="section-subtitle">Polls created or voted in by this user.</div>
+                        <div class="profile-feed-empty">
+                            <div class="profile-empty-icon"><i class="fas fa-square-poll-vertical"></i></div>
+                            <p class="profile-empty-title">No polls created yet</p>
+                            <p class="profile-empty-body">When this user runs or joins a poll, every vote and result lives here.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: TRIVIA -->
+                <div class="profile-tab-panel" data-panel="trivia">
+                    <div class="profile-feed-card">
+                        <div class="section-title">Trivia</div>
+                        <div class="section-subtitle">Sports trivia attempts, scores, and weekly trivia ladder.</div>
+                        <div class="profile-feed-empty">
+                            <div class="profile-empty-icon"><i class="fas fa-circle-question"></i></div>
+                            <p class="profile-empty-title">No trivia attempts yet</p>
+                            <p class="profile-empty-body">Trivia results and ladder placement will display here.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: TOURNAMENTS -->
+                <div class="profile-tab-panel" data-panel="tournaments">
+                    <div class="profile-feed-card">
+                        <div class="section-title">Tournaments</div>
+                        <div class="section-subtitle">Tournament entries, brackets, and ranked finishes.</div>
+                        <div class="profile-feed-empty">
+                            <div class="profile-empty-icon"><i class="fas fa-medal"></i></div>
+                            <p class="profile-empty-title">No tournaments joined yet</p>
+                            <p class="profile-empty-body">Tournament entries, bracket runs, and finish placement will appear here.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: STORE / CREATOR -->
+                <div class="profile-tab-panel" data-panel="store">
+                    <div class="profile-creator-panel">
+                        <div class="profile-creator-head">
+                            <div>
+                                <div class="profile-creator-eyebrow">Creator Tools</div>
+                                <div class="section-title">Premium Picks &amp; Subscriptions</div>
+                                <div class="section-subtitle">Build a verified record first. Once eligibility is met, packages, subscriptions, and recent results unlock here.</div>
+                            </div>
+                            <span class="profile-creator-status">Locked until verified record</span>
+                        </div>
+                        <div class="profile-feed-empty">
+                            <div class="profile-empty-icon"><i class="fas fa-store"></i></div>
+                            <p class="profile-empty-title">This user is not selling picks yet</p>
+                            <p class="profile-empty-body">Seller tools unlock after a verified record is built. Premium packages, subscriptions, and recent paid results will live here.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+
+            <!-- ==================== RIGHT SIDEBAR ==================== -->
+            <aside class="profile-sidebar" aria-label="Profile sidebar">
+
+                <div class="sidebar-card">
+                    <div class="sidebar-card-head">
+                        <span class="sidebar-card-label">Profile Stats</span>
+                    </div>
+                    <div class="sidebar-stat-list" id="sidebarStatList">
+                        <div class="sidebar-stat-row"><span class="sidebar-stat-key">Followers</span><span class="sidebar-stat-val" id="sidebarFollowers">&mdash;</span></div>
+                        <div class="sidebar-stat-row"><span class="sidebar-stat-key">Following</span><span class="sidebar-stat-val" id="sidebarFollowing">&mdash;</span></div>
+                        <div class="sidebar-stat-row"><span class="sidebar-stat-key">Tracked picks</span><span class="sidebar-stat-val" id="sidebarTrackedPicks">&mdash;</span></div>
+                        <div class="sidebar-stat-row"><span class="sidebar-stat-key">Leaderboard</span><span class="sidebar-stat-val" id="sidebarLeaderboard">&mdash;</span></div>
+                    </div>
+                </div>
+
+                <div class="sidebar-card">
+                    <div class="sidebar-card-head">
+                        <span class="sidebar-card-label">Badges</span>
+                    </div>
+                    <div class="sidebar-empty-mini">
+                        <p class="profile-empty-body">No badges earned yet. Verified record, ROI streaks, and tournament finishes unlock badges.</p>
+                    </div>
+                </div>
+
+                <div class="sidebar-card">
+                    <div class="sidebar-card-head">
+                        <span class="sidebar-card-label">Top Sports</span>
+                    </div>
+                    <div class="sidebar-empty-mini">
+                        <p class="profile-empty-body">Best sport surfaces here once enough picks are graded.</p>
+                    </div>
+                </div>
+
+                <div class="sidebar-card sidebar-card-cta">
+                    <div class="sidebar-card-head">
+                        <span class="sidebar-card-label">Compete</span>
+                    </div>
+                    <p class="profile-empty-body" style="margin:6px 0 12px;">Send a public callout, propose a head-to-head, or join an open tournament.</p>
+                    <a class="sidebar-cta-btn" href="/arena/">Open Arena</a>
+                </div>
+
+                <div class="sidebar-card">
+                    <div class="sidebar-card-head">
+                        <span class="sidebar-card-label">Recent Achievements</span>
+                    </div>
+                    <div class="sidebar-empty-mini">
+                        <p class="profile-empty-body">Verified milestones (first 100 picks, +10u month, 5-pick streaks) appear here.</p>
+                    </div>
+                </div>
+
+            </aside>
+        </div>
+    </section>
 
     <style>
-        .period-btn {
-            padding:6px 14px;border-radius:6px;border:1px solid var(--border-color);
-            background:var(--bg-card);color:var(--text-secondary);font-family:inherit;
-            font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;
-        }
-        .period-btn:hover { border-color:var(--accent-blue,#3b82f6);color:var(--text-primary); }
-        .period-btn.active {
-            background:var(--accent-blue,#3b82f6);color:#fff;border-color:var(--accent-blue,#3b82f6);
-        }
-        .capper-card {
-            background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;
-            padding:16px;text-align:center;transition:border-color .2s;
-        }
-        .capper-card:hover { border-color:var(--accent-blue,#3b82f6); }
-        .capper-card .cc-label {
-            font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;
-            font-weight:600;margin-bottom:6px;
-        }
-        .capper-card .cc-value {
-            font-size:1.4rem;font-weight:800;color:var(--text-primary);
-        }
-        .capper-card .cc-sub {
-            font-size:.72rem;color:var(--text-secondary);margin-top:4px;
-        }
-        .cc-positive { color:var(--accent-green) !important; }
-        .cc-negative { color:var(--accent-red) !important; }
-        .cc-neutral { color:var(--text-secondary) !important; }
-        .cc-blue { color:var(--accent-blue,#3b82f6) !important; }
-        .cc-gold { color:#f59e0b !important; }
-
-        .dow-cell {
-            background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;
-            padding:12px 8px;text-align:center;
-        }
-        .dow-cell .dow-label { font-size:.7rem;color:var(--text-muted);font-weight:600;text-transform:uppercase; }
-        .dow-cell .dow-record { font-size:.85rem;font-weight:700;margin-top:4px; }
-        .dow-cell .dow-units { font-size:.8rem;margin-top:2px; }
-
-        .monthly-table { width:100%;border-collapse:collapse; }
-        .monthly-table th { padding:10px 12px;text-align:left;font-size:.75rem;color:var(--text-muted);
-            text-transform:uppercase;letter-spacing:1px;font-weight:600;border-bottom:1px solid var(--border-color); }
-        .monthly-table td { padding:10px 12px;font-size:.85rem;border-bottom:1px solid var(--border-color);color:var(--text-secondary); }
-        .monthly-table tr:hover td { background:var(--bg-card-hover); }
-
-        .sport-detail-card {
-            background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;padding:16px;
-        }
-        .sport-detail-card .sd-header {
-            display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;
-            padding-bottom:10px;border-bottom:1px solid var(--border-color);
-        }
-        .sport-detail-card .sd-name { font-weight:700;font-size:1rem; }
-        .sport-detail-card .sd-row {
-            display:flex;justify-content:space-between;padding:4px 0;font-size:.85rem;
-        }
-        .sport-detail-card .sd-row .sd-label { color:var(--text-muted); }
-        .sport-detail-card .sd-row .sd-val { font-weight:600; }
-
-        .eq-line { stroke:var(--accent-blue,#3b82f6);stroke-width:2.5;fill:none; }
-        .eq-area { fill:url(#eqGrad);opacity:0.3; }
-        .eq-zero { stroke:var(--border-color);stroke-width:1;stroke-dasharray:4,4; }
-        .eq-dot { fill:var(--accent-blue,#3b82f6);r:3;opacity:0; }
-        .eq-dot:hover { opacity:1;r:5; }
-
-        /* ==================== RECORDS REDESIGN OVERRIDES ==================== */
-        body {
-            background:
-                linear-gradient(180deg, rgba(12, 30, 52, 0.04), rgba(12, 30, 52, 0) 220px),
-                #edf1f5;
+        /* ============================================================
+           TRUSTMYRECORD PROFILE - DARK SOCIAL PALETTE
+           Approved palette: bg #05070D, header #03050A, panels #0B1220,
+           cards #101B2D, raised #13213A, borders #1F3350,
+           cyan #22D3EE, blue #2563EB, text #F8FAFC, muted #94A3B8.
+           ============================================================ */
+        :root {
+            --tmr-bg: #05070D;
+            --tmr-bg-2: #07090F;
+            --tmr-nav: #03050A;
+            --tmr-panel: #0B1220;
+            --tmr-card: #101B2D;
+            --tmr-card-hover: #142339;
+            --tmr-card-raised: #13213A;
+            --tmr-border: #1F3350;
+            --tmr-border-soft: rgba(31, 51, 80, 0.55);
+            --tmr-cyan: #22D3EE;
+            --tmr-cyan-soft: rgba(34, 211, 238, 0.14);
+            --tmr-blue: #2563EB;
+            --tmr-blue-soft: rgba(37, 99, 235, 0.16);
+            --tmr-text: #F8FAFC;
+            --tmr-text-muted: #94A3B8;
+            --tmr-text-dim: #64748B;
+            --tmr-green: #22C55E;
+            --tmr-green-soft: rgba(34, 197, 94, 0.14);
+            --tmr-red: #EF4444;
+            --tmr-red-soft: rgba(239, 68, 68, 0.14);
+            --tmr-amber: #F59E0B;
+            --tmr-amber-soft: rgba(245, 158, 11, 0.14);
         }
 
-        .profile-header-section { padding: 24px 0 12px; }
-
-        .profile-header {
-            align-items: flex-start;
-            gap: 18px;
-            padding: 20px 22px;
-            border-radius: 10px;
-            border: 1px solid #d1d9e2;
-            background:
-                linear-gradient(180deg, #fbfdff 0%, #f2f6fa 100%);
-            box-shadow: 0 10px 24px rgba(16, 35, 56, 0.06);
+        /* Override profile.html body background to dark, win specificity over earlier rules */
+        html body.profile-page,
+        html body.profile-page.tmr-site-shell {
+            background: var(--tmr-bg) !important;
+            color: var(--tmr-text) !important;
         }
 
-        .profile-header::before { display: none; }
+        body.profile-page .container { max-width: 1320px; padding: 0 24px; }
 
-        .profile-avatar {
-            width: 72px;
-            height: 72px;
-            font-size: 1.5rem;
-            border: 1px solid #d1d9e2;
-            box-shadow: none;
-        }
-
-        .profile-name {
-            font-size: clamp(1.45rem, 2vw, 2rem);
-            color: #102338;
-            margin-bottom: 2px;
-        }
-
-        .profile-handle {
-            color: #5f7186;
-            margin-bottom: 10px;
-            font-size: 0.88rem;
-        }
-
-        .profile-trust-row {
-            gap: 6px;
-            margin-bottom: 10px;
-        }
-
-        .profile-trust-pill,
-        .profile-meta-item {
-            padding: 6px 10px;
-            border-radius: 5px;
-            border: 1px solid #d7dfe8;
-            background: #ffffff;
-            color: #344357;
-            font-size: 0.72rem;
-            box-shadow: none;
-        }
-
-        .profile-trust-pill {
-            letter-spacing: 0.08em;
-        }
-
-        .profile-bio {
-            color: #3f4d61;
-            font-size: 0.92rem;
-            max-width: 760px;
-        }
-
-        .profile-meta {
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        .btn {
-            border-radius: 6px;
-            font-size: 0.82rem;
-            padding: 9px 14px;
-        }
-
-        .btn-primary {
-            background: #102338;
-            color: #ffffff;
-        }
-
-        .btn-secondary {
-            background: #ffffff;
-            color: #243447;
-            border: 1px solid #cfd8e3;
-        }
-
-        .summary-bar { padding: 4px 0 18px; }
-
-        .summary-grid {
-            grid-template-columns: repeat(5, minmax(0, 1fr));
-            gap: 0;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid #d0d8e2;
-            background: #ffffff;
-            box-shadow: 0 10px 26px rgba(16, 35, 56, 0.05);
-        }
-
-        .summary-stat {
-            min-height: 66px;
-            padding: 12px 14px 11px;
-            border-right: 1px solid #e1e7ee;
-            border-bottom: 1px solid #e1e7ee;
-        }
-
-        .summary-stat:nth-child(5n) { border-right: none; }
-        .summary-stat:nth-last-child(-n + 5) { border-bottom: none; }
-
-        .summary-stat-label {
-            color: #6d7b8f;
-            font-size: 0.61rem;
-            letter-spacing: 0.12em;
-        }
-
-        .summary-stat-value {
-            margin-bottom: 2px;
-            color: #13253a;
-            font-size: 1rem;
-        }
-
-        .summary-stat-note {
-            margin-top: 2px;
-            color: #6d7b8f;
-            font-size: 0.68rem;
-        }
-
-        .workspace-nav-card,
-        .stats-table-card {
-            border-radius: 10px;
-            border: 1px solid #d0d8e2;
-            box-shadow: 0 8px 20px rgba(16, 35, 56, 0.05);
-        }
-
-        .workspace-nav-card {
-            padding: 16px 18px;
-            background: #f8fafc;
-        }
-
-        .workspace-nav-head { margin-bottom: 0; }
-        .workspace-tab {
-            min-height: 38px;
-            border-radius: 6px;
-            background: #ffffff;
-        }
-
-        .section-title {
-            font-size: 1rem;
-            letter-spacing: -0.02em;
-        }
-
-        .section-subtitle,
-        .table-note {
-            color: #66768a;
-            font-size: 0.82rem;
-        }
-
-        .ledger-filter-card {
-            margin-bottom: 12px;
-            padding: 14px;
-            border: 1px solid #d0d8e2;
-            border-radius: 8px;
-            background: #ffffff;
-            box-shadow: 0 8px 18px rgba(16, 35, 56, 0.04);
-        }
-
-        .filter-toolbar {
-            grid-template-columns: minmax(220px, 1.4fr) repeat(4, minmax(0, 1fr));
-            gap: 8px;
-        }
-
-        .filter-search-wrap {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .filter-search-icon {
-            position: absolute;
-            left: 12px;
-            color: #6d7b8f;
-            font-size: 0.8rem;
-            pointer-events: none;
-        }
-
-        .filter-search-input {
-            padding-left: 34px;
-        }
-
-        .filter-control,
-        .filter-button {
-            min-height: 38px;
-            border-radius: 6px;
-            border-color: #d0d8e2;
-            background: #fbfcfe;
-            color: #203041;
+        /* ===== Top strip + legacy header (kept available, sitewide nav still injects) ===== */
+        body.profile-page .profile-top-strip {
+            background: var(--tmr-nav);
+            color: var(--tmr-text-muted);
+            border-bottom: 1px solid var(--tmr-border-soft);
             font-size: 0.78rem;
         }
+        body.profile-page .profile-top-strip strong { color: var(--tmr-text); }
 
-        .ledger-filter-actions {
-            margin-bottom: 10px;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .filter-chip-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .ledger-toolbar-meta {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #6d7b8f;
-            font-size: 0.75rem;
-        }
-
-        .ledger-page-size-label {
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-        }
-
-        .ledger-page-size {
-            width: 82px;
-            min-width: 82px;
-        }
-
-        .picks-table-wrapper {
-            border-radius: 8px;
-            border: 1px solid #d0d8e2;
-            background: #ffffff;
-            box-shadow: 0 10px 26px rgba(16, 35, 56, 0.05);
-        }
-
-        .picks-table {
-            min-width: 1650px;
-            font-size: 0.8rem;
-        }
-
-        .picks-table thead {
-            background: #f4f7fb;
-            border-bottom: 1px solid #d9e1eb;
-        }
-
-        .picks-table th {
-            position: sticky;
-            top: 0;
-            z-index: 2;
-            padding: 10px 12px;
-            background: #f4f7fb;
-            color: #647589;
-            font-size: 0.64rem;
-            letter-spacing: 0.12em;
-            border-bottom: 1px solid #d9e1eb;
-        }
-
-        .picks-table td {
-            padding: 10px 12px;
-            color: #203041;
-            border-bottom: 1px solid #e8edf3;
-            vertical-align: top;
-        }
-
-        .picks-table tbody tr:nth-child(even) { background: #fbfcfd; }
-        .picks-table tbody tr:hover { background: #f2f7fc; }
-
-        .ledger-sort-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            border: none;
-            background: transparent;
-            padding: 0;
-            color: inherit;
-            font: inherit;
-            text-transform: inherit;
-            letter-spacing: inherit;
-            cursor: pointer;
-        }
-
-        .ledger-sort-button::after {
-            content: "↕";
-            font-size: 0.7rem;
-            color: #91a0b2;
-        }
-
-        .ledger-sort-button.is-active {
-            color: #102338;
-        }
-
-        .ledger-sort-button.is-active::after {
-            color: #102338;
-        }
-
-        .ledger-pick-title {
-            color: #142437;
-            font-size: 0.79rem;
-        }
-
-        .ledger-pick-meta,
-        .ledger-game-meta,
-        .ledger-muted,
-        .ledger-status,
-        .ledger-type,
-        .ledger-subline {
-            color: #6a7a8c;
-            font-size: 0.69rem;
-        }
-
-        .ledger-subline {
-            margin-top: 4px;
-        }
-
-        .pick-sport {
-            border-radius: 4px;
-            padding: 3px 8px;
-        }
-
-        .result-badge {
-            border-radius: 4px;
-            padding: 3px 7px;
-        }
-
-        .ledger-pagination-row {
-            display: block;
-            padding: 12px;
-            background: #f7fafc;
-        }
-
-        .ledger-pagination {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .ledger-pagination-summary {
-            color: #66768a;
-            font-size: 0.75rem;
-        }
-
-        .ledger-pagination-controls {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        .ledger-pagination-controls button {
-            min-width: 34px;
-            min-height: 34px;
-            border: 1px solid #d0d8e2;
-            background: #ffffff;
-            color: #203041;
-            border-radius: 6px;
-            font: inherit;
-            font-size: 0.77rem;
-            cursor: pointer;
-        }
-
-        .ledger-pagination-controls button.is-active {
-            background: #102338;
-            border-color: #102338;
-            color: #ffffff;
-        }
-
-        .ledger-pagination-controls button:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        .ledger-page-ellipsis {
-            display: inline-flex;
-            align-items: center;
-            padding: 0 4px;
-            color: #738296;
-            font-size: 0.78rem;
-        }
-
-        .analytics-grid {
-            gap: 10px;
-        }
-
-        .analytics-card,
-        .sport-detail-card,
-        .breakdown-row,
-        #recentFormGrid,
-        #performanceTimeline,
-        #equityCurve,
-        #monthlyReturns {
-            border-radius: 8px;
-        }
-
-        .breakdown-grid {
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 10px;
-        }
-
-        .support-section-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 14px;
-            margin-top: 24px;
-        }
-
-        .support-module {
-            padding: 14px;
-            border: 1px solid #d0d8e2;
-            border-radius: 8px;
-            background: #ffffff;
-            box-shadow: 0 8px 18px rgba(16, 35, 56, 0.04);
-        }
-
-        .support-module-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            gap: 10px;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-        }
-
-        .support-module-note {
-            color: #728295;
-            font-size: 0.76rem;
-        }
-
-        .breakdown-row {
-            padding: 12px 14px;
-            background: #ffffff;
-            border: 1px solid #d8e0e9;
-        }
-
-        .stats-summary-table th,
-        .stats-summary-table td {
-            padding: 10px 12px;
-        }
-
-        @media (max-width: 1100px) {
-            .summary-grid {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-
-            .summary-stat:nth-child(5n) { border-right: 1px solid #e1e7ee; }
-            .summary-stat:nth-last-child(-n + 5) { border-bottom: 1px solid #e1e7ee; }
-            .summary-stat:nth-child(3n) { border-right: none; }
-            .summary-stat:nth-last-child(-n + 3) { border-bottom: none; }
-
-            .filter-toolbar {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 760px) {
-            .summary-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
-            .summary-stat:nth-child(3n) { border-right: 1px solid #e1e7ee; }
-            .summary-stat:nth-last-child(-n + 3) { border-bottom: 1px solid #e1e7ee; }
-            .summary-stat:nth-child(2n) { border-right: none; }
-            .summary-stat:nth-last-child(-n + 2) { border-bottom: none; }
-
-            .filter-toolbar {
-                grid-template-columns: 1fr;
-            }
-
-            .support-section-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .ledger-filter-actions,
-            .ledger-pagination {
-                align-items: flex-start;
-            }
-        }
-
-        html body.tmr-site-shell.profile-page {
-            background:
-                linear-gradient(180deg, #eef3f8 0%, #f6f9fc 34%, #eef4fb 100%) !important;
-            color: #162231 !important;
-        }
-
-        body.tmr-site-shell.profile-page .profile-top-strip,
-        body.tmr-site-shell.profile-page > header {
-            display: none !important;
-            visibility: hidden !important;
-            height: 0 !important;
-            min-height: 0 !important;
-            max-height: 0 !important;
-            overflow: hidden !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            border: 0 !important;
+        body.profile-page > header {
+            background: var(--tmr-nav) !important;
+            border-bottom: 1px solid var(--tmr-border-soft) !important;
             box-shadow: none !important;
         }
+        body.profile-page > header .logo,
+        body.profile-page > header .logo span { color: var(--tmr-text) !important; }
+        body.profile-page > header .logo span { color: var(--tmr-cyan) !important; }
+        body.profile-page > header nav a { color: var(--tmr-text-muted) !important; }
+        body.profile-page > header nav a.active,
+        body.profile-page > header nav a:hover { color: var(--tmr-cyan) !important; background: transparent !important; }
 
-        body.tmr-site-shell.profile-page .header-content,
-        body.tmr-site-shell.profile-page .nav-links {
-            display: none !important;
-        }
-
-        body.tmr-site-shell.profile-page .profile-header-section {
-            padding-top: 28px;
-        }
-
-        body.tmr-site-shell.profile-page .profile-empty-ledger {
-            margin-top: 18px;
-            padding: 16px 18px;
-            border-radius: 16px;
-            border: 1px solid rgba(191, 201, 214, 0.72);
-            background: rgba(246, 249, 252, 0.94);
-            color: #41546b;
-            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
-        }
-
-        body.tmr-site-shell.profile-page .profile-empty-ledger strong {
-            color: #162231;
-        }
-
-        body.tmr-site-shell.profile-page .profile-empty-ledger p + p {
-            margin-top: 8px;
-        }
-
-        body.tmr-site-shell.profile-page .tmr-route-note {
-            border-color: rgba(191, 201, 214, 0.72);
-            background: rgba(255, 255, 255, 0.92);
-            color: #5f7084;
-            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
-        }
-
-        body.tmr-site-shell.profile-page .tmr-route-note strong {
-            color: #1b2c42;
-        }
-
-        body.tmr-site-shell.profile-page .profile-header,
-        body.tmr-site-shell.profile-page .summary-grid,
-        body.tmr-site-shell.profile-page .workspace-nav-card,
-        body.tmr-site-shell.profile-page .ledger-filter-card,
-        body.tmr-site-shell.profile-page .picks-table-wrapper,
-        body.tmr-site-shell.profile-page .analytics-card,
-        body.tmr-site-shell.profile-page .analytics-preview-card,
-        body.tmr-site-shell.profile-page .support-module,
-        body.tmr-site-shell.profile-page .support-callout,
-        body.tmr-site-shell.profile-page .support-strip,
-        body.tmr-site-shell.profile-page .empty-state {
-            border: 1px solid rgba(183, 197, 213, 0.72) !important;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 253, 0.98)) !important;
-            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08) !important;
-            backdrop-filter: none !important;
-        }
-
-        body.tmr-site-shell.profile-page .profile-header {
-            display: grid;
-            grid-template-columns: minmax(0, 1.55fr) minmax(260px, 340px);
-            align-items: start;
-            gap: 28px;
-            border-radius: 28px !important;
-            padding: 32px !important;
-            color: #172435 !important;
+        /* ===== COVER BANNER ===== */
+        .profile-cover-section { padding: 22px 0 0; }
+        .profile-cover {
+            position: relative;
+            height: 220px;
+            border: 1px solid var(--tmr-border);
+            border-radius: 18px;
             background:
-                radial-gradient(circle at top right, rgba(32, 104, 182, 0.10), transparent 34%),
-                radial-gradient(circle at bottom left, rgba(245, 130, 32, 0.10), transparent 28%),
-                linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(246, 249, 252, 0.99)) !important;
+                radial-gradient(circle at 20% 0%, rgba(34, 211, 238, 0.18), transparent 55%),
+                radial-gradient(circle at 85% 110%, rgba(37, 99, 235, 0.22), transparent 55%),
+                linear-gradient(135deg, #0A1426 0%, #0B1A30 50%, #0E2548 100%);
+            overflow: hidden;
+        }
+        .profile-cover::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(248, 250, 252, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(248, 250, 252, 0.04) 1px, transparent 1px);
+            background-size: 32px 32px;
+            mask-image: radial-gradient(ellipse at center, #000 35%, transparent 80%);
+            pointer-events: none;
+        }
+        .profile-cover-glow {
+            position: absolute;
+            right: -80px;
+            top: -80px;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(34, 211, 238, 0.28), transparent 70%);
+            filter: blur(20px);
         }
 
-        body.tmr-site-shell.profile-page .profile-header::before {
-            display: none !important;
+        /* ===== PROFILE HEADER (overlaps cover) ===== */
+        .profile-header-section {
+            padding: 0;
+            margin-top: -64px;
+            position: relative;
+            z-index: 2;
         }
+        body.profile-page .profile-header,
+        body.profile-page.tmr-site-shell .profile-header {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1.6fr) minmax(260px, 0.9fr);
+            gap: 28px !important;
+            align-items: stretch !important;
+            padding: 26px 28px !important;
+            border: 1px solid var(--tmr-border) !important;
+            border-radius: 18px !important;
+            background:
+                linear-gradient(180deg, var(--tmr-card-raised) 0%, var(--tmr-card) 100%) !important;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45) !important;
+            color: var(--tmr-text) !important;
+            text-align: left !important;
+        }
+        body.profile-page .profile-header::before,
+        body.profile-page.tmr-site-shell .profile-header::before { display: none !important; }
 
-        body.tmr-site-shell.profile-page .profile-avatar {
-            width: 92px !important;
-            height: 92px !important;
-            border: 3px solid rgba(255, 255, 255, 0.92) !important;
-            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12) !important;
-        }
-
-        body.tmr-site-shell.profile-page .profile-info {
-            min-width: 0;
-        }
+        body.profile-page .profile-info,
+        body.profile-page.tmr-site-shell .profile-info { min-width: 0; }
 
         .profile-identity-row {
             display: flex;
@@ -1928,379 +1587,800 @@
             gap: 18px;
             margin-bottom: 14px;
         }
-
-        .profile-identity-copy {
-            min-width: 0;
+        body.profile-page .profile-avatar,
+        body.profile-page.tmr-site-shell .profile-avatar {
+            width: 96px !important;
+            height: 96px !important;
+            border-radius: 50% !important;
+            border: 3px solid var(--tmr-border) !important;
+            background: linear-gradient(135deg, var(--tmr-blue), var(--tmr-cyan)) !important;
+            color: #03050A !important;
+            font-size: 2.1rem !important;
+            font-weight: 800 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55) !important;
+            flex-shrink: 0;
         }
-
+        .profile-identity-copy { min-width: 0; }
         .profile-eyebrow {
-            margin-bottom: 8px;
-            color: #5f7084;
-            font-size: 0.7rem;
+            color: var(--tmr-cyan);
+            font-size: 0.68rem;
             font-weight: 800;
-            letter-spacing: 0.16em;
+            letter-spacing: 0.18em;
             text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        body.profile-page .profile-name,
+        body.profile-page.tmr-site-shell .profile-name {
+            color: var(--tmr-text) !important;
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: clamp(1.6rem, 2.4vw, 2.2rem) !important;
+            font-weight: 800 !important;
+            letter-spacing: -0.04em !important;
+            margin: 0 0 4px !important;
+            line-height: 1.1 !important;
+        }
+        body.profile-page .profile-handle,
+        body.profile-page.tmr-site-shell .profile-handle {
+            color: var(--tmr-text-muted) !important;
+            font-size: 0.92rem !important;
+            margin-bottom: 0 !important;
         }
 
-        body.tmr-site-shell.profile-page .profile-name,
-        body.tmr-site-shell.profile-page .section-title,
-        body.tmr-site-shell.profile-page .summary-stat-value,
-        body.tmr-site-shell.profile-page .analytics-card-value,
-        body.tmr-site-shell.profile-page .analytics-card h3,
-        body.tmr-site-shell.profile-page .support-module h3 {
-            color: #162231 !important;
+        body.profile-page .profile-trust-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+        body.profile-page .profile-trust-pill,
+        body.profile-page.tmr-site-shell .profile-trust-pill {
+            display: inline-flex !important;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 11px !important;
+            border-radius: 999px !important;
+            background: var(--tmr-panel) !important;
+            border: 1px solid var(--tmr-border) !important;
+            color: var(--tmr-text-muted) !important;
+            font-size: 0.72rem !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.04em;
+            box-shadow: none !important;
         }
+        body.profile-page .profile-trust-pill strong,
+        body.profile-page.tmr-site-shell .profile-trust-pill strong { color: var(--tmr-text) !important; }
 
-        body.tmr-site-shell.profile-page .profile-handle,
-        body.tmr-site-shell.profile-page .profile-bio,
-        body.tmr-site-shell.profile-page .section-subtitle,
-        body.tmr-site-shell.profile-page .table-note,
-        body.tmr-site-shell.profile-page .summary-stat-note,
-        body.tmr-site-shell.profile-page .analytics-card p,
-        body.tmr-site-shell.profile-page .support-module-note,
-        body.tmr-site-shell.profile-page .empty-state p {
-            color: #5f7084 !important;
+        body.profile-page .profile-bio,
+        body.profile-page.tmr-site-shell .profile-bio {
+            color: var(--tmr-text) !important;
+            font-size: 0.95rem !important;
+            line-height: 1.6 !important;
+            margin: 4px 0 14px !important;
+            max-width: 720px;
         }
-
-        body.tmr-site-shell.profile-page .profile-trust-pill,
-        body.tmr-site-shell.profile-page .profile-meta-item,
-        body.tmr-site-shell.profile-page .workspace-tab {
-            border-color: rgba(189, 202, 216, 0.9) !important;
-            background: rgba(248, 250, 252, 0.96) !important;
-            color: #314255 !important;
-        }
-
-        body.tmr-site-shell.profile-page .profile-trust-pill strong {
-            color: #162231 !important;
-        }
-
-        .profile-bio {
-            margin-top: 2px;
-            max-width: 760px;
-            line-height: 1.65;
-        }
-
-        .profile-bio-empty {
+        body.profile-page .profile-bio.profile-bio-empty,
+        body.profile-page.tmr-site-shell .profile-bio.profile-bio-empty {
+            color: var(--tmr-text-dim) !important;
             font-style: italic;
         }
 
         .profile-overview-grid {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 12px;
-            margin-top: 18px;
+            gap: 10px;
+            margin: 6px 0 16px;
         }
-
         .profile-overview-card {
-            padding: 14px 16px;
-            border: 1px solid rgba(219, 228, 236, 0.9);
-            border-radius: 18px;
-            background: linear-gradient(180deg, #ffffff, #f8fbfd);
+            padding: 12px 14px;
+            border: 1px solid var(--tmr-border);
+            border-radius: 12px;
+            background: var(--tmr-panel);
         }
-
         .profile-overview-label {
             display: block;
-            margin-bottom: 8px;
-            color: #6a7c91;
-            font-size: 0.68rem;
+            color: var(--tmr-text-dim);
+            font-size: 0.62rem;
             font-weight: 800;
-            letter-spacing: 0.12em;
+            letter-spacing: 0.16em;
             text-transform: uppercase;
+            margin-bottom: 6px;
         }
-
         .profile-overview-value {
             display: block;
-            color: #182635;
-            font-size: 0.96rem;
+            color: var(--tmr-text);
+            font-size: 0.92rem;
             font-weight: 700;
-            line-height: 1.35;
-            word-break: break-word;
         }
 
-        .profile-rail {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-            min-width: 0;
-            align-self: stretch;
-        }
-
-        .profile-rail-card {
-            padding: 16px 16px;
-            border-radius: 18px;
-            border: 1px solid rgba(219, 228, 236, 0.95);
-            background: linear-gradient(180deg, #ffffff, #f8fbfd);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
-        }
-
-        .profile-rail-label {
-            display: block;
-            margin-bottom: 6px;
-            color: #6a7c91;
-            font-size: 0.68rem;
-            font-weight: 800;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-        }
-
-        .profile-rail-value {
-            color: #182635;
-            font-family: 'Barlow', 'Inter', sans-serif;
-            font-size: 1.02rem;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-        }
-
-        body.tmr-site-shell.profile-page .summary-grid {
-            grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-            border-radius: 24px !important;
-            overflow: hidden !important;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(247, 250, 253, 0.99) 100%) !important;
-        }
-
-        body.tmr-site-shell.profile-page .summary-stat {
-            min-height: 94px !important;
-            padding: 18px 18px 16px !important;
-            border-right: 1px solid rgba(214, 223, 232, 0.9) !important;
-            border-bottom: 1px solid rgba(214, 223, 232, 0.9) !important;
-            background: transparent !important;
-        }
-
-        body.tmr-site-shell.profile-page .summary-stat:nth-child(5n) {
-            border-right: none !important;
-        }
-
-        body.tmr-site-shell.profile-page .summary-stat:nth-last-child(-n + 5) {
-            border-bottom: none !important;
-        }
-
-        body.tmr-site-shell.profile-page .summary-stat-label {
-            color: #6a7c91 !important;
-            font-size: 0.64rem !important;
-            letter-spacing: 0.16em !important;
-        }
-
-        body.tmr-site-shell.profile-page .summary-stat-note {
-            color: #6e8094 !important;
-        }
-
-        body.tmr-site-shell.profile-page .workspace-nav-head {
-            align-items: center;
-        }
-
-        .workspace-nav-card {
-            padding: 24px 26px;
-        }
-
-        body.tmr-site-shell.profile-page .workspace-tab.active,
-        body.tmr-site-shell.profile-page .btn-primary,
-        body.tmr-site-shell.profile-page .filter-button.active {
-            background: linear-gradient(135deg, #102338, #21486d) !important;
-            color: #ffffff !important;
-            border-color: transparent !important;
-        }
-
-        body.tmr-site-shell.profile-page .btn-secondary,
-        body.tmr-site-shell.profile-page .filter-button,
-        body.tmr-site-shell.profile-page .ledger-sort-button {
-            background: #f8fafc !important;
-            color: #28415b !important;
-            border-color: rgba(189, 202, 216, 0.9) !important;
-        }
-
-        body.tmr-site-shell.profile-page .filter-toolbar {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 12px;
-            background: transparent !important;
-            border-color: transparent !important;
-        }
-
-        .filter-search-wrap {
-            grid-column: 1 / -1;
-        }
-
-        #pickFilters {
-            padding: 0;
-            border: none;
-            border-radius: 0;
-            background: transparent;
-            box-shadow: none;
-        }
-
-        .filter-control,
-        .filter-button {
-            min-height: 42px;
-            border-radius: 12px;
-            background: #ffffff;
-            color: #203041;
-            border: 1px solid #d5dee7;
-        }
-
-        .filter-search-input {
-            background: #ffffff;
-        }
-
-        .ledger-filter-card {
-            border-radius: 22px;
-            padding: 18px;
-        }
-
-        .ledger-filter-head {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 14px;
-        }
-
-        .ledger-filter-title {
-            color: #162231;
-            font-size: 0.95rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            margin-bottom: 4px;
-        }
-
-        .ledger-filter-subtitle {
-            color: #6f8194;
-            font-size: 0.8rem;
-            max-width: 620px;
-            line-height: 1.5;
-        }
-
-        .ledger-filter-status {
-            flex-shrink: 0;
-            min-height: 38px;
-            padding: 9px 14px;
-            border: 1px solid #d8e1ea;
-            border-radius: 999px;
-            background: #f8fbfd;
-            color: #4b6177;
-            font-size: 0.76rem;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-
-        .ledger-filter-actions {
-            margin-top: 2px;
-            padding-top: 12px;
-            border-top: 1px solid #e3eaf1;
-        }
-
-        .section-header-actions {
+        body.profile-page .profile-meta,
+        body.profile-page.tmr-site-shell .profile-meta {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
+            margin: 0 0 14px !important;
+        }
+        body.profile-page .profile-meta-item,
+        body.profile-page.tmr-site-shell .profile-meta-item {
+            padding: 7px 12px !important;
+            border-radius: 8px !important;
+            background: var(--tmr-panel) !important;
+            border: 1px solid var(--tmr-border) !important;
+            color: var(--tmr-text-muted) !important;
+            font-size: 0.76rem !important;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        body.profile-page .profile-meta-item:hover,
+        body.profile-page.tmr-site-shell .profile-meta-item:hover {
+            border-color: var(--tmr-cyan) !important;
+            color: var(--tmr-text) !important;
         }
 
-        .records-section-head {
+        body.profile-page .profile-actions,
+        body.profile-page.tmr-site-shell .profile-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 14px !important;
+        }
+        body.profile-page .btn,
+        body.profile-page.tmr-site-shell .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 18px !important;
+            border-radius: 10px !important;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 0.84rem;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+            text-decoration: none;
+        }
+        body.profile-page .btn-primary,
+        body.profile-page.tmr-site-shell .btn-primary {
+            background: linear-gradient(135deg, var(--tmr-cyan), #67E8F9) !important;
+            color: #04111A !important;
+            border: 1px solid transparent !important;
+            box-shadow: 0 8px 20px rgba(34, 211, 238, 0.18);
+        }
+        body.profile-page .btn-primary:hover,
+        body.profile-page.tmr-site-shell .btn-primary:hover { transform: translateY(-1px); }
+        body.profile-page .btn-secondary,
+        body.profile-page.tmr-site-shell .btn-secondary {
+            background: var(--tmr-panel) !important;
+            color: var(--tmr-text) !important;
+            border: 1px solid var(--tmr-border) !important;
+        }
+        body.profile-page .btn-secondary:hover,
+        body.profile-page.tmr-site-shell .btn-secondary:hover {
+            border-color: var(--tmr-cyan) !important;
+            color: var(--tmr-cyan) !important;
+        }
+
+        /* Right rail (existing #profileHeader injects .profile-rail) */
+        .profile-rail {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            align-content: start;
+            min-width: 0;
+        }
+        .profile-rail-card {
+            padding: 14px 14px;
+            border: 1px solid var(--tmr-border);
+            border-radius: 14px;
+            background: var(--tmr-panel);
+        }
+        .profile-rail-label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--tmr-text-dim);
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+        .profile-rail-value {
+            color: var(--tmr-text);
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 1.08rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .profile-empty-ledger {
+            margin-top: 14px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--tmr-border);
+            background: var(--tmr-panel);
+            color: var(--tmr-text-muted);
+            font-size: 0.85rem;
+        }
+        .profile-empty-ledger strong { color: var(--tmr-text); }
+        .profile-empty-ledger p + p { margin-top: 6px; }
+
+        /* ===== TAB BAR ===== */
+        .profile-tabs-section { padding: 22px 0 0; }
+        .profile-tabs {
+            display: flex;
+            gap: 4px;
+            padding: 6px;
+            background: var(--tmr-card);
+            border: 1px solid var(--tmr-border);
+            border-radius: 14px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .profile-tabs::-webkit-scrollbar { display: none; }
+        .profile-tab {
+            flex: 0 0 auto;
+            padding: 11px 18px;
+            border-radius: 10px;
+            border: none;
+            background: transparent;
+            color: var(--tmr-text-muted);
+            font-family: inherit;
+            font-size: 0.86rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease;
+            white-space: nowrap;
+        }
+        .profile-tab:hover { color: var(--tmr-text); background: var(--tmr-card-hover); }
+        .profile-tab.active {
+            background: var(--tmr-blue);
+            color: #FFFFFF;
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.32);
+        }
+
+        /* ===== BODY GRID ===== */
+        .profile-body-section { padding: 18px 0 60px; }
+        .profile-body-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 22px;
+            align-items: start;
+        }
+        .profile-main { min-width: 0; }
+        .profile-tab-panel { display: none; }
+        .profile-tab-panel.active { display: block; }
+        .profile-tab-panel > * + * { margin-top: 14px; }
+
+        /* ===== FEED CARDS / EMPTY STATES ===== */
+        .profile-feed-card,
+        .profile-creator-panel {
+            padding: 22px;
+            border: 1px solid var(--tmr-border);
+            border-radius: 16px;
+            background: var(--tmr-card);
+        }
+        .profile-feed-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        body.profile-page .profile-feed-card .section-title,
+        body.profile-page .profile-creator-panel .section-title {
+            color: var(--tmr-text);
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        body.profile-page .profile-feed-card .section-subtitle,
+        body.profile-page .profile-creator-panel .section-subtitle {
+            color: var(--tmr-text-muted);
+            font-size: 0.84rem;
+            margin-top: 4px;
+        }
+
+        .profile-feed-empty {
+            padding: 38px 20px;
+            border: 1px dashed var(--tmr-border);
+            border-radius: 12px;
+            background: var(--tmr-panel);
+            text-align: center;
+        }
+        .profile-feed-empty.profile-feed-empty-compact { padding: 24px 16px; }
+        .profile-empty-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--tmr-cyan-soft);
+            color: var(--tmr-cyan);
+            font-size: 1.4rem;
             margin-bottom: 14px;
         }
-
-        .records-section-head .section-title,
-        .stats-table-head .section-title {
-            font-size: 1.1rem;
+        .profile-empty-title {
+            color: var(--tmr-text);
+            font-size: 1.02rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+        .profile-empty-body {
+            color: var(--tmr-text-muted);
+            font-size: 0.88rem;
+            line-height: 1.55;
+            max-width: 460px;
+            margin: 0 auto;
         }
 
-        .ledger-toolbar-meta {
-            color: #647589;
+        .profile-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
         }
 
-        .table-note {
-            color: #6f8194;
-            max-width: 640px;
+        /* ===== CREATOR PANEL ===== */
+        .profile-creator-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--tmr-border);
+        }
+        .profile-creator-eyebrow {
+            color: var(--tmr-cyan);
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .profile-creator-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: var(--tmr-amber-soft);
+            color: var(--tmr-amber);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            align-self: flex-start;
         }
 
-        body.tmr-site-shell.profile-page .picks-table th {
-            background: #f5f8fb;
-            color: #6a7c91;
+        /* ===== RIGHT SIDEBAR ===== */
+        .profile-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            position: sticky;
+            top: 18px;
+        }
+        .sidebar-card {
+            padding: 16px 18px;
+            border: 1px solid var(--tmr-border);
+            border-radius: 14px;
+            background: var(--tmr-card);
+        }
+        .sidebar-card-head { margin-bottom: 12px; }
+        .sidebar-card-label {
+            color: var(--tmr-cyan);
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+        .sidebar-stat-list { display: flex; flex-direction: column; gap: 8px; }
+        .sidebar-stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 7px 10px;
+            border-radius: 8px;
+            background: var(--tmr-panel);
+            border: 1px solid var(--tmr-border-soft);
+        }
+        .sidebar-stat-key { color: var(--tmr-text-muted); font-size: 0.78rem; font-weight: 600; }
+        .sidebar-stat-val { color: var(--tmr-text); font-weight: 800; font-size: 0.92rem; }
+        .sidebar-empty-mini { color: var(--tmr-text-muted); font-size: 0.84rem; line-height: 1.5; }
+        .sidebar-card-cta { background: linear-gradient(180deg, var(--tmr-card) 0%, var(--tmr-card-raised) 100%); }
+        .sidebar-cta-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: var(--tmr-cyan);
+            color: #04111A;
+            font-weight: 800;
+            font-size: 0.86rem;
+            text-decoration: none;
+            transition: transform 0.15s ease;
+        }
+        .sidebar-cta-btn:hover { transform: translateY(-1px); }
+
+        /* ===== RECORD TAB - SUMMARY GRID + FILTERS + TABLE ===== */
+        body.profile-page .summary-bar,
+        body.profile-page.tmr-site-shell .summary-bar { padding: 0 0 14px !important; }
+        body.profile-page .summary-grid,
+        body.profile-page.tmr-site-shell .summary-grid {
+            display: grid !important;
+            grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+            gap: 0 !important;
+            border: 1px solid var(--tmr-border) !important;
+            border-radius: 14px !important;
+            overflow: hidden !important;
+            background: var(--tmr-card) !important;
+            box-shadow: none !important;
+        }
+        body.profile-page .summary-stat,
+        body.profile-page.tmr-site-shell .summary-stat {
+            padding: 14px 16px !important;
+            border-right: 1px solid var(--tmr-border) !important;
+            border-bottom: 1px solid var(--tmr-border) !important;
+            background: transparent !important;
+            min-height: 86px !important;
+        }
+        body.profile-page .summary-stat:nth-child(5n),
+        body.profile-page.tmr-site-shell .summary-stat:nth-child(5n) { border-right: none !important; }
+        body.profile-page .summary-stat:nth-last-child(-n + 5),
+        body.profile-page.tmr-site-shell .summary-stat:nth-last-child(-n + 5) { border-bottom: none !important; }
+        body.profile-page .summary-stat-label,
+        body.profile-page.tmr-site-shell .summary-stat-label {
+            color: var(--tmr-text-dim) !important;
+            font-size: 0.62rem !important;
+            font-weight: 800;
+            letter-spacing: 0.16em !important;
+            text-transform: uppercase;
+        }
+        body.profile-page .summary-stat-value,
+        body.profile-page.tmr-site-shell .summary-stat-value {
+            color: var(--tmr-text) !important;
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 1.14rem !important;
+            font-weight: 800 !important;
+            margin-bottom: 4px !important;
+            letter-spacing: -0.04em;
+        }
+        body.profile-page .summary-stat-note,
+        body.profile-page.tmr-site-shell .summary-stat-note {
+            color: var(--tmr-text-muted) !important;
+            font-size: 0.72rem !important;
+            margin-top: 4px !important;
+        }
+        body.profile-page .positive { color: var(--tmr-green) !important; }
+        body.profile-page .negative { color: var(--tmr-red) !important; }
+        body.profile-page .neutral  { color: var(--tmr-text) !important; }
+
+        body.profile-page .picks-section { padding: 14px 0 18px !important; }
+        body.profile-page .picks-section .container { padding: 0 !important; max-width: none !important; }
+
+        body.profile-page .ledger-filter-card,
+        body.profile-page.tmr-site-shell .ledger-filter-card {
+            padding: 16px !important;
+            border: 1px solid var(--tmr-border) !important;
+            border-radius: 14px !important;
+            background: var(--tmr-card) !important;
+            box-shadow: none !important;
+            margin-bottom: 14px;
+        }
+        body.profile-page .ledger-filter-title { color: var(--tmr-text) !important; font-weight: 800; }
+        body.profile-page .ledger-filter-subtitle,
+        body.profile-page .table-note,
+        body.profile-page .ledger-toolbar-meta { color: var(--tmr-text-muted) !important; }
+        body.profile-page .ledger-filter-status,
+        body.profile-page.tmr-site-shell .ledger-filter-status {
+            background: var(--tmr-panel) !important;
+            border: 1px solid var(--tmr-border) !important;
+            color: var(--tmr-cyan) !important;
         }
 
-        body.tmr-site-shell.profile-page .picks-table td {
-            color: #203041;
-            border-color: #e4ebf2;
+        body.profile-page .filter-toolbar,
+        body.profile-page.tmr-site-shell .filter-toolbar {
+            grid-template-columns: minmax(220px, 1.4fr) repeat(4, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+        }
+        body.profile-page .filter-control,
+        body.profile-page .filter-button,
+        body.profile-page .filter-search-input,
+        body.profile-page.tmr-site-shell .filter-control,
+        body.profile-page.tmr-site-shell .filter-button {
+            min-height: 40px !important;
+            padding: 0 12px !important;
+            border-radius: 10px !important;
+            border: 1px solid var(--tmr-border) !important;
+            background: var(--tmr-panel) !important;
+            color: var(--tmr-text) !important;
+            font-size: 0.82rem !important;
+        }
+        body.profile-page select.filter-control,
+        body.profile-page.tmr-site-shell select.filter-control {
+            background: var(--tmr-panel) !important;
+        }
+        body.profile-page .filter-search-icon { color: var(--tmr-text-muted); }
+        body.profile-page .filter-search-input { padding-left: 34px !important; }
+
+        body.profile-page .picks-table-wrapper,
+        body.profile-page.tmr-site-shell .picks-table-wrapper {
+            border: 1px solid var(--tmr-border) !important;
+            border-radius: 14px !important;
+            background: var(--tmr-card) !important;
+            box-shadow: none !important;
+            overflow-x: auto;
+        }
+        body.profile-page .picks-table th,
+        body.profile-page.tmr-site-shell .picks-table th {
+            background: var(--tmr-panel) !important;
+            color: var(--tmr-text-dim) !important;
+            border-bottom: 1px solid var(--tmr-border) !important;
+            font-size: 0.66rem !important;
+            letter-spacing: 0.14em !important;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        body.profile-page .picks-table td,
+        body.profile-page.tmr-site-shell .picks-table td {
+            color: var(--tmr-text) !important;
+            border-bottom: 1px solid var(--tmr-border-soft) !important;
+            padding: 11px 13px !important;
+            font-size: 0.82rem;
+        }
+        body.profile-page .picks-table tr:hover td,
+        body.profile-page.tmr-site-shell .picks-table tr:hover td {
+            background: var(--tmr-card-hover) !important;
+        }
+        body.profile-page .ledger-pick-title { color: var(--tmr-text) !important; }
+        body.profile-page .ledger-pick-meta,
+        body.profile-page .ledger-game-meta,
+        body.profile-page .ledger-muted,
+        body.profile-page .ledger-status,
+        body.profile-page .ledger-type,
+        body.profile-page .ledger-subline { color: var(--tmr-text-muted) !important; }
+
+        body.profile-page .ledger-sort-button {
+            background: transparent !important;
+            color: inherit !important;
+            border: none !important;
+        }
+        body.profile-page .ledger-sort-button.is-active { color: var(--tmr-cyan) !important; }
+
+        body.profile-page .ledger-pagination-row,
+        body.profile-page.tmr-site-shell .ledger-pagination-row {
+            background: var(--tmr-panel) !important;
+            border-top: 1px solid var(--tmr-border) !important;
+            padding: 12px !important;
+        }
+        body.profile-page .ledger-pagination-controls button {
+            background: var(--tmr-card) !important;
+            border: 1px solid var(--tmr-border) !important;
+            color: var(--tmr-text) !important;
+            border-radius: 8px !important;
+        }
+        body.profile-page .ledger-pagination-controls button.is-active {
+            background: var(--tmr-blue) !important;
+            border-color: var(--tmr-blue) !important;
+            color: #fff !important;
+        }
+        body.profile-page .ledger-pagination-summary { color: var(--tmr-text-muted) !important; }
+
+        /* ===== ANALYTICS / BREAKDOWNS / CAPPERMETRICS ===== */
+        body.profile-page .analytics-section { padding: 18px 0 !important; }
+        body.profile-page .analytics-section .container { padding: 0 !important; max-width: none !important; }
+        body.profile-page .stats-table-card,
+        body.profile-page.tmr-site-shell .stats-table-card {
+            border: 1px solid var(--tmr-border) !important;
+            border-radius: 14px !important;
+            background: var(--tmr-card) !important;
+            box-shadow: none !important;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        body.profile-page .stats-table-head { padding: 16px 18px; border-bottom: 1px solid var(--tmr-border); }
+        body.profile-page .stats-table-note { color: var(--tmr-text-muted) !important; }
+        body.profile-page .stats-summary-table thead { background: var(--tmr-panel) !important; border-bottom: 1px solid var(--tmr-border) !important; }
+        body.profile-page .stats-summary-table th { color: var(--tmr-text-dim) !important; }
+        body.profile-page .stats-summary-table td { color: var(--tmr-text) !important; border-bottom-color: var(--tmr-border-soft) !important; }
+
+        body.profile-page .analytics-card,
+        body.profile-page.tmr-site-shell .analytics-card {
+            background: var(--tmr-card) !important;
+            border: 1px solid var(--tmr-border) !important;
+            border-radius: 14px !important;
+            box-shadow: none !important;
+            padding: 18px !important;
+        }
+        body.profile-page .analytics-card-label { color: var(--tmr-text-dim) !important; }
+        body.profile-page .analytics-card-value,
+        body.profile-page.tmr-site-shell .analytics-card-value { color: var(--tmr-text) !important; }
+
+        body.profile-page .breakdown-row {
+            background: var(--tmr-panel) !important;
+            border: 1px solid var(--tmr-border) !important;
+            border-radius: 12px !important;
+        }
+        body.profile-page .breakdown-name { color: var(--tmr-text) !important; }
+        body.profile-page .breakdown-record { color: var(--tmr-text-muted) !important; }
+
+        body.profile-page .support-section-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+        }
+        body.profile-page .support-module,
+        body.profile-page.tmr-site-shell .support-module {
+            padding: 16px !important;
+            border: 1px solid var(--tmr-border) !important;
+            border-radius: 14px !important;
+            background: var(--tmr-card) !important;
+            box-shadow: none !important;
+        }
+        body.profile-page .support-module-head { margin-bottom: 12px; }
+        body.profile-page .support-module-note { color: var(--tmr-text-muted) !important; }
+
+        body.profile-page #recentFormGrid,
+        body.profile-page #performanceTimeline,
+        body.profile-page #equityCurve,
+        body.profile-page #monthlyReturns,
+        body.profile-page #dayOfWeekGrid {
+            background: var(--tmr-panel) !important;
+            border: 1px solid var(--tmr-border) !important;
+            border-radius: 12px !important;
+            color: var(--tmr-text);
+            box-shadow: none !important;
         }
 
-        body.tmr-site-shell.profile-page .picks-table tr:hover td {
-            background: #f4f8fc;
+        /* CapperMetrics period buttons + cards */
+        body.profile-page .period-btn {
+            padding: 7px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--tmr-border);
+            background: var(--tmr-panel);
+            color: var(--tmr-text-muted);
+            font-family: inherit;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
         }
+        body.profile-page .period-btn:hover { color: var(--tmr-text); border-color: var(--tmr-cyan); }
+        body.profile-page .period-btn.active {
+            background: var(--tmr-blue);
+            border-color: var(--tmr-blue);
+            color: #fff;
+        }
+        body.profile-page .capper-card {
+            background: var(--tmr-card) !important;
+            border: 1px solid var(--tmr-border) !important;
+            border-radius: 12px !important;
+            color: var(--tmr-text);
+        }
+        body.profile-page .capper-card .cc-label { color: var(--tmr-text-dim) !important; }
+        body.profile-page .capper-card .cc-value { color: var(--tmr-text) !important; }
+        body.profile-page .capper-card .cc-sub { color: var(--tmr-text-muted) !important; }
+        body.profile-page .cc-positive { color: var(--tmr-green) !important; }
+        body.profile-page .cc-negative { color: var(--tmr-red) !important; }
+        body.profile-page .cc-blue { color: var(--tmr-cyan) !important; }
+        body.profile-page .cc-gold { color: var(--tmr-amber) !important; }
 
+        body.profile-page .dow-cell {
+            background: var(--tmr-panel) !important;
+            border: 1px solid var(--tmr-border) !important;
+        }
+        body.profile-page .dow-cell .dow-label { color: var(--tmr-text-dim) !important; }
+        body.profile-page .dow-cell .dow-record { color: var(--tmr-text) !important; }
+        body.profile-page .dow-cell .dow-units { color: var(--tmr-text-muted) !important; }
+
+        body.profile-page .monthly-table th { color: var(--tmr-text-dim) !important; border-bottom-color: var(--tmr-border) !important; }
+        body.profile-page .monthly-table td { color: var(--tmr-text) !important; border-bottom-color: var(--tmr-border-soft) !important; }
+        body.profile-page .monthly-table tr:hover td { background: var(--tmr-card-hover) !important; }
+
+        body.profile-page .sport-detail-card {
+            background: var(--tmr-card) !important;
+            border: 1px solid var(--tmr-border) !important;
+            border-radius: 12px !important;
+            color: var(--tmr-text);
+        }
+        body.profile-page .sport-detail-card .sd-header { border-bottom-color: var(--tmr-border) !important; }
+        body.profile-page .sport-detail-card .sd-name { color: var(--tmr-text); }
+        body.profile-page .sport-detail-card .sd-row .sd-label { color: var(--tmr-text-muted); }
+        body.profile-page .sport-detail-card .sd-row .sd-val { color: var(--tmr-text); }
+
+        /* Result badges + sport pills */
+        body.profile-page .result-badge.won { background: var(--tmr-green-soft) !important; color: var(--tmr-green) !important; }
+        body.profile-page .result-badge.lost { background: var(--tmr-red-soft) !important; color: var(--tmr-red) !important; }
+        body.profile-page .result-badge.push { background: rgba(148,163,184,0.16) !important; color: var(--tmr-text-muted) !important; }
+        body.profile-page .result-badge.pending { background: var(--tmr-amber-soft) !important; color: var(--tmr-amber) !important; }
+
+        /* ===== LOADING / ERROR STATES ===== */
+        body.profile-page .loading { color: var(--tmr-text-muted); }
+        body.profile-page .loading-spinner { border-color: var(--tmr-border); border-top-color: var(--tmr-cyan); }
+        body.profile-page .error-message {
+            background: var(--tmr-red-soft);
+            border: 1px solid rgba(239, 68, 68, 0.32);
+            color: var(--tmr-text);
+            border-radius: 14px;
+        }
+        body.profile-page .error-message h3 { color: var(--tmr-red); }
+        body.profile-page .empty-state { color: var(--tmr-text-muted); }
+        body.profile-page .empty-state p { color: var(--tmr-text-muted); }
+
+        /* ===== SITE FOOTER ===== */
+        body.profile-page .site-footer {
+            background: var(--tmr-nav);
+            border-top: 1px solid var(--tmr-border-soft);
+        }
+        body.profile-page .site-footer-logo { color: var(--tmr-text); }
+        body.profile-page .site-footer-logo span { color: var(--tmr-cyan); }
+        body.profile-page .site-footer-brand p,
+        body.profile-page .site-footer-links a { color: var(--tmr-text-muted); }
+        body.profile-page .site-footer-links a:hover { color: var(--tmr-cyan); }
+        body.profile-page .site-footer-links h4 { color: var(--tmr-text); }
+        body.profile-page .site-footer-bottom { color: var(--tmr-text-dim); border-top-color: var(--tmr-border-soft); }
+
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 1100px) {
-            body.tmr-site-shell.profile-page .profile-header {
-                grid-template-columns: 1fr;
+            .profile-body-grid { grid-template-columns: 1fr; }
+            .profile-sidebar { position: static; }
+            body.profile-page .profile-header,
+            body.profile-page.tmr-site-shell .profile-header {
+                grid-template-columns: 1fr !important;
             }
-
-            .profile-rail {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
+            .profile-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            body.profile-page .summary-grid,
+            body.profile-page.tmr-site-shell .summary-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
             }
-
-            .profile-overview-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+            body.profile-page .summary-stat:nth-child(5n),
+            body.profile-page.tmr-site-shell .summary-stat:nth-child(5n) { border-right: 1px solid var(--tmr-border) !important; }
+            body.profile-page .summary-stat:nth-last-child(-n + 5),
+            body.profile-page.tmr-site-shell .summary-stat:nth-last-child(-n + 5) { border-bottom: 1px solid var(--tmr-border) !important; }
+            body.profile-page .summary-stat:nth-child(3n),
+            body.profile-page.tmr-site-shell .summary-stat:nth-child(3n) { border-right: none !important; }
+            body.profile-page .summary-stat:nth-last-child(-n + 3),
+            body.profile-page.tmr-site-shell .summary-stat:nth-last-child(-n + 3) { border-bottom: none !important; }
+            body.profile-page .filter-toolbar,
+            body.profile-page.tmr-site-shell .filter-toolbar {
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
             }
-
-            body.tmr-site-shell.profile-page .filter-toolbar {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-
-            .ledger-filter-head {
-                flex-direction: column;
-            }
+            body.profile-page .support-section-grid { grid-template-columns: 1fr; }
+            .profile-grid-2 { grid-template-columns: 1fr; }
         }
 
-        @media (max-width: 760px) {
-            body.tmr-site-shell.profile-page .profile-header {
-                grid-template-columns: 1fr;
-                text-align: left;
+        @media (max-width: 700px) {
+            .profile-cover { height: 160px; }
+            .profile-header-section { margin-top: -50px; }
+            .profile-identity-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+            body.profile-page .profile-avatar,
+            body.profile-page.tmr-site-shell .profile-avatar {
+                width: 80px !important;
+                height: 80px !important;
+                font-size: 1.7rem !important;
             }
-
-            .profile-identity-row {
-                align-items: flex-start;
-            }
-
-            .profile-overview-grid,
-            .profile-rail {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
-            body.tmr-site-shell.profile-page .filter-toolbar {
-                grid-template-columns: 1fr;
-            }
-
-            .section-header-actions,
-            .ledger-filter-actions {
-                width: 100%;
-            }
-
-            .section-header-actions {
-                justify-content: flex-start;
-            }
-
-            .ledger-filter-status {
-                width: 100%;
-                text-align: center;
-            }
-
-            body.tmr-site-shell.profile-page .summary-grid {
+            .profile-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            body.profile-page .summary-grid,
+            body.profile-page.tmr-site-shell .summary-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
             }
-
-            body.tmr-site-shell.profile-page .summary-stat:nth-child(5n) {
-                border-right: 1px solid #e2e8f0 !important;
+            body.profile-page .summary-stat:nth-child(2n),
+            body.profile-page.tmr-site-shell .summary-stat:nth-child(2n) { border-right: none !important; }
+            body.profile-page .filter-toolbar,
+            body.profile-page.tmr-site-shell .filter-toolbar {
+                grid-template-columns: 1fr !important;
             }
-
-            body.tmr-site-shell.profile-page .summary-stat:nth-last-child(-n + 5) {
-                border-bottom: 1px solid #e2e8f0 !important;
-            }
-
-            body.tmr-site-shell.profile-page .summary-stat:nth-child(2n) {
-                border-right: none !important;
-            }
-
-            body.tmr-site-shell.profile-page .summary-stat:nth-last-child(-n + 2) {
-                border-bottom: none !important;
-            }
+            body.profile-page .container { padding: 0 16px; }
         }
+
+        /* Make sure the sitewide-injected legacy nav hide doesn't kill our top strip */
+        body.tmr-site-shell.profile-page .profile-top-strip { display: flex !important; visibility: visible !important; height: auto !important; padding: 10px 20px !important; }
     </style>
 
     <script>
@@ -3038,9 +3118,22 @@
             '</div>' + rail;
 
         updateWorkspaceLinks(p.username);
+        updateProfileSidebar(p);
+    }
+
+    function updateProfileSidebar(p) {
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        const totalPicks = Number(p && (p.total_picks || p.totalPicks) || 0);
+        set('sidebarFollowers', String(Number((p && p.follower_count) || 0)));
+        set('sidebarFollowing', String(Number((p && p.following_count) || 0)));
+        set('sidebarTrackedPicks', String(totalPicks));
+        set('sidebarLeaderboard', currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked');
     }
 
     function updateWorkspaceLinks(username) {
+        // Tabs are now in-page panels (data-tab) rather than navigation links.
+        // Setting .href on a button is a harmless no-op; preserved here to avoid breaking
+        // any downstream caller that still references these element IDs.
         const safeUser = encodeURIComponent(username || profileUsername || '');
         const performanceTab = document.getElementById('profilePerformanceTab');
         const triviaTab = document.getElementById('profileTriviaTab');
@@ -3049,6 +3142,40 @@
         if (triviaTab) triviaTab.href = 'trivia/' + (safeUser ? ('?user=' + safeUser) : '');
         if (pollsTab) pollsTab.href = 'hangout/' + (safeUser ? ('?user=' + safeUser) : '');
     }
+
+    // ======================== TAB SWITCHING ========================
+    (function initProfileTabs() {
+        const onReady = function () {
+            const bar = document.getElementById('profileTabsBar');
+            if (!bar) return;
+            bar.addEventListener('click', function (e) {
+                const btn = e.target.closest('.profile-tab');
+                if (!btn) return;
+                const tab = btn.getAttribute('data-tab');
+                if (!tab) return;
+                bar.querySelectorAll('.profile-tab').forEach(function (b) {
+                    const isActive = b.getAttribute('data-tab') === tab;
+                    b.classList.toggle('active', isActive);
+                    b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                });
+                document.querySelectorAll('.profile-tab-panel').forEach(function (p) {
+                    p.classList.toggle('active', p.getAttribute('data-panel') === tab);
+                });
+                try { history.replaceState(null, '', '#' + tab); } catch (_) {}
+            });
+            // Honour deep link (#record, #picks, etc.) on load
+            const hash = (location.hash || '').replace('#', '');
+            if (hash) {
+                const target = bar.querySelector('.profile-tab[data-tab="' + hash + '"]');
+                if (target) target.click();
+            }
+        };
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', onReady);
+        } else {
+            onReady();
+        }
+    })();
 
     // ======================== SUMMARY BAR ========================
     function renderSummaryBar(s) {
