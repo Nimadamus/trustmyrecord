@@ -8483,7 +8483,6 @@
                             <span>Spread</span>
                             <span>Moneyline</span>
                             <span>Total</span>
-                            <span>Team Total</span>
                             <span>Action</span>
                         </div>
 
@@ -8770,12 +8769,23 @@ window.toggleSportFamily = function (family) {
         return null;
     }
 
-    function oddsCell(label, line, price, sub) {
-        var lineHtml = (line == null || line === '') ? '<strong>—</strong>' : '<strong>' + line + '</strong>';
-        var priceHtml = (price == null || price === '') ? '<small>' + (sub || '—') + '</small>' : '<small>' + price + '</small>';
-        return '<button type="button" class="sb-board-cell" tabindex="0">' +
-               '<em>' + label + '</em>' + lineHtml + priceHtml +
+    function oddsButton(line, price) {
+        var lineTxt = (line == null || line === '') ? '—' : line;
+        var priceTxt = (price == null || price === '') ? '—' : price;
+        return '<button type="button" class="sb-odds" tabindex="0">' +
+               '<span class="sb-odds-line">' + lineTxt + '</span>' +
+               '<span class="sb-odds-price">' + priceTxt + '</span>' +
                '</button>';
+    }
+    function oddsStack(topBtn, bottomBtn) {
+        return '<div class="sb-odds-stack">' + topBtn + bottomBtn + '</div>';
+    }
+    function findOutcome(market, teamName) {
+        var outs = (market && market.outcomes) || [];
+        for (var i = 0; i < outs.length; i++) {
+            if (outs[i].name === teamName) return outs[i];
+        }
+        return null;
     }
 
     function renderRow(game) {
@@ -8783,56 +8793,86 @@ window.toggleSportFamily = function (family) {
         var home = game.home_team || game.homeTeam || (game.teams && game.teams.home) || '';
         var away = game.away_team || game.awayTeam || (game.teams && game.teams.away) || '';
         var commence = game.commence_time || game.commenceTime || game.start_time || game.date || '';
-        var when = '';
+        var dateStr = '', timeStr = '';
         try {
             if (commence) {
                 var d = new Date(commence);
                 if (!isNaN(d)) {
-                    when = d.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+                    dateStr = d.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                    timeStr = d.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit' });
                 }
             }
         } catch (e) {}
 
-        var spreadCell = oddsCell('Spread', null, null, '—');
-        var mlCell = oddsCell('Moneyline', null, null, '—');
-        var totalCell = oddsCell('Total', null, null, '—');
-        var ttCell = oddsCell('Team Total', null, null, '—');
+        // Two-sided default cells (top = away, bottom = home)
+        var spreadCell = oddsStack(oddsButton('—', '—'), oddsButton('—', '—'));
+        var mlCell = oddsStack(oddsButton('—', '—'), oddsButton('—', '—'));
+        var totalCell = oddsStack(oddsButton('—', '—'), oddsButton('—', '—'));
 
         if (book) {
             var spreadM = findMarket(book, 'spreads');
-            if (spreadM && spreadM.outcomes && spreadM.outcomes.length) {
-                var homeOut = spreadM.outcomes[0];
-                var price = fmtPrice(homeOut.price);
-                var line = fmtLine(homeOut.point);
-                spreadCell = oddsCell('Spread', line, price, teamShort(home));
+            if (spreadM) {
+                var awaySpread = findOutcome(spreadM, away) || (spreadM.outcomes && spreadM.outcomes[0]);
+                var homeSpread = findOutcome(spreadM, home) || (spreadM.outcomes && spreadM.outcomes[1]);
+                var awayLine = awaySpread ? fmtLine(awaySpread.point) : null;
+                var awayPx = awaySpread ? fmtPrice(awaySpread.price) : null;
+                var homeLine = homeSpread ? fmtLine(homeSpread.point) : null;
+                var homePx = homeSpread ? fmtPrice(homeSpread.price) : null;
+                spreadCell = oddsStack(
+                    oddsButton(awayLine, awayPx),
+                    oddsButton(homeLine, homePx)
+                );
             }
             var mlM = findMarket(book, 'h2h');
-            if (mlM && mlM.outcomes && mlM.outcomes.length) {
-                var homeMl = mlM.outcomes[0];
-                var pml = fmtPrice(homeMl.price);
-                mlCell = oddsCell('Moneyline', pml, null, teamShort(home));
+            if (mlM) {
+                var awayMl = findOutcome(mlM, away) || (mlM.outcomes && mlM.outcomes[0]);
+                var homeMl = findOutcome(mlM, home) || (mlM.outcomes && mlM.outcomes[1]);
+                mlCell = oddsStack(
+                    oddsButton('ML', awayMl ? fmtPrice(awayMl.price) : null),
+                    oddsButton('ML', homeMl ? fmtPrice(homeMl.price) : null)
+                );
             }
             var totalM = findMarket(book, 'totals');
-            if (totalM && totalM.outcomes && totalM.outcomes.length) {
-                var over = totalM.outcomes[0];
-                var pt = fmtPrice(over.price);
-                var lt = (over.point != null) ? 'O ' + over.point : null;
-                totalCell = oddsCell('Total', lt, pt, 'Over');
+            if (totalM && totalM.outcomes && totalM.outcomes.length >= 2) {
+                var over = null, under = null;
+                for (var i = 0; i < totalM.outcomes.length; i++) {
+                    var o = totalM.outcomes[i];
+                    if (String(o.name).toLowerCase() === 'over') over = o;
+                    else if (String(o.name).toLowerCase() === 'under') under = o;
+                }
+                if (!over) over = totalM.outcomes[0];
+                if (!under) under = totalM.outcomes[1];
+                var overLine = (over && over.point != null) ? 'O ' + over.point : 'O —';
+                var underLine = (under && under.point != null) ? 'U ' + under.point : 'U —';
+                totalCell = oddsStack(
+                    oddsButton(overLine, over ? fmtPrice(over.price) : null),
+                    oddsButton(underLine, under ? fmtPrice(under.price) : null)
+                );
             }
-            // Team Total often unavailable from ESPN — leave dashed cell so the layout reads sportsbook-native
         }
 
-        var matchup = '<div class="sb-board-matchup">' +
-            '<span class="sb-board-teams"><b>' + (away || 'Away') + '</b><i>@</i><b>' + (home || 'Home') + '</b></span>' +
-            (when ? '<span class="sb-board-time">' + when + '</span>' : '') +
+        var matchup =
+            '<div class="sb-board-matchup">' +
+                '<div class="sb-board-when">' +
+                    (dateStr ? '<span>' + dateStr + '</span>' : '') +
+                    (timeStr ? '<span>' + timeStr + '</span>' : '') +
+                '</div>' +
+                '<div class="sb-board-teams">' +
+                    '<div class="sb-board-team"><span class="sb-team-tag">A</span><b>' + (away || 'Away') + '</b></div>' +
+                    '<div class="sb-board-team"><span class="sb-team-tag">H</span><b>' + (home || 'Home') + '</b></div>' +
+                '</div>' +
             '</div>';
+
         var sport = (window.TMR && window.TMR.selectedSport) || 'NBA';
         var openHandler = "window.selectSportAndShowGames('" + sport + "')";
         var actionCell = '<button type="button" class="sb-board-action" onclick="' + openHandler + '">Open Board</button>';
 
         return '<div class="sb-board-row">' +
                matchup +
-               spreadCell + mlCell + totalCell + ttCell + actionCell +
+               '<div class="sb-board-col" data-col="spread">' + spreadCell + '</div>' +
+               '<div class="sb-board-col" data-col="ml">' + mlCell + '</div>' +
+               '<div class="sb-board-col" data-col="total">' + totalCell + '</div>' +
+               actionCell +
                '</div>';
     }
 
@@ -25060,7 +25100,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     </style>
-    <link rel="stylesheet" href="static/css/sportsbook-pro.css?v=20260429b">
+    <link rel="stylesheet" href="static/css/sportsbook-pro.css?v=20260429c">
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  7:32:00 PM -->

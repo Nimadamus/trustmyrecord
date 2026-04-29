@@ -5,29 +5,30 @@
  */
 
 :root {
-    /* Sharper black + royal-blue stack */
-    --sb-bg-deep: #02050d;        /* page void around the shell — near pure black */
-    --sb-bg: #060c1a;             /* page surface */
-    --sb-header: #02060f;         /* almost black header */
-    --sb-surface: #0c1830;        /* royal-blue panels (rail / board / slip) */
-    --sb-surface-2: #112744;      /* panel header strip */
-    --sb-surface-3: #173360;      /* hover / active panel surface */
-    --sb-row: #0a1528;            /* board row base */
-    --sb-row-alt: #0e1c34;        /* board row alt stripe */
-    --sb-row-hover: #1a2f55;      /* row hover — visible blue brighten */
-    --sb-cell: #060f22;           /* odds cell base — darker than row */
-    --sb-cell-hover: #142a52;     /* odds cell hover — punchy blue */
-    --sb-border: #1c3056;         /* visible blue divider */
-    --sb-border-strong: #2c4a82;  /* strong blue border */
-    --sb-divider: #14254a;        /* horizontal dividers */
+    /* Premium black + indigo-blue stack */
+    --sb-bg-deep: #01040c;
+    --sb-bg: #050b1a;
+    --sb-header: #02060f;
+    --sb-surface: #0d1a33;
+    --sb-surface-2: #142948;
+    --sb-surface-3: #1c3766;
+    --sb-row: #0c1a33;
+    --sb-row-alt: #0f2040;
+    --sb-row-hover: #1c3766;
+    --sb-cell: #070f24;
+    --sb-cell-hover: #16305a;
+    --sb-cell-active: #0b2548;
+    --sb-border: #1d3160;
+    --sb-border-strong: #2f4d8a;
+    --sb-divider: #142647;
     --sb-text: #ffffff;
-    --sb-text-2: #dae5f4;         /* primary content */
-    --sb-text-3: #8ea3c1;         /* muted steel blue */
-    --sb-text-4: #607692;         /* labels */
-    --sb-accent: #22e7c8;         /* brighter teal action */
-    --sb-accent-2: #0fcdb0;
-    --sb-accent-soft: rgba(34, 231, 200, 0.14);
-    --sb-accent-glow: rgba(34, 231, 200, 0.32);
+    --sb-text-2: #e2ecfb;
+    --sb-text-3: #94a8c7;
+    --sb-text-4: #687d9d;
+    --sb-accent: #2dd4bf;
+    --sb-accent-2: #14b8a6;
+    --sb-accent-soft: rgba(45, 212, 191, 0.14);
+    --sb-accent-glow: rgba(45, 212, 191, 0.32);
     --sb-blue-glow: rgba(56, 119, 220, 0.22);
     --sb-warn: #f5a524;
     --sb-good: #22c55e;
@@ -118,19 +119,20 @@ body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__panel {
     gap: 28px !important;
 }
 body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links {
-    justify-content: center !important;
-    gap: 16px !important;
-    padding: 0 36px !important;
+    justify-content: space-evenly !important;
+    gap: 22px !important;
+    padding: 0 48px !important;
     flex-wrap: nowrap !important;
+    flex: 1 1 auto !important;
 }
 body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links a {
-    font-size: 0.92rem !important;
+    font-size: 0.95rem !important;
     font-weight: 700 !important;
-    letter-spacing: 0.07em !important;
+    letter-spacing: 0.08em !important;
     text-transform: uppercase !important;
-    padding: 12px 22px !important;
-    min-height: 48px !important;
-    border-radius: 9px !important;
+    padding: 13px 24px !important;
+    min-height: 50px !important;
+    border-radius: 10px !important;
     color: var(--sb-text-2) !important;
     background: transparent !important;
     border: 1px solid transparent !important;
@@ -188,19 +190,19 @@ body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions button
     background: transparent;
     border: 1px solid transparent;
     color: var(--sb-text-3);
-    padding: 10px 22px;
+    padding: 11px 26px;
     font-size: 14.5px;
     font-weight: 800;
-    letter-spacing: 0.5px;
-    border-radius: 9px;
+    letter-spacing: 0.6px;
+    border-radius: 10px;
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
     text-transform: uppercase;
-    height: 44px;
+    height: 46px;
     line-height: 1;
-    flex: 1 1 auto;
-    min-width: 110px;
+    flex: 1 1 0;
+    min-width: 100px;
     text-align: center;
 }
 .sportsbook-sports-nav button:hover {
@@ -587,7 +589,10 @@ body > .container > main {
 }
 
 /* ==========================================================================
-   Game Board — actual matchup rows (Matchup · Spread · Moneyline · Total · Team Total · Action)
+   Game Board — sportsbook matchup rows
+   Matchup (away top, home bottom) · Spread · Moneyline · Total · Action
+   Each market is a vertical stack of two odds buttons (top = away/over,
+   bottom = home/under).
    ========================================================================== */
 #picks .sportsbook-board-grid {
     display: flex !important;
@@ -595,18 +600,23 @@ body > .container > main {
 }
 #picks .sportsbook-board-grid-head {
     display: grid !important;
-    grid-template-columns: minmax(200px, 1.5fr) repeat(4, minmax(108px, 1fr)) 138px !important;
+    grid-template-columns: minmax(200px, 1.5fr) repeat(3, minmax(124px, 1fr)) 150px !important;
     gap: 12px !important;
-    padding: 14px 24px !important;
+    padding: 16px 22px !important;
     background: var(--sb-surface-2) !important;
     border-bottom: 1px solid var(--sb-border) !important;
 }
 #picks .sportsbook-board-grid-head span {
-    font-size: 10.5px !important;
+    font-size: 11px !important;
     font-weight: 800 !important;
     text-transform: uppercase !important;
-    letter-spacing: 1.5px !important;
+    letter-spacing: 1.6px !important;
     color: var(--sb-text-4) !important;
+}
+#picks .sportsbook-board-grid-head span:nth-child(2),
+#picks .sportsbook-board-grid-head span:nth-child(3),
+#picks .sportsbook-board-grid-head span:nth-child(4) {
+    text-align: center !important;
 }
 #picks .sportsbook-board-grid-head span:last-child { text-align: right !important; }
 #picks .sportsbook-board-grid-body {
@@ -616,104 +626,132 @@ body > .container > main {
 
 #picks .sb-board-row {
     display: grid !important;
-    grid-template-columns: minmax(200px, 1.5fr) repeat(4, minmax(108px, 1fr)) 138px !important;
+    grid-template-columns: minmax(200px, 1.5fr) repeat(3, minmax(124px, 1fr)) 150px !important;
     gap: 12px !important;
     align-items: stretch !important;
-    padding: 16px 24px !important;
+    padding: 18px 22px !important;
     border: none !important;
     border-top: 1px solid var(--sb-border) !important;
     background: var(--sb-row) !important;
     color: var(--sb-text-2) !important;
     width: 100% !important;
-    min-height: 90px !important;
+    min-height: 132px !important;
     transition: background 0.15s ease !important;
 }
 #picks .sb-board-row:nth-child(even) { background: var(--sb-row-alt) !important; }
 #picks .sb-board-row:hover { background: var(--sb-row-hover) !important; }
 #picks .sb-board-row:first-of-type { border-top: none !important; }
 
+/* Matchup column — date/time over stacked teams */
 #picks .sb-board-matchup {
     display: flex !important;
     flex-direction: column !important;
-    gap: 6px !important;
+    gap: 10px !important;
     justify-content: center !important;
     min-width: 0 !important;
+}
+#picks .sb-board-when {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    font-size: 11px !important;
+    color: var(--sb-text-3) !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+}
+#picks .sb-board-when span:not(:last-child)::after {
+    content: '·';
+    margin-left: 10px;
+    color: var(--sb-text-4);
 }
 #picks .sb-board-teams {
     display: flex !important;
-    flex-wrap: wrap !important;
-    align-items: baseline !important;
+    flex-direction: column !important;
     gap: 6px !important;
-    color: var(--sb-text) !important;
 }
-#picks .sb-board-teams b {
-    font-size: 14.5px !important;
+#picks .sb-board-team {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-height: 32px !important;
+}
+#picks .sb-team-tag {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 22px !important;
+    height: 22px !important;
+    border-radius: 5px !important;
+    background: var(--sb-cell) !important;
+    border: 1px solid var(--sb-border) !important;
+    color: var(--sb-text-3) !important;
+    font-size: 10.5px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.5px !important;
+    flex-shrink: 0 !important;
+    text-transform: uppercase !important;
+}
+#picks .sb-board-team b {
+    font-size: 15.5px !important;
     font-weight: 800 !important;
     color: var(--sb-text) !important;
     letter-spacing: 0.1px !important;
-}
-#picks .sb-board-teams i {
-    font-style: normal !important;
-    font-size: 12px !important;
-    font-weight: 700 !important;
-    color: var(--sb-text-4) !important;
-    margin: 0 2px !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.4px !important;
-}
-#picks .sb-board-time {
-    font-size: 11px !important;
-    color: var(--sb-text-3) !important;
-    font-weight: 600 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.7px !important;
+    line-height: 1.2 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
 }
 
-#picks .sb-board-cell {
+/* Vertical stack of two odds buttons inside each market column */
+#picks .sb-board-col {
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: center !important;
+}
+#picks .sb-odds-stack {
     display: flex !important;
     flex-direction: column !important;
-    justify-content: center !important;
+    gap: 6px !important;
+    width: 100% !important;
+}
+#picks .sb-odds {
+    display: flex !important;
     align-items: center !important;
-    gap: 3px !important;
-    padding: 8px 10px !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    width: 100% !important;
     background: var(--sb-cell) !important;
     border: 1px solid var(--sb-border) !important;
     border-radius: var(--sb-radius-sm) !important;
+    padding: 0 14px !important;
+    height: 44px !important;
     color: var(--sb-text-2) !important;
-    font-family: inherit !important;
     cursor: pointer !important;
-    transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease !important;
-    min-height: 60px !important;
-    min-width: 0 !important;
+    font-family: inherit !important;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
 }
-#picks .sb-board-cell:hover {
+#picks .sb-odds:hover {
     background: var(--sb-cell-hover) !important;
     border-color: var(--sb-accent-glow) !important;
+    color: var(--sb-text) !important;
     box-shadow: 0 0 0 1px var(--sb-accent-glow) inset !important;
 }
-#picks .sb-board-cell em {
-    font-size: 9.5px !important;
+#picks .sb-odds-line {
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: var(--sb-text-3) !important;
+    letter-spacing: 0.3px !important;
     text-transform: uppercase !important;
-    letter-spacing: 1.1px !important;
-    color: var(--sb-text-4) !important;
-    font-style: normal !important;
-    font-weight: 800 !important;
 }
-#picks .sb-board-cell strong {
-    font-size: 17px !important;
+#picks .sb-odds-price {
+    font-size: 16px !important;
     font-weight: 800 !important;
     color: var(--sb-text) !important;
-    line-height: 1.1 !important;
-    letter-spacing: 0.1px !important;
+    letter-spacing: 0.2px !important;
     font-family: 'Inter', 'Barlow', sans-serif !important;
 }
-#picks .sb-board-cell small {
-    font-size: 11px !important;
-    color: var(--sb-text-3) !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.4px !important;
-    text-transform: uppercase !important;
-}
+#picks .sb-odds:hover .sb-odds-line { color: var(--sb-accent) !important; }
 
 #picks .sb-board-action {
     display: inline-flex !important;
@@ -722,17 +760,17 @@ body > .container > main {
     align-self: center !important;
     background: var(--sb-accent) !important;
     color: #02141a !important;
-    font-size: 12.5px !important;
+    font-size: 13px !important;
     font-weight: 800 !important;
-    letter-spacing: 0.6px !important;
-    padding: 0 14px !important;
+    letter-spacing: 0.7px !important;
+    padding: 0 16px !important;
     border-radius: var(--sb-radius-sm) !important;
     border: 1px solid var(--sb-accent) !important;
     transition: background 0.15s ease !important;
     text-align: center !important;
     justify-self: stretch !important;
     width: 100% !important;
-    height: 44px !important;
+    height: 50px !important;
     line-height: 1 !important;
     text-transform: uppercase !important;
     cursor: pointer !important;
@@ -1117,12 +1155,11 @@ section.hero { background: var(--sb-bg-deep); }
     }
     #picks .sportsbook-board-grid-head,
     #picks .sb-board-row {
-        grid-template-columns: minmax(180px, 1.5fr) repeat(4, minmax(96px, 1fr)) 110px !important;
+        grid-template-columns: minmax(220px, 1.5fr) repeat(3, minmax(124px, 1fr)) 130px !important;
         gap: 10px !important;
-        padding-left: 20px !important;
-        padding-right: 20px !important;
+        padding-left: 22px !important;
+        padding-right: 22px !important;
     }
-    #picks .sb-board-action { width: 110px !important; }
 }
 
 @media (max-width: 1180px) {
@@ -1164,30 +1201,35 @@ section.hero { background: var(--sb-bg-deep); }
         margin: 0 auto;
         width: 100%;
     }
-    /* Game-board rows stack into compact cards on tablet/mobile */
+    /* Game-board rows stack into a card on tablet/mobile */
     #picks .sportsbook-board-grid-head { display: none !important; }
     #picks .sb-board-row {
-        grid-template-columns: 1fr 1fr !important;
-        grid-template-rows: auto auto auto auto !important;
+        grid-template-columns: 1fr 1fr 1fr !important;
+        grid-template-rows: auto auto auto !important;
         grid-template-areas:
-            "match    match"
-            "spread   ml"
-            "total    tt"
-            "action   action" !important;
+            "match  match  match"
+            "spread ml     total"
+            "action action action" !important;
         gap: 10px !important;
-        padding: 14px 16px !important;
+        padding: 16px 16px !important;
         min-height: 0 !important;
     }
     #picks .sb-board-matchup { grid-area: match; }
-    #picks .sb-board-row > .sb-board-cell:nth-of-type(1) { grid-area: spread; }
-    #picks .sb-board-row > .sb-board-cell:nth-of-type(2) { grid-area: ml; }
-    #picks .sb-board-row > .sb-board-cell:nth-of-type(3) { grid-area: total; }
-    #picks .sb-board-row > .sb-board-cell:nth-of-type(4) { grid-area: tt; }
+    #picks .sb-board-row > .sb-board-col[data-col="spread"] { grid-area: spread; }
+    #picks .sb-board-row > .sb-board-col[data-col="ml"] { grid-area: ml; }
+    #picks .sb-board-row > .sb-board-col[data-col="total"] { grid-area: total; }
     #picks .sb-board-action {
         grid-area: action;
         width: 100% !important;
         justify-self: stretch !important;
+        height: 46px !important;
     }
+    #picks .sb-odds {
+        height: 40px !important;
+        padding: 0 10px !important;
+    }
+    #picks .sb-odds-line { font-size: 11.5px !important; }
+    #picks .sb-odds-price { font-size: 14.5px !important; }
 }
 
 @media (max-width: 900px) and (min-width: 641px) {
