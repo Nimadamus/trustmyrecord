@@ -5,33 +5,36 @@
  */
 
 :root {
-    /* Premium black + indigo-blue stack */
-    --sb-bg-deep: #01040c;
-    --sb-bg: #050b1a;
-    --sb-header: #02060f;
-    --sb-surface: #0d1a33;
-    --sb-surface-2: #142948;
-    --sb-surface-3: #1c3766;
-    --sb-row: #0c1a33;
-    --sb-row-alt: #0f2040;
-    --sb-row-hover: #1c3766;
-    --sb-cell: #070f24;
-    --sb-cell-hover: #16305a;
-    --sb-cell-active: #0b2548;
-    --sb-border: #1d3160;
-    --sb-border-strong: #2f4d8a;
-    --sb-divider: #142647;
-    --sb-text: #ffffff;
-    --sb-text-2: #e2ecfb;
-    --sb-text-3: #94a8c7;
-    --sb-text-4: #687d9d;
-    --sb-accent: #2dd4bf;
-    --sb-accent-2: #14b8a6;
-    --sb-accent-soft: rgba(45, 212, 191, 0.14);
-    --sb-accent-glow: rgba(45, 212, 191, 0.32);
-    --sb-blue-glow: rgba(56, 119, 220, 0.22);
+    /* Premium black shell · deep navy panels · cyan/blue accents
+       Per Nima's spec: confine green to live dots only. */
+    --sb-bg-deep: #03040a;        /* outer void around the shell */
+    --sb-bg: #05070D;             /* page background */
+    --sb-header: #03050A;         /* near-black header / sport tab strip */
+    --sb-surface: #0B1220;        /* main content panels (rail / board / slip) */
+    --sb-surface-2: #0F1A2E;      /* panel header strip */
+    --sb-surface-3: #16243C;      /* hover panel surface */
+    --sb-row: #101B2D;            /* board row base — slightly brighter navy */
+    --sb-row-alt: #0E1828;        /* alt-stripe */
+    --sb-row-hover: #16243C;      /* row hover */
+    --sb-cell: #07101F;           /* odds box base — very dark slate */
+    --sb-cell-2: #0D1828;         /* odds box alt */
+    --sb-cell-hover: #123A5A;     /* odds hover/selected — sharp blue */
+    --sb-cell-active: #0E2D49;    /* pressed */
+    --sb-border: #1F3350;         /* visible blue divider */
+    --sb-border-strong: #2A476E;  /* stronger blue border */
+    --sb-divider: #16263F;        /* horizontal dividers */
+    --sb-text: #F8FAFC;           /* primary text */
+    --sb-text-2: #DCE5F2;         /* primary content */
+    --sb-text-3: #94A3B8;         /* secondary muted steel-blue */
+    --sb-text-4: #64748B;         /* labels */
+    --sb-accent: #22D3EE;         /* primary cyan action */
+    --sb-accent-2: #06B6D4;       /* hover/pressed cyan */
+    --sb-accent-soft: rgba(34, 211, 238, 0.14);
+    --sb-accent-glow: rgba(34, 211, 238, 0.32);
+    --sb-blue: #2563EB;           /* secondary blue accent */
+    --sb-blue-glow: rgba(37, 99, 235, 0.28);
+    --sb-good: #22C55E;           /* live dot only — never used as a fill */
     --sb-warn: #f5a524;
-    --sb-good: #22c55e;
     --sb-bad: #ef4444;
     --sb-radius: 12px;
     --sb-radius-sm: 8px;
@@ -209,12 +212,20 @@ body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions button
     background: var(--sb-surface-2);
     color: var(--sb-text);
 }
+.sportsbook-sports-nav button {
+    background: var(--sb-cell);
+}
+.sportsbook-sports-nav button:hover {
+    background: var(--sb-surface-3);
+    color: var(--sb-text);
+    border-color: var(--sb-border);
+}
 .sportsbook-sports-nav button.active,
 .sportsbook-sports-nav button.is-active {
-    background: var(--sb-accent-soft);
-    color: var(--sb-accent);
-    border-color: var(--sb-accent-glow);
-    box-shadow: 0 0 0 1px var(--sb-accent-glow) inset, 0 0 14px var(--sb-accent-glow);
+    background: var(--sb-accent);
+    color: #02141a;
+    border-color: var(--sb-accent);
+    box-shadow: 0 0 0 1px var(--sb-accent) inset, 0 0 18px var(--sb-accent-glow);
 }
 /* Cancel the inline negative margins added in tmr-sitewide.css */
 body.tmr-site-shell[data-tmr-route="sportsbook"] .sportsbook-sports-nav {
@@ -821,14 +832,15 @@ body > .container > main {
 /* ----- Right column: Pick slip ----- */
 #picks .sportsbook-ticket-preview {
     background: var(--sb-surface) !important;
-    border: 1px solid var(--sb-border) !important;
+    border: 1px solid var(--sb-border-strong) !important;
+    border-top: 2px solid var(--sb-accent) !important;
     border-radius: var(--sb-radius) !important;
     padding: 0 !important;
     height: fit-content !important;
     position: sticky !important;
     top: calc(var(--sb-header-h) + var(--sb-tabs-h) + 16px) !important;
     overflow: hidden !important;
-    box-shadow: var(--sb-shadow-card) !important;
+    box-shadow: var(--sb-shadow-card), 0 0 0 1px var(--sb-accent-glow) !important;
 }
 #picks .sportsbook-ticket-preview-head {
     padding: 18px 22px 16px !important;
