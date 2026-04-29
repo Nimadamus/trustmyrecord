@@ -8467,88 +8467,33 @@
                     </div>
                 </aside>
 
-                <section class="sportsbook-selector-shell sportsbook-stage-panel sportsbook-lobby">
+                <section class="sportsbook-selector-shell sportsbook-stage-panel sportsbook-board-shell">
                     <div class="sportsbook-selector-head">
                         <div>
-                            <span class="sportsbook-lobby-label">Board Selection</span>
-                            <h3>Available Sportsbooks</h3>
-                            <p class="sportsbook-selector-copy">Choose a sport to load its live games and markets.</p>
+                            <span class="sportsbook-lobby-label" id="boardKicker">NBA Board</span>
+                            <h3 id="boardTitle">NBA · Game Board</h3>
+                            <p class="sportsbook-selector-copy" id="boardSubtitle">Select a line to build a verified pick slip.</p>
                         </div>
                         <button class="sportsbook-lobby-secondary-btn" onclick="window.showPickStep('picksList')">Pick History</button>
                     </div>
 
-                    <div class="sportsbook-lobby-table">
-                        <div class="sportsbook-lobby-table-head">
-                            <span>Sport / League</span>
-                            <span>Markets Available</span>
-                            <span>Boards Live</span>
-                            <span>Status</span>
+                    <div class="sportsbook-board-grid">
+                        <div class="sportsbook-board-grid-head">
+                            <span>Matchup</span>
+                            <span>Spread</span>
+                            <span>Moneyline</span>
+                            <span>Total</span>
+                            <span>Team Total</span>
                             <span>Action</span>
                         </div>
 
-                        <button class="sportsbook-lobby-row" data-sport="NBA" onclick="window.selectSportAndShowGames('NBA')">
-                            <span class="sportsbook-lobby-league"><b>NBA</b><small>Pro Basketball</small></span>
-                            <span class="sportsbook-lobby-markets">Spreads · Moneylines · Totals · Team Totals · Props</span>
-                            <span class="sportsbook-lobby-count" id="nba-board-count" data-sport-count="NBA">Live boards</span>
-                            <span class="sportsbook-lobby-status sportsbook-lobby-status--open"><i></i>Open</span>
-                            <span class="sportsbook-lobby-action">Open Board</span>
-                        </button>
-
-                        <button class="sportsbook-lobby-row" data-sport="NHL" onclick="window.selectSportAndShowGames('NHL')">
-                            <span class="sportsbook-lobby-league"><b>NHL</b><small>Hockey</small></span>
-                            <span class="sportsbook-lobby-markets">Puck Lines · Moneylines · Totals · Props</span>
-                            <span class="sportsbook-lobby-count" id="nhl-board-count" data-sport-count="NHL">Live boards</span>
-                            <span class="sportsbook-lobby-status sportsbook-lobby-status--open"><i></i>Open</span>
-                            <span class="sportsbook-lobby-action">Open Board</span>
-                        </button>
-
-                        <button class="sportsbook-lobby-row" data-sport="NFL" onclick="window.selectSportAndShowGames('NFL')">
-                            <span class="sportsbook-lobby-league"><b>NFL</b><small>Pro Football</small></span>
-                            <span class="sportsbook-lobby-markets">Spreads · Moneylines · Totals · Team Totals · Props</span>
-                            <span class="sportsbook-lobby-count" id="nfl-board-count" data-sport-count="NFL">Live boards</span>
-                            <span class="sportsbook-lobby-status sportsbook-lobby-status--open"><i></i>Open</span>
-                            <span class="sportsbook-lobby-action">Open Board</span>
-                        </button>
-
-                        <button class="sportsbook-lobby-row" data-sport="MLB" onclick="window.selectSportAndShowGames('MLB')">
-                            <span class="sportsbook-lobby-league"><b>MLB</b><small>Baseball</small></span>
-                            <span class="sportsbook-lobby-markets">Moneylines · Run Lines · Totals · First 5 · Props</span>
-                            <span class="sportsbook-lobby-count" id="mlb-board-count" data-sport-count="MLB">Live boards</span>
-                            <span class="sportsbook-lobby-status sportsbook-lobby-status--open"><i></i>Open</span>
-                            <span class="sportsbook-lobby-action">Open Board</span>
-                        </button>
-
-                        <button class="sportsbook-lobby-row" data-sport="NCAAB" onclick="window.selectSportAndShowGames('NCAAB')">
-                            <span class="sportsbook-lobby-league"><b>NCAAB</b><small>College Basketball</small></span>
-                            <span class="sportsbook-lobby-markets">Spreads · Moneylines · Totals</span>
-                            <span class="sportsbook-lobby-count" id="ncaab-board-count" data-sport-count="NCAAB">Live boards</span>
-                            <span class="sportsbook-lobby-status sportsbook-lobby-status--open"><i></i>Open</span>
-                            <span class="sportsbook-lobby-action">Open Board</span>
-                        </button>
-
-                        <button class="sportsbook-lobby-row" data-sport="NCAAF" onclick="window.selectSportAndShowGames('NCAAF')">
-                            <span class="sportsbook-lobby-league"><b>NCAAF</b><small>College Football</small></span>
-                            <span class="sportsbook-lobby-markets">Spreads · Moneylines · Totals · Team Totals</span>
-                            <span class="sportsbook-lobby-count" id="ncaaf-board-count" data-sport-count="NCAAF">Live boards</span>
-                            <span class="sportsbook-lobby-status sportsbook-lobby-status--open"><i></i>Open</span>
-                            <span class="sportsbook-lobby-action">Open Board</span>
-                        </button>
-
-                        <button class="sportsbook-lobby-row" type="button" onclick="window.toggleSportFamily && window.toggleSportFamily('soccer')">
-                            <span class="sportsbook-lobby-league"><b>Soccer</b><small>EPL · MLS · UCL · La Liga · Serie A · Bundesliga · Ligue 1</small></span>
-                            <span class="sportsbook-lobby-markets">3-Way · Moneylines · Totals · Goal Lines · League Boards</span>
-                            <span class="sportsbook-lobby-count">7 leagues</span>
-                            <span class="sportsbook-lobby-status sportsbook-lobby-status--group"><i></i>League Group</span>
-                            <span class="sportsbook-lobby-action">View Leagues</span>
-                        </button>
-
-                        <button class="sportsbook-lobby-row" type="button" onclick="window.toggleSportFamily && window.toggleSportFamily('tennis')">
-                            <span class="sportsbook-lobby-league"><b>Tennis</b><small>ATP · WTA</small></span>
-                            <span class="sportsbook-lobby-markets">Match Winner · Set Spread · Game Totals · Set Totals</span>
-                            <span class="sportsbook-lobby-count">2 tours</span>
-                            <span class="sportsbook-lobby-status sportsbook-lobby-status--group"><i></i>Tour Group</span>
-                            <span class="sportsbook-lobby-action">View Tours</span>
-                        </button>
+                        <div id="lobbyBoardRows" class="sportsbook-board-grid-body" data-sport="NBA">
+                            <div class="sportsbook-board-empty" id="lobbyBoardEmpty">
+                                <div class="sportsbook-board-empty-icon" aria-hidden="true">●</div>
+                                <strong>Loading the live NBA board…</strong>
+                                <span>Real matchups, lines, and prices populate here as soon as the feed responds.</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="sportsbook-subleague-panel" id="soccerSubleagues">
@@ -8769,6 +8714,222 @@ window.toggleSportFamily = function (family) {
         soccer.classList.remove('show');
     }
 };
+
+// =====================================================
+// Inline Sportsbook Board — renders matchup rows for the
+// active sport directly inside #picks (no step jump). Each
+// row is a real game pulled from window.TMR.fetchGamesFromESPN
+// (same feed the existing pick flow uses), with sportsbook
+// style odds cells. Clicking a row opens the existing pick
+// details flow so the slip workflow stays connected.
+// =====================================================
+(function () {
+    var SPORT_LABELS = {
+        NBA: { kicker: 'NBA Board', title: 'NBA · Game Board', tagline: 'Pro basketball matchups. Tap any line to add it to your slip.' },
+        NHL: { kicker: 'NHL Board', title: 'NHL · Game Board', tagline: 'Hockey matchups. Tap any line to add it to your slip.' },
+        NFL: { kicker: 'NFL Board', title: 'NFL · Game Board', tagline: 'Pro football matchups. Tap any line to add it to your slip.' },
+        MLB: { kicker: 'MLB Board', title: 'MLB · Game Board', tagline: 'Baseball matchups. Tap any line to add it to your slip.' },
+        NCAAB: { kicker: 'NCAAB Board', title: 'NCAAB · Game Board', tagline: 'College basketball matchups. Tap any line to add it to your slip.' },
+        NCAAF: { kicker: 'NCAAF Board', title: 'NCAAF · Game Board', tagline: 'College football matchups. Tap any line to add it to your slip.' },
+        Soccer: { kicker: 'Soccer Board', title: 'Soccer · League Boards', tagline: 'Pick a league from the rail to load matchups.' },
+        Tennis: { kicker: 'Tennis Board', title: 'Tennis · Tour Boards', tagline: 'Pick a tour from the rail to load matchups.' },
+        WNBA: { kicker: 'WNBA Board', title: 'WNBA · Game Board', tagline: 'Pro basketball matchups. Tap any line to add it to your slip.' },
+        Consensus: { kicker: 'Consensus', title: 'Consensus Picks', tagline: 'Aggregated picks from loaded user records.' }
+    };
+
+    function fmtPrice(p) {
+        if (p == null || isNaN(p)) return null;
+        var n = Math.round(parseFloat(p));
+        if (n > 0) return '+' + n;
+        return String(n);
+    }
+    function fmtLine(p) {
+        if (p == null || isNaN(p)) return null;
+        var n = parseFloat(p);
+        if (n > 0) return '+' + n;
+        return String(n);
+    }
+    function teamShort(name) {
+        if (!name) return '';
+        var parts = String(name).trim().split(/\s+/);
+        return parts.length >= 2 ? parts.slice(-1)[0] : name;
+    }
+
+    function pickFirstBookmaker(game) {
+        var books = (game && game.bookmakers) || [];
+        if (!books.length) return null;
+        for (var i = 0; i < books.length; i++) {
+            if (books[i].markets && books[i].markets.length) return books[i];
+        }
+        return null;
+    }
+
+    function findMarket(book, key) {
+        var markets = (book && book.markets) || [];
+        for (var i = 0; i < markets.length; i++) if (markets[i].key === key) return markets[i];
+        return null;
+    }
+
+    function oddsCell(label, line, price, sub) {
+        var lineHtml = (line == null || line === '') ? '<strong>—</strong>' : '<strong>' + line + '</strong>';
+        var priceHtml = (price == null || price === '') ? '<small>' + (sub || '—') + '</small>' : '<small>' + price + '</small>';
+        return '<button type="button" class="sb-board-cell" tabindex="0">' +
+               '<em>' + label + '</em>' + lineHtml + priceHtml +
+               '</button>';
+    }
+
+    function renderRow(game) {
+        var book = pickFirstBookmaker(game);
+        var home = game.home_team || game.homeTeam || (game.teams && game.teams.home) || '';
+        var away = game.away_team || game.awayTeam || (game.teams && game.teams.away) || '';
+        var commence = game.commence_time || game.commenceTime || game.start_time || game.date || '';
+        var when = '';
+        try {
+            if (commence) {
+                var d = new Date(commence);
+                if (!isNaN(d)) {
+                    when = d.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+                }
+            }
+        } catch (e) {}
+
+        var spreadCell = oddsCell('Spread', null, null, '—');
+        var mlCell = oddsCell('Moneyline', null, null, '—');
+        var totalCell = oddsCell('Total', null, null, '—');
+        var ttCell = oddsCell('Team Total', null, null, '—');
+
+        if (book) {
+            var spreadM = findMarket(book, 'spreads');
+            if (spreadM && spreadM.outcomes && spreadM.outcomes.length) {
+                var homeOut = spreadM.outcomes[0];
+                var price = fmtPrice(homeOut.price);
+                var line = fmtLine(homeOut.point);
+                spreadCell = oddsCell('Spread', line, price, teamShort(home));
+            }
+            var mlM = findMarket(book, 'h2h');
+            if (mlM && mlM.outcomes && mlM.outcomes.length) {
+                var homeMl = mlM.outcomes[0];
+                var pml = fmtPrice(homeMl.price);
+                mlCell = oddsCell('Moneyline', pml, null, teamShort(home));
+            }
+            var totalM = findMarket(book, 'totals');
+            if (totalM && totalM.outcomes && totalM.outcomes.length) {
+                var over = totalM.outcomes[0];
+                var pt = fmtPrice(over.price);
+                var lt = (over.point != null) ? 'O ' + over.point : null;
+                totalCell = oddsCell('Total', lt, pt, 'Over');
+            }
+            // Team Total often unavailable from ESPN — leave dashed cell so the layout reads sportsbook-native
+        }
+
+        var matchup = '<div class="sb-board-matchup">' +
+            '<span class="sb-board-teams"><b>' + (away || 'Away') + '</b><i>@</i><b>' + (home || 'Home') + '</b></span>' +
+            (when ? '<span class="sb-board-time">' + when + '</span>' : '') +
+            '</div>';
+        var sport = (window.TMR && window.TMR.selectedSport) || 'NBA';
+        var openHandler = "window.selectSportAndShowGames('" + sport + "')";
+        var actionCell = '<button type="button" class="sb-board-action" onclick="' + openHandler + '">Open Board</button>';
+
+        return '<div class="sb-board-row">' +
+               matchup +
+               spreadCell + mlCell + totalCell + ttCell + actionCell +
+               '</div>';
+    }
+
+    function setHeader(sport) {
+        var meta = SPORT_LABELS[sport] || { kicker: sport + ' Board', title: sport + ' · Game Board', tagline: 'Tap a line to add it to your slip.' };
+        var k = document.getElementById('boardKicker'); if (k) k.textContent = meta.kicker;
+        var t = document.getElementById('boardTitle'); if (t) t.textContent = meta.title;
+        var s = document.getElementById('boardSubtitle'); if (s) s.textContent = meta.tagline;
+    }
+
+    function setActiveTabs(sport) {
+        var sel = document.querySelectorAll('[data-sportsbook-tab="sport"]');
+        sel.forEach(function (b) {
+            b.classList.toggle('active', b.getAttribute('data-sport') === sport);
+        });
+        var rails = document.querySelectorAll('.sportsbook-rail-board');
+        rails.forEach(function (b) {
+            b.classList.toggle('is-active', b.getAttribute('data-sport') === sport);
+        });
+    }
+
+    function emptyState(sport, message, tone) {
+        var icon = tone === 'closed' ? '○' : '●';
+        return '<div class="sportsbook-board-empty"><div class="sportsbook-board-empty-icon" aria-hidden="true">' + icon + '</div>' +
+               '<strong>' + message + '</strong>' +
+               '<span>Switch sports from the rail or tab strip to view a different live board.</span></div>';
+    }
+
+    function renderBoard(sport) {
+        var rows = document.getElementById('lobbyBoardRows');
+        if (!rows) return;
+        sport = sport || 'NBA';
+        rows.setAttribute('data-sport', sport);
+        setHeader(sport);
+        setActiveTabs(sport);
+
+        if (sport === 'Soccer' || sport === 'Tennis' || sport === 'Consensus') {
+            rows.innerHTML = emptyState(sport, sport + ' boards open from the rail.', 'group');
+            return;
+        }
+
+        rows.innerHTML = '<div class="sportsbook-board-empty"><div class="sportsbook-board-empty-icon" aria-hidden="true">●</div>' +
+                         '<strong>Loading the live ' + sport + ' board…</strong>' +
+                         '<span>Real matchups, lines, and prices populate here as soon as the feed responds.</span></div>';
+
+        var sportKey = (window.TMR && window.TMR.sportKeyMap && window.TMR.sportKeyMap[sport]);
+        if (!sportKey || !window.TMR.fetchGamesFromESPN) {
+            rows.innerHTML = emptyState(sport, 'No ' + sport + ' board available right now.', 'closed');
+            return;
+        }
+
+        try {
+            window.TMR.fetchGamesFromESPN(sportKey, function (games) {
+                if (rows.getAttribute('data-sport') !== sport) return; // user switched sports mid-fetch
+                if (!games || !games.length) {
+                    rows.innerHTML = emptyState(sport, 'No ' + sport + ' games scheduled today.', 'closed');
+                    return;
+                }
+                var html = '';
+                for (var i = 0; i < Math.min(games.length, 8); i++) {
+                    html += renderRow(games[i]);
+                }
+                rows.innerHTML = html;
+            });
+        } catch (err) {
+            console.warn('[TMR] inline board load error:', err);
+            rows.innerHTML = emptyState(sport, 'Unable to load ' + sport + ' board.', 'closed');
+        }
+    }
+
+    window.TMR = window.TMR || {};
+    window.TMR.renderInlineBoard = renderBoard;
+
+    // Wrap selectSportAndShowGames so clicking a sport tab/rail entry first
+    // re-renders the inline board, then preserves the existing step-jump
+    // behavior on the rail Open Board / inline Open Board buttons.
+    var _origSelect = window.selectSportAndShowGames;
+    window.selectSportAndShowGames = function (sport) {
+        try { renderBoard(sport); } catch (e) {}
+        if (typeof _origSelect === 'function') return _origSelect(sport);
+    };
+
+    // Auto-load NBA on first paint when #picks is active
+    function bootBoard() {
+        var hash = (location.hash || '').replace(/^#/, '').toLowerCase();
+        var picksActive = document.getElementById('picks') && document.getElementById('picks').classList.contains('active');
+        if (hash === 'picks' || picksActive) {
+            renderBoard((window.TMR && window.TMR.selectedSport) || 'NBA');
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootBoard);
+    } else {
+        bootBoard();
+    }
+    window.addEventListener('hashchange', bootBoard);
+})();
 </script>
 
 <style>
@@ -24899,7 +25060,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     </style>
-    <link rel="stylesheet" href="static/css/sportsbook-pro.css?v=20260429a">
+    <link rel="stylesheet" href="static/css/sportsbook-pro.css?v=20260429b">
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  7:32:00 PM -->
