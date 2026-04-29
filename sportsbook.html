@@ -8563,7 +8563,7 @@
         <!-- Step 3: Pick Details (Confirmation) -->
         <div id="pickDetails" class="pick-step">
             <div class="back-button" onclick="goBackToGames()">&#8592; Back to Games</div>
-            <h3>Confirm Your Pick</h3>
+            <h3>Bet Slip</h3>
             <div class="pick-slip-kicker">Bet Slip</div>
 
             <div id="betScopeSelector" style="display: none; gap: 0; margin-bottom: 12px; border-radius: 10px; overflow: hidden; border: 2px solid var(--glass-border);">
@@ -8593,7 +8593,7 @@
                 <div class="ticket-card-header">
                     <div class="ticket-card-header-main">
                         <span class="ticket-card-kicker">Bet Ticket</span>
-                        <strong>Ready To Submit</strong>
+                        <strong>Review Before Submit</strong>
                     </div>
                     <div class="ticket-card-status">Open</div>
                 </div>
@@ -21939,6 +21939,29 @@ document.addEventListener('DOMContentLoaded', function() {
             padding: 0 22px 22px !important;
         }
 
+        #picks #gamesListContainer .tmr-market-league {
+            color: #9cb0c8 !important;
+            font-size: 0.68rem !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.16em !important;
+            text-transform: uppercase;
+        }
+
+        #picks #gamesListContainer .tmr-market-status {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(148,163,184,0.12);
+            color: #e7eef8 !important;
+            font-size: 0.68rem !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.12em !important;
+            text-transform: uppercase;
+        }
+
         #picks #gamesListContainer .tmr-market-topline,
         #picks #gamesListContainer .tmr-group-title {
             letter-spacing: 0.1em !important;
@@ -21954,6 +21977,29 @@ document.addEventListener('DOMContentLoaded', function() {
             letter-spacing: -0.03em !important;
         }
 
+        #picks #gamesListContainer .tmr-matchup-divider {
+            color: #6f8198 !important;
+            font-size: 0.88rem !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        #picks #gamesListContainer .tmr-market-meta {
+            margin-top: 16px;
+            gap: 8px !important;
+        }
+
+        #picks #gamesListContainer .tmr-market-chip {
+            min-height: 30px;
+            padding: 0 10px !important;
+            border-radius: 999px !important;
+            font-size: 0.66rem !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.12em !important;
+            text-transform: uppercase;
+        }
+
         #picks #gamesListContainer .tmr-group {
             border-radius: 18px !important;
             background: rgba(255,255,255,0.025) !important;
@@ -21964,10 +22010,27 @@ document.addEventListener('DOMContentLoaded', function() {
             border-bottom: 1px solid rgba(148,163,184,0.10) !important;
         }
 
+        #picks #gamesListContainer .tmr-group-title {
+            display: grid !important;
+            gap: 4px;
+        }
+
+        #picks #gamesListContainer .tmr-group-title > span {
+            color: #f4d35e !important;
+        }
+
+        #picks #gamesListContainer .tmr-group-subtitle {
+            color: #7f8fa5 !important;
+            font-size: 0.62rem !important;
+            font-weight: 800 !important;
+            letter-spacing: 0.08em !important;
+            text-transform: none !important;
+        }
+
         #picks #gamesListContainer .tmr-option-btn {
             border-radius: 16px !important;
-            min-height: 78px;
-            padding: 12px 12px 12px 14px !important;
+            min-height: 94px;
+            padding: 14px 14px 14px 16px !important;
         }
 
         #picks #gamesListContainer .tmr-option-grid {
@@ -21975,20 +22038,59 @@ document.addEventListener('DOMContentLoaded', function() {
             padding: 10px !important;
         }
 
+        #picks #gamesListContainer .tmr-option-topline {
+            align-items: center;
+            gap: 8px !important;
+            margin-bottom: 8px;
+        }
+
+        #picks #gamesListContainer .tmr-option-tag,
+        #picks #gamesListContainer .tmr-option-line {
+            min-height: 24px;
+            padding: 0 8px;
+            border-radius: 999px;
+            font-size: 0.58rem !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.14em !important;
+            text-transform: uppercase;
+        }
+
+        #picks #gamesListContainer .tmr-option-tag {
+            background: rgba(255,255,255,0.05);
+            color: #e6edf8 !important;
+            border: 1px solid rgba(148,163,184,0.10);
+        }
+
+        #picks #gamesListContainer .tmr-option-line {
+            background: rgba(45,212,191,0.10);
+            color: #bdf7ef !important;
+            border: 1px solid rgba(45,212,191,0.18);
+        }
+
         #picks #gamesListContainer .tmr-option-market {
-            font-size: 0.98rem !important;
+            font-size: 1.02rem !important;
+            font-weight: 900 !important;
             letter-spacing: -0.02em !important;
         }
 
         #picks #gamesListContainer .tmr-option-detail {
-            font-size: 0.68rem !important;
-            letter-spacing: 0.08em !important;
+            font-size: 0.64rem !important;
+            font-weight: 800 !important;
+            letter-spacing: 0.12em !important;
+            text-transform: uppercase;
         }
 
         #picks #gamesListContainer .tmr-option-odds {
             min-width: 96px !important;
-            font-size: 1.9rem !important;
+            font-size: 2.1rem !important;
             padding: 12px 14px !important;
+        }
+
+        #picks #gamesListContainer .tmr-option-odds-label {
+            color: #7f8fa5 !important;
+            font-size: 0.56rem !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.16em !important;
         }
 
         #picks #gamesListContainer .tmr-market-count,
@@ -22350,7 +22452,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         #picks .ticket-card-header strong {
             color: #f8fafc;
-            font-size: 1rem;
+            font-size: 1.08rem;
             font-weight: 900;
             line-height: 1.15;
         }
@@ -22410,6 +22512,12 @@ document.addEventListener('DOMContentLoaded', function() {
         #picks #summaryOdds {
             color: #7CFC8A !important;
             font-size: 1.14rem !important;
+        }
+
+        #picks #pickDetails > h3 {
+            font-size: clamp(1.95rem, 3vw, 2.4rem) !important;
+            letter-spacing: -0.04em !important;
+            margin-bottom: 4px !important;
         }
 
         #picks .pick-options {
