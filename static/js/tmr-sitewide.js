@@ -2,7 +2,7 @@
     const sportsbookPicksHref = "/picks/";
     const routes = [
         ["/", "Home"],
-        [sportsbookPicksHref, "Sportsbook"],
+        [sportsbookPicksHref, "Make Picks"],
         ["/handicappers.html", "Handicappers"],
         ["/arena/", "Arena"],
         ["/feed/", "Feed"],
