@@ -10,7 +10,7 @@
         ["/polls/", "Polls"],
         ["/trivia/", "Trivia"],
         ["/forum/", "Forums"],
-        ["/marketplace/", "Marketplace"]
+        ["/marketplace/", "Sell Your Picks"]
     ];
 
     const routeMeta = {
@@ -25,7 +25,7 @@
         "profile.html": ["Profile", "Verified pick record, posts, splits, marketplace, polls, trivia, and challenges."],
         "forum.html": ["Forums", "Hardcore sports discussion. Threads tied to verified profiles and locked records."],
         "premium.html": ["Premium", "Optional membership tiers with extra analytics and limits beyond the free public-record product."],
-        "marketplace.html": ["Marketplace", "Buy and sell picks once a public record is built to back them up."],
+        "marketplace.html": ["Sell Your Picks", "Buy and sell picks once a public record is built to back them up."],
         "about.html": ["About", "Why TrustMyRecord exists: no edits, no deletions, no record resets."],
         "friends.html": ["Friends", "Follow real records. Build a sports social graph tied to public performance."],
         "messages.html": ["Messages", "Direct messages for matchups, picks, rivalries, and follow-up receipts."],
@@ -288,8 +288,13 @@
     nav.addEventListener("click", (event) => {
         const authRoute = event.target.closest("[data-tmr-auth-route]");
         if (authRoute) {
-            event.preventDefault();
-            routeToSportsbookAuth(authRoute.getAttribute("data-tmr-auth-route"));
+            // Don't preventDefault. Let the browser follow the native href
+            // (/login/ or /register/) so the button always works even if
+            // the JS hand-off below fails.
+            try {
+                const target = authRoute.getAttribute("data-tmr-auth-route") === "signup" ? "signup" : "login";
+                sessionStorage.setItem("tmr_force_section", target);
+            } catch (_) { /* sessionStorage may be blocked; ignore */ }
             setNavOpen(false);
             return;
         }
@@ -341,7 +346,7 @@
                                 <a href="/polls/"><strong>Polls</strong><span>Sports debates, predictions</span></a>
                                 <a href="/trivia/"><strong>Trivia</strong><span>Sports knowledge games</span></a>
                                 <a href="/forum/"><strong>Forums</strong><span>Hardcore discussion threads</span></a>
-                                <a href="/premium/"><strong>Marketplace</strong><span>Buy and sell picks</span></a>
+                                <a href="/marketplace/"><strong>Sell Your Picks</strong><span>Buy and sell picks</span></a>
                             </div>
                         </div>
                         <div class="tmr-search-section" id="tmrSearchResults" hidden></div>

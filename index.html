@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260429d">
+<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260429e">
 <style>
 :root{
   --bg:#f5f7fb;
@@ -1260,7 +1260,7 @@ button{font:inherit;cursor:pointer}
 .hero-sales-cta .btn { padding: 11px 18px; font-size: 13.5px; }
 
 /* Right-column SAMPLE locked-pick card — straight, premium receipt presentation */
-.hero-sample-card {
+.hero-rules-card {
     position: relative;
     background:
         linear-gradient(180deg, rgba(15, 20, 40, 0.92) 0%, rgba(7, 11, 24, 0.94) 100%);
@@ -1286,7 +1286,7 @@ button{font:inherit;cursor:pointer}
     flex-direction: column;
     gap: 12px;
 }
-.hero-sample-card-top {
+.hero-rules-card-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1294,7 +1294,8 @@ button{font:inherit;cursor:pointer}
     padding-bottom: 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
-.hero-sample-locked {
+/* Right-column rules card (replaces the previous fake-profile sample card). */
+.hero-rules-eyebrow {
     display: inline-flex;
     align-items: center;
     gap: 7px;
@@ -1302,10 +1303,10 @@ button{font:inherit;cursor:pointer}
     font-size: 10.5px;
     font-weight: 800;
     letter-spacing: 1.6px;
-    color: var(--tmr-cyan-bright, #00E5C7);
+    color: var(--tmr-cyan-bright, #2dd4bf);
     text-transform: uppercase;
 }
-.hero-sample-pill {
+.hero-rules-pill {
     display: inline-flex;
     align-items: center;
     padding: 3px 9px;
@@ -1319,77 +1320,50 @@ button{font:inherit;cursor:pointer}
     color: #94a3b8;
     text-transform: uppercase;
 }
-.hero-sample-author {
+.hero-rules-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
     display: flex;
-    align-items: center;
-    gap: 11px;
+    flex-direction: column;
+    gap: 10px;
 }
-.hero-sample-avatar {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #FF6B47 0%, #C04A30 100%);
-    color: #fff;
-    font-family: 'Barlow Condensed', 'Inter', sans-serif;
-    font-weight: 900;
-    font-size: 14px;
-    letter-spacing: 0.5px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    flex-shrink: 0;
+.hero-rules-list li {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 10px;
+    align-items: flex-start;
 }
-.hero-sample-author-meta { font-size: 12.5px; color: #b8c2d1; line-height: 1.3; }
-.hero-sample-author-meta strong { color: #fff; font-weight: 700; }
-.hero-sample-pick {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 12px 14px;
-    border-radius: 10px;
-    background: rgba(0, 229, 199, 0.08);
-    border: 1px solid rgba(0, 229, 199, 0.28);
-    font-family: 'Barlow Condensed', 'Inter', sans-serif;
-    font-weight: 800;
-    font-size: 19px;
-    letter-spacing: -0.2px;
-    color: #fff;
-    line-height: 1;
-    flex-wrap: wrap;
-}
-.hero-sample-pick .pick-label { color: #fff; }
-.hero-sample-pick .pick-odds { color: var(--tmr-cyan-bright, #00E5C7); }
-.hero-sample-pick .pick-units {
-    margin-left: auto;
-    font-size: 14px;
-    color: #94a3b8;
-    font-family: 'JetBrains Mono', 'Menlo', monospace;
-    letter-spacing: 0.4px;
-}
-.hero-sample-seal {
+.hero-rules-num {
     font-family: 'JetBrains Mono', 'Menlo', monospace;
     font-size: 11px;
-    color: #6f7a8e;
-    letter-spacing: 0.3px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    color: var(--tmr-cyan-bright, #2dd4bf);
+    line-height: 1.4;
+    padding-top: 2px;
 }
-.hero-sample-actions {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+.hero-rules-list li > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.hero-rules-list strong {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: -0.1px;
+    line-height: 1.3;
+}
+.hero-rules-list span {
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1.45;
+}
+.hero-rules-foot {
+    margin-top: 4px;
     padding-top: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
-    font-size: 13px;
-    font-weight: 700;
-}
-.hero-sample-actions span { display: inline-flex; align-items: center; gap: 5px; }
-.hero-sample-actions .sa-tail   { color: #35dc80; }
-.hero-sample-actions .sa-fade   { color: #ff5e5e; }
-.hero-sample-actions .sa-reply  { color: #fff; }
-.hero-sample-actions .sa-share  {
-    margin-left: auto;
     color: #94a3b8;
-    font-size: 16px;
+    font-size: 11.5px;
+    font-style: italic;
+    letter-spacing: 0.02em;
 }
 
 /* Zone B: 6-tile platform strip pinned at the bottom of the hero */
@@ -1540,7 +1514,7 @@ button{font:inherit;cursor:pointer}
         gap: 28px;
     }
     .hero-sales-panel,
-    .hero-sample-card {
+    .hero-rules-card {
         max-width: 100%;
         justify-self: stretch;
     }
@@ -1969,27 +1943,19 @@ button{font:inherit;cursor:pointer}
         </div>
       </div>
 
-      <aside class="hero-sample-card" aria-label="Sample locked pick">
-        <div class="hero-sample-card-top">
-          <span class="hero-sample-locked"><span aria-hidden="true">🔒</span> LOCKED PICK</span>
-          <span class="hero-sample-pill">Sample</span>
+<aside class="hero-rules-card" aria-label="The rules">
+        <div class="hero-rules-head">
+          <span class="hero-rules-eyebrow">The Rules</span>
+          <span class="hero-rules-pill">Public Ledger</span>
         </div>
-        <div class="hero-sample-author">
-          <span class="hero-sample-avatar" aria-hidden="true">JM</span>
-          <div class="hero-sample-author-meta"><strong>@jaymoneyball</strong><br>NBA · 2 min ago</div>
-        </div>
-        <div class="hero-sample-pick">
-          <span class="pick-label">Lakers ML</span>
-          <span class="pick-odds">+135</span>
-          <span class="pick-units">1.5u</span>
-        </div>
-        <div class="hero-sample-seal">Sealed: 10:32:14 AM PT · Apr 29, 2026</div>
-        <div class="hero-sample-actions" aria-label="Sample reactions">
-          <span class="sa-tail" aria-hidden="true">▲ Tail (47)</span>
-          <span class="sa-fade" aria-hidden="true">▽ Fade (12)</span>
-          <span class="sa-reply" aria-hidden="true">💬 (8)</span>
-          <span class="sa-share" aria-hidden="true">↗</span>
-        </div>
+        <ul class="hero-rules-list">
+          <li><span class="hero-rules-num">01</span><div><strong>Lock picks before games start.</strong><span>Every pick gets a permanent, public timestamp.</span></div></li>
+          <li><span class="hero-rules-num">02</span><div><strong>No deletes. No resets. No do-overs.</strong><span>Wins, losses, and pushes all stay on your record.</span></div></li>
+          <li><span class="hero-rules-num">03</span><div><strong>Talk shit on the record.</strong><span>Posts, polls, trivia, and forum threads all tie back to your profile.</span></div></li>
+          <li><span class="hero-rules-num">04</span><div><strong>Sell picks once the numbers back you up.</strong><span>Buyers see your full public ledger before they pay.</span></div></li>
+          <li><span class="hero-rules-num">05</span><div><strong>Climb the board. Build a name.</strong><span>Leaderboards rank by ROI, units, sample size, and trust score.</span></div></li>
+        </ul>
+        <div class="hero-rules-foot">No fake records. No deleted losses. No empty hype.</div>
       </aside>
     </div>
   </div>
@@ -2249,7 +2215,7 @@ button{font:inherit;cursor:pointer}
 <script src="static/js/config.js?v=20260330"></script>
 <script src="static/js/backend-api.js?v=20260420c"></script>
 <script src="static/js/auth-persistent.js?v=20260421a"></script>
-<script defer src="static/js/tmr-sitewide.js?v=20260429d"></script>
+<script defer src="static/js/tmr-sitewide.js?v=20260429e"></script>
 <script src="static/js/analytics.js?v=20260417"></script>
 <script>
 // Smooth scroll for any "Tour the Site" / scroll-cue CTA
