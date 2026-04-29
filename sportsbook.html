@@ -8959,6 +8959,17 @@ window.toggleSportFamily = function (family) {
             return;
         }
 
+        // Coming back to Full Game for the same sport: if we already cached
+        // the populated board this session, restore it instantly instead of
+        // refetching ESPN (rapid refetches sometimes return empty even when
+        // the first call succeeded).
+        window.TMR._fullBoardCache = window.TMR._fullBoardCache || {};
+        var cached = window.TMR._fullBoardCache[sport];
+        if (cached) {
+            rows.innerHTML = cached;
+            return;
+        }
+
         rows.innerHTML = '<div class="sportsbook-board-empty"><div class="sportsbook-board-empty-icon" aria-hidden="true">●</div>' +
                          '<strong>Loading the live ' + sport + ' board…</strong>' +
                          '<span>Real matchups, lines, and prices populate here as soon as the feed responds.</span></div>';
@@ -8981,6 +8992,11 @@ window.toggleSportFamily = function (family) {
                     html += renderRow(games[i]);
                 }
                 rows.innerHTML = html;
+                // Cache the populated full-game board so rapid period
+                // toggles can restore it without a refetch round-trip.
+                if (window.TMR && window.TMR._fullBoardCache) {
+                    window.TMR._fullBoardCache[sport] = html;
+                }
             });
         } catch (err) {
             console.warn('[TMR] inline board load error:', err);
