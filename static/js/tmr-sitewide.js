@@ -16,7 +16,7 @@
         "arena.html": ["Arena", "Head-to-head contests, rival callouts, public challenges, and competition loops."],
         "challenges.html": ["Arena", "Legacy arena route. Public competition and challenge traffic belongs on the Arena page."],
         "feed.html": ["Social Feed", "Posts, reactions, sports debate, locked picks, and activity from the community."],
-        "hangout.html": ["Hangout", "Prediction polls, opinion polls, fan debates, and community conversation loops."],
+        "hangout.html": ["Hangout", "Life polls, social questions, opinion threads, and everyday community conversation."],
         "polls.html": ["Hangout", "Legacy polls route. Prediction polls and opinion polls now live in Hangout."],
         "trivia.html": ["Trivia", "Sports knowledge games, custom questions, and scored fan status."],
         "profile.html": ["Verified Records", "Public profile history, pick ledger, advanced splits, and credibility markers."],
