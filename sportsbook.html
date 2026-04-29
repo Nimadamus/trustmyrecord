@@ -7988,14 +7988,12 @@
                 </div>
 
                 <nav class="main-nav">
-                    <a href="/sportsbook/" class="nav-link">Odds</a>
-                    <a href="/picks/" class="nav-link make-picks-nav">Picks</a>
-                    <a href="/sportsbook/" class="nav-link">Scores &amp; Matchups</a>
+                    <a href="/sportsbook.html#picks" class="nav-link is-active make-picks-nav" onclick="if(typeof showSection==='function'){showSection('picks');return false;}">Make Picks</a>
                     <a href="handicappers.html" class="nav-link">Handicappers</a>
-                    <a href="/feed/" class="nav-link">News</a>
-                    <a href="/forum/" class="nav-link">Forum</a>
-                    <a href="/messages/" class="nav-link">Messages</a>
-                    <a href="/profile/" class="nav-link profile-link">My Account</a>
+                    <a href="arena.html" class="nav-link">Arena</a>
+                    <a href="feed.html" class="nav-link">Feed</a>
+                    <a href="hangout.html" class="nav-link">Hangout</a>
+                    <a href="forum.html" class="nav-link">Forum</a>
                 </nav>
             </div>
 
@@ -8030,15 +8028,15 @@
         </header>
 
         <div class="sportsbook-sports-nav" aria-label="Sportsbook navigation">
-            <button type="button" class="active" data-sportsbook-tab="sport" data-sport="MLB">MLB</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="NBA">NBA</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="NHL">NHL</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="NFL">NFL</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="NCAAB">NCAAB</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="NCAAF">NCAAF</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="Soccer">Soccer</button>
-            <button type="button" data-sportsbook-tab="promos">Promos</button>
-            <button type="button" data-sportsbook-tab="consensus">Consensus Picks</button>
+            <button type="button" class="active" data-sportsbook-tab="sport" data-sport="NBA" onclick="window.selectSportAndShowGames && window.selectSportAndShowGames('NBA')">NBA</button>
+            <button type="button" data-sportsbook-tab="sport" data-sport="NHL" onclick="window.selectSportAndShowGames && window.selectSportAndShowGames('NHL')">NHL</button>
+            <button type="button" data-sportsbook-tab="sport" data-sport="NFL" onclick="window.selectSportAndShowGames && window.selectSportAndShowGames('NFL')">NFL</button>
+            <button type="button" data-sportsbook-tab="sport" data-sport="MLB" onclick="window.selectSportAndShowGames && window.selectSportAndShowGames('MLB')">MLB</button>
+            <button type="button" data-sportsbook-tab="sport" data-sport="NCAAB" onclick="window.selectSportAndShowGames && window.selectSportAndShowGames('NCAAB')">NCAAB</button>
+            <button type="button" data-sportsbook-tab="sport" data-sport="NCAAF" onclick="window.selectSportAndShowGames && window.selectSportAndShowGames('NCAAF')">NCAAF</button>
+            <button type="button" data-sportsbook-tab="sport" data-sport="Soccer" onclick="window.toggleSportFamily && window.toggleSportFamily('soccer')">Soccer</button>
+            <button type="button" data-sportsbook-tab="sport" data-sport="Tennis" onclick="window.toggleSportFamily && window.toggleSportFamily('tennis')">Tennis</button>
+            <button type="button" data-sportsbook-tab="consensus">Consensus</button>
         </div>
 
         <main>
@@ -8429,37 +8427,18 @@
                 <aside class="sportsbook-league-rail">
                     <div class="sportsbook-rail-head">
                         <span class="sportsbook-lobby-label">Sports</span>
-                        <h3>All Sports</h3>
-                        <p class="sportsbook-selector-copy">Choose a sport or league group.</p>
-                    </div>
-
-                    <div class="sportsbook-sport-select-wrap">
-                        <label for="sportQuickSelect">All Sports</label>
-                        <select id="sportQuickSelect" onchange="if(this.value){window.selectSportAndShowGames(this.value);this.selectedIndex=0;}">
-                            <option value="">Jump to board...</option>
-                            <option value="NBA">NBA</option>
-                            <option value="WNBA">WNBA</option>
-                            <option value="NFL">NFL</option>
-                            <option value="NHL">NHL</option>
-                            <option value="NCAAB">College Hoops</option>
-                            <option value="NCAAF">College Football</option>
-                            <option value="MLB">MLB</option>
-                            <option value="Soccer">EPL</option>
-                            <option value="MLS">MLS</option>
-                            <option value="UCL">Champions League</option>
-                            <option value="LaLiga">La Liga</option>
-                            <option value="SerieA">Serie A</option>
-                            <option value="Bundesliga">Bundesliga</option>
-                            <option value="Ligue1">Ligue 1</option>
-                            <option value="ATP">ATP Tennis</option>
-                            <option value="WTA">WTA Tennis</option>
-                        </select>
+                        <h3>All Boards</h3>
+                        <p class="sportsbook-selector-copy">Pick a league to load its odds board.</p>
                     </div>
 
                     <div class="sportsbook-rail-list">
-                        <button class="sportsbook-rail-board" data-sport="NBA" onclick="window.selectSportAndShowGames('NBA')">
-                            <span class="sportsbook-rail-board-main"><b>NBA</b><small><i></i> Pro Hoops</small></span>
+                        <button class="sportsbook-rail-board is-active" data-sport="NBA" onclick="window.selectSportAndShowGames('NBA')">
+                            <span class="sportsbook-rail-board-main"><b>NBA</b><small><i></i> Pro Basketball</small></span>
                             <span class="sportsbook-rail-board-count" id="nba-game-count">Board</span>
+                        </button>
+                        <button class="sportsbook-rail-board" data-sport="NHL" onclick="window.selectSportAndShowGames('NHL')">
+                            <span class="sportsbook-rail-board-main"><b>NHL</b><small><i></i> Hockey</small></span>
+                            <span class="sportsbook-rail-board-count" id="nhl-game-count">Board</span>
                         </button>
                         <button class="sportsbook-rail-board" data-sport="NFL" onclick="window.selectSportAndShowGames('NFL')">
                             <span class="sportsbook-rail-board-main"><b>NFL</b><small><i></i> Pro Football</small></span>
@@ -8469,12 +8448,8 @@
                             <span class="sportsbook-rail-board-main"><b>MLB</b><small><i></i> Baseball</small></span>
                             <span class="sportsbook-rail-board-count" id="mlb-game-count">Board</span>
                         </button>
-                        <button class="sportsbook-rail-board" data-sport="NHL" onclick="window.selectSportAndShowGames('NHL')">
-                            <span class="sportsbook-rail-board-main"><b>NHL</b><small><i></i> Hockey</small></span>
-                            <span class="sportsbook-rail-board-count" id="nhl-game-count">Board</span>
-                        </button>
                         <button class="sportsbook-rail-board" data-sport="NCAAB" onclick="window.selectSportAndShowGames('NCAAB')">
-                            <span class="sportsbook-rail-board-main"><b>NCAAB</b><small><i></i> College Hoops</small></span>
+                            <span class="sportsbook-rail-board-main"><b>NCAAB</b><small><i></i> College Basketball</small></span>
                             <span class="sportsbook-rail-board-count" id="ncaab-game-count">Board</span>
                         </button>
                         <button class="sportsbook-rail-board" data-sport="NCAAF" onclick="window.selectSportAndShowGames('NCAAF')">
@@ -8482,11 +8457,11 @@
                             <span class="sportsbook-rail-board-count" id="ncaaf-game-count">Board</span>
                         </button>
                         <button class="sportsbook-rail-board" type="button" onclick="window.toggleSportFamily && window.toggleSportFamily('soccer')">
-                            <span class="sportsbook-rail-board-main"><b>Soccer</b><small><i></i> League Group</small></span>
+                            <span class="sportsbook-rail-board-main"><b>Soccer</b><small><i></i> 6 Leagues</small></span>
                             <span class="sportsbook-rail-board-count">Group</span>
                         </button>
                         <button class="sportsbook-rail-board" type="button" onclick="window.toggleSportFamily && window.toggleSportFamily('tennis')">
-                            <span class="sportsbook-rail-board-main"><b>Tennis</b><small><i></i> Tour Group</small></span>
+                            <span class="sportsbook-rail-board-main"><b>Tennis</b><small><i></i> ATP · WTA</small></span>
                             <span class="sportsbook-rail-board-count">Group</span>
                         </button>
                     </div>
@@ -8510,98 +8485,88 @@
                             <span>Team Total</span>
                             <span>Props</span>
                         </div>
-                        <div class="sportsbook-board-toolbar-note">Odds boxes below are sportsbook-style board previews.</div>
                     </div>
 
                     <div class="sportsbook-board-table">
                         <div class="sportsbook-board-table-head">
-                            <span>Event</span>
+                            <span>League</span>
                             <span>Spread</span>
                             <span>Moneyline</span>
-                            <span>Totals</span>
+                            <span>Total</span>
                             <span>Team Total</span>
                             <span>Board</span>
                         </div>
 
                         <button class="sportsbook-board-table-row" data-sport="NBA" onclick="window.selectSportAndShowGames('NBA')">
-                            <span class="sportsbook-board-table-league"><b>NBA</b><small>Pro Hoops</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Spread</em><strong>-3.5</strong><small>-110</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>+135</strong><small>Home</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>O 224.5</strong><small>-108</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>O 112.5</strong><small>-115</small></span>
-                            <span class="sportsbook-board-table-action">Open Board</span>
-                        </button>
-
-                        <button class="sportsbook-board-table-row" data-sport="NFL" onclick="window.selectSportAndShowGames('NFL')">
-                            <span class="sportsbook-board-table-league"><b>NFL</b><small>Pro Football</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Spread</em><strong>+2.5</strong><small>-112</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>+118</strong><small>Home</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>U 46.5</strong><small>-110</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>U 22.5</strong><small>-105</small></span>
-                            <span class="sportsbook-board-table-action">Open Board</span>
-                        </button>
-
-                        <button class="sportsbook-board-table-row" data-sport="MLB" onclick="window.selectSportAndShowGames('MLB')">
-                            <span class="sportsbook-board-table-league"><b>MLB</b><small>Baseball</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Run Line</em><strong>-1.5</strong><small>+120</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>-142</strong><small>Game</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>O 8.5</strong><small>-105</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>O 4.5</strong><small>-110</small></span>
+                            <span class="sportsbook-board-table-league"><b>NBA</b><small>Pro Basketball</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Spread</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>—</strong><small>Live</small></span>
                             <span class="sportsbook-board-table-action">Open Board</span>
                         </button>
 
                         <button class="sportsbook-board-table-row" data-sport="NHL" onclick="window.selectSportAndShowGames('NHL')">
                             <span class="sportsbook-board-table-league"><b>NHL</b><small>Hockey</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Puck Line</em><strong>+1.5</strong><small>-125</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>+122</strong><small>Game</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>U 5.5</strong><small>-110</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>U 2.5</strong><small>-118</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Puck Line</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-table-action">Open Board</span>
+                        </button>
+
+                        <button class="sportsbook-board-table-row" data-sport="NFL" onclick="window.selectSportAndShowGames('NFL')">
+                            <span class="sportsbook-board-table-league"><b>NFL</b><small>Pro Football</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Spread</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-table-action">Open Board</span>
+                        </button>
+
+                        <button class="sportsbook-board-table-row" data-sport="MLB" onclick="window.selectSportAndShowGames('MLB')">
+                            <span class="sportsbook-board-table-league"><b>MLB</b><small>Baseball</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Run Line</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>—</strong><small>Live</small></span>
                             <span class="sportsbook-board-table-action">Open Board</span>
                         </button>
 
                         <button class="sportsbook-board-table-row" data-sport="NCAAB" onclick="window.selectSportAndShowGames('NCAAB')">
-                            <span class="sportsbook-board-table-league"><b>NCAAB</b><small>College Hoops</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Spread</em><strong>-4.5</strong><small>-110</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>-155</strong><small>Home</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>O 148.5</strong><small>-108</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>O 74.5</strong><small>-112</small></span>
+                            <span class="sportsbook-board-table-league"><b>NCAAB</b><small>College Basketball</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Spread</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>—</strong><small>Live</small></span>
                             <span class="sportsbook-board-table-action">Open Board</span>
                         </button>
 
                         <button class="sportsbook-board-table-row" data-sport="NCAAF" onclick="window.selectSportAndShowGames('NCAAF')">
                             <span class="sportsbook-board-table-league"><b>NCAAF</b><small>College Football</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Spread</em><strong>+6.5</strong><small>-110</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>+185</strong><small>Game</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>U 58.5</strong><small>-108</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>U 26.5</strong><small>-110</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Spread</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>—</strong><small>Live</small></span>
                             <span class="sportsbook-board-table-action">Open Board</span>
                         </button>
 
                         <button class="sportsbook-board-table-row" type="button" onclick="window.toggleSportFamily && window.toggleSportFamily('soccer')">
-                            <span class="sportsbook-board-table-league"><b>Soccer</b><small>League Group</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Spread</em><strong>3-Way</strong><small>Match</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>+125</strong><small>Top Match</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>O 2.5</strong><small>-112</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>6 Leagues</strong><small>Grouped</small></span>
+                            <span class="sportsbook-board-table-league"><b>Soccer</b><small>EPL · MLS · UCL · La Liga · Serie A</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Result</em><strong>—</strong><small>3-Way</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>—</strong><small>Goals</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>—</strong><small>Goals</small></span>
                             <span class="sportsbook-board-table-action">View Leagues</span>
                         </button>
 
                         <button class="sportsbook-board-table-row" type="button" onclick="window.toggleSportFamily && window.toggleSportFamily('tennis')">
-                            <span class="sportsbook-board-table-league"><b>Tennis</b><small>Tour Group</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Spread</em><strong>Sets</strong><small>Match</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>-118</strong><small>Top Match</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>O 22.5</strong><small>-110</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>2 Tours</strong><small>Grouped</small></span>
-                            <span class="sportsbook-board-table-action">View Leagues</span>
-                        </button>
-
-                        <button class="sportsbook-board-table-row" data-sport="WNBA" onclick="window.selectSportAndShowGames('WNBA')">
-                            <span class="sportsbook-board-table-league"><b>WNBA</b><small>Pro Hoops</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Spread</em><strong>-1.5</strong><small>-110</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>+128</strong><small>Home</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>O 167.5</strong><small>-108</small></span>
-                            <span class="sportsbook-board-odds-cell"><em>Team Total</em><strong>O 83.5</strong><small>-115</small></span>
-                            <span class="sportsbook-board-table-action">Open Board</span>
+                            <span class="sportsbook-board-table-league"><b>Tennis</b><small>ATP · WTA</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Set Spread</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Moneyline</em><strong>—</strong><small>Live</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Total</em><strong>—</strong><small>Games</small></span>
+                            <span class="sportsbook-board-odds-cell"><em>Set Total</em><strong>—</strong><small>Games</small></span>
+                            <span class="sportsbook-board-table-action">View Tours</span>
                         </button>
                     </div>
 
@@ -8637,39 +8602,35 @@
                     <div class="sportsbook-ticket-preview-head">
                         <span class="sportsbook-lobby-label">Pick Slip</span>
                         <h3>Pick Slip</h3>
-                        <p class="sportsbook-selector-copy">Select an odds box to build your verified pick slip.</p>
+                        <p class="sportsbook-selector-copy">No selections yet. Select an odds box to build your verified pick.</p>
                     </div>
 
                     <div class="sportsbook-ticket-preview-card">
                         <div class="sportsbook-ticket-preview-topline">
-                            <strong>No Selections Yet</strong>
-                            <span>Ready</span>
+                            <strong>Empty Slip</strong>
+                            <span>0 picks</span>
                         </div>
                         <div class="sportsbook-ticket-preview-row">
-                            <span>Slip</span>
-                            <strong>Select odds from the board</strong>
+                            <span>Pick lock</span>
+                            <strong>After submission</strong>
                         </div>
                         <div class="sportsbook-ticket-preview-row">
-                            <span>Market</span>
-                            <strong>Spread, moneyline, totals, props</strong>
-                        </div>
-                        <div class="sportsbook-ticket-preview-row">
-                            <span>Receipt</span>
-                            <strong>Public timestamp after submit</strong>
+                            <span>Public timestamp</span>
+                            <strong>Issued at submit</strong>
                         </div>
                         <div class="sportsbook-ticket-preview-row">
                             <span>Grading</span>
-                            <strong>Automatic results update</strong>
+                            <strong>Auto · updates record</strong>
                         </div>
                         <div class="sportsbook-ticket-preview-row">
-                            <span>Submit</span>
-                            <strong>Disabled until selection</strong>
+                            <span>Receipt</span>
+                            <strong>Permanent · public</strong>
                         </div>
-                        <div class="sportsbook-ticket-preview-note">Open a board, select the exact price you played, then confirm it into your verified record.</div>
+                        <div class="sportsbook-ticket-preview-note">Tap any odds button on the board. Your selection becomes a locked, verified public record.</div>
                         <button type="button" class="sportsbook-ticket-preview-submit" disabled>Submit Pick</button>
                     </div>
 
-                    <button class="sportsbook-lobby-secondary-btn sportsbook-lobby-secondary-btn--wide" onclick="window.showPickStep('picksList')">Open Your Pick History</button>
+                    <button class="sportsbook-lobby-secondary-btn sportsbook-lobby-secondary-btn--wide" onclick="window.showPickStep('picksList')">Open Pick History</button>
                 </aside>
             </div>
         </div>
@@ -24912,6 +24873,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     </style>
+    <link rel="stylesheet" href="static/css/sportsbook-pro.css?v=20260428b">
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  7:32:00 PM -->
