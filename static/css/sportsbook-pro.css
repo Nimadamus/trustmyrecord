@@ -600,6 +600,63 @@ body > .container > main {
 }
 
 /* ==========================================================================
+   Period / market tab bar — sits under the board header, right-aligned
+   ========================================================================== */
+#picks .sportsbook-period-bar {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 12px 22px !important;
+    background: var(--sb-surface) !important;
+    border-bottom: 1px solid var(--sb-border) !important;
+}
+#picks .sportsbook-period-tab {
+    background: var(--sb-cell) !important;
+    border: 1px solid var(--sb-border) !important;
+    color: var(--sb-text-3) !important;
+    padding: 7px 14px !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px !important;
+    border-radius: var(--sb-radius-sm) !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease !important;
+    font-family: inherit !important;
+    height: 34px !important;
+    line-height: 1 !important;
+}
+#picks .sportsbook-period-tab:hover {
+    background: var(--sb-surface-3) !important;
+    color: var(--sb-text) !important;
+    border-color: var(--sb-border-strong) !important;
+}
+#picks .sportsbook-period-tab.is-active {
+    background: var(--sb-accent) !important;
+    color: #02141a !important;
+    border-color: var(--sb-accent) !important;
+    box-shadow: 0 0 0 1px var(--sb-accent) inset, 0 0 14px var(--sb-accent-glow) !important;
+}
+@media (max-width: 760px) {
+    #picks .sportsbook-period-bar {
+        justify-content: flex-start !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding: 10px 14px !important;
+    }
+    #picks .sportsbook-period-bar::-webkit-scrollbar { display: none; }
+    #picks .sportsbook-period-tab {
+        flex: 0 0 auto !important;
+        padding: 6px 12px !important;
+        font-size: 12px !important;
+        height: 32px !important;
+    }
+}
+
+/* ==========================================================================
    Game Board — sportsbook matchup rows
    Matchup (away top, home bottom) · Spread · Moneyline · Total · Action
    Each market is a vertical stack of two odds buttons (top = away/over,

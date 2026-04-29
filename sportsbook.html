@@ -8477,6 +8477,17 @@
                         <button class="sportsbook-lobby-secondary-btn" onclick="window.showPickStep('picksList')">Pick History</button>
                     </div>
 
+                    <div class="sportsbook-period-bar" role="tablist" aria-label="Market period">
+                        <button type="button" role="tab" class="sportsbook-period-tab is-active" data-period="full" aria-selected="true">Full Game</button>
+                        <button type="button" role="tab" class="sportsbook-period-tab" data-period="1h" aria-selected="false">1st Half</button>
+                        <button type="button" role="tab" class="sportsbook-period-tab" data-period="2h" aria-selected="false">2nd Half</button>
+                        <button type="button" role="tab" class="sportsbook-period-tab" data-period="q1" aria-selected="false">1st Quarter</button>
+                        <button type="button" role="tab" class="sportsbook-period-tab" data-period="q2" aria-selected="false">2nd Quarter</button>
+                        <button type="button" role="tab" class="sportsbook-period-tab" data-period="q3" aria-selected="false">3rd Quarter</button>
+                        <button type="button" role="tab" class="sportsbook-period-tab" data-period="q4" aria-selected="false">4th Quarter</button>
+                        <button type="button" role="tab" class="sportsbook-period-tab" data-period="tt" aria-selected="false">Team Totals</button>
+                    </div>
+
                     <div class="sportsbook-board-grid">
                         <div class="sportsbook-board-grid-head">
                             <span>Matchup</span>
@@ -8909,6 +8920,17 @@ window.toggleSportFamily = function (family) {
                '<span>Switch sports from the rail or tab strip to view a different live board.</span></div>';
     }
 
+    var PERIOD_LABELS = {
+        full: 'Full Game',
+        '1h': '1st Half',
+        '2h': '2nd Half',
+        q1: '1st Quarter',
+        q2: '2nd Quarter',
+        q3: '3rd Quarter',
+        q4: '4th Quarter',
+        tt: 'Team Totals'
+    };
+
     function renderBoard(sport) {
         var rows = document.getElementById('lobbyBoardRows');
         if (!rows) return;
@@ -8919,6 +8941,21 @@ window.toggleSportFamily = function (family) {
 
         if (sport === 'Soccer' || sport === 'Tennis' || sport === 'Consensus') {
             rows.innerHTML = emptyState(sport, sport + ' boards open from the rail.', 'group');
+            return;
+        }
+
+        // Period-aware: only the Full Game tab pulls live ESPN rows. Period
+        // markets (halves, quarters, team totals) drop into a clean
+        // placeholder state until those feeds are wired so we don't fabricate
+        // odds. Default selectedPeriod is 'full' and survives sport switches.
+        var period = (window.TMR && window.TMR.selectedPeriod) || 'full';
+        if (period !== 'full') {
+            var label = PERIOD_LABELS[period] || period;
+            rows.innerHTML = '<div class="sportsbook-board-empty">' +
+                '<div class="sportsbook-board-empty-icon" aria-hidden="true">●</div>' +
+                '<strong>' + label + ' board for ' + sport + ' opens once that market goes live.</strong>' +
+                '<span>Tap Full Game to see the matchups available right now, or check back closer to tip-off for ' + label + ' lines.</span>' +
+                '</div>';
             return;
         }
 
@@ -8964,6 +9001,36 @@ window.toggleSportFamily = function (family) {
         try { renderBoard(sport); } catch (e) { console.warn('[TMR] setSport render error', e); }
     };
 
+    // Period / market tab bar — wires Full Game / 1H / 2H / Q1-Q4 / TT
+    window.TMR.selectedPeriod = window.TMR.selectedPeriod || 'full';
+    window.TMR.setPeriod = function (period) {
+        if (!period) return;
+        window.TMR.selectedPeriod = period;
+        var bar = document.querySelectorAll('.sportsbook-period-tab');
+        bar.forEach(function (t) {
+            var on = t.getAttribute('data-period') === period;
+            t.classList.toggle('is-active', on);
+            t.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        // Re-render the board so the empty state and (when ready) the rows
+        // can reflect the chosen period. The ESPN feed only carries full-game
+        // markets right now, so non-full periods drop into a clean placeholder
+        // state instead of inventing odds.
+        try {
+            renderBoard(window.TMR.selectedSport || 'NBA');
+        } catch (e) { /* no-op */ }
+    };
+    function bindPeriodTabs() {
+        var tabs = document.querySelectorAll('.sportsbook-period-tab');
+        tabs.forEach(function (t) {
+            if (t.dataset.tmrPeriodBound === '1') return;
+            t.dataset.tmrPeriodBound = '1';
+            t.addEventListener('click', function () {
+                window.TMR.setPeriod(t.getAttribute('data-period'));
+            });
+        });
+    }
+
     // Auto-load NBA on first paint when #picks is active
     function bootBoard() {
         var hash = (location.hash || '').replace(/^#/, '').toLowerCase();
@@ -8971,6 +9038,7 @@ window.toggleSportFamily = function (family) {
         if (hash === 'picks' || picksActive) {
             renderBoard((window.TMR && window.TMR.selectedSport) || 'NBA');
         }
+        bindPeriodTabs();
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', bootBoard);
@@ -25109,7 +25177,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     </style>
-    <link rel="stylesheet" href="static/css/sportsbook-pro.css?v=20260429e">
+    <link rel="stylesheet" href="static/css/sportsbook-pro.css?v=20260429f">
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  7:32:00 PM -->
