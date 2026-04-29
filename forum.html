@@ -2041,6 +2041,223 @@
         @media (max-width: 960px) {
             .tmr-fb-shell { grid-template-columns: 1fr !important; max-width: 100% !important; }
         }
+
+        /* ============================================================
+           AUTHENTIC TWO PLUS TWO REBUILD  (Apr 29, 2026)
+           Real 2+2 has no left sidebar, no hero banner, no tab bar.
+           Just a centered stack of vBulletin category tables on a
+           cream/tan page. Strip the chrome, lock in the look.
+           ============================================================ */
+        html body { background: #EFEDE2 !important; font-family: Verdana, Geneva, Arial, Helvetica, sans-serif !important; }
+
+        /* Kill the left sidebar entirely — JS still references it but display:none keeps it out of the layout */
+        .tmr-fb-sidebar { display: none !important; }
+        .tmr-fb-shell { grid-template-columns: 1fr !important; max-width: 980px !important; padding: 8px 8px 30px !important; gap: 0 !important; }
+
+        /* Replace the marketing banner with a thin red maroon page title strip (a la 2+2's dark-red category header) */
+        .tmr-fb-banner {
+            background: #6B1F1F !important;
+            border: 1px solid #4A1414 !important;
+            border-radius: 0 !important;
+            padding: 6px 10px !important;
+            margin: 0 0 1px !important;
+        }
+        .tmr-fb-banner-eyebrow { display: none !important; }
+        .tmr-fb-banner-headline { font-size: 13px !important; font-weight: 700 !important; color: #FFFFFF !important; margin: 0 !important; }
+        .tmr-fb-banner-sub { font-size: 11px !important; color: #F5DCDC !important; margin-top: 2px !important; }
+
+        /* Drop the colored breadcrumb chip — 2+2 uses tiny plain breadcrumb text */
+        .tmr-fb-breadcrumb {
+            background: transparent !important;
+            border: none !important;
+            padding: 4px 2px !important;
+            font-size: 11px !important;
+            color: #555 !important;
+            margin-bottom: 4px !important;
+        }
+        .tmr-fb-breadcrumb a { color: #2A4D7C !important; font-weight: 700 !important; }
+
+        /* Hide the bold page title between breadcrumb and banner — 2+2 puts the title INSIDE the maroon header strip */
+        .tmr-fb-page-title { display: none !important; }
+
+        /* Hide the action toolbar + sample-thread section on the index — they don't belong on 2+2's forum home */
+        #viewCategories .tmr-fb-actionrow,
+        #viewCategories > .group-header[style*="margin-top:18px"],
+        #viewCategories > .group-header + .tmr-fb-table-wrap { display: none !important; }
+        #viewCategories #sampleSampleTable { display: none !important; }
+
+        /* Sub-nav strip (User CP / Today's Posts / FAQ / Members) — fake 2+2 secondary tab bar */
+        .tmr-fb-banner + .stats-bar {
+            background: #4F7AB0 !important;
+            border: 1px solid #2A4D7C !important;
+            border-top: none !important;
+            border-radius: 0 !important;
+            margin: 0 0 8px !important;
+            padding: 0 !important;
+        }
+        .stats-bar > div {
+            color: #FFFFFF !important;
+            border-right: 1px solid #2A4D7C !important;
+            padding: 4px 12px !important;
+            font-size: 11px !important;
+            background: linear-gradient(180deg, #6E97C7 0%, #4F7AB0 100%) !important;
+        }
+        .stats-bar > div:hover { background: linear-gradient(180deg, #82A6CF 0%, #6386B6 100%) !important; }
+        .stats-bar strong { color: #FFFFFF !important; font-weight: 700 !important; }
+        .stats-bar .stats-label { color: #DCE6F4 !important; font-weight: 600 !important; }
+
+        /* === The vBulletin "category table" stack === */
+        /* Group header: deep navy bar with white "Sports Betting" text */
+        .group-header {
+            background: linear-gradient(180deg, #4F7AB0 0%, #2A4D7C 100%) !important;
+            color: #FFFFFF !important;
+            border: 1px solid #1B3D5F !important;
+            border-bottom: none !important;
+            padding: 5px 10px !important;
+            margin-top: 10px !important;
+            border-radius: 0 !important;
+            display: flex !important;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .group-header:first-child { margin-top: 0 !important; }
+        .group-header-title { font-size: 12px !important; font-weight: 700 !important; text-transform: none !important; letter-spacing: 0 !important; }
+        .group-header-meta { display: none !important; }
+
+        /* Sub-header row of column labels under the group bar */
+        .group-header + .cat-table { border-radius: 0 !important; border: 1px solid #8E96A0 !important; border-top: none !important; margin-bottom: 12px !important; background: #FFFFFF !important; overflow: hidden !important; }
+        .group-header + .cat-table thead th {
+            background: #DEDED2 !important;
+            color: #333 !important;
+            border-bottom: 1px solid #8E96A0 !important;
+            font-size: 10px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.04em !important;
+            padding: 4px 10px !important;
+        }
+        .group-header + .cat-table thead th.col-num { width: 60px !important; text-align: center !important; }
+        .group-header + .cat-table thead th.col-last { width: 220px !important; text-align: left !important; }
+
+        /* Forum rows */
+        .cat-table tbody tr { background: #FFFFFF !important; border-bottom: 1px solid #D0D0C0 !important; }
+        .cat-table tbody tr:nth-child(even) { background: #F7F5EC !important; }
+        .cat-table tbody tr:hover { background: #FFFCEA !important; }
+        .cat-table tbody tr:last-child { border-bottom: none !important; }
+        .cat-table td { padding: 6px 10px !important; vertical-align: middle !important; font-size: 11px !important; }
+
+        /* Folder-icon for forum rows: classic manila-folder look */
+        .cat-table .cat-icon {
+            width: 28px !important; height: 22px !important;
+            background: linear-gradient(180deg, #FFE8A8 0%, #E2C36C 100%) !important;
+            border: 1px solid #8B6914 !important;
+            border-radius: 1px 4px 1px 1px !important;
+            color: transparent !important;
+            position: relative;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
+        }
+        .cat-table .cat-icon::before {
+            content: "";
+            position: absolute;
+            top: -3px; left: 0;
+            width: 12px; height: 4px;
+            background: #E2C36C;
+            border: 1px solid #8B6914;
+            border-bottom: none;
+            border-radius: 1px 4px 0 0;
+        }
+        .cat-table .cat-name {
+            color: #2A4D7C !important;
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            font-family: Verdana, Geneva, Arial, sans-serif !important;
+        }
+        .cat-table .cat-name:hover { color: #B12704 !important; text-decoration: underline; }
+        .cat-table .cat-desc { color: #555 !important; font-size: 11px !important; margin-top: 1px !important; line-height: 1.4; }
+        .cat-table td.col-num { font-size: 11px !important; color: #333 !important; font-weight: 600 !important; text-align: center !important; }
+        .cat-table td.col-last { font-size: 11px !important; color: #333 !important; }
+        .cat-table .last-post-info .last-post-title { color: #2A4D7C !important; font-weight: 700; font-size: 11px !important; }
+        .cat-table .last-post-info .last-post-meta { color: #555 !important; font-size: 10px !important; }
+        .cat-table .no-posts { color: #888 !important; font-size: 11px !important; font-style: italic; }
+
+        /* Thread-list view: keep the shell tighter and shed the Rating column visually so it matches 2+2 default */
+        #viewThreads .tmr-fb-table-wrap { border: 1px solid #8E96A0 !important; border-radius: 0 !important; }
+        #viewThreads .thread-table thead th {
+            background: linear-gradient(180deg, #4F7AB0 0%, #2A4D7C 100%) !important;
+            color: #FFFFFF !important;
+            font-size: 11px !important;
+            padding: 5px 10px !important;
+            border-bottom: 1px solid #1B3D5F !important;
+        }
+        #viewThreads .thread-table thead th.col-rating { width: 60px !important; }
+        #viewThreads .thread-table tbody tr { background: #FFFFFF !important; border-bottom: 1px solid #D0D0C0 !important; }
+        #viewThreads .thread-table tbody tr:nth-child(even) { background: #F7F5EC !important; }
+        #viewThreads .thread-table tbody tr:hover { background: #FFFCEA !important; }
+        #viewThreads .thread-table td { padding: 5px 10px !important; font-size: 11px !important; }
+
+        /* Thread-row folder/dot icon */
+        .tmr-fb-thread-icon {
+            width: 22px !important; height: 18px !important;
+            background: linear-gradient(180deg, #E8E4D0 0%, #C8C0A4 100%) !important;
+            border: 1px solid #6E6648 !important;
+            border-radius: 1px 4px 1px 1px !important;
+            color: transparent !important;
+            position: relative;
+        }
+        .tmr-fb-thread-icon::before {
+            content: "";
+            position: absolute;
+            top: -3px; left: 0;
+            width: 9px; height: 3px;
+            background: #C8C0A4;
+            border: 1px solid #6E6648;
+            border-bottom: none;
+            border-radius: 1px 3px 0 0;
+        }
+        .tmr-fb-thread-icon.is-pinned { background: linear-gradient(180deg, #FFE0A0 0%, #E2A040 100%) !important; border-color: #8B5A14 !important; }
+        .tmr-fb-thread-icon.is-pinned::before { background: #E2A040; border-color: #8B5A14; }
+        .tmr-fb-thread-icon.is-hot    { background: linear-gradient(180deg, #FFC4B0 0%, #D85040 100%) !important; border-color: #7A1A03 !important; }
+        .tmr-fb-thread-icon.is-hot::before    { background: #D85040; border-color: #7A1A03; }
+
+        .tmr-fb-thread-title { color: #2A4D7C !important; font-size: 12px !important; }
+        .tmr-fb-thread-title:hover { color: #B12704 !important; }
+        .tmr-fb-thread-meta { color: #555 !important; font-size: 10px !important; }
+        .tmr-fb-thread-meta strong { color: #2A4D7C !important; }
+
+        .tmr-fb-lastpost-title { color: #2A4D7C !important; font-size: 11px !important; }
+        .tmr-fb-lastpost-meta { color: #555 !important; font-size: 10px !important; }
+        .last-post-info .last-post-title { color: #2A4D7C !important; font-size: 11px !important; }
+        .last-post-info .last-post-meta { color: #555 !important; font-size: 10px !important; }
+
+        /* Top toolbar (TR brand bar) — keep but de-emphasize, classic 2+2 dark navy */
+        .tmr-fb-topbar { background: #2A4D7C !important; border-bottom: 1px solid #1B3D5F !important; }
+        .tmr-fb-topbar-inner { padding: 4px 10px !important; max-width: 980px !important; }
+        .tmr-fb-brand { font-size: 13px !important; }
+        .tmr-fb-search input { height: 22px !important; font-size: 11px !important; padding: 0 8px 0 24px !important; }
+        .tmr-fb-search::before { font-size: 10px !important; left: 7px !important; }
+        .tmr-fb-topnav a, .tmr-fb-topnav button { padding: 3px 8px !important; font-size: 11px !important; }
+        .tmr-fb-cta { background: #B12704 !important; border: 1px solid #7A1A03 !important; }
+        .tmr-fb-cta:hover { background: #7A1A03 !important; }
+
+        /* Toolbar above thread list (vBulletin "New Thread / Subscribe / Tools" bar) */
+        .toolbar { background: linear-gradient(180deg, #DEDED2 0%, #C8C8B8 100%) !important; border: 1px solid #8E96A0 !important; padding: 4px 8px !important; border-radius: 0 !important; font-size: 11px !important; }
+        .toolbar strong { font-size: 12px; color: #2A4D7C !important; }
+
+        /* Action row on thread-list view stays but classic-styled */
+        #viewThreads .tmr-fb-actionrow { background: #DEDED2 !important; border: 1px solid #8E96A0 !important; padding: 3px 6px !important; border-radius: 0 !important; }
+
+        /* Stats bar text content tweaks (the secondary toolbar uses this) */
+        .stats-bar > div:nth-child(1)::before { content: "Today's Posts \00a0\00a0|"; margin-right: 6px; opacity: 0.55; }
+
+        /* Forum jump row at the bottom of thread list */
+        .forum-jump-row { background: #DEDED2 !important; border: 1px solid #8E96A0 !important; border-top: none !important; padding: 5px 10px !important; font-size: 11px !important; }
+
+        @media (max-width: 980px) {
+            .tmr-fb-shell { padding: 6px !important; }
+            .group-header + .cat-table thead th.col-last { display: none !important; }
+            .group-header + .cat-table tbody td.col-last { display: none !important; }
+        }
     </style>
 </head>
 <body>
