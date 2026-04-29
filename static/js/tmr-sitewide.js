@@ -2,14 +2,12 @@
     const sportsbookPicksHref = "/picks/";
     const routes = [
         ["/", "Home"],
-        [sportsbookPicksHref, "Make Picks"],
+        [sportsbookPicksHref, "Sportsbook"],
         ["/handicappers.html", "Handicappers"],
         ["/arena/", "Arena"],
         ["/feed/", "Feed"],
         ["/hangout/", "Hangout"],
-        ["/trivia/", "Trivia"],
-        ["/forum/", "Forum"],
-        ["/about/", "About"]
+        ["/forum/", "Forum"]
     ];
 
     const routeMeta = {
@@ -59,6 +57,14 @@
         }
 
         try {
+            if (window.auth && window.auth.currentUser && (window.auth.currentUser.username || window.auth.currentUser.email)) {
+                return window.auth.currentUser;
+            }
+        } catch (error) {
+            // Ignore auth cache access failures.
+        }
+
+        try {
             if (window.api && window.api._cachedUser && (window.api._cachedUser.username || window.api._cachedUser.email)) {
                 return window.api._cachedUser;
             }
@@ -66,18 +72,39 @@
             // Ignore API cache access failures.
         }
 
-        const keys = ["trustmyrecord_session", "tmr_current_user", "currentUser"];
-        for (const key of keys) {
-            try {
-                const raw = localStorage.getItem(key);
-                if (!raw) continue;
-                const parsed = JSON.parse(raw);
-                const user = parsed && (parsed.user || parsed);
-                if (user && (user.username || user.email)) {
-                    return user;
+        try {
+            if (window.api && typeof window.api.getCurrentUser === "function") {
+                const apiUser = window.api.getCurrentUser();
+                if (apiUser && (apiUser.username || apiUser.email)) {
+                    return apiUser;
                 }
-            } catch (error) {
-                // Ignore malformed session values and keep scanning.
+            }
+        } catch (error) {
+            // Ignore API accessor failures.
+        }
+
+        const keys = ["trustmyrecord_session", "tmr_current_user", "currentUser"];
+        const stores = [];
+        try {
+            stores.push(localStorage);
+        } catch (error) {}
+        try {
+            stores.push(sessionStorage);
+        } catch (error) {}
+
+        for (const store of stores) {
+            for (const key of keys) {
+                try {
+                    const raw = store.getItem(key);
+                    if (!raw) continue;
+                    const parsed = JSON.parse(raw);
+                    const user = parsed && (parsed.user || parsed);
+                    if (user && (user.username || user.email)) {
+                        return user;
+                    }
+                } catch (error) {
+                    // Ignore malformed session values and keep scanning.
+                }
             }
         }
         return null;
@@ -169,19 +196,33 @@
                 <span class="tmr-global-nav__mark">TMR</span>
                 <span>TRUST<span>MY</span>RECORD</span>
             </a>
-            <div class="tmr-global-nav__links">
-                ${routes.slice(1).filter(([href]) => href !== "profile.html").map(([href, label]) => {
-                    const hrefFile = href.split("#")[0].toLowerCase();
-                    const active = currentFile === hrefFile || ((currentFile === "arena.html" || currentFile === "challenges.html") && hrefFile === "arena.html");
-                    return `<a href="${href}"${active ? ' aria-current="page"' : ""}>${label}</a>`;
-                }).join("")}
+            <button class="tmr-global-nav__toggle" type="button" aria-expanded="false" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="tmr-global-nav__panel">
+                <div class="tmr-global-nav__links">
+                    ${routes.slice(1).filter(([href]) => href !== "profile.html").map(([href, label]) => {
+                        const hrefFile = href.split("#")[0].toLowerCase();
+                        const active = currentFile === hrefFile || ((currentFile === "arena.html" || currentFile === "challenges.html") && hrefFile === "arena.html");
+                        return `<a href="${href}"${active ? ' aria-current="page"' : ""}>${label}</a>`;
+                    }).join("")}
+                </div>
+                <div class="tmr-global-nav__actions"></div>
             </div>
-            <div class="tmr-global-nav__actions"></div>
         </div>
     `;
     document.body.prepend(nav);
 
     const actions = nav.querySelector(".tmr-global-nav__actions");
+    const toggleButton = nav.querySelector(".tmr-global-nav__toggle");
+
+    function setNavOpen(isOpen) {
+        if (!toggleButton) return;
+        nav.classList.toggle("is-open", isOpen);
+        toggleButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    }
 
     function renderActions() {
         if (!actions) return;
@@ -230,15 +271,33 @@
         if (authRoute) {
             event.preventDefault();
             routeToSportsbookAuth(authRoute.getAttribute("data-tmr-auth-route"));
+            setNavOpen(false);
+            return;
+        }
+        const toggle = event.target.closest(".tmr-global-nav__toggle");
+        if (toggle) {
+            event.preventDefault();
+            setNavOpen(!nav.classList.contains("is-open"));
             return;
         }
         const logoutButton = event.target.closest("[data-tmr-logout]");
-        if (!logoutButton) return;
-        event.preventDefault();
-        handleLogout();
+        if (logoutButton) {
+            event.preventDefault();
+            handleLogout();
+            return;
+        }
+        const navLink = event.target.closest(".tmr-global-nav__links a, .tmr-global-nav__actions a");
+        if (navLink) {
+            setNavOpen(false);
+        }
     });
 
     renderActions();
+    window.addEventListener("resize", () => {
+        if (window.innerWidth > 860) {
+            setNavOpen(false);
+        }
+    });
     window.addEventListener("storage", renderActions);
     window.addEventListener("tmr-auth-changed", renderActions);
     document.addEventListener("visibilitychange", () => {
