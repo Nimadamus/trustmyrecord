@@ -858,14 +858,14 @@
         <!-- Page Header -->
         <div class="page-header">
             <h1>The Hangout</h1>
-            <p>Post prediction polls, spark opinion polls, and keep the sports conversation moving between picks.</p>
+            <p>Post everyday polls, social questions, hot takes, and life-topic debates people can answer fast.</p>
         </div>
 
         <div class="user-stats-card" style="margin-top: 0; margin-bottom: 24px; grid-template-columns: 1fr;">
             <div class="stat-item" style="align-items: flex-start; text-align: left;">
                 <div class="stat-label" style="margin-bottom: 8px;">What The Hangout Is For</div>
                 <div class="hangout-note">
-                    Prediction polls keep the community sharp on games, lines, and outcomes. Opinion polls keep the room alive with debates, fan takes, rankings, and sports culture questions. Both live here.
+                    The Hangout is for quick polls about life, culture, relationships, work, routines, opinions, and whatever people want to weigh in on. It should feel social first, not sports-first.
                 </div>
             </div>
         </div>
@@ -894,9 +894,8 @@
         <div class="action-bar">
             <div>
                 <div class="mode-switch" id="hangoutModeSwitch">
-                    <button type="button" class="active" data-mode="all" onclick="setHangoutMode('all', this)">All Hangout</button>
-                    <button type="button" data-mode="prediction" onclick="setHangoutMode('prediction', this)">Prediction Polls</button>
-                    <button type="button" data-mode="opinion" onclick="setHangoutMode('opinion', this)">Opinion Polls</button>
+                    <button type="button" data-mode="all" onclick="setHangoutMode('all', this)">All Polls</button>
+                    <button type="button" class="active" data-mode="opinion" onclick="setHangoutMode('opinion', this)">Life Polls</button>
                 </div>
                 <div class="category-filters" id="categoryFilters"></div>
             </div>
@@ -926,8 +925,7 @@
                 <div class="form-group">
                     <label>Poll Type</label>
                     <div class="mode-switch" id="createPollTypeSwitch" style="margin-bottom: 0;">
-                        <button type="button" class="active" data-mode="prediction" onclick="setCreatePollType('prediction', this)">Prediction</button>
-                        <button type="button" data-mode="opinion" onclick="setCreatePollType('opinion', this)">Opinion</button>
+                        <button type="button" class="active" data-mode="opinion" onclick="setCreatePollType('opinion', this)">Life Poll</button>
                     </div>
                 </div>
                 <div class="form-group">
@@ -938,7 +936,7 @@
                 </div>
                 <div class="form-group">
                     <label id="pollQuestionLabel">Poll Question</label>
-                    <input type="text" id="pollQuestion" placeholder="e.g., Who wins tonight?" required>
+                    <input type="text" id="pollQuestion" placeholder="e.g., Is it weird to text back the next day?" required>
                 </div>
                 <div class="form-group">
                     <label id="pollOptionsLabel">Options (2-4)</label>
@@ -960,7 +958,7 @@
                         <option value="100">100 points (Expert)</option>
                     </select>
                     <div id="pollPointsHelp" style="margin-top: 8px; color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">
-                        Prediction polls reward the crowd for calling the result correctly. Opinion polls can use the same point loop to reward participation and keep the hangout active.
+                        Use points to reward participation, strong questions, and community activity across the Hangout.
                     </div>
                 </div>
                 <button type="submit" class="submit-btn" id="createPollSubmitLabel">Post Poll</button>
@@ -991,7 +989,7 @@
     <div class="modal-overlay" id="leaderboardModal">
         <div class="modal-box" style="max-width: 560px;">
             <button class="modal-close" onclick="closeLeaderboardModal()">&times;</button>
-            <h2 style="margin-bottom: 8px;">Prediction Leaderboard</h2>
+            <h2 style="margin-bottom: 8px;">Hangout Leaderboard</h2>
             <div style="display: flex; gap: 6px; margin-bottom: 18px;">
                 <button class="filter-btn active" onclick="loadLeaderboard('all', this)">All Time</button>
                 <button class="filter-btn" onclick="loadLeaderboard('month', this)">Month</button>
@@ -1010,8 +1008,8 @@
     <script>
     // ============ STATE ============
     let currentFilter = 'all';
-    let currentMode = 'all';
-    let createPollType = 'prediction';
+    let currentMode = 'opinion';
+    let createPollType = 'opinion';
     let pollsCache = [];         // fetched polls with options
     let categoriesCache = [];    // { id, name, slug, ... }
     let activePollDetailId = null;
@@ -1045,7 +1043,7 @@
         return mins + 'm left';
     }
 
-    const catIcons = { nfl: '\uD83C\uDFC8', nba: '\uD83C\uDFC0', mlb: '\u26BE', nhl: '\uD83C\uDFD2', ncaaf: '\uD83C\uDF93', ncaab: '\uD83C\uDFEB', soccer: '\u26BD', games: '\uD83C\uDFC6', weekly: '\uD83D\uDCC5', draft: '\uD83D\uDCCB', fun: '\uD83C\uDF89', general: '\uD83D\uDCAC', other: '\uD83C\uDFB2' };
+    const catIcons = { fun: '\uD83C\uDF89', general: '\uD83D\uDCAC', debate: '\uD83D\uDD25', social: '\uD83E\uDD1D', community: '\uD83C\uDFE1', mixed: '\u2728', relationships: '\uD83D\uDC95', work: '\uD83D\uDCBC', money: '\uD83D\uDCB8', style: '\uD83D\uDC57', food: '\uD83C\uDF54', travel: '\u2708\uFE0F', wellness: '\uD83E\uDDD8', other: '\uD83C\uDFB2' };
     const opinionCategorySlugs = ['fun', 'general', 'debate', 'social', 'community', 'mixed'];
 
     function isOpinionCategorySlug(slug) {
@@ -1082,7 +1080,6 @@
     }
 
     function syncCreateCopy() {
-        const prediction = createPollType === 'prediction';
         const categoryLabel = document.getElementById('pollCategoryLabel');
         const questionLabel = document.getElementById('pollQuestionLabel');
         const questionInput = document.getElementById('pollQuestion');
@@ -1095,37 +1092,31 @@
         const heading = document.getElementById('createPollHeading');
         const submit = document.getElementById('createPollSubmitLabel');
 
-        if (heading) heading.textContent = prediction ? 'Start A Prediction Poll' : 'Start An Opinion Poll';
-        if (categoryLabel) categoryLabel.textContent = prediction ? 'Sports Category' : 'Hangout Topic';
-        if (questionLabel) questionLabel.textContent = prediction ? 'Prediction Question' : 'Opinion Question';
-        if (optionsLabel) optionsLabel.textContent = prediction ? 'Outcomes (2-4)' : 'Answer Choices (2-4)';
-        if (questionInput) questionInput.placeholder = prediction ? "e.g., Who wins tonight's game?" : 'e.g., Which fanbase travels best?';
-        if (option1) option1.placeholder = prediction ? 'Team / outcome 1' : 'Opinion choice 1';
-        if (option2) option2.placeholder = prediction ? 'Team / outcome 2' : 'Opinion choice 2';
-        if (option3) option3.placeholder = prediction ? 'Optional outcome 3' : 'Optional opinion 3';
-        if (option4) option4.placeholder = prediction ? 'Optional outcome 4' : 'Optional opinion 4';
-        if (submit) submit.textContent = prediction ? 'Post Prediction Poll' : 'Post Opinion Poll';
-        if (pointsHelp) {
-            pointsHelp.textContent = prediction
-                ? 'Prediction polls reward the crowd for calling the result correctly.'
-                : 'Opinion polls use the same points loop to reward participation and keep the Hangout active.';
-        }
+        if (heading) heading.textContent = 'Start A Hangout Poll';
+        if (categoryLabel) categoryLabel.textContent = 'Hangout Topic';
+        if (questionLabel) questionLabel.textContent = 'Poll Question';
+        if (optionsLabel) optionsLabel.textContent = 'Answer Choices (2-4)';
+        if (questionInput) questionInput.placeholder = 'e.g., Is it weird to text back the next day?';
+        if (option1) option1.placeholder = 'Choice 1';
+        if (option2) option2.placeholder = 'Choice 2';
+        if (option3) option3.placeholder = 'Optional choice 3';
+        if (option4) option4.placeholder = 'Optional choice 4';
+        if (submit) submit.textContent = 'Post Poll';
+        if (pointsHelp) pointsHelp.textContent = 'Use points to reward participation and keep the Hangout active.';
     }
 
     function populateCreateCategoryOptions() {
         const sel = document.getElementById('pollCategory');
         if (!sel) return;
-        const categories = getFilteredCategoriesForMode(createPollType);
-        const defaultLabel = createPollType === 'prediction' ? 'Select Category' : 'Choose a topic or leave as General';
+        const categories = getFilteredCategoriesForMode('opinion');
+        const defaultLabel = 'Choose a topic or leave as General';
         sel.innerHTML = '<option value="">' + defaultLabel + '</option>';
         categories.forEach(c => {
             const icon = catIcons[getCategorySlug(c)] || '\uD83D\uDCCA';
             sel.innerHTML += '<option value="' + c.id + '">' + icon + ' ' + escapeHtml(c.name) + '</option>';
         });
-        if (createPollType === 'opinion') {
-            const fallback = getOpinionFallbackCategory();
-            if (fallback) sel.value = String(fallback.id);
-        }
+        const fallback = getOpinionFallbackCategory();
+        if (fallback) sel.value = String(fallback.id);
     }
 
     // ============ DATA FETCHING ============
@@ -1228,11 +1219,7 @@
                 '<h3>No Hangout polls found</h3>' +
                 '<p>' + (currentFilter !== 'all'
                     ? 'No polls in this category yet.'
-                    : (currentMode === 'opinion'
-                        ? 'Start an opinion poll to get the conversation moving.'
-                        : currentMode === 'prediction'
-                            ? 'Start a prediction poll to get the crowd on record.'
-                            : 'Start a poll to get the Hangout moving.')) + '</p>' +
+                    : 'Start a life poll to get the conversation moving.') + '</p>' +
                 '<button onclick="openCreatePollModal()">Start A Poll</button>' +
                 '</div>';
             return;
@@ -1462,20 +1449,20 @@
         }
         const dt = new Date(Date.now() + 86400000);
         document.getElementById('pollEndTime').value = dt.toISOString().slice(0, 16);
-        setCreatePollType(currentMode === 'opinion' ? 'opinion' : 'prediction');
+        setCreatePollType('opinion');
         document.getElementById('createPollModal').classList.add('active');
     }
 
     function closeCreatePollModal() {
         document.getElementById('createPollModal').classList.remove('active');
         document.getElementById('createPollForm').reset();
-        setCreatePollType('prediction');
+        setCreatePollType('opinion');
     }
 
     function setCreatePollType(mode, btnEl) {
-        createPollType = mode === 'opinion' ? 'opinion' : 'prediction';
+        createPollType = 'opinion';
         document.querySelectorAll('#createPollTypeSwitch button').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.mode === createPollType);
+            btn.classList.toggle('active', btn.dataset.mode === 'opinion');
         });
         if (btnEl) btnEl.classList.add('active');
         syncCreateCopy();
@@ -1523,7 +1510,7 @@
                 body: {
                     category_id: resolvedCategoryId,
                     title: question,
-                    description: createPollType === 'opinion' ? 'Opinion poll from the Hangout.' : 'Prediction poll from the Hangout.',
+                    description: 'Life poll from the Hangout.',
                     scoring_type: 'binary',
                     points_correct: pointsCorrect,
                     points_incorrect: 0,
@@ -1533,7 +1520,7 @@
             });
 
             closeCreatePollModal();
-            showToast(createPollType === 'opinion' ? 'Opinion poll posted!' : 'Prediction poll posted!', 'success');
+            showToast('Poll posted!', 'success');
             await fetchPolls();
             renderPollsGrid();
         } catch (e) {
@@ -1544,7 +1531,7 @@
     // ============ FILTER ============
 
     function setHangoutMode(mode, btnEl) {
-        currentMode = ['prediction', 'opinion'].includes(mode) ? mode : 'all';
+        currentMode = mode === 'all' ? 'all' : 'opinion';
         currentFilter = 'all';
         document.querySelectorAll('#hangoutModeSwitch button').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.mode === currentMode);
