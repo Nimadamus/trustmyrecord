@@ -1326,8 +1326,8 @@
             _optionKey: optionKey
         }, option));
         const detailLabel = option.source === 'manual'
-            ? 'Manual line entry'
-            : (option.book_title || option.source_label || option.group_label || 'Sportsbook feed');
+            ? 'Enter your book'
+            : (option.book_title || option.source_label || 'Sportsbook board');
         const detailClass = option.source === 'manual' ? 'tmr-option-detail manual' : 'tmr-option-detail';
         const optionTag = getOptionTag(option, game);
         const optionLine = getOptionLineText(option);
@@ -1337,8 +1337,18 @@
             '<div class="tmr-option-market">' + escapeHtml(option.selection_label) + '</div>' +
             '<div class="' + detailClass + '">' + escapeHtml(detailLabel) + '</div>' +
             '</div>' +
-            '<div class="tmr-option-odds-wrap"><span class="tmr-option-odds-label">Odds</span><div class="tmr-option-odds">' + escapeHtml(option.odds_display || 'Manual') + '</div></div>' +
+            '<div class="tmr-option-odds-wrap"><span class="tmr-option-odds-label">American</span><div class="tmr-option-odds">' + escapeHtml(option.odds_display || 'Manual') + '</div></div>' +
             '</button>';
+    }
+
+    function getGroupPrompt(group) {
+        const category = getGroupCategory(group);
+        if (category === 'game-lines') return 'Spread, moneyline, and game total prices';
+        if (category === 'team-totals') return 'Team-specific totals';
+        if (category === 'first-5') return 'Early-game lines';
+        if (category === 'segments') return 'Segment and period markets';
+        if (category === 'alt-lines') return 'Alternate price ladders';
+        return 'Additional board markets';
     }
 
     function renderBoardGroup(group, groupIndex, game, cardIndex) {
@@ -1357,7 +1367,7 @@
         if (!buttons) return '';
 
         return '<div class="tmr-group" data-scope="' + getGroupScope(group) + '" data-category="' + getGroupCategory(group) + '">' +
-            '<div class="tmr-group-header"><div class="tmr-group-title"><span>' + escapeHtml(group.label) + '</span></div><div class="tmr-group-metahead">Selection</div><div class="tmr-group-count">' + groupItems.length + ' lines</div></div>' +
+            '<div class="tmr-group-header"><div class="tmr-group-title"><span>' + escapeHtml(group.label) + '</span><small class="tmr-group-subtitle">' + escapeHtml(getGroupPrompt(group)) + '</small></div><div class="tmr-group-metahead">Selection</div><div class="tmr-group-count">' + groupItems.length + ' prices</div></div>' +
             '<div class="tmr-option-grid">' + buttons + '</div>' +
             '</div>';
     }
@@ -1423,8 +1433,9 @@
         html += games.map(function(rawGame, index) {
             const game = rawGame;
             const cardId = 'tmr-market-card-' + index;
+            const boardNumber = 701 + (index * 2);
             const sourceClass = game.has_sportsbook_odds ? 'real' : 'fallback';
-            const sourceText = game.has_sportsbook_odds ? 'Sportsbook feed' : 'Manual entry';
+            const sourceText = game.has_sportsbook_odds ? 'Board Live' : 'Manual Board';
             const accent = getSportAccent(game.sport_key);
             const orderedGroups = (game.market_groups || []).slice().sort(function(a, b) {
                 const order = { full_game: 1, spread: 2, total: 3, team_totals: 4, first_half: 5, second_half: 6, period_1: 7, first_5: 8, alt_spreads: 9, alt_totals: 10 };
@@ -1459,10 +1470,10 @@
             return '<div class="tmr-market-card' + (index === 0 ? ' open' : '') + '" id="' + cardId + '" data-scope="full" data-market-filter="' + activeCardFilter + '" style="--tmr-accent:' + escapeHtml(accent.primary) + ';--tmr-accent-soft:' + escapeHtml(accent.secondary) + ';">' +
                 '<div class="tmr-market-head" onclick="window.tmrToggleCard(\'' + cardId + '\')">' +
                 '<div>' +
-                '<div class="tmr-market-topline"><span class="tmr-market-league">' + escapeHtml(state.selectedSport || game.sport_title || 'Board') + '</span><span class="tmr-market-status">' + escapeHtml(formatStartsIn(game.commence_time)) + '</span></div>' +
+                '<div class="tmr-market-topline"><span class="tmr-market-league">Game ' + boardNumber + ' • ' + escapeHtml(state.selectedSport || game.sport_title || 'Board') + '</span><span class="tmr-market-status">' + escapeHtml(formatStartsIn(game.commence_time)) + '</span></div>' +
                 '<div class="tmr-market-matchup">' +
                 '<div class="tmr-team-row"><span class="tmr-team-side">Away</span><span class="tmr-team-abbr">' + escapeHtml(teamBadge(game.away_team)) + '</span><span class="tmr-team-name">' + escapeHtml(game.away_team) + '</span></div>' +
-                '<div class="tmr-matchup-divider">Matchup</div>' +
+                '<div class="tmr-matchup-divider">@</div>' +
                 '<div class="tmr-team-row"><span class="tmr-team-side">Home</span><span class="tmr-team-abbr">' + escapeHtml(teamBadge(game.home_team)) + '</span><span class="tmr-team-name">' + escapeHtml(game.home_team) + '</span></div>' +
                 '</div>' +
                 '<div class="tmr-market-meta">' +
