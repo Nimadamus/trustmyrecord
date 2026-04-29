@@ -8426,182 +8426,148 @@
 
         <!-- Step 1: Sport Selection -->
         <div id="sportSelection" class="pick-step active">
-            <div class="sportsbook-lobby-header">
-                <div>
-                    <span class="sportsbook-lobby-label">Sportsbook lobby</span>
-                    <h3>Choose League</h3>
+            <div class="sportsbook-selector-shell">
+                <div class="sportsbook-selector-head">
+                    <div>
+                        <span class="sportsbook-lobby-label">Sportsbook lobby</span>
+                        <h3>Choose Your Board</h3>
+                        <p class="sportsbook-selector-copy">Start with a league, open the board, and go straight into lines.</p>
+                    </div>
+                    <button class="sportsbook-lobby-secondary-btn" onclick="window.showPickStep('picksList')">View Your Picks</button>
                 </div>
-                <div class="sportsbook-lobby-note">Pick a board fast, then move straight into lines</div>
-            </div>
-            <div class="sportsbook-sport-toolbar">
-                <div class="sportsbook-sport-select-wrap">
-                    <label for="sportQuickSelect">Quick Select</label>
-                    <select id="sportQuickSelect" onchange="if(this.value){window.selectSportAndShowGames(this.value);this.selectedIndex=0;}">
-                        <option value="">Choose a league...</option>
-                        <option value="NBA">NBA</option>
-                        <option value="WNBA">WNBA</option>
-                        <option value="NFL">NFL</option>
-                        <option value="NHL">NHL</option>
-                        <option value="NCAAB">College Hoops</option>
-                        <option value="NCAAF">College Football</option>
-                        <option value="MLB">MLB</option>
-                        <option value="Soccer">EPL</option>
-                        <option value="MLS">MLS</option>
-                        <option value="UCL">Champions League</option>
-                        <option value="LaLiga">La Liga</option>
-                        <option value="SerieA">Serie A</option>
-                        <option value="Bundesliga">Bundesliga</option>
-                        <option value="Ligue1">Ligue 1</option>
-                        <option value="ATP">ATP Tennis</option>
-                        <option value="WTA">WTA Tennis</option>
-                    </select>
+
+                <div class="sportsbook-quickbar">
+                    <div class="sportsbook-sport-select-wrap">
+                        <label for="sportQuickSelect">Quick Select</label>
+                        <select id="sportQuickSelect" onchange="if(this.value){window.selectSportAndShowGames(this.value);this.selectedIndex=0;}">
+                            <option value="">Choose a league...</option>
+                            <option value="NBA">NBA</option>
+                            <option value="WNBA">WNBA</option>
+                            <option value="NFL">NFL</option>
+                            <option value="NHL">NHL</option>
+                            <option value="NCAAB">College Hoops</option>
+                            <option value="NCAAF">College Football</option>
+                            <option value="MLB">MLB</option>
+                            <option value="Soccer">EPL</option>
+                            <option value="MLS">MLS</option>
+                            <option value="UCL">Champions League</option>
+                            <option value="LaLiga">La Liga</option>
+                            <option value="SerieA">Serie A</option>
+                            <option value="Bundesliga">Bundesliga</option>
+                            <option value="Ligue1">Ligue 1</option>
+                            <option value="ATP">ATP Tennis</option>
+                            <option value="WTA">WTA Tennis</option>
+                        </select>
+                    </div>
+                    <div class="sportsbook-market-strip" aria-label="Available markets">
+                        <span>Moneyline</span>
+                        <span>Spread</span>
+                        <span>Totals</span>
+                        <span>Team Totals</span>
+                        <span>1st 5</span>
+                        <span>Periods</span>
+                    </div>
                 </div>
-                <button class="sportsbook-lobby-secondary-btn" onclick="window.showPickStep('picksList')">View Your Picks</button>
-            </div>
-            <div class="market-chip-row" aria-label="Available wager types">
-                <span>Moneyline</span>
-                <span>Spread / Run Line / Puck Line</span>
-                <span>Totals</span>
-                <span>Team Totals</span>
-                <span>First 5 Innings</span>
-                <span>Halves / Periods</span>
-                <span>Soccer 3-Way</span>
-            </div>
-            <div class="sportsbook-board-section">
-                <div class="sportsbook-board-section-head">
-                    <strong>Major Boards</strong>
-                    <span>Core U.S. boards with full pricing flow</span>
+
+                <div class="sportsbook-featured-row">
+                    <button class="sportsbook-featured-board" data-sport="NBA" onclick="window.selectSportAndShowGames('NBA')">
+                        <span class="featured-league">NBA</span>
+                        <span class="featured-meta">Pro Hoops</span>
+                        <span class="featured-count" id="nba-game-count">Loading...</span>
+                    </button>
+                    <button class="sportsbook-featured-board" data-sport="NFL" onclick="window.selectSportAndShowGames('NFL')">
+                        <span class="featured-league">NFL</span>
+                        <span class="featured-meta">Pro Football</span>
+                        <span class="featured-count" id="nfl-game-count">Loading...</span>
+                    </button>
+                    <button class="sportsbook-featured-board" data-sport="MLB" onclick="window.selectSportAndShowGames('MLB')">
+                        <span class="featured-league">MLB</span>
+                        <span class="featured-meta">Baseball</span>
+                        <span class="featured-count" id="mlb-game-count">Loading...</span>
+                    </button>
+                    <button class="sportsbook-featured-board" data-sport="NHL" onclick="window.selectSportAndShowGames('NHL')">
+                        <span class="featured-league">NHL</span>
+                        <span class="featured-meta">Pro Hockey</span>
+                        <span class="featured-count" id="nhl-game-count">Loading...</span>
+                    </button>
+                    <button class="sportsbook-featured-board" data-sport="NCAAB" onclick="window.selectSportAndShowGames('NCAAB')">
+                        <span class="featured-league">NCAAB</span>
+                        <span class="featured-meta">College Hoops</span>
+                        <span class="featured-count" id="ncaab-game-count">Loading...</span>
+                    </button>
+                    <button class="sportsbook-featured-board" data-sport="NCAAF" onclick="window.selectSportAndShowGames('NCAAF')">
+                        <span class="featured-league">NCAAF</span>
+                        <span class="featured-meta">College Football</span>
+                        <span class="featured-count" id="ncaaf-game-count">Loading...</span>
+                    </button>
                 </div>
-                <div class="sport-cards-grid">
-                    <div class="sport-card" data-sport="NBA" onclick="window.selectSportAndShowGames('NBA')" style="cursor:pointer;">
-                    <div class="sport-card-topline"><span class="sport-league-tag">Pro Hoops</span><span class="sport-card-arrow">Open Board</span></div>
-                    <div class="sport-icon">🏀</div>
-                    <div class="sport-name">NBA</div>
-                    <div class="sport-card-copy">Sides, totals, team totals.</div>
-                    <div class="sport-games" id="nba-game-count">Loading...</div>
+
+                <div class="sportsbook-board-list">
+                    <div class="sportsbook-board-list-head">
+                        <strong>All Boards</strong>
+                        <span>Compact board selector</span>
+                    </div>
+
+                    <button class="sportsbook-board-row" data-sport="WNBA" onclick="window.selectSportAndShowGames('WNBA')">
+                        <span class="board-row-main"><b>WNBA</b><small>Pro Hoops</small></span>
+                        <span class="board-row-markets">Sides • Totals</span>
+                        <span class="board-row-count" id="wnba-game-count">Loading...</span>
+                    </button>
+
+                    <button class="sportsbook-board-row" data-sport="Soccer" onclick="window.selectSportAndShowGames('Soccer')">
+                        <span class="board-row-main"><b>EPL</b><small>Soccer</small></span>
+                        <span class="board-row-markets">3-Way • Totals</span>
+                        <span class="board-row-count" id="soccer-game-count">Loading...</span>
+                    </button>
+
+                    <button class="sportsbook-board-row" data-sport="MLS" onclick="window.selectSportAndShowGames('MLS')">
+                        <span class="board-row-main"><b>MLS</b><small>Soccer</small></span>
+                        <span class="board-row-markets">3-Way • Totals</span>
+                        <span class="board-row-count" id="mls-game-count">Loading...</span>
+                    </button>
+
+                    <button class="sportsbook-board-row" data-sport="UCL" onclick="window.selectSportAndShowGames('UCL')">
+                        <span class="board-row-main"><b>Champions League</b><small>Soccer</small></span>
+                        <span class="board-row-markets">3-Way • Totals</span>
+                        <span class="board-row-count" id="ucl-game-count">Loading...</span>
+                    </button>
+
+                    <button class="sportsbook-board-row" data-sport="LaLiga" onclick="window.selectSportAndShowGames('LaLiga')">
+                        <span class="board-row-main"><b>La Liga</b><small>Spain</small></span>
+                        <span class="board-row-markets">3-Way • Totals</span>
+                        <span class="board-row-count" id="laliga-game-count">Loading...</span>
+                    </button>
+
+                    <button class="sportsbook-board-row" data-sport="SerieA" onclick="window.selectSportAndShowGames('SerieA')">
+                        <span class="board-row-main"><b>Serie A</b><small>Italy</small></span>
+                        <span class="board-row-markets">3-Way • Totals</span>
+                        <span class="board-row-count" id="seriea-game-count">Loading...</span>
+                    </button>
+
+                    <button class="sportsbook-board-row" data-sport="Bundesliga" onclick="window.selectSportAndShowGames('Bundesliga')">
+                        <span class="board-row-main"><b>Bundesliga</b><small>Germany</small></span>
+                        <span class="board-row-markets">3-Way • Totals</span>
+                        <span class="board-row-count" id="bundesliga-game-count">Loading...</span>
+                    </button>
+
+                    <button class="sportsbook-board-row" data-sport="Ligue1" onclick="window.selectSportAndShowGames('Ligue1')">
+                        <span class="board-row-main"><b>Ligue 1</b><small>France</small></span>
+                        <span class="board-row-markets">3-Way • Totals</span>
+                        <span class="board-row-count" id="ligue1-game-count">Loading...</span>
+                    </button>
+
+                    <button class="sportsbook-board-row" data-sport="ATP" onclick="window.selectSportAndShowGames('ATP')">
+                        <span class="board-row-main"><b>ATP Tennis</b><small>Men's</small></span>
+                        <span class="board-row-markets">Match Board</span>
+                        <span class="board-row-count" id="atp-game-count">Loading...</span>
+                    </button>
+
+                    <button class="sportsbook-board-row" data-sport="WTA" onclick="window.selectSportAndShowGames('WTA')">
+                        <span class="board-row-main"><b>WTA Tennis</b><small>Women's</small></span>
+                        <span class="board-row-markets">Match Board</span>
+                        <span class="board-row-count" id="wta-game-count">Loading...</span>
+                    </button>
                 </div>
-                <div class="sport-card" data-sport="WNBA" onclick="window.selectSportAndShowGames('WNBA')" style="cursor:pointer;">
-                    <div class="sport-card-topline"><span class="sport-league-tag">Pro Hoops</span><span class="sport-card-arrow">Open Board</span></div>
-                    <div class="sport-icon">🏀</div>
-                    <div class="sport-name">WNBA</div>
-                    <div class="sport-card-copy">Compact board with fast pricing.</div>
-                    <div class="sport-games" id="wnba-game-count">Loading...</div>
-                </div>
-                <div class="sport-card" data-sport="NFL" onclick="window.selectSportAndShowGames('NFL')" style="cursor:pointer;">
-                    <div class="sport-card-topline"><span class="sport-league-tag">Pro Football</span><span class="sport-card-arrow">Open Board</span></div>
-                    <div class="sport-icon">🏈</div>
-                    <div class="sport-name">NFL</div>
-                    <div class="sport-card-copy">Spreads, moneylines, totals, extras.</div>
-                    <div class="sport-games" id="nfl-game-count">Loading...</div>
-                </div>
-                <div class="sport-card" data-sport="NHL" onclick="window.selectSportAndShowGames('NHL')" style="cursor:pointer;">
-                    <div class="sport-card-topline"><span class="sport-league-tag">Pro Hockey</span><span class="sport-card-arrow">Open Board</span></div>
-                    <div class="sport-icon">🏒</div>
-                    <div class="sport-name">NHL</div>
-                    <div class="sport-card-copy">Puck lines, totals, quick entry.</div>
-                    <div class="sport-games" id="nhl-game-count">Loading...</div>
-                </div>
-                <div class="sport-card" data-sport="NCAAB" onclick="window.selectSportAndShowGames('NCAAB')" style="cursor:pointer;">
-                    <div class="sport-card-topline"><span class="sport-league-tag">College</span><span class="sport-card-arrow">Open Board</span></div>
-                    <div class="sport-icon">🏫</div>
-                    <div class="sport-name">College Hoops</div>
-                    <div class="sport-card-copy">College hoops board and totals.</div>
-                    <div class="sport-games" id="ncaab-game-count">Loading...</div>
-                </div>
-                <div class="sport-card" data-sport="NCAAF" onclick="window.selectSportAndShowGames('NCAAF')" style="cursor:pointer;">
-                    <div class="sport-card-topline"><span class="sport-league-tag">College</span><span class="sport-card-arrow">Open Board</span></div>
-                    <div class="sport-icon">🎓</div>
-                    <div class="sport-name">College Football</div>
-                    <div class="sport-card-copy">Main board plus alternates.</div>
-                    <div class="sport-games" id="ncaaf-game-count">Loading...</div>
-                </div>
-                <div class="sport-card" data-sport="MLB" onclick="window.selectSportAndShowGames('MLB')" style="cursor:pointer;">
-                    <div class="sport-card-topline"><span class="sport-league-tag">Baseball</span><span class="sport-card-arrow">Open Board</span></div>
-                    <div class="sport-icon">⚾</div>
-                    <div class="sport-name">MLB</div>
-                    <div class="sport-card-copy">Moneyline, run line, totals, F5.</div>
-                    <div class="sport-games" id="mlb-game-count">Loading...</div>
-                </div>
-                </div>
-            </div>
-            <div class="sportsbook-board-section">
-                <div class="sportsbook-board-section-head">
-                    <strong>Soccer Boards</strong>
-                    <span>3-way pricing and totals by competition</span>
-                </div>
-                <div class="sport-cards-grid compact">
-                <div class="sport-card compact" data-sport="Soccer" onclick="window.selectSportAndShowGames('Soccer')" style="cursor:pointer;">
-                    <div class="sport-card-topline"><span class="sport-league-tag">Soccer</span><span class="sport-card-arrow">Open</span></div>
-                    <div class="sport-icon">⚽</div>
-                    <div class="sport-name">EPL</div>
-                    <div class="sport-card-copy">3-way board.</div>
-                    <div class="sport-games" id="soccer-game-count">Loading...</div>
-                </div>
-                <div class="sport-card compact" data-sport="MLS" onclick="window.selectSportAndShowGames('MLS')" style="cursor:pointer;">
-                    <div class="sport-card-topline"><span class="sport-league-tag">Soccer</span><span class="sport-card-arrow">Open</span></div>
-                    <div class="sport-icon">⚽</div>
-                    <div class="sport-name">MLS</div>
-                    <div class="sport-card-copy">U.S. league board.</div>
-                    <div class="sport-games" id="mls-game-count">Loading...</div>
-                </div>
-                <div class="sport-card compact" data-sport="UCL" onclick="window.selectSportAndShowGames('UCL')" style="cursor:pointer;">
-                    <div class="sport-card-topline"><span class="sport-league-tag">Soccer</span><span class="sport-card-arrow">Open</span></div>
-                    <div class="sport-icon">⚽</div>
-                    <div class="sport-name">Champions League</div>
-                    <div class="sport-card-copy">Continental board.</div>
-                    <div class="sport-games" id="ucl-game-count">Loading...</div>
-                </div>
-                <div class="sport-card compact" data-sport="LaLiga" onclick="window.selectSportAndShowGames('LaLiga')" style="cursor:pointer;">
-                    <div class="sport-card-topline"><span class="sport-league-tag">Soccer</span><span class="sport-card-arrow">Open</span></div>
-                    <div class="sport-icon">⚽</div>
-                    <div class="sport-name">La Liga</div>
-                    <div class="sport-card-copy">Spain board.</div>
-                    <div class="sport-games" id="laliga-game-count">Loading...</div>
-                </div>
-                <div class="sport-card compact" data-sport="SerieA" onclick="window.selectSportAndShowGames('SerieA')" style="cursor:pointer;">
-                    <div class="sport-card-topline"><span class="sport-league-tag">Soccer</span><span class="sport-card-arrow">Open</span></div>
-                    <div class="sport-icon">⚽</div>
-                    <div class="sport-name">Serie A</div>
-                    <div class="sport-card-copy">Italy board.</div>
-                    <div class="sport-games" id="seriea-game-count">Loading...</div>
-                </div>
-                <div class="sport-card compact" data-sport="Bundesliga" onclick="window.selectSportAndShowGames('Bundesliga')" style="cursor:pointer;">
-                    <div class="sport-card-topline"><span class="sport-league-tag">Soccer</span><span class="sport-card-arrow">Open</span></div>
-                    <div class="sport-icon">⚽</div>
-                    <div class="sport-name">Bundesliga</div>
-                    <div class="sport-card-copy">Germany board.</div>
-                    <div class="sport-games" id="bundesliga-game-count">Loading...</div>
-                </div>
-                <div class="sport-card compact" data-sport="Ligue1" onclick="window.selectSportAndShowGames('Ligue1')" style="cursor:pointer;">
-                    <div class="sport-card-topline"><span class="sport-league-tag">Soccer</span><span class="sport-card-arrow">Open</span></div>
-                    <div class="sport-icon">⚽</div>
-                    <div class="sport-name">Ligue 1</div>
-                    <div class="sport-card-copy">France board.</div>
-                    <div class="sport-games" id="ligue1-game-count">Loading...</div>
-                </div>
-                </div>
-            </div>
-            <div class="sportsbook-board-section">
-                <div class="sportsbook-board-section-head">
-                    <strong>Tennis Boards</strong>
-                    <span>Simple match boards and quick prices</span>
-                </div>
-                <div class="sport-cards-grid compact compact-tight">
-                <div class="sport-card compact" data-sport="ATP" onclick="window.selectSportAndShowGames('ATP')" style="cursor:pointer;">
-                    <div class="sport-card-topline"><span class="sport-league-tag">Tennis</span><span class="sport-card-arrow">Open</span></div>
-                    <div class="sport-icon">🎾</div>
-                    <div class="sport-name">ATP Tennis</div>
-                    <div class="sport-card-copy">Men's board.</div>
-                    <div class="sport-games" id="atp-game-count">Loading...</div>
-                </div>
-                <div class="sport-card compact" data-sport="WTA" onclick="window.selectSportAndShowGames('WTA')" style="cursor:pointer;">
-                    <div class="sport-card-topline"><span class="sport-league-tag">Tennis</span><span class="sport-card-arrow">Open</span></div>
-                    <div class="sport-icon">🎾</div>
-                    <div class="sport-name">WTA Tennis</div>
-                    <div class="sport-card-copy">Women's board.</div>
-                    <div class="sport-games" id="wta-game-count">Loading...</div>
-                </div>
-            </div>
             </div>
         </div>
 
@@ -22064,6 +22030,248 @@ document.addEventListener('DOMContentLoaded', function() {
             text-transform: uppercase;
         }
 
+        #picks .sportsbook-selector-shell {
+            display: grid;
+            gap: 18px;
+        }
+
+        #picks .sportsbook-selector-head {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(148,163,184,0.10);
+        }
+
+        #picks .sportsbook-selector-copy {
+            margin: 0;
+            color: #97abc1;
+            font-size: 0.92rem;
+            font-weight: 700;
+            line-height: 1.5;
+            max-width: 560px;
+        }
+
+        #picks .sportsbook-quickbar {
+            display: grid;
+            gap: 14px;
+            padding: 16px 18px;
+            border-radius: 18px;
+            border: 1px solid rgba(148,163,184,0.14);
+            background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+        }
+
+        #picks .sportsbook-market-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        #picks .sportsbook-market-strip span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 32px;
+            padding: 0 11px;
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.12);
+            background: rgba(255,255,255,0.03);
+            color: #b9c8da;
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        #picks .sportsbook-sport-select-wrap {
+            display: grid;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        #picks .sportsbook-sport-select-wrap label {
+            color: #8ea0b7;
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        #picks .sportsbook-sport-select-wrap select {
+            min-height: 54px;
+            border-radius: 16px;
+            border: 1px solid rgba(148,163,184,0.16);
+            background: linear-gradient(180deg, rgba(15,23,42,0.96), rgba(9,15,27,0.98));
+            color: #f8fafc;
+            padding: 0 16px;
+            font-size: 0.98rem;
+            font-weight: 800;
+            box-shadow: 0 16px 34px rgba(0,0,0,0.16);
+        }
+
+        #picks .sportsbook-lobby-secondary-btn {
+            min-height: 48px;
+            padding: 0 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(148,163,184,0.16);
+            background: rgba(255,255,255,0.05);
+            color: #eef4fb;
+            font-size: 0.76rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        #picks .sportsbook-featured-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        #picks .sportsbook-featured-board {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 8px 12px;
+            padding: 14px 16px;
+            border-radius: 18px;
+            border: 1px solid rgba(148,163,184,0.16);
+            background: linear-gradient(180deg, rgba(15,23,42,0.98), rgba(9,15,27,1));
+            color: #f8fafc;
+            text-align: left;
+            box-shadow: 0 16px 34px rgba(0,0,0,0.18);
+        }
+
+        #picks .sportsbook-featured-board:hover,
+        #picks .sportsbook-board-row:hover {
+            border-color: rgba(45,212,191,0.32);
+            background: rgba(255,255,255,0.035);
+        }
+
+        #picks .featured-league {
+            font-size: 1.05rem;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+        }
+
+        #picks .featured-meta {
+            color: #8ea0b7;
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        #picks .featured-count {
+            grid-column: 2;
+            grid-row: 1 / span 2;
+            align-self: center;
+            justify-self: end;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 92px;
+            min-height: 38px;
+            border-radius: 999px;
+            border: 1px solid rgba(45,212,191,0.18);
+            background: rgba(45,212,191,0.08);
+            color: #c9fff5;
+            font-size: 0.7rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        #picks .sportsbook-board-list {
+            display: grid;
+            gap: 0;
+            border: 1px solid rgba(148,163,184,0.14);
+            border-radius: 20px;
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(12,19,31,0.98), rgba(9,15,26,1));
+            box-shadow: 0 20px 42px rgba(0,0,0,0.20);
+        }
+
+        #picks .sportsbook-board-list-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 16px 18px;
+            border-bottom: 1px solid rgba(148,163,184,0.10);
+            background: rgba(255,255,255,0.03);
+        }
+
+        #picks .sportsbook-board-list-head strong {
+            color: #f8fafc;
+            font-size: 1rem;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+        }
+
+        #picks .sportsbook-board-list-head span {
+            color: #8ea0b7;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        #picks .sportsbook-board-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 14px;
+            padding: 15px 18px;
+            border: 0;
+            border-top: 1px solid rgba(148,163,184,0.08);
+            background: transparent;
+            color: #f8fafc;
+            text-align: left;
+        }
+
+        #picks .board-row-main {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        #picks .board-row-main b {
+            color: #f8fafc;
+            font-size: 0.98rem;
+            font-weight: 900;
+            letter-spacing: -0.01em;
+        }
+
+        #picks .board-row-main small {
+            color: #8ea0b7;
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        #picks .board-row-markets {
+            color: #aebccd;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        #picks .board-row-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 92px;
+            min-height: 34px;
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.14);
+            background: rgba(255,255,255,0.04);
+            color: #dce7f8;
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
         #picks .games-header {
             padding-bottom: 16px;
             border-bottom: 1px solid rgba(148,163,184,0.14);
@@ -23186,6 +23394,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         @media (max-width: 640px) {
+            #picks .sportsbook-selector-head {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            #picks .sportsbook-featured-row {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            #picks .sportsbook-board-row {
+                grid-template-columns: 1fr;
+                align-items: start;
+            }
+
+            #picks .board-row-count {
+                justify-self: start;
+            }
+
             #picks .sportsbook-sport-toolbar {
                 align-items: stretch;
             }
@@ -23747,6 +23973,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         @media (max-width: 480px) {
+            #picks .sportsbook-featured-row {
+                grid-template-columns: 1fr;
+            }
+
             #picks .section-header {
                 margin-bottom: 18px;
             }
