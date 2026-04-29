@@ -17240,13 +17240,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Initialize active nav state for home
         document.addEventListener('DOMContentLoaded', function() {
-            // Set home as active by default
+            // Default landing is the picks board, not the marketing #home section.
+            // We explicitly remove the .active class from #home in case any other
+            // legacy script added it, and ensure #picks is the visible section.
             const homeSection = document.getElementById('home');
-            if (homeSection) {
-                homeSection.classList.add('active');
+            if (homeSection) homeSection.classList.remove('active');
+            const picksSection = document.getElementById('picks');
+            if (picksSection && !picksSection.classList.contains('active')) {
+                document.querySelectorAll('.page-section').forEach(function(s){ s.classList.remove('active'); });
+                picksSection.classList.add('active');
+            }
+            if (typeof initPicksPage === 'function') {
+                try { initPicksPage(); } catch(_) {}
             }
 
-            // Load and display user stats
+            // Load and display user stats (still computed for the dashboard widget
+            // that lives inside #home; harmless when #home is hidden).
             updateStatsDashboard();
             updateHeroCta();
 
