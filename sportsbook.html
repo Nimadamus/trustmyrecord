@@ -8041,7 +8041,7 @@
 
         <main>
             <!-- Home Section -->
-            <div id="home" class="page-section active">
+            <div id="home" class="page-section">
                 <section class="hero">
                     <div class="sportsbook-hero-grid">
                         <div class="sportsbook-hero-copy">
@@ -8398,14 +8398,24 @@
 </div>
 
 <!-- REDESIGNED PICKS SECTION - Games First Flow -->
-<div id="picks" class="page-section">
+<div id="picks" class="page-section active">
     <div class="picks-container-modern">
-        <div class="section-header sportsbook-page-shell">
+        <!-- Logged-out join prompt: visible only when no auth session is active.
+             Hidden automatically once the auth shim flips body[data-tmr-auth] to logged-in. -->
+        <div class="make-picks-loggedout" id="makePicksLoggedOutPrompt">
+            <div>
+                <strong>Heads up:</strong> Browse the board freely, but you'll need a free account to lock a pick onto your public record.
+            </div>
+            <div class="make-picks-loggedout-actions">
+                <a class="make-picks-loggedout-btn make-picks-loggedout-btn--primary" href="/register/">Join Free</a>
+                <a class="make-picks-loggedout-btn" href="/login/">Log In</a>
+            </div>
+        </div>
+        <div class="section-header sportsbook-page-shell make-picks-header">
             <div class="sportsbook-page-topbar">
                 <div class="sportsbook-page-intro">
-                    <div class="sportsbook-kicker">Make Picks</div>
-                    <h2>Sportsbook</h2>
-                    <p>Select odds, submit your pick, and lock a verified public receipt.</p>
+                    <h1 class="make-picks-title">Make Your Picks</h1>
+                    <p class="make-picks-sub">Choose a sport, select a game, pick a market, and lock your play to your permanent public record.</p>
                 </div>
             </div>
             <div class="sportsbook-sport-tabs" aria-label="Sportsbook tabs">
@@ -9070,8 +9080,69 @@ window.toggleSportFamily = function (family) {
 .picks-container-modern {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 40px 20px;
+    padding: 16px 20px 40px;
 }
+
+/* Functional Make Picks header (replaces the marketing kicker/h2) */
+#picks .make-picks-header { padding-top: 4px; padding-bottom: 14px; }
+#picks .make-picks-title {
+    font-family: 'Barlow Condensed', 'Inter', sans-serif;
+    font-size: clamp(28px, 3.4vw, 40px);
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    line-height: 1;
+    margin: 0 0 8px;
+    text-transform: uppercase;
+    color: #ffffff;
+}
+#picks .make-picks-sub {
+    color: #a5b1c6;
+    font-size: 15px;
+    line-height: 1.55;
+    margin: 0;
+    max-width: 680px;
+}
+
+/* Logged-out join prompt above the board.
+   Hidden whenever the body has a logged-in auth marker. */
+.make-picks-loggedout {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 12px 18px;
+    margin: 6px 0 14px;
+    background: linear-gradient(180deg, rgba(45, 212, 191, 0.10), rgba(34, 211, 238, 0.06));
+    border: 1px solid rgba(45, 212, 191, 0.34);
+    border-radius: 12px;
+    color: #e6edf6;
+    font-size: 14px;
+    line-height: 1.45;
+}
+.make-picks-loggedout strong { color: #ffffff; }
+.make-picks-loggedout-actions { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+.make-picks-loggedout-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(148, 163, 184, 0.32);
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 13px;
+    text-decoration: none;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.make-picks-loggedout-btn:hover { background: rgba(255, 255, 255, 0.10); border-color: rgba(45, 212, 191, 0.55); color: #ffffff; text-decoration: none; }
+.make-picks-loggedout-btn--primary {
+    background: linear-gradient(135deg, #2dd4bf, #22d3ee);
+    border-color: transparent;
+    color: #04111A;
+}
+.make-picks-loggedout-btn--primary:hover { background: linear-gradient(135deg, #67e8f9, #2dd4bf); color: #04111A; }
+body[data-tmr-auth="logged-in"] .make-picks-loggedout { display: none; }
 
 .pick-step {
     display: none;
@@ -25194,6 +25265,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     </style>
     <link rel="stylesheet" href="static/css/sportsbook-pro.css?v=20260429f">
+    <script>
+    // Stamp body[data-tmr-auth] so the Make Picks page can hide the
+    // logged-out prompt the moment auth flips. Re-runs on auth events.
+    (function(){
+        function detect() {
+            try { if (window.auth && window.auth.isLoggedIn && window.auth.isLoggedIn()) return true; } catch(_){}
+            try { if (window.api && window.api.isLoggedIn && window.api.isLoggedIn()) return true; } catch(_){}
+            try { if (localStorage.getItem('tmr_is_logged_in') === 'true') return true; } catch(_){}
+            try { if (localStorage.getItem('trustmyrecord_session')) return true; } catch(_){}
+            return false;
+        }
+        function stamp(){ document.body.setAttribute('data-tmr-auth', detect() ? 'logged-in' : 'logged-out'); }
+        if (document.body) stamp();
+        document.addEventListener('DOMContentLoaded', stamp);
+        window.addEventListener('storage', stamp);
+        window.addEventListener('tmr-auth-changed', stamp);
+    })();
+    </script>
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  7:32:00 PM -->
