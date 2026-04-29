@@ -587,6 +587,8 @@
             });
         }
         state.currentBoard = response.games || [];
+        window.TMR = window.TMR || {};
+        window.TMR.currentGames = state.currentBoard;
         state.lastBoardRenderAt = Date.now();
         state.lastBoardRenderSport = sport;
         updateBoardBadge(badge, state.currentBoard.length);
@@ -605,10 +607,10 @@
     }
 
     function prewarmCoreBoards() {
-        ['MLB', 'NHL', 'NBA', 'NFL', 'NCAAB', 'NCAAF'].forEach(function(sport, index) {
+        ['MLB', 'NHL', 'NBA', 'WNBA', 'NFL', 'NCAAB', 'NCAAF', 'Soccer', 'MLS', 'UCL', 'LaLiga', 'SerieA', 'Bundesliga', 'Ligue1', 'ATP', 'WTA'].forEach(function(sport, index) {
             window.setTimeout(function() {
                 prefetchSportBoard(sport);
-            }, 280 + (index * 170));
+            }, 200 + (index * 120));
         });
     }
 
@@ -1258,14 +1260,23 @@
         return 'specials';
     }
 
-    function getFilterLabel(category) {
+    function getFilterLabel(category, game) {
+        const sportKey = String(game && game.sport_key || '').toLowerCase();
+        if (category === 'first-5') {
+            return sportKey.indexOf('baseball_') !== -1 ? '1st 5' : 'Early Lines';
+        }
+        if (category === 'segments') {
+            if (sportKey.indexOf('icehockey_') !== -1) return 'Periods';
+            if (sportKey.indexOf('basketball_') !== -1) return 'Quarters';
+            if (sportKey.indexOf('football_') !== -1) return 'Halves';
+            if (sportKey.indexOf('soccer_') !== -1) return '1H Lines';
+            return 'Segments';
+        }
         const labels = {
             'game-lines': 'Game Lines',
             'team-totals': 'Team Totals',
-            'first-5': '5 Innings',
-            segments: 'Periods',
             'alt-lines': 'Alt Lines',
-            specials: 'Specials'
+            specials: 'Props'
         };
         return labels[category] || 'Markets';
     }
@@ -1401,9 +1412,9 @@
                     const available = boardCategorySet.has(filter);
                     const classes = 'tmr-board-filter-tab' + (available && filter === activeBoardFilter ? ' active' : '') + (available ? '' : ' disabled');
                     if (!available) {
-                        return '<button class="' + classes + '" type="button" data-filter="' + filter + '" disabled aria-disabled="true">' + escapeHtml(getFilterLabel(filter)) + '</button>';
+                        return '<button class="' + classes + '" type="button" data-filter="' + filter + '" disabled aria-disabled="true">' + escapeHtml(getFilterLabel(filter, { sport_key: SPORT_KEY_MAP[state.selectedSport] || '' })) + '</button>';
                     }
-                    return '<button class="' + classes + '" type="button" data-filter="' + filter + '" onclick="window.tmrSetBoardFilter(\'' + filter + '\')">' + escapeHtml(getFilterLabel(filter)) + '</button>';
+                    return '<button class="' + classes + '" type="button" data-filter="' + filter + '" onclick="window.tmrSetBoardFilter(\'' + filter + '\')">' + escapeHtml(getFilterLabel(filter, { sport_key: SPORT_KEY_MAP[state.selectedSport] || '' })) + '</button>';
                 }).join('') +
                 '</div>' +
                 '</div>';
@@ -1419,18 +1430,33 @@
                 const order = { full_game: 1, spread: 2, total: 3, team_totals: 4, first_half: 5, second_half: 6, period_1: 7, first_5: 8, alt_spreads: 9, alt_totals: 10 };
                 return (order[a && a.key] || 99) - (order[b && b.key] || 99);
             });
-            const visibleGroups = orderedGroups.filter(function(group) {
-                return activeBoardFilter === 'all' || getGroupCategory(group) === activeBoardFilter;
+            const cardCategorySet = new Set();
+            orderedGroups.forEach(function(group) {
+                cardCategorySet.add(getGroupCategory(group));
             });
-            const groupsHtml = visibleGroups.map(function(group, groupIndex) {
+            const cardTabFilters = getPreferredFilters(game, cardCategorySet).filter(function(filter) {
+                return cardCategorySet.has(filter);
+            });
+            const activeCardFilter = cardCategorySet.has(activeBoardFilter)
+                ? activeBoardFilter
+                : (cardTabFilters[0] || 'game-lines');
+            const groupsHtml = orderedGroups.map(function(group, groupIndex) {
                 return renderBoardGroup(group, groupIndex, game, index);
             }).join('');
+            const cardTabsHtml = cardTabFilters.length > 1
+                ? '<div class="tmr-card-filter-bar"><div class="tmr-card-filter-tabs">' +
+                    cardTabFilters.map(function(filter) {
+                        const active = filter === activeCardFilter ? ' active' : '';
+                        return '<button class="tmr-card-filter-tab' + active + '" type="button" data-filter="' + filter + '" onclick="event.stopPropagation();window.tmrSetCardFilter(\'' + cardId + '\',\'' + filter + '\')">' + escapeHtml(getFilterLabel(filter, game)) + '</button>';
+                    }).join('') +
+                  '</div></div>'
+                : '';
 
             if (!groupsHtml) {
                 return '';
             }
 
-            return '<div class="tmr-market-card' + (index === 0 ? ' open' : '') + '" id="' + cardId + '" data-scope="full" data-market-filter="' + activeBoardFilter + '" style="--tmr-accent:' + escapeHtml(accent.primary) + ';--tmr-accent-soft:' + escapeHtml(accent.secondary) + ';">' +
+            return '<div class="tmr-market-card' + (index === 0 ? ' open' : '') + '" id="' + cardId + '" data-scope="full" data-market-filter="' + activeCardFilter + '" style="--tmr-accent:' + escapeHtml(accent.primary) + ';--tmr-accent-soft:' + escapeHtml(accent.secondary) + ';">' +
                 '<div class="tmr-market-head" onclick="window.tmrToggleCard(\'' + cardId + '\')">' +
                 '<div>' +
                 '<div class="tmr-market-topline"><span class="tmr-market-league">' + escapeHtml(state.selectedSport || game.sport_title || 'Board') + '</span><span class="tmr-market-status">' + escapeHtml(formatStartsIn(game.commence_time)) + '</span></div>' +
@@ -1447,7 +1473,7 @@
                 '</div>' +
                 '<div class="tmr-market-summary"><div class="tmr-market-count">' + (game.market_groups || []).length + ' markets</div><div class="tmr-market-caret">⌄</div></div>' +
                 '</div>' +
-                '<div class="tmr-market-body">' + groupsHtml + '</div>' +
+                '<div class="tmr-market-body">' + cardTabsHtml + groupsHtml + '</div>' +
                 '</div>';
         }).join('');
 
