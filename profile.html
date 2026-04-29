@@ -966,7 +966,10 @@
                 <button type="button" class="profile-tab" data-tab="polls" id="profilePollsTab" role="tab">Polls</button>
                 <button type="button" class="profile-tab" data-tab="trivia" id="profileTriviaTab" role="tab">Trivia</button>
                 <button type="button" class="profile-tab" data-tab="tournaments" role="tab">Tournaments</button>
-                <button type="button" class="profile-tab" data-tab="store" role="tab">Store</button>
+                <button type="button" class="profile-tab" data-tab="advanced" role="tab">Advanced Metrics</button>
+                <button type="button" class="profile-tab" data-tab="charts" role="tab">Charts</button>
+                <button type="button" class="profile-tab" data-tab="splits" role="tab">Splits</button>
+                <button type="button" class="profile-tab" data-tab="store" role="tab">Marketplace</button>
             </div>
         </div>
     </section>
@@ -1377,6 +1380,156 @@
                             <div class="profile-empty-icon"><i class="fas fa-medal"></i></div>
                             <p class="profile-empty-title">No tournaments joined yet</p>
                             <p class="profile-empty-body">Tournament entries, bracket runs, and finish placement will appear here.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: ADVANCED METRICS (capper analytics dashboard) -->
+                <div class="profile-tab-panel" data-panel="advanced">
+                    <div class="profile-feed-card">
+                        <div class="profile-feed-head">
+                            <div>
+                                <div class="section-title">Advanced Capper Metrics</div>
+                                <div class="section-subtitle">PickMonitor-style analytics layer. Pulls from the same public ledger as the Record tab. Metrics show "&mdash;" until enough graded picks exist to compute them.</div>
+                            </div>
+                        </div>
+                        <div id="advCardOverall" class="tmr-cap-card">
+                            <div class="tmr-cap-card__head">
+                                <div class="tmr-cap-card__avatar">A</div>
+                                <div class="tmr-cap-card__name"><strong>Overall &amp; recent</strong><span>Top-line ledger summary across the entire history.</span></div>
+                            </div>
+                            <div class="tmr-cap-card__metrics">
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Record</span><span class="tmr-cap-metric__value is-placeholder" id="advRecord">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Win %</span><span class="tmr-cap-metric__value is-placeholder" id="advWinPct">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Net units</span><span class="tmr-cap-metric__value is-placeholder" id="advUnits">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">ROI</span><span class="tmr-cap-metric__value is-placeholder" id="advRoi">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Avg odds</span><span class="tmr-cap-metric__value is-placeholder" id="advAvgOdds">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Total picks</span><span class="tmr-cap-metric__value is-placeholder" id="advTotal">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Pending</span><span class="tmr-cap-metric__value is-placeholder" id="advPending">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Pushes</span><span class="tmr-cap-metric__value is-placeholder" id="advPushes">—</span></div>
+                            </div>
+                            <div class="tmr-cap-card__metrics" style="margin-top:8px;">
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">P/L units</span><span class="tmr-cap-metric__value is-placeholder" id="advPlUnits">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">P/L flat $100</span><span class="tmr-cap-metric__value is-placeholder" id="advPlFlat">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Current streak</span><span class="tmr-cap-metric__value is-placeholder" id="advStreak">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best streak</span><span class="tmr-cap-metric__value is-placeholder" id="advBestStreak">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst streak</span><span class="tmr-cap-metric__value is-placeholder" id="advWorstStreak">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Avg unit size</span><span class="tmr-cap-metric__value is-placeholder" id="advAvgUnit">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Largest unit</span><span class="tmr-cap-metric__value is-placeholder" id="advMaxUnit">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Trust score</span><span class="tmr-cap-metric__value is-placeholder" id="advTrust">—</span></div>
+                            </div>
+                        </div>
+
+                        <div class="tmr-cap-card" style="margin-top:14px;">
+                            <div class="tmr-cap-card__head">
+                                <div class="tmr-cap-card__avatar">P</div>
+                                <div class="tmr-cap-card__name"><strong>Period performance</strong><span>ROI and units across rolling time windows.</span></div>
+                            </div>
+                            <div class="tmr-cap-card__metrics">
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 7d</span><span class="tmr-cap-metric__value is-placeholder">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 14d</span><span class="tmr-cap-metric__value is-placeholder">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 30d</span><span class="tmr-cap-metric__value is-placeholder">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 60d</span><span class="tmr-cap-metric__value is-placeholder">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 90d</span><span class="tmr-cap-metric__value is-placeholder">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 180d</span><span class="tmr-cap-metric__value is-placeholder">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 365d</span><span class="tmr-cap-metric__value is-placeholder">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">All time</span><span class="tmr-cap-metric__value is-placeholder">—</span></div>
+                            </div>
+                        </div>
+
+                        <div class="tmr-cap-card" style="margin-top:14px;">
+                            <div class="tmr-cap-card__head">
+                                <div class="tmr-cap-card__avatar">S</div>
+                                <div class="tmr-cap-card__name"><strong>Scores</strong><span>Composite analytics scores. Each requires a minimum graded sample size.</span></div>
+                            </div>
+                            <div class="tmr-cap-card__metrics">
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Consistency</span><span class="tmr-cap-metric__value is-placeholder">—</span><span class="tmr-cap-metric__sub">Variance vs. rolling ROI</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Volatility</span><span class="tmr-cap-metric__value is-placeholder">—</span><span class="tmr-cap-metric__sub">Std dev of monthly units</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Sample size</span><span class="tmr-cap-metric__value is-placeholder">—</span><span class="tmr-cap-metric__sub">Total graded picks</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Public-record</span><span class="tmr-cap-metric__value is-placeholder">—</span><span class="tmr-cap-metric__sub">Time-on-platform &amp; lock rate</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Max drawdown</span><span class="tmr-cap-metric__value is-placeholder">—</span><span class="tmr-cap-metric__sub">Peak-to-trough units</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Peak units</span><span class="tmr-cap-metric__value is-placeholder">—</span><span class="tmr-cap-metric__sub">All-time high</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Recovery</span><span class="tmr-cap-metric__value is-placeholder">—</span><span class="tmr-cap-metric__sub">Drawdown to new peak</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Capper trust</span><span class="tmr-cap-metric__value is-placeholder">—</span><span class="tmr-cap-metric__sub">Composite score</span></div>
+                            </div>
+                        </div>
+
+                        <p style="margin-top:14px;color:var(--tmr-text-muted);font-size:.78rem;">Metrics not yet computed for this account show "&mdash;" instead of fabricated values. Once the underlying ledger has enough graded picks for a metric, the dashboard fills in automatically.</p>
+                    </div>
+                </div>
+
+                <!-- TAB: CHARTS -->
+                <div class="profile-tab-panel" data-panel="charts">
+                    <div class="profile-feed-card">
+                        <div class="profile-feed-head">
+                            <div>
+                                <div class="section-title">Charts</div>
+                                <div class="section-subtitle">Equity curve, monthly units, ROI by sport, market splits, drawdown, recent form. Charts populate when graded picks exist.</div>
+                            </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;">
+                            <div class="tmr-chart-stage">
+                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Equity curve</div><div class="tmr-chart-stage__sub">Cumulative net units</div></div>
+                                <div class="tmr-chart-stage__canvas">Chart populates when data exists</div>
+                            </div>
+                            <div class="tmr-chart-stage">
+                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Monthly units</div><div class="tmr-chart-stage__sub">Units gained/lost per month</div></div>
+                                <div class="tmr-chart-stage__canvas">Chart populates when data exists</div>
+                            </div>
+                            <div class="tmr-chart-stage">
+                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">ROI by sport</div><div class="tmr-chart-stage__sub">Per-sport return on units risked</div></div>
+                                <div class="tmr-chart-stage__canvas">Chart populates when data exists</div>
+                            </div>
+                            <div class="tmr-chart-stage">
+                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Market type performance</div><div class="tmr-chart-stage__sub">Spread / Total / ML / Props</div></div>
+                                <div class="tmr-chart-stage__canvas">Chart populates when data exists</div>
+                            </div>
+                            <div class="tmr-chart-stage">
+                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Odds range performance</div><div class="tmr-chart-stage__sub">ROI by line bucket</div></div>
+                                <div class="tmr-chart-stage__canvas">Chart populates when data exists</div>
+                            </div>
+                            <div class="tmr-chart-stage">
+                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Unit size performance</div><div class="tmr-chart-stage__sub">ROI by stake size</div></div>
+                                <div class="tmr-chart-stage__canvas">Chart populates when data exists</div>
+                            </div>
+                            <div class="tmr-chart-stage">
+                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Drawdown</div><div class="tmr-chart-stage__sub">Peak-to-trough sequence</div></div>
+                                <div class="tmr-chart-stage__canvas">Chart populates when data exists</div>
+                            </div>
+                            <div class="tmr-chart-stage">
+                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Recent form</div><div class="tmr-chart-stage__sub">Last 20 graded picks</div></div>
+                                <div class="tmr-chart-stage__canvas">Chart populates when data exists</div>
+                            </div>
+                            <div class="tmr-chart-stage">
+                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Streak history</div><div class="tmr-chart-stage__sub">W and L runs over time</div></div>
+                                <div class="tmr-chart-stage__canvas">Chart populates when data exists</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: SPLITS -->
+                <div class="profile-tab-panel" data-panel="splits">
+                    <div class="profile-feed-card">
+                        <div class="profile-feed-head">
+                            <div>
+                                <div class="section-title">Splits</div>
+                                <div class="section-subtitle">Sport / league / market / side / odds-range / period splits. Each split needs enough sample to compute.</div>
+                            </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;">
+                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">S</div><div class="tmr-cap-card__name"><strong>By sport</strong><span>NFL / NBA / MLB / NHL / NCAA / Soccer / UFC</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
+                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">L</div><div class="tmr-cap-card__name"><strong>By league</strong><span>Per-league record + ROI</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
+                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">M</div><div class="tmr-cap-card__name"><strong>By market</strong><span>Spread / Total / ML / Props / Team Totals / Halves / F5</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
+                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">F</div><div class="tmr-cap-card__name"><strong>Fav vs Dog</strong><span>Performance vs price profile</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Favorite</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Underdog</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
+                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">H</div><div class="tmr-cap-card__name"><strong>Home vs Away</strong><span>Side-of-board split</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Home</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Away</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
+                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">O</div><div class="tmr-cap-card__name"><strong>Over vs Under</strong><span>Totals direction split</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Overs</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Unders</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
+                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">G</div><div class="tmr-cap-card__name"><strong>Game segments</strong><span>1H / 2H / F5 (MLB) / Full game</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
+                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">T</div><div class="tmr-cap-card__name"><strong>Teams</strong><span>Most picked / most faded / most/least profitable</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Top</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
+                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">D</div><div class="tmr-cap-card__name"><strong>By day of week</strong><span>Sun / Mon / ... / Sat ROI</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
+                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">$</div><div class="tmr-cap-card__name"><strong>By odds range</strong><span>Heavy fav / fav / even / dog / longshot</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best bucket</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst bucket</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
+                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">U</div><div class="tmr-cap-card__name"><strong>By unit size</strong><span>0.5–1u / 1.5–2u / 2.5–3u / 3u+</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
+                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">L</div><div class="tmr-cap-card__name"><strong>Live vs Pre-game</strong><span>Where supported</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Pregame</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Live</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
                         </div>
                     </div>
                 </div>
@@ -3123,11 +3276,52 @@
 
     function updateProfileSidebar(p) {
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        const setMetric = (id, value, isPlaceholder, isPos, isNeg) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = value;
+            el.classList.toggle('is-placeholder', !!isPlaceholder);
+            el.classList.toggle('is-pos', !!isPos);
+            el.classList.toggle('is-neg', !!isNeg);
+        };
         const totalPicks = Number(p && (p.total_picks || p.totalPicks) || 0);
         set('sidebarFollowers', String(Number((p && p.follower_count) || 0)));
         set('sidebarFollowing', String(Number((p && p.following_count) || 0)));
         set('sidebarTrackedPicks', String(totalPicks));
         set('sidebarLeaderboard', currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked');
+
+        // Advanced Metrics top-line panel — populate from real fields where they exist;
+        // never fabricate. Anything missing keeps its '—' placeholder.
+        const wins = Number((p && p.wins) || 0);
+        const losses = Number((p && p.losses) || 0);
+        const pushes = Number((p && p.pushes) || 0);
+        const pending = Number((p && p.pending) || 0);
+        const winRate = (p && p.win_rate != null) ? Number(p.win_rate) : null;
+        const roi = (p && p.roi != null) ? Number(p.roi) : null;
+        const units = (p && (p.net_units != null ? p.net_units : p.units)) ?? null;
+
+        if (totalPicks > 0) {
+            setMetric('advRecord', wins + '-' + losses + (pushes ? ('-' + pushes) : ''), false);
+            setMetric('advTotal', String(totalPicks), false);
+            setMetric('advPushes', String(pushes), false);
+            setMetric('advPending', String(pending), false);
+        }
+        if (winRate != null) setMetric('advWinPct', winRate.toFixed(1) + '%', false);
+        if (roi != null) setMetric('advRoi', (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%', false, roi > 0, roi < 0);
+        if (units != null) {
+            const u = Number(units);
+            setMetric('advUnits', (u >= 0 ? '+' : '') + u.toFixed(1) + 'u', false, u > 0, u < 0);
+            setMetric('advPlUnits', (u >= 0 ? '+' : '') + u.toFixed(1) + 'u', false, u > 0, u < 0);
+            setMetric('advPlFlat', (u >= 0 ? '+$' : '-$') + Math.abs(u * 100).toFixed(0), false, u > 0, u < 0);
+        }
+        if (p && p.avg_odds != null) setMetric('advAvgOdds', String(p.avg_odds), false);
+        if (p && p.avg_units != null) setMetric('advAvgUnit', Number(p.avg_units).toFixed(2) + 'u', false);
+        if (p && p.current_streak != null) {
+            const cs = Number(p.current_streak);
+            setMetric('advStreak', (cs > 0 ? cs + 'W' : cs < 0 ? Math.abs(cs) + 'L' : '0'), false, cs > 0, cs < 0);
+        }
+        if (p && p.best_streak != null) setMetric('advBestStreak', Math.abs(Number(p.best_streak)) + 'W', false, true);
+        if (p && p.worst_streak != null) setMetric('advWorstStreak', Math.abs(Number(p.worst_streak)) + 'L', false, false, true);
     }
 
     function updateWorkspaceLinks(username) {
