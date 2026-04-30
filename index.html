@@ -1031,7 +1031,8 @@ button{font:inherit;cursor:pointer}
 ============================================================ */
 .combined-hero.hero-v2 {
     position: relative;
-    min-height: 90vh;
+    min-height: 0;            /* let content set its own height */
+    height: auto;
     padding: 0;
     overflow: hidden;
     isolation: isolate;
@@ -1055,46 +1056,50 @@ button{font:inherit;cursor:pointer}
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: 78% center;          /* shift Curry further right so he sits behind the right column instead of competing with the headline */
-    filter: saturate(0.7) contrast(0.9) brightness(0.55) blur(2px);
-    transform: scale(1.06);              /* offset blur edge softness */
-    opacity: 0.85;
+    object-position: 78% center;
+    /* Brought back. Less blur, more saturation, more brightness so Curry
+       reads as energy. The gradient + vignette below still keep the text
+       readable. */
+    filter: saturate(0.95) contrast(1.0) brightness(0.85) blur(0.8px);
+    transform: scale(1.04);
+    opacity: 1;
 }
 .combined-hero.hero-v2 .hero-bg-gradient {
     position: absolute;
     inset: 0;
-    /* Stronger left-side blackout so the headline sits on near-flat black,
-       Curry faintly visible only on the right edge as atmosphere. */
+    /* Lighter overlay so Curry comes through, but still a strong fall-off
+       on the left so the headline keeps high contrast. */
     background:
-        linear-gradient(90deg, rgba(5, 8, 18, 0.97) 0%, rgba(5, 8, 18, 0.88) 38%, rgba(5, 8, 18, 0.62) 70%, rgba(5, 8, 18, 0.38) 100%);
+        linear-gradient(90deg, rgba(5, 8, 18, 0.88) 0%, rgba(5, 8, 18, 0.66) 42%, rgba(5, 8, 18, 0.30) 75%, rgba(5, 8, 18, 0.12) 100%);
     pointer-events: none;
 }
 .combined-hero.hero-v2 .hero-bg-vignette {
     position: absolute;
     inset: 0;
-    /* Heavier corner darkening + a top fade so the navbar reads as separate. */
+    /* Softer top fade for navbar separation; bottom fade kept so the trust
+       strip sits on a clean dark band. Corner darkening dialed back. */
     background:
-        linear-gradient(180deg, rgba(5, 7, 13, 0.6) 0%, transparent 18%, transparent 78%, rgba(5, 7, 13, 0.85) 100%),
-        radial-gradient(ellipse 120% 100% at 50% 50%, transparent 38%, rgba(0, 0, 0, 0.45) 100%);
+        linear-gradient(180deg, rgba(5, 7, 13, 0.5) 0%, transparent 14%, transparent 80%, rgba(5, 7, 13, 0.88) 100%),
+        radial-gradient(ellipse 130% 110% at 50% 50%, transparent 50%, rgba(0, 0, 0, 0.30) 100%);
     pointer-events: none;
 }
 
-/* Zone A: headline + sample card */
+/* Zone A: headline + platform card. Content-driven height; no forced 90vh. */
 .combined-hero.hero-v2 .hero-zone-a {
     position: relative;
     z-index: 2;
-    flex: 1 1 70%;
+    flex: 0 0 auto;                /* let content set height instead of stretching */
     display: flex;
-    align-items: flex-start;       /* anchor content to the TOP of the hero (was center) */
-    padding: 28px 0 22px;
+    align-items: center;            /* center vertically so left + right columns balance */
+    padding: 36px 0 32px;           /* tighter than 90vh sprawl, generous top breathing room */
 }
 .combined-hero.hero-v2 .hero-zone-a-inner {
-    width: min(1320px, calc(100% - 36px));   /* slightly wider so left + right edges sit further out */
+    width: min(1380px, calc(100% - 48px));
     margin: 0 auto;
     display: grid;
-    grid-template-columns: minmax(0, 58%) minmax(0, 42%);
-    gap: 32px;
-    align-items: start;            /* both columns top-anchored */
+    grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
+    gap: 64px;                      /* much wider gap so columns no longer hug each other */
+    align-items: center;
 }
 
 /* Headline column — keep existing chrome but tighter */
@@ -1136,20 +1141,20 @@ button{font:inherit;cursor:pointer}
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     margin: 4px 0 0;
 }
 .combined-hero.hero-v2 .hero-action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 16px 26px;
+    padding: 15px 22px;
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(148, 163, 184, 0.22);
     color: #ffffff;
     font-family: 'Barlow Condensed', 'Inter', sans-serif;
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 800;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -1162,8 +1167,8 @@ button{font:inherit;cursor:pointer}
     background: transparent;
     border-color: rgba(255, 255, 255, 0.18);
     color: #cbd5e1;
-    padding: 14px 22px;
-    font-size: 15px;
+    padding: 13px 18px;
+    font-size: 14.5px;
 }
 .combined-hero.hero-v2 .hero-action--ghost:hover {
     background: rgba(255, 255, 255, 0.04);
@@ -1316,36 +1321,36 @@ button{font:inherit;cursor:pointer}
 .hero-platform-card {
     position: relative;
     width: 100%;
-    max-width: 460px;
+    max-width: 540px;
     justify-self: end;
-    align-self: start;
-    margin: 4px 0 0;
-    padding: 18px 18px 16px;
+    align-self: center;
+    margin: 0;
+    padding: 24px 24px 22px;
     background: linear-gradient(180deg, rgba(11, 18, 32, 0.86) 0%, rgba(5, 10, 22, 0.92) 100%);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-top: 1px solid rgba(45, 212, 191, 0.45);
-    border-radius: 14px;
+    border-radius: 16px;
     backdrop-filter: blur(18px) saturate(140%);
     -webkit-backdrop-filter: blur(18px) saturate(140%);
-    box-shadow: 0 24px 56px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    box-shadow: 0 28px 64px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.04);
     color: #e6edf6;
     font-family: 'Inter', system-ui, sans-serif;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 18px;
 }
 .hero-platform-card-head {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: 10px;
-    padding-bottom: 12px;
+    gap: 12px;
+    padding-bottom: 14px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     flex-wrap: wrap;
 }
 .hero-platform-eyebrow {
     font-family: 'Barlow Condensed', 'Inter', sans-serif;
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 900;
     letter-spacing: -0.2px;
     color: #ffffff;
@@ -1354,22 +1359,22 @@ button{font:inherit;cursor:pointer}
 }
 .hero-platform-sub {
     color: #94a3b8;
-    font-size: 12px;
+    font-size: 12.5px;
     line-height: 1.4;
 }
 .hero-platform-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
+    gap: 12px;
 }
 .hero-platform-tile {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 12px 12px 11px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    gap: 6px;
+    padding: 16px 16px 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.07);
     color: inherit;
     text-decoration: none;
     transition: background .15s ease, border-color .15s ease, transform .15s ease;
@@ -1381,11 +1386,11 @@ button{font:inherit;cursor:pointer}
     transform: translateY(-1px);
     text-decoration: none;
 }
-.hero-platform-ico { font-size: 18px; line-height: 1; }
+.hero-platform-ico { font-size: 20px; line-height: 1; margin-bottom: 2px; }
 .hero-platform-title {
     color: #ffffff;
     font-family: 'Barlow Condensed', 'Inter', sans-serif;
-    font-size: 14.5px;
+    font-size: 15.5px;
     font-weight: 800;
     letter-spacing: 0.01em;
     line-height: 1.15;
@@ -1393,8 +1398,8 @@ button{font:inherit;cursor:pointer}
 }
 .hero-platform-body {
     color: #94a3b8;
-    font-size: 11.5px;
-    line-height: 1.4;
+    font-size: 12px;
+    line-height: 1.45;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
