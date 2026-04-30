@@ -1968,6 +1968,7 @@
             try { window.api.loadTokens(); } catch (error) {}
         }
 
+        let finalPayload = null;
         try {
             const api = await getApiClientOrFallback();
             await ensureBackendAccessToken(api);
@@ -1991,6 +1992,7 @@
                 game_snapshot: buildSubmittedGameSnapshot(option),
                 reasoning: reasoningInput ? reasoningInput.value.trim() : ''
             };
+            finalPayload = payload;
             try { console.info('[TMR][lockInPick] final payload', payload); } catch (_) {}
             const response = await api.createPick(payload);
 
@@ -2020,7 +2022,10 @@
                 'game_id=' + (option.game_id || ''),
                 'sport_key=' + (option.sport_key || ''),
                 'market=' + (option.market_type || ''),
-                'sel=' + (option.selection || '')
+                'sel=' + (submittedSelection || option.selection || ''),
+                'line=' + (lineValue == null ? '' : lineValue),
+                'odds=' + (Number.isNaN(oddsValue) ? '' : oddsValue),
+                'payload=' + (finalPayload ? JSON.stringify(finalPayload) : 'not-built')
             ].join(' | ');
             try { console.error('[TMR][lockInPick] failure', { error, option, data }); } catch (e) {}
             showSubmitTrace('Submit failed: ' + dumped);
