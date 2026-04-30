@@ -1791,42 +1791,104 @@
         if (bookInput) bookInput.value = option.book_title || '';
         if (timestampInput) timestampInput.value = formatTimestamp(option.source_updated_at);
 
-        // Team-totals: also populate the .sportsbook-ticket-preview slip aside.
-        // Without this, the visible "SUBMIT PICK" button stays disabled and a
-        // user clicking e.g. Pirates Under +4.5 has nothing to submit through.
-        // _ttPopulateSlip swaps the static slip card for one with a working
-        // #ttSlipSubmit that calls window.lockInPick().
-        if (option.market_type === 'team_totals' && window.TMR && typeof window.TMR._ttPopulateSlip === 'function') {
+        // CRITICAL fix Apr 30 2026: populate the VISIBLE lobby pick slip
+        // (.sportsbook-ticket-preview aside) for EVERY market type, not
+        // just team_totals. The user-visible slip on the lobby was stuck
+        // at "0 Picks / No picks selected yet" because spread / ML / total
+        // / over / under clicks filled the hidden #pickDetails form but
+        // never touched the aside the user is actually looking at. The
+        // _ttPopulateSlip helper repaints the aside in place with the
+        // selection summary + a working "Lock Pick" button — and writes
+        // through to window.TMR.currentSelectedPick so window.lockInPick()
+        // submits the right thing. Same path for every sport.
+        if (window.TMR && typeof window.TMR._ttPopulateSlip === 'function') {
             try {
-                const label = String(option.selection_label || '');
-                const betType = /under/i.test(label) ? 'teamunder' : 'teamover';
-                let teamName = label.replace(/\s*(Over|Under).*$/i, '').trim();
-                if (!teamName && option.game) {
-                    teamName = option.game.home_team || option.game.away_team || '';
+                const label = String(option.selection_label || option.selection || '');
+                const market = option.market_type || '';
+                const game = option.game || {};
+                const awayTeam = game.away_team || '';
+                const homeTeam = game.home_team || '';
+
+                // Map (market_type, label) -> ({betType, displayTeam, sideLabel}) for
+                // the slip headline. Match the labels selectGameBet legacy bridge uses.
+                let betType = 'ml';
+                let displayTeam = '';
+                let sideLabel = '';
+                switch (market) {
+                    case 'team_totals':
+                        betType = /under/i.test(label) ? 'teamunder' : 'teamover';
+                        displayTeam = label.replace(/\s*(Over|Under).*$/i, '').trim() || homeTeam || awayTeam;
+                        sideLabel = /under/i.test(label) ? 'Under' : 'Over';
+                        break;
+                    case 'totals':
+                        betType = /under/i.test(label) ? 'under' : 'over';
+                        displayTeam = '';
+                        sideLabel = /under/i.test(label) ? 'Under' : 'Over';
+                        break;
+                    case 'f5_totals':
+                        betType = /under/i.test(label) ? 'f5under' : 'f5over';
+                        displayTeam = '';
+                        sideLabel = /under/i.test(label) ? 'F5 Under' : 'F5 Over';
+                        break;
+                    case 'spreads':
+                        betType = 'spread';
+                        displayTeam = option.selection || label.split(' ')[0] || '';
+                        sideLabel = '';
+                        break;
+                    case 'f5_spreads':
+                        betType = 'f5spread';
+                        displayTeam = option.selection || '';
+                        sideLabel = 'F5';
+                        break;
+                    case 'h2h':
+                        betType = 'ml';
+                        displayTeam = option.selection || '';
+                        sideLabel = 'ML';
+                        break;
+                    case 'f5_h2h':
+                        betType = 'f5ml';
+                        displayTeam = option.selection || '';
+                        sideLabel = 'F5 ML';
+                        break;
+                    default:
+                        betType = 'ml';
+                        displayTeam = option.selection || '';
+                        sideLabel = '';
                 }
+
                 window.TMR._ttPopulateSlip({
                     gameIndex: null,
                     betType: betType,
-                    team: teamName,
+                    team: displayTeam,
                     line: option.line != null ? option.line : (parseFloat(option.line_display) || null),
                     odds: option.odds,
-                    awayTeam: option.game ? option.game.away_team : '',
-                    homeTeam: option.game ? option.game.home_team : '',
+                    awayTeam: awayTeam,
+                    homeTeam: homeTeam,
                     sport: (window.TMR && window.TMR.selectedSport) || '',
-                    market: option.group_label || 'Team Total',
-                    marketType: 'team_totals',
+                    market: option.group_label || sideLabel || 'Pick',
+                    marketType: market,
                     book: option.book_title || '',
-                    gameTime: option.game ? option.game.commence_time : null,
-                    gameId: option.game_id || (option.game && option.game.id) || null,
-                    game: option.game || null
+                    gameTime: game.commence_time || null,
+                    gameId: option.game_id || game.id || null,
+                    game: game
                 });
             } catch (e) {
-                console.warn('[TMR][TT] _ttPopulateSlip wiring failed:', e && e.message);
+                console.warn('[TMR][slip] _ttPopulateSlip wiring failed:', e && e.message);
             }
         }
 
+        // showPickStep would HIDE the lobby (#sportSelection) and the lobby
+        // slip the user is actually looking at, then "advance" them to
+        // #pickDetails which on desktop is below the fold and on mobile is
+        // a fresh screen. Skip it — the lobby slip is now repainted in place
+        // by _ttPopulateSlip above, which is what the user actually sees.
+        // (Old behavior is preserved when an explicit caller sets
+        // __suppressPickStep=false AND we're already past the lobby.)
         if (!(window.TMR && window.TMR.__suppressPickStep) && typeof window.showPickStep === 'function') {
-            window.showPickStep('pickDetails');
+            const lobbyActive = !!document.querySelector('#sportSelection.active');
+            if (!lobbyActive) {
+                window.showPickStep('pickDetails');
+            }
         }
     }
 

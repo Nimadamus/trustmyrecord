@@ -209,3 +209,21 @@
     #picks .sb-board-action { height: 50px !important; font-size: 13px !important; }
     #picks .sportsbook-period-tab { height: 38px !important; padding: 8px 14px !important; }
 }
+
+/* CRITICAL fix Apr 30 2026: while the lobby (#sportSelection) is active,
+   HIDE the secondary .picks-board-row pane entirely. The lobby has its
+   own board (#lobbyBoardRows) and its own pick slip aside
+   (.sportsbook-ticket-preview). The picks-board-row was forcing
+   #gamesListSection ("NBA Games / Loading games...") and a second
+   #pickDetails to display:block via desktop CSS, which caused the
+   "duplicate Pick Slip" + "duplicate NBA Games loading" sections the
+   user was seeing on the same page. Once an odds button is clicked, the
+   lobby slip lights up via _ttPopulateSlip — the user never sees these
+   secondary panes during normal pick flow. */
+#picks #sportSelection.active ~ .picks-board-row,
+body #picks #sportSelection.active ~ .picks-board-row {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
