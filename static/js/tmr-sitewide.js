@@ -33,7 +33,8 @@
         "terms.html": ["Terms", "The rules for using TrustMyRecord as a sports social record platform."],
         "privacy.html": ["Privacy", "How TrustMyRecord handles account, profile, and platform data."],
         "reset-password.html": ["Reset Password", "Recover account access without leaving the product shell."],
-        "verify-email.html": ["Verify Email", "Confirm account ownership before using record and social features."]
+        "verify-email.html": ["Verify Email", "Confirm account ownership before using record and social features."],
+        "report-bug.html": ["Report a Bug", "Spot something broken on TrustMyRecord? Send it straight to the team."]
     };
 
     const currentFile = (location.pathname.split("/").pop() || "index.html").toLowerCase();
@@ -465,7 +466,7 @@
                         <a href="about/">About</a>
                         <a href="terms/">Terms</a>
                         <a href="privacy/">Privacy</a>
-                        <a href="mailto:support@trustmyrecord.com">Contact</a>
+                        <a href="report-bug/">Report a Bug</a>
                     </div>
                 </div>
             </div>

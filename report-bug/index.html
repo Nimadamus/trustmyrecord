@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report a Bug | TrustMyRecord</title>
+    <meta name="description" content="Spot something broken on TrustMyRecord? Report it here. Direct line to the team — no public thread, no third party.">
+    <meta name="robots" content="noindex,follow">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260429f">
+    <link rel="stylesheet" href="/static/css/tmr-page-polish.css?v=20260429a">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260429f"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { min-height: 100vh; }
+        a { color: var(--tmrp-neon-cyan); text-decoration: none; }
+        a:hover { color: var(--tmrp-neon-gold); }
+
+        .nav { background: rgba(11,17,24,0.92); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 0 24px; display: flex; align-items: center; height: 60px; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(14px); }
+        .nav-logo { font-family: 'Barlow','Inter',sans-serif; font-size: 18px; font-weight: 800; color: var(--tmrp-neon-cyan); margin-right: 32px; letter-spacing: 1px; }
+        .nav-logo span { color: var(--tmrp-neon-gold); }
+        .nav-links { display: flex; gap: 10px; flex-wrap: wrap; }
+        .nav-link { padding: 8px 16px; border-radius: 8px; color: var(--tmrp-text-secondary); font-weight: 500; font-size: 14px; transition: all 0.2s; }
+        .nav-link:hover { color: var(--tmrp-text-primary); background: rgba(255,255,255,0.05); }
+        .nav-right { margin-left: auto; display: flex; gap: 12px; align-items: center; }
+        .nav-user { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+        .nav-user:hover { background: rgba(255,255,255,0.05); }
+        .nav-avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(0,255,255,0.15); border: 2px solid var(--tmrp-neon-cyan); object-fit: cover; }
+        .nav-username { font-size: 13px; color: var(--tmrp-text-primary); font-weight: 600; }
+        .btn-sm-cyan { padding: 6px 14px; border-radius: 8px; background: var(--tmrp-neon-cyan); color: #000; font-weight: 700; font-size: 12px; }
+
+        .hamburger { display: none; background: none; border: none; color: var(--tmrp-text-primary); font-size: 24px; cursor: pointer; }
+        @media (max-width: 768px) {
+            .hamburger { display: block; }
+            .nav-links { position: fixed; top: 60px; left: 0; right: 0; background: rgba(11,17,24,0.96); border-bottom: 1px solid rgba(255,255,255,0.08); flex-direction: column; padding: 16px; z-index: 99; display: none; }
+            .nav-links.open { display: flex; }
+        }
+
+        .form-row { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 8px; }
+        @media (min-width: 720px) { .form-row.cols-2 { grid-template-columns: 1fr 1fr; } }
+        .form-label { display: block; font-size: 13px; color: var(--tmrp-text-secondary); margin-bottom: 6px; font-weight: 600; letter-spacing: 0.02em; }
+        .form-help  { font-size: 12px; color: var(--tmrp-text-muted); margin-top: 4px; }
+        .form-required { color: var(--tmrp-neon-cyan); }
+
+        textarea.tmr-textarea { min-height: 180px; resize: vertical; }
+        .honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; opacity: 0; }
+
+        .alert { border-radius: 12px; padding: 14px 16px; margin-top: 16px; font-size: 14px; line-height: 1.5; display: none; }
+        .alert.is-shown { display: block; }
+        .alert-success { background: rgba(0, 255, 136, 0.08); border: 1px solid rgba(0, 255, 136, 0.32); color: #b6ffd9; }
+        .alert-error   { background: rgba(255, 80, 100, 0.10); border: 1px solid rgba(255, 80, 100, 0.36); color: #ffd0d6; }
+
+        .meta-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 14px; }
+        @media (min-width: 720px) { .meta-grid { grid-template-columns: repeat(3, 1fr); } }
+        .meta-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 14px; }
+        .meta-card .meta-label { font-size: 11px; color: var(--tmrp-text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .meta-card .meta-value { font-size: 13px; color: var(--tmrp-text-primary); font-weight: 600; word-break: break-all; }
+    </style>
+</head>
+<body class="tmr-polished-page">
+
+<nav class="nav">
+    <a href="/" class="nav-logo">TRUST<span>MY</span>RECORD</a>
+    <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+    <div class="nav-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/sportsbook/" class="nav-link">Sportsbook</a>
+        <a href="/feed/" class="nav-link">Feed</a>
+        <a href="/arena/" class="nav-link">Arena</a>
+        <a href="/forum/" class="nav-link">Forum</a>
+        <a href="/messages/" class="nav-link">Messages</a>
+        <a href="/profile/" class="nav-link">My Profile</a>
+    </div>
+    <div class="nav-right">
+        <div class="nav-user" id="navUser" style="display:none;">
+            <img class="nav-avatar" id="navAvatar" src="" alt="">
+            <span class="nav-username" id="navUsername"></span>
+        </div>
+        <a href="/login/" class="btn-sm-cyan" id="navLoginBtn">Sign In</a>
+    </div>
+</nav>
+
+<main class="tmr-shell">
+    <header class="tmr-page-header">
+        <h1 class="tmr-h1">Report a Bug</h1>
+        <p class="tmr-page-sub">Spot something broken, weird, or just wrong? Tell us. This goes straight to the TrustMyRecord team — no public thread, no third party.</p>
+    </header>
+
+    <section class="tmr-glass">
+        <h2 class="tmr-h2">What happened?</h2>
+        <p>The more specific you are, the faster we can fix it. Steps to reproduce, what you expected vs. what you got, the page you were on, and the time it happened all help.</p>
+
+        <form id="bugReportForm" novalidate style="margin-top:18px;">
+            <input type="text" class="honeypot" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+            <div class="form-row cols-2">
+                <div>
+                    <label class="form-label" for="bugCategory">Category <span class="form-required">*</span></label>
+                    <select id="bugCategory" name="category" class="tmr-select" required>
+                        <option value="bug">Functional bug (something broke)</option>
+                        <option value="visual">Visual glitch (layout, color, broken image)</option>
+                        <option value="picks">Picks / posting / locking</option>
+                        <option value="grading">Auto-grading wrong</option>
+                        <option value="account">Account, login, or profile</option>
+                        <option value="forum">Forum / thread / replies</option>
+                        <option value="trivia">Trivia</option>
+                        <option value="polls">Polls</option>
+                        <option value="mobile">Mobile-specific issue</option>
+                        <option value="security">Security or privacy concern</option>
+                        <option value="other">Something else</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" for="bugPageUrl">Page URL where it happened</label>
+                    <input id="bugPageUrl" name="pageUrl" type="url" class="tmr-input" placeholder="https://trustmyrecord.com/...">
+                    <div class="form-help">Auto-fills from where you opened this form, edit if needed.</div>
+                </div>
+            </div>
+
+            <div class="form-row" style="margin-top:14px;">
+                <div>
+                    <label class="form-label" for="bugDescription">Describe the bug <span class="form-required">*</span></label>
+                    <textarea id="bugDescription" name="description" class="tmr-textarea" required minlength="10" maxlength="5000" placeholder="What were you doing? What did you expect to happen? What actually happened? Steps to reproduce, error messages, anything else useful."></textarea>
+                    <div class="form-help"><span id="bugCharCount">0</span> / 5000 — minimum 10 characters.</div>
+                </div>
+            </div>
+
+            <div class="form-row cols-2" style="margin-top:14px;">
+                <div>
+                    <label class="form-label" for="bugUsername">Your username (optional)</label>
+                    <input id="bugUsername" name="username" type="text" class="tmr-input" placeholder="auto-filled if you're signed in" maxlength="64">
+                </div>
+                <div>
+                    <label class="form-label" for="bugEmail">Reply-to email (optional)</label>
+                    <input id="bugEmail" name="email" type="email" class="tmr-input" placeholder="so we can follow up if needed">
+                    <div class="form-help">We only use this to reply to your report.</div>
+                </div>
+            </div>
+
+            <div class="meta-grid" id="bugMetaGrid">
+                <div class="meta-card"><div class="meta-label">Page</div><div class="meta-value" id="metaPage">—</div></div>
+                <div class="meta-card"><div class="meta-label">Browser</div><div class="meta-value" id="metaBrowser">—</div></div>
+                <div class="meta-card"><div class="meta-label">When</div><div class="meta-value" id="metaWhen">—</div></div>
+            </div>
+
+            <div style="display:flex;gap:12px;margin-top:22px;flex-wrap:wrap;">
+                <button type="submit" id="bugSubmitBtn" class="tmr-cta-primary"><i class="fas fa-paper-plane"></i> Send Report</button>
+                <a href="/" class="tmr-cta-secondary"><i class="fas fa-arrow-left"></i> Back to Home</a>
+            </div>
+
+            <div class="alert alert-success" id="bugAlertSuccess">
+                <strong>Got it.</strong> Your report was sent to the team. If you left an email, we'll follow up if we have questions.
+            </div>
+            <div class="alert alert-error" id="bugAlertError">
+                <strong>Hmm, something went wrong.</strong> <span id="bugAlertErrorMsg">Please try again in a moment.</span>
+            </div>
+        </form>
+    </section>
+
+    <section class="tmr-glass" style="margin-top:18px;">
+        <h2 class="tmr-h2">A few notes</h2>
+        <ul>
+            <li><strong>Security or account-takeover concern?</strong> Pick "Security or privacy concern" and add as much detail as you safely can. Don't post passwords, tokens, or session cookies.</li>
+            <li><strong>Wrong auto-grade?</strong> Include the pick (sport, teams, market, your side, the line, the date) plus what the grader said vs. what should have happened.</li>
+            <li><strong>Visual bug?</strong> A short note about the device, browser, and what you saw is gold. The auto-detected metadata below the form already covers most of it.</li>
+        </ul>
+    </section>
+</main>
+
+<script>
+(function() {
+    var form = document.getElementById('bugReportForm');
+    if (!form) return;
+
+    var pageUrlInput  = document.getElementById('bugPageUrl');
+    var usernameInput = document.getElementById('bugUsername');
+    var emailInput    = document.getElementById('bugEmail');
+    var descInput     = document.getElementById('bugDescription');
+    var charCount     = document.getElementById('bugCharCount');
+    var submitBtn     = document.getElementById('bugSubmitBtn');
+    var alertSuccess  = document.getElementById('bugAlertSuccess');
+    var alertError    = document.getElementById('bugAlertError');
+    var alertErrorMsg = document.getElementById('bugAlertErrorMsg');
+
+    var ref = '';
+    try { ref = document.referrer && document.referrer.indexOf(location.origin) === 0 ? document.referrer : ''; } catch (e) {}
+    pageUrlInput.value = ref || '';
+
+    document.getElementById('metaPage').textContent = ref || '(opened directly)';
+    document.getElementById('metaBrowser').textContent = (navigator.userAgent || '—').slice(0, 140);
+    document.getElementById('metaWhen').textContent = new Date().toLocaleString();
+
+    try {
+        var cached = null;
+        if (window.api && window.api._cachedUser) cached = window.api._cachedUser;
+        if (!cached) {
+            var raw = localStorage.getItem('tmr_user') || localStorage.getItem('user');
+            if (raw) cached = JSON.parse(raw);
+        }
+        if (cached) {
+            if (cached.username && !usernameInput.value) usernameInput.value = cached.username;
+            if (cached.email && !emailInput.value) emailInput.value = cached.email;
+        }
+    } catch (e) {}
+
+    descInput.addEventListener('input', function() {
+        charCount.textContent = String(descInput.value.length);
+    });
+
+    function showError(msg) {
+        alertSuccess.classList.remove('is-shown');
+        alertErrorMsg.textContent = msg || 'Please try again in a moment.';
+        alertError.classList.add('is-shown');
+    }
+    function showSuccess() {
+        alertError.classList.remove('is-shown');
+        alertSuccess.classList.add('is-shown');
+    }
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        alertSuccess.classList.remove('is-shown');
+        alertError.classList.remove('is-shown');
+
+        var description = (descInput.value || '').trim();
+        if (description.length < 10) {
+            showError('Please add at least a sentence about what went wrong (10+ characters).');
+            descInput.focus();
+            return;
+        }
+
+        var payload = {
+            category: document.getElementById('bugCategory').value || 'bug',
+            description: description,
+            pageUrl: (pageUrlInput.value || '').trim(),
+            username: (usernameInput.value || '').trim(),
+            email:    (emailInput.value || '').trim(),
+            honeypot: form.elements['company'] ? form.elements['company'].value : ''
+        };
+
+        submitBtn.disabled = true;
+        var originalLabel = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+        try {
+            var bases = [];
+            if (window.api && window.api.baseUrl) bases.push(window.api.baseUrl);
+            bases.push('https://trustmyrecord-api.onrender.com/api');
+
+            var lastErrText = 'Unknown error';
+            var ok = false;
+            for (var i = 0; i < bases.length && !ok; i++) {
+                try {
+                    var res = await fetch(bases[i] + '/support/bug-report', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (res.ok) { ok = true; break; }
+                    var data = null;
+                    try { data = await res.json(); } catch (e) {}
+                    lastErrText = (data && data.error) || ('Server returned ' + res.status);
+                } catch (err) {
+                    lastErrText = err && err.message ? err.message : 'Network error';
+                }
+            }
+
+            if (ok) {
+                showSuccess();
+                descInput.value = '';
+                charCount.textContent = '0';
+            } else {
+                showError(lastErrText);
+            }
+        } catch (err) {
+            showError(err && err.message ? err.message : 'Network error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalLabel;
+        }
+    });
+})();
+</script>
+
+</body>
+</html>
