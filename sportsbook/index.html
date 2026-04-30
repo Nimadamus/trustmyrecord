@@ -9364,10 +9364,34 @@ window.toggleSportFamily = function (family) {
             "'" + _ttEsc(awayTeam) + "'",
             "'" + _ttEsc(homeTeam) + "'"
         ].join(',');
-        return '<button type="button" class="sb-odds" onclick="window.selectGameBet(' + args + ')">' +
+        // Wrap selectGameBet so the lobby click also scrolls the pick form
+        // into view. Without this the lobby (#sportSelection) stays visible
+        // above the activated #pickDetails because CSS specificity forces
+        // #picks #sportSelection { display: block } — the form opens far
+        // below the fold and looks like "nothing happened".
+        var onclick = "window.selectGameBet(" + args + "); window.TMR && window.TMR._ttScrollToPickSlip && window.TMR._ttScrollToPickSlip();";
+        return '<button type="button" class="sb-odds" onclick="' + onclick + '">' +
                '<span class="sb-odds-line">' + _ttHtmlEsc(lineTxt) + '</span>' +
                '<span class="sb-odds-price">' + _ttHtmlEsc(oddsTxt) + '</span></button>';
     }
+
+    // After the lobby fires selectGameBet, jump the user to the activated
+    // #pickDetails form. We also collapse the lobby below so the form takes
+    // the visual top of the viewport — without this, the click looks like
+    // a no-op because the form opens off-screen.
+    window.TMR = window.TMR || {};
+    window.TMR._ttScrollToPickSlip = function () {
+        var pd = document.getElementById('pickDetails');
+        if (!pd) return;
+        // Force the pick form active in case any race kept it hidden.
+        pd.classList.add('active');
+        try {
+            pd.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (e) {
+            // Older browsers — fall back to instant scroll.
+            window.scrollTo(0, pd.getBoundingClientRect().top + window.scrollY - 80);
+        }
+    };
 
     function _ttRenderRows(sport, rowsEl, games, sourceLabel) {
         // Surface the games to selectGameBet (it indexes via window.TMR.currentGames).
