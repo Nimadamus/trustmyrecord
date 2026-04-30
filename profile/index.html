@@ -2613,52 +2613,63 @@
             color: #67e8f9;
             border-color: rgba(103, 232, 249, 0.28);
         }
-        /* === KPI strip — single horizontal row, 7 stats (Apr 30 2026) ===
-           Tracked Picks, Record, Win Rate, Units, ROI, Rank, Pending. Each
-           cell carries a small icon + uppercase label + bold value. */
+        /* === KPI strip — single horizontal row, 7 stats (Apr 30 2026 r2) ===
+           Each cell now reads LEFT-TO-RIGHT inside: a square icon tile on
+           the left, then a tall text block (uppercase label on top, big
+           bold value below) flush against it. Larger overall: 130px tall,
+           42px icon, 2rem-ish value. */
         .capper-main-row {
             display: grid;
             grid-template-columns: repeat(7, minmax(0, 1fr));
             border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+            background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0));
         }
         .capper-stat {
-            padding: 16px 18px;
+            padding: 22px 22px;
             border-right: 1px solid rgba(148, 163, 184, 0.13);
             min-width: 0;
             display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            gap: 8px;
-            min-height: 96px;
+            flex-direction: row;
+            align-items: center;
+            gap: 14px;
+            min-height: 130px;
         }
         .capper-stat:last-child { border-right: 0; }
         .capper-stat .capper-stat-icon {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 26px;
-            height: 26px;
-            border-radius: 6px;
-            background: rgba(34, 211, 238, 0.10);
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: linear-gradient(180deg, rgba(34, 211, 238, 0.18), rgba(34, 211, 238, 0.06));
+            border: 1px solid rgba(34, 211, 238, 0.22);
             color: #22d3ee;
-            font-size: 13px;
+            font-size: 20px;
             line-height: 1;
             flex-shrink: 0;
+        }
+        .capper-stat .capper-stat-text {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 6px;
+            min-width: 0;
+            flex: 1;
         }
         .capper-stat span.capper-stat-label {
             display: block;
             color: #94a3b8;
-            font-size: 0.66rem;
+            font-size: 0.7rem;
             font-weight: 800;
-            letter-spacing: 0.13em;
+            letter-spacing: 0.14em;
             text-transform: uppercase;
             margin: 0;
         }
         .capper-stat strong {
             display: block;
             color: #f8fafc;
-            font: 800 clamp(1.30rem, 1.9vw, 1.7rem)/1 'Barlow', 'Inter', sans-serif;
+            font: 800 clamp(1.55rem, 2.2vw, 2.1rem)/1 'Barlow', 'Inter', sans-serif;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -5092,8 +5103,10 @@
             main.innerHTML = cards.map(([label, value, cls, icon]) =>
                 '<div class="capper-stat">' +
                     '<span class="capper-stat-icon" aria-hidden="true">' + icon + '</span>' +
-                    '<span class="capper-stat-label">' + label + '</span>' +
-                    '<strong class="' + cls + '">' + value + '</strong>' +
+                    '<div class="capper-stat-text">' +
+                        '<span class="capper-stat-label">' + label + '</span>' +
+                        '<strong class="' + cls + '">' + value + '</strong>' +
+                    '</div>' +
                 '</div>'
             ).join('');
         }
