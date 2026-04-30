@@ -13,46 +13,46 @@
     <meta property="og:type" content="website">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430h">
-<script defer src="/static/js/tmr-sitewide.js?v=20260430h"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430j">
+<script defer src="/static/js/tmr-sitewide.js?v=20260430j"></script>
     <style>
         :root {
-            /* Two Plus Two / vBulletin v3-era palette: cream tan body,
-               solid navy header bands (NOT gradient), terracotta accents,
-               muted gray borders. No neon, no glass cards. */
-            --forum-blue: #003366;          /* navy header band */
-            --forum-blue-dark: #002244;     /* darker on hover */
-            --forum-silver: #f5f1e6;        /* row stripe A (cream) */
-            --forum-panel: #fcfaf3;         /* row stripe B (very light cream) */
-            --forum-border: #888888;        /* table chrome border */
-            --forum-border-strong: #555555;
-            --forum-accent: #b34700;        /* terracotta accent (2+2 link hover) */
-            --forum-link: #0033cc;          /* classic vB blue link */
-            --forum-link-hover: #b34700;
-            --forum-meta: #5a5a5a;
-            --forum-text: #1a1a1a;
-            --forum-soft: #ece6d3;
+            /* twoplustwo.com palette (rev 2): grayish body, white inner
+               content, medium-blue header bands, light-gray + pale-blue
+               row stripes, classic vB link colors. */
+            --forum-blue: #1d3a6b;          /* medium-blue header band */
+            --forum-blue-dark: #122747;
+            --forum-silver: #f7f7f7;        /* row stripe A (light gray) */
+            --forum-panel: #e8eef5;         /* row stripe B (pale blue) */
+            --forum-border: #bbbbbb;        /* table chrome border */
+            --forum-border-strong: #999999;
+            --forum-accent: #cc3300;        /* terracotta accent (link hover) */
+            --forum-link: #22229c;          /* classic vB dark blue link */
+            --forum-link-hover: #cc3300;
+            --forum-meta: #555555;
+            --forum-text: #000000;
+            --forum-soft: #e8eef5;
             --success: #2d7a35;
             --danger: #a12222;
             --warning: #735400;
             --primary: var(--forum-blue);
             --primary-dark: var(--forum-blue-dark);
             --text-primary: var(--forum-text);
-            --text-secondary: #2a2a2a;
+            --text-secondary: #1a1a1a;
             --text-muted: var(--forum-meta);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            /* 2+2: flat cream body, no gradient. Tighter type. */
+            /* 2+2 rev 2: grayish body, no gradient. Tighter type. */
             font-family: Verdana, Arial, Helvetica, sans-serif;
-            background: #e8e0c8;
+            background: #cccccc;
             color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
-            font-size: 11.5px;
-            line-height: 1.45;
+            font-size: 11px;
+            line-height: 1.4;
         }
 
         /* Loading state */
@@ -65,11 +65,11 @@
         .tmr-loading-state .tmr-loading-retry button { background: var(--forum-blue); color: #fff; border: 1px solid var(--forum-blue-dark); padding: 10px 24px; border-radius: 4px; cursor: pointer; font-weight: 700; font-size: 0.9rem; margin-top: 8px; }
         .tmr-loading-state .tmr-loading-retry button:hover { opacity: 0.85; }
 
-        /* ========== HEADER / NAV BAR (vB-style flat navy band) ========== */
+        /* ========== HEADER / NAV BAR (vB-style flat medium-blue band) ========== */
         header {
             background: var(--forum-blue);
-            border-bottom: 1px solid #001a33;
-            padding: 8px 0;
+            border-bottom: 1px solid #122747;
+            padding: 6px 0;
         }
 
         .header-content {
@@ -1236,69 +1236,76 @@
         }
 
         /* =========================================================
-           2+2 / vBulletin v3 final-cascade skin (Apr 30 2026).
-           Sits at the bottom so it overrides any earlier rules.
+           2+2 / vBulletin v3 final-cascade skin (rev 2, Apr 30 2026).
+           Palette adjusted to match the actual twoplustwo.com look:
+           - grayish body (NOT cream)
+           - white inner content shell with thin gray border
+           - medium-blue header bands (#1d3a6b), not pure navy
+           - light-gray and pale-blue row striping
+           - dark-blue links, terracotta hover, purple visited
+           - 11px Verdana, very tight row geometry
            ========================================================= */
         body {
-            background: #e8e0c8 !important;
+            background: #cccccc !important;
             font-family: Verdana, Arial, Helvetica, sans-serif !important;
-            font-size: 11.5px !important;
-            color: #1a1a1a !important;
+            font-size: 11px !important;
+            color: #000000 !important;
         }
-        /* Force the inner shell to a tight 2+2 width with a thin
-           gray border around the whole content tray. */
+        /* Force the inner shell to look like a 2+2 content tray:
+           pure white interior, thin gray frame, no shadow. Centered
+           narrowish max-width is preserved by the existing wrapper. */
         .forum-shell, .forum-container, .forum-content,
         .container, main {
-            background: #fcfaf3 !important;
-            border: 1px solid #888 !important;
+            background: #ffffff !important;
+            border: 1px solid #bbbbbb !important;
             box-shadow: none !important;
         }
-        /* Header row: the global TMR nav stays + a flat navy band that
-           feels like the 2+2 logo strip below it. */
-        header { background: #003366 !important; border-bottom: 1px solid #001a33 !important; }
-        header .logo, header .nav-link, header a { color: #fff !important; }
-        header .logo:hover, header a:hover { color: #ffd54f !important; }
+        /* Header row: medium-blue band, white text, the 2+2 forum-strip color. */
+        header { background: #1d3a6b !important; border-bottom: 1px solid #122747 !important; }
+        header .logo, header .nav-link, header a { color: #ffffff !important; }
+        header .logo:hover, header a:hover { color: #ffcc00 !important; }
 
-        /* All anchors: classic blue link, terracotta on hover. */
+        /* All anchors: classic vB dark-blue, terracotta on hover, purple visited. */
         a, .forum-link, .thread-title-link, .cat-table a, .thread-table a {
-            color: #0033cc !important; text-decoration: none !important;
+            color: #22229c !important; text-decoration: none !important;
         }
-        a:hover, .forum-link:hover, .thread-title-link:hover { color: #b34700 !important; text-decoration: underline !important; }
-        a:visited { color: #5c2d91 !important; }
+        a:hover, .forum-link:hover, .thread-title-link:hover { color: #cc3300 !important; text-decoration: underline !important; }
+        a:visited { color: #660066 !important; }
 
-        /* Category + thread tables: tight rows, gray borders, alternating cream stripes. */
+        /* Category + thread tables: tight rows, gray borders, alternating
+           gray + pale-blue stripes -- the actual 2+2 look. */
         .cat-table, .thread-table, table.forum-table {
             width: 100% !important;
             border-collapse: collapse !important;
-            background: #fcfaf3 !important;
-            border: 1px solid #888 !important;
-            font-size: 11.5px !important;
+            background: #ffffff !important;
+            border: 1px solid #bbbbbb !important;
+            font-size: 11px !important;
         }
         .cat-table thead th, .thread-table thead th, table.forum-table thead th {
-            background: #003366 !important;
+            background: #1d3a6b !important;
             color: #ffffff !important;
             font: 700 11px/1.1 Verdana, Arial, sans-serif !important;
             text-transform: none !important;
             letter-spacing: 0 !important;
             text-align: left !important;
-            padding: 6px 10px !important;
-            border-right: 1px solid #001a33 !important;
-            border-bottom: 1px solid #888 !important;
+            padding: 4px 8px !important;
+            border-right: 1px solid #122747 !important;
+            border-bottom: 1px solid #122747 !important;
         }
         .cat-table thead th:last-child, .thread-table thead th:last-child { border-right: 0 !important; }
-        .cat-table tbody tr, .thread-table tbody tr { border-bottom: 1px solid #cdc6b3 !important; }
+        .cat-table tbody tr, .thread-table tbody tr { border-bottom: 1px solid #dddddd !important; }
         .cat-table tbody tr:nth-child(odd),
-        .thread-table tbody tr:nth-child(odd) { background: #f5f1e6 !important; }
+        .thread-table tbody tr:nth-child(odd) { background: #f7f7f7 !important; }
         .cat-table tbody tr:nth-child(even),
-        .thread-table tbody tr:nth-child(even) { background: #fcfaf3 !important; }
+        .thread-table tbody tr:nth-child(even) { background: #e8eef5 !important; }
         .cat-table tbody tr:hover,
-        .thread-table tbody tr:hover { background: #ffffe7 !important; }
+        .thread-table tbody tr:hover { background: #fffce5 !important; }
         .cat-table tbody td,
         .thread-table tbody td {
-            padding: 6px 10px !important;
-            border-right: 1px solid #d6cfb8 !important;
+            padding: 4px 8px !important;
+            border-right: 1px solid #dddddd !important;
             vertical-align: middle !important;
-            color: #1a1a1a !important;
+            color: #000000 !important;
         }
         .cat-table tbody td:last-child,
         .thread-table tbody td:last-child { border-right: 0 !important; }
@@ -1310,107 +1317,116 @@
         .thread-table .col-replies, .thread-table .col-views {
             text-align: right !important;
             font-variant-numeric: tabular-nums !important;
-            color: #5a5a5a !important;
+            color: #555555 !important;
             white-space: nowrap !important;
         }
 
         /* Forum/thread title block: bold-ish, slightly larger; description gray. */
         .cat-name, .thread-title, .forum-title {
             font: 700 12px/1.25 Verdana, Arial, sans-serif !important;
-            color: #0033cc !important;
+            color: #22229c !important;
         }
-        .cat-name:hover, .thread-title:hover, .forum-title:hover { color: #b34700 !important; }
+        .cat-name:hover, .thread-title:hover, .forum-title:hover { color: #cc3300 !important; }
         .cat-desc, .thread-desc, .forum-desc, .cat-meta {
             font: 400 10.5px/1.4 Verdana, Arial, sans-serif !important;
-            color: #5a5a5a !important;
+            color: #666666 !important;
             margin-top: 2px !important;
         }
 
         /* Last-post column: tighter, with the username on top, time underneath. */
         .last-post, .col-last, .cat-last, .thread-last {
             font-size: 10.5px !important;
-            color: #5a5a5a !important;
+            color: #555555 !important;
             line-height: 1.35 !important;
         }
-        .last-post strong, .col-last strong, .cat-last strong { color: #0033cc !important; font-weight: 700 !important; }
+        .last-post strong, .col-last strong, .cat-last strong { color: #22229c !important; font-weight: 700 !important; }
 
-        /* Page section headings (e.g., the "category bar" between groups). */
+        /* Page section headings (the "category bar" between forum groups). */
         .forum-category-header, .category-bar, .forum-section-head {
-            background: #003366 !important;
+            background: #1d3a6b !important;
             color: #ffffff !important;
             font: 700 12px/1 Verdana, Arial, sans-serif !important;
-            padding: 6px 10px !important;
-            border: 1px solid #001a33 !important;
+            padding: 5px 8px !important;
+            border: 1px solid #122747 !important;
             border-bottom: 0 !important;
         }
-        .forum-category-header a, .category-bar a, .forum-section-head a { color: #ffd54f !important; }
+        .forum-category-header a, .category-bar a, .forum-section-head a { color: #ffcc00 !important; }
 
-        /* Buttons: gray vB chrome */
+        /* Buttons: classic vB gray chrome. */
         .forum-btn, button.forum-action, .btn-secondary, .btn-primary {
-            background: linear-gradient(180deg, #e0e0d0 0%, #c8c8b8 100%) !important;
-            color: #1a1a1a !important;
-            border: 1px solid #888 !important;
-            border-radius: 3px !important;
+            background: linear-gradient(180deg, #f0f0f0 0%, #d8d8d8 100%) !important;
+            color: #000000 !important;
+            border: 1px solid #999999 !important;
+            border-radius: 2px !important;
             font: 700 11px/1 Verdana, Arial, sans-serif !important;
-            padding: 5px 12px !important;
+            padding: 4px 10px !important;
             text-shadow: none !important;
             box-shadow: 0 1px 0 #fff inset, 0 1px 1px rgba(0,0,0,0.08) !important;
         }
         .forum-btn:hover, button.forum-action:hover, .btn-secondary:hover, .btn-primary:hover {
-            background: linear-gradient(180deg, #ebebd8 0%, #d4d4c0 100%) !important;
+            background: linear-gradient(180deg, #f8f8f8 0%, #e0e0e0 100%) !important;
         }
 
-        /* Sidebar / forum-jump-row: small, muted, bordered. */
+        /* Forum-jump-row: small muted strip. */
         .forum-jump-row, .forum-toolbar, .forum-actions {
-            background: #ece6d3 !important;
-            border: 1px solid #888 !important;
+            background: #e8eef5 !important;
+            border: 1px solid #bbbbbb !important;
             padding: 4px 8px !important;
             font-size: 10.5px !important;
-            color: #1a1a1a !important;
+            color: #000000 !important;
         }
-        .forum-jump-row select, .forum-jump-row input { font-size: 11px !important; padding: 2px 4px !important; }
+        .forum-jump-row select, .forum-jump-row input {
+            font-size: 11px !important; padding: 2px 4px !important;
+            border: 1px solid #999 !important; background: #fff !important; color: #000 !important;
+        }
 
         /* Per-post layout (vB classic two-pane): user pane left, body right. */
         .post-shell {
-            background: #fcfaf3 !important;
-            border: 1px solid #888 !important;
-            margin-bottom: 6px !important;
+            background: #ffffff !important;
+            border: 1px solid #bbbbbb !important;
+            margin-bottom: 4px !important;
         }
         .post-top-bar {
-            background: #ece6d3 !important;
-            border-bottom: 1px solid #cdc6b3 !important;
-            padding: 4px 8px !important;
+            background: #e8eef5 !important;
+            border-bottom: 1px solid #bbbbbb !important;
+            padding: 3px 8px !important;
             font: 700 10.5px/1.2 Verdana !important;
-            color: #5a5a5a !important;
+            color: #555555 !important;
             display: flex !important;
             justify-content: space-between !important;
         }
-        .post-author-name { color: #0033cc !important; font-weight: 700 !important; }
+        .post-author-name { color: #22229c !important; font-weight: 700 !important; }
         .post-layout { grid-template-columns: 160px 1fr !important; }
         .post-user-pane {
-            background: #f5f1e6 !important;
-            border-right: 1px solid #cdc6b3 !important;
-            padding: 8px !important;
+            background: #f7f7f7 !important;
+            border-right: 1px solid #dddddd !important;
+            padding: 6px 8px !important;
         }
-        .post-user-name { color: #0033cc !important; font: 700 12px Verdana !important; }
-        .post-user-stats { font-size: 10px !important; color: #5a5a5a !important; line-height: 1.45 !important; }
-        .post-body, .post-content { padding: 10px 14px !important; font-size: 11.5px !important; line-height: 1.55 !important; color: #1a1a1a !important; }
+        .post-user-name { color: #22229c !important; font: 700 12px Verdana !important; }
+        .post-user-stats { font-size: 10px !important; color: #666666 !important; line-height: 1.45 !important; }
+        .post-body, .post-content { padding: 8px 10px !important; font-size: 11px !important; line-height: 1.55 !important; color: #000000 !important; }
 
-        /* Loading spinner: keep but recolor to navy. */
-        .tmr-loading-state .tmr-spinner { border-color: rgba(0,51,102,0.18) !important; border-top-color: #003366 !important; }
+        /* Loading spinner: medium-blue. */
+        .tmr-loading-state .tmr-spinner { border-color: rgba(29,58,107,0.18) !important; border-top-color: #1d3a6b !important; }
 
-        /* Trust-note callouts (forum-trust-note): cream/tan box, navy left bar. */
+        /* Trust-note callouts: pale-yellow box, blue left bar. */
         .forum-trust-note {
             background: #fffce5 !important;
-            border: 1px solid #888 !important;
-            border-left: 4px solid #003366 !important;
-            color: #1a1a1a !important;
-            padding: 6px 10px !important;
+            border: 1px solid #bbbbbb !important;
+            border-left: 4px solid #1d3a6b !important;
+            color: #000000 !important;
+            padding: 5px 8px !important;
             font-size: 11px !important;
         }
 
-        /* Hide any glassy / neon affordances that remained. */
-        .glass-card, .neon-card, .tmr-glow { background: #fcfaf3 !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border: 1px solid #888 !important; }
+        /* Kill any remaining glass/neon affordances. */
+        .glass-card, .neon-card, .tmr-glow {
+            background: #ffffff !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: 1px solid #bbbbbb !important;
+        }
     </style>
 </head>
 <body>
