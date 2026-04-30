@@ -322,7 +322,7 @@
                 if (typeof window.auth.persistSession === 'function') window.auth.persistSession();
             }
 
-            async function loginWithBackend(login, password) {
+            async function loginWithBackend(login, password, rememberMe) {
                 if (window.api && typeof window.api.login === 'function') {
                     if (window.api.ready) {
                         try { await window.api.ready; } catch (error) {}
@@ -385,7 +385,7 @@
                 setMessage('', '');
 
                 try {
-                    const result = await loginWithBackend(login, password);
+                    const result = await loginWithBackend(login, password, rememberMe);
                     await persistBackendLogin(result.user || {}, rememberMe);
                     finishLoginRedirect((result && result.user) || {});
                 } catch (error) {
