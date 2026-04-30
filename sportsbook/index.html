@@ -525,19 +525,19 @@
     };
 
     // ===== Renderer for non-Game markets (F5, Team Totals, Alts, etc.) =====
-    // Pulls items from game.market_groups[].items where group.key matches the
-    // requested marketKey. Each item already carries selection_label / line / odds /
-    // market_type so we just render and wire onclick to selectGameBet.
+    // Two presentation modes (April 30, 2026 redesign):
+    //   - team_totals → per-team rows with Team Total Over | Under | Action columns
+    //   - first_5     → full DK 5-col board: Matchup | F5 RL | F5 Total | F5 ML | More
+    //   - alts/other  → falls through to legacy pill-grid renderer
+    // selectGameBet onclick contract preserved: same arg shape, same bet-type strings.
     window.TMR._renderMarketBoard = function(container, games, sport, marketKey) {
         var aliases = marketKey === 'alts' ? ['alt_spreads', 'alt_totals'] : [marketKey];
         var labelByMarket = {
-            first_5: 'First 5 Innings',
+            first_5: '5 Inning Lines',
             team_totals: 'Team Totals',
             alts: 'Alt Spreads &amp; Totals'
         };
         var headerLabel = labelByMarket[marketKey] || marketKey;
-        var html = '';
-        var anyContent = false;
         var esc = function(s) { return ('' + (s != null ? s : '')).replace(/'/g, "\\'"); };
         var pv  = function(v) { return v != null ? '' + v : ''; };
         var fmtOdds = function(o) {
@@ -545,43 +545,200 @@
             if (!Number.isFinite(n)) return '';
             return n > 0 ? '+' + n : '' + n;
         };
+        var fmtSpread = function(p) {
+            var n = Number(p);
+            if (!Number.isFinite(n)) return '';
+            return n > 0 ? '+' + n : '' + n;
+        };
+        var escHtml = function(s) { return ('' + (s == null ? '' : s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+        var anyContent = false;
+        var html = '';
 
+        var collectItems = function(game) {
+            if (!Array.isArray(game.market_groups)) return [];
+            var out = [];
+            game.market_groups.forEach(function(g) {
+                if (!g || aliases.indexOf(g.key) === -1 || !Array.isArray(g.items)) return;
+                g.items.forEach(function(it) { out.push(it); });
+            });
+            return out;
+        };
+
+        // ---- Team Totals: per-team Over/Under rows, DK style ------------
+        if (marketKey === 'team_totals') {
+            html += '<div class="games-board-wrap" data-market="team_totals" data-cols="5" data-sport="' + sport + '">';
+            html += '<div class="market-headers">'
+                + '<div class="market-label" data-mkt="matchup">Team</div>'
+                + '<div class="market-label" data-mkt="spread">Team Total Over</div>'
+                + '<div class="market-label" data-mkt="total">Team Total Under</div>'
+                + '<div class="market-label" data-mkt="ml">Action</div>'
+                + '<div class="market-label" data-mkt="more">More Bets</div>'
+                + '</div>';
+            games.forEach(function(game, index) {
+                var items = collectItems(game);
+                if (!items.length) return;
+                anyContent = true;
+                var gameTime = new Date(game.commence_time).toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'});
+                // Group items by team. Accept selection_team / team / fallback to selection.
+                var byTeam = {};
+                items.forEach(function(it) {
+                    var team = it.selection_team || it.team || it.selection || '';
+                    if (!team) return;
+                    byTeam[team] = byTeam[team] || { over: null, under: null };
+                    var sel = String(it.selection_label || it.selection || '').toLowerCase();
+                    if (sel.indexOf('over') !== -1 || it.bet_side === 'over') byTeam[team].over = it;
+                    else if (sel.indexOf('under') !== -1 || it.bet_side === 'under') byTeam[team].under = it;
+                    else if (!byTeam[team].over) byTeam[team].over = it;
+                    else byTeam[team].under = it;
+                });
+                var teamOrder = [game.away_team, game.home_team].filter(function(t) { return byTeam[t]; });
+                if (!teamOrder.length) teamOrder = Object.keys(byTeam);
+                if (!teamOrder.length) return;
+
+                html += '<div class="game-row game-row--with-more">'
+                    + '<div class="game-time-header"><span class="game-time">' + gameTime + '</span>'
+                    + '<span style="margin-left:10px;color:#8ea0bc;font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:700;">' + escHtml(game.away_team) + ' @ ' + escHtml(game.home_team) + ' · Team Totals</span>'
+                    + '</div>';
+                teamOrder.forEach(function(teamName, ti) {
+                    var pair = byTeam[teamName];
+                    var over = pair.over, under = pair.under;
+                    var oLine = over && over.line != null ? 'O ' + over.line : 'Over';
+                    var uLine = under && under.line != null ? 'U ' + under.line : 'Under';
+                    var oOdds = over ? fmtOdds(over.odds) : '';
+                    var uOdds = under ? fmtOdds(under.odds) : '';
+                    var moreCell = (ti === 0)
+                        ? '<button class="odds-btn odds-more-btn" data-mkt="more"'
+                          + ' onclick="window.TMR.setMarket(\'game\'); var st=document.getElementById(\'marketSubtabs\'); if(st){window.scrollTo({top: st.offsetTop - 80, behavior: \'smooth\'});}"'
+                          + ' title="Back to Game Lines for this matchup">'
+                          + '<span class="odds-line">Game Lines</span><span class="odds-value">More &rsaquo;</span>'
+                          + '</button>'
+                        : '<div class="odds-more-spacer" data-mkt="more" aria-hidden="true"></div>';
+
+                    html += '<div class="team-row">'
+                        + '<div class="team-info" data-mkt="matchup"><div class="team-details"><div class="team-name">' + escHtml(teamName) + '</div></div></div>'
+                        + (over
+                            ? '<button class="odds-btn" data-mkt="spread" onclick="window.selectGameBet(' + index + ',\'teamover\',\'' + esc(teamName) + ' Over\',\'' + esc(pv(over.line)) + '\',\'' + esc(pv(over.odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + oLine + '</span><span class="odds-value' + (Number(over.odds) > 0 ? ' positive' : '') + '">' + oOdds + '</span></button>'
+                            : '<div class="odds-btn no-odds-btn" data-mkt="spread"><span class="odds-line">Over</span><span class="odds-value">—</span></div>')
+                        + (under
+                            ? '<button class="odds-btn" data-mkt="total" onclick="window.selectGameBet(' + index + ',\'teamunder\',\'' + esc(teamName) + ' Under\',\'' + esc(pv(under.line)) + '\',\'' + esc(pv(under.odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + uLine + '</span><span class="odds-value' + (Number(under.odds) > 0 ? ' positive' : '') + '">' + uOdds + '</span></button>'
+                            : '<div class="odds-btn no-odds-btn" data-mkt="total"><span class="odds-line">Under</span><span class="odds-value">—</span></div>')
+                        + '<div class="odds-btn no-odds-btn" data-mkt="ml" style="background:transparent;border:0;cursor:default;"><span class="odds-line" style="opacity:0.5;">—</span></div>'
+                        + moreCell
+                        + '</div>';
+                });
+                html += '</div>';
+            });
+            html += '</div>';
+            if (!anyContent) {
+                container.innerHTML = '<div class="market-empty">No verified team totals posted yet. Switch back to <button type="button" class="link-btn" onclick="window.TMR.setMarket(\'game\')" style="background:none;border:0;color:#2dd4bf;padding:0;cursor:pointer;font-weight:700;">Game Lines</button> or check back closer to first pitch.</div>';
+                return;
+            }
+            container.innerHTML = html;
+            return;
+        }
+
+        // ---- 5 Inning Lines (MLB first_5): full DK 5-col board ----------
+        if (marketKey === 'first_5') {
+            html += '<div class="games-board-wrap" data-market="first_5" data-cols="5" data-sport="' + sport + '">';
+            html += '<div class="market-headers">'
+                + '<div class="market-label" data-mkt="matchup">Matchup</div>'
+                + '<div class="market-label" data-mkt="spread">5 Inning Run Line</div>'
+                + '<div class="market-label" data-mkt="total">5 Inning Total</div>'
+                + '<div class="market-label" data-mkt="ml">5 Inning Moneyline</div>'
+                + '<div class="market-label" data-mkt="more">More Bets</div>'
+                + '</div>';
+            games.forEach(function(game, index) {
+                var items = collectItems(game);
+                if (!items.length) return;
+                anyContent = true;
+                var gameTime = new Date(game.commence_time).toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'});
+                var awaySpread = null, homeSpread = null;
+                var awayML = null, homeML = null;
+                var overItem = null, underItem = null;
+                items.forEach(function(it) {
+                    var mt = it.market_type || '';
+                    var sel = it.selection || '';
+                    if (mt === 'f5_spreads' || mt === 'f5_spread') {
+                        if (sel === game.home_team) homeSpread = it; else awaySpread = it;
+                    } else if (mt === 'f5_h2h' || mt === 'f5_ml' || mt === 'f5_moneyline') {
+                        if (sel === game.home_team) homeML = it; else awayML = it;
+                    } else if (mt === 'f5_totals' || mt === 'f5_total') {
+                        if (sel === 'Over' || it.bet_side === 'over') overItem = it; else underItem = it;
+                    }
+                });
+                var awayPitcher = game.away_pitcher || game.away_starter || (game.starters && game.starters.away) || '';
+                var homePitcher = game.home_pitcher || game.home_starter || (game.starters && game.starters.home) || '';
+                var awayPitcherHtml = awayPitcher ? '<div class="team-pitcher">' + escHtml(awayPitcher) + '</div>' : '';
+                var homePitcherHtml = homePitcher ? '<div class="team-pitcher">' + escHtml(homePitcher) + '</div>' : '';
+
+                var cell = function(it, mkt, type, sideLabel, lineFmt) {
+                    if (!it) return '<div class="odds-btn no-odds-btn" data-mkt="' + mkt + '"><span class="odds-line">' + sideLabel + '</span><span class="odds-value">—</span></div>';
+                    var lineTxt = lineFmt(it);
+                    var oddsTxt = fmtOdds(it.odds);
+                    var sel = it.selection || sideLabel;
+                    return '<button class="odds-btn" data-mkt="' + mkt + '"'
+                        + ' onclick="window.selectGameBet(' + index + ',\'' + type + '\',\'' + esc(sel) + '\',\'' + esc(pv(it.line)) + '\',\'' + esc(pv(it.odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')">'
+                        + '<span class="odds-line">' + lineTxt + '</span>'
+                        + '<span class="odds-value' + (Number(it.odds) > 0 ? ' positive' : '') + '">' + oddsTxt + '</span>'
+                        + '</button>';
+                };
+                var spreadFmt = function(it) { return it.line != null ? fmtSpread(it.line) : '5IP RL'; };
+                var totalFmt  = function(side) { return function(it) { return it.line != null ? side + ' ' + it.line : side; }; };
+                var mlFmt     = function() { return 'F5 ML'; };
+
+                html += '<div class="game-row game-row--with-more">'
+                    + '<div class="game-time-header"><span class="game-time">' + gameTime + '</span></div>'
+                    + '<div class="team-row">'
+                    + '<div class="team-info" data-mkt="matchup"><div class="team-details"><div class="team-name">' + escHtml(game.away_team) + '</div>' + awayPitcherHtml + '</div></div>'
+                    + cell(awaySpread, 'spread', 'f5spread', '5IP RL', spreadFmt)
+                    + cell(overItem,   'total',  'f5over',   'O',     totalFmt('O'))
+                    + cell(awayML,     'ml',     'f5ml',     'F5 ML', mlFmt)
+                    + '<button class="odds-btn odds-more-btn" data-mkt="more"'
+                    + ' onclick="window.TMR.setMarket(\'team_totals\'); var st=document.getElementById(\'marketSubtabs\'); if(st){window.scrollTo({top: st.offsetTop - 80, behavior: \'smooth\'});}"'
+                    + ' title="See Team Totals for this matchup">'
+                    + '<span class="odds-line">Team Totals</span><span class="odds-value">More &rsaquo;</span>'
+                    + '</button>'
+                    + '</div>'
+                    + '<div class="team-row">'
+                    + '<div class="team-info" data-mkt="matchup"><div class="team-details"><div class="team-name">' + escHtml(game.home_team) + '</div>' + homePitcherHtml + '</div></div>'
+                    + cell(homeSpread, 'spread', 'f5spread', '5IP RL', spreadFmt)
+                    + cell(underItem,  'total',  'f5under',  'U',     totalFmt('U'))
+                    + cell(homeML,     'ml',     'f5ml',     'F5 ML', mlFmt)
+                    + '<div class="odds-more-spacer" data-mkt="more" aria-hidden="true"></div>'
+                    + '</div>'
+                    + '</div>';
+            });
+            html += '</div>';
+            if (!anyContent) {
+                container.innerHTML = '<div class="market-empty">No verified 5 inning lines posted yet. Switch back to <button type="button" class="link-btn" onclick="window.TMR.setMarket(\'game\')" style="background:none;border:0;color:#2dd4bf;padding:0;cursor:pointer;font-weight:700;">Game Lines</button> or check back closer to first pitch.</div>';
+                return;
+            }
+            container.innerHTML = html;
+            return;
+        }
+
+        // ---- Fallback: legacy pill-grid renderer for alts / unknown markets.
         games.forEach(function(game, index) {
-            var groups = Array.isArray(game.market_groups) ? game.market_groups.filter(function(g) {
-                return g && aliases.indexOf(g.key) !== -1 && Array.isArray(g.items) && g.items.length;
-            }) : [];
-            if (!groups.length) return; // skip games that don't offer this market
+            var items = collectItems(game);
+            if (!items.length) return;
             anyContent = true;
-            var items = [];
-            groups.forEach(function(g) { g.items.forEach(function(it) { items.push(it); }); });
             var gameTime = new Date(game.commence_time).toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'});
-
             html += '<div class="game-row">'
                 + '<div class="game-time-header"><span class="game-time">' + gameTime + '</span></div>'
                 + '<div style="padding:6px 12px 4px;color:#94a3b8;font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;">'
-                + game.away_team + ' @ ' + game.home_team + ' &middot; ' + headerLabel
+                + escHtml(game.away_team) + ' @ ' + escHtml(game.home_team) + ' &middot; ' + headerLabel
                 + '</div>'
                 + '<div style="padding:6px 12px 12px;display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:6px;">';
             items.forEach(function(item) {
-                // Map per the existing selectGameBet contract:
-                // First 5 innings: f5ml / f5over / f5under / f5spread
-                // Team totals:    teamover (we reuse the same; backend stores selection_label)
-                // Alts:           altspread / altover / altunder
                 var type = 'pick';
-                if (marketKey === 'first_5') {
-                    if (item.market_type === 'f5_h2h') type = 'f5ml';
-                    else if (item.market_type === 'f5_totals') type = (item.selection === 'Over' ? 'f5over' : 'f5under');
-                    else type = 'f5spread';
-                } else if (marketKey === 'team_totals') {
-                    type = 'teamover';
-                } else if (marketKey === 'alts') {
+                if (marketKey === 'alts') {
                     if (item.market_type === 'alt_totals') type = (item.selection === 'Over' ? 'altover' : 'altunder');
                     else type = 'altspread';
                 }
                 var label = item.selection_label || item.selection || headerLabel;
                 html += '<button class="odds-btn" style="padding:10px 12px;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px;"'
                     + ' onclick="window.selectGameBet(' + index + ',\'' + type + '\',\'' + esc(item.selection || '') + '\',\'' + esc(pv(item.line)) + '\',\'' + esc(pv(item.odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')">'
-                    + '<span class="odds-line" style="font-weight:600;color:#cbd5e1;">' + label + '</span>'
+                    + '<span class="odds-line" style="font-weight:600;color:#cbd5e1;">' + escHtml(label) + '</span>'
                     + '<span class="odds-value" style="color:' + (Number(item.odds) > 0 ? '#4ade80' : '#fff') + ';">' + fmtOdds(item.odds) + '</span>'
                     + '</button>';
             });
@@ -589,7 +746,7 @@
         });
 
         if (!anyContent) {
-            html = '<div class="market-empty">No verified ' + headerLabel.replace(/&amp;/g, '&').toLowerCase() + ' lines available right now. Switch back to <button type="button" class="link-btn" onclick="window.TMR.setMarket(\'game\')" style="background:none;border:0;color:#00ffff;padding:0;cursor:pointer;font-weight:700;">Full Game</button> or check back closer to tip-off.</div>';
+            html = '<div class="market-empty">No verified ' + headerLabel.replace(/&amp;/g, '&').toLowerCase() + ' lines available right now. Switch back to <button type="button" class="link-btn" onclick="window.TMR.setMarket(\'game\')" style="background:none;border:0;color:#2dd4bf;padding:0;cursor:pointer;font-weight:700;">Game Lines</button> or check back closer to tip-off.</div>';
         }
         container.innerHTML = html;
     };
@@ -755,19 +912,40 @@
             if (!hasRealOdds) {
                 pendingBadge = '<span class="odds-pending-badge" title="Odds integration pending for this game">Sample Market</span>';
             }
-            html += '<div class="game-row">' +
+            // Pitcher / starter slot — only render when feed actually carries the name.
+            // Sources we accept: game.away_pitcher / game.away_starter / game.starters.away.
+            // Never invent names; an empty slot is fine and the row collapses cleanly.
+            var awayPitcher = game.away_pitcher || game.away_starter || (game.starters && game.starters.away) || '';
+            var homePitcher = game.home_pitcher || game.home_starter || (game.starters && game.starters.home) || '';
+            var escHtml = function(s) { return ('' + (s || '')).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+            var awayPitcherHtml = awayPitcher ? '<div class="team-pitcher">' + escHtml(awayPitcher) + '</div>' : '';
+            var homePitcherHtml = homePitcher ? '<div class="team-pitcher">' + escHtml(homePitcher) + '</div>' : '';
+            // More Bets cell — appears once per game, spans both team rows via CSS.
+            // For MLB it jumps to 5 Inning Lines; for NHL to Team Totals. Honest action:
+            // surfaces additional markets we already publish — no stub overlay.
+            var moreBetsCell = hasMoreBets
+                ? '<button class="odds-btn odds-more-btn" data-mkt="more"'
+                  + ' onclick="window.TMR.setMarket(\'' + moreBetsTarget + '\'); var st=document.getElementById(\'marketSubtabs\'); if(st){window.scrollTo({top: st.offsetTop - 80, behavior: \'smooth\'});}"'
+                  + ' title="See ' + moreBetsLabel + ' and more markets for this matchup">'
+                  + '<span class="odds-line">' + moreBetsLabel + '</span>'
+                  + '<span class="odds-value">More &rsaquo;</span>'
+                  + '</button>'
+                : '';
+            html += '<div class="game-row' + (hasMoreBets ? ' game-row--with-more' : '') + '">' +
                 '<div class="game-time-header"><span class="game-time">' + gameTime + sourceIndicator + '</span>' + pendingBadge + '</div>' +
                 '<div class="team-row">' +
-                '<div class="team-info" data-mkt="matchup"><div class="team-details"><div class="team-name">' + game.away_team + '</div></div></div>' +
+                '<div class="team-info" data-mkt="matchup"><div class="team-details"><div class="team-name">' + game.away_team + '</div>' + awayPitcherHtml + '</div></div>' +
                 '<button class="odds-btn' + noOddsClass + '" data-mkt="spread" onclick="window.selectGameBet(' + index + ',\'spread\',\'' + esc(game.away_team) + '\',\'' + esc(pv(awaySpread.point != null ? fmtSpread(awaySpread.point) : '')) + '\',\'' + esc(pv(awaySpread.price)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + spdLine(awaySpread.point) + '</span><span class="odds-value">' + spdOdds(awaySpread.price) + '</span></button>' +
-                '<button class="odds-btn' + noOddsClass + '" data-mkt="ml" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + esc(game.away_team) + '\',\'ML\',\'' + esc(pv(awayML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (awayML > 0 ? 'positive' : '') + '">' + mlDisplay(awayML) + '</span></button>' +
                 '<button class="odds-btn' + noOddsClass + '" data-mkt="total" onclick="window.selectGameBet(' + index + ',\'over\',\'Over\',\'' + esc(pv(total)) + '\',\'' + esc(pv(overPrice)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + totLine('Over') + '</span><span class="odds-value">' + totOdds(overPrice) + '</span></button>' +
+                '<button class="odds-btn' + noOddsClass + '" data-mkt="ml" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + esc(game.away_team) + '\',\'ML\',\'' + esc(pv(awayML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (awayML > 0 ? 'positive' : '') + '">' + mlDisplay(awayML) + '</span></button>' +
+                moreBetsCell +
                 '</div>' +
                 '<div class="team-row">' +
-                '<div class="team-info" data-mkt="matchup"><div class="team-details"><div class="team-name">' + game.home_team + '</div></div></div>' +
+                '<div class="team-info" data-mkt="matchup"><div class="team-details"><div class="team-conjunction">at</div><div class="team-name">' + game.home_team + '</div>' + homePitcherHtml + '</div></div>' +
                 '<button class="odds-btn' + noOddsClass + '" data-mkt="spread" onclick="window.selectGameBet(' + index + ',\'spread\',\'' + esc(game.home_team) + '\',\'' + esc(pv(homeSpread.point != null ? fmtSpread(homeSpread.point) : '')) + '\',\'' + esc(pv(homeSpread.price)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + spdLine(homeSpread.point) + '</span><span class="odds-value">' + spdOdds(homeSpread.price) + '</span></button>' +
-                '<button class="odds-btn' + noOddsClass + '" data-mkt="ml" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + esc(game.home_team) + '\',\'ML\',\'' + esc(pv(homeML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (homeML > 0 ? 'positive' : '') + '">' + mlDisplay(homeML) + '</span></button>' +
                 '<button class="odds-btn' + noOddsClass + '" data-mkt="total" onclick="window.selectGameBet(' + index + ',\'under\',\'Under\',\'' + esc(pv(total)) + '\',\'' + esc(pv(underPrice)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + totLine('Under') + '</span><span class="odds-value">' + totOdds(underPrice) + '</span></button>' +
+                '<button class="odds-btn' + noOddsClass + '" data-mkt="ml" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + esc(game.home_team) + '\',\'ML\',\'' + esc(pv(homeML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (homeML > 0 ? 'positive' : '') + '">' + mlDisplay(homeML) + '</span></button>' +
+                (hasMoreBets ? '<div class="odds-more-spacer" data-mkt="more" aria-hidden="true"></div>' : '') +
                 '</div></div>';
             // Inline "More Markets" expandable removed Apr 29 2026 -- those markets
             // (F5, Team Totals, Alts) now live as top-level sub-tabs above the games
@@ -8341,7 +8519,7 @@
         <header>
             <div class="header-content">
                 <div style="display: flex; align-items: center; gap: 20px;">
-                    <div class="logo" onclick="showSection('home')">TRUST<span style="color: #f58220;">MY</span>RECORD</div>
+                    <a href="/" class="logo" style="text-decoration:none;color:inherit;cursor:pointer;">TRUST<span style="color: #f58220;">MY</span>RECORD</a>
                 </div>
 
 
@@ -8360,7 +8538,7 @@
                 </div>
 
                 <nav class="main-nav">
-                    <a href="/sportsbook/" class="nav-link is-active make-picks-nav" onclick="if(typeof showSection==='function'){showSection('picks');return false;}">Make Picks</a>
+                    <a href="/sportsbook/" class="nav-link is-active make-picks-nav">Make Picks</a>
                     <a href="/handicappers/" class="nav-link">Handicappers</a>
                     <a href="/arena/" class="nav-link">Arena</a>
                     <a href="/feed/" class="nav-link">Feed</a>
@@ -9428,11 +9606,10 @@ window.toggleSportFamily = function (family) {
                    '<span class="sb-odds-line">' + (side === 'over' ? 'Over' : 'Under') + '</span>' +
                    '<span class="sb-odds-price">—</span></button>';
         }
-        // data-attributes + delegated listener (bound below) instead of inline
-        // onclick. Inline onclicks were not reaching selectGameBet for some
-        // users — likely an extension or attribute sanitization stripping
-        // them. Delegation runs on a single document-level listener that
-        // can't be stripped per-button.
+        // Apr 30 2026 v4 (Nima reported clicks dead): belt-and-suspenders.
+        // Inline onclick fires synchronously regardless of any document-level
+        // delegation issues, parent stopPropagation, or stale _ttClickBound.
+        // Data attrs + delegated handler are kept as a backup path.
         return '<button type="button" class="sb-odds" data-tt-pick="1"' +
                ' data-game-index="' + gameIndex + '"' +
                ' data-bet-type="' + betType + '"' +
@@ -9440,10 +9617,42 @@ window.toggleSportFamily = function (family) {
                ' data-line="' + _ttHtmlEsc(line) + '"' +
                ' data-odds="' + _ttHtmlEsc(odds) + '"' +
                ' data-away="' + _ttHtmlEsc(awayTeam) + '"' +
-               ' data-home="' + _ttHtmlEsc(homeTeam) + '">' +
+               ' data-home="' + _ttHtmlEsc(homeTeam) + '"' +
+               ' onclick="window.TMR &amp;&amp; window.TMR._ttDirectClick &amp;&amp; window.TMR._ttDirectClick(this, event)">' +
                '<span class="sb-odds-line">' + _ttHtmlEsc(lineTxt) + '</span>' +
                '<span class="sb-odds-price">' + _ttHtmlEsc(oddsTxt) + '</span></button>';
     }
+
+    // Direct click path — invoked by inline onclick on every team-total
+    // button. Reads data-* attrs straight off the button, calls
+    // selectGameBet, then scrolls the slip into view. Robust against
+    // delegated-listener failures.
+    window.TMR = window.TMR || {};
+    window.TMR._ttDirectClick = function (btn, ev) {
+        try { if (ev && ev.preventDefault) ev.preventDefault(); } catch (_) {}
+        try { if (ev && ev.stopPropagation) ev.stopPropagation(); } catch (_) {}
+        try {
+            var gameIndex = parseInt(btn.getAttribute('data-game-index'), 10);
+            var betType   = btn.getAttribute('data-bet-type');
+            var team      = btn.getAttribute('data-team');
+            var line      = btn.getAttribute('data-line');
+            var odds      = btn.getAttribute('data-odds');
+            var awayTeam  = btn.getAttribute('data-away');
+            var homeTeam  = btn.getAttribute('data-home');
+            console.log('[TMR][TT] direct click:', { gameIndex: gameIndex, betType: betType, team: team, line: line, odds: odds });
+            if (typeof window.selectGameBet !== 'function') {
+                console.error('[TMR][TT] selectGameBet missing — cannot lock pick');
+                alert('Pick form failed to load. Refresh and try again.');
+                return;
+            }
+            window.selectGameBet(gameIndex, betType, team, line, odds, awayTeam, homeTeam);
+        } catch (err) {
+            console.error('[TMR][TT] direct click failed:', err);
+            alert('Could not select that pick: ' + (err && err.message ? err.message : 'unknown error'));
+            return;
+        }
+        try { if (window.TMR && typeof window.TMR._ttScrollToPickSlip === 'function') window.TMR._ttScrollToPickSlip(); } catch (_) {}
+    };
 
     // After selectGameBet runs, jump the activated #pickDetails into view.
     // CSS forces #sportSelection visible, so without this the form opens
@@ -25391,16 +25600,19 @@ document.addEventListener('DOMContentLoaded', function() {
             gap: 20px !important;
         }
         /* If the link row gets too wide, let it scroll horizontally inside
-           its column instead of overflowing into the right user card. */
+           its column instead of overflowing into the right user card.
+           Hide the scrollbar visually — the user reported a stray bar
+           sliding under the nav — while keeping horizontal touch/wheel
+           scroll behavior for accessibility on narrow viewports. */
         body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links {
             min-width: 0;
             overflow-x: auto;
-            scrollbar-width: thin;
+            overflow-y: hidden;
+            scrollbar-width: none;
             -ms-overflow-style: none;
-            padding-bottom: 2px;
+            padding-bottom: 0;
         }
-        body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links::-webkit-scrollbar { height: 4px; }
-        body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links::-webkit-scrollbar-thumb { background: rgba(112, 221, 255, 0.18); border-radius: 4px; }
+        body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links::-webkit-scrollbar { display: none; height: 0; width: 0; }
         body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__right {
             flex: 0 0 auto;
             margin-left: auto;
@@ -26143,6 +26355,145 @@ document.addEventListener('DOMContentLoaded', function() {
             header .header-content > div:first-child {
                 padding-right: 12px !important;
             }
+        }
+
+        /* ===========================================================
+           DraftKings-style sportsbook board (April 30, 2026)
+           5-col grid for MLB / NHL: Matchup | RL/PL | Total | ML | More
+           Pitcher slot under team name. Stripped of nested-card noise.
+           Pure CSS — no behavior changes; selectGameBet wiring untouched.
+           =========================================================== */
+
+        /* 5-col grid only when the renderer marks the wrap as data-cols="5". */
+        #picks .games-board-wrap[data-cols="5"] .market-headers,
+        #picks .games-board-wrap[data-cols="5"] .game-row .team-row {
+            grid-template-columns: minmax(220px, 1fr) 116px 116px 116px 116px !important;
+            gap: 8px !important;
+        }
+
+        /* Pitcher / starter line under each team name. Empty string = nothing renders,
+           so games without a probable pitcher just collapse the slot cleanly. */
+        #picks .game-row .team-pitcher {
+            color: #8ea0bc !important;
+            font: 600 12.5px/1.25 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            margin-top: 2px !important;
+            letter-spacing: 0.01em;
+        }
+        /* Subtle "at" connector between away and home (kept hidden — vertical
+           stack already implies the matchup; reserved for future enable). */
+        #picks .game-row .team-conjunction { display: none; }
+
+        /* More Bets cell — second team row holds an empty spacer so the grid
+           stays 5-wide. Visual style mirrors DK's outline action button. */
+        #picks .game-row .odds-more-btn {
+            background: #1d2230 !important;
+            border: 1px dashed #2dd4bf !important;
+            color: #2dd4bf !important;
+        }
+        #picks .game-row .odds-more-btn:hover {
+            background: rgba(45, 212, 191, 0.10) !important;
+            border-style: solid !important;
+        }
+        #picks .game-row .odds-more-btn .odds-line {
+            color: #2dd4bf !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+        #picks .game-row .odds-more-btn .odds-value {
+            color: #94a3b8 !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+        }
+        #picks .game-row .odds-more-spacer {
+            min-height: 58px;
+            visibility: hidden;
+        }
+
+        /* Cleaner game-row card — drop heavy nested borders, give it a real
+           DK-feeling surface without the dashboard-y double-border look. */
+        #picks .game-row {
+            background: linear-gradient(180deg, #181d29 0%, #161a25 100%) !important;
+            border: 1px solid #232938 !important;
+            border-radius: 10px !important;
+            margin-bottom: 12px !important;
+            box-shadow: 0 2px 0 rgba(0,0,0,0.16);
+        }
+        #picks .game-row:hover { border-color: #303a4f !important; }
+        #picks .game-row .game-time-header {
+            background: transparent !important;
+            border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+            padding: 9px 18px !important;
+        }
+        #picks .game-row .team-row {
+            padding: 14px 18px !important;
+            border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+        }
+        #picks .game-row .team-row:last-child { border-bottom: none !important; }
+        #picks .game-row .odds-btn {
+            min-height: 62px !important;
+            border-radius: 6px !important;
+            background: #232a39 !important;
+            border-color: #2f3849 !important;
+            transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease !important;
+        }
+        #picks .game-row .odds-btn:hover {
+            background: #2c3447 !important;
+            border-color: #3e4a63 !important;
+        }
+        #picks .game-row .odds-btn:active { transform: scale(0.985); }
+        #picks .game-row .odds-btn .odds-line {
+            font-size: 16px !important;
+            color: #f4f7fb !important;
+        }
+
+        /* Market headers: bigger, sharper, real sportsbook spacing. */
+        #picks .market-headers {
+            background: #0f131c !important;
+            border: 1px solid #232938 !important;
+            border-radius: 10px 10px 0 0 !important;
+            padding: 12px 18px !important;
+            margin-bottom: -1px !important;
+        }
+        #picks .market-headers .market-label {
+            color: #94a3b8 !important;
+            font-size: 11.5px !important;
+            letter-spacing: 0.7px !important;
+        }
+
+        /* Strip the noisy nested-card frame around the picks board so the
+           sportsbook layout breathes. Container keeps its outer rounded edge,
+           but the inner sections sit on the page directly. */
+        #picks .picks-container-modern {
+            border: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            padding: clamp(12px, 1.2vw, 20px) !important;
+        }
+
+        /* Mobile: market tabs scroll horizontally, board collapses to 4 cols
+           (drop More Bets — top tab strip is one swipe away). Pick slip
+           stacks under the board because the desktop grid is gated >=1100px. */
+        @media (max-width: 768px) {
+            #marketSubtabs {
+                overflow-x: auto;
+                flex-wrap: nowrap !important;
+                scrollbar-width: none;
+                -webkit-overflow-scrolling: touch;
+            }
+            #marketSubtabs::-webkit-scrollbar { display: none; }
+            #picks .games-board-wrap[data-cols="5"] .market-headers,
+            #picks .games-board-wrap[data-cols="5"] .game-row .team-row {
+                grid-template-columns: minmax(0, 1fr) 78px 78px 78px !important;
+            }
+            #picks .games-board-wrap[data-cols="5"] [data-mkt="more"] {
+                display: none !important;
+            }
+            #picks .game-row .team-name { font-size: 14.5px !important; }
+            #picks .game-row .team-pitcher { font-size: 11.5px !important; }
+            #picks .game-row .odds-btn { min-height: 54px !important; }
+            #picks .game-row .odds-btn .odds-line { font-size: 14px !important; }
         }
     </style>
     <link rel="stylesheet" href="/static/css/sportsbook-pro.css?v=20260430a">
