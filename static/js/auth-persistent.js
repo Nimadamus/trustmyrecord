@@ -24,6 +24,7 @@ class PersistentAuthSystem {
     init() {
         const restored = this.restoreSession();
         this.initializeUI();
+        this.restoreBackendSessionIfPossible(restored);
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.initializeUI());
         }
@@ -32,6 +33,70 @@ class PersistentAuthSystem {
             if (!document.hidden && this.currentUser) this.initializeUI();
         });
         setInterval(() => { if (this.currentUser) this.persistSession(); }, 30000);
+    }
+
+    async restoreBackendSessionIfPossible(hasLocalSession) {
+        if (hasLocalSession) {
+            this.refreshBackendAccessInBackground();
+            return;
+        }
+
+        if (!this.hasBackendCredentials()) return;
+        if (typeof api === 'undefined') return;
+
+        try {
+            if (api.ready) {
+                try { await api.ready; } catch (error) {}
+            }
+            if (!api.token && api.refreshToken && typeof api.refreshAccessToken === 'function') {
+                await api.refreshAccessToken();
+            }
+            if (typeof api.getCurrentUser !== 'function') return;
+            const data = await api.getCurrentUser();
+            const userData = data && (data.user || data);
+            if (!userData || (!userData.username && !userData.email)) return;
+            this.currentUser = this.normalizeBackendUser(userData);
+            this.setRememberMe(true);
+            this.persistSession();
+            this.initializeUI();
+            window.dispatchEvent(new CustomEvent('tmr-auth-changed', {
+                detail: { loggedIn: true, user: this.currentUser }
+            }));
+        } catch (error) {
+            console.warn('[Auth] Could not restore remembered backend session:', error && error.message ? error.message : error);
+        }
+    }
+
+    async refreshBackendAccessInBackground() {
+        if (typeof api === 'undefined') return;
+        try {
+            if (api.ready) {
+                try { await api.ready; } catch (error) {}
+            }
+            if (!api.token && api.refreshToken && typeof api.refreshAccessToken === 'function') {
+                await api.refreshAccessToken();
+            }
+        } catch (error) {
+            console.warn('[Auth] Background token refresh failed:', error && error.message ? error.message : error);
+        }
+    }
+
+    normalizeBackendUser(userData) {
+        const loginValue = userData.username || userData.email || '';
+        return {
+            id: userData.id || this.generateUserId(),
+            username: userData.username || loginValue,
+            email: userData.email || '',
+            displayName: userData.displayName || userData.display_name || userData.username || loginValue,
+            avatar: userData.avatarUrl || userData.avatar_url || this.getDefaultAvatar(userData.username || loginValue),
+            bio: userData.bio || '',
+            joinedDate: userData.created_at || new Date().toISOString(),
+            verified: !!(userData.emailVerified || userData.email_verified),
+            stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
+            social: { followers: [], following: [], reputation: 0, badges: [] },
+            isPremium: false,
+            backendUser: true
+        };
     }
 
     restoreSession() {
@@ -197,22 +262,9 @@ class PersistentAuthSystem {
         }
 
         try {
-            const data = await api.login(usernameOrEmail, password);
+            const data = await api.login(usernameOrEmail, password, rememberMe);
             const userData = data.user || {};
-            const user = {
-                id: userData.id || this.generateUserId(),
-                username: userData.username || usernameOrEmail,
-                email: userData.email || '',
-                displayName: userData.displayName || userData.username || usernameOrEmail,
-                avatar: userData.avatarUrl || this.getDefaultAvatar(userData.username || usernameOrEmail),
-                bio: userData.bio || '',
-                joinedDate: userData.created_at || new Date().toISOString(),
-                verified: userData.emailVerified || false,
-                stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
-                social: { followers: [], following: [], reputation: 0, badges: [] },
-                isPremium: false,
-                backendUser: true
-            };
+            const user = this.normalizeBackendUser({ ...userData, username: userData.username || usernameOrEmail });
             this.currentUser = user;
             this.setRememberMe(rememberMe);
             this.persistSession();
