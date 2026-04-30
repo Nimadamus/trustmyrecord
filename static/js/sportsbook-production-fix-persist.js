@@ -2095,6 +2095,13 @@
             const response = await api.createPick(payload);
 
             showSubmitTrace('API saved pick. Refreshing pick history.');
+            // Notify any aside / panel that listens for "a pick just locked"
+            // so it can refresh from the backend (e.g. lobby Pending Picks
+            // panel, profile widgets). Defensive try/catch — never block
+            // confirmation on a downstream listener throwing.
+            try {
+                window.dispatchEvent(new CustomEvent('tmr:pickLocked', { detail: { pick: response && response.pick ? response.pick : null } }));
+            } catch (e) {}
             await fetchCurrentUserPicks();
             syncRecordWidgets(state.currentUserPicks);
             const savedSelectionLabel = option.selection_label || submittedSelection || 'Pick';
