@@ -969,7 +969,7 @@
                             '<span class="capper-sub">@' + escapeHtml(entry.username) + ' • ' + escapeHtml(entry.sport || 'All sports') + ' • streak ' + (entry.streak > 0 ? 'W' + entry.streak : entry.streak < 0 ? 'L' + Math.abs(entry.streak) : '0') + '</span>' +
                         '</div>' +
                     '</div></td>' +
-                    '<td>' + record + '</td>' +
+                    '<td class="' + statClass(entry.winRate - 50) + '">' + record + '</td>' +
                     '<td class="' + statClass(entry.roi) + '">' + signed(entry.roi, '%') + '</td>' +
                     '<td class="' + statClass(entry.units) + '">' + signed(entry.units, 'u') + '</td>' +
                     '<td class="' + statClass(entry.winRate - 50) + '">' + entry.winRate.toFixed(1) + '%</td>' +

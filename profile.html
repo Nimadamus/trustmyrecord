@@ -3155,11 +3155,15 @@
         };
         const s = data.summary || {};
         if (s.total_picks > 0) {
-            set('advRecord', s.record);
+            // Record + win % color from win-rate ONLY (independent of units per Apr 29 rule:
+            // a 7-3 record stays green even when units are negative).
+            const wr = Number(s.win_rate || 0);
+            const wrSigned = (Number(s.wins || 0) + Number(s.losses || 0)) > 0 ? (wr - 50) : 0;
+            set('advRecord', s.record, { signed: wrSigned });
             set('advTotal', String(s.total_picks));
             set('advPushes', String(s.pushes || 0));
             set('advPending', String(s.pending_picks || 0));
-            set('advWinPct', (s.win_rate || 0).toFixed(1) + '%');
+            set('advWinPct', wr.toFixed(1) + '%', { signed: wrSigned });
             const roi = Number(s.roi || 0);
             set('advRoi', (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%', { signed: roi });
             const u = Number(s.net_units || 0);
@@ -3573,12 +3577,18 @@
         const units = (p && (p.net_units != null ? p.net_units : p.units)) ?? null;
 
         if (totalPicks > 0) {
-            setMetric('advRecord', wins + '-' + losses + (pushes ? ('-' + pushes) : ''), false);
+            // Record + win % colored from win-rate ONLY, independent of units.
+            const wrForColor = winRate != null ? winRate : ((wins + losses) > 0 ? (wins / (wins + losses)) * 100 : 50);
+            const recordIsWinning = (wins + losses) > 0 && wrForColor > 50;
+            const recordIsLosing  = (wins + losses) > 0 && wrForColor < 50;
+            setMetric('advRecord', wins + '-' + losses + (pushes ? ('-' + pushes) : ''), false, recordIsWinning, recordIsLosing);
             setMetric('advTotal', String(totalPicks), false);
             setMetric('advPushes', String(pushes), false);
             setMetric('advPending', String(pending), false);
         }
-        if (winRate != null) setMetric('advWinPct', winRate.toFixed(1) + '%', false);
+        if (winRate != null) {
+            setMetric('advWinPct', winRate.toFixed(1) + '%', false, winRate > 50, winRate < 50);
+        }
         if (roi != null) setMetric('advRoi', (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%', false, roi > 0, roi < 0);
         if (units != null) {
             const u = Number(units);
