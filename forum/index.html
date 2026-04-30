@@ -4,44 +4,55 @@
     <meta charset="UTF-8">
     <link rel="canonical" href="https://trustmyrecord.com/forum/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forum - TrustMyRecord</title>
+    <title>Sports Betting Forum | Classic Bulletin Board | TrustMyRecord</title>
+    <meta name="description" content="Sports betting forum tied to verified handicapper records. Talk MLB, NBA, NFL, NHL, soccer, college football, UFC, and more in threads where every poster has a public pick history.">
+    <meta name="keywords" content="sports betting forum, sports handicapping forum, sports discussion threads, MLB betting forum, NBA betting forum, NFL betting forum, verified handicapper forum">
+    <meta property="og:title" content="Sports Betting Forum | Classic Bulletin Board">
+    <meta property="og:description" content="Sports betting forum tied to verified handicapper records. Every poster has a public pick history.">
+    <meta property="og:url" content="https://trustmyrecord.com/forum/">
+    <meta property="og:type" content="website">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430a">
-<script defer src="/static/js/tmr-sitewide.js?v=20260430a"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430h">
+<script defer src="/static/js/tmr-sitewide.js?v=20260430h"></script>
     <style>
         :root {
-            --forum-blue: #4f6b9a;
-            --forum-blue-dark: #3d5581;
-            --forum-silver: #e9edf5;
-            --forum-panel: #f7f9fc;
-            --forum-border: #aeb8c8;
-            --forum-border-strong: #8895ab;
-            --forum-accent: #234b85;
-            --forum-link: #163f7a;
-            --forum-link-hover: #0f2b52;
-            --forum-meta: #5f6b7a;
-            --forum-text: #20262f;
-            --forum-soft: #d9e1ee;
+            /* Two Plus Two / vBulletin v3-era palette: cream tan body,
+               solid navy header bands (NOT gradient), terracotta accents,
+               muted gray borders. No neon, no glass cards. */
+            --forum-blue: #003366;          /* navy header band */
+            --forum-blue-dark: #002244;     /* darker on hover */
+            --forum-silver: #f5f1e6;        /* row stripe A (cream) */
+            --forum-panel: #fcfaf3;         /* row stripe B (very light cream) */
+            --forum-border: #888888;        /* table chrome border */
+            --forum-border-strong: #555555;
+            --forum-accent: #b34700;        /* terracotta accent (2+2 link hover) */
+            --forum-link: #0033cc;          /* classic vB blue link */
+            --forum-link-hover: #b34700;
+            --forum-meta: #5a5a5a;
+            --forum-text: #1a1a1a;
+            --forum-soft: #ece6d3;
             --success: #2d7a35;
             --danger: #a12222;
             --warning: #735400;
             --primary: var(--forum-blue);
             --primary-dark: var(--forum-blue-dark);
             --text-primary: var(--forum-text);
-            --text-secondary: #313946;
+            --text-secondary: #2a2a2a;
             --text-muted: var(--forum-meta);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
+            /* 2+2: flat cream body, no gradient. Tighter type. */
             font-family: Verdana, Arial, Helvetica, sans-serif;
-            background: linear-gradient(180deg, #f3f6fb 0%, #e3e9f2 100%);
+            background: #e8e0c8;
             color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
-            font-size: 13px;
+            font-size: 11.5px;
+            line-height: 1.45;
         }
 
         /* Loading state */
@@ -54,12 +65,11 @@
         .tmr-loading-state .tmr-loading-retry button { background: var(--forum-blue); color: #fff; border: 1px solid var(--forum-blue-dark); padding: 10px 24px; border-radius: 4px; cursor: pointer; font-weight: 700; font-size: 0.9rem; margin-top: 8px; }
         .tmr-loading-state .tmr-loading-retry button:hover { opacity: 0.85; }
 
-        /* ========== HEADER / NAV BAR ========== */
+        /* ========== HEADER / NAV BAR (vB-style flat navy band) ========== */
         header {
-            background: linear-gradient(180deg, var(--forum-blue) 0%, var(--forum-blue-dark) 100%);
-            border-bottom: 1px solid #2a3a56;
-            padding: 10px 0;
-            box-shadow: inset 0 -1px 0 rgba(255,255,255,0.14);
+            background: var(--forum-blue);
+            border-bottom: 1px solid #001a33;
+            padding: 8px 0;
         }
 
         .header-content {
@@ -1224,6 +1234,183 @@
             .post-user-pane { display: flex; align-items: center; gap: 10px; border-right: none; border-bottom: 1px solid #D0D0C0; }
             .post-user-avatar { width: 40px; height: 40px; margin: 0; }
         }
+
+        /* =========================================================
+           2+2 / vBulletin v3 final-cascade skin (Apr 30 2026).
+           Sits at the bottom so it overrides any earlier rules.
+           ========================================================= */
+        body {
+            background: #e8e0c8 !important;
+            font-family: Verdana, Arial, Helvetica, sans-serif !important;
+            font-size: 11.5px !important;
+            color: #1a1a1a !important;
+        }
+        /* Force the inner shell to a tight 2+2 width with a thin
+           gray border around the whole content tray. */
+        .forum-shell, .forum-container, .forum-content,
+        .container, main {
+            background: #fcfaf3 !important;
+            border: 1px solid #888 !important;
+            box-shadow: none !important;
+        }
+        /* Header row: the global TMR nav stays + a flat navy band that
+           feels like the 2+2 logo strip below it. */
+        header { background: #003366 !important; border-bottom: 1px solid #001a33 !important; }
+        header .logo, header .nav-link, header a { color: #fff !important; }
+        header .logo:hover, header a:hover { color: #ffd54f !important; }
+
+        /* All anchors: classic blue link, terracotta on hover. */
+        a, .forum-link, .thread-title-link, .cat-table a, .thread-table a {
+            color: #0033cc !important; text-decoration: none !important;
+        }
+        a:hover, .forum-link:hover, .thread-title-link:hover { color: #b34700 !important; text-decoration: underline !important; }
+        a:visited { color: #5c2d91 !important; }
+
+        /* Category + thread tables: tight rows, gray borders, alternating cream stripes. */
+        .cat-table, .thread-table, table.forum-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            background: #fcfaf3 !important;
+            border: 1px solid #888 !important;
+            font-size: 11.5px !important;
+        }
+        .cat-table thead th, .thread-table thead th, table.forum-table thead th {
+            background: #003366 !important;
+            color: #ffffff !important;
+            font: 700 11px/1.1 Verdana, Arial, sans-serif !important;
+            text-transform: none !important;
+            letter-spacing: 0 !important;
+            text-align: left !important;
+            padding: 6px 10px !important;
+            border-right: 1px solid #001a33 !important;
+            border-bottom: 1px solid #888 !important;
+        }
+        .cat-table thead th:last-child, .thread-table thead th:last-child { border-right: 0 !important; }
+        .cat-table tbody tr, .thread-table tbody tr { border-bottom: 1px solid #cdc6b3 !important; }
+        .cat-table tbody tr:nth-child(odd),
+        .thread-table tbody tr:nth-child(odd) { background: #f5f1e6 !important; }
+        .cat-table tbody tr:nth-child(even),
+        .thread-table tbody tr:nth-child(even) { background: #fcfaf3 !important; }
+        .cat-table tbody tr:hover,
+        .thread-table tbody tr:hover { background: #ffffe7 !important; }
+        .cat-table tbody td,
+        .thread-table tbody td {
+            padding: 6px 10px !important;
+            border-right: 1px solid #d6cfb8 !important;
+            vertical-align: middle !important;
+            color: #1a1a1a !important;
+        }
+        .cat-table tbody td:last-child,
+        .thread-table tbody td:last-child { border-right: 0 !important; }
+
+        /* Numeric / last-post cells right-aligned and muted. */
+        .cat-table td.num, .thread-table td.num,
+        .cat-table th.num, .thread-table th.num,
+        .cat-table .col-threads, .cat-table .col-posts,
+        .thread-table .col-replies, .thread-table .col-views {
+            text-align: right !important;
+            font-variant-numeric: tabular-nums !important;
+            color: #5a5a5a !important;
+            white-space: nowrap !important;
+        }
+
+        /* Forum/thread title block: bold-ish, slightly larger; description gray. */
+        .cat-name, .thread-title, .forum-title {
+            font: 700 12px/1.25 Verdana, Arial, sans-serif !important;
+            color: #0033cc !important;
+        }
+        .cat-name:hover, .thread-title:hover, .forum-title:hover { color: #b34700 !important; }
+        .cat-desc, .thread-desc, .forum-desc, .cat-meta {
+            font: 400 10.5px/1.4 Verdana, Arial, sans-serif !important;
+            color: #5a5a5a !important;
+            margin-top: 2px !important;
+        }
+
+        /* Last-post column: tighter, with the username on top, time underneath. */
+        .last-post, .col-last, .cat-last, .thread-last {
+            font-size: 10.5px !important;
+            color: #5a5a5a !important;
+            line-height: 1.35 !important;
+        }
+        .last-post strong, .col-last strong, .cat-last strong { color: #0033cc !important; font-weight: 700 !important; }
+
+        /* Page section headings (e.g., the "category bar" between groups). */
+        .forum-category-header, .category-bar, .forum-section-head {
+            background: #003366 !important;
+            color: #ffffff !important;
+            font: 700 12px/1 Verdana, Arial, sans-serif !important;
+            padding: 6px 10px !important;
+            border: 1px solid #001a33 !important;
+            border-bottom: 0 !important;
+        }
+        .forum-category-header a, .category-bar a, .forum-section-head a { color: #ffd54f !important; }
+
+        /* Buttons: gray vB chrome */
+        .forum-btn, button.forum-action, .btn-secondary, .btn-primary {
+            background: linear-gradient(180deg, #e0e0d0 0%, #c8c8b8 100%) !important;
+            color: #1a1a1a !important;
+            border: 1px solid #888 !important;
+            border-radius: 3px !important;
+            font: 700 11px/1 Verdana, Arial, sans-serif !important;
+            padding: 5px 12px !important;
+            text-shadow: none !important;
+            box-shadow: 0 1px 0 #fff inset, 0 1px 1px rgba(0,0,0,0.08) !important;
+        }
+        .forum-btn:hover, button.forum-action:hover, .btn-secondary:hover, .btn-primary:hover {
+            background: linear-gradient(180deg, #ebebd8 0%, #d4d4c0 100%) !important;
+        }
+
+        /* Sidebar / forum-jump-row: small, muted, bordered. */
+        .forum-jump-row, .forum-toolbar, .forum-actions {
+            background: #ece6d3 !important;
+            border: 1px solid #888 !important;
+            padding: 4px 8px !important;
+            font-size: 10.5px !important;
+            color: #1a1a1a !important;
+        }
+        .forum-jump-row select, .forum-jump-row input { font-size: 11px !important; padding: 2px 4px !important; }
+
+        /* Per-post layout (vB classic two-pane): user pane left, body right. */
+        .post-shell {
+            background: #fcfaf3 !important;
+            border: 1px solid #888 !important;
+            margin-bottom: 6px !important;
+        }
+        .post-top-bar {
+            background: #ece6d3 !important;
+            border-bottom: 1px solid #cdc6b3 !important;
+            padding: 4px 8px !important;
+            font: 700 10.5px/1.2 Verdana !important;
+            color: #5a5a5a !important;
+            display: flex !important;
+            justify-content: space-between !important;
+        }
+        .post-author-name { color: #0033cc !important; font-weight: 700 !important; }
+        .post-layout { grid-template-columns: 160px 1fr !important; }
+        .post-user-pane {
+            background: #f5f1e6 !important;
+            border-right: 1px solid #cdc6b3 !important;
+            padding: 8px !important;
+        }
+        .post-user-name { color: #0033cc !important; font: 700 12px Verdana !important; }
+        .post-user-stats { font-size: 10px !important; color: #5a5a5a !important; line-height: 1.45 !important; }
+        .post-body, .post-content { padding: 10px 14px !important; font-size: 11.5px !important; line-height: 1.55 !important; color: #1a1a1a !important; }
+
+        /* Loading spinner: keep but recolor to navy. */
+        .tmr-loading-state .tmr-spinner { border-color: rgba(0,51,102,0.18) !important; border-top-color: #003366 !important; }
+
+        /* Trust-note callouts (forum-trust-note): cream/tan box, navy left bar. */
+        .forum-trust-note {
+            background: #fffce5 !important;
+            border: 1px solid #888 !important;
+            border-left: 4px solid #003366 !important;
+            color: #1a1a1a !important;
+            padding: 6px 10px !important;
+            font-size: 11px !important;
+        }
+
+        /* Hide any glassy / neon affordances that remained. */
+        .glass-card, .neon-card, .tmr-glow { background: #fcfaf3 !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border: 1px solid #888 !important; }
     </style>
 </head>
 <body>
@@ -1281,8 +1468,8 @@
     </div>
 
     <div class="vb-title-strip">
-        <div id="forumPageTitle">Sports Betting</div>
-        <div class="vb-title-strip-sub">Threads tie back to your public profile and locked pick history. Be civil. No spam. No fake records.</div>
+        <div id="forumPageTitle">TrustMyRecord Sports Betting Forums</div>
+        <div class="vb-title-strip-sub">Classic bulletin-board discussion for picks, handicappers, challenges, polls, trivia, and receipts.</div>
     </div>
 
     <!-- ================= CATEGORIES VIEW ================= -->
@@ -1386,13 +1573,13 @@ var fallbackCategories = [
     {
         id: 'cat_general',
         slug: 'general-betting',
-        name: 'General Betting Talk',
-        description: 'Broad sports betting discussion, process, bankroll discipline, and board movement.',
+        name: 'Sports Betting Forum',
+        description: 'Main board for picks, game discussion, polls, trivia, bankroll discipline, and board movement.',
         icon: '\ud83d\udcac',
         thread_count: 0,
         post_count: 0,
         latest_thread: null,
-        group: 'Main Forums'
+        group: 'TrustMyRecord Forums'
     },
     {
         id: 'cat_nfl',
@@ -1403,7 +1590,7 @@ var fallbackCategories = [
         thread_count: 0,
         post_count: 0,
         latest_thread: null,
-        group: 'Sports Forums'
+        group: 'Sports Betting Forums'
     },
     {
         id: 'cat_nba',
@@ -1414,7 +1601,7 @@ var fallbackCategories = [
         thread_count: 0,
         post_count: 0,
         latest_thread: null,
-        group: 'Sports Forums'
+        group: 'Sports Betting Forums'
     },
     {
         id: 'cat_nhl',
@@ -1425,7 +1612,7 @@ var fallbackCategories = [
         thread_count: 0,
         post_count: 0,
         latest_thread: null,
-        group: 'Sports Forums'
+        group: 'Sports Betting Forums'
     },
     {
         id: 'cat_mlb',
@@ -1436,18 +1623,18 @@ var fallbackCategories = [
         thread_count: 0,
         post_count: 0,
         latest_thread: null,
-        group: 'Sports Forums'
+        group: 'Sports Betting Forums'
     },
     {
         id: 'cat_challenges',
         slug: 'challenges',
-        name: 'Challenges & Arena',
-        description: 'Open challenges, competition talk, and strategy around proving yourself in head-to-head formats.',
+        name: 'Marketplace, Challenges & Arena',
+        description: 'Pick seller questions, open challenges, competition talk, and head-to-head formats.',
         icon: '\ud83c\udfaf',
         thread_count: 0,
         post_count: 0,
         latest_thread: null,
-        group: 'Community'
+        group: 'TrustMyRecord Forums'
     }
 ];
 var usingFallbackCategories = false;
@@ -1553,9 +1740,9 @@ function showCategories() {
     document.getElementById('viewThreads').style.display = 'none';
     document.getElementById('viewThread').style.display = 'none';
 
-    setForumPageHeader('Sports Betting');
+    setForumPageHeader('TrustMyRecord Sports Betting Forums');
     setActiveSidebar('sports-betting');
-    document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span id="forumPageTitleLabel">Sports Betting</span>';
+    document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span id="forumPageTitleLabel">Forum Home</span>';
     window.history.replaceState({}, '', '/forum/');
     renderCategories();
     renderSampleThreads();
@@ -1730,7 +1917,7 @@ function renderCategories() {
     var html = '';
 
     groups.forEach(function(group) {
-        html += '<div class="group-header"><div class="group-header-title"><span>' + escHtml(group.name) + '</span></div><div class="group-header-meta">Boards built for receipt-backed discussion</div></div>';
+        html += '<div class="group-header"><div class="group-header-title"><span>' + escHtml(group.name) + '</span></div><div class="group-header-meta">Classic board index</div></div>';
         html += '<table class="cat-table"><thead><tr><th>Forum</th><th class="col-num">Threads</th><th class="col-num">Posts</th><th class="col-last">Last Post</th></tr></thead><tbody>';
 
         group.categories.forEach(function(cat) {
@@ -2220,7 +2407,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     var queryCategory = params.get('category');
     if (queryCategory) {
-        await showThreadsList(queryCategory, queryCategory);
+        await loadCategories();
+        var queryCatMatch = categories.find(function(item) { return item.slug === queryCategory; });
+        await showThreadsList(queryCategory, queryCatMatch ? queryCatMatch.name : queryCategory, queryCatMatch ? queryCatMatch.id : null);
         return;
     }
 
@@ -2235,16 +2424,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (hash && hash.indexOf('#cat-') === 0) {
         var slug = hash.substring(5);
         if (slug) {
-            await showThreadsList(slug, slug);
+            await loadCategories();
+            var hashCatMatch = categories.find(function(item) { return item.slug === slug; });
+            await showThreadsList(slug, hashCatMatch ? hashCatMatch.name : slug, hashCatMatch ? hashCatMatch.id : null);
             return;
         }
     }
 
-    // Default: show categories
+    // Default: load and show the live forum index.
+    await loadCategories();
     showCategories();
 });
 </script>
 </body>
 </html>
-
-
