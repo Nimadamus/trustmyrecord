@@ -395,24 +395,77 @@
     // Each sport offers a different mix of supported markets. The data shape used
     // here matches what the backend exposes via game.bookmakers + game.market_groups.
     // Markets without supporting data are NOT shown (no fake tabs).
+    // Each entry's `key` semantics:
+    //   game / moneyline / spread / total -> full-game filter (renders the
+    //     standard 3-col board, then hides the columns the active filter
+    //     doesn't want; 'game' = all three columns visible).
+    //   team_totals / first_5 / alts / first_half / second_half -> rendered
+    //     by _renderMarketBoard, items pulled from game.market_groups.
+    //   live -> stub; "Live betting coming soon" empty state.
     window.TMR.marketCatalog = {
-        'NBA':    [ {key:'game', label:'Full Game', hint:'ML / Spread / Total'},
-                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'} ],
-        'NCAAB':  [ {key:'game', label:'Full Game', hint:'ML / Spread / Total'},
-                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'} ],
-        'NFL':    [ {key:'game', label:'Full Game', hint:'ML / Spread / Total'},
-                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'} ],
-        'NCAAF':  [ {key:'game', label:'Full Game', hint:'ML / Spread / Total'},
-                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'} ],
-        'NHL':    [ {key:'game', label:'Full Game', hint:'ML / Puck / Total'},
-                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'} ],
-        'MLB':    [ {key:'game', label:'Full Game', hint:'ML / Run / Total'},
+        'NBA':    [ {key:'game', label:'All Markets', hint:'ML + Spread + Total'},
+                    {key:'moneyline', label:'Moneyline', hint:'ML only'},
+                    {key:'spread', label:'Spread', hint:'Point spread'},
+                    {key:'total', label:'Total', hint:'O/U'},
+                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'},
+                    {key:'first_half', label:'1H', hint:'First-half lines'},
+                    {key:'second_half', label:'2H', hint:'Second-half lines'},
+                    {key:'live', label:'Live', hint:'Coming soon'} ],
+        'NCAAB':  [ {key:'game', label:'All Markets', hint:'ML + Spread + Total'},
+                    {key:'moneyline', label:'Moneyline', hint:'ML only'},
+                    {key:'spread', label:'Spread', hint:'Point spread'},
+                    {key:'total', label:'Total', hint:'O/U'},
+                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'},
+                    {key:'first_half', label:'1H', hint:'First-half lines'},
+                    {key:'second_half', label:'2H', hint:'Second-half lines'},
+                    {key:'live', label:'Live', hint:'Coming soon'} ],
+        'NFL':    [ {key:'game', label:'All Markets', hint:'ML + Spread + Total'},
+                    {key:'moneyline', label:'Moneyline', hint:'ML only'},
+                    {key:'spread', label:'Spread', hint:'Point spread'},
+                    {key:'total', label:'Total', hint:'O/U'},
+                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'},
+                    {key:'first_half', label:'1H', hint:'First-half lines'},
+                    {key:'second_half', label:'2H', hint:'Second-half lines'},
+                    {key:'live', label:'Live', hint:'Coming soon'} ],
+        'NCAAF':  [ {key:'game', label:'All Markets', hint:'ML + Spread + Total'},
+                    {key:'moneyline', label:'Moneyline', hint:'ML only'},
+                    {key:'spread', label:'Spread', hint:'Point spread'},
+                    {key:'total', label:'Total', hint:'O/U'},
+                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'},
+                    {key:'first_half', label:'1H', hint:'First-half lines'},
+                    {key:'second_half', label:'2H', hint:'Second-half lines'},
+                    {key:'live', label:'Live', hint:'Coming soon'} ],
+        'NHL':    [ {key:'game', label:'All Markets', hint:'ML + Puck + Total'},
+                    {key:'moneyline', label:'Moneyline', hint:'ML only'},
+                    {key:'spread', label:'Puck Line', hint:'+/-1.5 puck'},
+                    {key:'total', label:'Total', hint:'O/U goals'},
+                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'},
+                    {key:'live', label:'Live', hint:'Coming soon'} ],
+        'MLB':    [ {key:'game', label:'All Markets', hint:'ML + Run + Total'},
+                    {key:'moneyline', label:'Moneyline', hint:'ML only'},
+                    {key:'spread', label:'Run Line', hint:'+/-1.5 runs'},
+                    {key:'total', label:'Total', hint:'O/U runs'},
                     {key:'first_5', label:'F5 (5-Inning)', hint:'First 5 innings'},
                     {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'},
-                    {key:'alts', label:'Alts', hint:'Alt spreads / totals'} ],
-        'Soccer': [ {key:'game', label:'90-Min', hint:'1X2 / Spread / Total'} ],
-        'Tennis': [ {key:'game', label:'Match', hint:'ML / Spread / Total'} ],
+                    {key:'alts', label:'Alts', hint:'Alt spreads / totals'},
+                    {key:'live', label:'Live', hint:'Coming soon'} ],
+        'Soccer': [ {key:'game', label:'90-Min', hint:'1X2 / Spread / Total'},
+                    {key:'moneyline', label:'1X2', hint:'Win / Draw'},
+                    {key:'spread', label:'Asian', hint:'Asian handicap'},
+                    {key:'total', label:'Total', hint:'O/U goals'},
+                    {key:'first_half', label:'1H', hint:'First-half lines'},
+                    {key:'second_half', label:'2H', hint:'Second-half lines'},
+                    {key:'live', label:'Live', hint:'Coming soon'} ],
+        'Tennis': [ {key:'game', label:'Match', hint:'ML + Spread + Total'},
+                    {key:'moneyline', label:'Moneyline', hint:'ML only'},
+                    {key:'spread', label:'Set Spread', hint:'Game spread'},
+                    {key:'total', label:'Total', hint:'O/U games'},
+                    {key:'live', label:'Live', hint:'Coming soon'} ],
     };
+    // Markets that filter the standard 3-col board instead of pulling from market_groups.
+    window.TMR._fullGameFilterMarkets = ['game', 'moneyline', 'spread', 'total'];
+    // Markets that pull items from game.market_groups via _renderMarketBoard.
+    window.TMR._groupBackedMarkets = ['team_totals', 'first_5', 'alts', 'first_half', 'second_half'];
     window.TMR.selectedMarket = 'game';
     window.TMR._cachedGames = [];
     window.TMR._cachedSport = null;
@@ -430,16 +483,20 @@
         }
         // Filter out tabs with zero supporting data so we never render an empty tab.
         var hasMarket = function(key) {
-            if (key === 'game') return true;
-            return (games || []).some(function(g) {
-                if (key === 'team_totals' || key === 'first_5' || key === 'alts') {
-                    var alias = key === 'alts' ? ['alt_spreads', 'alt_totals'] : [key];
+            // Filtered full-game views always show (the main 3-col board exists by default).
+            if (window.TMR._fullGameFilterMarkets.indexOf(key) !== -1) return true;
+            // Live stays available so the user sees the "coming soon" message.
+            if (key === 'live') return true;
+            // Group-backed markets only appear when the underlying market_groups data exists.
+            if (window.TMR._groupBackedMarkets.indexOf(key) !== -1) {
+                var alias = key === 'alts' ? ['alt_spreads', 'alt_totals'] : [key];
+                return (games || []).some(function(g) {
                     return Array.isArray(g.market_groups) && g.market_groups.some(function(grp) {
                         return grp && alias.indexOf(grp.key) !== -1 && Array.isArray(grp.items) && grp.items.length;
                     });
-                }
-                return false;
-            });
+                });
+            }
+            return false;
         };
         var supported = catalog.filter(function(t) { return hasMarket(t.key); });
         // If the previously selected market is gone after filter, reset to 'game'.
@@ -605,10 +662,23 @@
         window.TMR.renderMarketSubtabs(sport, games);
         var market = window.TMR.selectedMarket || 'game';
 
-        // ===== Non-Game markets render their own dedicated card per game =====
-        if (market !== 'game') {
+        // ===== Live betting stub (clearly labeled, no fake odds) =====
+        if (market === 'live') {
+            container.innerHTML = '<div class="market-empty" style="padding:32px 20px;">'
+                + '<div style="font-size:34px;margin-bottom:10px;">&#128268;</div>'
+                + '<div style="color:#f4f7fb;font-weight:800;font-size:16px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;">Live Betting &mdash; Coming Soon</div>'
+                + 'In-game lines for live wagering are wired into the data pipeline next. For now, switch back to '
+                + '<button type="button" onclick="window.TMR.setMarket(\'game\')" style="background:none;border:0;color:#00ffff;padding:0;cursor:pointer;font-weight:700;">All Markets</button> to lock pre-game picks.'
+                + '</div>';
+            return;
+        }
+
+        // ===== Group-backed markets (Team Totals / F5 / Halves / Alts) =====
+        if (window.TMR._groupBackedMarkets.indexOf(market) !== -1) {
             return window.TMR._renderMarketBoard(container, games, sport, market);
         }
+        // 'game' / 'moneyline' / 'spread' / 'total' all flow through the standard
+        // 3-col board below; the column-filter is applied via .market-board[data-filter].
 
         // Validate each game's odds quality (full-game branch only)
         var validationResults = games.map(function(g) { return window.TMR.validateOdds(g); });
@@ -622,7 +692,16 @@
             html += '<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;color:#fca5a5;font-size:14px;"><span style="font-size:20px;">&#9888;</span> Real odds not available yet. Showing matchups only. Enter your own line and odds from your sportsbook after selecting a pick.</div>';
         }
         var spreadLabel = (sport === 'NHL') ? 'Puck Line' : (sport === 'MLB' ? 'Run Line' : 'Spread');
-        html += '<div class="market-headers"><div class="market-label">Matchup</div><div class="market-label">' + spreadLabel + '</div><div class="market-label">Moneyline</div><div class="market-label">Total</div></div>';
+        // Wrap the standard board in a filter-aware container so the active
+        // market sub-tab (moneyline / spread / total / game) can hide the
+        // other columns via CSS without re-templating per-row markup.
+        html += '<div class="games-board-wrap" data-market="' + market + '">';
+        html += '<div class="market-headers">'
+            + '<div class="market-label" data-mkt="matchup">Matchup</div>'
+            + '<div class="market-label" data-mkt="spread">' + spreadLabel + '</div>'
+            + '<div class="market-label" data-mkt="ml">Moneyline</div>'
+            + '<div class="market-label" data-mkt="total">Total</div>'
+            + '</div>';
         games.forEach(function(game, index) {
             var validation = validationResults[index];
             var bookmaker = game.bookmakers && game.bookmakers[0];
@@ -664,25 +743,31 @@
             if (validation.source === 'sportsbook' || validation.source === 'espn') {
                 sourceIndicator = '<span style="color:#22c55e;font-size:8px;margin-left:6px;" title="Real sportsbook odds">&#9679;</span>';
             }
+            // Per-game "Odds integration pending" badge when no bookmaker odds at all.
+            var pendingBadge = '';
+            if (!hasRealOdds) {
+                pendingBadge = '<span class="odds-pending-badge" title="Odds integration pending for this game">Sample Market</span>';
+            }
             html += '<div class="game-row">' +
-                '<div class="game-time-header"><span class="game-time">' + gameTime + sourceIndicator + '</span></div>' +
+                '<div class="game-time-header"><span class="game-time">' + gameTime + sourceIndicator + '</span>' + pendingBadge + '</div>' +
                 '<div class="team-row">' +
-                '<div class="team-info"><div class="team-details"><div class="team-name">' + game.away_team + '</div></div></div>' +
-                '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'spread\',\'' + esc(game.away_team) + '\',\'' + esc(pv(awaySpread.point != null ? fmtSpread(awaySpread.point) : '')) + '\',\'' + esc(pv(awaySpread.price)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + spdLine(awaySpread.point) + '</span><span class="odds-value">' + spdOdds(awaySpread.price) + '</span></button>' +
-                '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + esc(game.away_team) + '\',\'ML\',\'' + esc(pv(awayML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (awayML > 0 ? 'positive' : '') + '">' + mlDisplay(awayML) + '</span></button>' +
-                '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'over\',\'Over\',\'' + esc(pv(total)) + '\',\'' + esc(pv(overPrice)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + totLine('Over') + '</span><span class="odds-value">' + totOdds(overPrice) + '</span></button>' +
+                '<div class="team-info" data-mkt="matchup"><div class="team-details"><div class="team-name">' + game.away_team + '</div></div></div>' +
+                '<button class="odds-btn' + noOddsClass + '" data-mkt="spread" onclick="window.selectGameBet(' + index + ',\'spread\',\'' + esc(game.away_team) + '\',\'' + esc(pv(awaySpread.point != null ? fmtSpread(awaySpread.point) : '')) + '\',\'' + esc(pv(awaySpread.price)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + spdLine(awaySpread.point) + '</span><span class="odds-value">' + spdOdds(awaySpread.price) + '</span></button>' +
+                '<button class="odds-btn' + noOddsClass + '" data-mkt="ml" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + esc(game.away_team) + '\',\'ML\',\'' + esc(pv(awayML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (awayML > 0 ? 'positive' : '') + '">' + mlDisplay(awayML) + '</span></button>' +
+                '<button class="odds-btn' + noOddsClass + '" data-mkt="total" onclick="window.selectGameBet(' + index + ',\'over\',\'Over\',\'' + esc(pv(total)) + '\',\'' + esc(pv(overPrice)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + totLine('Over') + '</span><span class="odds-value">' + totOdds(overPrice) + '</span></button>' +
                 '</div>' +
                 '<div class="team-row">' +
-                '<div class="team-info"><div class="team-details"><div class="team-name">' + game.home_team + '</div></div></div>' +
-                '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'spread\',\'' + esc(game.home_team) + '\',\'' + esc(pv(homeSpread.point != null ? fmtSpread(homeSpread.point) : '')) + '\',\'' + esc(pv(homeSpread.price)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + spdLine(homeSpread.point) + '</span><span class="odds-value">' + spdOdds(homeSpread.price) + '</span></button>' +
-                '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + esc(game.home_team) + '\',\'ML\',\'' + esc(pv(homeML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (homeML > 0 ? 'positive' : '') + '">' + mlDisplay(homeML) + '</span></button>' +
-                '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'under\',\'Under\',\'' + esc(pv(total)) + '\',\'' + esc(pv(underPrice)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + totLine('Under') + '</span><span class="odds-value">' + totOdds(underPrice) + '</span></button>' +
+                '<div class="team-info" data-mkt="matchup"><div class="team-details"><div class="team-name">' + game.home_team + '</div></div></div>' +
+                '<button class="odds-btn' + noOddsClass + '" data-mkt="spread" onclick="window.selectGameBet(' + index + ',\'spread\',\'' + esc(game.home_team) + '\',\'' + esc(pv(homeSpread.point != null ? fmtSpread(homeSpread.point) : '')) + '\',\'' + esc(pv(homeSpread.price)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + spdLine(homeSpread.point) + '</span><span class="odds-value">' + spdOdds(homeSpread.price) + '</span></button>' +
+                '<button class="odds-btn' + noOddsClass + '" data-mkt="ml" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + esc(game.home_team) + '\',\'ML\',\'' + esc(pv(homeML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (homeML > 0 ? 'positive' : '') + '">' + mlDisplay(homeML) + '</span></button>' +
+                '<button class="odds-btn' + noOddsClass + '" data-mkt="total" onclick="window.selectGameBet(' + index + ',\'under\',\'Under\',\'' + esc(pv(total)) + '\',\'' + esc(pv(underPrice)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + totLine('Under') + '</span><span class="odds-value">' + totOdds(underPrice) + '</span></button>' +
                 '</div></div>';
             // Inline "More Markets" expandable removed Apr 29 2026 -- those markets
             // (F5, Team Totals, Alts) now live as top-level sub-tabs above the games
             // list (window.TMR.marketCatalog) so users can pick a market context first
             // and see all games filtered to that market in one view.
         });
+        html += '</div>'; // close .games-board-wrap
         container.innerHTML = html;
     };
 
@@ -8965,6 +9050,40 @@
             .market-subtab .market-subtab__hint{display:block;font-size:9.5px;color:rgba(0,0,0,0.55);margin-top:3px;font-weight:600;letter-spacing:.05em;}
             .market-subtab:not(.is-active) .market-subtab__hint{color:#64748b;}
             .market-empty{padding:16px 18px;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:10px;color:#94a3b8;font-size:13.5px;text-align:center;margin:8px 0 0;}
+
+            /* Column filter: when a single-market sub-tab is active, hide the other
+               two columns of the standard board. data-mkt="matchup" always stays. */
+            .games-board-wrap[data-market="moneyline"] [data-mkt="spread"],
+            .games-board-wrap[data-market="moneyline"] [data-mkt="total"]  { display:none !important; }
+            .games-board-wrap[data-market="spread"]    [data-mkt="ml"],
+            .games-board-wrap[data-market="spread"]    [data-mkt="total"]  { display:none !important; }
+            .games-board-wrap[data-market="total"]     [data-mkt="ml"],
+            .games-board-wrap[data-market="total"]     [data-mkt="spread"] { display:none !important; }
+            /* Single-column layout when only one market column is shown so the
+               surviving button takes the freed real estate. */
+            .games-board-wrap[data-market="moneyline"] .market-headers,
+            .games-board-wrap[data-market="spread"]    .market-headers,
+            .games-board-wrap[data-market="total"]     .market-headers,
+            .games-board-wrap[data-market="moneyline"] .team-row,
+            .games-board-wrap[data-market="spread"]    .team-row,
+            .games-board-wrap[data-market="total"]     .team-row {
+                grid-template-columns: minmax(180px, 1.4fr) minmax(120px, 1fr);
+            }
+
+            /* Per-game "Sample Market" pill when bookmaker odds are missing. */
+            .odds-pending-badge {
+                display: inline-block;
+                margin-left: 10px;
+                padding: 2px 8px;
+                border-radius: 4px;
+                background: rgba(245, 158, 11, 0.16);
+                border: 1px solid rgba(245, 158, 11, 0.42);
+                color: #fcd34d;
+                font: 700 9.5px/1.5 'Inter', sans-serif;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                vertical-align: middle;
+            }
 
             /* ===== Persistent right-rail Pick Slip layout (desktop) ===== */
             /* On wide screens, force the games board + pick slip side by side
@@ -22551,8 +22670,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <script src="/static/js/platform-production-fix.js?v=20260415d"></script>
     <script src="/static/js/sportsbook-dashboard-sync.js?v=20260415d"></script>
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430b">
-<script defer src="/static/js/tmr-sitewide.js?v=20260430b"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430c">
+<script defer src="/static/js/tmr-sitewide.js?v=20260430c"></script>
     <style>
         /* Make Your Picks polish: visual-only overrides, no pick-flow logic changes. */
         #picks.page-section {
