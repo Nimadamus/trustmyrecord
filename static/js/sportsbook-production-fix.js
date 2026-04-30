@@ -1586,6 +1586,22 @@
         }
         if (typeof window.showPickStep === 'function') window.showPickStep('gamesListSection');
 
+        // Hard timeout so the loading state can never hang silently if both
+        // the primary fetch and the fallback chain stall. After 14s, if this
+        // request is still the latest and the board still hasn't rendered,
+        // show a real error with a Retry button instead of leaving the user
+        // staring at "Loading…" forever (Apr 30 incident).
+        var loadingTimeoutTimer = window.setTimeout(function() {
+            if (requestId !== latestBoardRequestId) return;
+            if (state.lastBoardRenderSport === sport && state.lastBoardRenderAt > Date.now() - 14000) return;
+            var c = document.getElementById('gamesListContainer');
+            if (!c) return;
+            if (c.querySelector('.tmr-board-loading') || c.textContent.indexOf('Loading') !== -1) {
+                c.innerHTML = '<div class="tmr-empty-state">Sportsbook feed is taking longer than usual to respond. ' +
+                    '<div style="margin-top:12px;"><button class="tmr-board-button" onclick="window.tmrSportsbookRefresh && window.tmrSportsbookRefresh()">Retry</button></div></div>';
+            }
+        }, 14000);
+
         if (cachedBoard) {
             renderBoardIfCurrent(requestId, sport, badge, cachedBoard);
         }
@@ -1617,7 +1633,9 @@
                 }
             }
             renderBoardIfCurrent(requestId, sport, badge, response);
+            window.clearTimeout(loadingTimeoutTimer);
         } catch (error) {
+            window.clearTimeout(loadingTimeoutTimer);
             recordBoardEvent('board_primary_failed', {
                 sport: sport,
                 sport_key: sportKey,
