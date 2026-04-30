@@ -8862,58 +8862,96 @@
                 return dys + 'd ago';
             }
             function fmtMarket(m) {
-                return String(m || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                const raw = String(m || '').trim();
+                if (!raw) return '';
+                return raw.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
             }
-            function getCachedUsername() {
+            function getCurrentUser() {
                 try {
-                    if (window.api && window.api._cachedUser && window.api._cachedUser.username) return window.api._cachedUser.username;
-                    const raw = localStorage.getItem('tmr_user') || localStorage.getItem('user');
-                    if (raw) { const u = JSON.parse(raw); if (u && u.username) return u.username; }
+                    if (window.auth && typeof window.auth.getCurrentUser === 'function' && window.auth.isLoggedIn()) {
+                        const authUser = window.auth.getCurrentUser();
+                        if (authUser) return authUser.user || authUser;
+                    }
+                    if (window.api && window.api._cachedUser) return window.api._cachedUser;
+                    const raw = localStorage.getItem('tmr_current_user')
+                        || localStorage.getItem('trustmyrecord_session')
+                        || localStorage.getItem('tmr_user')
+                        || localStorage.getItem('user');
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        return parsed && parsed.user ? parsed.user : parsed;
+                    }
                 } catch (e) {}
                 return null;
             }
             function isLoggedIn() {
                 if (document.body.getAttribute('data-tmr-auth') === 'logged-in') return true;
-                return !!getCachedUsername();
+                return !!getCurrentUser();
+            }
+            function normalizePendingPick(p) {
+                if (!p || String(p.status || 'pending').toLowerCase() !== 'pending') return null;
+                const sport = (p.sport_display || p.sport_key || p.sport || '').toString().toUpperCase().replace(/_/g, ' ');
+                const selection = String(p.selection_label || p.selection || p.pick || p.side || '').trim();
+                const market = fmtMarket(p.market_type);
+                const odds = Number(p.odds_snapshot);
+                const units = Number(p.units);
+                if (!sport || !selection || /^pick$/i.test(selection) || !market || !Number.isFinite(odds) || !Number.isFinite(units)) {
+                    console.warn('[Sportsbook] Skipping malformed pending pick', p);
+                    return null;
+                }
+                const line = (window.TMR && typeof window.TMR.formatLine === 'function')
+                    ? window.TMR.formatLine(p.line_snapshot)
+                    : (p.line_snapshot == null ? '' : String(p.line_snapshot));
+                let pickText = selection.replace(/\b(\d+)\.(\d)0+\b/g, '$1.$2').replace(/\b(\d+)\.0+\b/g, '$1');
+                if (line && pickText.indexOf(line) === -1) pickText += ' ' + line;
+                return {
+                    sport,
+                    pickText,
+                    market,
+                    odds,
+                    units,
+                    when: fmtAgo(p.locked_at || p.created_at),
+                    lockedAt: p.locked_at || p.created_at || ''
+                };
             }
 
             async function loadPending() {
                 if (!isLoggedIn()) { rail.hidden = true; return; }
-                const username = getCachedUsername();
-                if (!username || !window.api || typeof window.api.request !== 'function') return;
+                const user = getCurrentUser();
+                if (!user || !window.api || typeof window.api.request !== 'function') return;
+                const qs = user.id
+                    ? 'userId=' + encodeURIComponent(user.id)
+                    : 'username=' + encodeURIComponent(user.username || '');
+                if (!qs || /=$/.test(qs)) return;
 
                 let picks = [];
                 try {
-                    const data = await window.api.request('/picks?username=' + encodeURIComponent(username) + '&result=pending&limit=20');
+                    const data = await window.api.request('/picks?' + qs + '&status=pending&limit=100');
                     picks = (data && Array.isArray(data.picks)) ? data.picks : [];
                 } catch (err) {
                     console.warn('[Sportsbook] pending picks load failed:', err && err.message ? err.message : err);
                     return;
                 }
 
+                const validPicks = picks.map(normalizePendingPick).filter(Boolean);
                 rail.hidden = false;
-                countLabel.textContent = String(picks.length);
-                if (!picks.length) {
+                countLabel.textContent = String(validPicks.length);
+                if (!validPicks.length) {
                     list.innerHTML = '';
                     emptyMsg.hidden = false;
+                    emptyMsg.innerHTML = '<i class="fas fa-clock"></i> No pending picks awaiting grade.';
                     return;
                 }
                 emptyMsg.hidden = true;
-                picks.sort((a, b) => new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0));
-                list.innerHTML = picks.slice(0, 8).map(p => {
-                    const sport  = (p.sport_key || p.sport || '').toString().toUpperCase().replace(/_/g, ' ');
-                    const market = fmtMarket(p.market_type);
-                    const side   = p.selection || p.pick || p.side || '—';
-                    const odds   = fmtOdds(p.odds_snapshot);
-                    const units  = Number(p.units || 0).toFixed(2) + 'u';
-                    const when   = fmtAgo(p.locked_at || p.created_at);
+                validPicks.sort((a, b) => new Date(b.lockedAt || 0) - new Date(a.lockedAt || 0));
+                list.innerHTML = validPicks.slice(0, 8).map(p => {
                     return '<div class="pending-pick-card">'
                         + '<div class="pending-pick-card__top">'
-                        + '<span class="pending-pick-card__sport">' + escapeHtml(sport || 'PICK') + '</span>'
-                        + '<span class="pending-pick-card__when">' + escapeHtml(when) + '</span>'
+                        + '<span class="pending-pick-card__sport">' + escapeHtml(p.sport) + '</span>'
+                        + '<span class="pending-pick-card__when">' + escapeHtml(p.when) + '</span>'
                         + '</div>'
-                        + '<div class="pending-pick-card__pick">' + escapeHtml(side) + '</div>'
-                        + '<div class="pending-pick-card__detail"><span>' + escapeHtml(market || '—') + '</span><span><b>' + escapeHtml(odds) + '</b> · ' + escapeHtml(units) + '</span></div>'
+                        + '<div class="pending-pick-card__pick">' + escapeHtml(p.pickText) + '</div>'
+                        + '<div class="pending-pick-card__detail"><span>' + escapeHtml(p.market) + '</span><span><b>' + escapeHtml(fmtOdds(p.odds)) + '</b> · ' + escapeHtml(p.units.toFixed(2) + 'u') + '</span></div>'
                         + '</div>';
                 }).join('');
             }
@@ -9157,13 +9195,20 @@
             .tmr-pending-pick {
                 display: grid;
                 grid-template-columns: 1fr auto;
-                gap: 4px 12px;
+                gap: 6px 12px;
                 padding: 10px 12px;
                 border-radius: 10px;
                 background: rgba(255, 255, 255, 0.03);
                 border: 1px solid rgba(255, 255, 255, 0.06);
                 font: 600 12.5px/1.4 'Inter', sans-serif;
                 color: #cbd5e1;
+            }
+            .tmr-pending-pick-sport {
+                grid-column: 1 / -1;
+                color: #67e8f9;
+                font: 800 10px/1 'Inter', sans-serif;
+                letter-spacing: .12em;
+                text-transform: uppercase;
             }
             .tmr-pending-pick strong {
                 color: #f8fafc;
@@ -9181,6 +9226,20 @@
             .tmr-pending-pick .tmr-pending-pick-odds {
                 color: #67e8f9;
                 font-weight: 800;
+                white-space: nowrap;
+            }
+            .tmr-pending-status {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 3px 7px;
+                border-radius: 5px;
+                border: 1px solid rgba(103,232,249,.32);
+                background: rgba(103,232,249,.10);
+                color: #67e8f9;
+                font: 800 9px/1 'Inter', sans-serif;
+                letter-spacing: .08em;
+                text-transform: uppercase;
                 white-space: nowrap;
             }
             .tmr-pending-empty,
@@ -9801,13 +9860,70 @@ window.toggleSportFamily = function (family) {
                 case 'f5_h2h':      return 'F5 ML';
                 case 'f5_spreads':  return 'F5 Spread';
                 case 'f5_totals':   return 'F5 Total';
-                default:            return m || 'Pick';
+                default:            return m ? String(m).replace(/_/g, ' ') : '';
             }
         }
         function fmtUnits(u) {
             var n = Number(u);
-            if (!Number.isFinite(n)) return '1u';
+            if (!Number.isFinite(n)) return '';
             return (Number.isInteger(n) ? String(n) : n.toFixed(1)) + 'u';
+        }
+        function getCurrentUser() {
+            try {
+                if (window.auth && typeof window.auth.getCurrentUser === 'function' && window.auth.isLoggedIn()) {
+                    var authUser = window.auth.getCurrentUser();
+                    if (authUser) return authUser.user || authUser;
+                }
+                if (window.api && window.api._cachedUser) return window.api._cachedUser;
+                var raw = localStorage.getItem('tmr_current_user')
+                    || localStorage.getItem('trustmyrecord_session')
+                    || localStorage.getItem('tmr_user')
+                    || localStorage.getItem('user');
+                if (raw) {
+                    var parsed = JSON.parse(raw);
+                    return parsed && parsed.user ? parsed.user : parsed;
+                }
+            } catch (e) {}
+            return null;
+        }
+        function fmtSubmitted(ts) {
+            if (!ts) return '';
+            var d = new Date(ts);
+            if (isNaN(d.getTime())) return '';
+            return d.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+        }
+        function normalizePendingPick(p) {
+            if (!p || String(p.status || 'pending').toLowerCase() !== 'pending') return null;
+            var sport = String(p.sport_display || p.sport_key || p.sport || '').toUpperCase().replace(/_/g, ' ').trim();
+            var selection = String(p.selection_label || p.selection || p.pick || '').trim();
+            var market = fmtMarket(p.market_type);
+            var odds = Number(p.odds_snapshot);
+            var unitsText = fmtUnits(p.units);
+            if (!sport || !selection || /^pick$/i.test(selection) || !market || !Number.isFinite(odds) || !unitsText) {
+                console.warn('[TMR] Skipping malformed awaiting-grade pick', p);
+                return null;
+            }
+            var formattedLine = (window.TMR && typeof window.TMR.formatLine === 'function')
+                ? window.TMR.formatLine(p.line_snapshot)
+                : (p.line_snapshot == null ? '' : String(p.line_snapshot));
+            selection = selection.replace(/\b(\d+)\.(\d)0+\b/g, '$1.$2').replace(/\b(\d+)\.0+\b/g, '$1');
+            if (formattedLine && selection.indexOf(formattedLine) === -1) selection += ' ' + formattedLine;
+            var game = '';
+            if (p.game && (p.game.home_team || p.game.away_team)) {
+                game = (p.game.away_team || '') + ' @ ' + (p.game.home_team || '');
+            } else if (p.away_team || p.home_team) {
+                game = (p.away_team || '') + ' @ ' + (p.home_team || '');
+            }
+            return {
+                sport: sport,
+                selection: selection,
+                market: market,
+                odds: odds,
+                unitsText: unitsText,
+                game: game,
+                submitted: fmtSubmitted(p.locked_at || p.created_at),
+                lockedAt: p.locked_at || p.created_at || ''
+            };
         }
 
         function render(picks, opts) {
@@ -9828,47 +9944,20 @@ window.toggleSportFamily = function (family) {
                 listEl.innerHTML = '<div class="tmr-pending-error">Could not load pending picks. Refresh in a moment.</div>';
                 return;
             }
-            picks = Array.isArray(picks) ? picks : [];
-            countEl.textContent = picks.length === 0 ? '0' : String(picks.length);
-            if (picks.length === 0) {
-                listEl.innerHTML = '<div class="tmr-pending-empty">No pending picks. Lock one on the board above and it shows up here.</div>';
+            var validPicks = (Array.isArray(picks) ? picks : []).map(normalizePendingPick).filter(Boolean);
+            countEl.textContent = String(validPicks.length);
+            if (validPicks.length === 0) {
+                listEl.innerHTML = '<div class="tmr-pending-empty">No pending picks awaiting grade.</div>';
                 return;
             }
-            listEl.innerHTML = picks.slice(0, 30).map(function (p) {
-                var game = '';
-                if (p.game && (p.game.home_team || p.game.away_team)) {
-                    game = (p.game.away_team || '') + ' @ ' + (p.game.home_team || '');
-                } else if (p.away_team || p.home_team) {
-                    game = (p.away_team || '') + ' @ ' + (p.home_team || '');
-                }
-                var sel = p.selection_label || p.selection || 'Pick';
-                // Route every line display through TMR.formatLine so totals
-                // never render as 5.50/4.50 — only 5.5/4.5. Also strip any
-                // 5.50-style line that's already baked into selection_label
-                // (legacy server data can ship "Tigers Under 4.50").
-                var formattedLine = (window.TMR && typeof window.TMR.formatLine === 'function')
-                    ? window.TMR.formatLine(p.line_snapshot)
-                    : (p.line_snapshot == null ? '' : String(p.line_snapshot));
-                sel = String(sel).replace(/\b(\d+)\.(\d)0+\b/g, '$1.$2').replace(/\b(\d+)\.0+\b/g, '$1');
-                if (formattedLine && String(sel).indexOf(formattedLine) === -1) {
-                    sel = sel + ' ' + formattedLine;
-                }
-                var market = fmtMarket(p.market_type);
-                var units  = fmtUnits(p.units);
-                var commence = p.commence_time || (p.game && p.game.commence_time) || null;
-                var when = '';
-                if (commence) {
-                    try {
-                        var d = new Date(commence);
-                        if (!isNaN(d.getTime())) {
-                            when = d.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-                        }
-                    } catch (e) {}
-                }
+            validPicks.sort(function(a, b) { return new Date(b.lockedAt || 0) - new Date(a.lockedAt || 0); });
+            listEl.innerHTML = validPicks.slice(0, 30).map(function (p) {
                 return '<div class="tmr-pending-pick">'
-                    + '<strong>' + escapeHtml(sel) + '</strong>'
-                    + '<span class="tmr-pending-pick-odds">' + escapeHtml(fmtOdds(p.odds_snapshot)) + ' · ' + escapeHtml(units) + '</span>'
-                    + '<span class="tmr-pending-pick-meta">' + escapeHtml(market) + (game ? ' · ' + escapeHtml(game) : '') + (when ? ' · ' + escapeHtml(when) : '') + '</span>'
+                    + '<span class="tmr-pending-pick-sport">' + escapeHtml(p.sport) + '</span>'
+                    + '<strong>' + escapeHtml(p.selection) + '</strong>'
+                    + '<span class="tmr-pending-pick-odds">' + escapeHtml(fmtOdds(p.odds)) + ' · ' + escapeHtml(p.unitsText) + '</span>'
+                    + '<span class="tmr-pending-pick-meta">' + escapeHtml(p.market) + (p.game ? ' · ' + escapeHtml(p.game) : '') + (p.submitted ? ' · Submitted: ' + escapeHtml(p.submitted) : '') + '</span>'
+                    + '<span class="tmr-pending-status">Awaiting Grade</span>'
                     + '</div>';
             }).join('');
         }
@@ -9881,10 +9970,15 @@ window.toggleSportFamily = function (family) {
             try {
                 if (!isLoggedIn()) { render(null, { signedOut: true }); return; }
                 var token = getToken();
+                var user = getCurrentUser();
+                if (!user || (!user.id && !user.username)) { render(null, { signedOut: true }); return; }
                 var base = getApiBase().replace(/\/+$/, '');
                 var headers = { 'Accept': 'application/json' };
                 if (token) headers.Authorization = 'Bearer ' + token;
-                var res = await fetch(base + '/picks?status=pending&limit=50', { headers: headers });
+                var qs = user.id
+                    ? 'userId=' + encodeURIComponent(user.id)
+                    : 'username=' + encodeURIComponent(user.username);
+                var res = await fetch(base + '/picks?' + qs + '&status=pending&limit=100', { headers: headers });
                 if (!res || !res.ok) { render(null, { error: true }); return; }
                 var data = await res.json().catch(function () { return null; });
                 var picks = (data && (data.picks || data.results || data.rows)) || [];
