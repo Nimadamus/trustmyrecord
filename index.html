@@ -1055,19 +1055,27 @@ button{font:inherit;cursor:pointer}
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: 70% center; /* Curry's body in the right third */
-    filter: saturate(1.05) contrast(1.02);
+    object-position: 78% center;          /* shift Curry further right so he sits behind the right column instead of competing with the headline */
+    filter: saturate(0.7) contrast(0.9) brightness(0.55) blur(2px);
+    transform: scale(1.06);              /* offset blur edge softness */
+    opacity: 0.85;
 }
 .combined-hero.hero-v2 .hero-bg-gradient {
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, rgba(8, 12, 28, 0.95) 0%, rgba(8, 12, 28, 0.15) 100%);
+    /* Stronger left-side blackout so the headline sits on near-flat black,
+       Curry faintly visible only on the right edge as atmosphere. */
+    background:
+        linear-gradient(90deg, rgba(5, 8, 18, 0.97) 0%, rgba(5, 8, 18, 0.88) 38%, rgba(5, 8, 18, 0.62) 70%, rgba(5, 8, 18, 0.38) 100%);
     pointer-events: none;
 }
 .combined-hero.hero-v2 .hero-bg-vignette {
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse 110% 95% at 50% 50%, transparent 60%, rgba(0, 0, 0, 0.2) 100%);
+    /* Heavier corner darkening + a top fade so the navbar reads as separate. */
+    background:
+        linear-gradient(180deg, rgba(5, 7, 13, 0.6) 0%, transparent 18%, transparent 78%, rgba(5, 7, 13, 0.85) 100%),
+        radial-gradient(ellipse 120% 100% at 50% 50%, transparent 38%, rgba(0, 0, 0, 0.45) 100%);
     pointer-events: none;
 }
 
@@ -1098,66 +1106,86 @@ button{font:inherit;cursor:pointer}
 }
 .combined-hero.hero-v2 .hero-headline .ch-eyebrow { margin-bottom: 2px; }
 .combined-hero.hero-v2 .hero-headline h1 {
-    font-size: clamp(34px, 4.4vw, 64px); /* tighter so the pill row + 6-tile strip fit ATF */
-    line-height: 0.97;
+    font-family: 'Barlow Condensed', 'Inter', sans-serif;
+    font-size: clamp(44px, 5.4vw, 88px);
+    font-weight: 900;
+    line-height: 0.96;
+    letter-spacing: -1.4px;
     margin: 0;
+    color: #ffffff;
+    text-transform: uppercase;
+    text-shadow: 0 2px 24px rgba(0, 0, 0, 0.6);
 }
+.combined-hero.hero-v2 .hero-headline h1 br { display: block; content: ""; }
 .combined-hero.hero-v2 .hero-headline h1 .accent {
-    display: block;
-    color: var(--orange, #FF6B47);
-    margin-top: 4px;
+    display: inline;
+    color: var(--tmr-cyan-bright, #2dd4bf);
+    margin: 0 0 0 14px;
+    text-shadow: 0 0 22px rgba(45, 212, 191, 0.45);
 }
 .combined-hero.hero-v2 .hero-headline .lead {
-    font-size: clamp(13.5px, 1vw, 15.5px);
-    line-height: 1.5;
-    color: #c5cee0;
+    font-size: clamp(14.5px, 1.05vw, 17px);
+    line-height: 1.6;
+    color: #d8e0ec;
     margin: 0;
-    max-width: 580px;
+    max-width: 560px;
+    text-shadow: 0 1px 14px rgba(0, 0, 0, 0.55);
 }
 /* Hero action row - 3 stronger CTAs replacing the old chip row */
 .combined-hero.hero-v2 .hero-action-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    align-items: center;
+    gap: 14px;
     margin: 4px 0 0;
 }
 .combined-hero.hero-v2 .hero-action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 14px 22px;
+    padding: 16px 26px;
     border-radius: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(148, 163, 184, 0.30);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(148, 163, 184, 0.22);
     color: #ffffff;
     font-family: 'Barlow Condensed', 'Inter', sans-serif;
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 800;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
     text-decoration: none;
     line-height: 1;
-    transition: background .15s ease, border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+    transition: background .15s ease, border-color .15s ease, transform .15s ease, box-shadow .15s ease, color .15s ease;
     white-space: nowrap;
 }
-.combined-hero.hero-v2 .hero-action:hover {
-    background: rgba(45, 212, 191, 0.12);
-    border-color: rgba(45, 212, 191, 0.65);
+.combined-hero.hero-v2 .hero-action--ghost {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.18);
+    color: #cbd5e1;
+    padding: 14px 22px;
+    font-size: 15px;
+}
+.combined-hero.hero-v2 .hero-action--ghost:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(45, 212, 191, 0.45);
     color: #ffffff;
-    transform: translateY(-1px);
+    transform: none;
     text-decoration: none;
 }
 .combined-hero.hero-v2 .hero-action--primary {
     background: linear-gradient(135deg, var(--tmr-cyan-bright, #2dd4bf) 0%, #67e8f9 100%);
     border-color: transparent;
     color: #04111A;
-    box-shadow: 0 12px 28px rgba(45, 212, 191, 0.28), 0 0 0 1px rgba(45, 212, 191, 0.45);
+    padding: 18px 30px;
+    font-size: 18px;
+    box-shadow: 0 14px 32px rgba(45, 212, 191, 0.32), 0 0 0 1px rgba(45, 212, 191, 0.45);
 }
 .combined-hero.hero-v2 .hero-action--primary:hover {
     background: linear-gradient(135deg, #67e8f9 0%, var(--tmr-cyan-bright, #2dd4bf) 100%);
     border-color: transparent;
     color: #04111A;
-    box-shadow: 0 16px 36px rgba(45, 212, 191, 0.36), 0 0 0 1px rgba(45, 212, 191, 0.55);
+    transform: translateY(-1px);
+    box-shadow: 0 18px 40px rgba(45, 212, 191, 0.42), 0 0 0 1px rgba(45, 212, 191, 0.55);
 }
 @media (max-width: 640px) {
     .combined-hero.hero-v2 .hero-action {
@@ -1281,132 +1309,97 @@ button{font:inherit;cursor:pointer}
 }
 .hero-sales-cta .btn { padding: 11px 18px; font-size: 13.5px; }
 
-/* Right-column SAMPLE locked-pick card — straight, premium receipt presentation */
-/* Right-column "Free Capper Analytics" panel.
- *
- * NOT a floating card. Lives directly on the Curry hero atmosphere with no
- * background fill, no borders, no drop shadow. Type carries the weight,
- * with a subtle text-shadow for legibility over the GIF. Anchored top-right
- * of the headline column (higher + further right than the old centered card).
- */
-.hero-rules-card {
+/* Right-column platform preview panel.
+   Replaces the old numbered "rules" stack with a clean 2x3 mini-grid of
+   feature cards. Each card is a quick-jump link to that product page.
+   Glass-card chrome — single panel feel, not 6 floating tiles. */
+.hero-platform-card {
     position: relative;
-    background: transparent;
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    padding: 0;
-    transform: none;
-    max-width: 460px;
     width: 100%;
+    max-width: 460px;
     justify-self: end;
     align-self: start;
-    margin: 6px -16px 0 0;       /* lifted (small top offset) and pushed further right (-16px) */
-    color: #f4f7fb;
+    margin: 4px 0 0;
+    padding: 18px 18px 16px;
+    background: linear-gradient(180deg, rgba(11, 18, 32, 0.86) 0%, rgba(5, 10, 22, 0.92) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(45, 212, 191, 0.45);
+    border-radius: 14px;
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    box-shadow: 0 24px 56px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    color: #e6edf6;
     font-family: 'Inter', system-ui, sans-serif;
     display: flex;
     flex-direction: column;
-    gap: 16px;                    /* tighter vertical rhythm */
-    text-shadow: 0 1px 18px rgba(0, 0, 0, 0.6);
-}
-.hero-rules-card-top {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
     gap: 14px;
-    padding: 0;
-    border: 0;
 }
-.hero-rules-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
+.hero-platform-card-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    flex-wrap: wrap;
+}
+.hero-platform-eyebrow {
     font-family: 'Barlow Condensed', 'Inter', sans-serif;
-    font-size: 28px;
+    font-size: 20px;
     font-weight: 900;
-    letter-spacing: -0.4px;
+    letter-spacing: -0.2px;
     color: #ffffff;
     text-transform: uppercase;
     line-height: 1;
 }
-.hero-rules-eyebrow::before {
-    content: "";
-    display: inline-block;
-    width: 36px;
-    height: 4px;
-    background: var(--tmr-cyan-bright, #2dd4bf);
-    border-radius: 2px;
-    box-shadow: 0 0 14px rgba(45, 212, 191, 0.65);
+.hero-platform-sub {
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1.4;
 }
-.hero-rules-pill {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 12px;
-    border-radius: 999px;
-    background: rgba(0, 229, 199, 0.14);
-    border: 1px solid rgba(0, 229, 199, 0.5);
-    font-family: 'JetBrains Mono', 'Menlo', monospace;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 1.8px;
-    color: var(--tmr-cyan-bright, #2dd4bf);
-    text-transform: uppercase;
-    text-shadow: none;
+.hero-platform-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
 }
-.hero-rules-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+.hero-platform-tile {
     display: flex;
     flex-direction: column;
-    gap: 14px;          /* tighter vertical rhythm */
+    gap: 4px;
+    padding: 12px 12px 11px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: inherit;
+    text-decoration: none;
+    transition: background .15s ease, border-color .15s ease, transform .15s ease;
+    min-width: 0;
 }
-.hero-rules-list li {
-    display: grid;
-    grid-template-columns: 48px 1fr;
-    column-gap: 16px;
-    row-gap: 4px;
-    align-items: start;
-    padding-left: 0;
-    border-left: 0;
+.hero-platform-tile:hover {
+    background: rgba(45, 212, 191, 0.08);
+    border-color: rgba(45, 212, 191, 0.4);
+    transform: translateY(-1px);
+    text-decoration: none;
 }
-.hero-rules-num {
-    font-family: 'Barlow Condensed', 'Inter', sans-serif;
-    font-size: 38px;
-    font-weight: 900;
-    letter-spacing: -0.6px;
-    color: var(--tmr-cyan-bright, #2dd4bf);
-    line-height: 0.9;
-    text-shadow: 0 0 22px rgba(45, 212, 191, 0.55);
-}
-.hero-rules-list li > div { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.hero-rules-list strong {
+.hero-platform-ico { font-size: 18px; line-height: 1; }
+.hero-platform-title {
     color: #ffffff;
     font-family: 'Barlow Condensed', 'Inter', sans-serif;
-    font-size: 24px;
-    font-weight: 900;
-    letter-spacing: -0.3px;
-    line-height: 1.05;
+    font-size: 14.5px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    line-height: 1.15;
     text-transform: uppercase;
 }
-.hero-rules-list span {
-    color: #e2e8f0;
-    font-size: 15px;
-    line-height: 1.55;
-    font-weight: 500;
-}
-.hero-rules-foot {
-    margin: 6px 0 0;
-    padding: 14px 0 0;
-    border: 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.22);
-    color: #cbd5e1;
-    font-size: 14px;
-    line-height: 1.55;
-    font-style: italic;
-    letter-spacing: 0;
+.hero-platform-body {
+    color: #94a3b8;
+    font-size: 11.5px;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
 /* Zone B: 6-tile platform strip pinned at the bottom of the hero */
@@ -1503,17 +1496,14 @@ button{font:inherit;cursor:pointer}
         gap: 28px;
     }
     .hero-sales-panel,
-    .hero-rules-card {
+    .hero-platform-card {
         max-width: 100%;
         justify-self: stretch;
         align-self: start;
         margin: 0;
     }
-    .hero-rules-eyebrow { font-size: 22px; }
-    .hero-rules-num { font-size: 30px; }
-    .hero-rules-list strong { font-size: 19px; }
-    .hero-rules-list span { font-size: 14px; }
-    .hero-rules-foot { font-size: 13px; }
+    .hero-platform-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hero-platform-eyebrow { font-size: 18px; }
 }
 @media (max-width: 640px) {
     .combined-hero.hero-v2 .hero-zone-a-inner,
@@ -1923,48 +1913,57 @@ button{font:inherit;cursor:pointer}
   <div class="hero-zone-a">
     <div class="hero-zone-a-inner">
       <div class="hero-headline">
-        <span class="ch-eyebrow"><span class="pip"></span>The Sports Network Where Opinions Get Receipts</span>
-        <h1>DO YOU THINK YOU KNOW SPORTS?<span class="accent">PROVE IT.</span></h1>
-        <p class="lead">Build a public sports record that cannot be deleted, edited, or faked. Post picks, talk trash, climb leaderboards, challenge other fans, create polls, play trivia, and sell picks once your record proves you are worth following.</p>
+        <span class="ch-eyebrow"><span class="pip"></span>Sports Social Media · Verified Records · Competition</span>
+        <h1>POST PICKS.<br>TALK TRASH.<span class="accent">PROVE IT.</span></h1>
+        <p class="lead">Track every pick, build a verified public record, climb leaderboards, create polls and trivia, challenge other fans, and sell picks once your record proves you are worth following.</p>
         <div class="hero-action-row" role="group" aria-label="Get started">
-          <a class="hero-action hero-action--primary auth-link" href="register/">Start Your Record</a>
-          <a class="hero-action" href="/feed/">Explore the Feed</a>
-          <a class="hero-action" href="/arena/">Enter the Arena</a>
+          <a class="hero-action hero-action--primary auth-link" href="register/">Start Tracking Picks</a>
+          <a class="hero-action hero-action--ghost" href="/feed/">Explore the Community</a>
+          <a class="hero-action hero-action--ghost" href="/arena/">Enter the Arena</a>
         </div>
         <div class="ch-warning">
           <div class="ic">⚠</div>
-          <div><b>NO DELETES. NO RESETS. NO DO-OVERS.</b> Once you lock a pick, it's on your record forever. Pick carefully.</div>
+          <div><b>NO DELETES. NO RESETS. NO DO-OVERS.</b> Once you lock a pick, it's on your record forever.</div>
         </div>
       </div>
 
-<aside class="hero-rules-card" aria-label="What TrustMyRecord gives you">
-        <div class="hero-rules-head">
-          <span class="hero-rules-eyebrow">Built For Real Sports Fans</span>
+      <aside class="hero-platform-card" aria-label="What's on TrustMyRecord">
+        <div class="hero-platform-card-head">
+          <span class="hero-platform-eyebrow">The Platform</span>
+          <span class="hero-platform-sub">Everything real sports fans do, on one site.</span>
         </div>
-        <ul class="hero-rules-list">
-          <li>
-            <span class="hero-rules-num">01</span>
-            <div>
-              <strong>Track Every Pick. Forever.</strong>
-              <span>Lock picks before tip-off. Auto-graded the moment the game ends. Never deleted, never edited, never reset.</span>
-            </div>
-          </li>
-          <li>
-            <span class="hero-rules-num">02</span>
-            <div>
-              <strong>Free Capper Analytics.</strong>
-              <span>ROI, units, sample size, market splits, equity curve, drawdown, trust score &mdash; the whole PickMonitor-style stack, free for every account.</span>
-            </div>
-          </li>
-          <li>
-            <span class="hero-rules-num">03</span>
-            <div>
-              <strong>Compete For Real.</strong>
-              <span>Sports pick duels, polls and trivia ladders, console matchups in NBA 2K, Madden, MLB The Show, EA FC, and NHL.</span>
-            </div>
-          </li>
-        </ul>
-        <div class="hero-rules-foot">No fake records. No deleted losses. No empty hype. Just receipts.</div>
+        <div class="hero-platform-grid">
+          <a class="hero-platform-tile" href="/profile/">
+            <span class="hero-platform-ico" aria-hidden="true">🔒</span>
+            <span class="hero-platform-title">Verified Pick Records</span>
+            <span class="hero-platform-body">Auto-graded, public forever, never edited.</span>
+          </a>
+          <a class="hero-platform-tile" href="/handicappers.html">
+            <span class="hero-platform-ico" aria-hidden="true">🏆</span>
+            <span class="hero-platform-title">Leaderboards</span>
+            <span class="hero-platform-body">ROI, units, trust score, sample-gated.</span>
+          </a>
+          <a class="hero-platform-tile" href="/forum/">
+            <span class="hero-platform-ico" aria-hidden="true">🗂</span>
+            <span class="hero-platform-title">Forums &amp; Trash Talk</span>
+            <span class="hero-platform-body">Classic message-board, sport categories.</span>
+          </a>
+          <a class="hero-platform-tile" href="/polls/">
+            <span class="hero-platform-ico" aria-hidden="true">📊</span>
+            <span class="hero-platform-title">Polls &amp; Trivia</span>
+            <span class="hero-platform-body">Create, vote, climb the trivia ladder.</span>
+          </a>
+          <a class="hero-platform-tile" href="/arena/">
+            <span class="hero-platform-ico" aria-hidden="true">🎮</span>
+            <span class="hero-platform-title">Sports Gaming Arena</span>
+            <span class="hero-platform-body">Madden · NBA 2K · MLB The Show · EA FC.</span>
+          </a>
+          <a class="hero-platform-tile" href="/marketplace/">
+            <span class="hero-platform-ico" aria-hidden="true">💼</span>
+            <span class="hero-platform-title">Sell Your Picks</span>
+            <span class="hero-platform-body">After your record backs the price tag.</span>
+          </a>
+        </div>
       </aside>
     </div>
   </div>
