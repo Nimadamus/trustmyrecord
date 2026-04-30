@@ -236,12 +236,13 @@
                         if (stateStr === 'in' || status.id === '2') continue; // in-progress
                         // Skip postponed (id=3) and cancelled (id=6)
                         if (status.id === '3' || status.id === '6' || stateStr === 'post' || stateStr === 'cancel') continue;
-                        // Also skip by commence time - if game started more than 5 min ago
+                        // Skip games that have already started. Backend rejects
+                        // these too — keep them off the board so the user can
+                        // never click a Lock Pick button that's guaranteed to
+                        // 400. (Apr 30 fix: removed 5-minute grace window.)
                         var gameStart = new Date(evt.date || comp.date);
-                        // Fix timezone - ESPN dates are UTC, add offset
-                        var nowUTC = new Date().toISOString();
-                        var nowTime = new Date(nowUTC).getTime();
-                        if (!isNaN(gameStart.getTime()) && gameStart.getTime() < nowTime - 5 * 60 * 1000) continue;
+                        var nowTime = Date.now();
+                        if (!isNaN(gameStart.getTime()) && gameStart.getTime() <= nowTime) continue;
 
                         var bookmakers = window.TMR.parseEspnOdds(comp.odds || [], homeTeam, awayTeam);
                         // Keep records as display metadata only. Never generate betting lines from records.
@@ -1034,10 +1035,31 @@
         var sportKey = window.TMR.sportKeyMap[sport];
         if (!sportKey) { container.innerHTML = '<div class="no-games-message"><h4>Unknown sport</h4></div>'; return; }
 
+        // Apr 30 2026 — single source of truth for "is this game still
+        // pickable from the UI". Backend's commence_time check is the legal
+        // gate; this filter just keeps started games off the board so the
+        // user never sees them in the first place. Same predicate used in
+        // every render path (NHL_MARKETS, ESPN, AN cache, NFL feed) so the
+        // user never gets the "Cannot submit pick for a game that has
+        // already started" error from a clickable game.
+        function _tmrFilterPickableGames(games) {
+            if (!Array.isArray(games)) return [];
+            var now = Date.now();
+            return games.filter(function(g) {
+                if (!g || g.completed) return false;
+                if (!g.commence_time) return true;
+                var ms = Date.parse(g.commence_time);
+                if (!Number.isFinite(ms)) return true;
+                return ms > now;
+            });
+        }
+        window.TMR._filterPickableGames = _tmrFilterPickableGames;
+
         // NHL: Use dedicated market module for correct puck lines (±1.5 always)
         if (sport === 'NHL' && window.NHL_MARKETS) {
             console.log('[TMR] Using NHL_MARKETS module for correct puck lines');
             window.NHL_MARKETS.fetchGames().then(function(games) {
+                games = _tmrFilterPickableGames(games);
                 window.TMR.currentGames = games;
                 var badge = document.getElementById('gamesCountBadge');
                 if (badge) badge.textContent = games.length + ' game' + (games.length !== 1 ? 's' : '');
@@ -1061,6 +1083,7 @@
                 return;
             }
             console.log('[TMR] GOT ' + games.length + ' GAMES', daysOffset ? `(from ${daysOffset} day(s) ahead)` : '');
+            games = _tmrFilterPickableGames(games);
             // Debug: log bookmakers state for each game
             games.forEach(function(g, i) {
                 var bk = g.bookmakers;
@@ -1355,9 +1378,52 @@
     }
 
     // ============ LOCK IN PICK (localStorage version) ============
+    // Apr 30 2026 — pick-submission hardening (Nima reported triple Pirates
+    // TT-Under in feed). Three layers of duplicate prevention:
+    //   1) `__tmrLockInFlight` flag blocks re-entry during a pending request.
+    //   2) Lock-Pick button gets `disabled` + "Locking..." text on first
+    //      click; a finally{} restores it on response or error.
+    //   3) Backend has ON CONFLICT DO NOTHING + partial unique index — even
+    //      if the JS guard fails, the DB only stores one row.
+    window.__tmrLockInFlight = window.__tmrLockInFlight || false;
+
+    function _tmrLockBtns() {
+        // Every visible "Lock Pick" / "Submit Pick" button on the page.
+        return document.querySelectorAll(
+            '.submit-pick-btn, .sportsbook-ticket-preview-submit, #ttSlipSubmit, [data-tmr-lock-btn]'
+        );
+    }
+
+    function _tmrSetLockBtnsState(state) {
+        var btns = _tmrLockBtns();
+        for (var i = 0; i < btns.length; i++) {
+            var b = btns[i];
+            if (state === 'pending') {
+                b.dataset.tmrOriginalLabel = b.dataset.tmrOriginalLabel || b.textContent;
+                b.disabled = true;
+                b.setAttribute('aria-busy', 'true');
+                b.textContent = 'Locking...';
+            } else {
+                b.disabled = false;
+                b.removeAttribute('aria-busy');
+                if (b.dataset.tmrOriginalLabel) {
+                    b.textContent = b.dataset.tmrOriginalLabel;
+                    delete b.dataset.tmrOriginalLabel;
+                }
+            }
+        }
+    }
+
     window.lockInPick = function() {
         if (window.__tmrProductionLockInPick && window.__tmrProductionLockInPick !== window.lockInPick) {
             return window.__tmrProductionLockInPick();
+        }
+        // Re-entry guard. A user hammering the Lock Pick button (or a stale
+        // listener firing twice) can no longer queue a second request while
+        // the first is still pending.
+        if (window.__tmrLockInFlight) {
+            console.log('[TMR] lockInPick blocked — submission already in flight');
+            return;
         }
         var thePick = window.TMR.currentSelectedPick;
         if (!thePick) return;
@@ -1379,9 +1445,24 @@
             return;
         }
 
+        // Started-game guard. Backend rejects this with a 400 too, but
+        // checking client-side avoids a wasted round trip and a confusing
+        // mid-submit error message.
+        var commenceMs = Date.parse(thePick.gameTime || thePick.commence_time || '');
+        if (Number.isFinite(commenceMs) && commenceMs <= Date.now()) {
+            alert('This game has already started, so picks are locked.');
+            return;
+        }
+
+        // Units: whole numbers 1..5. The CLAUDE.md formula treats stored
+        // units as TO-WIN; this is the user-facing risk/to-win value before
+        // any conversion the backend applies.
         var units = 1;
-        try { var inp = document.getElementById('unitsInput'); if (inp) units = parseFloat(inp.value) || 1; } catch(e) {}
-        units = Math.max(0.5, Math.min(10, units));
+        try {
+            var inp = document.getElementById('unitsInput');
+            if (inp) units = parseInt(inp.value, 10) || 1;
+        } catch(e) {}
+        units = Math.max(1, Math.min(5, Math.round(units)));
 
         // Read from the editable form (overrides stored pick data)
         var betType = window.TMR.selectedBetType || thePick.betType || 'ml';
@@ -1418,26 +1499,30 @@
         var marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals' };
         var marketType = marketTypeMap[betType] || 'h2h';
 
-        // Determine selection name
-        var selection;
-        if (betType === 'over' || betType === 'f5over') {
-            selection = 'Over';
-        } else if (betType === 'under' || betType === 'f5under') {
-            selection = 'Under';
-        } else if (betType === 'teamover') {
-            selection = (thePick.team || '') + ' Over';
-        } else if (betType === 'teamunder') {
-            selection = (thePick.team || '') + ' Under';
-        } else if (betType === 'f5ml' || betType === 'f5spread') {
-            selection = thePick.team || thePick.pick || '';
-        } else {
-            selection = thePick.team || thePick.pick || '';
-        }
-
         // Determine line snapshot (spread number or total number, null for ML/F5ML)
         var lineSnapshot = null;
         if (betType === 'spread' || betType === 'over' || betType === 'under' || betType === 'teamover' || betType === 'teamunder' || betType === 'f5spread' || betType === 'f5over' || betType === 'f5under') {
             lineSnapshot = parseFloat(finalLine) || null;
+        }
+
+        // Determine selection name. Team-total selections MUST include the
+        // team name, the Over/Under side, AND the line so the API receives
+        // the same string the user sees on the slip — fixes the
+        // "sel=Pittsburgh Pirates" bug where Under 4.5 was lost in transit.
+        var selection;
+        var rawTeam = String(thePick.team || thePick.pick || '').replace(/\s+(over|under)\s*$/i, '').trim();
+        if (betType === 'over' || betType === 'f5over') {
+            selection = lineSnapshot != null ? ('Over ' + lineSnapshot) : 'Over';
+        } else if (betType === 'under' || betType === 'f5under') {
+            selection = lineSnapshot != null ? ('Under ' + lineSnapshot) : 'Under';
+        } else if (betType === 'teamover') {
+            selection = (rawTeam + ' Over' + (lineSnapshot != null ? ' ' + lineSnapshot : '')).trim();
+        } else if (betType === 'teamunder') {
+            selection = (rawTeam + ' Under' + (lineSnapshot != null ? ' ' + lineSnapshot : '')).trim();
+        } else if (betType === 'f5ml' || betType === 'f5spread') {
+            selection = rawTeam;
+        } else {
+            selection = rawTeam;
         }
 
         // Build pick object
@@ -1510,71 +1595,74 @@
             try { document.getElementById('pickReasoning').value = ''; document.getElementById('unitsInput').value = '1'; } catch(e) {}
         }
 
-        // Save to backend API (primary) with localStorage fallback
-        var pickSaved = false;
+        // Save to backend API. NO localStorage fallback for the canonical
+        // pick row — that path used to write phantom picks that survive
+        // refresh and re-pollute the UI on later loads (the memory rule
+        // "TMR never injects picks from localStorage" + the triple-Pirates
+        // feed bug were both symptoms of the same fallback). If the API is
+        // unreachable, the user gets a clear error and can retry; nothing
+        // ever gets stored locally that pretends to be a real pick.
+        if (typeof api === 'undefined' || typeof api.createPick !== 'function') {
+            alert('Lock failed: pick service unavailable. Please refresh and try again.');
+            return;
+        }
 
-        // Try backend API first
-        if (typeof api !== 'undefined' && typeof api.createPick === 'function') {
-            try {
-                var backendPick = {
-                    game_id: newPick.game_id,
-                    sport_key: newPick.sport_key,
-                    market_type: newPick.market_type,
-                    selection: newPick.selection,
-                    line_snapshot: newPick.line_snapshot,
-                    odds_snapshot: newPick.odds_snapshot,
-                    units: newPick.units,
-                    // Send the user's stake convention so the backend can convert
-                    // RISK -> TO-WIN before storing. The grader's result-units math
-                    // assumes TO-WIN; without this flag a -110 RISK 3u win was
-                    // overpaying by 0.27u and losses overcharging by 0.30u.
-                    units_mode: (window.TMR && window.TMR.selectedUnitsMode) || 'risk',
-                    home_team: newPick.home_team,
-                    away_team: newPick.away_team,
-                    commence_time: newPick.commence_time
-                };
-                api.createPick(backendPick).then(function(result) {
-                    console.log('[TMR] Pick saved to backend:', result);
-                    // Update local pick with server ID and lock status
-                    newPick.id = result.pick ? result.pick.id : result.id;
-                    newPick._backendSynced = true;
-                    newPick.locked = true;
-                    // Also save to localStorage as cache
-                    var cached = [];
-                    try { cached = JSON.parse(localStorage.getItem('tmr_picks') || '[]'); } catch(e) { cached = []; }
-                    cached.unshift(newPick);
-                    localStorage.setItem('tmr_picks', JSON.stringify(cached));
-                    // Refresh picks display
-                    if (typeof window.renderPicksList === 'function') window.renderPicksList();
-                    if (typeof window.loadPicksHistory === 'function') window.loadPicksHistory();
-                    // Show confirmation AFTER backend confirms
-                    showPickConfirmation();
-                }).catch(function(err) {
-                    console.error('[TMR] Backend save failed, using localStorage:', err);
-                    // Fallback to localStorage
-                    var allPicks = [];
-                    try { allPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]'); } catch(e) { allPicks = []; }
-                    allPicks.unshift(newPick);
-                    localStorage.setItem('tmr_picks', JSON.stringify(allPicks));
-                    // Show confirmation even on fallback
-                    showPickConfirmation();
-                });
-                pickSaved = true;
-            } catch(e) {
-                console.error('[TMR] Backend call failed:', e);
+        window.__tmrLockInFlight = true;
+        _tmrSetLockBtnsState('pending');
+
+        var backendPick = {
+            game_id: newPick.game_id,
+            sport_key: newPick.sport_key,
+            market_type: newPick.market_type,
+            selection: newPick.selection,
+            line_snapshot: newPick.line_snapshot,
+            odds_snapshot: newPick.odds_snapshot,
+            units: newPick.units,
+            // Send the user's stake convention so the backend can convert
+            // RISK -> TO-WIN before storing. The grader's result-units math
+            // assumes TO-WIN; without this flag a -110 RISK 3u win was
+            // overpaying by 0.27u and losses overcharging by 0.30u.
+            units_mode: (window.TMR && window.TMR.selectedUnitsMode) || 'risk',
+            home_team: newPick.home_team,
+            away_team: newPick.away_team,
+            commence_time: newPick.commence_time
+        };
+
+        api.createPick(backendPick).then(function(result) {
+            console.log('[TMR] Pick saved to backend:', result);
+            newPick.id = result.pick ? result.pick.id : result.id;
+            newPick._backendSynced = true;
+            newPick.locked = true;
+
+            // Backend tells us when this was already locked — surface the
+            // exact "You already locked this pick" copy so the user knows
+            // their first click landed and the duplicate was a no-op.
+            if (result && result.duplicate) {
+                alert('You already locked this pick.');
             }
-        }
 
-        if (!pickSaved) {
-            // Fallback: save to localStorage
-            var allPicks = [];
-            try { allPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]'); } catch(e) { allPicks = []; }
-            allPicks.unshift(newPick);
-            localStorage.setItem('tmr_picks', JSON.stringify(allPicks));
-            console.log('[TMR] Pick saved to localStorage (backend unavailable):', newPick.selection);
-            // Show confirmation immediately for localStorage-only
+            if (typeof window.renderPicksList === 'function') window.renderPicksList();
+            if (typeof window.loadPicksHistory === 'function') window.loadPicksHistory();
             showPickConfirmation();
-        }
+        }).catch(function(err) {
+            console.error('[TMR] Backend save failed:', err);
+            // Map known error shapes to friendly user-facing copy. The
+            // backend returns 409 for "different pick on the same market"
+            // and 200+duplicate for "exact same pick" (handled above).
+            var msg = (err && (err.message || err.error)) || '';
+            if (msg && /already/i.test(msg)) {
+                alert(msg);
+            } else if (msg && /already started/i.test(msg)) {
+                alert('This game has already started, so picks are locked.');
+            } else if (msg) {
+                alert('Lock failed: ' + msg);
+            } else {
+                alert('Lock failed. Please try again.');
+            }
+        }).finally(function() {
+            window.__tmrLockInFlight = false;
+            _tmrSetLockBtnsState('idle');
+        });
     };
     window.submitPick = window.lockInPick;
     window.submitPickNew = window.lockInPick; // alias
@@ -8573,73 +8661,15 @@
     </script>
     <div class="animated-grid"></div>
     <div class="container">
-        <div class="sportsbook-top-strip">
-            <strong>Today:</strong>
-            <span>Live odds boards</span>
-            <span>Verified user picks</span>
-            <span>Scores and matchups</span>
-            <span>Consensus and forum chatter</span>
-        </div>
-        <header>
-            <div class="header-content">
-                <div style="display: flex; align-items: center; gap: 20px;">
-                    <a href="/" class="logo" style="text-decoration:none;color:inherit;cursor:pointer;">TRUST<span style="color: #f58220;">MY</span>RECORD</a>
-                </div>
-
-
-                <div class="header-actions">
-                    <button class="header-icon-btn" onclick="toggleNotifications()" id="notificationBtn">
-                        <span class="icon">🔔</span>
-                        <span class="badge" id="notificationBadge" style="display:none;">0</span>
-                    </button>
-                    <button class="header-icon-btn" onclick="toggleSearch()">
-                        <span class="icon">🔍</span>
-                    </button>
-                    <div id="headerAuthButtons" style="display: flex; align-items: center; gap: 10px; margin-left: 0;">
-                        <button id="sportsbookHeaderLoginBtn" onclick="showSection('login')" class="btn" style="padding: 11px 16px; font-size: 14px; background: #ffffff; color: #162231; border: 1px solid #d8dde6; border-radius: 10px; cursor: pointer;">Log In</button>
-                        <button id="sportsbookHeaderRegisterBtn" onclick="showSection('signup')" class="btn btn-primary" style="padding: 11px 16px; font-size: 14px; background: #f58220; color: #ffffff; font-weight: 700; border: 1px solid #f58220; border-radius: 10px; cursor: pointer;">Register</button>
-                    </div>
-                </div>
-
-                <nav class="main-nav">
-                    <a href="/sportsbook/" class="nav-link is-active make-picks-nav">Make Picks</a>
-                    <a href="/leaderboards/" class="nav-link">Leaderboards</a>
-                    <a href="/arena/" class="nav-link">Arena</a>
-                    <a href="/feed/" class="nav-link">Feed</a>
-                    <a href="/hangout/" class="nav-link">Hangout</a>
-                    <a href="/forum/" class="nav-link">Forum</a>
-                </nav>
-            </div>
-
-            <!-- Notifications Dropdown -->
-            <div id="notificationsPanel" class="notifications-panel" style="display: none;">
-                <div class="notifications-header">
-                    <h3>Notifications <span class="unread-count" id="unreadCount">0</span></h3>
-                    <button class="mark-read-btn" onclick="markAllRead()">✓ Mark all read</button>
-                </div>
-
-                <!-- Notification Filters -->
-                <div class="notif-filters">
-                    <button class="notif-filter-btn active" onclick="filterNotifications('all')">All</button>
-                    <button class="notif-filter-btn" onclick="filterNotifications('picks')">Picks</button>
-                    <button class="notif-filter-btn" onclick="filterNotifications('social')">Social</button>
-                    <button class="notif-filter-btn" onclick="filterNotifications('alerts')">Alerts</button>
-                </div>
-
-                <div class="notifications-list" id="notificationsList">
-                    <!-- Notifications will be populated dynamically -->
-                    <div class="no-notifications-message" style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
-                        <div style="font-size: 48px; margin-bottom: 15px;">🔔</div>
-                        <p style="margin: 0; font-size: 14px;">No fresh alerts yet</p>
-                        <p style="margin: 8px 0 0 0; font-size: 12px; opacity: 0.7;">Pick grades, replies, follows, and account alerts will appear here</p>
-                    </div>
-                </div>
-
-                <div class="notifications-footer">
-                    <a href="/notifications/">View all notifications →</a>
-                </div>
-            </div>
-        </header>
+        <!-- Legacy in-page header + duplicate nav removed Apr 30 2026.
+             tmr-sitewide.js renders the single global nav (logo, links,
+             notifications bell, search, auth pill). The previous
+             <header> with .main-nav and an inline notificationsPanel
+             rendered a SECOND nav row beneath the global one and was
+             the "duplicate bottom navigation" Nima kept seeing on the
+             Make Picks board. Login / Register actions are routed
+             through /login/ and /register/ via the global nav buttons. -->
+        <div id="notificationsPanel" class="notifications-panel" hidden style="display:none !important"></div>
 
         <div class="sportsbook-sports-nav" aria-label="Sportsbook navigation">
             <button type="button" class="active" data-sportsbook-tab="sport" data-sport="NBA" onclick="window.TMR.setSport('NBA')">NBA</button>
@@ -9281,13 +9311,13 @@
                 <div class="option-group">
                     <label>Units</label>
                     <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
-<input type="number" id="unitsInput" min="0.5" max="5" step="0.5" value="1" style="width: 90px; padding: 12px 14px; background: var(--card-bg); border: 2px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 18px; font-weight: 700; text-align: center; font-family: 'Barlow', sans-serif;" />
+<input type="number" id="unitsInput" min="1" max="5" step="1" value="1" inputmode="numeric" pattern="[1-5]" oninput="this.value=this.value.replace(/[^1-5]/g,'').slice(0,1)" style="width: 90px; padding: 12px 14px; background: var(--card-bg); border: 2px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 18px; font-weight: 700; text-align: center; font-family: 'Barlow', sans-serif;" />
                         <div id="unitsModeToggle" style="display: flex; border-radius: 10px; overflow: hidden; border: 2px solid var(--glass-border);">
                             <button type="button" id="modeRisk" class="units-mode-btn active" onclick="setUnitsMode('risk')" style="padding: 12px 18px; background: var(--gradient-gold); border: none; color: var(--dark-bg); font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s;">RISK</button>
                             <button type="button" id="modeToWin" class="units-mode-btn" onclick="setUnitsMode('towin')" style="padding: 12px 18px; background: var(--card-bg); border: none; color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s;">TO WIN</button>
                         </div>
                     </div>
-                    <p id="unitsExplanation" class="ticket-input-help">Enter units you want to RISK (0.5 - 5). Winnings calculated from odds.</p>
+                    <p id="unitsExplanation" class="ticket-input-help">Whole units only. Choose between 1 and 5. Winnings calculated from odds.</p>
                 </div>
 
                 <div class="option-group">
@@ -10051,6 +10081,9 @@ window.toggleSportFamily = function (family) {
     function _ttRenderRows(sport, rowsEl, games, sourceLabel) {
         // Surface the games to selectGameBet (it indexes via window.TMR.currentGames).
         window.TMR = window.TMR || {};
+        if (typeof window.TMR._filterPickableGames === 'function') {
+            games = window.TMR._filterPickableGames(games);
+        }
         window.TMR.currentGames = games;
         window.TMR.selectedSport = sport;
 
@@ -10260,6 +10293,9 @@ window.toggleSportFamily = function (family) {
         // Renders ESPN-shape games[] into the lobby rows + caches HTML.
         var paintBoard = function (games, sourceLabel) {
             if (rows.getAttribute('data-sport') !== sport) return;
+            if (typeof window.TMR._filterPickableGames === 'function') {
+                games = window.TMR._filterPickableGames(games);
+            }
             if (!games || !games.length) {
                 rows.innerHTML = emptyState(sport, 'No ' + sport + ' games scheduled today.', 'closed');
                 return;
@@ -19234,7 +19270,7 @@ document.addEventListener('DOMContentLoaded', function() {
          containers that don't exist on the picks board, throwing console
          noise. They're loaded on /feed/ and /forum/ where they belong. -->
     <script src="/static/js/navigation.js?v=20260430routefix1"></script>
-<script src="/static/js/sportsbook-production-fix-persist.js?v=20260430pickpersist7"></script>
+<script src="/static/js/sportsbook-production-fix-persist.js?v=20260430pickpersist8"></script>
     <script src="/static/js/effects.js?v=20251208c"></script>
     <script>
     (function() {
