@@ -8248,8 +8248,38 @@
             color: #97abc1 !important;
         }
     </style>
+    <style>
+        /* Hard kill any horizontal scroll the user reported sliding under
+           the global nav. The picks board is wide on purpose; clip it
+           inside the viewport instead of letting the page page-wide
+           scroll horizontally. */
+        html, body { overflow-x: hidden !important; max-width: 100vw !important; }
+        /* Belt-and-suspenders: even if a stylesheet later adds active to
+           a non-picks page-section, force the picks board to render and
+           keep the marketing-style sections OFF until the user explicitly
+           navigates to them. /sportsbook/ MUST land on the board. */
+        #picks.page-section { display: block !important; min-height: 80vh; }
+    </style>
 </head>
 <body>
+    <script>
+    // Force the picks board to be the active section on every load of
+    // /sportsbook/, regardless of what late-loading scripts do. Reddit
+    // users reported clicking Make Picks and getting a marketing hero
+    // instead of the board; this guards against that.
+    (function(){
+        try {
+            document.addEventListener('DOMContentLoaded', function(){
+                var picks = document.getElementById('picks');
+                if (!picks) return;
+                document.querySelectorAll('.page-section.active').forEach(function(s){
+                    if (s.id !== 'picks') s.classList.remove('active');
+                });
+                picks.classList.add('active');
+            });
+        } catch (e) {}
+    })();
+    </script>
     <div class="animated-grid"></div>
     <div class="container">
         <div class="sportsbook-top-strip">
@@ -8281,7 +8311,7 @@
                 </div>
 
                 <nav class="main-nav">
-                    <a href="/sportsbook/#picks" class="nav-link is-active make-picks-nav" onclick="if(typeof showSection==='function'){showSection('picks');return false;}">Make Picks</a>
+                    <a href="/sportsbook/" class="nav-link is-active make-picks-nav" onclick="if(typeof showSection==='function'){showSection('picks');return false;}">Make Picks</a>
                     <a href="/handicappers/" class="nav-link">Handicappers</a>
                     <a href="/arena/" class="nav-link">Arena</a>
                     <a href="/feed/" class="nav-link">Feed</a>
@@ -8333,270 +8363,6 @@
         </div>
 
         <main>
-            <!-- Home Section -->
-            <div id="home" class="page-section">
-                <section class="hero">
-                    <div class="sportsbook-hero-grid">
-                        <div class="sportsbook-hero-copy">
-                            <div class="sportsbook-eyebrow">Make Your Picks</div>
-                            <h1 class="reveal">Live boards. Locked picks. Public receipts.</h1>
-                            <p class="reveal">This route is for the pick workflow: browse available markets, choose the line, submit the play, and attach the result to your permanent TrustMyRecord profile.</p>
-
-                            <div class="hero-cta-group reveal">
-                                <a id="heroPrimaryCta" class="hero-cta-primary" onclick="handleMakePicksCta()">
-                                    Open Make Your Picks
-                                </a>
-                                <p class="hero-cta-sub">Browse the live board, pick a market, and let every play hit your public record.</p>
-                            </div>
-
-                            <div class="hero-journey reveal">
-                                <div class="journey-step">
-                                    <div class="journey-icon">Live</div>
-                                    <div class="journey-label">Live board, real markets</div>
-                                </div>
-                                <div class="journey-step">
-                                    <div class="journey-icon">Markets</div>
-                                    <div class="journey-label">Moneyline, spreads, totals, team totals, halves, periods</div>
-                                </div>
-                                <div class="journey-step">
-                                    <div class="journey-icon">Picks</div>
-                                    <div class="journey-label">Lock plays into your record</div>
-                                </div>
-                                <div class="journey-step">
-                                    <div class="journey-icon">Proof</div>
-                                    <div class="journey-label">Transparent results and rankings</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="sportsbook-hero-image"></div>
-                    </div>
-                </section>
-
-                <section class="sportsbook-entry-panel">
-                    <div class="entry-panel-card">
-                        <span class="entry-panel-kicker">First-time user flow</span>
-                        <h3>Everything starts with one locked pick.</h3>
-                        <p>This page should feel clear before anyone ever places a bet. Browse live boards, understand what gets tracked, and create an account only when you are ready to attach a play to your public record.</p>
-                        <div class="entry-panel-actions">
-                            <button type="button" class="entry-panel-btn primary" onclick="showSection('signup')">Register Free</button>
-                            <button type="button" class="entry-panel-btn" onclick="showSection('login')">Log In</button>
-                            <button type="button" class="entry-panel-btn" onclick="showSection('picks')">Browse Picks Board</button>
-                        </div>
-                    </div>
-                    <div class="entry-panel-side">
-                        <h3>What gets tracked</h3>
-                        <div class="entry-panel-list">
-                            <div class="entry-panel-row">
-                                <span class="entry-panel-index">01</span>
-                                <div class="entry-panel-copy"><strong>Market and line</strong><span>Side, total, spread, line, odds, and units are part of the saved receipt.</span></div>
-                            </div>
-                            <div class="entry-panel-row">
-                                <span class="entry-panel-index">02</span>
-                                <div class="entry-panel-copy"><strong>Result and grading</strong><span>Once games settle, the record math updates from the same normalized pick history.</span></div>
-                            </div>
-                            <div class="entry-panel-row">
-                                <span class="entry-panel-index">03</span>
-                                <div class="entry-panel-copy"><strong>Public profile impact</strong><span>Your profile, recent picks, and leaderboard position all depend on the same source of truth.</span></div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- LOGGED-IN USER DASHBOARD - Command Center -->
-                <section id="userStatsDashboard" class="section" style="display: none;">
-                    <div class="dashboard-command-center">
-                        <!-- Profile Overview Header -->
-                        <div class="dashboard-profile-header">
-                            <div class="profile-avatar-section">
-                                <img id="dashboardAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=1" alt="Avatar" class="dashboard-avatar">
-                                <div class="profile-info">
-                                    <h2 id="dashboardUsername" class="dashboard-username">Welcome Back!</h2>
-                                    <p class="dashboard-member-since">Member since <span id="dashboardJoinDate">Today</span></p>
-                                    <div class="dashboard-badges" id="dashboardBadges">
-                                        <span class="badge-item newbie">Newcomer</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="profile-rank-section">
-                                <div class="rank-display">
-                                    <span class="rank-label">Leaderboard Rank</span>
-                                    <span class="rank-value" id="dashboardRank">#--</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Main Stats Grid -->
-                        <div class="dashboard-stats-section">
-                            <h3 class="section-label">Your Performance</h3>
-                            <div class="stats-grid enhanced">
-                                <div class="stat-card primary">
-                                    <div class="stat-icon">📊</div>
-                                    <div class="stat-value" id="totalPicks">0</div>
-                                    <div class="stat-label">Total Picks</div>
-                                    <div class="stat-subtitle" id="picksBreakdown">0W - 0L - 0P</div>
-                                </div>
-                                <div class="stat-card success">
-                                    <div class="stat-icon">✅</div>
-                                    <div class="stat-value" id="winRate">0%</div>
-                                    <div class="stat-label">Win Rate</div>
-                                    <div class="stat-subtitle">Overall Record</div>
-                                </div>
-                                <div class="stat-card profit">
-                                    <div class="stat-icon">💰</div>
-                                    <div class="stat-value" id="totalUnits">+0.00u</div>
-                                    <div class="stat-label">Net Units</div>
-                                    <div class="stat-subtitle" id="roiDisplay">0% ROI</div>
-                                </div>
-                                <div class="stat-card streak">
-                                    <div class="stat-icon">🔥</div>
-                                    <div class="stat-value" id="currentStreak">0</div>
-                                    <div class="stat-label">Current Streak</div>
-                                    <div class="stat-subtitle" id="bestStreak">Best: 0</div>
-                                </div>
-                            </div>
-                            <div class="analytics-depth-grid" id="dashboardAnalyticsDepth" aria-live="polite">
-                                <div class="analytics-depth-card"><span>Wins</span><strong id="dashboardWins">0</strong></div>
-                                <div class="analytics-depth-card"><span>Losses</span><strong id="dashboardLosses">0</strong></div>
-                                <div class="analytics-depth-card"><span>Pushes</span><strong id="dashboardPushes">0</strong></div>
-                                <div class="analytics-depth-card"><span>Pending</span><strong id="dashboardPending">0</strong></div>
-                                <div class="analytics-depth-card"><span>Graded Picks</span><strong id="dashboardGraded">0</strong></div>
-                                <div class="analytics-depth-card"><span>Average Odds</span><strong id="dashboardAvgOdds">--</strong></div>
-                                <div class="analytics-depth-card"><span>Average Units</span><strong id="dashboardAvgUnits">0.00u</strong></div>
-                                <div class="analytics-depth-card"><span>Best Streak</span><strong id="dashboardBestStreak">0</strong></div>
-                            </div>
-                            <div class="breakdown-panels">
-                                <div class="breakdown-panel">
-                                    <div class="breakdown-title">Sport Breakdown</div>
-                                    <div id="dashboardSportBreakdown" class="breakdown-list"></div>
-                                </div>
-                                <div class="breakdown-panel">
-                                    <div class="breakdown-title">Market Breakdown</div>
-                                    <div id="dashboardMarketBreakdown" class="breakdown-list"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Activity Section -->
-                        <div class="dashboard-activity-section">
-                            <h3 class="section-label">Community Activity</h3>
-                            <div class="activity-grid">
-                                <div class="activity-card">
-                                    <div class="activity-icon">💬</div>
-                                    <div class="activity-value" id="forumPosts">0</div>
-                                    <div class="activity-label">Forum Posts</div>
-                                </div>
-                                <div class="activity-card">
-                                    <div class="activity-icon">🎯</div>
-                                    <div class="activity-value" id="triviaScore">0</div>
-                                    <div class="activity-label">Trivia Points</div>
-                                </div>
-                                <div class="activity-card">
-                                    <div class="activity-icon">🗳️</div>
-                                    <div class="activity-value" id="pollVotes">0</div>
-                                    <div class="activity-label">Poll Votes</div>
-                                </div>
-                                <div class="activity-card">
-                                    <div class="activity-icon">❓</div>
-                                    <div class="activity-value" id="triviaCreated">0</div>
-                                    <div class="activity-label">Trivia Created</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Quick Actions -->
-                        <div class="dashboard-actions">
-                            <h3 class="section-label">Quick Actions</h3>
-                            <div class="quick-actions-grid">
-                                <button onclick="showSection('picks')" class="action-btn primary-action">
-                                    <span class="action-icon">🎯</span>
-                                    <span class="action-text">Make a Pick</span>
-                                </button>
-                                <button onclick="showSection('my-record')" class="action-btn" style="background: linear-gradient(135deg, var(--neon-gold), #cc9900);">
-                                    <span class="action-icon">📊</span>
-                                    <span class="action-text">My Record</span>
-                                </button>
-                                <button onclick="loadMyPicks(window.currentPicksTab||'pending'); if (typeof refreshAdvancedStats === 'function') refreshAdvancedStats();" class="action-btn" style="background: linear-gradient(135deg, var(--neon-green), #00cc00);">
-                                    <span class="action-icon">✅</span>
-                                    <span class="action-text">Sync Results</span>
-                                </button>
-                                <button onclick="showSection('leaderboards')" class="action-btn">
-                                    <span class="action-icon">🏆</span>
-                                    <span class="action-text">Leaderboards</span>
-                                </button>
-                                <button onclick="showSection('polls-trivia')" class="action-btn">
-                                    <span class="action-icon">🧠</span>
-                                    <span class="action-text">Take Quiz</span>
-                                </button>
-                                <button onclick="showSection('forums')" class="action-btn">
-                                    <span class="action-icon">💬</span>
-                                    <span class="action-text">Forums</span>
-                                </button>
-                                <button onclick="exportUserData()" class="action-btn secondary">
-                                    <span class="action-icon">📥</span>
-                                    <span class="action-text">Export Data</span>
-                                </button>
-                                <button onclick="showSection('profile')" class="action-btn secondary">
-                                    <span class="action-icon">⚙️</span>
-                                    <span class="action-text">Settings</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Recent Activity Feed -->
-                        <div class="dashboard-recent">
-                            <h3 class="section-label">Recent Picks</h3>
-                            <div id="dashboardRecentPicks" class="recent-picks-mini">
-                                <p class="no-picks-message">No locked plays yet. Lock your first pick to start building a permanent public record.</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="sportsbook-control-panel">
-                    <div class="sportsbook-panel-header">
-                        <span class="sportsbook-eyebrow">Betting control center</span>
-                        <h2>Board, record, and results in one place.</h2>
-                        <p>Sportsbook is now focused on the actual workflow: open the board, lock a pick, review the record, and audit performance from the same source of truth.</p>
-                    </div>
-                    <div class="sportsbook-workflow-grid">
-                        <button type="button" class="workflow-card primary" onclick="showSection('picks')">
-                            <span>01</span>
-                            <strong>Open the Board</strong>
-                            <small>Choose sport, market, line, and units.</small>
-                        </button>
-                        <button type="button" class="workflow-card" onclick="showSection('mypicks'); if (typeof loadMyPicks === 'function') loadMyPicks('all');">
-                            <span>02</span>
-                            <strong>Audit My Picks</strong>
-                            <small>Pending, graded, and historical cards.</small>
-                        </button>
-                        <button type="button" class="workflow-card" onclick="showSection('my-record')">
-                            <span>03</span>
-                            <strong>Review Record</strong>
-                            <small>Record, ROI, streaks, sport splits.</small>
-                        </button>
-                        <button type="button" class="workflow-card" data-sportsbook-tab="consensus">
-                            <span>04</span>
-                            <strong>Consensus Picks</strong>
-                            <small>Real pick clusters from loaded data.</small>
-                        </button>
-                    </div>
-                </section>
-
-                <section class="sportsbook-trust-panel">
-                    <div>
-                        <span class="sportsbook-eyebrow">Data discipline</span>
-                        <h2>No duplicate record math.</h2>
-                        <p>The page now uses one normalized pick list for total picks, W-L-P, win rate, net units, ROI, streaks, recent picks, and status badges.</p>
-                    </div>
-                    <div class="trust-flow">
-                        <div><strong>Lock</strong><span>Pick submitted</span></div>
-                        <div><strong>Grade</strong><span>Result normalized</span></div>
-                        <div><strong>Sync</strong><span>Dashboard updates</span></div>
-                        <div><strong>Audit</strong><span>Same record everywhere</span></div>
-                    </div>
-                </section>
-            </div>
-
             <div id="promos" class="page-section">
                 <section class="sportsbook-tool-page">
                     <div class="sportsbook-panel-header">
@@ -22721,8 +22487,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <script src="/static/js/platform-production-fix.js?v=20260415d"></script>
     <script src="/static/js/sportsbook-dashboard-sync.js?v=20260415d"></script>
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430g">
-<script defer src="/static/js/tmr-sitewide.js?v=20260430g"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430i">
+<script defer src="/static/js/tmr-sitewide.js?v=20260430i"></script>
     <style>
         /* Make Your Picks polish: visual-only overrides, no pick-flow logic changes. */
         #picks.page-section {
