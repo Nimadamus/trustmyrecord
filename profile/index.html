@@ -1184,11 +1184,11 @@
 
                 <!-- TAB: PICKS (default) -->
                 <div class="profile-tab-panel active" data-panel="picks">
-                    <section class="capper-monitor" id="capperMonitor">
+                    <section class="capper-monitor capper-monitor--v2" id="capperMonitor">
                         <div class="capper-monitor-head">
                             <div>
-                                <div class="section-title">Capper Performance Monitor</div>
-                                <div class="section-subtitle">Filtered, graded-only performance metrics from the public backend ledger.</div>
+                                <div class="section-title">Capper Dashboard</div>
+                                <div class="section-subtitle">All performance metrics in one clean strip. Filters drive every row, every card, and the ledger below.</div>
                             </div>
                         </div>
 
@@ -1231,6 +1231,12 @@
 
                         <div class="capper-main-row" id="capperMainRow"></div>
 
+                        <!-- Secondary KPI strip — six more metrics in one
+                             clean horizontal row (Apr 30 2026 r3). Reads
+                             left to right: Avg Odds, Avg Units, Best Streak,
+                             Current Streak, Graded Picks, CLV. -->
+                        <div class="capper-second-row" id="capperSecondRow"></div>
+
                         <div class="capper-table-grid">
                             <!-- Apr 30 2026 redesign: 3 visible cards only.
                                  Performance Overview (composite) / By Market Type / By Sport.
@@ -1260,104 +1266,43 @@
                         </section>
                     </section>
 
-                    <div class="profile-feed-card">
-                        <div class="profile-feed-head">
-                            <div>
-                                <div class="section-title">Locked Picks</div>
-                                <div class="section-subtitle">Verified locked picks tied to this profile. Filters update the table and stats below.</div>
-                            </div>
-                            <a class="profile-pending-link" id="viewPendingPicksLink" href="/profile/?tab=picks&result=pending">View pending picks</a>
+                    <!-- Apr 30 2026 reconstruction: the legacy duplicate
+                         "Locked Picks" / pm-summary-bar / pmPicksTable
+                         block was removed because it duplicated the new
+                         capper-monitor dashboard above. The IDs it owned
+                         (pmFilters, pmSummaryBar, pmPicksTable, pmSum*,
+                         pmFilter*, viewPendingPicksLink) live here as
+                         hidden stubs so JS that targets them keeps working
+                         without throwing on missing elements. -->
+                    <div class="pm-legacy-stubs" hidden aria-hidden="true" style="display:none !important;">
+                        <a id="viewPendingPicksLink" href="/profile/?tab=picks&amp;result=pending"></a>
+                        <div id="pmFilters" hidden>
+                            <input type="date" id="pmFilterFrom">
+                            <input type="date" id="pmFilterTo">
+                            <select id="pmFilterSport"><option value="">All</option></select>
+                            <select id="pmFilterMarket"><option value="">All</option></select>
+                            <select id="pmFilterSide"><option value="">All</option></select>
+                            <select id="pmFilterOdds"><option value="">All</option></select>
+                            <select id="pmFilterResult"><option value="">All</option></select>
+                            <button type="button" id="pmFilterReset">Reset</button>
                         </div>
-
-                        <!-- Filter toolbar. All controls update window.__pmFilters and re-run renderPmPicksTable(). -->
-                        <div class="pm-filters" id="pmFilters" hidden>
-                            <div class="pm-filter">
-                                <label>Date From</label>
-                                <input type="date" id="pmFilterFrom">
-                            </div>
-                            <div class="pm-filter">
-                                <label>Date To</label>
-                                <input type="date" id="pmFilterTo">
-                            </div>
-                            <div class="pm-filter">
-                                <label>Sport</label>
-                                <select id="pmFilterSport"><option value="">All sports</option></select>
-                            </div>
-                            <div class="pm-filter">
-                                <label>Market</label>
-                                <select id="pmFilterMarket"><option value="">All markets</option></select>
-                            </div>
-                            <div class="pm-filter">
-                                <label>Side</label>
-                                <select id="pmFilterSide">
-                                    <option value="">All sides</option>
-                                    <option value="favorite">Favorites</option>
-                                    <option value="underdog">Underdogs</option>
-                                </select>
-                            </div>
-                            <div class="pm-filter">
-                                <label>Odds range</label>
-                                <select id="pmFilterOdds">
-                                    <option value="">All odds</option>
-                                    <option value="heavy_favorite">Heavy fav (-200+)</option>
-                                    <option value="favorite">Favorite (-110 to -200)</option>
-                                    <option value="even">Even (±110)</option>
-                                    <option value="underdog">Dog (+110 to +200)</option>
-                                    <option value="big_underdog">Big dog (+200+)</option>
-                                </select>
-                            </div>
-                            <div class="pm-filter">
-                                <label>Result</label>
-                                <select id="pmFilterResult">
-                                    <option value="">All results</option>
-                                    <option value="won">Wins</option>
-                                    <option value="lost">Losses</option>
-                                    <option value="push">Pushes</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="void">Void / Cancelled</option>
-                                </select>
-                            </div>
-                            <button type="button" class="pm-filter-reset" id="pmFilterReset">Reset</button>
+                        <div id="pmSummaryBar" hidden>
+                            <span id="pmSumTotal">0</span>
+                            <span id="pmSumGraded">0</span>
+                            <span id="pmSumPending">0</span>
+                            <span id="pmSumWins">0</span>
+                            <span id="pmSumLosses">0</span>
+                            <span id="pmSumPushes">0</span>
+                            <span id="pmSumWinPct">N/A</span>
+                            <span id="pmSumUnits">0.00u</span>
+                            <span id="pmSumAvgUnits">N/A</span>
+                            <span id="pmSumAvgOdds">N/A</span>
+                            <span id="pmSumRoi">N/A</span>
+                            <span id="pmSumBestStreak">0</span>
+                            <span id="pmSumCurrentStreak">0</span>
+                            <span id="pmSumClv">N/A</span>
                         </div>
-
-                        <!-- One-row monitor strip that recomputes for the filtered subset. -->
-                        <div class="pm-summary-bar" id="pmSummaryBar" hidden>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">Total Picks</span><span class="pm-summary-value" id="pmSumTotal">0</span></div>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">Graded Picks</span><span class="pm-summary-value" id="pmSumGraded">0</span></div>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">Pending Picks</span><span class="pm-summary-value" id="pmSumPending">0</span></div>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">Wins</span><span class="pm-summary-value" id="pmSumWins">0</span></div>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">Losses</span><span class="pm-summary-value" id="pmSumLosses">0</span></div>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">Pushes</span><span class="pm-summary-value" id="pmSumPushes">0</span></div>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">Win %</span><span class="pm-summary-value" id="pmSumWinPct">N/A</span></div>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">Units Won</span><span class="pm-summary-value" id="pmSumUnits">0.00u</span></div>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">Average Units</span><span class="pm-summary-value" id="pmSumAvgUnits">N/A</span></div>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">Average Odds</span><span class="pm-summary-value" id="pmSumAvgOdds">N/A</span></div>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">ROI</span><span class="pm-summary-value" id="pmSumRoi">N/A</span></div>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">Best Streak</span><span class="pm-summary-value" id="pmSumBestStreak">0</span></div>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">Current Streak</span><span class="pm-summary-value" id="pmSumCurrentStreak">0</span></div>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">CLV</span><span class="pm-summary-value" id="pmSumClv">N/A</span></div>
-                        </div>
-
-                        <div class="pm-picks-wrap">
-                            <table class="pm-picks-table" id="pmPicksTable">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Sport</th>
-                                        <th>Market</th>
-                                        <th>Pick</th>
-                                        <th class="num">Line</th>
-                                        <th class="num">Odds</th>
-                                        <th class="num">Units</th>
-                                        <th>Result</th>
-                                        <th class="num">P/L</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr class="pm-picks-empty"><td colspan="9">Loading picks&hellip;</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
+                        <table id="pmPicksTable"><tbody></tbody></table>
                     </div>
                 </div>
 
@@ -2677,6 +2622,46 @@
         .capper-pos { color: #4ade80 !important; }
         .capper-neg { color: #f87171 !important; }
         .capper-neutral { color: #f8fafc !important; }
+        /* Secondary KPI strip — 6 more stats LTR (Apr 30 2026 r3) */
+        .capper-second-row {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+            background: rgba(255, 255, 255, 0.015);
+        }
+        .capper-second-row .capper-stat {
+            min-height: 100px;
+            padding: 16px 18px;
+            gap: 12px;
+        }
+        .capper-second-row .capper-stat-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 17px;
+            background: linear-gradient(180deg, rgba(192, 132, 252, 0.16), rgba(192, 132, 252, 0.04));
+            border-color: rgba(192, 132, 252, 0.22);
+            color: #c084fc;
+        }
+        .capper-second-row .capper-stat strong {
+            font-size: clamp(1.20rem, 1.7vw, 1.55rem);
+        }
+
+        /* Capper monitor — tighter dashboard chrome */
+        .capper-monitor.capper-monitor--v2 {
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(13, 21, 34, 0.85), rgba(11, 18, 31, 0.92));
+            margin-bottom: 24px;
+        }
+        .capper-monitor.capper-monitor--v2 .capper-monitor-head {
+            padding: 18px 22px 14px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+        }
+        .capper-monitor.capper-monitor--v2 .capper-filter-bar {
+            border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+        }
+
         /* Reduce summary cards to 3: Overview / Market / Sport */
         .capper-table-grid {
             display: grid;
@@ -3328,6 +3313,9 @@
             .capper-main-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
             .capper-stat:nth-child(4n) { border-right: 0; }
             .capper-stat:nth-child(n+5) { border-top: 1px solid rgba(148, 163, 184, 0.13); }
+            .capper-second-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .capper-second-row .capper-stat:nth-child(3n) { border-right: 0; }
+            .capper-second-row .capper-stat:nth-child(n+4) { border-top: 1px solid rgba(148, 163, 184, 0.13); }
             .capper-table-grid { grid-template-columns: 1fr; }
             .capper-table-card { border-right: 0; }
             body.profile-page .summary-grid,
@@ -3370,6 +3358,9 @@
             .capper-stat:nth-child(3n) { border-right: 1px solid rgba(148, 163, 184, 0.13); }
             .capper-stat:nth-child(2n) { border-right: 0; }
             .capper-stat:nth-child(n+3) { border-top: 1px solid rgba(148, 163, 184, 0.13); }
+            .capper-second-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .capper-second-row .capper-stat:nth-child(2n) { border-right: 0; }
+            .capper-second-row .capper-stat:nth-child(n+3) { border-top: 1px solid rgba(148, 163, 184, 0.13); }
             body.profile-page .summary-grid,
             body.profile-page.tmr-site-shell .summary-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -5101,6 +5092,42 @@
                 ['Pending Picks', String(pendingCount), 'capper-neutral', '\u{23F3}']                           // hourglass
             ];
             main.innerHTML = cards.map(([label, value, cls, icon]) =>
+                '<div class="capper-stat">' +
+                    '<span class="capper-stat-icon" aria-hidden="true">' + icon + '</span>' +
+                    '<div class="capper-stat-text">' +
+                        '<span class="capper-stat-label">' + label + '</span>' +
+                        '<strong class="' + cls + '">' + value + '</strong>' +
+                    '</div>' +
+                '</div>'
+            ).join('');
+        }
+
+        // Secondary KPI strip — six more stats LTR.
+        const second = document.getElementById('capperSecondRow');
+        if (second) {
+            const decided = stats.wins + stats.losses;
+            const avgUnitsVal = stats.picks ? (rows.reduce((s, p) => s + capUnits(p), 0) / stats.picks) : 0;
+            const bestStreak = computeBestStreak(rows);
+            const currentStreak = (function () {
+                const chrono = rows.slice().sort((a, b) => capDateMs(b) - capDateMs(a));
+                let n = 0, last = '';
+                for (const p of chrono) {
+                    const s = capStatus(p);
+                    if (s !== 'won' && s !== 'lost') continue;
+                    if (!last) last = s;
+                    if (s === last) n++; else break;
+                }
+                return last === 'won' ? n + 'W' : last === 'lost' ? n + 'L' : '0';
+            })();
+            const sCards = [
+                ['Avg Odds',       formatAvgOddsForOverview(rows),       'capper-neutral', '\u{1F3AF}'],
+                ['Avg Units',      stats.picks ? avgUnitsVal.toFixed(2) + 'u' : 'N/A', 'capper-neutral', '\u{1F4D0}'],
+                ['Best Streak',    bestStreak ? bestStreak + 'W' : '0',  'capper-pos',     '\u{1F525}'],
+                ['Current Streak', currentStreak,                         currentStreak.endsWith('W') && parseInt(currentStreak) > 0 ? 'capper-pos' : (currentStreak.endsWith('L') && parseInt(currentStreak) > 0 ? 'capper-neg' : 'capper-neutral'), '\u{1F4AB}'],
+                ['Graded',         String(decided + (stats.pushes || 0)), 'capper-neutral', '\u{2705}'],
+                ['Pushes',         String(stats.pushes || 0),             'capper-neutral', '\u{27F0}']
+            ];
+            second.innerHTML = sCards.map(([label, value, cls, icon]) =>
                 '<div class="capper-stat">' +
                     '<span class="capper-stat-icon" aria-hidden="true">' + icon + '</span>' +
                     '<div class="capper-stat-text">' +
