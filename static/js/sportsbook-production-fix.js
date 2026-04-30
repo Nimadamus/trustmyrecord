@@ -1815,21 +1815,49 @@
         if (box) box.style.display = 'none';
     }
 
+    // Reset every "Locking…" / disabled submit button across the page back
+    // to its labelled, clickable state. The ttSlipSubmit handler in
+    // sportsbook/index.html sets `Locking…` synchronously and never awaits
+    // lockInPick, so without an unconditional reset the team-totals submit
+    // button hangs on "Locking…" forever after the first click. Called from
+    // every early return AND from the finally-block of the API try/catch.
+    function resetLockButtons() {
+        const list = [
+            document.getElementById('ttSlipSubmit'),
+            document.getElementById('submitPickBtn')
+        ].filter(Boolean);
+        try {
+            document.querySelectorAll('button.submit-pick-btn, button.lock-pick-btn, [data-lock-pick-btn]').forEach(function (b) { list.push(b); });
+        } catch (_) {}
+        list.forEach(function (btn) {
+            try {
+                btn.disabled = false;
+                btn.removeAttribute('disabled');
+                if (/locking/i.test(btn.textContent || '')) {
+                    btn.textContent = btn.getAttribute('data-original-label') || 'Lock Pick';
+                }
+            } catch (_) {}
+        });
+    }
+
     async function lockInPick() {
         clearPickSlipError();
         const option = state.selectedOption;
         if (!option) {
             showPickSlipError('Select a market before submitting a pick.');
+            resetLockButtons();
             return;
         }
 
         if (!option.game_id || /unknown/i.test(String(option.game_id))) {
             showPickSlipError('That market is missing its game ID. Refresh the board (Ctrl-F5) and re-select the bet.');
+            resetLockButtons();
             return;
         }
 
         const allowed = await ensurePicksAccess();
         if (!allowed) {
+            resetLockButtons();
             return;
         }
 
@@ -1845,6 +1873,7 @@
 
         if (Number.isNaN(oddsValue) || (oddsValue > -100 && oddsValue < 100)) {
             showPickSlipError('Enter valid American odds like -110 or +150.');
+            resetLockButtons();
             return;
         }
 
@@ -1896,6 +1925,8 @@
             ].join(' | ');
             try { console.error('[TMR][lockInPick] failure', { error, option, data }); } catch (e) {}
             showPickSlipError('Pick submission failed [' + dumped + ']');
+        } finally {
+            resetLockButtons();
         }
     }
 
