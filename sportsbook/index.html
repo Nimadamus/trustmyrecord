@@ -196,10 +196,12 @@
             date.setDate(date.getDate() + daysOffset);
             var dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
 
-            var url = 'https://site.api.espn.com/apis/site/v2/sports/' + espnPath + '/scoreboard';
-            if (daysOffset > 0) {
-                url += '?dates=' + dateStr;
-            }
+            // Always pass ?dates= even for +0d. ESPN's default scoreboard URL
+            // returns whatever ESPN considers the "active" scoreboard day —
+            // which late at night UTC is yesterday's slate (e.g. 4/30 04:00 UTC
+            // returns 4/29 'post' games). Pinning the query to today's UTC date
+            // prevents skipping today's pre-game slate entirely.
+            var url = 'https://site.api.espn.com/apis/site/v2/sports/' + espnPath + '/scoreboard?dates=' + dateStr;
             console.log('[TMR] ESPN FETCH:', url, '(day +' + daysOffset + ')');
 
             fetch(url)
@@ -9564,24 +9566,60 @@ window.toggleSportFamily = function (family) {
             return;
         }
 
+        // Renders ESPN-shape games[] into the lobby rows + caches HTML.
+        var paintBoard = function (games, sourceLabel) {
+            if (rows.getAttribute('data-sport') !== sport) return;
+            if (!games || !games.length) {
+                rows.innerHTML = emptyState(sport, 'No ' + sport + ' games scheduled today.', 'closed');
+                return;
+            }
+            // Surface to selectGameBet (it indexes via window.TMR.currentGames).
+            window.TMR.currentGames = games;
+            var html = '';
+            for (var i = 0; i < Math.min(games.length, 8); i++) {
+                html += renderRow(games[i]);
+            }
+            rows.innerHTML = html;
+            if (window.TMR && window.TMR._fullBoardCache) {
+                window.TMR._fullBoardCache[sport] = html;
+            }
+            console.log('[TMR][lobby] ' + sport + ' rendered ' + Math.min(games.length, 8) + ' games. Source: ' + sourceLabel);
+        };
+
+        var espnFallback = function () {
+            try {
+                window.TMR.fetchGamesFromESPN(sportKey, function (games) {
+                    paintBoard(games, 'ESPN');
+                });
+            } catch (err) {
+                console.warn('[TMR] inline board ESPN error:', err);
+                rows.innerHTML = emptyState(sport, 'Unable to load ' + sport + ' board.', 'closed');
+            }
+        };
+
+        // SOURCE 1: Backend (Action Network → DraftKings, includes today's
+        // games even when ESPN's default scoreboard is stuck on yesterday's).
+        // SOURCE 2: ESPN scoreboard direct, only used if backend has 0 games.
+        if (TT_SUPPORTED_SPORTS[sport]) {
+            var url = _ttApiBase() + '/games/board/' + encodeURIComponent(sportKey) + '?limit=20';
+            fetch(url, { headers: { 'Accept': 'application/json' } })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (payload) {
+                    if (rows.getAttribute('data-sport') !== sport) return;
+                    var bgames = (payload && Array.isArray(payload.games)) ? payload.games : [];
+                    if (bgames.length === 0) { espnFallback(); return; }
+                    var src = (payload.diagnostics && payload.diagnostics.source) || 'backend';
+                    paintBoard(bgames, src);
+                })
+                .catch(function (e) {
+                    console.warn('[TMR][lobby] backend fetch failed, falling back to ESPN:', e);
+                    espnFallback();
+                });
+            return;
+        }
+
         try {
-            window.TMR.fetchGamesFromESPN(sportKey, function (games) {
-                if (rows.getAttribute('data-sport') !== sport) return; // user switched sports mid-fetch
-                if (!games || !games.length) {
-                    rows.innerHTML = emptyState(sport, 'No ' + sport + ' games scheduled today.', 'closed');
-                    return;
-                }
-                var html = '';
-                for (var i = 0; i < Math.min(games.length, 8); i++) {
-                    html += renderRow(games[i]);
-                }
-                rows.innerHTML = html;
-                // Cache the populated full-game board so rapid period
-                // toggles can restore it without a refetch round-trip.
-                if (window.TMR && window.TMR._fullBoardCache) {
-                    window.TMR._fullBoardCache[sport] = html;
-                }
-            });
+            espnFallback();
         } catch (err) {
             console.warn('[TMR] inline board load error:', err);
             rows.innerHTML = emptyState(sport, 'Unable to load ' + sport + ' board.', 'closed');
