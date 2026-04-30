@@ -1886,6 +1886,7 @@
             await ensureBackendAccessToken(api);
             const response = await api.createPick({
                 game_id: option.game_id,
+                external_game_id: option.game_id,
                 sport_key: option.sport_key,
                 market_type: option.market_type,
                 selection: option.selection,
@@ -1898,6 +1899,7 @@
                 market_label: option.group_label,
                 source_type: option.source,
                 source_updated_at: option.source_updated_at,
+                game_snapshot: buildSubmittedGameSnapshot(option),
                 reasoning: reasoningInput ? reasoningInput.value.trim() : ''
             });
 
@@ -1928,6 +1930,20 @@
         } finally {
             resetLockButtons();
         }
+    }
+
+    function buildSubmittedGameSnapshot(option) {
+        const game = option && option.game ? option.game : {};
+        return {
+            id: option.game_id || game.id || null,
+            sport_key: option.sport_key || game.sport_key || null,
+            sport_title: game.sport_title || null,
+            home_team: game.home_team || option.home_team || null,
+            away_team: game.away_team || option.away_team || null,
+            commence_time: game.commence_time || option.commence_time || null,
+            updated_at: game.updated_at || option.source_updated_at || null,
+            bookmakers: Array.isArray(game.bookmakers) ? game.bookmakers : []
+        };
     }
 
     // Clear inline error whenever the user picks a new market.
