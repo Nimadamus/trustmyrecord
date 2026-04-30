@@ -69,12 +69,6 @@
         return haystack.indexOf(team.toLowerCase()) !== -1;
     }
 
-    function isKnownSabresDevilsBadPush(pick) {
-        return normalizeStatus(pick.status, pick.result) === 'push' &&
-            includesTeam(pick, 'Buffalo Sabres') &&
-            includesTeam(pick, 'New Jersey Devils');
-    }
-
     function calculateWinUnits(pick) {
         const units = Number(pick.units || pick.stake || 1);
         const odds = Number(pick.odds_snapshot || pick.odds || pick.price || -110);
@@ -89,14 +83,6 @@
         normalized.units = Number(normalized.units || normalized.stake || 1);
         normalized.odds_snapshot = normalized.odds_snapshot != null ? normalized.odds_snapshot : normalized.odds;
         normalized.line_snapshot = normalized.line_snapshot != null ? normalized.line_snapshot : normalized.line;
-
-        if (isKnownSabresDevilsBadPush(normalized)) {
-            normalized.status = 'won';
-            normalized.result = 'won';
-            normalized.result_units = calculateWinUnits(normalized);
-            normalized.tmr_corrected_result = true;
-        }
-
         return normalized;
     }
 
@@ -126,20 +112,22 @@
     }
 
     function readLocalPicks() {
-        let picks = [];
-        try { picks = JSON.parse(localStorage.getItem('tmr_picks') || '[]'); } catch (error) {}
-        if (!Array.isArray(picks)) return [];
-        const ids = currentUserIds();
-        return picks.filter(function(pick) {
-            if (!pick.user_id) return true;
-            return ids.indexOf(String(pick.user_id)) !== -1;
-        });
+        // DISABLED Apr 30, 2026 — local picks must never appear on TrustMyRecord
+        // surfaces. Eagerly clear the legacy keys so stale demo/seed data
+        // (e.g. Apr 11 Giants -3.45u, Buffalo Sabres push) cannot resurface
+        // from a previously-cached browser.
+        try {
+            ['tmr_picks', 'trustmyrecord_picks', 'tmr_picks_legacy'].forEach(function(key) {
+                localStorage.removeItem(key);
+            });
+        } catch (error) {}
+        return [];
     }
 
     function getCanonicalPicks() {
         const backend = Array.isArray(window._cachedBackendPicks) ? window._cachedBackendPicks : [];
-        const source = backend.length ? backend : readLocalPicks();
-        return source.map(normalizePick).sort(function(a, b) {
+        readLocalPicks();
+        return backend.map(normalizePick).sort(function(a, b) {
             return new Date(b.locked_at || b.created_at || b.commence_time || 0) -
                 new Date(a.locked_at || a.created_at || a.commence_time || 0);
         });

@@ -1423,10 +1423,11 @@
                     <div class="ledger-toolbar-meta">
                         <label class="ledger-page-size-label" for="pageSizeSelect">Rows</label>
                         <select id="pageSizeSelect" class="filter-control ledger-page-size" onchange="changePageSize(this.value)">
-                            <option value="15">15</option>
-                            <option value="25" selected>25</option>
+                            <option value="25">25</option>
                             <option value="50">50</option>
-                            <option value="100">100</option>
+                            <option value="100" selected>100</option>
+                            <option value="250">250</option>
+                            <option value="500">500</option>
                         </select>
                     </div>
                 </div>
@@ -3074,6 +3075,406 @@
 
         /* Make sure the sitewide-injected legacy nav hide doesn't kill our top strip */
         body.tmr-site-shell.profile-page .profile-top-strip { display: flex !important; visibility: visible !important; height: auto !important; padding: 10px 20px !important; }
+
+        /* ============================================================
+           PICK HISTORY + ADVANCED METRICS — futuristic redesign
+           (Apr 30, 2026 — Nima: bold, sleek, neon, sportsbook-meets-social)
+           Advanced metrics row goes ABOVE pick history; both run L→R.
+           ============================================================ */
+        :root {
+            --tmr-neon-cyan: #00ffff;
+            --tmr-neon-purple: #c084fc;
+            --tmr-neon-green: #39ff14;
+            --tmr-neon-red: #ff3860;
+            --tmr-neon-gold: #ffd700;
+            --tmr-card-bg: rgba(15, 22, 38, 0.85);
+            --tmr-card-bg-strong: rgba(20, 27, 44, 0.96);
+            --tmr-card-border: rgba(0, 255, 255, 0.18);
+            --tmr-card-border-hot: rgba(0, 255, 255, 0.5);
+        }
+
+        /* Re-order: advanced metrics ABOVE pick history. We do this with
+           CSS order on a flex container, then the JS below also moves the
+           DOM nodes so semantic order matches visual order. */
+        body.profile-page .profile-tab-panel[data-panel="record"] {
+            display: flex; flex-direction: column;
+        }
+        body.profile-page .profile-tab-panel[data-panel="record"] > .summary-bar { order: 1; }
+        body.profile-page .profile-tab-panel[data-panel="record"] > .analytics-section { order: 2; }
+        body.profile-page .profile-tab-panel[data-panel="record"] > .picks-section { order: 3; }
+
+        /* ===== ADVANCED METRICS — horizontal stat tiles ===== */
+        body.profile-page .stats-table-card,
+        body.profile-page.tmr-site-shell .stats-table-card {
+            background:
+                radial-gradient(circle at 0% 0%, rgba(0, 255, 255, 0.06), transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(192, 132, 252, 0.05), transparent 40%),
+                var(--tmr-card-bg) !important;
+            border: 1px solid var(--tmr-card-border) !important;
+            border-radius: 18px !important;
+            padding: 20px 22px !important;
+            margin-bottom: 18px !important;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.36) !important;
+            position: relative;
+            overflow: hidden;
+        }
+        body.profile-page .stats-table-card::before,
+        body.profile-page.tmr-site-shell .stats-table-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, var(--tmr-neon-cyan), var(--tmr-neon-purple));
+        }
+        body.profile-page .stats-table-head,
+        body.profile-page.tmr-site-shell .stats-table-head {
+            margin-bottom: 14px !important;
+        }
+        body.profile-page .stats-table-card .section-title,
+        body.profile-page.tmr-site-shell .stats-table-card .section-title {
+            font-family: 'Barlow', 'Inter', sans-serif !important;
+            font-weight: 800 !important;
+            font-size: 1.05rem !important;
+            letter-spacing: 0.02em !important;
+            text-transform: uppercase !important;
+            background: linear-gradient(135deg, var(--tmr-neon-cyan), var(--tmr-neon-purple)) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            background-clip: text !important;
+        }
+        body.profile-page .stats-table-note,
+        body.profile-page.tmr-site-shell .stats-table-note {
+            color: #94a3b8 !important;
+            font-size: 0.78rem !important;
+            margin-top: 4px !important;
+        }
+        /* Replace the boring three-col table with a horizontal grid of metric tiles */
+        body.profile-page .stats-table-card .picks-table-wrapper,
+        body.profile-page.tmr-site-shell .stats-table-card .picks-table-wrapper {
+            border: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            overflow: visible !important;
+        }
+        body.profile-page .stats-summary-table,
+        body.profile-page.tmr-site-shell .stats-summary-table {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
+            gap: 10px !important;
+            border-collapse: separate !important;
+            background: transparent !important;
+        }
+        body.profile-page .stats-summary-table thead,
+        body.profile-page.tmr-site-shell .stats-summary-table thead { display: none !important; }
+        body.profile-page .stats-summary-table tbody,
+        body.profile-page.tmr-site-shell .stats-summary-table tbody {
+            display: contents !important;
+        }
+        body.profile-page .stats-summary-table tr,
+        body.profile-page.tmr-site-shell .stats-summary-table tr {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 4px !important;
+            background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.005)) !important;
+            border: 1px solid rgba(148, 163, 184, 0.14) !important;
+            border-radius: 12px !important;
+            padding: 12px 14px !important;
+            transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease !important;
+            position: relative;
+            overflow: hidden;
+        }
+        body.profile-page .stats-summary-table tr:hover,
+        body.profile-page.tmr-site-shell .stats-summary-table tr:hover {
+            border-color: var(--tmr-card-border-hot) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.38) !important;
+        }
+        body.profile-page .stats-summary-table td,
+        body.profile-page.tmr-site-shell .stats-summary-table td {
+            border: 0 !important;
+            padding: 0 !important;
+            background: transparent !important;
+        }
+        body.profile-page .stats-summary-table td:first-child,
+        body.profile-page.tmr-site-shell .stats-summary-table td:first-child {
+            order: 2 !important;
+            color: #94a3b8 !important;
+            font-size: 0.7rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.08em !important;
+        }
+        body.profile-page .stats-summary-table td:nth-child(2),
+        body.profile-page.tmr-site-shell .stats-summary-table td:nth-child(2) {
+            order: 1 !important;
+            font-family: 'Barlow', 'Inter', sans-serif !important;
+            font-size: 1.45rem !important;
+            font-weight: 800 !important;
+            color: #ffffff !important;
+            letter-spacing: -0.01em !important;
+            line-height: 1.05 !important;
+        }
+        body.profile-page .stats-summary-table td:nth-child(3),
+        body.profile-page.tmr-site-shell .stats-summary-table td:nth-child(3) {
+            order: 3 !important;
+            color: #6b7e93 !important;
+            font-size: 0.72rem !important;
+            line-height: 1.35 !important;
+        }
+        /* Color-coding: positive units / W% > .500 / wins green; negative red */
+        body.profile-page .stats-summary-table td.is-positive,
+        body.profile-page.tmr-site-shell .stats-summary-table td.is-positive {
+            color: var(--tmr-neon-green) !important;
+        }
+        body.profile-page .stats-summary-table td.is-negative,
+        body.profile-page.tmr-site-shell .stats-summary-table td.is-negative {
+            color: var(--tmr-neon-red) !important;
+        }
+
+        /* ===== PICK HISTORY — horizontal pick cards ===== */
+        body.profile-page .picks-section,
+        body.profile-page.tmr-site-shell .picks-section {
+            margin-top: 12px !important;
+        }
+        body.profile-page .records-section-head .section-title,
+        body.profile-page.tmr-site-shell .records-section-head .section-title {
+            font-family: 'Barlow', 'Inter', sans-serif !important;
+            font-weight: 800 !important;
+            font-size: 1.6rem !important;
+            background: linear-gradient(135deg, var(--tmr-neon-cyan), var(--tmr-neon-purple)) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            background-clip: text !important;
+        }
+        body.profile-page .records-section-head::after {
+            content: 'Every Pick. Every Result. No Hiding.';
+            display: block; width: 100%; margin-top: 4px;
+            color: #94a3b8; font-size: 0.84rem; font-style: italic;
+            letter-spacing: 0.02em;
+        }
+
+        body.profile-page .ledger-filter-card,
+        body.profile-page.tmr-site-shell .ledger-filter-card {
+            background: var(--tmr-card-bg) !important;
+            border: 1px solid var(--tmr-card-border) !important;
+            border-radius: 16px !important;
+            padding: 16px 18px !important;
+            margin-bottom: 14px !important;
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.30) !important;
+        }
+        body.profile-page .filter-control,
+        body.profile-page.tmr-site-shell .filter-control {
+            background: rgba(255, 255, 255, 0.04) !important;
+            border: 1px solid rgba(148, 163, 184, 0.18) !important;
+            color: #ffffff !important;
+            font-family: 'Inter', sans-serif !important;
+        }
+        body.profile-page .filter-control:focus,
+        body.profile-page.tmr-site-shell .filter-control:focus {
+            border-color: var(--tmr-neon-cyan) !important;
+            box-shadow: 0 0 0 3px rgba(0, 255, 255, 0.15) !important;
+            outline: none !important;
+        }
+
+        body.profile-page .picks-table-wrapper,
+        body.profile-page.tmr-site-shell .picks-table-wrapper {
+            background: transparent !important;
+            border: 0 !important;
+            box-shadow: none !important;
+            overflow-x: auto;
+        }
+
+        /* Render each pick row as a horizontal card with strong hierarchy. */
+        body.profile-page .picks-table,
+        body.profile-page.tmr-site-shell .picks-table {
+            border-collapse: separate !important;
+            border-spacing: 0 8px !important;
+            width: 100% !important;
+            background: transparent !important;
+            min-width: 1100px;
+        }
+        body.profile-page .picks-table thead tr,
+        body.profile-page.tmr-site-shell .picks-table thead tr {
+            background: transparent !important;
+        }
+        body.profile-page .picks-table thead th,
+        body.profile-page.tmr-site-shell .picks-table thead th {
+            background: transparent !important;
+            color: #94a3b8 !important;
+            font-family: 'Barlow', 'Inter', sans-serif !important;
+            font-size: 0.72rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.10em !important;
+            padding: 6px 12px !important;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.14) !important;
+        }
+        body.profile-page .picks-table tbody tr,
+        body.profile-page.tmr-site-shell .picks-table tbody tr {
+            background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.005)) !important;
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+            border-left: 3px solid rgba(148, 163, 184, 0.22);
+            border-radius: 12px !important;
+            overflow: hidden;
+        }
+        body.profile-page .picks-table tbody tr td,
+        body.profile-page.tmr-site-shell .picks-table tbody tr td {
+            background: transparent !important;
+            border: 0 !important;
+            padding: 14px 12px !important;
+            color: #e2e8f0 !important;
+            font-size: 0.88rem !important;
+            vertical-align: middle !important;
+        }
+        body.profile-page .picks-table tbody tr td:first-child,
+        body.profile-page.tmr-site-shell .picks-table tbody tr td:first-child {
+            border-top-left-radius: 12px !important;
+            border-bottom-left-radius: 12px !important;
+        }
+        body.profile-page .picks-table tbody tr td:last-child,
+        body.profile-page.tmr-site-shell .picks-table tbody tr td:last-child {
+            border-top-right-radius: 12px !important;
+            border-bottom-right-radius: 12px !important;
+        }
+        body.profile-page .picks-table tbody tr:hover,
+        body.profile-page.tmr-site-shell .picks-table tbody tr:hover {
+            transform: translateY(-1px) !important;
+            border-color: var(--tmr-card-border-hot) !important;
+            background: linear-gradient(180deg, rgba(0,255,255,0.04), rgba(255,255,255,0.005)) !important;
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.36) !important;
+        }
+        /* Status accent border */
+        body.profile-page .picks-table tbody tr.row-won,
+        body.profile-page.tmr-site-shell .picks-table tbody tr.row-won {
+            border-left: 3px solid var(--tmr-neon-green) !important;
+        }
+        body.profile-page .picks-table tbody tr.row-lost,
+        body.profile-page.tmr-site-shell .picks-table tbody tr.row-lost {
+            border-left: 3px solid var(--tmr-neon-red) !important;
+        }
+        body.profile-page .picks-table tbody tr.row-push,
+        body.profile-page.tmr-site-shell .picks-table tbody tr.row-push {
+            border-left: 3px solid var(--tmr-neon-gold) !important;
+        }
+        body.profile-page .picks-table tbody tr.row-pending,
+        body.profile-page.tmr-site-shell .picks-table tbody tr.row-pending {
+            border-left: 3px solid var(--tmr-neon-cyan) !important;
+        }
+
+        /* Pick column = the headline. Make it pop. */
+        body.profile-page .picks-table tbody tr td:nth-child(4),
+        body.profile-page.tmr-site-shell .picks-table tbody tr td:nth-child(4) {
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            font-size: 0.95rem !important;
+        }
+
+        /* Result + Net Units — already coded by row class but reinforce */
+        body.profile-page .result-badge,
+        body.profile-page.tmr-site-shell .result-badge {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 4px 10px !important;
+            border-radius: 999px !important;
+            font-family: 'Barlow', 'Inter', sans-serif !important;
+            font-weight: 800 !important;
+            font-size: 0.72rem !important;
+            letter-spacing: 0.08em !important;
+            text-transform: uppercase !important;
+            min-width: 64px !important;
+        }
+        body.profile-page .result-badge.won,
+        body.profile-page.tmr-site-shell .result-badge.won {
+            background: rgba(57, 255, 20, 0.12) !important;
+            color: var(--tmr-neon-green) !important;
+            border: 1px solid rgba(57, 255, 20, 0.4) !important;
+            box-shadow: 0 0 12px rgba(57, 255, 20, 0.18);
+        }
+        body.profile-page .result-badge.lost,
+        body.profile-page.tmr-site-shell .result-badge.lost {
+            background: rgba(255, 56, 96, 0.12) !important;
+            color: var(--tmr-neon-red) !important;
+            border: 1px solid rgba(255, 56, 96, 0.4) !important;
+            box-shadow: 0 0 12px rgba(255, 56, 96, 0.18);
+        }
+        body.profile-page .result-badge.push,
+        body.profile-page.tmr-site-shell .result-badge.push {
+            background: rgba(255, 215, 0, 0.10) !important;
+            color: var(--tmr-neon-gold) !important;
+            border: 1px solid rgba(255, 215, 0, 0.36) !important;
+        }
+        body.profile-page .result-badge.pending,
+        body.profile-page.tmr-site-shell .result-badge.pending {
+            background: rgba(0, 255, 255, 0.08) !important;
+            color: var(--tmr-neon-cyan) !important;
+            border: 1px solid rgba(0, 255, 255, 0.36) !important;
+        }
+        body.profile-page .profit-cell.positive,
+        body.profile-page.tmr-site-shell .profit-cell.positive {
+            color: var(--tmr-neon-green) !important;
+            font-weight: 800 !important;
+        }
+        body.profile-page .profit-cell.negative,
+        body.profile-page.tmr-site-shell .profit-cell.negative {
+            color: var(--tmr-neon-red) !important;
+            font-weight: 800 !important;
+        }
+
+        /* Pagination row */
+        body.profile-page .ledger-pagination,
+        body.profile-page.tmr-site-shell .ledger-pagination {
+            display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+            padding: 14px 0 0;
+        }
+        body.profile-page .ledger-pagination button,
+        body.profile-page.tmr-site-shell .ledger-pagination button {
+            background: rgba(255,255,255,0.04) !important;
+            border: 1px solid rgba(148, 163, 184, 0.18) !important;
+            color: #cbd5e1 !important;
+            padding: 7px 14px !important;
+            border-radius: 9px !important;
+            font-weight: 700 !important;
+            font-size: 0.82rem !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease;
+        }
+        body.profile-page .ledger-pagination button:hover:not(:disabled),
+        body.profile-page.tmr-site-shell .ledger-pagination button:hover:not(:disabled) {
+            border-color: var(--tmr-neon-cyan) !important;
+            color: var(--tmr-neon-cyan) !important;
+        }
+        body.profile-page .ledger-pagination button.is-active,
+        body.profile-page.tmr-site-shell .ledger-pagination button.is-active {
+            background: linear-gradient(135deg, var(--tmr-neon-cyan), var(--tmr-neon-purple)) !important;
+            color: #000 !important;
+            border-color: transparent !important;
+        }
+        body.profile-page .ledger-pagination button:disabled,
+        body.profile-page.tmr-site-shell .ledger-pagination button:disabled {
+            opacity: 0.4; cursor: not-allowed;
+        }
+
+        /* Empty state for picks list */
+        body.profile-page .empty-state,
+        body.profile-page.tmr-site-shell .empty-state {
+            background: var(--tmr-card-bg) !important;
+            border: 1px dashed var(--tmr-card-border) !important;
+            border-radius: 16px !important;
+            padding: 56px 28px !important;
+            text-align: center;
+            color: #94a3b8 !important;
+        }
+
+        /* Mobile: stack pick row fields vertically with key fields up top */
+        @media (max-width: 760px) {
+            body.profile-page .picks-table { min-width: 0 !important; }
+            body.profile-page .picks-table thead { display: none !important; }
+            body.profile-page .picks-table tbody tr { display: grid !important; grid-template-columns: 1fr 1fr; gap: 4px 10px; padding: 12px 14px !important; }
+            body.profile-page .picks-table tbody tr td { padding: 4px 0 !important; }
+            body.profile-page .picks-table tbody tr td::before { content: attr(data-label); display:block; color:#7e8ba0; font-size:0.66rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:2px; }
+            body.profile-page .picks-table tbody tr td:nth-child(4) { grid-column: 1 / -1 !important; }
+            body.profile-page .stats-summary-table { grid-template-columns: repeat(2, 1fr) !important; }
+        }
     </style>
 
     <script>
@@ -3106,7 +3507,7 @@
     let latestAdvancedStats = null;
     let currentLeaderboardRank = null;
     let currentTableSort = 'date_desc';
-    let currentPageSize = 25;
+    let currentPageSize = 100; // 100 default, Max 500 per page (Nima Apr 30, 2026)
     let usingRecoveredLocalPicks = false;
     const MARKET_TYPE_GROUPS = [
         { key: 'moneyline', label: 'Moneyline', types: ['h2h', 'moneyline'] },
@@ -3323,16 +3724,9 @@
     }
 
     function readLegacyPickStorage() {
-        const stored = [];
-        ['tmr_picks', 'trustmyrecord_picks'].forEach(function(key) {
-            try {
-                const parsed = JSON.parse(localStorage.getItem(key) || '[]');
-                if (Array.isArray(parsed) && parsed.length) {
-                    stored.push.apply(stored, parsed);
-                }
-            } catch (error) {}
-        });
-        return stored;
+        // DISABLED Apr 30, 2026 — see anti-recovery safeguard in loadAndRender.
+        // Local picks must never appear on a "Trust My Record" profile.
+        return [];
     }
 
     function normalizeLegacyProfilePick(rawPick, index) {
@@ -3383,47 +3777,13 @@
     }
 
     function getRecoveredLocalPicks() {
-        if (!isOwnProfile) return [];
-        const candidates = getProfileIdentityCandidates();
-        if (!candidates.size) return [];
-
-        return readLegacyPickStorage()
-            .filter(function(rawPick) {
-                const ownerValues = [
-                    rawPick.userId,
-                    rawPick.user_id,
-                    rawPick.username,
-                    rawPick.user_name,
-                    rawPick.authorUsername,
-                    rawPick.user,
-                    rawPick.created_by
-                ].map(function(value) {
-                    return String(value || '').trim().toLowerCase();
-                }).filter(Boolean);
-                return ownerValues.some(function(value) { return candidates.has(value); });
-            })
-            .map(normalizeLegacyProfilePick)
-            .filter(Boolean)
-            .sort(function(a, b) {
-                return new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0);
-            });
+        // DISABLED Apr 30, 2026 — see anti-recovery safeguard in loadAndRender.
+        return [];
     }
 
     function applyRecoveredProfileStats(picks) {
-        if (!profileData || !Array.isArray(picks) || !picks.length) return;
-        const stats = computeUnifiedStats(picks);
-        profileData = Object.assign({}, profileData, {
-            total_picks: picks.length,
-            totalPicks: picks.length,
-            wins: stats.wins,
-            losses: stats.losses,
-            pushes: stats.pushes,
-            pending_picks: stats.pending,
-            net_units: stats.netUnits,
-            roi: stats.roi,
-            win_rate: stats.winRate,
-            __recoveredFromLocal: true
-        });
+        // DISABLED Apr 30, 2026 — local picks no longer hydrate profile stats.
+        return;
     }
 
     function getClosingLineValue(pick) {
@@ -4106,14 +4466,17 @@
             }
         }
 
-        const recoveredLocalPicks = !picks.length ? getRecoveredLocalPicks() : [];
-        if (!picks.length && recoveredLocalPicks.length) {
-            picks = recoveredLocalPicks;
-            usingRecoveredLocalPicks = true;
-            applyRecoveredProfileStats(picks);
-        } else {
-            usingRecoveredLocalPicks = false;
-        }
+        // SAFEGUARD (Apr 30, 2026): Never inject picks from localStorage as if
+        // they were tracked picks. Stale demo/seed data lingering in
+        // tmr_picks / trustmyrecord_picks was being shown on real profiles
+        // (e.g. Apr 11 Giants -3.45u, Buffalo Sabres push). The DB is the
+        // single source of truth — empty backend -> empty table.
+        try {
+            ['tmr_picks', 'trustmyrecord_picks', 'tmr_picks_legacy'].forEach(function(key) {
+                localStorage.removeItem(key);
+            });
+        } catch (e) {}
+        usingRecoveredLocalPicks = false;
 
         picks.sort((a, b) => new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0));
         allLoadedPicks = picks;
@@ -4425,6 +4788,16 @@
                 '<button class="btn btn-secondary" onclick="location.href=\'arena/?challenge=' + encodeURIComponent(p.username) + '\'">Challenge</button></div>';
         }
 
+        // Headline (Twitter-style 140-char tagline). Always rendered; empty
+        // state prompts own-profile owner to add one.
+        var headline = (p && typeof p.headline === 'string') ? p.headline.trim() : '';
+        var isOwn = !!(typeof isOwnProfile !== 'undefined' && isOwnProfile);
+        var headlineHtml = headline
+            ? '<div class="profile-headline" style="margin-top:6px;color:var(--tmr-cyan,#5bd6dc);font-style:italic;font-size:0.95rem;line-height:1.4;">' + headline + '</div>'
+            : (isOwn
+                ? '<div class="profile-headline profile-headline-empty" style="margin-top:6px;color:var(--text-muted,#9aacbf);font-size:0.85rem;"><a href="#" onclick="event.preventDefault();openProfileEditor && openProfileEditor();" style="color:inherit;text-decoration:underline;">Add a headline</a> &mdash; one line that defines you (140 chars).</div>'
+                : '');
+
         el.innerHTML = '<div class="profile-info">' +
             '<div class="profile-identity-row">' +
             '<div class="profile-avatar">' + (p.avatar_url ? '<img src="' + p.avatar_url + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + name + '">' : letter) + '</div>' +
@@ -4432,6 +4805,7 @@
             '<div class="profile-eyebrow">Trust My Record profile</div>' +
             '<div class="profile-name">' + name + '</div>' +
             '<div class="profile-handle">@' + p.username + '</div>' +
+            headlineHtml +
             '</div>' +
             '</div>' +
             trustPills +
@@ -4677,21 +5051,22 @@
         const rd = r != null ? formatSignedUnits(r) : '--';
         const clvClass = clvValue > 0 ? 'positive' : clvValue < 0 ? 'negative' : 'zero';
 
-        return '<tr>' +
-            '<td><div>' + dateStr + '</div><div class="ledger-muted">' + timeStr + '</div></td>' +
-            '<td><span class="pick-sport ' + sc + '">' + sport + '</span></td>' +
-            '<td class="col-game"><div class="ledger-pick-title">' + matchup + '</div><div class="ledger-game-meta">' + (p.event_name || 'Tracked pick') + '</div></td>' +
-            '<td class="col-pick"><div class="ledger-pick-title">' + sel + '</div><div class="ledger-pick-meta">' + (p.notes || '') + '</div></td>' +
-            '<td><span class="ledger-type">' + market + '</span></td>' +
-            '<td>' + line + '</td>' +
-            '<td>' + odds + '</td>' +
-            '<td>' + units + '</td>' +
-            '<td><span class="result-badge ' + status + '">' + status.toUpperCase() + '</span></td>' +
-            '<td class="profit-cell ' + plc + '">' + pl + '<div class="ledger-subline">Running ' + rd + '</div></td>' +
-            '<td class="ledger-closing">' + formatLineValue(closingLine) + '</td>' +
-            '<td class="profit-cell ' + clvClass + '">' + formatClvValue(clvValue) + '</td>' +
-            '<td>' + book + '</td>' +
-            '<td><span class="ledger-status">' + (status === 'pending' ? 'Open' : 'Final') + '</span></td>' +
+        const rowClass = 'row-' + status;
+        return '<tr class="' + rowClass + '">' +
+            '<td data-label="Date"><div>' + dateStr + '</div><div class="ledger-muted">' + timeStr + '</div></td>' +
+            '<td data-label="Sport"><span class="pick-sport ' + sc + '">' + sport + '</span></td>' +
+            '<td data-label="Game" class="col-game"><div class="ledger-pick-title">' + matchup + '</div><div class="ledger-game-meta">' + (p.event_name || 'Tracked pick') + '</div></td>' +
+            '<td data-label="Pick" class="col-pick"><div class="ledger-pick-title">' + sel + '</div><div class="ledger-pick-meta">' + (p.notes || '') + '</div></td>' +
+            '<td data-label="Market"><span class="ledger-type">' + market + '</span></td>' +
+            '<td data-label="Line">' + line + '</td>' +
+            '<td data-label="Odds">' + odds + '</td>' +
+            '<td data-label="Units">' + units + '</td>' +
+            '<td data-label="Result"><span class="result-badge ' + status + '">' + status.toUpperCase() + '</span></td>' +
+            '<td data-label="Net Units" class="profit-cell ' + plc + '">' + pl + '<div class="ledger-subline">Running ' + rd + '</div></td>' +
+            '<td data-label="Closing Line" class="ledger-closing">' + formatLineValue(closingLine) + '</td>' +
+            '<td data-label="CLV" class="profit-cell ' + clvClass + '">' + formatClvValue(clvValue) + '</td>' +
+            '<td data-label="Book">' + book + '</td>' +
+            '<td data-label="Status"><span class="ledger-status">' + (status === 'pending' ? 'Open' : 'Final') + '</span></td>' +
             '</tr>';
     }
 
@@ -4736,7 +5111,8 @@
     }
 
     function changePageSize(value) {
-        currentPageSize = Math.max(1, Number(value) || 25);
+        // Hard cap 500 per Nima — beyond that, paginate naturally.
+        currentPageSize = Math.min(500, Math.max(1, Number(value) || 100));
         currentTablePage = 1;
         renderPicksTable(currentRenderedPicks.length ? currentRenderedPicks : getFilteredPicks());
     }
@@ -4873,10 +5249,42 @@
             );
         }
 
+        // Color-code metric values per Nima's spec: green when winning/positive,
+        // red when losing/negative, neutral on .500/zero/insufficient sample.
+        function metricSignClass(label, value) {
+            var lab = String(label || '').toLowerCase();
+            var val = String(value || '');
+            // Records like "12-7-1" -> green if W>L, red if W<L
+            var recMatch = val.match(/^(\d+)[\-–](\d+)/);
+            if (recMatch && (lab.indexOf('record') !== -1 || lab.indexOf('streak') === -1)) {
+                var w = parseInt(recMatch[1], 10), l = parseInt(recMatch[2], 10);
+                if (w + l === 0) return '';
+                if (w > l) return 'is-positive';
+                if (w < l) return 'is-negative';
+                return '';
+            }
+            // Signed numerics (+1.5u, -2.3u, +5%, -1.4%, +145, -110)
+            if (/^[+\-]/.test(val)) {
+                if (val.charAt(0) === '+' && parseFloat(val.slice(1)) !== 0) return 'is-positive';
+                if (val.charAt(0) === '-' && parseFloat(val.slice(1)) !== 0) return 'is-negative';
+                return '';
+            }
+            // Win Rate: green > 50, red < 50
+            if (lab === 'win rate' || lab === 'effective win %') {
+                var pct = parseFloat(val);
+                if (!isFinite(pct)) return '';
+                if (pct > 50) return 'is-positive';
+                if (pct < 50) return 'is-negative';
+                return '';
+            }
+            return '';
+        }
+
         body.innerHTML = rows.map(function(row) {
+            var valClass = metricSignClass(row[0], row[1]);
             return '<tr>' +
                 '<td class="stats-metric-label">' + row[0] + '</td>' +
-                '<td>' + row[1] + '</td>' +
+                '<td' + (valClass ? ' class="' + valClass + '"' : '') + '>' + row[1] + '</td>' +
                 '<td class="stats-metric-context">' + row[2] + '</td>' +
                 '</tr>';
         }).join('');
@@ -6136,6 +6544,10 @@
         showToast(successMessage || 'Copied!', 'success');
     }
 
+    // Alias so other UI (e.g. the "Add a headline" empty-state link) can open the editor.
+    window.openProfileEditor = function() { openEditModal(); };
+    window.openEditModal = function() { openEditModal(); };
+
     function openEditModal() {
         const m = document.getElementById('editModal'); if (m) m.remove();
         analyticsTrack('profile_edit_modal_opened', {
@@ -6160,6 +6572,7 @@
             '<div style="color:#6b7280;font-size:.75rem;">JPG, PNG, GIF, WebP. Max 2MB.</div>' +
             '</div></div>' +
             '<label style="' + ls + '">Display Name</label><input id="eDN" value="' + (profileData.display_name || profileData.username || '') + '" style="' + is + '">' +
+            '<label style="' + ls + '">Headline (one line, 140 chars)</label><input id="eHeadline" maxlength="140" placeholder="e.g. Sharp MLB cap. Pittsburgh born. Run line specialist." value="' + ((profileData.headline || '').replace(/"/g,'&quot;')) + '" style="' + is + '">' +
             '<label style="' + ls + '">Bio</label><textarea id="eBio" rows="3" style="' + is + 'resize:vertical;">' + (profileData.bio || '') + '</textarea>' +
             '<label style="' + ls + '">Location</label><input id="eLoc" value="' + (profileData.location || '') + '" style="' + is + '">' +
             '<div style="border-top:1px solid #353a4d;margin:20px 0 16px;padding-top:16px;"><h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;color:#00aeff;">Favorite Teams</h3></div>' +
@@ -6202,7 +6615,8 @@
                 const updates = {
                     display_name: document.getElementById('eDN').value.trim(),
                     bio: document.getElementById('eBio').value.trim(),
-                    location: document.getElementById('eLoc').value.trim()
+                    location: document.getElementById('eLoc').value.trim(),
+                    headline: (document.getElementById('eHeadline') ? document.getElementById('eHeadline').value.trim() : '')
                 };
                 if (pendingAvatarData) updates.avatar_url = pendingAvatarData;
 

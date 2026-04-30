@@ -425,26 +425,14 @@ class SocialSystem {
      * Get recent picks from followed users
      */
     getFollowingPicks(username, limit = 20) {
-        const user = this.getUser(username);
-        if (!user) return [];
-
-        const following = user.social?.following || [];
-        const allPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
-
-        return allPicks
-            .filter(p => following.includes(p.user_id || p.username))
-            .sort((a, b) => new Date(b.locked_at || b.created_at) - new Date(a.locked_at || a.created_at))
-            .slice(0, limit)
-            .map(pick => {
-                const picker = this.getUser(pick.user_id || pick.username);
-                return {
-                    ...pick,
-                    picker: {
-                        username: picker?.username || pick.user_id,
-                        displayName: picker?.displayName || picker?.username || pick.user_id
-                    }
-                };
+        // DISABLED Apr 30, 2026 — local picks must never feed the following
+        // feed. Real following picks come from the backend /feed endpoint.
+        try {
+            ['tmr_picks', 'trustmyrecord_picks', 'tmr_picks_legacy'].forEach(function(key) {
+                localStorage.removeItem(key);
             });
+        } catch (e) {}
+        return [];
     }
 
     /**

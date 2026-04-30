@@ -200,9 +200,15 @@ class SocialSystem {
     }
 
     loadAllPicks() {
-        // Check both storage keys (tmr_picks is primary, trustmyrecord_picks is legacy)
-        const stored = localStorage.getItem('tmr_picks') || localStorage.getItem('trustmyrecord_picks');
-        return stored ? JSON.parse(stored) : [];
+        // DISABLED Apr 30, 2026 — local picks must never appear as if they
+        // were tracked picks on TrustMyRecord. Returning [] forces the
+        // social surfaces to use the backend feed only.
+        try {
+            ['tmr_picks', 'trustmyrecord_picks', 'tmr_picks_legacy'].forEach(function(key) {
+                localStorage.removeItem(key);
+            });
+        } catch (e) {}
+        return [];
     }
 
     generateId() {

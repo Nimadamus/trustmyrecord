@@ -484,26 +484,16 @@ class ChallengesEngine {
      * Get user stats for a period
      */
     getUserStatsForPeriod(username, sport, startDate = null) {
-        const allPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
-        
-        let picks = allPicks.filter(p => (p.user_id || p.username) === username);
-
-        // Filter by sport
-        if (sport && sport !== 'all') {
-            picks = picks.filter(p => 
-                (p.sport_display || p.sport || '').toLowerCase().includes(sport.toLowerCase())
-            );
-        }
-
-        // Filter by date
-        if (startDate) {
-            picks = picks.filter(p => new Date(p.locked_at || p.created_at) >= new Date(startDate));
-        }
-
-        const won = picks.filter(p => p.status === 'won').length;
-        const lost = picks.filter(p => p.status === 'lost').length;
-        const pushed = picks.filter(p => p.status === 'pushed').length;
-        const total = won + lost + pushed;
+        // DISABLED Apr 30, 2026 — local picks no longer back challenge stats.
+        // Empty arrays produce a clean zero record until the backend is wired
+        // up for challenge stat queries.
+        try {
+            ['tmr_picks', 'trustmyrecord_picks', 'tmr_picks_legacy'].forEach(function(key) {
+                localStorage.removeItem(key);
+            });
+        } catch (e) {}
+        const picks = [];
+        const won = 0, lost = 0, pushed = 0, total = 0;
 
         return {
             picks: picks.length,

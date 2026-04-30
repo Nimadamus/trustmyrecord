@@ -684,14 +684,13 @@
             } catch (e) { hasMore = false; }
         }
 
-        // localStorage fallback for own profile
-        if (picks.length === 0 && isOwnProfile) {
-            try {
-                const all = JSON.parse(localStorage.getItem('tmr_picks') || '[]');
-                const uid = (currentUser || {}).username || (currentUser || {}).id || 'local';
-                picks = all.filter(p => p.user_id === uid);
-            } catch(e) {}
-        }
+        // SAFEGUARD Apr 30, 2026 — local picks must never appear on a real
+        // TrustMyRecord profile. Wipe stale demo storage instead.
+        try {
+            ['tmr_picks', 'trustmyrecord_picks', 'tmr_picks_legacy'].forEach(function(key) {
+                localStorage.removeItem(key);
+            });
+        } catch (e) {}
 
         picks.sort((a, b) => new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0));
         allLoadedPicks = picks;
