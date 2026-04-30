@@ -352,6 +352,13 @@
         return error.message || String(error);
     }
 
+    function hasGameStarted(game) {
+        if (!game || !game.commence_time) return false;
+        const ms = Date.parse(game.commence_time);
+        if (Number.isNaN(ms)) return false;
+        return ms <= Date.now();
+    }
+
     if (!window.TMRSubmitDiagnosticsBound) {
         window.TMRSubmitDiagnosticsBound = true;
         window.addEventListener('error', function(event) {
@@ -1915,6 +1922,13 @@
             return;
         }
 
+        if (hasGameStarted(option.game)) {
+            showSubmitTrace('Submit stopped: selected game has already started locally.');
+            showPickSlipError('This game has already started, so picks are locked.');
+            resetLockButtons();
+            return;
+        }
+
         showSubmitTrace('Checking account access for ' + option.market_type + ' / ' + option.game_id + '.');
         const allowed = await ensurePicksAccess();
         if (!allowed) {
@@ -2356,7 +2370,8 @@
         window.selectGameBet = function(gameIndex, betType, team, line, odds, awayTeam, homeTeam) {
             try {
                 var board = state.currentBoard || [];
-                var game = board[gameIndex] || null;
+                var tmrGames = (window.TMR && Array.isArray(window.TMR.currentGames)) ? window.TMR.currentGames : [];
+                var game = board[gameIndex] || tmrGames[gameIndex] || null;
                 if (!game) {
                     var sportKeyMap = (window.TMR && window.TMR.sportKeyMap) || {};
                     var sportDisplay = (window.TMR && window.TMR.selectedSport) || state.selectedSport || '';
@@ -2369,6 +2384,12 @@
                         _bookTitle: 'Sportsbook feed',
                         _bookKey: ''
                     };
+                }
+
+                if (hasGameStarted(game)) {
+                    showSubmitTrace('Selection blocked: game already started (' + (game.id || 'unknown') + ').');
+                    showPickSlipError('This game has already started, so picks are locked.');
+                    return;
                 }
 
                 var rawLine = (line === '' || line === 'ML' || line === 'Pick' || line == null) ? null : line;
