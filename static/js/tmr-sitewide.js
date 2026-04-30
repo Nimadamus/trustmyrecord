@@ -1,11 +1,14 @@
 (() => {
     // Canonical sitewide nav (one set of labels, one set of paths).
-    const sportsbookPicksHref = "/sportsbook.html";
+    // After the Apr 30 directory migration, .html roots are 30x redirect stubs;
+    // every nav target should hit its directory route directly to avoid a
+    // pointless redirect hop on every click.
+    const sportsbookPicksHref = "/sportsbook/";
     const routes = [
         ["/", "Home"],
         [sportsbookPicksHref, "Make Picks"],
         ["/feed/", "Feed"],
-        ["/handicappers.html", "Leaderboards"],
+        ["/handicappers/", "Leaderboards"],
         ["/arena/", "Arena"],
         ["/polls/", "Polls"],
         ["/trivia/", "Trivia"],
@@ -37,7 +40,17 @@
         "report-bug.html": ["Report a Bug", "Spot something broken on TrustMyRecord? Send it straight to the team."]
     };
 
-    const currentFile = (location.pathname.split("/").pop() || "index.html").toLowerCase();
+    // Derive the current "file" key for routeMeta. After the directory
+    // migration ("/sportsbook/" instead of "/sportsbook.html") the simple
+    // split-pop returns "" for trailing-slash routes, so we infer from the
+    // path segment and append ".html" to keep routeMeta keys stable.
+    const currentFile = (function() {
+        const parts = location.pathname.split("/").filter(Boolean);
+        const last = parts.length ? parts[parts.length - 1].toLowerCase() : "";
+        if (!last) return "index.html";
+        if (last.endsWith(".html")) return last;
+        return last + ".html";
+    })();
     if (document.querySelector(".tmr-global-nav")) return;
 
     function escapeHtml(value) {
@@ -340,9 +353,9 @@
                         <div class="tmr-search-section">
                             <div class="tmr-search-label">Quick jumps</div>
                             <div class="tmr-search-grid">
-                                <a href="/sportsbook.html"><strong>Make Picks</strong><span>Lock picks before games start</span></a>
+                                <a href="/sportsbook/"><strong>Make Picks</strong><span>Lock picks before games start</span></a>
                                 <a href="/feed/"><strong>Feed</strong><span>Posts, takes, locked picks</span></a>
-                                <a href="/handicappers.html"><strong>Leaderboards</strong><span>Ranked cappers by ROI, units</span></a>
+                                <a href="/handicappers/"><strong>Leaderboards</strong><span>Ranked cappers by ROI, units</span></a>
                                 <a href="/arena/"><strong>Arena</strong><span>Head-to-head challenges</span></a>
                                 <a href="/polls/"><strong>Polls</strong><span>Sports debates, predictions</span></a>
                                 <a href="/trivia/"><strong>Trivia</strong><span>Sports knowledge games</span></a>

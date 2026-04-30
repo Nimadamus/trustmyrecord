@@ -2,10 +2,2249 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/forum/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting...</title>
-    <meta http-equiv="refresh" content="0; url=/forum.html">
-    <script>window.location.replace('/forum.html' + window.location.search + window.location.hash);</script>
+    <title>Forum - TrustMyRecord</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430a">
+<script defer src="/static/js/tmr-sitewide.js?v=20260430a"></script>
+    <style>
+        :root {
+            --forum-blue: #4f6b9a;
+            --forum-blue-dark: #3d5581;
+            --forum-silver: #e9edf5;
+            --forum-panel: #f7f9fc;
+            --forum-border: #aeb8c8;
+            --forum-border-strong: #8895ab;
+            --forum-accent: #234b85;
+            --forum-link: #163f7a;
+            --forum-link-hover: #0f2b52;
+            --forum-meta: #5f6b7a;
+            --forum-text: #20262f;
+            --forum-soft: #d9e1ee;
+            --success: #2d7a35;
+            --danger: #a12222;
+            --warning: #735400;
+            --primary: var(--forum-blue);
+            --primary-dark: var(--forum-blue-dark);
+            --text-primary: var(--forum-text);
+            --text-secondary: #313946;
+            --text-muted: var(--forum-meta);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Verdana, Arial, Helvetica, sans-serif;
+            background: linear-gradient(180deg, #f3f6fb 0%, #e3e9f2 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            font-size: 13px;
+        }
+
+        /* Loading state */
+        .tmr-loading-state { text-align: center; padding: 60px 20px; }
+        .tmr-loading-state .tmr-spinner { width: 40px; height: 40px; border: 3px solid rgba(79,107,154,0.18); border-top-color: var(--forum-blue); border-radius: 50%; animation: tmr-spin 0.8s linear infinite; margin: 0 auto 16px; }
+        @keyframes tmr-spin { to { transform: rotate(360deg); } }
+        .tmr-loading-state p { color: var(--text-secondary); font-size: 0.95rem; margin: 8px 0; }
+        .tmr-loading-state .tmr-loading-slow { color: var(--warning); display: none; }
+        .tmr-loading-state .tmr-loading-retry { display: none; }
+        .tmr-loading-state .tmr-loading-retry button { background: var(--forum-blue); color: #fff; border: 1px solid var(--forum-blue-dark); padding: 10px 24px; border-radius: 4px; cursor: pointer; font-weight: 700; font-size: 0.9rem; margin-top: 8px; }
+        .tmr-loading-state .tmr-loading-retry button:hover { opacity: 0.85; }
+
+        /* ========== HEADER / NAV BAR ========== */
+        header {
+            background: linear-gradient(180deg, var(--forum-blue) 0%, var(--forum-blue-dark) 100%);
+            border-bottom: 1px solid #2a3a56;
+            padding: 10px 0;
+            box-shadow: inset 0 -1px 0 rgba(255,255,255,0.14);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 1.55rem;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+            letter-spacing: 0.02em;
+        }
+
+        .logo:hover {
+            color: #fff;
+        }
+
+        .logo span {
+            color: #d8e4f7;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            color: #edf2fa;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 12px;
+            transition: background 0.2s, color 0.2s;
+            padding: 6px 10px;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+
+        .nav-link:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.12);
+        }
+
+        .nav-link.active {
+            color: #fff;
+            background: rgba(255,255,255,0.18);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .nav-auth {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 12px;
+            flex-wrap: wrap;
+        }
+
+        .nav-auth .nav-link {
+            border: 1px solid rgba(255,255,255,0.18);
+        }
+
+        .nav-link.nav-auth-login {
+            background: rgba(255,255,255,0.08);
+        }
+
+        .nav-link.nav-auth-register {
+            background: #fff;
+            color: var(--forum-blue-dark);
+            border-color: rgba(255,255,255,0.34);
+            box-shadow: 0 1px 0 rgba(0,0,0,0.08);
+        }
+
+        .nav-link.nav-auth-register:hover {
+            background: #f4f7fc;
+            color: #23334c;
+        }
+
+        /* ========== CONTAINER ========== */
+        .forum-wrap {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 12px 12px 36px;
+        }
+
+        .forum-utility-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 7px 10px;
+            margin-bottom: 8px;
+            background: #e7edf6;
+            border: 1px solid var(--forum-border);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .forum-utility-status {
+            color: #4d5f79;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .forum-utility-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .forum-utility-bar a,
+        .forum-utility-bar button {
+            color: var(--forum-link);
+            text-decoration: none;
+            background: none;
+            border: none;
+            padding: 0;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .forum-utility-bar a:hover,
+        .forum-utility-bar button:hover {
+            text-decoration: underline;
+        }
+
+        /* ========== BREADCRUMB ========== */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            background: #f9fbfe;
+            border: 1px solid var(--forum-border);
+            padding: 8px 12px;
+        }
+        .breadcrumb a {
+            color: var(--forum-link);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb .sep { color: var(--text-muted); }
+
+        /* ========== PAGE HEADER / BANNER ========== */
+        .forum-banner {
+            background: linear-gradient(180deg, #fff 0%, #f0f4fa 100%);
+            border: 1px solid var(--forum-border);
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+        }
+        .forum-banner h1 {
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 23px;
+            font-weight: 700;
+            margin-bottom: 3px;
+            color: #23334c;
+        }
+        .forum-banner h1 span { color: var(--forum-accent); }
+        .forum-banner p { color: var(--text-muted); font-size: 12px; }
+        .forum-banner-subline {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #d7e0ec;
+            font-size: 11px;
+            color: #5a6c85;
+        }
+        .forum-trust-note {
+            margin-top: 8px;
+            padding: 8px 10px;
+            border: 1px solid #d7e0ec;
+            background: #f6f9fd;
+            color: #4d607c;
+            font-size: 11px;
+            line-height: 1.45;
+        }
+
+        .forum-banner-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .forum-banner-actions a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 36px;
+            padding: 0 14px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .forum-banner-actions .forum-primary-action {
+            background: linear-gradient(180deg, var(--forum-blue) 0%, var(--forum-blue-dark) 100%);
+            color: #fff;
+            border: 1px solid #2a3a56;
+        }
+
+        .forum-banner-actions .forum-secondary-action {
+            background: #fff;
+            color: var(--forum-link);
+            border: 1px solid var(--forum-border);
+        }
+
+        /* ========== STATS BAR ========== */
+        .stats-bar {
+            display: flex;
+            gap: 18px;
+            margin-bottom: 10px;
+            padding: 8px 10px;
+            background: var(--forum-panel);
+            border: 1px solid var(--forum-border);
+            font-size: 11px;
+            color: var(--text-muted);
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .stats-bar strong { color: var(--forum-accent); }
+        .stats-label {
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 10px;
+        }
+
+        /* ========== SEARCH BAR ========== */
+        .search-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .search-row input {
+            flex: 1;
+            background: #fff;
+            border: 1px solid var(--forum-border);
+            border-radius: 2px;
+            padding: 9px 12px;
+            color: var(--text-primary);
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-row input:focus { border-color: var(--forum-blue-dark); }
+        .search-row input::placeholder { color: var(--text-muted); }
+
+        /* ========== GROUP HEADER ========== */
+        .group-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: space-between;
+            padding: 7px 10px;
+            background: linear-gradient(180deg, #6780a8 0%, #4c6999 100%);
+            border: 1px solid var(--forum-border-strong);
+            margin-top: 12px;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #fff;
+        }
+        .group-header-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .group-header-meta {
+            font-size: 10px;
+            opacity: 0.9;
+            letter-spacing: 0.04em;
+        }
+
+        /* ========== CATEGORY TABLE ========== */
+        .cat-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 6px;
+            border: 1px solid var(--forum-border);
+            border-top: none;
+            background: #fff;
+        }
+        .cat-table thead th {
+            text-align: left;
+            padding: 6px 10px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #44556d;
+            background: #dde5f1;
+            border-bottom: 1px solid var(--forum-border);
+        }
+        .cat-table thead th.col-num { text-align: center; width: 80px; }
+        .cat-table thead th.col-last { width: 260px; }
+
+        .cat-table tbody tr {
+            border-bottom: 1px solid #d8e0ec;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .cat-table tbody tr:nth-child(even) { background: #f8fafd; }
+        .cat-table tbody tr:hover { background: #eef3fb; }
+
+        .cat-table td { padding: 9px 10px; vertical-align: middle; }
+        .cat-table td.col-num { text-align: center; color: var(--text-muted); font-size: 11px; }
+
+        .cat-info { display: flex; align-items: center; gap: 14px; }
+        .cat-icon {
+            font-size: 18px;
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #edf2f8;
+            border: 1px solid #cad4e2;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .cat-name { font-weight: 700; font-size: 12px; color: var(--forum-link); }
+        .cat-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+        .last-post-info { font-size: 11px; line-height: 1.45; }
+        .last-post-title { color: var(--forum-link); margin-bottom: 2px; font-weight: 700; }
+        .last-post-meta { color: var(--text-muted); font-size: 11px; }
+        .no-posts { color: var(--text-muted); font-style: italic; font-size: 11px; }
+
+        /* ========== TOOLBAR ========== */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 12px;
+            flex-wrap: wrap;
+            background: #edf2f9;
+            border: 1px solid var(--forum-border);
+            padding: 7px 10px;
+            font-size: 11px;
+        }
+        .toolbar-left,
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .toolbar-label {
+            color: #536781;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-size: 10px;
+        }
+        .toolbar select {
+            background: #fff;
+            border: 1px solid var(--forum-border);
+            border-radius: 2px;
+            color: var(--text-primary);
+            padding: 5px 8px;
+            font-size: 11px;
+            outline: none;
+        }
+
+        /* ========== BUTTONS ========== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border: 1px solid var(--forum-border-strong);
+            border-radius: 2px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(180deg, #6b86b2 0%, var(--forum-blue) 100%);
+            color: #fff;
+        }
+        .btn-primary:hover { background: linear-gradient(180deg, #5b78a5 0%, var(--forum-blue-dark) 100%); }
+        .btn-outline {
+            background: linear-gradient(180deg, #fff 0%, #eff3f9 100%);
+            color: var(--forum-link);
+        }
+        .btn-outline:hover { border-color: var(--forum-blue-dark); color: var(--forum-link-hover); }
+        .btn-sm { padding: 4px 9px; font-size: 11px; }
+
+        /* ========== THREAD TABLE ========== */
+        .thread-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border: 1px solid var(--forum-border);
+        }
+        .thread-table thead th {
+            text-align: left;
+            padding: 6px 10px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #44556d;
+            background: #dde5f1;
+            border-bottom: 1px solid var(--forum-border);
+        }
+        .thread-table thead th.col-num { text-align: center; width: 70px; }
+        .thread-table thead th.col-last { width: 240px; }
+
+        .thread-table tbody tr {
+            border-bottom: 1px solid #d8e0ec;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .thread-table tbody tr:nth-child(even) { background: #f8fafd; }
+        .thread-table tbody tr:hover { background: #eef3fb; }
+        .thread-table tbody tr.pinned { background: #fffce9; }
+
+        .thread-table td { padding: 8px 10px; vertical-align: middle; }
+        .thread-table td.col-num { text-align: center; color: var(--text-muted); font-size: 11px; }
+
+        .thread-title-link { font-weight: 700; font-size: 12px; color: var(--forum-link); }
+        .thread-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+        .thread-title-line {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .thread-prefix {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border: 1px solid #c7d1e0;
+            background: #f6f8fb;
+            color: #425472;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .pin-badge {
+            display: inline-block;
+            font-size: 10px;
+            background: #f5d87c;
+            color: #533d00;
+            padding: 2px 7px;
+            border-radius: 2px;
+            margin-right: 6px;
+            font-weight: 700;
+            border: 1px solid #d0b257;
+        }
+        .tag-pill {
+            display: inline-block;
+            font-size: 10px;
+            padding: 1px 7px;
+            border-radius: 2px;
+            margin-right: 4px;
+            background: #eef3fb;
+            color: var(--forum-accent);
+            border: 1px solid #d3dceb;
+        }
+
+        /* ========== THREAD DETAIL (posts) ========== */
+        .post-shell {
+            border: 1px solid var(--forum-border);
+            background: #fff;
+            margin-bottom: 10px;
+        }
+        .post-shell.op-card {
+            border-color: var(--forum-border-strong);
+        }
+        .post-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 10px;
+            background: linear-gradient(180deg, #edf2f9 0%, #dfe7f2 100%);
+            border-bottom: 1px solid var(--forum-border);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .post-author-name { font-weight: 700; color: var(--forum-link); }
+        .post-number { color: var(--text-muted); font-size: 11px; }
+        .post-layout {
+            display: grid;
+            grid-template-columns: 165px minmax(0, 1fr);
+            align-items: stretch;
+        }
+        .post-user-pane {
+            background: #f5f7fb;
+            border-right: 1px solid var(--forum-border);
+            padding: 10px 10px;
+        }
+        .post-user-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--forum-link);
+            margin-bottom: 6px;
+            word-break: break-word;
+        }
+        .post-user-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 3px;
+            border: 1px solid var(--forum-border);
+            object-fit: cover;
+            background: #fff;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .post-user-stats {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            padding: 8px 9px;
+            background: #eef3fa;
+            border: 1px solid #d4dce9;
+        }
+        .post-user-stats strong {
+            color: #394658;
+            font-weight: 700;
+        }
+        .post-main-pane {
+            min-width: 0;
+        }
+        .post-body {
+            padding: 12px 14px 16px;
+            line-height: 1.52;
+            font-size: 12px;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .post-body h2 {
+            font-size: 16px;
+            color: #243753;
+            margin-bottom: 8px;
+            font-family: Georgia, "Times New Roman", serif;
+        }
+
+        .post-footer-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-top: 1px solid #d8e0ec;
+            background: #fafbfd;
+        }
+        .vote-btns { display: flex; gap: 8px; }
+        .vote-btn {
+            background: linear-gradient(180deg, #fff 0%, #edf2f9 100%);
+            border: 1px solid var(--forum-border);
+            border-radius: 2px;
+            padding: 4px 10px;
+            font-size: 11px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .vote-btn:hover { border-color: var(--forum-blue-dark); color: var(--forum-link); }
+        .vote-btn.voted-up { border-color: var(--success); color: var(--success); background: #eef9ee; }
+        .vote-btn.voted-down { border-color: var(--danger); color: var(--danger); background: #fdeeee; }
+
+        /* ========== QUICK REPLY ========== */
+        .reply-box {
+            background: #fff;
+            border: 1px solid var(--forum-border);
+            padding: 12px;
+            margin-top: 12px;
+        }
+        .reply-box h3 {
+            font-size: 13px;
+            margin-bottom: 10px;
+            color: #23334c;
+        }
+        .reply-box textarea {
+            width: 100%;
+            background: #fff;
+            border: 1px solid var(--forum-border);
+            border-radius: 2px;
+            padding: 12px 14px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .reply-box textarea:focus { border-color: var(--forum-blue-dark); }
+        .reply-box textarea::placeholder { color: var(--text-muted); }
+        .reply-box .btn { margin-top: 10px; }
+
+        /* ========== MODAL ========== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            width: min(600px, calc(100vw - 24px));
+            background: #fff;
+            border: 1px solid var(--forum-border-strong);
+            box-shadow: 0 20px 70px rgba(0,0,0,0.4);
+        }
+        .modal-box .modal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: linear-gradient(180deg, #6780a8 0%, #4c6999 100%);
+            color: #fff;
+        }
+        .modal-box .modal-head h3 {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .modal-box .modal-body { padding: 14px; }
+        .modal-box .close-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.4rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .modal-box .close-btn:hover { color: var(--danger); }
+        .form-group { margin-bottom: 14px; }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            background: #fff;
+            border: 1px solid var(--forum-border);
+            border-radius: 2px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus { border-color: var(--forum-blue-dark); }
+        .form-group input::placeholder,
+        .form-group textarea::placeholder { color: var(--text-muted); }
+
+        /* ========== LOGIN PROMPT ========== */
+        .login-prompt {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .login-prompt a { color: var(--forum-link); text-decoration: none; font-weight: 700; }
+        .login-prompt a:hover { text-decoration: underline; }
+
+        /* ========== EMPTY STATE ========== */
+        .empty-msg {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+        .empty-msg .icon { font-size: 2.5rem; margin-bottom: 10px; opacity: 0.5; }
+
+        .forum-bottom-panel {
+            margin-top: 12px;
+            border: 1px solid var(--forum-border);
+            background: #fff;
+        }
+        .forum-bottom-head {
+            padding: 7px 10px;
+            background: linear-gradient(180deg, #6780a8 0%, #4c6999 100%);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .forum-bottom-body {
+            padding: 10px;
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+        .forum-bottom-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+        .forum-bottom-card {
+            border: 1px solid #d7e0ec;
+            background: #f8fbff;
+            padding: 10px;
+        }
+        .forum-bottom-card strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #243753;
+            font-size: 11px;
+        }
+
+        .forum-jump-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .forum-jump-row select {
+            min-width: 220px;
+            background: #fff;
+            border: 1px solid var(--forum-border);
+            padding: 5px 8px;
+            font-size: 11px;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+                padding: 14px 18px;
+            }
+
+            .nav-links,
+            .nav-auth {
+                justify-content: center;
+            }
+
+            .nav-auth {
+                margin-left: 0;
+            }
+
+            .cat-table thead th.col-num,
+            .cat-table td.col-num,
+            .cat-table thead th.col-last,
+            .cat-table td.col-last,
+            .thread-table thead th.col-num,
+            .thread-table td.col-num,
+            .thread-table thead th.col-last,
+            .thread-table td.col-last { display: none; }
+
+            .forum-banner { padding: 20px; }
+            .forum-banner h1 { font-size: 1.3rem; }
+            .stats-bar { flex-wrap: wrap; gap: 14px; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .toolbar-left,
+            .toolbar-right { width: 100%; justify-content: space-between; }
+            .post-top-bar { flex-wrap: wrap; gap: 4px; }
+            .post-layout { grid-template-columns: 1fr; }
+            .post-user-pane { border-right: none; border-bottom: 1px solid var(--forum-border); }
+            .post-user-avatar { width: 64px; height: 64px; }
+            .forum-bottom-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+    </style>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+    <style>
+        /* ============================================================
+           TRUSTMYRECORD FORUM - CLASSIC vBULLETIN / TWO PLUS TWO
+           From-scratch rebuild. Cream page, navy chrome, Verdana 11/12.
+           ============================================================ */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            background: #F4F2E8;
+            color: #000;
+            font-family: Verdana, Geneva, Tahoma, Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            min-height: 100vh;
+        }
+        a { color: #2A4D7C; text-decoration: none; }
+        a:hover { color: #B12704; text-decoration: underline; }
+
+        /* sitewide injected nav: hide it on the forum (this is a vB shell) */
+        body.tmr-site-shell > header,
+        body.tmr-site-shell .tmr-global-nav,
+        body.tmr-site-shell .tmr-global-footer { display: none !important; }
+        body { padding: 0 !important; margin: 0 !important; }
+
+        /* ===== TOP HEADER BAR ===== */
+        .vb-topbar { background: #2A4D7C; border-bottom: 1px solid #1B3D5F; color: #FFF; }
+        .vb-topbar-inner { max-width: 980px; margin: 0 auto; padding: 6px 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+        .vb-logo { color: #FFF; font-weight: 700; font-size: 14px; letter-spacing: 0.02em; text-decoration: none; }
+        .vb-logo:hover { color: #FFD000; text-decoration: none; }
+        .vb-logo span { color: #FFD000; }
+        .vb-topnav { display: flex; gap: 1px; flex-wrap: wrap; }
+        .vb-topnav a, .vb-topnav button {
+            padding: 4px 10px; font-size: 11px; color: #DCE6F4; background: transparent;
+            text-decoration: none; border: none; font-family: inherit; cursor: pointer; font-weight: 600;
+        }
+        .vb-topnav a:hover, .vb-topnav button:hover { color: #FFD000; text-decoration: none; }
+        .vb-topnav .vb-cta { background: #B12704; color: #FFF; padding: 4px 12px; }
+        .vb-topnav .vb-cta:hover { background: #7A1A03; color: #FFF; }
+        .vb-search { display: flex; align-items: center; gap: 4px; }
+        .vb-search input { height: 22px; width: 200px; padding: 0 8px; border: 1px solid #1B3D5F; background: #FFF; color: #000; font-size: 11px; font-family: inherit; }
+        .vb-search button { height: 22px; padding: 0 10px; background: linear-gradient(180deg,#FFFFFF 0%,#DDD 100%); border: 1px solid #888; color: #2A4D7C; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+        /* ===== SECONDARY TAB STRIP ===== */
+        .vb-subnav { background: #4F7AB0; border-bottom: 1px solid #1B3D5F; }
+        .vb-subnav-inner { max-width: 980px; margin: 0 auto; display: flex; gap: 1px; flex-wrap: wrap; }
+        .vb-subnav a, .vb-subnav button {
+            padding: 5px 14px; font-size: 11px; color: #FFF; background: linear-gradient(180deg,#6E97C7 0%,#4F7AB0 100%);
+            text-decoration: none; font-weight: 700; border: none; border-right: 1px solid #2A4D7C;
+            font-family: inherit; cursor: pointer;
+        }
+        .vb-subnav a:hover, .vb-subnav button:hover { background: linear-gradient(180deg,#82A6CF 0%,#6386B6 100%); color: #FFF; text-decoration: none; }
+
+        /* ===== PAGE WRAPPER ===== */
+        .vb-shell { max-width: 980px; margin: 0 auto; padding: 8px; }
+
+        /* ===== BREADCRUMB ===== */
+        .breadcrumb {
+            font-size: 11px; color: #555; padding: 4px 2px 6px;
+            display: flex; flex-wrap: wrap; align-items: center; gap: 0;
+        }
+        .breadcrumb a { color: #2A4D7C; font-weight: 700; cursor: pointer; }
+        .breadcrumb .sep { margin: 0 5px; color: #888; }
+        .breadcrumb span { color: #000; font-weight: 700; }
+
+        /* ===== PAGE TITLE STRIP ===== */
+        .vb-title-strip {
+            background: #6B1F1F; color: #FFF;
+            border: 1px solid #4A1414; border-bottom: none;
+            padding: 6px 10px;
+            font-size: 13px; font-weight: 700;
+        }
+        .vb-title-strip-sub { font-size: 11px; color: #F5DCDC; font-weight: 400; margin-top: 1px; }
+
+        /* ===== ACTION ROW (New Thread / Subscribe / Tools / Search) ===== */
+        .vb-actionrow {
+            background: linear-gradient(180deg,#DEDED2 0%,#C8C8B8 100%);
+            border: 1px solid #8E96A0; border-bottom: none;
+            padding: 4px 6px;
+            display: flex; gap: 4px; flex-wrap: wrap; align-items: center;
+        }
+        .vb-actionrow-spacer { flex: 1; }
+        .vb-action-btn {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 9px; font-size: 11px; font-weight: 700;
+            background: linear-gradient(180deg,#FFFFFF 0%,#E0E0D0 100%);
+            border: 1px solid #8E96A0; color: #2A4D7C;
+            font-family: inherit; cursor: pointer; text-decoration: none;
+            border-radius: 0;
+        }
+        .vb-action-btn:hover { background: linear-gradient(180deg,#FFFFFF 0%,#D0D0C0 100%); color: #B12704; text-decoration: none; }
+        .vb-action-btn.is-primary { background: linear-gradient(180deg,#6E97C7 0%,#2A4D7C 100%); color: #FFF; border-color: #1B3D5F; }
+        .vb-action-btn.is-primary:hover { background: linear-gradient(180deg,#4F7AB0 0%,#1B3D5F 100%); color: #FFF; }
+        .vb-actionrow input[type="search"] { height: 22px; padding: 0 6px; border: 1px solid #8E96A0; font-size: 11px; font-family: inherit; }
+
+        /* ===== CATEGORY GROUP HEADER (between tables on the index) ===== */
+        .group-header {
+            background: linear-gradient(180deg,#4F7AB0 0%,#2A4D7C 100%);
+            color: #FFF;
+            border: 1px solid #1B3D5F; border-bottom: none;
+            padding: 4px 10px;
+            margin-top: 8px;
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        }
+        .group-header:first-child { margin-top: 0; }
+        .group-header-title { font-size: 12px; font-weight: 700; color: #FFF; }
+        .group-header-meta { font-size: 11px; color: #DCE6F4; }
+
+        /* ===== FORUM/THREAD TABLES ===== */
+        .cat-table, .thread-table {
+            width: 100%; border-collapse: collapse;
+            background: #FFF;
+            border: 1px solid #8E96A0;
+            margin-bottom: 8px;
+            font-size: 11px;
+        }
+        .cat-table thead th, .thread-table thead th {
+            background: #DEDED2;
+            color: #333;
+            font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+            border-bottom: 1px solid #8E96A0;
+            padding: 4px 10px;
+            text-align: left;
+        }
+        .cat-table thead th.col-num, .thread-table thead th.col-num { width: 60px; text-align: center; }
+        .cat-table thead th.col-last, .thread-table thead th.col-last { width: 220px; }
+        .thread-table thead th.col-rating { width: 60px; text-align: center; }
+        .cat-table tbody tr, .thread-table tbody tr {
+            background: #FFF;
+            border-bottom: 1px solid #D0D0C0;
+            cursor: pointer;
+        }
+        .cat-table tbody tr:nth-child(even), .thread-table tbody tr:nth-child(even) { background: #F7F5EC; }
+        .cat-table tbody tr:hover, .thread-table tbody tr:hover { background: #FFFCEA; }
+        .cat-table tbody tr:last-child, .thread-table tbody tr:last-child { border-bottom: none; }
+        .cat-table td, .thread-table td { padding: 6px 10px; vertical-align: middle; font-size: 11px; color: #000; }
+        .cat-table td.col-num, .thread-table td.col-num { text-align: center; font-size: 11px; color: #333; font-weight: 600; }
+        .cat-table td.col-last, .thread-table td.col-last { font-size: 11px; color: #555; }
+
+        /* Folder icons (CSS-only manila folder, classic vB) */
+        .cat-info, .tmr-fb-thread-cell { display: flex; align-items: flex-start; gap: 8px; }
+        .cat-icon, .tmr-fb-thread-icon {
+            position: relative;
+            width: 24px; height: 18px;
+            background: linear-gradient(180deg,#FFE8A8 0%,#E2C36C 100%);
+            border: 1px solid #8B6914;
+            border-radius: 1px 4px 1px 1px;
+            flex-shrink: 0;
+            margin-top: 1px;
+            color: transparent;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
+        }
+        .cat-icon::before, .tmr-fb-thread-icon::before {
+            content: ""; position: absolute; top: -3px; left: 0;
+            width: 10px; height: 4px;
+            background: #E2C36C; border: 1px solid #8B6914; border-bottom: none;
+            border-radius: 1px 4px 0 0;
+        }
+        .tmr-fb-thread-icon.is-pinned { background: linear-gradient(180deg,#FFE0A0 0%,#E2A040 100%); border-color: #8B5A14; }
+        .tmr-fb-thread-icon.is-pinned::before { background: #E2A040; border-color: #8B5A14; }
+        .tmr-fb-thread-icon.is-hot { background: linear-gradient(180deg,#FFC4B0 0%,#D85040 100%); border-color: #7A1A03; }
+        .tmr-fb-thread-icon.is-hot::before { background: #D85040; border-color: #7A1A03; }
+
+        .cat-name, .tmr-fb-thread-title {
+            color: #2A4D7C; font-weight: 700; font-size: 12px;
+            font-family: Verdana, Geneva, Tahoma, Arial, sans-serif; text-decoration: none;
+        }
+        .cat-name:hover, .tmr-fb-thread-title:hover { color: #B12704; text-decoration: underline; }
+        .cat-desc, .tmr-fb-thread-meta { color: #555; font-size: 11px; margin-top: 1px; line-height: 1.4; }
+        .cat-desc { max-width: 480px; }
+        .tmr-fb-thread-meta strong { color: #2A4D7C; font-weight: 700; }
+        .tmr-fb-pin-tag {
+            display: inline-block; padding: 1px 5px;
+            background: #FFD000; color: #2A4D7C;
+            font-size: 9px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+            margin-right: 6px; vertical-align: middle;
+        }
+        .tmr-fb-sample-tag {
+            display: inline-block; padding: 1px 5px;
+            background: #DCE6F4; color: #2A4D7C;
+            font-size: 9px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+            margin-right: 6px; vertical-align: middle;
+        }
+        .tmr-fb-rating-stars { color: #C2A444; }
+
+        /* Last post column block (used by both index and thread list) */
+        .last-post-info { line-height: 1.35; }
+        .last-post-info .last-post-title, .tmr-fb-lastpost-title {
+            color: #2A4D7C; font-weight: 700; font-size: 11px; display: block;
+            max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .last-post-info .last-post-meta, .tmr-fb-lastpost-meta { color: #555; font-size: 10px; }
+        .no-posts { color: #888; font-size: 11px; font-style: italic; }
+        .tmr-fb-lastpost { line-height: 1.35; }
+
+        /* Empty / loading rows */
+        .empty-msg {
+            padding: 30px 16px; text-align: center;
+            color: #555; font-size: 11px;
+            background: #FFF;
+        }
+        .empty-msg .icon { font-size: 24px; opacity: 0.5; margin-bottom: 4px; }
+
+        /* ===== THREAD VIEW ===== */
+        .vb-thread-toolbar {
+            background: linear-gradient(180deg,#DEDED2 0%,#C8C8B8 100%);
+            border: 1px solid #8E96A0;
+            padding: 4px 8px;
+            display: flex; justify-content: space-between; align-items: center; gap: 8px;
+            font-size: 11px; flex-wrap: wrap;
+        }
+        .vb-thread-toolbar strong { color: #2A4D7C; font-size: 12px; }
+        .toolbar-left { display: flex; align-items: center; gap: 8px; }
+        .toolbar-right { display: flex; gap: 4px; flex-wrap: wrap; }
+        .toolbar-label { color: #555; }
+
+        .post-shell { background: #FFF; border: 1px solid #8E96A0; margin-bottom: 6px; }
+        .post-shell.op-card { border-color: #2A4D7C; }
+        .post-top-bar {
+            background: linear-gradient(180deg,#DEDED2 0%,#C8C8B8 100%);
+            border-bottom: 1px solid #8E96A0;
+            padding: 4px 10px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            font-size: 11px; color: #555;
+        }
+        .post-author-name { color: #2A4D7C; font-weight: 700; font-size: 12px; }
+        .post-number { font-family: Consolas, 'Courier New', monospace; font-size: 11px; color: #555; }
+        .post-layout { display: grid; grid-template-columns: 160px 1fr; }
+        .post-user-pane {
+            padding: 8px 10px; background: #F7F5EC; border-right: 1px solid #D0D0C0;
+            font-size: 11px; color: #555;
+        }
+        .post-user-name { color: #2A4D7C; font-weight: 700; font-size: 12px; margin-bottom: 4px; display: block; }
+        .post-user-avatar { width: 70px; height: 70px; object-fit: cover; border: 1px solid #8E96A0; display: block; margin-bottom: 6px; }
+        .post-user-stats { font-size: 10px; line-height: 1.5; }
+        .post-user-stats strong { color: #000; font-weight: 700; }
+        .post-main-pane { padding: 10px 12px; }
+        .post-body { font-size: 12px; line-height: 1.55; color: #000; white-space: pre-wrap; }
+        .post-body h2 { font-size: 14px; font-weight: 700; margin-bottom: 8px; color: #000; }
+        .post-footer-bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 12px; padding-top: 8px; border-top: 1px solid #D0D0C0; }
+        .vote-btns { display: flex; gap: 4px; }
+        .vote-btn {
+            padding: 3px 8px; font-size: 11px; font-weight: 700;
+            background: linear-gradient(180deg,#FFFFFF 0%,#E0E0D0 100%);
+            border: 1px solid #8E96A0; color: #2A4D7C;
+            cursor: pointer; text-decoration: none; font-family: inherit;
+        }
+        .vote-btn:hover { color: #B12704; text-decoration: none; }
+
+        .reply-box {
+            background: #FFF; border: 1px solid #8E96A0; padding: 10px;
+            margin-top: 6px;
+        }
+        .reply-box h3 { font-size: 12px; font-weight: 700; color: #2A4D7C; margin-bottom: 6px; }
+        .reply-box textarea {
+            width: 100%; padding: 6px 8px;
+            border: 1px solid #8E96A0; font-size: 12px; font-family: inherit;
+            color: #000; background: #FFF; resize: vertical; outline: none;
+        }
+        .login-prompt {
+            padding: 8px 10px; background: #F7F5EC; border: 1px dashed #8E96A0;
+            font-size: 11px; color: #555; text-align: center;
+        }
+
+        /* ===== FORUM JUMP ROW ===== */
+        .forum-jump-row {
+            background: linear-gradient(180deg,#DEDED2 0%,#C8C8B8 100%);
+            border: 1px solid #8E96A0;
+            padding: 5px 10px;
+            display: flex; justify-content: space-between; align-items: center; gap: 8px;
+            font-size: 11px; color: #555; flex-wrap: wrap;
+        }
+        .forum-jump-row select {
+            padding: 2px 6px; border: 1px solid #8E96A0; background: #FFF; font-size: 11px; font-family: inherit;
+        }
+
+        /* ===== STATS STRIP ===== */
+        .vb-stats {
+            display: flex; flex-wrap: wrap;
+            background: #F7F5EC; border: 1px solid #8E96A0; border-top: none;
+            padding: 0; margin-bottom: 8px;
+            font-size: 11px;
+        }
+        .vb-stats > div { padding: 4px 10px; border-right: 1px solid #D0D0C0; color: #555; }
+        .vb-stats > div:last-child { border-right: none; }
+        .vb-stats strong { color: #000; font-weight: 700; }
+
+        /* ===== BUTTONS (modals etc.) ===== */
+        .btn {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 4px 10px; font-size: 11px; font-weight: 700;
+            border: 1px solid #8E96A0;
+            background: linear-gradient(180deg,#FFFFFF 0%,#E0E0D0 100%);
+            color: #2A4D7C; cursor: pointer; text-decoration: none;
+            font-family: inherit;
+        }
+        .btn-sm { padding: 3px 8px; font-size: 11px; }
+        .btn-primary {
+            background: linear-gradient(180deg,#6E97C7 0%,#2A4D7C 100%);
+            color: #FFF; border-color: #1B3D5F;
+        }
+        .btn-primary:hover { background: linear-gradient(180deg,#4F7AB0 0%,#1B3D5F 100%); color: #FFF; text-decoration: none; }
+        .btn-outline:hover { color: #B12704; text-decoration: none; }
+
+        /* ===== MODAL (new thread) ===== */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 9000;
+            align-items: flex-start; justify-content: center;
+            padding: 40px 20px; overflow-y: auto;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            width: 100%; max-width: 600px; background: #FFF;
+            border: 1px solid #1B3D5F;
+        }
+        .modal-head {
+            background: linear-gradient(180deg,#4F7AB0 0%,#2A4D7C 100%);
+            color: #FFF;
+            padding: 6px 12px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-head h3 { font-size: 13px; font-weight: 700; color: #FFF; }
+        .close-btn { background: transparent; border: none; color: #FFF; font-size: 20px; line-height: 1; cursor: pointer; padding: 0 4px; }
+        .modal-body { padding: 14px; }
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; font-size: 11px; font-weight: 700; color: #2A4D7C; margin-bottom: 4px; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 5px 8px; font-size: 12px; font-family: inherit;
+            border: 1px solid #8E96A0; background: #FFF; color: #000;
+        }
+        .form-group input:focus, .form-group textarea:focus { border-color: #2A4D7C; outline: none; }
+
+        /* ===== LOADING STATE ===== */
+        .tmr-loading-state { padding: 24px 16px; text-align: center; }
+        .tmr-loading-state .tmr-spinner {
+            width: 24px; height: 24px;
+            border: 3px solid rgba(42,77,124,0.18); border-top-color: #2A4D7C;
+            border-radius: 50%; animation: vb-spin 0.8s linear infinite;
+            margin: 0 auto 8px;
+        }
+        @keyframes vb-spin { to { transform: rotate(360deg); } }
+        .tmr-loading-state p { color: #555; font-size: 11px; margin: 4px 0; }
+        .tmr-loading-slow { display: none; color: #735400; }
+        .tmr-loading-retry { display: none; }
+        .tmr-loading-retry button {
+            background: linear-gradient(180deg,#6E97C7 0%,#2A4D7C 100%);
+            color: #FFF; border: 1px solid #1B3D5F;
+            padding: 5px 16px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
+            margin-top: 6px;
+        }
+
+        /* Hide things from older overlay that we don't want anymore */
+        .pin-badge, .thread-prefix { display: none; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 720px) {
+            .vb-shell, .vb-topbar-inner, .vb-subnav-inner { max-width: 100%; }
+            .vb-topbar-inner { gap: 6px; }
+            .vb-search input { width: 130px; }
+            .cat-desc { max-width: none; }
+            .cat-table thead th.col-last, .thread-table thead th.col-last { display: none; }
+            .cat-table tbody td.col-last, .thread-table tbody td.col-last { display: none; }
+            .post-layout { grid-template-columns: 1fr; }
+            .post-user-pane { display: flex; align-items: center; gap: 10px; border-right: none; border-bottom: 1px solid #D0D0C0; }
+            .post-user-avatar { width: 40px; height: 40px; margin: 0; }
+        }
+    </style>
 </head>
-<body></body>
+<body>
+
+<!-- LEGACY HIDDEN HEADER (preserved for IDs the JS still references) -->
+<header style="display:none;">
+    <div class="header-content">
+        <a href="/" class="logo">TRUSTMYRECORD</a>
+        <nav class="nav-links"><a href="/forum/" class="nav-link active">Forum</a></nav>
+        <div class="nav-auth">
+            <a href="/login/" class="nav-link" id="forumHeaderLoginBtn">Log In</a>
+            <a href="/register/" class="nav-link" id="forumHeaderRegisterBtn">Register</a>
+        </div>
+    </div>
+</header>
+
+<!-- ================= TOP HEADER BAR ================= -->
+<div class="vb-topbar">
+    <div class="vb-topbar-inner">
+        <a class="vb-logo" href="/">TRUST<span>MY</span>RECORD</a>
+        <div class="vb-search">
+            <input type="search" id="searchInput" placeholder="Search forums" onkeyup="handleSearch(this.value)" autocomplete="off">
+            <button type="button" onclick="handleSearch(document.getElementById('searchInput').value)">Search</button>
+        </div>
+        <nav class="vb-topnav">
+            <a href="/profile/">User CP</a>
+            <a href="/messages/">Messages</a>
+            <a href="/notifications/">Alerts</a>
+            <a href="/profile/">Profile</a>
+            <button type="button" onclick="openNewThread()" class="vb-cta">New Thread</button>
+        </nav>
+    </div>
+</div>
+
+<!-- ================= SECONDARY TAB STRIP ================= -->
+<div class="vb-subnav">
+    <div class="vb-subnav-inner">
+        <a href="#" onclick="event.preventDefault();showCategories();">Forum Home</a>
+        <a href="#" onclick="event.preventDefault();showCategories();">Today's Posts</a>
+        <a href="#" onclick="event.preventDefault();showCategories();">Mark Forums Read</a>
+        <a href="/notifications/">Subscribed Threads</a>
+        <a href="/handicappers/">Members</a>
+        <a href="/about/">FAQ</a>
+        <button type="button" onclick="openNewThread()">New Thread</button>
+    </div>
+</div>
+
+<!-- ================= MAIN PAGE ================= -->
+<div class="vb-shell">
+
+    <div class="breadcrumb" id="breadcrumb">
+        <a onclick="showCategories()">TrustMyRecord Forums</a>
+        <span class="sep">&rsaquo;</span>
+        <span id="forumPageTitleLabel">Sports Betting</span>
+    </div>
+
+    <div class="vb-title-strip">
+        <div id="forumPageTitle">Sports Betting</div>
+        <div class="vb-title-strip-sub">Threads tie back to your public profile and locked pick history. Be civil. No spam. No fake records.</div>
+    </div>
+
+    <!-- ================= CATEGORIES VIEW ================= -->
+    <div id="viewCategories">
+        <div class="vb-stats" aria-label="Board stats">
+            <div><strong id="statThreads">0</strong> threads</div>
+            <div><strong id="statPosts">0</strong> posts</div>
+            <div><strong id="statUsers">0</strong> forums</div>
+            <div><strong id="statOnline">0</strong> active</div>
+        </div>
+        <div id="categoriesContainer"></div>
+    </div>
+
+    <!-- ================= THREADS VIEW ================= -->
+    <div id="viewThreads" style="display:none;">
+        <div class="vb-thread-toolbar">
+            <div class="toolbar-left">
+                <span class="toolbar-label">Forum:</span>
+                <strong id="threadsCategoryLabel">Forum</strong>
+            </div>
+            <div class="toolbar-right">
+                <button class="btn btn-primary btn-sm" type="button" onclick="openNewThread()">New Thread</button>
+                <button class="btn btn-sm" type="button" onclick="showCategories()">Forum Home</button>
+            </div>
+        </div>
+
+        <table class="thread-table">
+            <thead>
+                <tr>
+                    <th>Thread / Thread Starter</th>
+                    <th class="col-rating">Rating</th>
+                    <th class="col-last">Last Post</th>
+                    <th class="col-num">Replies</th>
+                    <th class="col-num">Views</th>
+                </tr>
+            </thead>
+            <tbody id="threadsBody"></tbody>
+        </table>
+
+        <div class="forum-jump-row">
+            <div>Forum Jump:</div>
+            <select id="forumJumpSelect" onchange="handleForumJump(this.value)"></select>
+        </div>
+    </div>
+
+    <!-- ================= THREAD DETAIL VIEW ================= -->
+    <div id="viewThread" style="display:none;">
+        <div class="vb-thread-toolbar">
+            <div class="toolbar-left">
+                <button class="btn btn-sm" type="button" onclick="backToThreads()">&laquo; Back to Thread List</button>
+            </div>
+            <div class="toolbar-right">
+                <button class="btn btn-primary btn-sm" type="button" onclick="openNewThread()">New Thread</button>
+            </div>
+        </div>
+
+        <div id="postsContainer"></div>
+
+        <div class="reply-box">
+            <h3>Quick Reply</h3>
+            <div id="replyArea"></div>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- NEW THREAD MODAL -->
+<div class="modal-overlay" id="newThreadModal">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3>Start New Thread</h3>
+            <button type="button" class="close-btn" onclick="closeNewThread()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="newThreadForm" onsubmit="submitThread(event)">
+                <div class="form-group">
+                    <label for="ntTitle">Title</label>
+                    <input id="ntTitle" type="text" maxlength="160" placeholder="Thread title">
+                </div>
+                <div class="form-group">
+                    <label for="ntContent">Post</label>
+                    <textarea id="ntContent" rows="7" placeholder="Write the opening post for this thread..."></textarea>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:8px;">
+                    <button type="button" class="btn btn-outline" onclick="closeNewThread()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Post Thread</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/config.js?v=20260421a"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+<script src="/static/js/auth-persistent.js?v=20260424a"></script>
+    <script src="/static/js/notifications.js?v=20260423a"></script>
+<script>
+var categories = [];
+var fallbackCategories = [
+    {
+        id: 'cat_general',
+        slug: 'general-betting',
+        name: 'General Betting Talk',
+        description: 'Broad sports betting discussion, process, bankroll discipline, and board movement.',
+        icon: '\ud83d\udcac',
+        thread_count: 0,
+        post_count: 0,
+        latest_thread: null,
+        group: 'Main Forums'
+    },
+    {
+        id: 'cat_nfl',
+        slug: 'nfl',
+        name: 'NFL',
+        description: 'Week-to-week football discussion, matchup reads, and betting angles tied to receipts.',
+        icon: '\ud83c\udfc8',
+        thread_count: 0,
+        post_count: 0,
+        latest_thread: null,
+        group: 'Sports Forums'
+    },
+    {
+        id: 'cat_nba',
+        slug: 'nba',
+        name: 'NBA',
+        description: 'Talk sides, totals, props, and scheduling edges with a public record behind the takes.',
+        icon: '\ud83c\udfc0',
+        thread_count: 0,
+        post_count: 0,
+        latest_thread: null,
+        group: 'Sports Forums'
+    },
+    {
+        id: 'cat_nhl',
+        slug: 'nhl',
+        name: 'NHL',
+        description: 'Ice hockey discussion focused on lines, injuries, travel, and long-term win-rate discipline.',
+        icon: '\ud83c\udfd2',
+        thread_count: 0,
+        post_count: 0,
+        latest_thread: null,
+        group: 'Sports Forums'
+    },
+    {
+        id: 'cat_mlb',
+        slug: 'mlb',
+        name: 'MLB',
+        description: 'Baseball betting discussion, pitchers, bullpens, market movement, and daily grind strategy.',
+        icon: '\u26be',
+        thread_count: 0,
+        post_count: 0,
+        latest_thread: null,
+        group: 'Sports Forums'
+    },
+    {
+        id: 'cat_challenges',
+        slug: 'challenges',
+        name: 'Challenges & Arena',
+        description: 'Open challenges, competition talk, and strategy around proving yourself in head-to-head formats.',
+        icon: '\ud83c\udfaf',
+        thread_count: 0,
+        post_count: 0,
+        latest_thread: null,
+        group: 'Community'
+    }
+];
+var usingFallbackCategories = false;
+var cachedThreads = [];
+var cachedThread = null;
+var cachedPosts = [];
+var currentCategorySlug = null;
+var currentCategoryName = null;
+var currentCategoryId = null;
+var currentThreadId = null;
+var currentThreadTitle = null;
+var searchDebounceTimer = null;
+
+function escHtml(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function timeAgo(dateString) {
+    if (!dateString) return 'just now';
+    var date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'just now';
+    var diff = Date.now() - date.getTime();
+    var sec = Math.max(1, Math.floor(diff / 1000));
+    if (sec < 60) return sec + ' sec ago';
+    var min = Math.floor(sec / 60);
+    if (min < 60) return min + (min === 1 ? ' min ago' : ' mins ago');
+    var hrs = Math.floor(min / 60);
+    if (hrs < 24) return hrs + (hrs === 1 ? ' hour ago' : ' hours ago');
+    var days = Math.floor(hrs / 24);
+    if (days < 30) return days + (days === 1 ? ' day ago' : ' days ago');
+    var months = Math.floor(days / 30);
+    if (months < 12) return months + (months === 1 ? ' month ago' : ' months ago');
+    var years = Math.floor(months / 12);
+    return years + (years === 1 ? ' year ago' : ' years ago');
+}
+
+function formatForumDate(dateString) {
+    if (!dateString) return 'Unknown';
+    var date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Unknown';
+    return date.toLocaleString();
+}
+
+function formatJoinedDate(dateString) {
+    if (!dateString) return 'New member';
+    var date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'New member';
+    return date.toLocaleDateString();
+}
+
+function showLoading(el) {
+    if (!el) return;
+    el.innerHTML = '<div class="empty-msg">Loading...</div>';
+}
+
+function showError(el, message) {
+    if (!el) return;
+    el.innerHTML = '<div class="empty-msg"><div style="color:var(--danger);">' + escHtml(message || 'Something went wrong.') + '</div></div>';
+}
+function updateStats() {
+    var threadCount = 0;
+    var postCount = 0;
+    var categoryCount = categories.length;
+    var activeCategoryCount = 0;
+    categories.forEach(function(cat) {
+        threadCount += parseInt(cat.thread_count || 0);
+        postCount += parseInt(cat.post_count || 0);
+        if (parseInt(cat.thread_count || 0) > 0 || parseInt(cat.post_count || 0) > 0 || cat.latest_thread) {
+            activeCategoryCount += 1;
+        }
+    });
+    document.getElementById('statThreads').textContent = threadCount;
+    document.getElementById('statPosts').textContent = postCount;
+    document.getElementById('statUsers').textContent = categoryCount;
+    document.getElementById('statOnline').textContent = activeCategoryCount;
+}
+
+function groupCategoriesForDisplay() {
+    var map = {};
+    categories.forEach(function(cat) {
+        var key = cat.group || 'Forums';
+        if (!map[key]) map[key] = [];
+        map[key].push(cat);
+    });
+    return Object.keys(map).map(function(groupName) {
+        return { name: groupName, categories: map[groupName] };
+    });
+}
+
+function showCategories() {
+    currentCategorySlug = null;
+    currentCategoryName = null;
+    currentCategoryId = null;
+    currentThreadId = null;
+    currentThreadTitle = null;
+
+    document.getElementById('viewCategories').style.display = '';
+    document.getElementById('viewThreads').style.display = 'none';
+    document.getElementById('viewThread').style.display = 'none';
+
+    setForumPageHeader('Sports Betting');
+    setActiveSidebar('sports-betting');
+    document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span id="forumPageTitleLabel">Sports Betting</span>';
+    window.history.replaceState({}, '', '/forum/');
+    renderCategories();
+    renderSampleThreads();
+    updateStats();
+    updateForumJump();
+}
+
+function setForumPageHeader(title) {
+    var titleEl = document.getElementById('forumPageTitle');
+    if (titleEl) titleEl.textContent = title;
+    var crumbLabel = document.getElementById('forumPageTitleLabel');
+    if (crumbLabel) crumbLabel.textContent = title;
+}
+
+function setActiveSidebar(slug) {
+    var links = document.querySelectorAll('.tmr-fb-sidebar-list a[data-cat-slug]');
+    links.forEach(function(a) {
+        a.classList.toggle('is-active', a.getAttribute('data-cat-slug') === slug);
+    });
+}
+
+function onSidebarPick(el, slug, name) {
+    setActiveSidebar(slug);
+    setForumPageHeader(name);
+    var match = (categories || []).find(function(c) { return (c.slug || '') === slug; });
+    if (match) {
+        showThreadsList(match.slug, match.name, match.id);
+    } else {
+        // Slug not present in live category list yet — show categories index with title swapped.
+        currentCategorySlug = null;
+        currentCategoryId = null;
+        currentCategoryName = name;
+        document.getElementById('viewCategories').style.display = '';
+        document.getElementById('viewThreads').style.display = 'none';
+        document.getElementById('viewThread').style.display = 'none';
+        document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span>' + escHtml(name) + '</span>';
+        window.history.replaceState({}, '', '/forum/#cat-' + encodeURIComponent(slug));
+        renderSampleThreads();
+    }
+}
+
+// Sample sticky/recent threads used as a layout demonstration on the index.
+// Marked SAMPLE so users can see the table shape until live threads are posted.
+var TMR_FORUM_SAMPLE_THREADS = [
+    { title: 'TrustMyRecord Forum Rules and Posting Guidelines', sticky: true, hot: false, sample: true, starter: 'TrustMyRecord', stars: 5, lastPoster: 'TrustMyRecord', lastTitle: 'Rules and Posting Guidelines', lastTime: 'Today', replies: 0, views: 0 },
+    { title: 'How Verified Records Work', sticky: true, hot: false, sample: true, starter: 'TrustMyRecord', stars: 5, lastPoster: 'TrustMyRecord', lastTitle: 'How Verified Records Work', lastTime: 'Today', replies: 0, views: 0 },
+    { title: 'Official Sports Betting Discussion Thread', sticky: false, hot: true, sample: true, starter: 'Handicapper', stars: 0, lastPoster: '—', lastTitle: 'Discussion', lastTime: '—', replies: 0, views: 0 },
+    { title: '2026 MLB Picks', sticky: false, hot: false, sample: true, starter: 'Handicapper', stars: 0, lastPoster: '—', lastTitle: '2026 MLB Picks', lastTime: '—', replies: 0, views: 0 },
+    { title: 'NBA Game Board Discussion', sticky: false, hot: false, sample: true, starter: 'Handicapper', stars: 0, lastPoster: '—', lastTitle: 'NBA Game Board', lastTime: '—', replies: 0, views: 0 },
+    { title: 'NFL Futures and Season Long Bets', sticky: false, hot: false, sample: true, starter: 'Handicapper', stars: 0, lastPoster: '—', lastTitle: 'NFL Futures', lastTime: '—', replies: 0, views: 0 },
+    { title: 'Pick Seller Questions and Marketplace Rules', sticky: false, hot: false, sample: true, starter: 'TrustMyRecord', stars: 0, lastPoster: '—', lastTitle: 'Marketplace Rules', lastTime: '—', replies: 0, views: 0 },
+    { title: 'Head to Head Challenge Requests', sticky: false, hot: false, sample: true, starter: 'Handicapper', stars: 0, lastPoster: '—', lastTitle: 'Challenge Requests', lastTime: '—', replies: 0, views: 0 },
+    { title: 'Create a League or Season', sticky: false, hot: false, sample: true, starter: 'Handicapper', stars: 0, lastPoster: '—', lastTitle: 'Leagues', lastTime: '—', replies: 0, views: 0 },
+    { title: 'Polls, Trivia, and Community Bets', sticky: false, hot: false, sample: true, starter: 'TrustMyRecord', stars: 0, lastPoster: '—', lastTitle: 'Polls and Trivia', lastTime: '—', replies: 0, views: 0 }
+];
+
+function renderSampleThreads() {
+    var body = document.getElementById('sampleThreadBody');
+    if (!body) return;
+    body.innerHTML = TMR_FORUM_SAMPLE_THREADS.map(function(t) {
+        var iconClass = 'tmr-fb-thread-icon';
+        var iconChar = 'T';
+        if (t.sticky) { iconClass += ' is-pinned'; iconChar = '★'; }
+        else if (t.hot) { iconClass += ' is-hot'; iconChar = ''; }
+        var stars = '';
+        if (t.stars) {
+            for (var i = 0; i < t.stars; i++) stars += '★';
+        }
+        var stickyTag = t.sticky ? '<span class="tmr-fb-pin-tag">Sticky</span>' : '';
+        var sampleTag = t.sample ? '<span class="tmr-fb-sample-tag">Sample</span>' : '';
+        return '<tr onclick="openNewThread()">' +
+            '<td><div class="tmr-fb-thread-cell">' +
+                '<span class="' + iconClass + '">' + (t.sticky ? '★' : (t.hot ? '\u{1F525}' : 'T')) + '</span>' +
+                '<div class="tmr-fb-thread-body">' +
+                    stickyTag + sampleTag +
+                    '<a class="tmr-fb-thread-title" href="#" onclick="event.preventDefault();event.stopPropagation();openNewThread();">' + escHtml(t.title) + '</a>' +
+                    '<div class="tmr-fb-thread-meta">Started by <strong>' + escHtml(t.starter) + '</strong></div>' +
+                '</div>' +
+            '</div></td>' +
+            '<td class="col-rating"><span class="tmr-fb-rating-stars">' + stars + '</span></td>' +
+            '<td class="col-last"><div class="tmr-fb-lastpost">' +
+                '<span class="tmr-fb-lastpost-title">' + escHtml(t.lastTitle) + '</span>' +
+                '<span class="tmr-fb-lastpost-meta">' + escHtml(t.lastTime) + ' &middot; by <strong>' + escHtml(t.lastPoster) + '</strong></span>' +
+            '</div></td>' +
+            '<td class="col-num">' + t.replies + '</td>' +
+            '<td class="col-num">' + t.views + '</td>' +
+        '</tr>';
+    }).join('');
+}
+
+async function showThreadsList(slug, name, id) {
+    currentCategorySlug = slug;
+    currentCategoryName = name || slug;
+    currentCategoryId = id || null;
+    currentThreadId = null;
+    currentThreadTitle = null;
+
+    document.getElementById('viewCategories').style.display = 'none';
+    document.getElementById('viewThreads').style.display = '';
+    document.getElementById('viewThread').style.display = 'none';
+    document.getElementById('threadsCategoryLabel').textContent = currentCategoryName || 'Forum';
+    setForumPageHeader(currentCategoryName || 'Forum');
+    setActiveSidebar(slug);
+    document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span>' + escHtml(currentCategoryName || slug || 'Forum') + '</span>';
+    if (slug) {
+        window.history.replaceState({}, '', '/forum/#cat-' + encodeURIComponent(slug));
+    }
+    await loadThreads();
+}
+
+async function showThreadDetail(threadId) {
+    currentThreadId = threadId;
+    document.getElementById('viewCategories').style.display = 'none';
+    document.getElementById('viewThreads').style.display = 'none';
+    document.getElementById('viewThread').style.display = '';
+    await loadThread(threadId);
+    var crumbParts = ['<a onclick="showCategories()">Forums</a>'];
+    if (currentCategorySlug) {
+        crumbParts.push('<span class="sep">&raquo;</span><a onclick="showThreadsList(\'' + escHtml(currentCategorySlug) + '\',\'' + escHtml(currentCategoryName || currentCategorySlug) + '\',' + (currentCategoryId || 'null') + ')">' + escHtml(currentCategoryName || currentCategorySlug) + '</a>');
+    }
+    crumbParts.push('<span class="sep">&raquo;</span><span>' + escHtml(currentThreadTitle || 'Thread') + '</span>');
+    document.getElementById('breadcrumb').innerHTML = crumbParts.join('');
+    window.history.replaceState({}, '', '/forum/#thread-' + encodeURIComponent(threadId));
+}
+
+function backToThreads() {
+    if (currentCategorySlug) {
+        showThreadsList(currentCategorySlug, currentCategoryName, currentCategoryId);
+    } else {
+        showCategories();
+    }
+}
+
+// ================================================================
+// LOAD & RENDER CATEGORIES
+// ================================================================
+async function loadCategories() {
+    var container = document.getElementById('categoriesContainer');
+    showLoading(container);
+
+    try {
+        var data = await api.request('/forum/categories');
+        categories = data.categories || [];
+        if (!categories.length) {
+            usingFallbackCategories = true;
+            categories = fallbackCategories.slice();
+        } else {
+            usingFallbackCategories = false;
+        }
+        renderCategories();
+        updateStats();
+        updateForumJump();
+    } catch (err) {
+        console.error('Forum categories fallback:', err);
+        usingFallbackCategories = true;
+        categories = fallbackCategories.slice();
+        renderCategories();
+        updateStats();
+        updateForumJump();
+        container.insertAdjacentHTML('afterbegin', '<div class="forum-trust-note" style="margin-bottom:10px;">Live forum data is temporarily unavailable. Showing empty forum categories without fake threads or seeded users.</div>');
+    }
+}
+
+function renderCategories() {
+    var container = document.getElementById('categoriesContainer');
+    if (!categories.length) {
+        container.innerHTML = '<div class="empty-msg"><div class="icon">\ud83d\udcc2</div><div>No forum categories are available yet.</div></div>';
+        return;
+    }
+
+    var groups = groupCategoriesForDisplay();
+    var html = '';
+
+    groups.forEach(function(group) {
+        html += '<div class="group-header"><div class="group-header-title"><span>' + escHtml(group.name) + '</span></div><div class="group-header-meta">Boards built for receipt-backed discussion</div></div>';
+        html += '<table class="cat-table"><thead><tr><th>Forum</th><th class="col-num">Threads</th><th class="col-num">Posts</th><th class="col-last">Last Post</th></tr></thead><tbody>';
+
+        group.categories.forEach(function(cat) {
+            var icon = cat.icon || '\ud83d\udcc1';
+            var threadCount = parseInt(cat.thread_count || 0);
+            var postCount = parseInt(cat.post_count || 0);
+            var lastHtml = '<div class="no-posts">No live threads yet</div>';
+            if (cat.latest_thread) {
+                var lt = cat.latest_thread;
+                var ltTitle = (lt.title || '').length > 30 ? lt.title.substring(0, 30) + '...' : (lt.title || '');
+                lastHtml = '<div class="last-post-info"><div class="last-post-title">' + escHtml(ltTitle) + '</div><div class="last-post-meta">by <strong>' + escHtml(lt.username || '') + '</strong> ' + timeAgo(lt.created_at) + '</div></div>';
+            }
+
+            html += '<tr onclick="showThreadsList(\'' + escHtml(cat.slug) + '\',\'' + escHtml(cat.name) + '\',' + cat.id + ')">';
+            html += '<td><div class="cat-info"><div class="cat-icon">' + icon + '</div><div><div class="cat-name">' + escHtml(cat.name) + '</div><div class="cat-desc">' + escHtml(cat.description || '') + '</div></div></div></td>';
+            html += '<td class="col-num">' + threadCount + '</td>';
+            html += '<td class="col-num">' + postCount + '</td>';
+            html += '<td class="col-last">' + lastHtml + '</td>';
+            html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+    });
+
+    container.innerHTML = html;
+}
+
+function updateForumJump() {
+    var select = document.getElementById('forumJumpSelect');
+    if (!select) return;
+
+    var options = ['<option value="">Select a forum</option>'];
+    categories.forEach(function(cat) {
+        options.push('<option value="' + escHtml(String(cat.slug || '')) + '">' + escHtml(cat.name || 'Forum') + '</option>');
+    });
+    select.innerHTML = options.join('');
+}
+
+function handleForumJump(slug) {
+    if (!slug) return;
+    currentCategorySlug = slug;
+    var cat = categories.find(function(item) { return item.slug === slug; });
+    currentCategoryName = cat ? cat.name : 'Forum';
+    showThreadsList(slug, currentCategoryName, cat ? cat.id : null);
+}
+
+// ================================================================
+// LOAD & RENDER THREADS
+// ================================================================
+async function loadThreads() {
+    var body = document.getElementById('threadsBody');
+    body.innerHTML = '<tr><td colspan="5" class="empty-msg">Loading threads...</td></tr>';
+
+    try {
+        var isFallbackCategory = fallbackCategories.some(function(cat) {
+            return cat.slug === currentCategorySlug;
+        }) && categories.some(function(cat) {
+            return cat.slug === currentCategorySlug;
+        });
+        if (usingFallbackCategories && isFallbackCategory) {
+            cachedThreads = [];
+            renderThreads();
+            return;
+        }
+        var data = await api.request('/forum/categories/' + encodeURIComponent(currentCategorySlug));
+        cachedThreads = data.threads || [];
+        // Update category id from response if we didn't have it
+        if (data.category) {
+            currentCategoryId = data.category.id;
+            currentCategoryName = data.category.name;
+        }
+        renderThreads();
+    } catch (err) {
+        body.innerHTML = '<tr><td colspan="4" class="empty-msg"><div style="color:var(--danger);">Failed to load threads.</div></td></tr>';
+        console.error('Load threads error:', err);
+    }
+}
+
+function renderThreads() {
+    var body = document.getElementById('threadsBody');
+
+    if (cachedThreads.length === 0) {
+        body.innerHTML = '<tr><td colspan="5" class="empty-msg"><div class="icon">&#x1F4AC;</div><div>No threads yet. Be the first to start a discussion backed by a real pick angle, receipt, or record-based opinion.</div></td></tr>';
+        return;
+    }
+
+    body.innerHTML = cachedThreads.map(function(t) {
+        var lastUser = t.last_post_username || t.username || '';
+        var lastTime = t.last_post_at || t.created_at;
+        var replyCount = parseInt(t.post_count) || parseInt(t.reply_count) || 0;
+        var viewCount = parseInt(t.view_count) || 0;
+        var iconClass = 'tmr-fb-thread-icon' + (t.is_pinned ? ' is-pinned' : (replyCount >= 50 ? ' is-hot' : ''));
+        var iconChar = t.is_pinned ? '★' : (replyCount >= 50 ? '\u{1F525}' : 'T');
+        var stickyTag = t.is_pinned ? '<span class="tmr-fb-pin-tag">Sticky</span>' : '';
+
+        return '<tr class="' + (t.is_pinned ? 'pinned' : '') + '" onclick="showThreadDetail(' + t.id + ')">' +
+            '<td><div class="tmr-fb-thread-cell">' +
+                '<span class="' + iconClass + '">' + iconChar + '</span>' +
+                '<div class="tmr-fb-thread-body">' +
+                    stickyTag +
+                    '<a class="tmr-fb-thread-title" href="#" onclick="event.preventDefault();event.stopPropagation();showThreadDetail(' + t.id + ');">' + escHtml(t.title) + '</a>' +
+                    '<div class="tmr-fb-thread-meta">Started by <strong>' + escHtml(t.username || '') + '</strong> &middot; ' + timeAgo(t.created_at) + '</div>' +
+                '</div>' +
+            '</div></td>' +
+            '<td class="col-rating"></td>' +
+            '<td class="col-last"><div class="tmr-fb-lastpost">' +
+                '<span class="tmr-fb-lastpost-meta">' + timeAgo(lastTime) + ' &middot; by <strong>' + escHtml(lastUser) + '</strong></span>' +
+            '</div></td>' +
+            '<td class="col-num">' + replyCount + '</td>' +
+            '<td class="col-num">' + viewCount + '</td>' +
+            '</tr>';
+    }).join('');
+}
+
+// ================================================================
+// LOAD & RENDER THREAD DETAIL
+// ================================================================
+async function loadThread(threadId) {
+    var container = document.getElementById('postsContainer');
+    showLoading(container);
+
+    try {
+        var data = await api.request('/forum/threads/' + threadId);
+        cachedThread = data.thread;
+        cachedPosts = data.posts || [];
+        currentThreadTitle = cachedThread.title;
+        // Set category info from thread if not already set
+        if (cachedThread.category_slug) {
+            currentCategorySlug = cachedThread.category_slug;
+            currentCategoryName = cachedThread.category_name || cachedThread.category_slug;
+            currentCategoryId = cachedThread.category_id;
+        }
+        renderThread();
+    } catch (err) {
+        showError(container, 'Failed to load thread.');
+        console.error('Load thread error:', err);
+    }
+}
+
+function renderThread() {
+    if (!cachedThread) return;
+    var t = cachedThread;
+
+    // Build all posts: OP first, then replies
+    var allPosts = [{
+        id: 'op',
+        username: t.username,
+        content: t.content,
+        created_at: t.created_at,
+        like_count: t.like_count || 0,
+        isOP: true,
+        title: t.title,
+        avatar_url: t.avatar_url,
+        user_picks: t.user_picks || 0,
+        user_joined: t.user_joined
+    }];
+    cachedPosts.forEach(function(p) {
+        allPosts.push({
+            id: p.id,
+            username: p.username,
+            content: p.content,
+            created_at: p.created_at,
+            like_count: p.like_count || 0,
+            isOP: false,
+            avatar_url: p.avatar_url,
+            user_post_count: p.user_post_count || 0,
+            user_picks: p.user_picks || 0,
+            user_joined: p.user_joined,
+            is_edited: p.is_edited,
+            parent_post_id: p.parent_post_id
+        });
+    });
+
+    var container = document.getElementById('postsContainer');
+    container.innerHTML = allPosts.map(function(post, idx) {
+        var bodyHtml = post.isOP ? '<h2>' + escHtml(post.title) + '</h2>' + escHtml(post.content) : escHtml(post.content);
+        var editedNote = post.is_edited ? ' <span style="color:var(--text-muted);font-size:0.75rem;">(edited)</span>' : '';
+        var avatarHtml = post.avatar_url
+            ? '<img class="post-user-avatar" src="' + escHtml(post.avatar_url) + '" alt="' + escHtml(post.username) + '">'
+            : '';
+
+        var likeBtn = '';
+        if (!post.isOP) {
+            likeBtn = '<button class="vote-btn" onclick="likePost(' + post.id + ')">&#x1F44D; ' + (post.like_count || 0) + '</button>';
+        }
+
+        var forumUserActions = '<div class="vote-btns">' +
+            '<a class="vote-btn" href="/profile/?user=' + encodeURIComponent(post.username) + '">Profile</a>';
+        var viewer = getForumSessionUser();
+        if (viewer && viewer.username && String(viewer.username).toLowerCase() !== String(post.username || '').toLowerCase()) {
+            forumUserActions += '<a class="vote-btn" href="/messages/?to=' + encodeURIComponent(post.username) + '">Message</a>';
+        }
+        forumUserActions += '</div>';
+
+        return '<div class="post-shell' + (post.isOP ? ' op-card' : '') + '">' +
+            '<div class="post-top-bar"><span><span class="post-author-name" data-tmr-username="' + escHtml(post.username) + '">' + escHtml(post.username) + '</span>' + editedNote + '</span><span class="post-number">#' + (idx + 1) + ' &middot; ' + formatForumDate(post.created_at) + '</span></div>' +
+            '<div class="post-layout">' +
+            '<aside class="post-user-pane">' +
+            '<div class="post-user-name" data-tmr-username="' + escHtml(post.username) + '">' + escHtml(post.username) + '</div>' +
+            avatarHtml +
+            '<div class="post-user-stats"><div><strong>Joined:</strong> ' + formatJoinedDate(post.user_joined) + '</div><div><strong>Accountability:</strong> Public profile and message access enabled</div></div>' +
+            '</aside>' +
+            '<div class="post-main-pane">' +
+            '<div class="post-body">' + bodyHtml + '</div>' +
+            '<div class="post-footer-bar"><div class="vote-btns">' + likeBtn + '</div>' + forumUserActions + '</div>' +
+            '</div>' +
+            '</div>' +
+            '</div>';
+    }).join('');
+
+    // Render reply area
+    var replyAreaEl = document.getElementById('replyArea');
+    if (isUserLoggedIn()) {
+        replyAreaEl.innerHTML = '<textarea id="replyText" rows="5" placeholder="Type your reply..."></textarea>' +
+            '<button class="btn btn-primary" style="margin-top:10px;" onclick="submitReply()">Post Reply</button>';
+    } else {
+                replyAreaEl.innerHTML = '<div class="login-prompt">Replies are tied to real accounts and visible history. <a href="/login/">Log in</a> to respond, or <a href="/register/">register</a> to start building a public record.</div>';
+    }
+}
+
+// ================================================================
+// LIKE POST
+// ================================================================
+async function likePost(postId) {
+    if (!isUserLoggedIn()) {
+        alert('Please log in to like posts.');
+        return;
+    }
+    try {
+        await api.request('/forum/posts/' + postId + '/like', { method: 'POST' });
+        // Reload thread to get updated like counts
+        await loadThread(currentThreadId);
+    } catch (err) {
+        console.error('Like error:', err);
+        alert(err.message || 'Failed to like post.');
+    }
+}
+
+// ================================================================
+// CREATE THREAD
+// ================================================================
+function isUserLoggedIn() {
+    // Check backend JWT
+    if (api.isLoggedIn()) return true;
+    // Check PersistentAuthSystem
+    if (typeof auth !== 'undefined' && auth.isLoggedIn && auth.isLoggedIn()) return true;
+    // Check localStorage session directly
+    try {
+        var s = localStorage.getItem('trustmyrecord_session');
+        if (s) { var p = JSON.parse(s); var u = p.user || p; if (u && u.username) return true; }
+    } catch(e) {}
+    return false;
+}
+
+function openNewThread() {
+    if (!isUserLoggedIn()) {
+                window.location.href = '/login/';
+        return;
+    }
+    document.getElementById('newThreadModal').classList.add('active');
+}
+
+function closeNewThread() {
+    document.getElementById('newThreadModal').classList.remove('active');
+    document.getElementById('newThreadForm').reset();
+}
+
+function getForumSessionUser() {
+    try {
+        if (window.auth && typeof window.auth.getCurrentUser === 'function') {
+            var authUser = window.auth.getCurrentUser();
+            if (authUser && (authUser.username || authUser.email)) return authUser;
+        }
+    } catch(e) {}
+    try {
+        var raw = localStorage.getItem('trustmyrecord_session') || localStorage.getItem('tmr_current_user') || 'null';
+        var parsed = JSON.parse(raw);
+        return parsed && parsed.user ? parsed.user : parsed;
+    } catch(e) {}
+    return null;
+}
+
+function pushForumActivity(type, payload) {
+    var user = getForumSessionUser();
+    if (!user || !user.username) return;
+
+    try {
+        var activities = JSON.parse(localStorage.getItem('tmr_social_activity') || '[]');
+        activities.unshift({
+            id: 'forum_activity_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+            type: type,
+            username: user.username,
+            data: payload || {},
+            timestamp: new Date().toISOString(),
+            visibility: 'public'
+        });
+        localStorage.setItem('tmr_social_activity', JSON.stringify(activities.slice(0, 1000)));
+    } catch(e) {}
+}
+
+async function submitThread(e) {
+    e.preventDefault();
+        if (!isUserLoggedIn()) { window.location.href = '/login/'; return; }
+
+    var title = document.getElementById('ntTitle').value.trim();
+    var content = document.getElementById('ntContent').value.trim();
+
+    if (title.length < 5) { alert('Title must be at least 5 characters.'); return; }
+    if (content.length < 10) { alert('Content must be at least 10 characters.'); return; }
+
+    if (!currentCategoryId) {
+        alert('No category selected. Please go back and select a category.');
+        return;
+    }
+
+    var submitBtn = e.target.querySelector('button[type="submit"]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Posting...'; }
+
+    try {
+        var data = await api.request('/forum/threads', {
+            method: 'POST',
+            body: { category_id: currentCategoryId, title: title, content: content }
+        });
+        pushForumActivity('forum_thread_created', {
+            title: title,
+            category: currentCategoryName || currentCategorySlug || 'Forum',
+            threadId: data && data.thread ? data.thread.id : null
+        });
+        closeNewThread();
+        // Reload threads list
+        await loadThreads();
+    } catch (err) {
+        console.error('Create thread error:', err);
+        alert(err.message || 'Failed to create thread. Please try again.');
+    } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Post Thread'; }
+    }
+}
+
+// ================================================================
+// SUBMIT REPLY
+// ================================================================
+async function submitReply() {
+        if (!isUserLoggedIn()) { window.location.href = '/login/'; return; }
+
+    var textarea = document.getElementById('replyText');
+    if (!textarea) return;
+    var content = textarea.value.trim();
+    if (content.length < 5) { alert('Reply must be at least 5 characters.'); return; }
+
+    // Disable button while posting
+    var btns = textarea.parentElement.querySelectorAll('.btn');
+    btns.forEach(function(b) { b.disabled = true; b.textContent = 'Posting...'; });
+
+    try {
+        await api.request('/forum/threads/' + currentThreadId + '/posts', {
+            method: 'POST',
+            body: { content: content }
+        });
+        pushForumActivity('forum_reply_created', {
+            threadId: currentThreadId,
+            threadTitle: cachedThread && cachedThread.title ? cachedThread.title : 'Forum discussion'
+        });
+        // Reload thread to show new reply
+        await loadThread(currentThreadId);
+        // Scroll to bottom
+        var posts = document.getElementById('postsContainer');
+        if (posts && posts.lastElementChild) {
+            posts.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+        }
+    } catch (err) {
+        console.error('Reply error:', err);
+        alert(err.message || 'Failed to post reply. Please try again.');
+        btns.forEach(function(b) { b.disabled = false; b.textContent = 'Post Reply'; });
+    }
+}
+
+// ================================================================
+// SEARCH
+// ================================================================
+function handleSearch(query) {
+    clearTimeout(searchDebounceTimer);
+    if (!query || query.length < 3) {
+        return;
+    }
+    searchDebounceTimer = setTimeout(function() {
+        performSearch(query);
+    }, 400);
+}
+
+async function performSearch(query) {
+    // Switch to threads view for results
+    currentCategorySlug = null;
+    currentCategoryId = null;
+    document.getElementById('viewCategories').style.display = 'none';
+    document.getElementById('viewThreads').style.display = '';
+    document.getElementById('viewThread').style.display = 'none';
+
+    var bc = document.getElementById('breadcrumb');
+    bc.innerHTML = '<a onclick="showCategories()">Forums</a><span class="sep">&raquo;</span><span>Search: "' + escHtml(query) + '"</span>';
+
+    var body = document.getElementById('threadsBody');
+    body.innerHTML = '<tr><td colspan="5" class="empty-msg">Searching...</td></tr>';
+
+    try {
+        var data = await api.request('/forum/search?q=' + encodeURIComponent(query));
+        var results = data.results || [];
+
+        if (results.length === 0) {
+            body.innerHTML = '<tr><td colspan="5" class="empty-msg"><div>No threads match your search.</div></td></tr>';
+            return;
+        }
+
+        body.innerHTML = results.map(function(t) {
+            var catName = t.category_name || '';
+            var catSlug = t.category_slug || '';
+            return '<tr onclick="currentCategorySlug=\'' + escHtml(catSlug) + '\';currentCategoryName=\'' + escHtml(catName) + '\';showThreadDetail(' + t.id + ')">' +
+                '<td><div class="tmr-fb-thread-cell"><span class="tmr-fb-thread-icon">T</span><div class="tmr-fb-thread-body">' +
+                    '<span class="tag-pill">' + escHtml(catName) + '</span>' +
+                    '<a class="tmr-fb-thread-title" href="#" onclick="event.preventDefault();event.stopPropagation();currentCategorySlug=\'' + escHtml(catSlug) + '\';currentCategoryName=\'' + escHtml(catName) + '\';showThreadDetail(' + t.id + ');">' + escHtml(t.title) + '</a>' +
+                    '<div class="tmr-fb-thread-meta">Started by <strong>' + escHtml(t.username || '') + '</strong> &middot; ' + timeAgo(t.created_at) + '</div>' +
+                '</div></div></td>' +
+                '<td class="col-rating"></td>' +
+                '<td class="col-last"><div class="tmr-fb-lastpost-meta">' + timeAgo(t.created_at) + '</div></td>' +
+                '<td class="col-num">' + (t.reply_count || 0) + '</td>' +
+                '<td class="col-num">' + (t.view_count || 0) + '</td>' +
+                '</tr>';
+        }).join('');
+    } catch (err) {
+        body.innerHTML = '<tr><td colspan="5" class="empty-msg"><div style="color:var(--danger);">Search failed. Please try again.</div></td></tr>';
+        console.error('Search error:', err);
+    }
+}
+
+// ================================================================
+// INIT
+// ================================================================
+function updateForumNavAuth() {
+    var loginBtn = document.getElementById('forumHeaderLoginBtn');
+    var registerBtn = document.getElementById('forumHeaderRegisterBtn');
+    var loggedIn = isUserLoggedIn();
+
+    if (loginBtn) {
+        loginBtn.style.display = loggedIn ? 'none' : '';
+    }
+
+    if (registerBtn) {
+        registerBtn.style.display = loggedIn ? 'none' : '';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async function() {
+    updateForumNavAuth();
+
+    // Close modal on outside click
+    document.getElementById('newThreadModal').addEventListener('click', function(e) {
+        if (e.target === this) closeNewThread();
+    });
+
+    // Show loading state while waiting for backend
+    var catContainer = document.getElementById('categoriesContainer');
+    catContainer.innerHTML = '<div class="tmr-loading-state" id="forumLoadingState"><div class="tmr-spinner"></div><p>Loading forum...</p><p class="tmr-loading-slow" id="forumLoadingSlow">Warming up servers... this takes ~30 seconds on first visit.</p><div class="tmr-loading-retry" id="forumLoadingRetry"><p>Could not connect to servers.</p><button onclick="location.reload()">Refresh</button></div></div>';
+    var _forumSlowTimer = setTimeout(function() { var el = document.getElementById('forumLoadingSlow'); if (el) el.style.display = 'block'; }, 5000);
+    var _forumRetryTimer = setTimeout(function() { var el = document.getElementById('forumLoadingRetry'); var sl = document.getElementById('forumLoadingSlow'); if (el) el.style.display = 'block'; if (sl) sl.style.display = 'none'; }, 30000);
+
+    // Wait for backend detection
+    await api.ready;
+    clearTimeout(_forumSlowTimer); clearTimeout(_forumRetryTimer);
+
+    if (!api || typeof api.request !== 'function') {
+        catContainer.innerHTML =
+            '<div class="tmr-loading-state">' +
+            '<div style="font-size:2.5rem;margin-bottom:12px;opacity:0.5;">&#x1F50C;</div>' +
+            '<p>Could not connect to the forum server.</p>' +
+            '<p class="tmr-loading-slow" style="display:block;">The server may be warming up. This takes ~30 seconds on first visit.</p>' +
+            '<div class="tmr-loading-retry" style="display:block;"><button onclick="location.reload()">Try Again</button></div>' +
+            '</div>';
+        return;
+    }
+
+    // Check URL hash for deep link
+    var params = new URLSearchParams(window.location.search);
+    var queryThread = parseInt(params.get('thread'));
+    if (queryThread) {
+        await showThreadDetail(queryThread);
+        return;
+    }
+    var queryCategory = params.get('category');
+    if (queryCategory) {
+        await showThreadsList(queryCategory, queryCategory);
+        return;
+    }
+
+    var hash = window.location.hash;
+    if (hash && hash.indexOf('#thread-') === 0) {
+        var tid = parseInt(hash.substring(8));
+        if (tid) {
+            await showThreadDetail(tid);
+            return;
+        }
+    }
+    if (hash && hash.indexOf('#cat-') === 0) {
+        var slug = hash.substring(5);
+        if (slug) {
+            await showThreadsList(slug, slug);
+            return;
+        }
+    }
+
+    // Default: show categories
+    showCategories();
+});
+</script>
+</body>
 </html>
+
+
