@@ -747,24 +747,38 @@
             flex-shrink: 0;
             position: relative;
             user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .correct-radio-btn input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            cursor: pointer;
         }
         .correct-radio-btn:hover {
             border-color: #00ffff;
             color: #00ffff;
             background: rgba(0,255,255,0.08);
         }
-        .correct-radio-btn:focus-visible {
+        .correct-radio-btn:focus-within {
             outline: 2px solid #00ffff;
             outline-offset: 2px;
         }
-        .correct-radio-btn.selected {
+        .correct-radio-btn.selected,
+        .correct-radio-btn:has(input:checked) {
             background: linear-gradient(135deg, #00ffff 0%, #b388ff 100%);
             border-color: #00ffff;
             color: #07101a;
             box-shadow: 0 0 0 3px rgba(0,255,255,0.25), 0 0 18px 4px rgba(179,136,255,0.55);
             transform: scale(1.08);
         }
-        .correct-radio-btn.selected::after {
+        .correct-radio-btn.selected::after,
+        .correct-radio-btn:has(input:checked)::after {
             content: "\2713";
             position: absolute;
             top: -8px;
@@ -780,8 +794,10 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 0 8px rgba(0,255,255,0.7);
+            pointer-events: none;
         }
-        .answer-row.is-correct .form-input {
+        .answer-row.is-correct .form-input,
+        .answer-row:has(input[name="cqCorrect"]:checked) .form-input {
             border-color: rgba(0,255,255,0.55);
             box-shadow: 0 0 0 2px rgba(0,255,255,0.12);
         }
@@ -1856,21 +1872,21 @@ function renderCreateView() {
                 '</select>' +
             '</div>' +
             '<div class="form-group">' +
-                '<label>Four Answer Choices <span style="color:var(--text-muted);font-weight:500;">(click the A/B/C/D button to mark the correct one)</span></label>' +
+                '<label>Four Answer Choices <span style="color:var(--text-muted);font-weight:500;">(click the A/B/C/D circle to mark the correct one)</span></label>' +
                 '<div class="answer-row" id="cqAnswerRow0">' +
-                    '<button type="button" class="correct-radio-btn" id="cqCorrectBtn0" data-letter-idx="0" aria-pressed="false" aria-label="Mark answer A as correct" onclick="setCorrectAnswer(0)">A</button>' +
+                    '<label class="correct-radio-btn" id="cqCorrectBtn0" data-letter-idx="0" aria-label="Mark answer A as correct"><span>A</span><input type="radio" name="cqCorrect" value="0"></label>' +
                     '<input type="text" class="form-input" id="cqAnswer0" placeholder="Answer A" maxlength="120">' +
                 '</div>' +
                 '<div class="answer-row" id="cqAnswerRow1">' +
-                    '<button type="button" class="correct-radio-btn" id="cqCorrectBtn1" data-letter-idx="1" aria-pressed="false" aria-label="Mark answer B as correct" onclick="setCorrectAnswer(1)">B</button>' +
+                    '<label class="correct-radio-btn" id="cqCorrectBtn1" data-letter-idx="1" aria-label="Mark answer B as correct"><span>B</span><input type="radio" name="cqCorrect" value="1"></label>' +
                     '<input type="text" class="form-input" id="cqAnswer1" placeholder="Answer B" maxlength="120">' +
                 '</div>' +
                 '<div class="answer-row" id="cqAnswerRow2">' +
-                    '<button type="button" class="correct-radio-btn" id="cqCorrectBtn2" data-letter-idx="2" aria-pressed="false" aria-label="Mark answer C as correct" onclick="setCorrectAnswer(2)">C</button>' +
+                    '<label class="correct-radio-btn" id="cqCorrectBtn2" data-letter-idx="2" aria-label="Mark answer C as correct"><span>C</span><input type="radio" name="cqCorrect" value="2"></label>' +
                     '<input type="text" class="form-input" id="cqAnswer2" placeholder="Answer C" maxlength="120">' +
                 '</div>' +
                 '<div class="answer-row" id="cqAnswerRow3">' +
-                    '<button type="button" class="correct-radio-btn" id="cqCorrectBtn3" data-letter-idx="3" aria-pressed="false" aria-label="Mark answer D as correct" onclick="setCorrectAnswer(3)">D</button>' +
+                    '<label class="correct-radio-btn" id="cqCorrectBtn3" data-letter-idx="3" aria-label="Mark answer D as correct"><span>D</span><input type="radio" name="cqCorrect" value="3"></label>' +
                     '<input type="text" class="form-input" id="cqAnswer3" placeholder="Answer D" maxlength="120">' +
                 '</div>' +
                 '<input type="hidden" id="cqCorrectIdx" value="">' +
@@ -1896,19 +1912,17 @@ function renderCreateView() {
     renderCustomQuestionsList();
 }
 
-// Delegated click handler — survives even if inline onclick is stripped or
-// setCorrectAnswer name shadowing breaks. Bound to the form once per render.
+// Native-radio change listener — selection lives in form state, so this
+// just mirrors it into the JS var, hidden input, .selected class, and
+// the live "Correct answer: X" summary. Idempotent and bulletproof.
 function bindCorrectAnswerDelegation() {
     var form = document.getElementById('createQuestionForm');
     if (!form || form.__correctAnswerBound) return;
-    form.addEventListener('click', function(ev) {
-        var btn = ev.target && ev.target.closest ? ev.target.closest('.correct-radio-btn') : null;
-        if (!btn) return;
-        var idxAttr = btn.getAttribute('data-letter-idx');
-        if (idxAttr == null) return;
-        var idx = parseInt(idxAttr, 10);
+    form.addEventListener('change', function(ev) {
+        var t = ev.target;
+        if (!t || t.name !== 'cqCorrect') return;
+        var idx = parseInt(t.value, 10);
         if (isNaN(idx)) return;
-        ev.preventDefault();
         setCorrectAnswer(idx);
     });
     form.__correctAnswerBound = true;
@@ -1951,6 +1965,12 @@ function setCorrectAnswer(idx) {
     selectedCorrectAnswer = idx;
     var hidden = document.getElementById('cqCorrectIdx');
     if (hidden) hidden.value = String(idx);
+    // Tick the native radio so form state matches.
+    var radios = document.querySelectorAll('input[name="cqCorrect"]');
+    radios.forEach(function(r) {
+        var rIdx = parseInt(r.value, 10);
+        if (rIdx === idx) r.checked = true;
+    });
     for (var i = 0; i < 4; i++) {
         var btn = document.getElementById('cqCorrectBtn' + i);
         var row = document.getElementById('cqAnswerRow' + i);
@@ -1976,13 +1996,17 @@ function setCorrectAnswer(idx) {
 window.setCorrectAnswer = setCorrectAnswer;
 
 function getSelectedCorrectIdx() {
-    // Prefer the DOM hidden input (state survives even if the JS var was
-    // reset by an unexpected re-render). Fall back to the var, then to the
-    // button with the .selected class.
+    // Native radio is the source of truth.
+    var checked = document.querySelector('input[name="cqCorrect"]:checked');
+    if (checked) {
+        var v = parseInt(checked.value, 10);
+        if (!isNaN(v) && v >= 0 && v <= 3) return v;
+    }
+    // Fallback layers in case the radios were never rendered.
     var hidden = document.getElementById('cqCorrectIdx');
     if (hidden && hidden.value !== '') {
-        var v = parseInt(hidden.value, 10);
-        if (!isNaN(v) && v >= 0 && v <= 3) return v;
+        var hv = parseInt(hidden.value, 10);
+        if (!isNaN(hv) && hv >= 0 && hv <= 3) return hv;
     }
     if (typeof selectedCorrectAnswer === 'number' && selectedCorrectAnswer >= 0 && selectedCorrectAnswer <= 3) {
         return selectedCorrectAnswer;
@@ -2061,6 +2085,7 @@ async function handleCreateQuestion(e) {
             }
             if (resetRow) resetRow.classList.remove('is-correct');
         }
+        document.querySelectorAll('input[name="cqCorrect"]').forEach(function(r) { r.checked = false; });
         if (explanationEl) explanationEl.value = '';
         if (tagsEl) tagsEl.value = '';
         var resetHidden = document.getElementById('cqCorrectIdx');
@@ -2078,8 +2103,19 @@ async function handleCreateQuestion(e) {
             submitBtn.disabled = false;
         }, 2000);
     } catch (err) {
-        errEl.textContent = err.message || 'Failed to create question.';
+        console.error('[trivia] create question failed:', err, err && err.data);
+        var msg = err && err.message ? err.message : 'Failed to create question.';
+        // Surface express-validator field paths if the backend rejected the body.
+        if (err && err.data && Array.isArray(err.data.errors) && err.data.errors.length) {
+            msg = err.data.errors.map(function(e) {
+                var path = e.path || e.param || '';
+                return (path ? path + ': ' : '') + (e.msg || e.message || 'invalid');
+            }).join(' • ');
+        }
+        if (err && err.status === 401) msg = 'You must be logged in to submit a trivia question. Please log in and try again.';
+        errEl.textContent = msg;
         errEl.style.display = 'block';
+        errEl.scrollIntoView({behavior:'smooth', block:'center'});
         submitBtn.disabled = false;
         submitBtn.textContent = 'Submit Trivia Question';
     }
