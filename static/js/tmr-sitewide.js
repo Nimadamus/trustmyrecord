@@ -478,3 +478,92 @@
         document.body.appendChild(footer);
     }
 })();
+
+// ============================================================
+// Sticky team badge (favorite_team) — sitewide helper
+// ------------------------------------------------------------
+// Any page can call window.TMR.attachUserBadges(rootSelector) and every
+// element under root with [data-tmr-username] will get a small team badge
+// appended right after the username. Cached per session, fail-open if the
+// API call fails (no badge shown — never a fallback fake team).
+// ============================================================
+(function() {
+    if (window.TMR && window.TMR.attachUserBadges) return;
+    window.TMR = window.TMR || {};
+
+    var cache = {};       // username -> { team: 'Yankees', sport: 'MLB' } or null
+    var inflight = {};    // username -> Promise
+
+    function apiBase() {
+        try { if (window.api && window.api.baseUrl) return window.api.baseUrl; } catch (e) {}
+        return 'https://trustmyrecord-api.onrender.com/api';
+    }
+
+    function fetchOne(username) {
+        if (cache[username] !== undefined) return Promise.resolve(cache[username]);
+        if (inflight[username]) return inflight[username];
+        inflight[username] = fetch(apiBase() + '/users/' + encodeURIComponent(username), { headers: { Accept: 'application/json' } })
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(data) {
+                if (!data) { cache[username] = null; return null; }
+                var teams  = Array.isArray(data.favorite_teams)  ? data.favorite_teams  : [];
+                var sports = Array.isArray(data.favorite_sports) ? data.favorite_sports : (data.favorite_sport ? [data.favorite_sport] : []);
+                if (!teams.length) { cache[username] = null; return null; }
+                var entry = { team: String(teams[0]), sport: sports[0] || '' };
+                cache[username] = entry;
+                return entry;
+            })
+            .catch(function() { cache[username] = null; return null; })
+            .finally(function() { delete inflight[username]; });
+        return inflight[username];
+    }
+
+    function badgeHtml(entry) {
+        if (!entry || !entry.team) return '';
+        var sport = entry.sport ? ('<i class="fas fa-circle"></i>' + esc(entry.sport) + ' &middot; ') : '';
+        return '<span class="tmr-team-badge" title="' + esc(entry.sport ? entry.sport + ' fan' : 'Favorite team') + '">' + sport + esc(entry.team) + '</span>';
+    }
+
+    function esc(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    window.TMR.attachUserBadges = function(rootSelector) {
+        var root = rootSelector ? document.querySelector(rootSelector) : document;
+        if (!root) return;
+        var nodes = root.querySelectorAll('[data-tmr-username]:not([data-tmr-badge-attached])');
+        nodes.forEach(function(node) {
+            var username = node.getAttribute('data-tmr-username');
+            if (!username) return;
+            node.setAttribute('data-tmr-badge-attached', '1');
+            fetchOne(username).then(function(entry) {
+                if (!entry) return;
+                node.insertAdjacentHTML('beforeend', ' ' + badgeHtml(entry));
+            });
+        });
+    };
+
+    // Inject the .tmr-team-badge styles once globally so any page can use them.
+    if (!document.getElementById('tmrTeamBadgeStyles')) {
+        var style = document.createElement('style');
+        style.id = 'tmrTeamBadgeStyles';
+        style.textContent = '.tmr-team-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;margin-left:6px;border-radius:5px;background:rgba(0,255,255,0.08);border:1px solid rgba(0,255,255,0.22);color:#67e8f9;font:700 10px/1.4 "Inter",sans-serif;letter-spacing:.04em;text-transform:uppercase;vertical-align:1px;white-space:nowrap;}'
+            + '.tmr-team-badge i{font-size:8px;opacity:.7;}';
+        document.head.appendChild(style);
+    }
+
+    // Auto-run on initial load + after late inserts (forum/polls/trivia hydrate async).
+    function autoRun() { try { window.TMR.attachUserBadges(); } catch (e) {} }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', autoRun);
+    else autoRun();
+    // Re-scan when feed/polls/forum lists hydrate. Throttled.
+    var pending = false;
+    var observer = new MutationObserver(function() {
+        if (pending) return;
+        pending = true;
+        setTimeout(function() { pending = false; autoRun(); }, 250);
+    });
+    if (document.body) observer.observe(document.body, { childList: true, subtree: true });
+})();

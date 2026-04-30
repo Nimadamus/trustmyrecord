@@ -10,8 +10,8 @@
     <meta property="og:title" content="User Profile | TrustMyRecord">
     <meta property="og:description" content="Check out my verified handicapping record and stats.">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260429g">
-<script defer src="static/js/tmr-sitewide.js?v=20260429g"></script>
+<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260429h">
+<script defer src="static/js/tmr-sitewide.js?v=20260429h"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -952,8 +952,203 @@
             <div class="profile-header" id="profileHeader">
                 <div class="loading"><div class="loading-spinner"></div><p>Loading profile...</p></div>
             </div>
+
+            <!-- One-time setup prompt for own profile when favorite_sports/teams empty.
+                 Shown once we have profileData; auto-hides on save or if already set. -->
+            <div id="profileSetupPrompt" class="profile-setup-prompt" hidden>
+                <div class="profile-setup-prompt__head">
+                    <h3>Finish your profile</h3>
+                    <p>Pick the sports you follow + the teams you ride or die for. They show up next to your name in the forum, on polls and trivia, and on your public record.</p>
+                </div>
+                <form id="profileSetupForm" class="profile-setup-form">
+                    <label class="profile-setup-form__label" for="setupFavSport">Favorite sport</label>
+                    <select id="setupFavSport" required>
+                        <option value="">Choose one</option>
+                        <option value="MLB">MLB</option>
+                        <option value="NBA">NBA</option>
+                        <option value="NFL">NFL</option>
+                        <option value="NHL">NHL</option>
+                        <option value="NCAAB">College Basketball</option>
+                        <option value="NCAAF">College Football</option>
+                        <option value="Soccer">Soccer</option>
+                        <option value="UFC">UFC / MMA</option>
+                        <option value="Tennis">Tennis</option>
+                        <option value="Golf">Golf</option>
+                    </select>
+                    <label class="profile-setup-form__label" for="setupFavTeams">Favorite teams (comma-separated, up to 5)</label>
+                    <input id="setupFavTeams" type="text" placeholder="e.g. Yankees, Knicks, Dolphins" maxlength="180">
+                    <div class="profile-setup-form__actions">
+                        <button type="submit" class="profile-setup-form__save">Save</button>
+                        <button type="button" class="profile-setup-form__skip" id="profileSetupSkip">Skip for now</button>
+                    </div>
+                    <div class="profile-setup-form__msg" id="profileSetupMsg" hidden></div>
+                </form>
+            </div>
+
+            <!-- Avatar uploader for own profile. Hidden until isOwnProfile resolves true. -->
+            <div id="profileAvatarUploader" class="profile-avatar-uploader" hidden>
+                <strong>Avatar:</strong>
+                <label class="profile-avatar-uploader__btn" for="profileAvatarFile"><i class="fas fa-camera"></i> Change avatar</label>
+                <input id="profileAvatarFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+                <span class="profile-avatar-uploader__hint" id="profileAvatarHint">PNG / JPG / WebP, &le; 2 MB. Resized to 256&times;256.</span>
+            </div>
         </div>
     </section>
+    <style>
+        .profile-setup-prompt{margin:14px auto 0;padding:18px 20px;background:linear-gradient(135deg,rgba(0,255,255,0.06),rgba(255,0,255,0.04));border:1px solid rgba(0,255,255,0.22);border-radius:14px;max-width:920px;}
+        .profile-setup-prompt__head h3{margin:0 0 4px;font:800 17px/1.2 'Barlow','Inter',sans-serif;color:#f4f7fb;letter-spacing:-0.01em;}
+        .profile-setup-prompt__head p{margin:0 0 14px;color:#94a3b8;font-size:13.5px;line-height:1.55;}
+        .profile-setup-form{display:grid;gap:8px;}
+        .profile-setup-form__label{font-size:11.5px;color:#cbd5e1;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-top:6px;}
+        .profile-setup-form select,.profile-setup-form input{padding:11px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.4);color:#f4f7fb;font:600 14px/1 'Inter',sans-serif;outline:none;}
+        .profile-setup-form select:focus,.profile-setup-form input:focus{border-color:#00ffff;background:rgba(0,255,255,0.04);}
+        .profile-setup-form__actions{display:flex;gap:10px;margin-top:10px;}
+        .profile-setup-form__save{padding:10px 22px;border:0;border-radius:10px;background:linear-gradient(135deg,#00ffff,#67e8f9);color:#04111A;font:800 13px/1 'Barlow','Inter',sans-serif;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;}
+        .profile-setup-form__save:hover{transform:translateY(-1px);box-shadow:0 12px 24px rgba(0,255,255,0.32);}
+        .profile-setup-form__skip{padding:10px 18px;border:1px solid rgba(255,255,255,0.16);background:transparent;color:#cbd5e1;font:700 12px/1 'Inter',sans-serif;text-transform:uppercase;letter-spacing:.04em;border-radius:10px;cursor:pointer;}
+        .profile-setup-form__skip:hover{background:rgba(255,255,255,0.04);color:#fff;}
+        .profile-setup-form__msg{padding:8px 12px;border-radius:8px;font-size:12.5px;line-height:1.4;}
+        .profile-setup-form__msg.is-error{background:rgba(255,80,100,0.10);border:1px solid rgba(255,80,100,0.32);color:#ffd0d6;}
+        .profile-setup-form__msg.is-success{background:rgba(74,222,128,0.10);border:1px solid rgba(74,222,128,0.32);color:#bef0ce;}
+
+        .profile-avatar-uploader{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px auto 0;padding:12px 16px;background:rgba(15,21,32,0.65);border:1px solid rgba(255,255,255,0.06);border-radius:12px;max-width:920px;color:#cbd5e1;font-size:13px;}
+        .profile-avatar-uploader strong{color:#fff;font-size:13px;letter-spacing:.04em;text-transform:uppercase;}
+        .profile-avatar-uploader__btn{cursor:pointer;padding:8px 14px;border-radius:8px;background:rgba(0,255,255,0.10);border:1px solid rgba(0,255,255,0.32);color:#00ffff;font:700 12px/1 'Inter',sans-serif;letter-spacing:.04em;text-transform:uppercase;}
+        .profile-avatar-uploader__btn:hover{background:rgba(0,255,255,0.18);}
+        .profile-avatar-uploader__hint{color:#64748b;font-size:11.5px;}
+
+        /* Sticky team badge -- shown next to a username everywhere (forum, polls, trivia, feed). */
+        .tmr-team-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;margin-left:6px;border-radius:5px;background:rgba(0,255,255,0.08);border:1px solid rgba(0,255,255,0.22);color:#67e8f9;font:700 10px/1.4 'Inter',sans-serif;letter-spacing:.04em;text-transform:uppercase;vertical-align:1px;white-space:nowrap;}
+        .tmr-team-badge i{font-size:9px;opacity:.7;}
+    </style>
+    <script>
+    (function() {
+        var isReady = false;
+        function fmt(v) { return String(v == null ? '' : v).trim(); }
+        function fmtTeams(s) {
+            if (!s) return [];
+            return String(s).split(',').map(t => t.trim()).filter(Boolean).slice(0, 5);
+        }
+        function isOwn() {
+            try { return !!(window.profileData && window.currentUser && window.profileData.username && window.currentUser.username && window.profileData.username.toLowerCase() === window.currentUser.username.toLowerCase()); } catch (e) { return false; }
+        }
+        function tryWire() {
+            if (isReady) return;
+            if (!window.profileData) return setTimeout(tryWire, 250);
+            if (!isOwn()) return; // public view: nothing to do
+            isReady = true;
+
+            var p = window.profileData || {};
+            var favSports = Array.isArray(p.favorite_sports) ? p.favorite_sports : (p.favorite_sport ? [p.favorite_sport] : []);
+            var favTeams  = Array.isArray(p.favorite_teams) ? p.favorite_teams : [];
+            var setupNeeded = !favSports.length || !favTeams.length;
+
+            var promptEl    = document.getElementById('profileSetupPrompt');
+            var uploaderEl  = document.getElementById('profileAvatarUploader');
+            var sportSel    = document.getElementById('setupFavSport');
+            var teamsInput  = document.getElementById('setupFavTeams');
+            var setupForm   = document.getElementById('profileSetupForm');
+            var skipBtn     = document.getElementById('profileSetupSkip');
+            var msgEl       = document.getElementById('profileSetupMsg');
+            var fileInput   = document.getElementById('profileAvatarFile');
+            var avatarHint  = document.getElementById('profileAvatarHint');
+
+            if (uploaderEl) uploaderEl.hidden = false;
+            var skippedKey = 'tmr_profile_setup_skipped_' + (p.username || 'x');
+            if (promptEl && setupNeeded && !localStorage.getItem(skippedKey)) {
+                promptEl.hidden = false;
+                if (favSports[0] && sportSel) sportSel.value = favSports[0];
+                if (favTeams.length && teamsInput) teamsInput.value = favTeams.join(', ');
+            }
+
+            function showMsg(text, kind) {
+                if (!msgEl) return;
+                msgEl.textContent = text || '';
+                msgEl.className = 'profile-setup-form__msg' + (kind ? ' is-' + kind : '');
+                msgEl.hidden = !text;
+            }
+
+            if (skipBtn) skipBtn.addEventListener('click', function() {
+                try { localStorage.setItem(skippedKey, '1'); } catch (e) {}
+                if (promptEl) promptEl.hidden = true;
+            });
+
+            if (setupForm) setupForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                showMsg('', '');
+                var sport = fmt(sportSel.value);
+                var teams = fmtTeams(teamsInput.value);
+                if (!sport) return showMsg('Pick a sport.', 'error');
+                if (!window.api || typeof window.api.request !== 'function') return showMsg('Save service unavailable. Refresh and try again.', 'error');
+                try {
+                    await window.api.request('/users/profile', {
+                        method: 'PUT',
+                        body: { favorite_sports: [sport], favorite_teams: teams }
+                    });
+                    showMsg('Saved. Your team badge will show up next to your name everywhere.', 'success');
+                    window.profileData.favorite_sports = [sport];
+                    window.profileData.favorite_teams  = teams;
+                    setTimeout(function() { if (promptEl) promptEl.hidden = true; }, 1200);
+                } catch (err) {
+                    showMsg(err && err.message ? err.message : 'Save failed.', 'error');
+                }
+            });
+
+            // ===== Avatar upload (canvas-resize to 256x256, store as data URI) =====
+            if (fileInput) fileInput.addEventListener('change', async function() {
+                var file = fileInput.files && fileInput.files[0];
+                if (!file) return;
+                if (file.size > 2 * 1024 * 1024) {
+                    avatarHint.textContent = 'File too large. Max 2 MB.'; avatarHint.style.color = '#ffd0d6'; return;
+                }
+                avatarHint.textContent = 'Uploading...'; avatarHint.style.color = '#94a3b8';
+                try {
+                    var dataUri = await resizeImage(file, 256, 0.85);
+                    if (!dataUri || dataUri.length > 180000) {
+                        avatarHint.textContent = 'Image too complex after resize. Try a smaller one.'; avatarHint.style.color = '#ffd0d6'; return;
+                    }
+                    await window.api.request('/users/profile', { method: 'PUT', body: { avatar_url: dataUri } });
+                    avatarHint.textContent = 'Saved.'; avatarHint.style.color = '#bef0ce';
+                    window.profileData.avatar_url = dataUri;
+                    var hdrAvatar = document.querySelector('#profileHeader img.profile-avatar, #profileHeader .profile-avatar img');
+                    if (hdrAvatar) hdrAvatar.src = dataUri;
+                } catch (err) {
+                    avatarHint.textContent = err && err.message ? err.message : 'Upload failed.'; avatarHint.style.color = '#ffd0d6';
+                }
+            });
+
+            function resizeImage(file, maxSide, quality) {
+                return new Promise(function(resolve, reject) {
+                    var reader = new FileReader();
+                    reader.onerror = function() { reject(new Error('Could not read file.')); };
+                    reader.onload = function() {
+                        var img = new Image();
+                        img.onerror = function() { reject(new Error('Not a valid image.')); };
+                        img.onload = function() {
+                            var w = img.width, h = img.height;
+                            var scale = Math.min(1, maxSide / Math.max(w, h));
+                            var tw = Math.max(1, Math.round(w * scale));
+                            var th = Math.max(1, Math.round(h * scale));
+                            var canvas = document.createElement('canvas');
+                            canvas.width = tw; canvas.height = th;
+                            var ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, tw, th);
+                            try { resolve(canvas.toDataURL('image/jpeg', quality)); }
+                            catch (e) { reject(e); }
+                        };
+                        img.src = reader.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tryWire);
+        else tryWire();
+        // Re-attempt periodically if profileData lands later in the page boot
+        var attempts = 0;
+        var t = setInterval(function() { attempts++; tryWire(); if (isReady || attempts > 40) clearInterval(t); }, 350);
+    })();
+    </script>
 
     <!-- ==================== TAB BAR ==================== -->
     <section class="profile-tabs-section">
