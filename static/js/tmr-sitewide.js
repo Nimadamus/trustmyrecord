@@ -12,7 +12,7 @@
         ["/", "Home"],
         [sportsbookPicksHref, "Make Picks"],
         ["/feed/", "Feed"],
-        ["/handicappers/", "Leaderboards"],
+        ["/leaderboards/", "Leaderboards"],
         ["/arena/", "Arena"],
         ["/forum/", "Forums"],
         ["/marketplace/", "Sell Your Picks"]
@@ -24,7 +24,8 @@
 
     const routeMeta = {
         "sportsbook.html": ["Make Picks", "Lock picks before games start. Build a public, permanent record."],
-        "handicappers.html": ["Leaderboards", "Handicappers, trivia, polls, online challenges, and head-to-head pick battles &mdash; every leaderboard in one hub."],
+        "leaderboards.html": ["Leaderboards", "Handicapping records, trivia points, polls, online challenges, and handicapper challenges &mdash; every leaderboard in one hub."],
+        "handicappers.html": ["Leaderboards", "Handicapping records, trivia points, polls, online challenges, and handicapper challenges &mdash; every leaderboard in one hub."],
         "arena.html": ["Arena", "Challenge rivals in sports picks, MLB The Show, Madden, NBA 2K, EA FC, and NHL."],
         "challenges.html": ["Arena", "Public competition, head-to-head challenges, and rivalry loops."],
         "feed.html": ["Feed", "Locked picks, hot takes, polls, trivia, and challenges from people with a record."],
@@ -422,7 +423,7 @@
                             <div class="tmr-search-grid">
                                 <a href="/sportsbook/"><strong>Make Picks</strong><span>Lock picks before games start</span></a>
                                 <a href="/feed/"><strong>Feed</strong><span>Posts, takes, locked picks</span></a>
-                                <a href="/handicappers/"><strong>Leaderboards</strong><span>Handicappers, trivia, polls, challenges</span></a>
+                                <a href="/leaderboards/"><strong>Leaderboards</strong><span>Records, trivia, polls, challenges</span></a>
                                 <a href="/arena/"><strong>Arena</strong><span>Head-to-head challenges</span></a>
                                 <a href="/polls/"><strong>Polls</strong><span>Sports debates, predictions</span></a>
                                 <a href="/trivia/"><strong>Trivia</strong><span>Sports knowledge games</span></a>

@@ -3209,3 +3209,83 @@ body.tmr-site-shell .friends-top-strip {
     letter-spacing: 0.18em;
     text-transform: uppercase;
 }
+
+/* Canonical desktop header layout.
+   Keep every top-level label readable and keep account actions from stealing
+   width from the nav row on normal desktop/laptop viewports. */
+@media (min-width: 641px) {
+    body.tmr-site-shell .tmr-global-nav__inner {
+        width: min(1700px, calc(100% - 36px)) !important;
+        grid-template-columns: max-content minmax(0, 1fr) max-content !important;
+        grid-template-areas: "brand links actions" !important;
+        align-items: center !important;
+        column-gap: clamp(12px, 1.1vw, 22px) !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__brand {
+        grid-area: brand !important;
+        min-width: max-content !important;
+        font-size: clamp(1.35rem, 1.55vw, 2rem) !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__panel {
+        display: contents !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__links {
+        grid-area: links !important;
+        min-width: 0 !important;
+        justify-content: center !important;
+        gap: clamp(4px, 0.38vw, 8px) !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        scrollbar-width: auto !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__links a {
+        flex: 0 0 auto !important;
+        min-width: max-content !important;
+        max-width: none !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: nowrap !important;
+        padding: 8px clamp(9px, 0.65vw, 12px) !important;
+        letter-spacing: 0.055em !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__actions {
+        grid-area: actions !important;
+        min-width: max-content !important;
+        max-width: max-content !important;
+        justify-content: flex-end !important;
+        overflow: visible !important;
+        flex-wrap: nowrap !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__button {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 1560px) {
+    body.tmr-site-shell .tmr-global-nav__inner,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__inner {
+        width: min(100%, calc(100% - 28px)) !important;
+        grid-template-columns: minmax(0, 1fr) max-content !important;
+        grid-template-areas:
+            "brand actions"
+            "links links" !important;
+        row-gap: 8px !important;
+        min-height: 82px !important;
+        padding: 10px 0 !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__links,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links {
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+        row-gap: 6px !important;
+        overflow: visible !important;
+    }
+}
