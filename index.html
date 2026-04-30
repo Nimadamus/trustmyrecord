@@ -1110,6 +1110,29 @@ button{font:inherit;cursor:pointer}
     gap: 14px;
 }
 .combined-hero.hero-v2 .hero-headline .ch-eyebrow { margin-bottom: 2px; }
+/* Larger pre-headline variant — sized at ~22px so 'The End Of The Bullshit.'
+   reads as a real sub-headline, not a tiny mono pill. */
+.combined-hero.hero-v2 .hero-headline .ch-eyebrow--big {
+    font-family: 'Barlow Condensed', 'Inter', sans-serif !important;
+    font-size: 22px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.02em !important;
+    color: var(--tmr-cyan-bright, #2dd4bf) !important;
+    text-transform: uppercase !important;
+    line-height: 1.1 !important;
+    background: transparent !important;
+    border: 0 !important;
+    padding: 0 !important;
+    margin-bottom: 12px !important;
+    text-shadow: 0 1px 14px rgba(0, 0, 0, 0.55);
+}
+.combined-hero.hero-v2 .hero-headline .ch-eyebrow--big .pip {
+    width: 8px;
+    height: 8px;
+    background: var(--tmr-cyan-bright, #2dd4bf);
+    box-shadow: 0 0 12px rgba(45, 212, 191, 0.7);
+    margin-right: 8px;
+}
 .combined-hero.hero-v2 .hero-headline h1 {
     font-family: 'Barlow Condensed', 'Inter', sans-serif;
     font-size: clamp(44px, 5.4vw, 88px);
@@ -1129,12 +1152,19 @@ button{font:inherit;cursor:pointer}
     text-shadow: 0 0 22px rgba(45, 212, 191, 0.45);
 }
 .combined-hero.hero-v2 .hero-headline .lead {
-    font-size: clamp(14.5px, 1.05vw, 17px);
-    line-height: 1.6;
-    color: #d8e0ec;
+    font-size: clamp(15px, 1.1vw, 18px);
+    line-height: 1.55;
+    color: #f4f7fb;
     margin: 0;
-    max-width: 560px;
+    max-width: 580px;
+    font-weight: 600;
     text-shadow: 0 1px 14px rgba(0, 0, 0, 0.55);
+}
+.combined-hero.hero-v2 .hero-headline .lead--secondary {
+    font-size: clamp(13.5px, 1vw, 15.5px);
+    color: #c5cee0;
+    font-weight: 500;
+    margin-top: -2px;
 }
 /* Hero action row - 3 stronger CTAs replacing the old chip row */
 .combined-hero.hero-v2 .hero-action-row {
@@ -1925,9 +1955,10 @@ button{font:inherit;cursor:pointer}
   <div class="hero-zone-a">
     <div class="hero-zone-a-inner">
       <div class="hero-headline">
-        <span class="ch-eyebrow"><span class="pip"></span>Sports Social Media · Verified Records · Competition</span>
-        <h1>POST PICKS.<br>TALK TRASH.<span class="accent">PROVE IT.</span></h1>
-        <p class="lead">Track every pick, build a verified public record, climb leaderboards, create polls and trivia, challenge other fans, and sell picks once your record proves you are worth following.</p>
+        <span class="ch-eyebrow ch-eyebrow--big"><span class="pip"></span>The End Of The Bullshit.</span>
+        <h1>DO YOU THINK YOU KNOW SPORTS?<br><span class="accent">PROVE IT.</span></h1>
+        <p class="lead">You think you can pick winners? Great &mdash; you're the reason this site exists. There are so many people like you who are full of crap. We built this site to filter out the bullshitters.</p>
+        <p class="lead lead--secondary">Track every pick, build a public record, climb leaderboards, create polls and trivia, challenge other fans, and sell picks once your record proves you are worth following.</p>
         <div class="hero-action-row" role="group" aria-label="Get started">
           <a class="hero-action hero-action--primary auth-link" href="register/">Start Tracking Picks</a>
           <a class="hero-action hero-action--ghost" href="/feed/">Explore the Community</a>
