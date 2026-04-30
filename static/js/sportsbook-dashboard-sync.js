@@ -231,7 +231,16 @@
             const status = normalizeStatus(pick.status, pick.result);
             const matchup = (pick.away_team || '') + ' vs ' + (pick.home_team || '');
             const odds = pick.odds_snapshot != null ? Number(pick.odds_snapshot) : '';
-            const pickDisplay = (pick.selection || 'Pick') + (pick.line_snapshot ? ' ' + pick.line_snapshot : '');
+            // Trim trailing zeros so totals never display 5.50/4.50/9.00.
+            const _line = (function (l) {
+                if (l == null || l === '') return '';
+                const n = Number(l);
+                if (!Number.isFinite(n)) return '';
+                let s = String(n);
+                if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
+                return s;
+            })(pick.line_snapshot);
+            const pickDisplay = (pick.selection || 'Pick') + (_line ? ' ' + _line : '');
             const result = status !== 'pending' ? formatUnits(pick.result_units) : (Number(pick.units || 1).toFixed(1) + 'u risked');
             return '<div class="recent-pick-item">' +
                 '<div class="pick-info">' +

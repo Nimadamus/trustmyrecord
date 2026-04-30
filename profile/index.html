@@ -3644,7 +3644,10 @@
     function formatLineValue(value) {
         if (value == null || value === '' || isNaN(Number(value))) return '--';
         const num = Number(value);
-        return num > 0 ? '+' + num : String(num);
+        // Trim trailing zeros: 5.50 -> "5.5", 9.00 -> "9", -3.50 -> "-3.5".
+        let s = String(num);
+        if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
+        return num > 0 ? '+' + s : s;
     }
 
     function formatUnitsValue(value) {
@@ -4635,7 +4638,14 @@
             return;
         }
         const fmtOdds = (o) => Number.isFinite(Number(o)) ? ((Number(o) > 0 ? '+' : '') + Number(o)) : '—';
-        const fmtLine = (l) => (l == null || l === '') ? '—' : (Number.isFinite(Number(l)) && Number(l) > 0 ? '+' : '') + l;
+        const fmtLine = (l) => {
+            if (l == null || l === '') return '—';
+            const n = Number(l);
+            if (!Number.isFinite(n)) return String(l);
+            let s = String(n);
+            if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
+            return n > 0 ? '+' + s : s;
+        };
         const fmtUnits = (u) => Number.isFinite(Number(u)) ? Number(u).toFixed(2) + 'u' : '—';
         const fmtPL = (p) => {
             const r = pmResultClass(p);

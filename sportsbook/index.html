@@ -1507,18 +1507,19 @@
 
         // Determine selection name. Team-total selections MUST include the
         // team name, the Over/Under side, AND the line so the API receives
-        // the same string the user sees on the slip — fixes the
-        // "sel=Pittsburgh Pirates" bug where Under 4.5 was lost in transit.
+        // the same string the user sees on the slip. Lines route through
+        // TMR.formatLine so they NEVER render with two decimals (5.50 -> 5.5).
+        var _line = (lineSnapshot != null && window.TMR && typeof window.TMR.formatLine === 'function') ? window.TMR.formatLine(lineSnapshot) : (lineSnapshot != null ? String(lineSnapshot) : '');
         var selection;
         var rawTeam = String(thePick.team || thePick.pick || '').replace(/\s+(over|under)\s*$/i, '').trim();
         if (betType === 'over' || betType === 'f5over') {
-            selection = lineSnapshot != null ? ('Over ' + lineSnapshot) : 'Over';
+            selection = _line ? ('Over ' + _line) : 'Over';
         } else if (betType === 'under' || betType === 'f5under') {
-            selection = lineSnapshot != null ? ('Under ' + lineSnapshot) : 'Under';
+            selection = _line ? ('Under ' + _line) : 'Under';
         } else if (betType === 'teamover') {
-            selection = (rawTeam + ' Over' + (lineSnapshot != null ? ' ' + lineSnapshot : '')).trim();
+            selection = (rawTeam + ' Over' + (_line ? ' ' + _line : '')).trim();
         } else if (betType === 'teamunder') {
-            selection = (rawTeam + ' Under' + (lineSnapshot != null ? ' ' + lineSnapshot : '')).trim();
+            selection = (rawTeam + ' Under' + (_line ? ' ' + _line : '')).trim();
         } else if (betType === 'f5ml' || betType === 'f5spread') {
             selection = rawTeam;
         } else {
@@ -9724,6 +9725,30 @@ window.toggleSportFamily = function (family) {
     window.TMR._renderPeriodBar = renderPeriodBar;
 
     // ====================================================================
+    // CANONICAL LINE FORMATTER (Apr 30 2026)
+    // Sportsbook lines NEVER show two decimals — totals are always 5.5,
+    // 4.5, 9, 8 — never 5.50 / 4.50 / 9.00 / 8.00. Spreads same. Every
+    // call site that displays a line/spread/total goes through this.
+    //   - Trims trailing zeros after the decimal
+    //   - Strips a stray trailing dot ("5." -> "5")
+    //   - opts.signed=true prepends '+' for positive values (spreads)
+    //   - Empty/NaN -> '' so callers can `if (line) ' ' + line`
+    // ====================================================================
+    window.TMR.formatLine = function (v, opts) {
+        if (v == null || v === '') return '';
+        var n = (typeof v === 'number') ? v : parseFloat(String(v).trim());
+        if (!Number.isFinite(n)) return '';
+        // Drop trailing zeros: 5.50 -> "5.5", 9.00 -> "9", -3.50 -> "-3.5"
+        var s = String(n);
+        // parseFloat already drops trailing zeros for most JS values, but if
+        // a string like "5.50" was passed in originally, n is 5.5 and
+        // String(5.5) = "5.5" — good. Belt and suspenders for "5.0":
+        if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
+        if (opts && opts.signed && n > 0) return '+' + s;
+        return s;
+    };
+
+    // ====================================================================
     // PENDING PICKS PANEL (lobby aside)
     //
     // Pulls every pick the user has locked but not yet graded from
@@ -9817,8 +9842,16 @@ window.toggleSportFamily = function (family) {
                     game = (p.away_team || '') + ' @ ' + (p.home_team || '');
                 }
                 var sel = p.selection_label || p.selection || 'Pick';
-                if (p.line_snapshot != null && String(sel).indexOf(String(p.line_snapshot)) === -1) {
-                    sel = sel + ' ' + p.line_snapshot;
+                // Route every line display through TMR.formatLine so totals
+                // never render as 5.50/4.50 — only 5.5/4.5. Also strip any
+                // 5.50-style line that's already baked into selection_label
+                // (legacy server data can ship "Tigers Under 4.50").
+                var formattedLine = (window.TMR && typeof window.TMR.formatLine === 'function')
+                    ? window.TMR.formatLine(p.line_snapshot)
+                    : (p.line_snapshot == null ? '' : String(p.line_snapshot));
+                sel = String(sel).replace(/\b(\d+)\.(\d)0+\b/g, '$1.$2').replace(/\b(\d+)\.0+\b/g, '$1');
+                if (formattedLine && String(sel).indexOf(formattedLine) === -1) {
+                    sel = sel + ' ' + formattedLine;
                 }
                 var market = fmtMarket(p.market_type);
                 var units  = fmtUnits(p.units);
@@ -10165,7 +10198,9 @@ window.toggleSportFamily = function (family) {
         var safeTeam = safe(sel.team);
         var safeBook = safe(bookLabel);
         var oddsTxt  = fmtOdds(sel.odds);
-        var lineTxt  = (sel.line == null || sel.line === '') ? '' : (' ' + sel.line);
+        // Single canonical formatter — totals never show 5.50/4.50; only 5.5/4.5.
+        var _fmt = (window.TMR && typeof window.TMR.formatLine === 'function') ? window.TMR.formatLine : function (v) { if (v == null || v === '') return ''; var n = parseFloat(v); if (!Number.isFinite(n)) return ''; var s = String(n); if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, ''); return s; };
+        var lineTxt  = (sel.line == null || sel.line === '') ? '' : (' ' + _fmt(sel.line));
 
         card.innerHTML =
             '<div class="sportsbook-ticket-preview-topline">' +
@@ -19540,7 +19575,7 @@ document.addEventListener('DOMContentLoaded', function() {
          containers that don't exist on the picks board, throwing console
          noise. They're loaded on /feed/ and /forum/ where they belong. -->
     <script src="/static/js/navigation.js?v=20260430routefix1"></script>
-<script src="/static/js/sportsbook-production-fix-persist.js?v=20260430pendingev1"></script>
+<script src="/static/js/sportsbook-production-fix-persist.js?v=20260430notrailzero1"></script>
     <script src="/static/js/effects.js?v=20251208c"></script>
     <script>
     (function() {

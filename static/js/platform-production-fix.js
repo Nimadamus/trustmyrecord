@@ -274,7 +274,12 @@
     function buildPickDisplay(pick) {
         const selection = pick.selection || pick.side || pick.team || 'Selection';
         const line = pick.line_snapshot ?? pick.line;
-        return line == null || line === '' ? selection : selection + ' ' + line;
+        if (line == null || line === '') return selection;
+        // Trim trailing zeros so totals never display 5.50/4.50/9.00.
+        const n = Number(line);
+        let s = Number.isFinite(n) ? String(n) : String(line);
+        if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
+        return selection + ' ' + s;
     }
 
     function formatOdds(odds) {
