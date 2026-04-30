@@ -15,7 +15,8 @@ async function directBackendLoginFallback(usernameOrEmail, password, rememberMe)
         },
         body: JSON.stringify({
             login: usernameOrEmail,
-            password
+            password,
+            rememberMe: rememberMe !== false
         })
     });
 
