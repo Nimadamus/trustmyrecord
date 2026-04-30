@@ -1737,6 +1737,40 @@
         if (bookInput) bookInput.value = option.book_title || '';
         if (timestampInput) timestampInput.value = formatTimestamp(option.source_updated_at);
 
+        // Team-totals: also populate the .sportsbook-ticket-preview slip aside.
+        // Without this, the visible "SUBMIT PICK" button stays disabled and a
+        // user clicking e.g. Pirates Under +4.5 has nothing to submit through.
+        // _ttPopulateSlip swaps the static slip card for one with a working
+        // #ttSlipSubmit that calls window.lockInPick().
+        if (option.market_type === 'team_totals' && window.TMR && typeof window.TMR._ttPopulateSlip === 'function') {
+            try {
+                const label = String(option.selection_label || '');
+                const betType = /under/i.test(label) ? 'teamunder' : 'teamover';
+                let teamName = label.replace(/\s*(Over|Under).*$/i, '').trim();
+                if (!teamName && option.game) {
+                    teamName = option.game.home_team || option.game.away_team || '';
+                }
+                window.TMR._ttPopulateSlip({
+                    gameIndex: null,
+                    betType: betType,
+                    team: teamName,
+                    line: option.line != null ? option.line : (parseFloat(option.line_display) || null),
+                    odds: option.odds,
+                    awayTeam: option.game ? option.game.away_team : '',
+                    homeTeam: option.game ? option.game.home_team : '',
+                    sport: (window.TMR && window.TMR.selectedSport) || '',
+                    market: option.group_label || 'Team Total',
+                    marketType: 'team_totals',
+                    book: option.book_title || '',
+                    gameTime: option.game ? option.game.commence_time : null,
+                    gameId: option.game_id || (option.game && option.game.id) || null,
+                    game: option.game || null
+                });
+            } catch (e) {
+                console.warn('[TMR][TT] _ttPopulateSlip wiring failed:', e && e.message);
+            }
+        }
+
         if (!(window.TMR && window.TMR.__suppressPickStep) && typeof window.showPickStep === 'function') {
             window.showPickStep('pickDetails');
         }
