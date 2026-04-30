@@ -1,0 +1,211 @@
+/* ===========================================================================
+   Sportsbook DraftKings-style polish (Apr 30 2026)
+   ----------------------------------------------------------------------------
+   Sits on top of sportsbook-pro.css. Pushes the Make Picks board toward a
+   cleaner, more professional, less cramped sportsbook feel:
+     - Larger odds buttons with stronger price typography
+     - More vertical breathing room between game rows
+     - Wider centered max-width for the main board
+     - Stronger visual hierarchy on market tabs
+     - Larger pick slip on the right
+     - Cleaner, more legible score / time strip
+   No HTML changes required — the existing markup classes are still the
+   authoritative selectors. Loaded after sportsbook-pro.css so its rules win.
+   =========================================================================== */
+
+/* Wider, breathing-room layout. The original board capped close to 1180px
+ * which felt cramped at modern sportsbook widths. */
+#picks .sportsbook-board,
+#picks .sportsbook-board-wrap,
+#picks .sportsbook-lobby-shell,
+#picks .sportsbook-board-grid {
+    max-width: 1320px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* ===== Period / market tabs ===== */
+#picks .sportsbook-period-bar {
+    padding: 16px 24px !important;
+    gap: 8px !important;
+    justify-content: flex-start !important;
+}
+#picks .sportsbook-period-tab {
+    height: 40px !important;
+    padding: 9px 18px !important;
+    font-size: 13px !important;
+    letter-spacing: 0.4px !important;
+    border-radius: 8px !important;
+    border-width: 1px !important;
+}
+#picks .sportsbook-period-tab.is-active {
+    box-shadow: 0 0 0 1px var(--sb-accent) inset, 0 4px 18px var(--sb-accent-glow, rgba(34,211,238,.45)) !important;
+    transform: translateY(-1px);
+}
+
+/* ===== Game rows ===== */
+#picks .sb-board-row {
+    padding: 22px 26px !important;
+    min-height: 148px !important;
+    gap: 16px !important;
+}
+#picks .sb-board-row + .sb-board-row {
+    border-top: 1px solid var(--sb-border) !important;
+}
+
+/* Slightly larger team typography for scannability */
+#picks .sb-board-team b {
+    font-size: 16.5px !important;
+    letter-spacing: 0.15px !important;
+}
+#picks .sb-board-when {
+    font-size: 11.5px !important;
+    letter-spacing: 1.2px !important;
+}
+
+/* ===== Odds buttons (the headline change) ===== */
+#picks .sb-odds {
+    height: 56px !important;
+    padding: 0 18px !important;
+    border-radius: 10px !important;
+    border-width: 1px !important;
+    background: linear-gradient(180deg, var(--sb-cell) 0%, rgba(255,255,255,0.02) 100%) !important;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease !important;
+}
+#picks .sb-odds:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.28), 0 0 0 1px var(--sb-accent-glow, rgba(34,211,238,.5)) inset !important;
+}
+#picks .sb-odds:active {
+    transform: translateY(0) !important;
+}
+#picks .sb-odds-price {
+    font-size: 18px !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.3px !important;
+}
+#picks .sb-odds-line {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+#picks .sb-odds[disabled],
+#picks .sb-odds.is-locked {
+    opacity: 0.42 !important;
+    background: var(--sb-cell, #0f1928) !important;
+    cursor: not-allowed !important;
+}
+
+/* Selected/active state — visual confirmation of the current pick */
+#picks .sb-odds.is-selected,
+#picks .sb-odds[aria-pressed="true"] {
+    background: rgba(34, 211, 238, 0.16) !important;
+    border-color: var(--sb-accent, #22d3ee) !important;
+    color: var(--sb-text, #f8fafc) !important;
+    box-shadow: 0 0 0 1px var(--sb-accent, #22d3ee) inset, 0 8px 22px rgba(34,211,238,0.30) !important;
+}
+#picks .sb-odds.is-selected .sb-odds-line,
+#picks .sb-odds.is-selected .sb-odds-price {
+    color: var(--sb-text, #f8fafc) !important;
+}
+
+/* Action button per-row (Make Pick) */
+#picks .sb-board-action {
+    height: 56px !important;
+    font-size: 13.5px !important;
+    letter-spacing: 1.1px !important;
+    border-radius: 10px !important;
+}
+
+/* ===== Header row ===== */
+#picks .sportsbook-board-grid-head {
+    padding: 18px 26px !important;
+    background: linear-gradient(180deg, var(--sb-surface-2) 0%, var(--sb-surface) 100%) !important;
+}
+#picks .sportsbook-board-grid-head span {
+    font-size: 11.5px !important;
+    letter-spacing: 1.8px !important;
+}
+
+/* ===== Team-totals stack — match the new height ===== */
+#picks .sb-tt-team-cell {
+    height: 56px !important;
+    border-radius: 10px !important;
+    padding: 0 14px !important;
+}
+#picks .sb-tt-team-cell b {
+    font-size: 14.5px !important;
+}
+
+/* ===== Pick slip (right side) — bigger, cleaner ===== */
+#picks .sportsbook-ticket-preview,
+#picks .pick-slip,
+#picks .pick-slip-card {
+    border-radius: 14px !important;
+    border: 1px solid var(--sb-border, rgba(148,163,184,0.18)) !important;
+    background: var(--sb-surface, #101a2d) !important;
+    padding: 22px 22px 18px !important;
+    min-width: 320px;
+}
+#picks .sportsbook-ticket-preview-submit,
+#picks .submit-pick-btn,
+#picks .lock-pick-btn {
+    width: 100% !important;
+    height: 54px !important;
+    font-size: 14.5px !important;
+    font-weight: 900 !important;
+    letter-spacing: 1px !important;
+    border-radius: 10px !important;
+    text-transform: uppercase !important;
+    margin-top: 14px !important;
+    transition: transform 0.12s ease, background 0.15s ease, box-shadow 0.15s ease !important;
+}
+#picks .sportsbook-ticket-preview-submit:hover:not(:disabled),
+#picks .submit-pick-btn:hover:not(:disabled),
+#picks .lock-pick-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.28);
+}
+#picks .sportsbook-ticket-preview-submit:disabled,
+#picks .submit-pick-btn:disabled,
+#picks .lock-pick-btn:disabled,
+#picks .sportsbook-ticket-preview-submit[aria-busy="true"] {
+    opacity: 0.55 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+}
+
+/* Empty state — bigger, friendlier */
+#picks .sportsbook-board-empty {
+    padding: 56px 28px !important;
+    border-radius: 14px !important;
+}
+
+/* ===== Sports rail ===== */
+.sportsbook-sports-nav {
+    padding: 14px 22px !important;
+    gap: 8px !important;
+    background: var(--sb-surface-2, #0d1626) !important;
+    border-radius: 10px;
+    margin-bottom: 14px;
+}
+.sportsbook-sports-nav button {
+    padding: 9px 18px !important;
+    font-size: 13.5px !important;
+    border-radius: 8px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.4px !important;
+}
+.sportsbook-sports-nav button.active {
+    box-shadow: 0 0 0 1px var(--sb-accent, #22d3ee) inset, 0 4px 14px rgba(34,211,238,0.32) !important;
+}
+
+/* Mobile: tighten spacing but keep buttons tap-friendly */
+@media (max-width: 760px) {
+    #picks .sb-board-row {
+        padding: 18px 16px !important;
+        min-height: 0 !important;
+    }
+    #picks .sb-odds { height: 50px !important; padding: 0 12px !important; }
+    #picks .sb-board-action { height: 50px !important; font-size: 13px !important; }
+    #picks .sportsbook-period-tab { height: 38px !important; padding: 8px 14px !important; }
+}

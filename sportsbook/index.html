@@ -9072,33 +9072,22 @@
 
                 <aside class="sportsbook-ticket-preview">
                     <div class="sportsbook-ticket-preview-head">
-                        <span class="sportsbook-lobby-label">Pick Slip</span>
-                        <h3>Pick Slip</h3>
-                        <p class="sportsbook-selector-copy">No selections yet. Select an odds box to build your verified pick.</p>
+                        <div class="sportsbook-ticket-preview-titlebar">
+                            <div>
+                                <span class="sportsbook-lobby-label">Pick Slip</span>
+                                <h3>Pick Slip</h3>
+                            </div>
+                            <span class="sportsbook-slip-count">0 Picks</span>
+                        </div>
+                        <p class="sportsbook-selector-copy">No picks selected yet.</p>
                     </div>
 
                     <div class="sportsbook-ticket-preview-card">
-                        <div class="sportsbook-ticket-preview-topline">
-                            <strong>Empty Slip</strong>
-                            <span>0 picks</span>
+                        <div class="sportsbook-empty-slip" role="status">
+                            <strong>No picks selected yet.</strong>
+                            <span>Click any odds box to add a pick to your slip.</span>
                         </div>
-                        <div class="sportsbook-ticket-preview-row">
-                            <span>Pick lock</span>
-                            <strong>After submission</strong>
-                        </div>
-                        <div class="sportsbook-ticket-preview-row">
-                            <span>Public timestamp</span>
-                            <strong>Issued at submit</strong>
-                        </div>
-                        <div class="sportsbook-ticket-preview-row">
-                            <span>Grading</span>
-                            <strong>Auto · updates record</strong>
-                        </div>
-                        <div class="sportsbook-ticket-preview-row">
-                            <span>Receipt</span>
-                            <strong>Permanent · public</strong>
-                        </div>
-                        <div class="sportsbook-ticket-preview-note">Tap any odds button on the board. Your selection becomes a locked, verified public record.</div>
+                        <div class="sportsbook-ticket-preview-note">Your pick will be locked to your public record once submitted. A timestamp will be created automatically. Results will update your record after grading.</div>
                         <button type="button" class="sportsbook-ticket-preview-submit" disabled>Submit Pick</button>
                     </div>
 
@@ -19130,22 +19119,28 @@ document.addEventListener('DOMContentLoaded', function() {
         // script load order shifted. Removed Apr 30 2026 (Nima).
     </script>
     <script>
-        // Notifications System
+        // Notifications System.
+        // Apr 30 2026: legacy in-page notifications header was removed in
+        // favor of the sitewide global nav bell, so notificationBtn /
+        // notificationBadge / unreadCount can all legitimately be null on
+        // this page. Every helper below null-guards to keep downstream JS
+        // (lockInPick, board renderers, etc.) from breaking on TypeError.
         function toggleNotifications() {
             const panel = document.getElementById('notificationsPanel');
-            if (panel.style.display === 'none') {
-                panel.style.display = 'block';
-            } else {
-                panel.style.display = 'none';
-            }
+            if (!panel) return;
+            panel.style.display = (panel.style.display === 'none') ? 'block' : 'none';
         }
 
         function markAllRead() {
             const unreadItems = document.querySelectorAll('.notification-item.unread');
             unreadItems.forEach(item => item.classList.remove('unread'));
-            document.getElementById('notificationBadge').textContent = '0';
-            document.getElementById('notificationBadge').style.display = 'none';
-            document.getElementById('unreadCount').textContent = '0';
+            const badge = document.getElementById('notificationBadge');
+            if (badge) {
+                badge.textContent = '0';
+                badge.style.display = 'none';
+            }
+            const unread = document.getElementById('unreadCount');
+            if (unread) unread.textContent = '0';
         }
 
         function openNewMessageModal() {
@@ -19209,21 +19204,19 @@ document.addEventListener('DOMContentLoaded', function() {
             showSection('profile');
         }
 
-        // Update unread count dynamically
+        // Update unread count dynamically. Null-guarded — legacy badge
+        // elements were removed Apr 30 2026 and the sitewide nav-badges.js
+        // owns the bell badge now. We still update local items if any.
         function updateUnreadCount() {
             const unreadItems = document.querySelectorAll('.notification-item.unread');
             const count = unreadItems.length;
             const badge = document.getElementById('notificationBadge');
             const unreadCount = document.getElementById('unreadCount');
-
-            if (count > 0) {
-                badge.textContent = count;
-                badge.style.display = 'block';
-                unreadCount.textContent = count;
-            } else {
-                badge.style.display = 'none';
-                unreadCount.textContent = '0';
+            if (badge) {
+                if (count > 0) { badge.textContent = String(count); badge.style.display = 'block'; }
+                else { badge.style.display = 'none'; }
             }
+            if (unreadCount) unreadCount.textContent = String(count || 0);
         }
 
         // Mark individual notification as read on click
@@ -19270,7 +19263,7 @@ document.addEventListener('DOMContentLoaded', function() {
          containers that don't exist on the picks board, throwing console
          noise. They're loaded on /feed/ and /forum/ where they belong. -->
     <script src="/static/js/navigation.js?v=20260430routefix1"></script>
-<script src="/static/js/sportsbook-production-fix-persist.js?v=20260430pickpersist8"></script>
+<script src="/static/js/sportsbook-production-fix-persist.js?v=20260430pickslipexp1"></script>
     <script src="/static/js/effects.js?v=20251208c"></script>
     <script>
     (function() {
@@ -27103,7 +27096,7 @@ document.addEventListener('DOMContentLoaded', function() {
             #picks .game-row .odds-btn .odds-value { font-size: 11px !important; }
         }
     </style>
-    <link rel="stylesheet" href="/static/css/sportsbook-pro.css?v=20260430b">
+    <link rel="stylesheet" href="/static/css/sportsbook-pro.css?v=20260430pickslipexp1">
     <link rel="stylesheet" href="/static/css/sportsbook-dk-polish.css?v=20260430dk">
     <script>
     // Stamp body[data-tmr-auth] so the Make Picks page can hide the
