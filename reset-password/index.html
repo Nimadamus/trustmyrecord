@@ -2,62 +2,332 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/reset-password/">
+    <meta name="robots" content="noindex, nofollow">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting To Password Reset...</title>
-    <meta http-equiv="refresh" content="0; url=/reset-password.html">
-    <script>
-    (function() {
-        var target = '/reset-password.html';
-        if (window.location.search) {
-            target += window.location.search;
-        }
-        if (window.location.hash) {
-            target += window.location.hash;
-        }
-        window.location.replace(target);
-    })();
-    </script>
+    <title>Reset Password - TrustMyRecord</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260429f">
+<link rel="stylesheet" href="/static/css/tmr-page-polish.css?v=20260429a">
+<script defer src="/static/js/tmr-sitewide.js?v=20260429f"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
     <style>
-        html, body {
-            margin: 0;
-            min-height: 100%;
-            background: #0b1220;
-            color: #f8fafc;
-            font-family: Inter, sans-serif;
-        }
         body {
+            margin: 0;
+            min-height: 100vh;
             display: grid;
             place-items: center;
             padding: 24px;
+            background:
+                radial-gradient(circle at 12% 0%, rgba(45, 212, 191, 0.12), transparent 28%),
+                linear-gradient(180deg, #08111d, #0d1726) !important;
+            color: #eef4fb;
+            font-family: 'Inter', sans-serif;
         }
-        .redirect-card {
-            max-width: 520px;
-            padding: 28px 32px;
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.08);
-            background: linear-gradient(180deg, rgba(18, 24, 38, 0.96), rgba(10, 14, 24, 0.98));
-            box-shadow: 0 24px 60px rgba(0,0,0,0.28);
+
+        .reset-container {
+            width: min(520px, 100%);
+            margin: 0 auto;
+            padding: 34px;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
+                rgba(11, 20, 34, 0.94);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 22px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.32);
+        }
+        .reset-title {
+            margin: 0 0 10px;
+            font-family: 'Barlow', sans-serif;
+            font-size: clamp(2rem, 5vw, 2.55rem);
+            line-height: 0.96;
+            letter-spacing: -0.03em;
+            color: #eef4fb;
             text-align: center;
         }
-        h1 {
-            margin: 0 0 12px;
-            font-size: 28px;
-            line-height: 1.1;
+        .reset-subtitle {
+            font-size: 0.94rem;
+            color: #97a8bc;
+            text-align: center;
+            margin-bottom: 30px;
         }
-        p {
-            margin: 0;
-            color: rgba(226, 232, 240, 0.82);
-            line-height: 1.5;
+        .form-group {
+            margin-bottom: 20px;
         }
-        a {
-            color: #7dd3fc;
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.72rem;
+            color: #97a8bc;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 800;
+        }
+        .form-group input {
+            width: 100%;
+            min-height: 46px;
+            padding: 0 15px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 14px;
+            background: rgba(255,255,255,0.045);
+            color: #eef4fb;
+            font-size: 0.95rem;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: rgba(45, 212, 191, 0.38);
+            box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.12);
+        }
+        .btn-primary {
+            width: 100%;
+            background: linear-gradient(135deg, #2dd4bf, #8df5ea);
+            color: #06120f;
+            border: none;
+            min-height: 48px;
+            border-radius: 999px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 38px rgba(45, 212, 191, 0.22);
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .message {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .message.success {
+            background: rgba(45, 212, 191, 0.12);
+            border: 1px solid rgba(45, 212, 191, 0.22);
+            color: #d7fffb;
+        }
+        .message.error {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.24);
+            color: #fecaca;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 24px;
+            color: #97a8bc;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .back-link:hover {
+            color: #eef4fb;
+        }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(45, 212, 191, 0.16);
+            border-top-color: #2dd4bf;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .hidden { display: none; }
+        .password-requirements {
+            font-size: 12px;
+            color: #97a8bc;
+            margin-top: 6px;
+        }
+        .password-requirements.valid {
+            color: #d7fffb;
+        }
+        @media (max-width: 640px) {
+            .reset-container { padding: 24px 20px; }
         }
     </style>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
 </head>
-<body>
-    <div class="redirect-card">
-        <h1>Opening Password Reset</h1>
-        <p>If you are not redirected automatically, <a href="/reset-password.html">continue to reset your password</a>.</p>
+<body class="tmr-polished-page">
+    <div class="reset-container">
+        <!-- Request Reset Form -->
+        <div id="request-form">
+            <h1 class="reset-title">Forgot Password?</h1>
+            <p class="reset-subtitle">Enter your email or username and we'll send the reset link to the account email on file</p>
+            
+            <div id="request-message"></div>
+            
+            <form id="forgot-form" onsubmit="handleForgotSubmit(event)">
+                <div class="form-group">
+                    <label for="email">Email Or Username</label>
+                    <input type="text" id="email" required placeholder="your@email.com or your username">
+                </div>
+                <button type="submit" class="btn-primary" id="request-btn">
+                    Send Reset Link
+                </button>
+            </form>
+        </div>
+
+        <!-- Reset Password Form -->
+        <div id="reset-form" class="hidden">
+            <h1 class="reset-title">Create New Password</h1>
+            <p class="reset-subtitle">Enter your new password below</p>
+            
+            <div id="reset-message"></div>
+            
+            <form id="new-password-form" onsubmit="handleResetSubmit(event)">
+                <div class="form-group">
+                    <label for="new-password">New Password</label>
+                    <input type="password" id="new-password" required 
+                           minlength="8" placeholder="••••••••">
+                    <div class="password-requirements" id="password-help">
+                        Must be at least 8 characters
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="confirm-password">Confirm Password</label>
+                    <input type="password" id="confirm-password" required 
+                           placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn-primary" id="reset-btn">
+                    Reset Password
+                </button>
+            </form>
+        </div>
+
+        <!-- Success State -->
+        <div id="success-state" class="hidden">
+            <div class="message success">
+                ✅ Your password has been reset successfully!
+            </div>
+                    <a href="/login/" class="btn-primary" style="text-decoration: none; display: inline-block; text-align: center;">
+                Go to Login
+            </a>
+        </div>
+
+        <a href="/" class="back-link">← Back to home</a>
     </div>
+
+<script src="/static/js/config.js"></script>
+<script src="/static/js/analytics.js?v=20260405"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+<script src="/static/js/auth-persistent.js?v=20260424a"></script>
+    <script>
+        const apiClient = window.api;
+        let resetToken = '';
+
+        async function ensureApiReady() {
+            if (!apiClient) {
+                throw new Error('Password reset service is unavailable right now.');
+            }
+
+            if (apiClient.ready) {
+                try {
+                    await apiClient.ready;
+                } catch (error) {}
+            }
+
+            return apiClient;
+        }
+
+        // Check URL for reset token
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            resetToken = urlParams.get('token');
+            const loginPrefill = (urlParams.get('login') || '').trim();
+
+            if (resetToken) {
+                document.getElementById('request-form').classList.add('hidden');
+                document.getElementById('reset-form').classList.remove('hidden');
+            } else if (loginPrefill) {
+                const emailField = document.getElementById('email');
+                if (emailField) emailField.value = loginPrefill;
+            }
+        });
+
+        // Password validation
+        document.getElementById('new-password')?.addEventListener('input', (e) => {
+            const help = document.getElementById('password-help');
+            if (e.target.value.length >= 8) {
+                help.classList.add('valid');
+                help.textContent = '✓ Password looks good';
+            } else {
+                help.classList.remove('valid');
+                help.textContent = 'Must be at least 8 characters';
+            }
+        });
+
+        async function handleForgotSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const btn = document.getElementById('request-btn');
+            const msg = document.getElementById('request-message');
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Sending...';
+
+            try {
+                const api = await ensureApiReady();
+                await api.forgotPassword(email);
+                msg.innerHTML = '<div class="message success">If that account exists, a reset link is on the way to its email address.</div>';
+                document.getElementById('forgot-form').reset();
+            } catch (error) {
+                msg.innerHTML = `<div class="message error">${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Send Reset Link';
+            }
+        }
+
+        async function handleResetSubmit(e) {
+            e.preventDefault();
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const btn = document.getElementById('reset-btn');
+            const msg = document.getElementById('reset-message');
+
+            if (newPassword !== confirmPassword) {
+                msg.innerHTML = '<div class="message error">Passwords do not match</div>';
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                msg.innerHTML = '<div class="message error">Password must be at least 8 characters</div>';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Resetting...';
+
+            try {
+                const api = await ensureApiReady();
+                await api.resetPassword(resetToken, newPassword);
+                document.getElementById('reset-form').classList.add('hidden');
+                document.getElementById('success-state').classList.remove('hidden');
+            } catch (error) {
+                msg.innerHTML = `<div class="message error">${error.message}</div>`;
+                btn.disabled = false;
+                btn.innerHTML = 'Reset Password';
+            }
+        }
+    </script>
 </body>
 </html>
+
+

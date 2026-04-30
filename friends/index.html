@@ -2,10 +2,1304 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/friends/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting...</title>
-    <meta http-equiv="refresh" content="0; url=/friends.html">
-    <script>window.location.replace('/friends.html' + window.location.search + window.location.hash);</script>
+    <title>Friends | TrustMyRecord</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260429f">
+<script defer src="/static/js/tmr-sitewide.js?v=20260429f"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --neon-cyan: #00ffff;
+            --neon-purple: #ff00ff;
+            --neon-green: #39ff14;
+            --neon-gold: #ffd700;
+            --neon-red: #ff073a;
+            --neon-orange: #ff8c00;
+            --dark-bg: #0a0a0f;
+            --darker-bg: #050508;
+            --card-bg: rgba(20, 20, 35, 0.8);
+            --glass-border: rgba(0, 255, 255, 0.2);
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0c0;
+            --text-muted: #808090;
+            --border-color: rgba(0, 255, 255, 0.2);
+            /* Aliases for legacy references */
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(20, 20, 35, 0.8);
+            --bg-hover: rgba(0, 255, 255, 0.1);
+            --primary: #00ffff;
+            --success: #39ff14;
+            --danger: #ff073a;
+            --warning: #ffd700;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark-bg);
+            background-image:
+                radial-gradient(circle at 25% 75%, rgba(0, 255, 255, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 75% 25%, rgba(255, 215, 0, 0.06) 0%, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        /* Main Navigation - LARGER, CLEARER, BETTER SPACED */
+        header {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo {
+            font-family: 'Barlow', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logo:hover {
+            filter: brightness(1.2);
+            transform: scale(1.02);
+        }
+
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--neon-cyan);
+        }
+
+        .nav-links a.active {
+            color: var(--neon-cyan);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .logo {
+                font-size: 20px;
+            }
+        }
+        
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .page-header {
+            margin-bottom: 40px;
+        }
+
+        .page-title {
+            font-family: 'Barlow', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Search Section */
+        .search-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .search-input {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--neon-cyan);
+        }
+
+        .search-btn {
+            padding: 15px 30px;
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .tab {
+            padding: 10px 25px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .tab:hover {
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        .tab.active {
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
+            border-color: transparent;
+            color: white;
+        }
+
+        .tab-badge {
+            background: var(--danger);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        /* Friends Grid */
+        .friends-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .friend-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .friend-card:hover {
+            border-color: var(--neon-cyan);
+            transform: translateY(-3px);
+        }
+
+        .friend-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .friend-avatar.online::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 14px;
+            height: 14px;
+            background: var(--success);
+            border: 2px solid var(--bg-card);
+            border-radius: 50%;
+        }
+
+        .friend-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .friend-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .friend-status {
+            font-size: 13px;
+            color: var(--success);
+        }
+
+        .friend-status.offline {
+            color: var(--text-muted);
+        }
+
+        .friend-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .friend-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-btn:hover {
+            background: rgba(0, 243, 255, 0.1);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .action-btn.danger:hover {
+            background: rgba(255, 7, 58, 0.1);
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .action-btn.success:hover {
+            background: rgba(57, 255, 20, 0.1);
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        /* Request Card Variant */
+        .request-card {
+            border-left: 3px solid var(--warning);
+        }
+
+        .request-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-accept, .btn-decline {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .btn-accept {
+            background: var(--success);
+            color: black;
+        }
+
+        .btn-accept:hover {
+            background: #2dd112;
+        }
+
+        .btn-decline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .btn-decline:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        /* Loading state */
+        .tmr-loading-state { text-align: center; padding: 60px 20px; }
+        .tmr-loading-state .tmr-spinner { width: 40px; height: 40px; border: 3px solid rgba(0,255,255,0.15); border-top-color: var(--neon-cyan); border-radius: 50%; animation: tmr-spin 0.8s linear infinite; margin: 0 auto 16px; }
+        @keyframes tmr-spin { to { transform: rotate(360deg); } }
+        .tmr-loading-state p { color: var(--text-secondary); font-size: 0.95rem; margin: 8px 0; }
+        .tmr-loading-state .tmr-loading-slow { color: var(--neon-gold); display: none; }
+        .tmr-loading-state .tmr-loading-retry { display: none; }
+        .tmr-loading-state .tmr-loading-retry button { background: var(--neon-cyan); color: var(--dark-bg); border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; margin-top: 8px; }
+        .tmr-loading-state .tmr-loading-retry button:hover { opacity: 0.85; }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-family: 'Barlow', sans-serif;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        /* Search Results */
+        .search-results {
+            margin-top: 20px;
+        }
+
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+
+        .add-friend-btn {
+            margin-left: auto;
+            padding: 8px 20px;
+            background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .add-friend-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 243, 255, 0.3);
+        }
+
+        .add-friend-btn:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Barlow', sans-serif;
+            font-size: 1.8rem;
+            color: var(--neon-cyan);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .page-title {
+                font-size: 1.8rem;
+            }
+
+            .friends-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+        }
+
+        /* ========================================
+           FRIENDS PORTAL OVERRIDE
+           ======================================== */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f3f5f8;
+            color: #162231;
+        }
+
+        .friends-top-strip,
+        header,
+        .container,
+        footer {
+            max-width: 1440px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .friends-top-strip {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            overflow-x: auto;
+            white-space: nowrap;
+            background: #102338;
+            color: #ffffff;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            scrollbar-width: none;
+        }
+
+        .friends-top-strip::-webkit-scrollbar { display: none; }
+
+        header {
+            background: #ffffff;
+            border-bottom: 1px solid #d8dde6;
+            padding: 0;
+            position: static;
+            backdrop-filter: none;
+        }
+
+        .header-content {
+            max-width: 1440px;
+            padding: 0 20px;
+            min-height: 78px;
+        }
+
+        .logo {
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 1.58rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #162231;
+            background: none;
+            -webkit-text-fill-color: initial;
+        }
+
+        .logo span { color: #f58220; }
+
+        .nav-links a {
+            color: #637389;
+            font-weight: 700;
+            font-size: 1.08rem;
+            padding: 14px 8px;
+            text-align: center;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #f58220;
+        }
+
+        .container {
+            max-width: 1440px;
+            padding: 22px 20px 40px;
+        }
+
+        .page-title {
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 2.4rem;
+            color: #162231;
+            background: none;
+            -webkit-text-fill-color: initial;
+            letter-spacing: -0.05em;
+        }
+
+        .page-subtitle {
+            color: #637389;
+        }
+
+        .stats-bar,
+        .search-section,
+        .friend-card {
+            background: #ffffff;
+            border: 1px solid #d8dde6;
+            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
+        }
+
+        .stat-value {
+            font-family: 'Barlow', 'Inter', sans-serif;
+            color: #1f7ae0;
+        }
+
+        .search-input {
+            background: #ffffff;
+            border: 1px solid #d8dde6;
+            color: #162231;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .search-btn,
+        .add-friend-btn {
+            background: #f58220;
+            border: none;
+            color: #ffffff;
+        }
+
+        .tabs {
+            border-bottom-color: #d8dde6;
+        }
+
+        .tab {
+            border-color: #d8dde6;
+            color: #637389;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .tab.active {
+            background: rgba(31, 122, 224, 0.1);
+            border-color: #1f7ae0;
+            color: #1f7ae0;
+        }
+
+        .friend-card:hover {
+            border-color: #1f7ae0;
+        }
+
+        .friend-avatar {
+            background: linear-gradient(135deg, #1f7ae0, #102338);
+        }
+
+        footer a:hover { color: #1f7ae0 !important; }
+    </style>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+    <style>
+        /* Premium refinement pass */
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(45, 212, 191, 0.12), transparent 28%),
+                radial-gradient(circle at top right, rgba(212, 167, 44, 0.08), transparent 22%),
+                linear-gradient(180deg, #07111d 0%, #0b1523 52%, #0d1828 100%) !important;
+            color: #f4f7fb;
+        }
+
+        .friends-top-strip,
+        header {
+            max-width: 1380px;
+            margin: 0 auto;
+        }
+
+        .friends-top-strip {
+            background: rgba(8, 15, 28, 0.82) !important;
+            border: 1px solid rgba(45, 212, 191, 0.16);
+            border-radius: 18px;
+            padding: 10px 18px;
+            color: #9cb0c8;
+            margin-top: 14px;
+            backdrop-filter: blur(18px);
+        }
+
+        header {
+            background: rgba(7, 15, 27, 0.86) !important;
+            border: 1px solid rgba(45, 212, 191, 0.16);
+            border-radius: 22px;
+            margin-top: 14px;
+            box-shadow: 0 24px 54px rgba(0, 0, 0, 0.28);
+        }
+
+        .header-content {
+            max-width: none;
+            padding: 0 22px;
+            min-height: 72px;
+        }
+
+        .logo {
+            font-size: 1.25rem !important;
+            letter-spacing: 0.08em;
+            background: linear-gradient(135deg, #ecfeff, #2dd4bf 58%, #7dd3fc 100%) !important;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links { gap: 8px; }
+
+        .nav-link {
+            padding: 10px 14px !important;
+            border-radius: 999px;
+            font-size: 0.84rem !important;
+            color: #9fb0c6 !important;
+            background: transparent !important;
+            border: 1px solid transparent;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: #f4f7fb !important;
+            background: rgba(45, 212, 191, 0.1) !important;
+            border-color: rgba(45, 212, 191, 0.22);
+        }
+
+        .container {
+            max-width: 1280px;
+            padding: 34px 22px 72px;
+        }
+
+        .page-header,
+        .search-section,
+        .stats-bar,
+        .tabs,
+        .friend-card,
+        .request-card,
+        .empty-state {
+            background: linear-gradient(180deg, rgba(12, 23, 39, 0.94), rgba(8, 16, 28, 0.92)) !important;
+            border: 1px solid rgba(148, 163, 184, 0.14) !important;
+            box-shadow: 0 24px 44px rgba(0, 0, 0, 0.24);
+        }
+
+        .page-header {
+            border-radius: 28px;
+            padding: 30px !important;
+        }
+
+        .page-title {
+            font-size: clamp(2rem, 4vw, 3rem) !important;
+            line-height: 0.94;
+            letter-spacing: 0.02em;
+            margin-bottom: 10px;
+        }
+
+        .page-subtitle {
+            max-width: 760px;
+            font-size: 1rem !important;
+            color: #97abc1 !important;
+        }
+
+        .stats-bar {
+            margin-top: 20px;
+            border-radius: 22px;
+            padding: 18px 22px !important;
+            gap: 12px;
+        }
+
+        .stat-item {
+            padding: 10px 14px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .stat-value {
+            font-size: 1.55rem !important;
+            color: #f8fbff;
+        }
+
+        .stat-label {
+            color: #7f92aa !important;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.72rem !important;
+        }
+
+        .search-section {
+            border-radius: 24px;
+            padding: 18px !important;
+            margin-top: 18px;
+        }
+
+        .search-box {
+            background: rgba(7, 15, 27, 0.88) !important;
+            border: 1px solid rgba(148, 163, 184, 0.18) !important;
+            border-radius: 18px;
+        }
+
+        .search-input { color: #f4f7fb !important; }
+
+        .search-btn {
+            border-radius: 14px;
+            background: linear-gradient(135deg, #1dbaa8, #159e8f) !important;
+            box-shadow: none;
+        }
+
+        .tabs {
+            border-radius: 20px;
+            padding: 10px !important;
+            margin-top: 18px;
+            gap: 10px;
+        }
+
+        .tab {
+            border-radius: 14px;
+            padding: 12px 16px !important;
+            color: #97abc1 !important;
+            background: transparent !important;
+            border: 1px solid transparent;
+        }
+
+        .tab.active {
+            background: rgba(45, 212, 191, 0.11) !important;
+            border-color: rgba(45, 212, 191, 0.24);
+            color: #f4f7fb !important;
+        }
+
+        .friends-grid {
+            gap: 18px !important;
+            margin-top: 20px;
+        }
+
+        .friend-card,
+        .request-card,
+        .empty-state {
+            border-radius: 24px !important;
+        }
+
+        .friend-card { padding: 22px !important; }
+
+        .friend-card:hover,
+        .request-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(45, 212, 191, 0.26) !important;
+        }
+    </style>
 </head>
-<body></body>
+<body>
+    <div class="friends-top-strip">
+        <strong>Today:</strong>
+        <span>Followers and following</span>
+        <span>Mutual betting networks</span>
+        <span>Direct community discovery</span>
+        <span>Cleaner social connections</span>
+    </div>
+        <header>
+        <div class="header-content">
+            <a href="/" class="logo">TRUST<span>MY</span>RECORD</a>
+            <nav class="nav-links">
+                <a href="/sportsbook/" class="nav-link">Odds</a>
+                <a href="/sportsbook/" class="nav-link">Scores &amp; Matchups</a>
+                <a href="/feed/" class="nav-link">News</a>
+                <a href="/picks/" class="nav-link">Picks</a>
+                <a href="/handicappers/" class="nav-link">Handicappers</a>
+                <a href="/forum/" class="nav-link">Forum</a>
+                <a href="/messages/" class="nav-link">Messages</a>
+                <a href="/friends/" class="nav-link active">Friends</a>
+                <a href="/profile/" class="nav-link">My Account</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="page-header">
+            <h1 class="page-title"><i class="fas fa-users"></i> Friends</h1>
+            <p class="page-subtitle">Connect with other bettors, challenge friends, and build your network</p>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="totalFriends">0</div>
+                <div class="stat-label">Following</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="onlineFriends">0</div>
+                <div class="stat-label">Followers</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="pendingRequests">0</div>
+                <div class="stat-label">Mutual</div>
+            </div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <h3 style="margin-bottom: 15px; font-family: 'Barlow', sans-serif;"><i class="fas fa-search"></i> Find Friends</h3>
+            <div class="search-box">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search by username...">
+                <button class="search-btn" onclick="searchUsers()">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+            <div class="search-results" id="searchResults"></div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('following')" id="tab-following">
+                <i class="fas fa-user-friends"></i> Following
+            </button>
+            <button class="tab" onclick="showTab('followers')" id="tab-followers">
+                <i class="fas fa-users"></i> Followers
+            </button>
+            <button class="tab" onclick="showTab('discover')" id="tab-discover">
+                <i class="fas fa-lightbulb"></i> Discover
+            </button>
+        </div>
+
+        <!-- Following List -->
+        <div id="followingList" class="friends-grid"></div>
+
+        <!-- Followers List -->
+        <div id="followersList" class="friends-grid" style="display: none;"></div>
+
+        <!-- Discover List -->
+        <div id="discoverList" class="friends-grid" style="display: none;"></div>
+    </main>
+
+    <script src="/static/js/config.js"></script>
+    <script src="/static/js/analytics.js?v=20260405"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+<script src="/static/js/nav-badges.js"></script>
+    <script src="/static/js/auth-persistent.js?v=20260424a"></script>
+    <script src="/static/js/notifications.js?v=20260423a"></script>
+    <script>
+        let myUserId = null;
+        let followingList = [];
+        let followersList = [];
+        // Track which user IDs the current user follows (for follow-back buttons)
+        let followingIds = new Set();
+
+        function timeAgo(timestamp) {
+            const d = typeof timestamp === 'string' ? new Date(timestamp) : new Date(timestamp);
+            const seconds = Math.floor((Date.now() - d.getTime()) / 1000);
+            if (seconds < 60) return 'just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            return `${Math.floor(hours / 24)}d ago`;
+        }
+
+        function renderUserCard(user, actions) {
+            const username = user.username || user.display_name || 'Unknown';
+            const avatarLetter = username[0]?.toUpperCase() || '?';
+            const avatarHtml = user.avatar_url
+                ? `<img src="${user.avatar_url}" alt="${username}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+                : avatarLetter;
+
+            const statsHtml = user.total_picks != null
+                ? `<div class="friend-meta">${user.total_picks} picks${user.roi != null ? ' | ROI: ' + (parseFloat(user.roi) || 0).toFixed(1) + '%' : ''}${user.net_units != null ? ' | ' + parseFloat(user.net_units).toFixed(1) + 'u' : ''}</div>`
+                : '';
+
+            const verifiedBadge = user.verification_status === 'verified'
+                ? ' <i class="fas fa-check-circle" style="color:var(--primary);font-size:11px;" title="Verified"></i>'
+                : '';
+
+            return `
+                <div class="friend-card" data-user-id="${user.id}">
+                    <div class="friend-avatar">${avatarHtml}</div>
+                    <div class="friend-info">
+                <div class="friend-name"><a href="/profile/?user=${username}" style="color:inherit;text-decoration:none;">${username}${verifiedBadge}</a></div>
+                        ${user.display_name && user.display_name !== username ? `<div class="friend-meta" style="color:var(--text-muted);font-size:12px;">${user.display_name}</div>` : ''}
+                        ${statsHtml}
+                    </div>
+                    <div class="friend-actions">
+                        ${actions}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadFollowing() {
+            const container = document.getElementById('followingList');
+            container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+            try {
+                const data = await api.getFollowing(myUserId);
+                followingList = data.following || [];
+                followingIds = new Set(followingList.map(u => u.id));
+
+                if (followingList.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1/-1;">
+                            <i class="fas fa-user-friends"></i>
+                            <h3>Not Following Anyone</h3>
+                            <p>Search for users above or check Discover to find people to follow</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = followingList.map(u => renderUserCard(u, `
+                    <button class="action-btn" onclick="viewProfile('${u.username}')" title="View Profile">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="action-btn danger" onclick="unfollowUser(${u.id}, '${u.username}')" title="Unfollow">
+                        <i class="fas fa-user-minus"></i>
+                    </button>
+                `)).join('');
+            } catch (err) {
+                console.error('Load following error:', err);
+                container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">Failed to load. Please try again.</div>';
+            }
+        }
+
+        async function loadFollowers() {
+            const container = document.getElementById('followersList');
+            container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+            try {
+                const data = await api.getFollowers(myUserId);
+                followersList = data.followers || [];
+
+                if (followersList.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1/-1;">
+                            <i class="fas fa-users"></i>
+                            <h3>No Followers Yet</h3>
+                            <p>Share your picks to attract followers</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = followersList.map(u => {
+                    const isFollowing = followingIds.has(u.id);
+                    const followBackBtn = isFollowing
+                        ? `<button class="action-btn" disabled title="Already following" style="opacity:0.4;"><i class="fas fa-check"></i></button>`
+                        : `<button class="action-btn success" onclick="followUser(${u.id}, '${u.username}')" title="Follow Back"><i class="fas fa-user-plus"></i></button>`;
+                    return renderUserCard(u, `
+                        ${followBackBtn}
+                        <button class="action-btn" onclick="viewProfile('${u.username}')" title="View Profile">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    `);
+                }).join('');
+            } catch (err) {
+                console.error('Load followers error:', err);
+                container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">Failed to load. Please try again.</div>';
+            }
+        }
+
+        async function loadDiscover() {
+            const container = document.getElementById('discoverList');
+            container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+            try {
+                const data = await api.searchUsers('', { limit: 20 });
+                const users = (data.users || []).filter(u => u.id !== myUserId && !followingIds.has(u.id));
+
+                if (users.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1/-1;">
+                            <i class="fas fa-lightbulb"></i>
+                            <h3>No Suggestions</h3>
+                            <p>Check back later for new users to follow</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = users.map(u => renderUserCard(u, `
+                    <button class="action-btn success" onclick="followUser(${u.id}, '${u.username}')" title="Follow">
+                        <i class="fas fa-user-plus"></i>
+                    </button>
+                    <button class="action-btn" onclick="viewProfile('${u.username}')" title="View Profile">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                `)).join('');
+            } catch (err) {
+                console.error('Load discover error:', err);
+                container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">Failed to load suggestions.</div>';
+            }
+        }
+
+        async function followUser(userId, username) {
+            try {
+                await api.followUser(userId);
+                followingIds.add(userId);
+                updateStats();
+                // Refresh current tab
+                const activeTab = document.querySelector('.tab.active');
+                if (activeTab) {
+                    const tabId = activeTab.id.replace('tab-', '');
+                    if (tabId === 'following') await loadFollowing();
+                    else if (tabId === 'followers') await loadFollowers();
+                    else if (tabId === 'discover') await loadDiscover();
+                }
+            } catch (err) {
+                console.error('Follow error:', err);
+                alert('Failed to follow user: ' + (err.message || 'Unknown error'));
+            }
+        }
+
+        async function unfollowUser(userId, username) {
+            if (!confirm(`Unfollow ${username}?`)) return;
+            try {
+                await api.unfollowUser(userId);
+                followingIds.delete(userId);
+                updateStats();
+                await loadFollowing();
+            } catch (err) {
+                console.error('Unfollow error:', err);
+                alert('Failed to unfollow user: ' + (err.message || 'Unknown error'));
+            }
+        }
+
+        async function searchUsers() {
+            const query = document.getElementById('searchInput').value.trim();
+            const resultsDiv = document.getElementById('searchResults');
+
+            if (!query) {
+                resultsDiv.innerHTML = '';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<p style="color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Searching...</p>';
+
+            try {
+                const data = await api.searchUsers(query, { limit: 10 });
+                const results = (data.users || []).filter(u => u.id !== myUserId);
+
+                if (results.length === 0) {
+                    resultsDiv.innerHTML = '<p style="color: var(--text-muted);">No users found</p>';
+                    return;
+                }
+
+                resultsDiv.innerHTML = results.map(u => {
+                    const isFollowing = followingIds.has(u.id);
+                    const avatarLetter = (u.username || '?')[0].toUpperCase();
+                    const avatarHtml = u.avatar_url
+                        ? `<img src="${u.avatar_url}" alt="${u.username}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+                        : avatarLetter;
+
+                    const statsStr = u.total_picks != null ? `${u.total_picks} picks` : '';
+                    const roiStr = u.roi != null ? `ROI: ${(parseFloat(u.roi) || 0).toFixed(1)}%` : '';
+                    const metaParts = [statsStr, roiStr].filter(Boolean).join(' | ');
+
+                    return `
+                        <div class="search-result-item">
+                            <div class="friend-avatar">${avatarHtml}</div>
+                            <div class="friend-info">
+                <div class="friend-name"><a href="/profile/?user=${u.username}" style="color:inherit;text-decoration:none;">${u.username}</a></div>
+                                ${metaParts ? `<div class="friend-meta">${metaParts}</div>` : ''}
+                            </div>
+                            <button class="add-friend-btn" onclick="${isFollowing ? '' : `followUser(${u.id}, '${u.username}')`}" ${isFollowing ? 'disabled' : ''}>
+                                ${isFollowing ? '<i class="fas fa-check"></i> Following' : '<i class="fas fa-user-plus"></i> Follow'}
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Search error:', err);
+                resultsDiv.innerHTML = '<p style="color:var(--text-muted);">Search failed. Please try again.</p>';
+            }
+        }
+
+        async function updateStats() {
+            document.getElementById('totalFriends').textContent = followingIds.size;
+            document.getElementById('onlineFriends').textContent = followersList.length;
+
+            // Mutual = followers who you also follow
+            const mutualCount = followersList.filter(f => followingIds.has(f.id)).length;
+            document.getElementById('pendingRequests').textContent = mutualCount;
+        }
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            document.getElementById('followingList').style.display = tab === 'following' ? 'grid' : 'none';
+            document.getElementById('followersList').style.display = tab === 'followers' ? 'grid' : 'none';
+            document.getElementById('discoverList').style.display = tab === 'discover' ? 'grid' : 'none';
+
+            // Lazy load tab content
+            if (tab === 'followers') loadFollowers();
+            if (tab === 'discover') loadDiscover();
+        }
+
+        function viewProfile(username) {
+        window.location.href = `profile/?user=${username}`;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Show loading state while waiting for backend
+            var flContainer = document.getElementById('followingList');
+            flContainer.innerHTML = '<div class="tmr-loading-state" style="grid-column:1/-1;" id="friendsLoadingState"><div class="tmr-spinner"></div><p>Loading...</p><p class="tmr-loading-slow" id="friendsLoadingSlow">Warming up servers... this takes ~30 seconds on first visit.</p><div class="tmr-loading-retry" id="friendsLoadingRetry"><p>Could not connect to servers.</p><button onclick="location.reload()">Refresh</button></div></div>';
+            var _friendsSlowTimer = setTimeout(function() { var el = document.getElementById('friendsLoadingSlow'); if (el) el.style.display = 'block'; }, 5000);
+            var _friendsRetryTimer = setTimeout(function() { var el = document.getElementById('friendsLoadingRetry'); var sl = document.getElementById('friendsLoadingSlow'); if (el) el.style.display = 'block'; if (sl) sl.style.display = 'none'; }, 30000);
+
+            await api.ready;
+            clearTimeout(_friendsSlowTimer); clearTimeout(_friendsRetryTimer);
+
+            if (!api || typeof api.getCurrentUser !== 'function' || typeof api.getFollowers !== 'function' || typeof api.getFollowing !== 'function') {
+                flContainer.innerHTML = '<div class="tmr-loading-state" style="grid-column:1/-1;"><div style="font-size:2rem;margin-bottom:12px;opacity:0.5;">&#x1F50C;</div><p>Could not connect to servers.</p><p class="tmr-loading-slow" style="display:block;">The server may be warming up. This takes ~30 seconds on first visit.</p><div class="tmr-loading-retry" style="display:block;"><button onclick="location.reload()">Try Again</button></div></div>';
+                return;
+            }
+
+            if (!api.isLoggedIn()) {
+            window.location.href = '/login/';
+                return;
+            }
+
+            // Get current user's ID from backend
+            try {
+                const me = await api.getCurrentUser();
+                myUserId = me.user?.id || me.id;
+            } catch (err) {
+                console.error('Auth error:', err);
+            window.location.href = '/login/';
+                return;
+            }
+
+            // Load following first (default tab), then update stats
+            await loadFollowing();
+            updateStats();
+
+            // Search on enter
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') searchUsers();
+            });
+        });
+    </script>
+
+        <footer style="background: #ffffff; border-top: 1px solid #d8dde6; padding: 0; margin-top: 60px;">
+            <div style="max-width: 1440px; margin: 0 auto; padding: 22px 24px 0;">
+                <!-- Footer Columns -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding-bottom: 28px; border-bottom: 1px solid #d8dde6;">
+                    <!-- Brand Column -->
+                    <div>
+                        <div style="font-size: 1.3rem; font-weight: 800; color: #162231; margin-bottom: 10px; letter-spacing: 0;">Trust<span style='color:#f58220;'>My</span>Record</div>
+                        <p style="color: #637389; font-size: 0.85rem; line-height: 1.6; margin: 0 0 16px 0;">Transparent sports betting records, sharper social tools, and a cleaner portal-style product shell.</p>
+                        <p style="color: #637389; font-size: 0.8rem; margin: 0;">&copy; 2026 TrustMyRecord.com</p>
+                    </div>
+                    <!-- Platform Column -->
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: #162231; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Platform</div>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <a href="/sportsbook/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Sportsbook</a>
+                            <a href="/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Leaderboards</a>
+                            <a href="/arena/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Gaming Arena</a>
+                            <a href="/forum/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Forum</a>
+                        </div>
+                    </div>
+                    <!-- Community Column -->
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: #162231; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Community</div>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <a href="/feed/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Feed</a>
+                            <a href="/arena/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Arena</a>
+                            <a href="/hangout/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Polls</a>
+                            <a href="/trivia/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Trivia</a>
+                        </div>
+                    </div>
+                    <!-- Legal Column -->
+                    <div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: #162231; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px;">Info</div>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <a href="/about/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
+                            <a href="/terms/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
+                            <a href="/privacy/" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
+                            <a href="mailto:support@trustmyrecord.com" style="color: #637389; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Contact</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Bottom Bar -->
+                <div style="padding: 24px 0; text-align: center;">
+                    <p style="color: #637389; font-size: 0.78rem; line-height: 1.7; margin: 0 0 8px 0;">TrustMyRecord is not a gambling site. We provide pick tracking and community features only. No real money is wagered on this platform.</p>
+                    <p style="color: #637389; font-size: 0.72rem; margin: 0;">If you or someone you know has a gambling problem, call local support resources. Must be 18+ to participate. Please gamble responsibly.</p>
+                </div>
+            </div>
+        </footer>
+
+
+</body>
 </html>
+<!-- Deploy: Tue, Apr 14, 2026  8:18:00 PM -->
+
+

@@ -2,60 +2,205 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/picks/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting To Make Picks...</title>
-    <meta http-equiv="refresh" content="0; url=/sportsbook.html#picks">
+    <title>Make Picks | Public Sports Pick Tracking | TrustMyRecord</title>
+    <meta name="description" content="Lock public sports picks on TrustMyRecord. Every pick is timestamped, graded, and added to your permanent public record across MLB, NBA, NFL, NHL, soccer, and more.">
+    <meta property="og:title" content="Make Picks | Public Sports Pick Tracking | TrustMyRecord">
+    <meta property="og:description" content="Lock public sports picks. Every pick is timestamped, graded, and added to your permanent public record.">
+    <meta property="og:url" content="https://trustmyrecord.com/picks/">
+    <meta property="og:type" content="website">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260429f">
+    <link rel="stylesheet" href="/static/css/tmr-page-polish.css?v=20260429a">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260429f"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
     <script>
-    (function() {
-        var target = '/sportsbook.html';
-        if (window.location.search) {
-            target += window.location.search;
-        }
-        target += '#picks';
-        window.location.replace(target);
-    })();
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
     </script>
     <style>
-        html, body {
-            margin: 0;
-            min-height: 100%;
-            background: #0b1220;
-            color: #f8fafc;
-            font-family: Inter, sans-serif;
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-surface: #12121a;
+            --bg-card: #1a1a2e;
+            --border: #2a2a4a;
+            --primary: #2dd4bf;
+            --accent-gold: #d4a72c;
+            --text: #e8e8f0;
+            --text-dim: #8888aa;
+            --text-muted: #555577;
+            --font-display: 'Barlow', sans-serif;
+            --font-body: 'Inter', sans-serif;
         }
-        body {
-            display: grid;
-            place-items: center;
-            padding: 24px;
-        }
-        .redirect-card {
-            max-width: 480px;
-            padding: 28px 32px;
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.08);
-            background: linear-gradient(180deg, rgba(18, 24, 38, 0.96), rgba(10, 14, 24, 0.98));
-            box-shadow: 0 24px 60px rgba(0,0,0,0.28);
-            text-align: center;
-        }
-        h1 {
-            margin: 0 0 12px;
-            font-size: 28px;
-            line-height: 1.1;
-        }
-        p {
-            margin: 0;
-            color: rgba(226, 232, 240, 0.82);
-            line-height: 1.5;
-        }
-        a {
-            color: #7dd3fc;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg-dark); color: var(--text); font-family: var(--font-body); min-height: 100vh; }
+        a { color: var(--primary); text-decoration: none; }
+        a:hover { color: var(--accent-gold); }
+
+        .picks-hero { background: linear-gradient(135deg, rgba(45,212,191,0.10), rgba(212,167,44,0.06)); border-bottom: 1px solid var(--border); padding: 64px 24px; }
+        .picks-hero-shell { max-width: 960px; margin: 0 auto; }
+        .picks-hero h1 { font-family: var(--font-display); font-size: 38px; font-weight: 900; margin-bottom: 18px; line-height: 1.2; }
+        .picks-hero h1 .gold { color: var(--accent-gold); }
+        .picks-hero h1 .blue { color: var(--primary); }
+        .picks-hero p.lede { font-size: 18px; color: var(--text-dim); line-height: 1.6; max-width: 720px; margin-bottom: 24px; }
+        .picks-cta-row { display: flex; flex-wrap: wrap; gap: 12px; }
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; font-family: var(--font-body); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+        .btn-primary { background: var(--primary); color: #001b1f; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(45,212,191,0.25); }
+        .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+        .btn-outline:hover { background: rgba(255,255,255,0.04); }
+
+        .content-wrapper { max-width: 960px; margin: 0 auto; padding: 56px 24px 80px; }
+        .picks-section { margin-bottom: 48px; }
+        .picks-section h2 { font-family: var(--font-display); font-size: 22px; font-weight: 800; color: var(--accent-gold); margin-bottom: 14px; letter-spacing: 0.4px; }
+        .picks-section p { color: var(--text-dim); font-size: 16px; line-height: 1.75; margin-bottom: 14px; }
+        .picks-section strong { color: var(--text); }
+
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; margin: 28px 0 8px; }
+        .feature-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; }
+        .feature-card .icon { font-size: 22px; margin-bottom: 10px; color: var(--primary); }
+        .feature-card h3 { font-family: var(--font-display); font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+        .feature-card p { color: var(--text-dim); font-size: 14px; line-height: 1.6; margin: 0; }
+
+        .sport-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0 8px; }
+        .sport-pill { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border); color: var(--text); font-size: 13px; font-weight: 600; background: rgba(255,255,255,0.03); }
+
+        .picks-final-cta { text-align: center; padding: 40px 24px; border: 1px solid var(--border); border-radius: 16px; background: linear-gradient(180deg, rgba(45,212,191,0.06), rgba(255,255,255,0.01)); margin-top: 16px; }
+        .picks-final-cta h2 { font-family: var(--font-display); color: var(--text); font-size: 22px; margin-bottom: 10px; }
+        .picks-final-cta p { color: var(--text-dim); margin-bottom: 18px; }
+
+        @media (max-width: 600px) {
+            .picks-hero h1 { font-size: 28px; }
+            .picks-hero { padding: 44px 20px; }
+            .content-wrapper { padding: 40px 20px 60px; }
         }
     </style>
 </head>
-<body>
-    <div class="redirect-card">
-        <h1>Opening Make Picks</h1>
-        <p>If you are not redirected automatically, <a href="/sportsbook.html#picks">continue to the picks board</a>.</p>
+<body class="tmr-polished-page">
+
+<nav class="nav">
+    <a href="/" class="nav-logo">TRUST<span>MY</span>RECORD</a>
+    <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+    <div class="nav-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/arena/" class="nav-link">Arena</a>
+        <a href="/feed/" class="nav-link">Feed</a>
+        <a href="/picks/" class="nav-link active">Make Picks</a>
+        <a href="/hangout/" class="nav-link">Polls</a>
+        <a href="/trivia/" class="nav-link">Trivia</a>
+        <a href="/forum/" class="nav-link">Forum</a>
+        <a href="/messages/" class="nav-link">Messages</a>
+        <a href="/profile/" class="nav-link">Records</a>
+        <a href="/about/" class="nav-link">About</a>
     </div>
+    <div class="nav-right">
+        <a href="/login/" class="btn btn-outline btn-sm" id="navLoginBtn">Log In</a>
+        <a href="/register/" class="btn btn-primary btn-sm" id="navRegisterBtn">Register</a>
+    </div>
+</nav>
+
+<section class="picks-hero">
+    <div class="picks-hero-shell">
+        <h1>Lock <span class="gold">public</span> sports picks. Build a <span class="blue">permanent</span> record.</h1>
+        <p class="lede">TrustMyRecord turns a sports pick into a public, timestamped, graded entry on your account. No deletes, no edits, no rewriting history. Every win, loss, and push lives on the same ledger that anyone can audit.</p>
+        <div class="picks-cta-row">
+            <a class="btn btn-primary" href="/sportsbook/#picks">Open The Sportsbook</a>
+            <a class="btn btn-outline" href="/register/">Create Your Free Record</a>
+        </div>
+    </div>
+</section>
+
+<main class="content-wrapper">
+
+    <section class="picks-section">
+        <h2>What "Making Picks" Means Here</h2>
+        <p>On most sports apps a pick is a screenshot. On TrustMyRecord, a pick is a <strong>locked submission</strong>. You enter the side, line, and units before a game starts, the entry is timestamped, and it stays attached to your username forever. When the game finishes, the result grades automatically and your record updates in public.</p>
+        <p>The point is not to beat the book in private. The point is to build a sports reputation with receipts: a record sharp bettors, casual fans, and skeptics can all read the same way.</p>
+    </section>
+
+    <section class="picks-section">
+        <h2>Sports Covered</h2>
+        <p>The pick board pulls live odds and game data across every major American sport, plus international football and combat sports.</p>
+        <div class="sport-row">
+            <span class="sport-pill">MLB</span>
+            <span class="sport-pill">NBA</span>
+            <span class="sport-pill">NFL</span>
+            <span class="sport-pill">NHL</span>
+            <span class="sport-pill">College Football</span>
+            <span class="sport-pill">College Basketball</span>
+            <span class="sport-pill">Soccer</span>
+            <span class="sport-pill">UFC / MMA</span>
+            <span class="sport-pill">Boxing</span>
+            <span class="sport-pill">Tennis</span>
+            <span class="sport-pill">Golf</span>
+            <span class="sport-pill">Esports</span>
+        </div>
+    </section>
+
+    <section class="picks-section">
+        <h2>What Tracks On Every Pick</h2>
+        <div class="features-grid">
+            <article class="feature-card">
+                <div class="icon"><i class="fas fa-lock"></i></div>
+                <h3>Locked &amp; Timestamped</h3>
+                <p>Side, line, units, and entry time are frozen the moment you submit. No silent edits after the result.</p>
+            </article>
+            <article class="feature-card">
+                <div class="icon"><i class="fas fa-chart-line"></i></div>
+                <h3>Auto-Graded Results</h3>
+                <p>Wins, losses, and pushes grade against the closing line and final score. Units settle on your record automatically.</p>
+            </article>
+            <article class="feature-card">
+                <div class="icon"><i class="fas fa-stopwatch"></i></div>
+                <h3>Closing Line Value</h3>
+                <p>Every pick stores the line you locked vs. the closing number, so CLV becomes a real metric on your profile.</p>
+            </article>
+            <article class="feature-card">
+                <div class="icon"><i class="fas fa-layer-group"></i></div>
+                <h3>Splits That Matter</h3>
+                <p>Sport, market, side, sample size, current streak, ROI, and unit growth all break down on your record page.</p>
+            </article>
+            <article class="feature-card">
+                <div class="icon"><i class="fas fa-trophy"></i></div>
+                <h3>Leaderboard Eligible</h3>
+                <p>Hit the public sample-size floor and your record shows up on the handicappers leaderboard ranked by ROI and units.</p>
+            </article>
+            <article class="feature-card">
+                <div class="icon"><i class="fas fa-store"></i></div>
+                <h3>Marketplace Ready</h3>
+                <p>Once your public record clears the eligibility bar, you can open paid pick packages on the marketplace, all backed by the same verified ledger.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="picks-section">
+        <h2>Picks Connect To The Rest Of The Platform</h2>
+        <p>A pick is never a one-off post. It threads through the social side of TrustMyRecord: <a href="/feed/">the feed</a> shows your locked picks alongside your takes, <a href="/forum/">the forums</a> tag your picks when you defend a position, <a href="/hangout/">polls</a> and <a href="/trivia/">trivia</a> credit your record, and <a href="/arena/">the arena</a> uses your picks history to seed head-to-head challenges with other users.</p>
+        <p>The same locked pick also drives the <a href="/handicappers/">handicappers leaderboard</a> and unlocks the <a href="/marketplace/">marketplace</a> once you hit the volume and ROI floor. One submission, one public truth, every part of the site reads from it.</p>
+    </section>
+
+    <section class="picks-section">
+        <h2>Why "Public" Matters</h2>
+        <p>Sports credibility online is mostly built on screenshots and selective memory. Bios get rewritten, bad weeks get muted, winning weeks get cropped and reposted. A locked, public record makes that impossible. If you say you are sharp, the ledger says it for you. If you go cold, the ledger says that too. Honesty is the product.</p>
+        <p>That accountability is the entire reason TrustMyRecord exists. Every other feature on the site, the sportsbook, the leaderboards, the polls, the marketplace, the gaming arena, all sit on top of this one rule: <strong>once you lock a pick, you cannot rewrite the receipt</strong>.</p>
+    </section>
+
+    <div class="picks-final-cta">
+        <h2>Ready to lock your first pick?</h2>
+        <p>Create a free account, lock a pick, and let the public record do the talking.</p>
+        <div class="picks-cta-row" style="justify-content:center;">
+            <a class="btn btn-primary" href="/register/">Start Your Free Record</a>
+            <a class="btn btn-outline" href="/sportsbook/#picks">See The Sportsbook</a>
+        </div>
+    </div>
+
+</main>
+
 </body>
 </html>

@@ -2,10 +2,687 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/notifications/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting...</title>
-    <meta http-equiv="refresh" content="0; url=/notifications/">
-    <script>window.location.replace('/notifications/' + window.location.search + window.location.hash);</script>
+    <title>Notifications | TrustMyRecord</title>
+    <meta name="description" content="Review likes, comments, follows, challenge activity, and updates on TrustMyRecord.">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260429f">
+<link rel="stylesheet" href="/static/css/tmr-page-polish.css?v=20260429a">
+<script defer src="/static/js/tmr-sitewide.js?v=20260429f"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #f3f5f8;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --border-color: #d8dde6;
+            --text-primary: #162231;
+            --text-secondary: #637389;
+            --text-muted: #637389;
+            --accent-blue: #1f7ae0;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --accent-gold: #f58220;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        .notifications-top-strip,
+        header,
+        .page {
+            max-width: 1440px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .notifications-top-strip {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            overflow-x: auto;
+            white-space: nowrap;
+            background: #102338;
+            color: #ffffff;
+            padding: 10px 24px;
+            font-size: 0.9rem;
+            scrollbar-width: none;
+        }
+        .notifications-top-strip::-webkit-scrollbar { display: none; }
+        header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+            position: static;
+            z-index: 100;
+        }
+        .header-inner, .page {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .header-inner {
+            min-height: 78px;
+            display: grid;
+            grid-template-columns: auto minmax(760px, 1fr);
+            align-items: center;
+            gap: 24px;
+        }
+        .logo {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 1.58rem;
+            letter-spacing: -0.03em;
+        }
+        .logo span { color: var(--accent-gold); }
+        nav {
+            display: flex;
+            width: 100%;
+            gap: 28px;
+            flex-wrap: wrap;
+            justify-content: space-evenly;
+        }
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 1.08rem;
+            font-weight: 700;
+            padding: 14px 8px;
+            border-radius: 0;
+            text-align: center;
+        }
+        nav a.active, nav a:hover {
+            background: transparent;
+            color: var(--accent-gold);
+        }
+        .page {
+            padding-top: 22px;
+            padding-bottom: 48px;
+        }
+        .hero {
+            display: grid;
+            grid-template-columns: 1.08fr 0.92fr;
+            gap: 18px;
+            margin-bottom: 20px;
+            border-radius: 18px;
+            border: 1px solid #d8dde6;
+            background: linear-gradient(135deg, #102338 0%, #163451 100%);
+            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
+            overflow: hidden;
+        }
+        .hero-copy { padding: 28px; }
+        .hero-image {
+            background:
+                radial-gradient(circle at 70% 18%, rgba(45,212,191,0.24), transparent 28%),
+                radial-gradient(circle at 14% 86%, rgba(212,167,44,0.18), transparent 30%),
+                linear-gradient(135deg, #081523 0%, #122a43 48%, #0b1725 100%);
+        }
+        .eyebrow {
+            display: inline-flex;
+            padding: 7px 11px;
+            margin-bottom: 14px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.1);
+            color: #ffffff;
+            font-size: 0.74rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+        .hero h1 {
+            margin: 0 0 6px;
+            font-family: 'Barlow', 'Inter', sans-serif;
+            font-size: 2.4rem;
+            letter-spacing: -0.05em;
+            color: #ffffff;
+        }
+        .hero p {
+            margin: 0;
+            color: rgba(255,255,255,0.82);
+        }
+        .btn {
+            border: 1px solid var(--border-color);
+            background: #ffffff;
+            color: var(--text-primary);
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn.primary {
+            background: var(--accent-gold);
+            border-color: var(--accent-gold);
+            color: white;
+        }
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filter {
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: .85rem;
+            cursor: pointer;
+        }
+        .filter.active {
+            color: var(--accent-blue);
+            border-color: var(--accent-blue);
+            background: rgba(31, 122, 224, 0.1);
+        }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
+        }
+        .list-empty, .list-loading {
+            padding: 40px 24px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        .notif {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+        .notif:last-child { border-bottom: none; }
+        .notif.unread { background: rgba(59, 130, 246, 0.08); }
+        .notif:hover { background: #f8fafc; }
+        .notif-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+        .notif-body {
+            min-width: 0;
+            flex: 1;
+        }
+        .notif-message {
+            color: var(--text-primary);
+            font-size: .96rem;
+            line-height: 1.45;
+            margin-bottom: 6px;
+        }
+        .notif-meta {
+            color: var(--text-muted);
+            font-size: .8rem;
+        }
+        .notif-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .notif-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #eef4fb;
+            color: #47627e;
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .02em;
+        }
+        .notif-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--accent-red);
+            border-radius: 50%;
+            margin-top: 8px;
+            flex-shrink: 0;
+        }
+        @media (max-width: 700px) {
+            .header-inner, .page { padding-left: 16px; padding-right: 16px; }
+            nav { display: none; }
+            .hero h1 { font-size: 1.5rem; }
+            .hero { grid-template-columns: 1fr; }
+            .hero-image { min-height: 180px; }
+        }
+    </style>
+    <style>
+        /* Premium refinement pass */
+        :root {
+            --bg-primary: #07111d;
+            --bg-secondary: rgba(10, 19, 33, 0.9);
+            --bg-card: rgba(12, 23, 39, 0.94);
+            --border-color: rgba(148, 163, 184, 0.14);
+            --text-primary: #f4f7fb;
+            --text-secondary: #97abc1;
+            --text-muted: #7f92aa;
+            --accent-blue: #2dd4bf;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --accent-gold: #d4a72c;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(45, 212, 191, 0.12), transparent 26%),
+                radial-gradient(circle at top right, rgba(212, 167, 44, 0.08), transparent 20%),
+                linear-gradient(180deg, #07111d 0%, #0b1523 52%, #0d1828 100%) !important;
+        }
+
+        .notifications-top-strip,
+        header,
+        .page {
+            max-width: 1380px;
+        }
+
+        .notifications-top-strip {
+            background: rgba(8, 15, 28, 0.82) !important;
+            border: 1px solid rgba(45, 212, 191, 0.16);
+            border-radius: 18px;
+            color: #9cb0c8;
+            margin-top: 14px;
+            backdrop-filter: blur(18px);
+        }
+
+        header {
+            background: rgba(7, 15, 27, 0.86) !important;
+            border: 1px solid rgba(45, 212, 191, 0.16) !important;
+            border-radius: 22px;
+            margin-top: 14px;
+            box-shadow: 0 24px 54px rgba(0, 0, 0, 0.28);
+        }
+
+        .header-inner { min-height: 72px; }
+
+        .logo {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            color: #f4f7fb !important;
+        }
+
+        header a,
+        header .active {
+            color: #9fb0c6 !important;
+        }
+
+        header .active,
+        header a:hover {
+            color: #f4f7fb !important;
+        }
+
+        .page {
+            padding-top: 28px;
+            padding-bottom: 72px;
+        }
+
+        .hero,
+        .card {
+            background: linear-gradient(180deg, rgba(12, 23, 39, 0.94), rgba(8, 16, 28, 0.92)) !important;
+            border: 1px solid rgba(148, 163, 184, 0.14) !important;
+            box-shadow: 0 24px 44px rgba(0, 0, 0, 0.24);
+        }
+
+        .hero { border-radius: 28px; }
+        .hero-copy { padding: 30px !important; }
+
+        .hero h1 {
+            font-size: clamp(2rem, 4vw, 3rem) !important;
+            line-height: 0.95;
+            letter-spacing: 0.01em;
+        }
+
+        .hero p { color: #97abc1 !important; }
+
+        .btn.primary {
+            background: linear-gradient(135deg, #1dbaa8, #159e8f) !important;
+            box-shadow: none;
+        }
+
+        .filters { gap: 10px; }
+
+        .filter {
+            border-radius: 999px;
+            background: rgba(12, 23, 39, 0.9) !important;
+            border: 1px solid rgba(148, 163, 184, 0.12) !important;
+            color: #97abc1 !important;
+        }
+
+        .filter.active {
+            background: rgba(45, 212, 191, 0.11) !important;
+            border-color: rgba(45, 212, 191, 0.24) !important;
+            color: #f4f7fb !important;
+        }
+
+        .card { border-radius: 24px; }
+
+        .list-empty,
+        .list-loading { color: #97abc1 !important; }
+
+        .notif { border-bottom: 1px solid rgba(148, 163, 184, 0.1) !important; }
+        .notif.unread { background: rgba(45, 212, 191, 0.08) !important; }
+        .notif:hover { background: rgba(255, 255, 255, 0.03) !important; }
+        .notif-message { color: #edf4fb !important; }
+        .notif-meta,
+        .notif-tag { color: #7f92aa !important; }
+        .notif-dot { background: #2dd4bf !important; }
+    </style>
 </head>
-<body></body>
+<body class="tmr-polished-page">
+    <div class="notifications-top-strip">
+        <strong>Today:</strong>
+        <span>Likes and replies</span>
+        <span>Follow and friend activity</span>
+        <span>Challenge updates</span>
+        <span>Account alerts</span>
+    </div>
+    <header>
+        <div class="header-inner">
+            <a href="/" class="logo">Trust<span>My</span>Record</a>
+            <nav>
+                <a href="/sportsbook/">Odds</a>
+                <a href="/sportsbook/">Scores &amp; Matchups</a>
+                <a href="/feed/">News</a>
+                <a href="/picks/">Picks</a>
+                <a href="/handicappers/">Handicappers</a>
+                <a href="/forum/">Forum</a>
+                <a href="/messages/">Messages</a>
+                <a href="/profile/">My Account</a>
+                <a href="/notifications/" class="active">Notifications</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page">
+        <section class="hero">
+            <div class="hero-copy">
+                <div class="eyebrow">Reference-Led Direction</div>
+                <h1>Notifications</h1>
+                <p>Track follows, likes, comments, challenge activity, and account updates without dropping back into an older product shell.</p>
+            </div>
+            <div class="hero-copy" style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;">
+                <div></div>
+                <button id="markAllBtn" class="btn primary" type="button">Mark All Read</button>
+            </div>
+        </section>
+
+        <section class="filters">
+            <button class="filter active" data-filter="all" type="button">All</button>
+            <button class="filter" data-filter="unread" type="button">Unread</button>
+            <button class="filter" data-filter="picks" type="button">Picks</button>
+            <button class="filter" data-filter="forum" type="button">Forum</button>
+            <button class="filter" data-filter="social" type="button">Social</button>
+            <button class="filter" data-filter="messages" type="button">Messages</button>
+        </section>
+
+        <section class="card">
+            <div id="notifList" class="list-loading">Loading notifications...</div>
+        </section>
+    </main>
+
+    <script src="/static/js/config.js?v=20260330"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+<script src="/static/js/auth-persistent.js?v=20260424a"></script>
+    <script src="/static/js/analytics.js?v=20260417"></script>
+    <script>
+        let notifFilter = 'all';
+        let notifications = [];
+
+        function getSessionUser() {
+            try {
+                if (typeof auth !== 'undefined' && typeof auth.getCurrentUser === 'function') {
+                    const authUser = auth.getCurrentUser();
+                    if (authUser && (authUser.username || authUser.email || authUser.id)) return authUser;
+                }
+            } catch (e) {}
+
+            const keys = ['trustmyrecord_session', 'tmr_current_user', 'currentUser'];
+            for (const key of keys) {
+                try {
+                    const raw = localStorage.getItem(key);
+                    if (!raw) continue;
+                    const parsed = JSON.parse(raw);
+                    const user = parsed && parsed.user ? parsed.user : parsed;
+                    if (user && (user.username || user.email || user.id)) return user;
+                } catch (e) {}
+            }
+
+            return null;
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            document.querySelectorAll('.filter').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.filter').forEach(function(el) { el.classList.remove('active'); });
+                    btn.classList.add('active');
+                    notifFilter = btn.dataset.filter;
+                    renderNotifications();
+                });
+            });
+
+            document.getElementById('markAllBtn').addEventListener('click', markAllRead);
+
+            if (typeof api !== 'undefined' && api.ready) {
+                try { await api.ready; } catch (e) {}
+            }
+
+            const sessionUser = getSessionUser();
+            const isLoggedIn = !!sessionUser || (api && typeof api.isLoggedIn === 'function' && api.isLoggedIn());
+            if (!api || typeof api.getNotifications !== 'function' || !isLoggedIn) {
+                document.getElementById('notifList').innerHTML = '<div class="list-empty">Log in to view your notifications.<div style="margin-top:8px;font-size:.86rem;">Replies, follows, graded picks, and social alerts show up here once your account is active.</div></div>';
+                return;
+            }
+
+            await loadNotifications();
+        });
+
+        async function loadNotifications() {
+            const list = document.getElementById('notifList');
+            list.innerHTML = '<div class="list-loading">Loading notifications...</div>';
+            try {
+                const data = await api.getNotifications({ limit: 100 });
+                notifications = data.notifications || [];
+                renderNotifications();
+            } catch (error) {
+                list.innerHTML = '<div class="list-empty">Failed to load notifications.</div>';
+            }
+        }
+
+        function renderNotifications() {
+            const list = document.getElementById('notifList');
+            const visible = notifications.filter(function(n) {
+                const normalized = normalizeNotification(n);
+                if (notifFilter === 'unread') return !normalized.isRead;
+                if (notifFilter === 'all') return true;
+                return normalized.category === notifFilter;
+            });
+
+            if (!visible.length) {
+                list.innerHTML = '<div class="list-empty">' + (notifFilter === 'unread' ? 'No unread notifications.' : 'No notifications yet.') + '<div style="margin-top:8px;font-size:.86rem;">Once people reply, follow, grade picks, or message you, the alert trail will build here.</div></div>';
+                return;
+            }
+
+            list.innerHTML = visible.map(function(n) {
+                const normalized = normalizeNotification(n);
+                const meta = formatTime(n.created_at);
+                const icon = getNotifTheme(normalized.type);
+                const destination = getNotificationDestination(normalized);
+                return '<div class="notif ' + (normalized.isRead ? '' : 'unread') + '" onclick="openNotification(\'' + escapeJs(String(n.id || '')) + '\')">' +
+                    '<div class="notif-icon" style="background:' + icon.bg + ';color:' + icon.fg + ';">' + icon.label + '</div>' +
+                    '<div class="notif-body">' +
+                    '<div class="notif-message">' + escapeHtml(normalized.message) + '</div>' +
+                    '<div class="notif-meta">' + meta + (normalized.username ? ' • @' + escapeHtml(normalized.username) : '') + '</div>' +
+                    '<div class="notif-tags"><span class="notif-tag">' + escapeHtml(destination.label) + '</span><span class="notif-tag">' + escapeHtml(formatCategoryLabel(normalized.category)) + '</span></div>' +
+                    '</div>' +
+                    (normalized.isRead ? '' : '<div class="notif-dot"></div>') +
+                    '</div>';
+            }).join('');
+        }
+
+        function normalizeNotification(notification) {
+            return {
+                ...notification,
+                id: notification.id,
+                type: String(notification.type || '').toLowerCase(),
+                isRead: !!(notification.is_read || notification.read),
+                message: notification.content || notification.message || '',
+                username: notification.username || notification.actor_username || notification.from_username || notification.target_username || '',
+                category: getNotificationCategory(notification)
+            };
+        }
+
+        function getNotificationCategory(notification) {
+            const type = String(notification.type || '').toLowerCase();
+            const resourceType = String(notification.resource_type || notification.resourceType || notification.entity_type || notification.entityType || '').toLowerCase();
+
+            if (['new_message', 'message'].includes(type)) return 'messages';
+            if (type.indexOf('forum') !== -1 || ['thread', 'reply'].includes(resourceType)) return 'forum';
+            if (type.indexOf('pick') !== -1 || type.indexOf('bet') !== -1 || ['pick', 'receipt'].includes(resourceType)) return 'picks';
+            if (['follow', 'friend_request', 'friend_accept', 'like', 'comment', 'mention'].includes(type)) return 'social';
+            return 'all';
+        }
+
+        function formatCategoryLabel(category) {
+            return {
+                all: 'General',
+                picks: 'Picks',
+                forum: 'Forum',
+                social: 'Social',
+                messages: 'Messages'
+            }[category] || 'General';
+        }
+
+        function getNotificationDestination(notification) {
+            const type = String(notification.type || '').toLowerCase();
+            const resourceType = String(notification.resource_type || notification.resourceType || notification.entity_type || notification.entityType || '').toLowerCase();
+            const username = notification.username || notification.actor_username || notification.from_username || notification.target_username;
+            const threadId = notification.thread_id || notification.threadId || notification.resource_id || notification.resourceId;
+            const pickId = notification.pick_id || notification.pickId || notification.bet_id || notification.betId;
+            const pollId = notification.poll_id || notification.pollId;
+            const conversationUser = notification.sender_username || notification.from_username || notification.username;
+
+            if (['follow'].includes(type) && username) {
+                    return { href: '/profile/?user=' + encodeURIComponent(username), label: 'Open profile' };
+            }
+            if (['friend_request', 'friend_accept'].includes(type)) {
+                    return { href: '/friends/', label: 'Open friends' };
+            }
+            if (['new_message', 'message'].includes(type)) {
+                    return { href: conversationUser ? '/messages/?to=' + encodeURIComponent(conversationUser) : '/messages/', label: 'Open messages' };
+            }
+            if (type.indexOf('forum') !== -1 || ['thread', 'reply'].includes(resourceType)) {
+                    return { href: threadId ? '/forum/?thread=' + encodeURIComponent(threadId) : '/forum/', label: 'Open forum' };
+            }
+            if (type.indexOf('poll') !== -1 || pollId) {
+                    return { href: '/hangout/', label: 'Open polls' };
+            }
+            if (type.indexOf('trivia') !== -1) {
+                    return { href: '/trivia/', label: 'Open trivia' };
+            }
+            if (type.indexOf('pick') !== -1 || type.indexOf('bet') !== -1 || pickId) {
+                return {
+                        href: username ? '/profile/?user=' + encodeURIComponent(username) + '&view=picks' : '/mypicks/',
+                    label: username ? 'Open capper record' : 'Open record'
+                };
+            }
+            if (['like', 'comment', 'mention'].includes(type)) {
+                    return { href: '/feed/', label: 'Open feed' };
+            }
+            if (['challenge', 'challenge_invite', 'challenge_result'].includes(type)) {
+                    return { href: '/arena/', label: 'Open arena' };
+            }
+                    return { href: '/notifications/', label: 'Stay here' };
+        }
+
+        async function openNotification(id) {
+            const notification = notifications.find(function(n) { return String(n.id) === String(id); });
+            const normalized = normalizeNotification(notification || {});
+            try {
+                await api.markNotificationRead(id);
+                notifications = notifications.map(function(n) {
+                    return String(n.id) === String(id) ? { ...n, is_read: true, read: true } : n;
+                });
+                renderNotifications();
+            } catch (e) {}
+
+            const destination = getNotificationDestination(normalized);
+            if (destination.href && destination.href !== '/notifications/') {
+                location.href = destination.href;
+            }
+        }
+
+        async function markAllRead() {
+            try {
+                await api.markAllNotificationsRead();
+                notifications = notifications.map(function(n) { return { ...n, is_read: true }; });
+                renderNotifications();
+            } catch (error) {}
+        }
+
+        function getNotifTheme(type) {
+            const map = {
+                follow: { label: 'F', bg: 'rgba(59,130,246,0.15)', fg: '#60a5fa' },
+                like: { label: 'L', bg: 'rgba(239,68,68,0.15)', fg: '#f87171' },
+                comment: { label: 'C', bg: 'rgba(34,197,94,0.15)', fg: '#4ade80' },
+                mention: { label: '@', bg: 'rgba(31,122,224,0.15)', fg: '#1f7ae0' },
+                challenge: { label: 'T', bg: 'rgba(245,158,11,0.15)', fg: '#fbbf24' },
+                challenge_invite: { label: 'T', bg: 'rgba(245,158,11,0.15)', fg: '#fbbf24' },
+                challenge_result: { label: 'T', bg: 'rgba(245,158,11,0.15)', fg: '#fbbf24' },
+                pick_graded: { label: 'P', bg: 'rgba(59,130,246,0.15)', fg: '#60a5fa' },
+                forum_thread_created: { label: 'Q', bg: 'rgba(139,92,246,0.15)', fg: '#8b5cf6' },
+                forum_reply_created: { label: 'R', bg: 'rgba(99,102,241,0.15)', fg: '#6366f1' },
+                new_message: { label: 'M', bg: 'rgba(45,212,191,0.15)', fg: '#14b8a6' },
+                message: { label: 'M', bg: 'rgba(45,212,191,0.15)', fg: '#14b8a6' }
+            };
+            return map[type] || { label: 'N', bg: 'rgba(255,255,255,0.08)', fg: '#e5e7eb' };
+        }
+
+        function formatTime(value) {
+            const date = new Date(value);
+            const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+            if (diff < 60) return 'just now';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+            if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+            return date.toLocaleDateString();
+        }
+
+        function escapeHtml(value) {
+            const div = document.createElement('div');
+            div.textContent = value || '';
+            return div.innerHTML;
+        }
+
+        function escapeJs(value) {
+            return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        }
+    </script>
+</body>
 </html>
+<!-- Deploy: Tue, Apr 14, 2026  8:18:00 PM -->
+
+

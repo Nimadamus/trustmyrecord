@@ -2,9 +2,526 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=/marketplace.html">
-    <title>Marketplace | TrustMyRecord</title>
-    <script>window.location.replace('/marketplace.html' + window.location.search + window.location.hash);</script>
+    <link rel="canonical" href="https://trustmyrecord.com/marketplace/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sell Your Picks | TrustMyRecord</title>
+    <meta name="description" content="Sell sports picks once a public record backs them up. Capper analytics, ROI, units, sample size on every seller.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://trustmyrecord.com/marketplace/">
+    <meta property="og:title" content="Sell Your Picks | TrustMyRecord">
+    <meta property="og:description" content="Pick marketplace built on public records. ROI, units, sample size, market splits on every seller.">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260429f">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260429f"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #08111d;
+            --panel: rgba(11, 23, 42, 0.92);
+            --line: rgba(148, 163, 184, 0.18);
+            --text: #eef4fb;
+            --muted: #96a7bb;
+            --teal: #2dd4bf;
+            --cyan: #22d3ee;
+            --blue: #2563eb;
+            --orange: #ff6a3d;
+            --green: #4ade80;
+            --red: #f87171;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background:
+                radial-gradient(circle at 10% -10%, rgba(45,212,191,0.10), transparent 30%),
+                radial-gradient(circle at 95% -10%, rgba(37,99,235,0.10), transparent 30%),
+                linear-gradient(180deg, #07111d 0%, #0a1422 100%);
+            color: var(--text);
+            font-family: 'Inter', system-ui, sans-serif;
+            min-height: 100vh;
+        }
+        a { color: inherit; text-decoration: none; }
+        .mp-shell {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 28px 24px 60px;
+        }
+        .mp-hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+            gap: 24px;
+            align-items: stretch;
+            margin-bottom: 28px;
+        }
+        .mp-hero-main {
+            background: linear-gradient(180deg, rgba(15,28,48,0.95), rgba(7,14,28,0.95));
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 28px 32px;
+            position: relative;
+            overflow: hidden;
+        }
+        .mp-hero-main::after {
+            content: "";
+            position: absolute; right: -80px; top: -80px;
+            width: 280px; height: 280px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(45,212,191,0.18), transparent 70%);
+            filter: blur(20px);
+            pointer-events: none;
+        }
+        .mp-hero-eyebrow {
+            display: inline-block;
+            color: var(--cyan);
+            font: 800 10.5px/1 'JetBrains Mono', 'Menlo', monospace;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            padding: 6px 11px;
+            border-radius: 999px;
+            background: rgba(34,211,238,0.10);
+            border: 1px solid rgba(34,211,238,0.32);
+            margin-bottom: 14px;
+        }
+        .mp-hero-title {
+            font-family: 'Barlow Condensed', 'Inter', sans-serif;
+            font-size: clamp(34px, 4.4vw, 54px);
+            font-weight: 900;
+            letter-spacing: -1px;
+            line-height: 1;
+            margin: 0 0 12px;
+            color: #ffffff;
+        }
+        .mp-hero-title .accent { color: var(--orange); }
+        .mp-hero-sub {
+            color: #c5cee0;
+            font-size: 15px;
+            line-height: 1.55;
+            max-width: 620px;
+            margin-bottom: 18px;
+        }
+        .mp-hero-cta {
+            display: inline-flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px 18px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-weight: 800;
+            font-size: 13.5px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            text-decoration: none;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--teal), var(--cyan));
+            color: #04111A;
+        }
+        .btn-primary:hover { transform: translateY(-1px); }
+        .btn-outline {
+            background: rgba(255,255,255,0.04);
+            color: var(--text);
+            border-color: var(--line);
+        }
+        .btn-outline:hover { border-color: var(--cyan); color: #ffffff; }
+
+        .mp-hero-side {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .mp-hero-side h3 {
+            font: 800 11px/1 'JetBrains Mono', 'Menlo', monospace;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--cyan);
+        }
+        .mp-hero-side ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+        .mp-hero-side li {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            font-size: 13.5px;
+            color: #d8e0ec;
+        }
+        .mp-hero-side li::before {
+            content: "★";
+            color: var(--cyan);
+            font-size: 14px;
+        }
+        .mp-quote {
+            margin-top: auto;
+            padding-top: 12px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.55;
+            font-style: italic;
+        }
+
+        .mp-toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            padding: 14px 18px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            margin-bottom: 14px;
+        }
+        .mp-toolbar select, .mp-toolbar input {
+            padding: 9px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            background: rgba(7,14,28,0.6);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13px;
+            outline: none;
+            min-width: 140px;
+        }
+        .mp-toolbar select:focus, .mp-toolbar input:focus { border-color: var(--cyan); }
+        .mp-toolbar .spacer { flex: 1; }
+
+        .mp-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 14px;
+        }
+
+        .mp-section {
+            margin-top: 28px;
+        }
+        .mp-section-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .mp-section-head h2 {
+            font-family: 'Barlow Condensed', 'Inter', sans-serif;
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: -0.3px;
+            line-height: 1;
+            text-transform: uppercase;
+            color: #ffffff;
+        }
+        .mp-section-head p {
+            color: var(--muted);
+            font-size: 13px;
+            max-width: 560px;
+        }
+
+        /* Seller card uses .tmr-cap-card primitives from sitewide CSS, then a marketplace-specific footer */
+        .mp-card-foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid var(--line);
+            flex-wrap: wrap;
+        }
+        .mp-card-price {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .mp-card-price strong {
+            font-family: 'Barlow Condensed', 'Inter', sans-serif;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: -0.4px;
+            color: #ffffff;
+        }
+        .mp-card-price span {
+            font-size: 11px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+        .mp-card-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .mp-card-actions .btn { padding: 7px 12px; font-size: 12px; }
+
+        @media (max-width: 880px) {
+            .mp-hero { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 560px) {
+            .mp-shell { padding: 18px 14px 40px; }
+            .mp-hero-main, .mp-hero-side { padding: 18px; }
+        }
+    </style>
 </head>
-<body><a href="/marketplace.html">Continue to Marketplace</a></body>
+<body>
+
+<main class="mp-shell">
+
+    <section class="mp-hero">
+        <div class="mp-hero-main">
+            <span class="mp-hero-eyebrow">Sell Your Picks</span>
+            <h1 class="mp-hero-title">Sell picks <span class="accent">after the numbers back you up.</span></h1>
+            <p class="mp-hero-sub">Your record is your storefront. No public proof, no trust. Turn public results into a real sports reputation, then turn that reputation into paid picks. Every seller card on TrustMyRecord shows ROI, units, sample size, current streak, and the splits buyers actually want before they pay.</p>
+            <div class="mp-hero-cta">
+                <a class="btn btn-primary" href="/sportsbook/">Lock A Pick To Open Shop</a>
+                <a class="btn btn-outline" href="/handicappers/">Browse Leaderboards</a>
+            </div>
+        </div>
+        <aside class="mp-hero-side">
+            <h3>How it works</h3>
+            <ul>
+                <li>Lock picks publicly. Build a graded sample size that buyers can audit.</li>
+                <li>Hit the eligibility floor (volume, ROI, time-on-platform). Seller mode unlocks.</li>
+                <li>Open packages with clear pricing. Buyers see your full record before they buy.</li>
+                <li>Every paid pick stays on the same public ledger. No hidden tracker, no second set of books.</li>
+            </ul>
+            <p class="mp-quote">No fake records. No deleted losses. No empty hype. Sell picks after you prove you can win.</p>
+        </aside>
+    </section>
+
+    <div class="mp-toolbar">
+        <input type="search" id="mpSearch" placeholder="Search seller, sport, market..." autocomplete="off">
+        <select id="mpSport">
+            <option value="all">All sports</option>
+            <option value="NFL">NFL</option>
+            <option value="NBA">NBA</option>
+            <option value="MLB">MLB</option>
+            <option value="NHL">NHL</option>
+            <option value="NCAAF">NCAAF</option>
+            <option value="NCAAB">NCAAB</option>
+            <option value="Soccer">Soccer</option>
+            <option value="UFC">UFC</option>
+        </select>
+        <select id="mpSort">
+            <option value="roi">Sort: ROI</option>
+            <option value="units">Sort: Net units</option>
+            <option value="last30">Sort: Last 30 days</option>
+            <option value="sample">Sort: Sample size</option>
+            <option value="streak">Sort: Current streak</option>
+            <option value="rating">Sort: Buyer rating</option>
+            <option value="price-asc">Sort: Price low to high</option>
+            <option value="price-desc">Sort: Price high to low</option>
+        </select>
+        <select id="mpPeriod">
+            <option value="all">Period: All time</option>
+            <option value="30">Last 30 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="season">Current season</option>
+        </select>
+        <span class="spacer"></span>
+        <span style="color: var(--muted); font-size: 12px;" id="mpCount">Loading sellers...</span>
+    </div>
+
+    <div id="mpGrid" class="mp-grid"></div>
+
+    <section class="mp-section">
+        <div class="mp-section-head">
+            <div>
+                <h2>Why a record-backed marketplace</h2>
+                <p>Pick selling has been broken for decades because sellers control the scoreboard. Here, the scoreboard controls the seller.</p>
+            </div>
+        </div>
+        <div class="mp-grid">
+            <div class="tmr-cap-card">
+                <div class="tmr-cap-card__head">
+                    <div class="tmr-cap-card__avatar">1</div>
+                    <div class="tmr-cap-card__name"><strong>Public-record gating</strong><span>No closed books. Every seller's full ledger stays visible to buyers.</span></div>
+                </div>
+            </div>
+            <div class="tmr-cap-card">
+                <div class="tmr-cap-card__head">
+                    <div class="tmr-cap-card__avatar">2</div>
+                    <div class="tmr-cap-card__name"><strong>Splits buyers can audit</strong><span>ROI by sport, market, side, odds range, and unit size before payment.</span></div>
+                </div>
+            </div>
+            <div class="tmr-cap-card">
+                <div class="tmr-cap-card__head">
+                    <div class="tmr-cap-card__avatar">3</div>
+                    <div class="tmr-cap-card__name"><strong>One public ledger</strong><span>Free picks and paid picks live in the same record. No hidden tracker, no second set of books.</span></div>
+                </div>
+            </div>
+            <div class="tmr-cap-card">
+                <div class="tmr-cap-card__head">
+                    <div class="tmr-cap-card__avatar">4</div>
+                    <div class="tmr-cap-card__name"><strong>Eligibility floor</strong><span>Sellers must clear a sample size, ROI, and time-on-platform threshold before opening shop.</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<script src="/static/js/config.js?v=20260330"></script>
+<script src="/static/js/backend-api.js?v=20260423a"></script>
+<script>
+    /* ============================================================
+       Marketplace listing — seller cards driven by real backend data.
+       Pulls from /handicappers leaderboard endpoint and filters to
+       eligible sellers. If no eligible sellers exist yet, render the
+       canonical empty state from the design system instead of mocks.
+       ============================================================ */
+    const grid = document.getElementById('mpGrid');
+    const countEl = document.getElementById('mpCount');
+    let allSellers = [];
+
+    function escHtml(v) {
+        return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+    }
+    function num(v) { const n = Number(v); return Number.isFinite(n) ? n : 0; }
+    function pct(v) { const n = num(v); return n <= 1 && n >= 0 ? n*100 : n; }
+    function fmtSigned(v, suffix) { const n = num(v); return (n>=0?'+':'') + n.toFixed(1) + (suffix || ''); }
+    function classFor(v) { const n = num(v); return n>0 ? 'is-pos' : n<0 ? 'is-neg' : ''; }
+    function placeholder(label) {
+        return `<div class="tmr-cap-metric"><span class="tmr-cap-metric__label">${escHtml(label)}</span><span class="tmr-cap-metric__value is-placeholder">—</span></div>`;
+    }
+    function metric(label, value, cls, sub) {
+        const valueClass = ['tmr-cap-metric__value', cls || ''].filter(Boolean).join(' ');
+        return `<div class="tmr-cap-metric"><span class="tmr-cap-metric__label">${escHtml(label)}</span><span class="${valueClass}">${escHtml(value)}</span>${sub ? `<span class="tmr-cap-metric__sub">${escHtml(sub)}</span>` : ''}</div>`;
+    }
+
+    function renderEmpty() {
+        countEl.textContent = '0 sellers';
+        grid.innerHTML = `
+            <div class="tmr-empty" style="grid-column: 1 / -1;">
+                <div class="tmr-empty__icon">★</div>
+                <div class="tmr-empty__title">No sellers yet</div>
+                <p class="tmr-empty__body">Sell-your-picks mode opens after sellers prove a public record can back the price tag. No fake history, no inflated screenshots — just public ledgers buyers can audit.</p>
+                <div class="tmr-empty__cta">
+                    <a class="btn btn-primary" href="/sportsbook/">Build Your Record And Open Shop</a>
+                    <a class="btn btn-outline" href="/handicappers/">Browse Leaderboards</a>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderSellers(sellers) {
+        if (!sellers.length) return renderEmpty();
+        countEl.textContent = sellers.length + (sellers.length === 1 ? ' seller' : ' sellers');
+        grid.innerHTML = sellers.map(function(s) {
+            const username = s.username || s.handle || '';
+            const display = s.display_name || s.displayName || username || 'Capper';
+            const initial = (display || 'C').charAt(0).toUpperCase();
+            const wins = num(s.wins), losses = num(s.losses), pushes = num(s.pushes);
+            const total = num(s.total_picks || s.totalPicks || (wins + losses + pushes));
+            const record = `${wins}-${losses}${pushes ? '-' + pushes : ''}`;
+            const roi = pct(s.roi);
+            const units = num(s.net_units != null ? s.net_units : s.units);
+            const last30 = num(s.last_30d_roi);
+            const avgOdds = s.avg_odds != null ? s.avg_odds : null;
+            const streak = num(s.current_streak != null ? s.current_streak : s.currentStreak);
+            const bestSport = s.best_sport || null;
+            const sport = s.sport || s.primary_sport || 'All';
+            const sportTagClass = 'tmr-sport-tag tmr-sport-tag--' + String(sport).toLowerCase().replace(/[^a-z]/g, '');
+            const isVerifiedSeller = s.is_seller || s.is_verified;
+
+            return `
+                <div class="tmr-cap-card" data-username="${escHtml(username)}">
+                    <div class="tmr-cap-card__head">
+                        <div class="tmr-cap-card__avatar">${escHtml(initial)}</div>
+                        <div class="tmr-cap-card__name">
+                            <strong>${escHtml(display)} ${isVerifiedSeller ? '<span class="tmr-verify-pill">Seller</span>' : ''}</strong>
+                            <span>@${escHtml(username || 'unknown')} ${sport && sport !== 'All' ? `<span class="${sportTagClass}">${escHtml(sport)}</span>` : ''}</span>
+                        </div>
+                    </div>
+                    <div class="tmr-cap-card__metrics">
+                        ${total > 0 ? metric('Record', record) : placeholder('Record')}
+                        ${total > 0 ? metric('ROI', fmtSigned(roi, '%'), classFor(roi)) : placeholder('ROI')}
+                        ${total > 0 ? metric('Net units', fmtSigned(units, 'u'), classFor(units)) : placeholder('Net units')}
+                        ${total > 0 ? metric('Sample', String(total)) : placeholder('Sample')}
+                    </div>
+                    <div class="tmr-cap-card__metrics" style="margin-top: 8px;">
+                        ${last30 ? metric('30d ROI', fmtSigned(last30, '%'), classFor(last30)) : placeholder('30d ROI')}
+                        ${avgOdds != null ? metric('Avg odds', String(avgOdds)) : placeholder('Avg odds')}
+                        ${streak ? metric('Streak', (streak > 0 ? streak + 'W' : Math.abs(streak) + 'L'), classFor(streak)) : placeholder('Streak')}
+                        ${bestSport ? metric('Best', String(bestSport)) : placeholder('Best sport')}
+                    </div>
+                    <div class="mp-card-foot">
+                        <div class="mp-card-price">
+                            ${s.package_price ? `<strong>$${escHtml(s.package_price)}</strong><span>per pick package</span>` : `<strong style="color:#64748b;">—</strong><span>Pricing not set</span>`}
+                        </div>
+                        <div class="mp-card-actions">
+                            <a class="btn btn-outline" href="/profile/?user=${encodeURIComponent(username)}">View profile</a>
+                            ${s.package_price ? `<a class="btn btn-primary" href="/profile/?user=${encodeURIComponent(username)}#marketplace">Buy picks</a>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    async function loadSellers() {
+        if (!window.api || !api.request) {
+            renderEmpty();
+            return;
+        }
+        try {
+            await (api.ready || Promise.resolve());
+            // Use existing /handicappers endpoint and filter to sellers when the backend
+            // exposes the seller flag; otherwise show all leaderboard entries with package
+            // pricing as the seller signal. NEVER fabricate seller status.
+            const data = await api.request('/handicappers/leaderboard?limit=24').catch(() => null);
+            const list = (data && (data.handicappers || data.leaderboard || data.entries || [])) || [];
+            allSellers = list.filter(function(s) { return s.is_seller || s.package_price || (Number(s.total_picks || 0) > 0 && Number(s.roi || 0) > 0); });
+            applyFilters();
+        } catch (err) {
+            console.error('marketplace load error', err);
+            renderEmpty();
+        }
+    }
+
+    function applyFilters() {
+        const q = (document.getElementById('mpSearch').value || '').trim().toLowerCase();
+        const sport = document.getElementById('mpSport').value;
+        const sort = document.getElementById('mpSort').value;
+        let list = allSellers.slice();
+        if (q) {
+            list = list.filter(function(s) {
+                return (s.username || '').toLowerCase().includes(q)
+                    || (s.display_name || '').toLowerCase().includes(q)
+                    || (s.sport || '').toLowerCase().includes(q);
+            });
+        }
+        if (sport && sport !== 'all') {
+            list = list.filter(function(s) { return (s.sport || s.primary_sport || '').toUpperCase() === sport.toUpperCase(); });
+        }
+        list.sort(function(a, b) {
+            switch (sort) {
+                case 'units': return num(b.net_units || b.units) - num(a.net_units || a.units);
+                case 'sample': return num(b.total_picks) - num(a.total_picks);
+                case 'last30': return num(b.last_30d_roi) - num(a.last_30d_roi);
+                case 'streak': return num(b.current_streak) - num(a.current_streak);
+                case 'rating': return num(b.buyer_rating) - num(a.buyer_rating);
+                case 'price-asc': return num(a.package_price) - num(b.package_price);
+                case 'price-desc': return num(b.package_price) - num(a.package_price);
+                case 'roi':
+                default: return pct(b.roi) - pct(a.roi);
+            }
+        });
+        renderSellers(list);
+    }
+
+    document.getElementById('mpSearch').addEventListener('input', applyFilters);
+    document.getElementById('mpSport').addEventListener('change', applyFilters);
+    document.getElementById('mpSort').addEventListener('change', applyFilters);
+    document.getElementById('mpPeriod').addEventListener('change', applyFilters);
+
+    loadSellers();
+</script>
+</body>
 </html>
