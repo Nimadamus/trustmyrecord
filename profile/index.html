@@ -11,8 +11,8 @@
     <meta property="og:title" content="User Profile | TrustMyRecord">
     <meta property="og:description" content="Check out my verified handicapping record and stats.">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430f">
-<script defer src="/static/js/tmr-sitewide.js?v=20260430f"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430k">
+<script defer src="/static/js/tmr-sitewide.js?v=20260430k"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1113,6 +1113,29 @@
                     window.profileData.avatar_url = dataUri;
                     var hdrAvatar = document.querySelector('#profileHeader img.profile-avatar, #profileHeader .profile-avatar img');
                     if (hdrAvatar) hdrAvatar.src = dataUri;
+                    // Refresh cached user so the sitewide nav avatar updates immediately.
+                    try {
+                        if (window.api && window.api._cachedUser) {
+                            window.api._cachedUser.avatar_url = dataUri;
+                            window.api._cachedUser.avatarUrl = dataUri;
+                        }
+                        if (window.auth && window.auth.currentUser) {
+                            window.auth.currentUser.avatar_url = dataUri;
+                            window.auth.currentUser.avatarUrl = dataUri;
+                        }
+                        ['trustmyrecord_session','tmr_current_user','currentUser'].forEach(function(k){
+                            try {
+                                var raw = localStorage.getItem(k); if (!raw) return;
+                                var parsed = JSON.parse(raw);
+                                var u = (parsed && parsed.user) ? parsed.user : parsed;
+                                if (u && typeof u === 'object') {
+                                    u.avatar_url = dataUri; u.avatarUrl = dataUri;
+                                    localStorage.setItem(k, JSON.stringify(parsed));
+                                }
+                            } catch(e) {}
+                        });
+                        window.dispatchEvent(new CustomEvent('tmr-auth-changed'));
+                    } catch(e) { /* best-effort cache refresh */ }
                 } catch (err) {
                     avatarHint.textContent = err && err.message ? err.message : 'Upload failed.'; avatarHint.style.color = '#ffd0d6';
                 }
@@ -2255,6 +2278,51 @@
         }
 
         body.profile-page .profile-trust-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+        /* Affiliation chips row -- favorite sport + favorite teams shown
+           on every profile (visible to all viewers, not gated to own). */
+        .profile-affiliation-row {
+            display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px;
+            align-items: center;
+        }
+        .profile-affiliation-chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 10px; border-radius: 999px;
+            background: rgba(0,255,255,0.08);
+            border: 1px solid rgba(0,255,255,0.28);
+            color: #67e8f9;
+            font: 700 11px/1 'Inter', sans-serif;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+        }
+        .profile-affiliation-chip i { font-size: 9px; opacity: 0.75; }
+        .profile-affiliation-chip--sport {
+            background: rgba(255,0,255,0.06);
+            border-color: rgba(255,0,255,0.28);
+            color: #f0abfc;
+        }
+        .profile-affiliation-row--empty {
+            background: rgba(255,255,255,0.02);
+            border: 1px dashed rgba(0,255,255,0.32);
+            border-radius: 8px;
+            padding: 8px 12px;
+            justify-content: space-between;
+        }
+        .profile-affiliation-empty {
+            color: #94a3b8; font-size: 12.5px;
+        }
+        .profile-affiliation-cta {
+            background: linear-gradient(135deg, #00ffff, #67e8f9);
+            color: #04111A !important;
+            border: 0; border-radius: 6px;
+            padding: 6px 12px;
+            font: 800 11px/1 'Barlow', 'Inter', sans-serif;
+            letter-spacing: 0.04em; text-transform: uppercase;
+            cursor: pointer;
+        }
+        .profile-affiliation-cta:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px rgba(0,255,255,0.32);
+        }
         body.profile-page .profile-trust-pill,
         body.profile-page.tmr-site-shell .profile-trust-pill {
             display: inline-flex !important;
@@ -3545,6 +3613,9 @@
 
             const data = await api.getUserProfile(profileUsername);
             profileData = data.user || data;
+            // Expose globally so inline onclick handlers (affiliation CTA, etc)
+            // can read the username for per-user localStorage keys.
+            window.profileData = profileData;
             profileUserId = profileData.id;
 
             if (currentUser && !isOwnProfile) {
@@ -4294,6 +4365,31 @@
             '<span class="profile-trust-pill"><i class="fas fa-database"></i> Ledger <strong>' + totalPicks + ' tracked picks</strong></span>' +
             (p.__recoveredFromLocal ? '<span class="profile-trust-pill"><i class="fas fa-rotate-left"></i> Legacy recovery <strong>Browser ledger restored</strong></span>' : '') +
             '</div>';
+
+        // Affiliation row: favorite sport + team chips, visible to everyone.
+        // Pulls from p.favorite_sports / p.favorite_teams. If empty AND this
+        // is the user's own profile, show a single "Set your teams" CTA that
+        // jumps to the setup prompt (it always exists in the DOM; we just
+        // un-skip + scroll).
+        const favSportsArr = Array.isArray(p.favorite_sports) ? p.favorite_sports
+            : (p.favorite_sport ? [p.favorite_sport] : []);
+        const favTeamsArr  = Array.isArray(p.favorite_teams)  ? p.favorite_teams  : [];
+        const escTxt = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        let affiliationRow = '';
+        if (favSportsArr.length || favTeamsArr.length) {
+            const sportChips = favSportsArr.slice(0, 3).map(s =>
+                '<span class="profile-affiliation-chip profile-affiliation-chip--sport"><i class="fas fa-circle"></i> ' + escTxt(s) + ' fan</span>'
+            ).join('');
+            const teamChips = favTeamsArr.slice(0, 5).map(t =>
+                '<span class="profile-affiliation-chip"><i class="fas fa-shield-alt"></i> ' + escTxt(t) + '</span>'
+            ).join('');
+            affiliationRow = '<div class="profile-affiliation-row">' + sportChips + teamChips + '</div>';
+        } else if (isOwnProfile) {
+            affiliationRow = '<div class="profile-affiliation-row profile-affiliation-row--empty">'
+                + '<span class="profile-affiliation-empty">No teams yet.</span>'
+                + '<button type="button" class="profile-affiliation-cta" onclick="(function(){var el=document.getElementById(\'profileSetupPrompt\');if(el){el.hidden=false;el.scrollIntoView({behavior:\'smooth\',block:\'center\'});var k=\'tmr_profile_setup_skipped_\'+(window.profileData&&window.profileData.username||\'\');try{localStorage.removeItem(k);}catch(_){}}})()">Set favorite sport &amp; teams &rarr;</button>'
+                + '</div>';
+        }
         const emptyLedgerNote = showEmptyLedgerNote
             ? '<div class="profile-empty-ledger">' +
                 '<p><strong>No live tracked picks are currently tied to this backend account.</strong></p>' +
@@ -4339,6 +4435,7 @@
             '</div>' +
             '</div>' +
             trustPills +
+            affiliationRow +
             (p.bio ? '<div class="profile-bio">' + p.bio + '</div>' : '<div class="profile-bio profile-bio-empty">No bio added yet.</div>') +
             overview +
             '<div class="profile-meta">' +
@@ -4476,8 +4573,13 @@
         const gradedPicks = merged.wins + merged.losses + merged.pushes;
         const nc = merged.netUnits > 0 ? 'positive' : merged.netUnits < 0 ? 'negative' : 'neutral';
         const rc = merged.roi > 0 ? 'positive' : merged.roi < 0 ? 'negative' : 'neutral';
+        // Win rate: green > .500, red < .500, neutral when no graded sample or exactly .500
+        const wrSample = merged.wins + merged.losses;
+        const wc = wrSample === 0 ? 'neutral'
+                 : merged.winRate > 50 ? 'positive'
+                 : merged.winRate < 50 ? 'negative' : 'neutral';
         document.getElementById('summaryGrid').innerHTML =
-            summaryStat('Win %', merged.winRate.toFixed(1) + '%', merged.wins + ' wins / ' + merged.losses + ' losses') +
+            summaryStat('Win %', merged.winRate.toFixed(1) + '%', merged.wins + ' wins / ' + merged.losses + ' losses', wc) +
             summaryStat('Units Won', formatSignedUnits(merged.netUnits), gradedPicks + ' graded picks', nc) +
             summaryStat('ROI', (merged.roi >= 0 ? '+' : '') + merged.roi.toFixed(1) + '%', 'Return on risked units', rc) +
             summaryStat('Total Picks', String(s.total), usingRecoveredLocalPicks ? 'Recovered from this browser' : (ledger.pending ? ledger.pending + ' pending' : 'All visible picks')) +
