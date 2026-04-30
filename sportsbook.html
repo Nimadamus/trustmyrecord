@@ -381,8 +381,166 @@
 
     // Core function - Select Sport and Show Games (ESPN free API, no server needed)
     // Shared game list renderer used by both generic and NHL paths
+    // ===== Per-sport market sub-tabs =====
+    // Each sport offers a different mix of supported markets. The data shape used
+    // here matches what the backend exposes via game.bookmakers + game.market_groups.
+    // Markets without supporting data are NOT shown (no fake tabs).
+    window.TMR.marketCatalog = {
+        'NBA':    [ {key:'game', label:'Full Game', hint:'ML / Spread / Total'},
+                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'} ],
+        'NCAAB':  [ {key:'game', label:'Full Game', hint:'ML / Spread / Total'},
+                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'} ],
+        'NFL':    [ {key:'game', label:'Full Game', hint:'ML / Spread / Total'},
+                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'} ],
+        'NCAAF':  [ {key:'game', label:'Full Game', hint:'ML / Spread / Total'},
+                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'} ],
+        'NHL':    [ {key:'game', label:'Full Game', hint:'ML / Puck / Total'},
+                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'} ],
+        'MLB':    [ {key:'game', label:'Full Game', hint:'ML / Run / Total'},
+                    {key:'first_5', label:'F5 (5-Inning)', hint:'First 5 innings'},
+                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'},
+                    {key:'alts', label:'Alts', hint:'Alt spreads / totals'} ],
+        'Soccer': [ {key:'game', label:'90-Min', hint:'1X2 / Spread / Total'} ],
+        'Tennis': [ {key:'game', label:'Match', hint:'ML / Spread / Total'} ],
+    };
+    window.TMR.selectedMarket = 'game';
+    window.TMR._cachedGames = [];
+    window.TMR._cachedSport = null;
+
+    window.TMR.renderMarketSubtabs = function(sport, games) {
+        var host = document.getElementById('marketSubtabs');
+        if (!host) return;
+        // Match catalog by exact sport, then fall back by family for soccer leagues / tennis tours.
+        var catalog = window.TMR.marketCatalog[sport];
+        if (!catalog) {
+            var s = String(sport || '').toLowerCase();
+            if (s.indexOf('soccer') !== -1 || /epl|laliga|seriea|bundesliga|ligue1|mls|ucl/i.test(sport)) catalog = window.TMR.marketCatalog['Soccer'];
+            else if (s.indexOf('tennis') !== -1 || /atp|wta/i.test(sport)) catalog = window.TMR.marketCatalog['Tennis'];
+            else catalog = [{key:'game', label:'Full Game', hint:''}];
+        }
+        // Filter out tabs with zero supporting data so we never render an empty tab.
+        var hasMarket = function(key) {
+            if (key === 'game') return true;
+            return (games || []).some(function(g) {
+                if (key === 'team_totals' || key === 'first_5' || key === 'alts') {
+                    var alias = key === 'alts' ? ['alt_spreads', 'alt_totals'] : [key];
+                    return Array.isArray(g.market_groups) && g.market_groups.some(function(grp) {
+                        return grp && alias.indexOf(grp.key) !== -1 && Array.isArray(grp.items) && grp.items.length;
+                    });
+                }
+                return false;
+            });
+        };
+        var supported = catalog.filter(function(t) { return hasMarket(t.key); });
+        // If the previously selected market is gone after filter, reset to 'game'.
+        if (!supported.some(function(t) { return t.key === window.TMR.selectedMarket; })) {
+            window.TMR.selectedMarket = 'game';
+        }
+        host.innerHTML = supported.map(function(t) {
+            var active = t.key === window.TMR.selectedMarket ? ' is-active' : '';
+            return '<button type="button" class="market-subtab' + active + '" role="tab"'
+                + ' data-market="' + t.key + '" onclick="window.TMR.setMarket(\'' + t.key + '\')">'
+                + t.label
+                + (t.hint ? '<span class="market-subtab__hint">' + t.hint + '</span>' : '')
+                + '</button>';
+        }).join('');
+    };
+
+    window.TMR.setMarket = function(marketKey) {
+        window.TMR.selectedMarket = marketKey || 'game';
+        document.querySelectorAll('#marketSubtabs .market-subtab').forEach(function(btn) {
+            btn.classList.toggle('is-active', btn.getAttribute('data-market') === window.TMR.selectedMarket);
+        });
+        var container = document.getElementById('gamesListContainer');
+        if (container && window.TMR._cachedGames && window.TMR._cachedSport) {
+            window.TMR._renderGamesList(container, window.TMR._cachedGames, window.TMR._cachedSport);
+        }
+    };
+
+    // ===== Renderer for non-Game markets (F5, Team Totals, Alts, etc.) =====
+    // Pulls items from game.market_groups[].items where group.key matches the
+    // requested marketKey. Each item already carries selection_label / line / odds /
+    // market_type so we just render and wire onclick to selectGameBet.
+    window.TMR._renderMarketBoard = function(container, games, sport, marketKey) {
+        var aliases = marketKey === 'alts' ? ['alt_spreads', 'alt_totals'] : [marketKey];
+        var labelByMarket = {
+            first_5: 'First 5 Innings',
+            team_totals: 'Team Totals',
+            alts: 'Alt Spreads &amp; Totals'
+        };
+        var headerLabel = labelByMarket[marketKey] || marketKey;
+        var html = '';
+        var anyContent = false;
+        var esc = function(s) { return ('' + (s != null ? s : '')).replace(/'/g, "\\'"); };
+        var pv  = function(v) { return v != null ? '' + v : ''; };
+        var fmtOdds = function(o) {
+            var n = Number(o);
+            if (!Number.isFinite(n)) return '';
+            return n > 0 ? '+' + n : '' + n;
+        };
+
+        games.forEach(function(game, index) {
+            var groups = Array.isArray(game.market_groups) ? game.market_groups.filter(function(g) {
+                return g && aliases.indexOf(g.key) !== -1 && Array.isArray(g.items) && g.items.length;
+            }) : [];
+            if (!groups.length) return; // skip games that don't offer this market
+            anyContent = true;
+            var items = [];
+            groups.forEach(function(g) { g.items.forEach(function(it) { items.push(it); }); });
+            var gameTime = new Date(game.commence_time).toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'});
+
+            html += '<div class="game-row">'
+                + '<div class="game-time-header"><span class="game-time">' + gameTime + '</span></div>'
+                + '<div style="padding:6px 12px 4px;color:#94a3b8;font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;">'
+                + game.away_team + ' @ ' + game.home_team + ' &middot; ' + headerLabel
+                + '</div>'
+                + '<div style="padding:6px 12px 12px;display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:6px;">';
+            items.forEach(function(item) {
+                // Map per the existing selectGameBet contract:
+                // First 5 innings: f5ml / f5over / f5under / f5spread
+                // Team totals:    teamover (we reuse the same; backend stores selection_label)
+                // Alts:           altspread / altover / altunder
+                var type = 'pick';
+                if (marketKey === 'first_5') {
+                    if (item.market_type === 'f5_h2h') type = 'f5ml';
+                    else if (item.market_type === 'f5_totals') type = (item.selection === 'Over' ? 'f5over' : 'f5under');
+                    else type = 'f5spread';
+                } else if (marketKey === 'team_totals') {
+                    type = 'teamover';
+                } else if (marketKey === 'alts') {
+                    if (item.market_type === 'alt_totals') type = (item.selection === 'Over' ? 'altover' : 'altunder');
+                    else type = 'altspread';
+                }
+                var label = item.selection_label || item.selection || headerLabel;
+                html += '<button class="odds-btn" style="padding:10px 12px;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px;"'
+                    + ' onclick="window.selectGameBet(' + index + ',\'' + type + '\',\'' + esc(item.selection || '') + '\',\'' + esc(pv(item.line)) + '\',\'' + esc(pv(item.odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')">'
+                    + '<span class="odds-line" style="font-weight:600;color:#cbd5e1;">' + label + '</span>'
+                    + '<span class="odds-value" style="color:' + (Number(item.odds) > 0 ? '#4ade80' : '#fff') + ';">' + fmtOdds(item.odds) + '</span>'
+                    + '</button>';
+            });
+            html += '</div></div>';
+        });
+
+        if (!anyContent) {
+            html = '<div class="market-empty">No verified ' + headerLabel.replace(/&amp;/g, '&').toLowerCase() + ' lines available right now. Switch back to <button type="button" class="link-btn" onclick="window.TMR.setMarket(\'game\')" style="background:none;border:0;color:#00ffff;padding:0;cursor:pointer;font-weight:700;">Full Game</button> or check back closer to tip-off.</div>';
+        }
+        container.innerHTML = html;
+    };
+
     window.TMR._renderGamesList = function(container, games, sport) {
-        // Validate each game's odds quality
+        // Cache for market-tab re-renders.
+        window.TMR._cachedGames = games;
+        window.TMR._cachedSport = sport;
+        // Build the market sub-tab row first so it reflects whichever sport just loaded.
+        window.TMR.renderMarketSubtabs(sport, games);
+        var market = window.TMR.selectedMarket || 'game';
+
+        // ===== Non-Game markets render their own dedicated card per game =====
+        if (market !== 'game') {
+            return window.TMR._renderMarketBoard(container, games, sport, market);
+        }
+
+        // Validate each game's odds quality (full-game branch only)
         var validationResults = games.map(function(g) { return window.TMR.validateOdds(g); });
         var anyHasOdds = validationResults.some(function(v) { return v.valid && v.source !== 'none'; });
         var anyReal = validationResults.some(function(v) { return v.source === 'sportsbook' || v.source === 'espn'; });
@@ -450,39 +608,10 @@
                 '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + esc(game.home_team) + '\',\'ML\',\'' + esc(pv(homeML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (homeML > 0 ? 'positive' : '') + '">' + mlDisplay(homeML) + '</span></button>' +
                 '<button class="odds-btn' + noOddsClass + '" onclick="window.selectGameBet(' + index + ',\'under\',\'Under\',\'' + esc(pv(total)) + '\',\'' + esc(pv(underPrice)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + totLine('Under') + '</span><span class="odds-value">' + totOdds(underPrice) + '</span></button>' +
                 '</div></div>';
-            // More Markets expandable section. Only render sportsbook-provided
-            // team totals and first-five markets; never synthesize lines.
-            var isMLB = (sport && (sport.toLowerCase().indexOf('baseball') !== -1 || sport === 'MLB'));
-            var first5Group = Array.isArray(game.market_groups) ? game.market_groups.find(function(group) { return group && group.key === 'first_5'; }) : null;
-            var first5Items = first5Group && Array.isArray(first5Group.items) ? first5Group.items : [];
-            var teamTotalGroup = Array.isArray(game.market_groups) ? game.market_groups.find(function(group) { return group && group.key === 'team_totals'; }) : null;
-            var teamTotalItems = teamTotalGroup && Array.isArray(teamTotalGroup.items) ? teamTotalGroup.items : [];
-            html += '<div style="text-align:center;margin:-4px 0 8px 0;"><button onclick="(function(el){var p=el.parentElement.nextElementSibling;if(p){p.style.display=p.style.display===\'none\'?\'block\':\'none\';el.textContent=p.style.display===\'none\'?\'More Markets \\u25BC\':\'Less Markets \\u25B2\'}})(this)" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--text-muted,#888);padding:6px 18px;border-radius:6px;cursor:pointer;font-size:12px;transition:all 0.2s;">More Markets &#9660;</button></div>';
-            html += '<div style="display:none;padding:8px 12px 12px;border-top:1px solid rgba(255,255,255,0.06);">';
-            // Team Totals
-            html += '<div style="margin-bottom:10px;"><div style="color:var(--text-muted,#aaa);font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600;">Team Totals</div>';
-            if (teamTotalItems.length) {
-                teamTotalItems.forEach(function(item) {
-                    html += '<button class="odds-btn" style="width:100%;padding:6px 8px;margin-bottom:4px;" onclick="window.selectGameBet(' + index + ',\'teamover\',\'' + esc(item.selection || item.selection_label || '') + '\',\'' + esc(pv(item.line)) + '\',\'' + esc(pv(item.odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + (item.selection_label || item.selection || 'Team Total') + '</span><span class="odds-value">' + fmtOdds(item.odds) + '</span></button>';
-                });
-            } else {
-                html += '<div style="color:var(--text-muted,#aaa);font-size:12px;">No verified team-total lines available for this game.</div>';
-            }
-            html += '</div>';
-            // F5 markets for MLB only
-            if (isMLB) {
-                html += '<div style="margin-top:10px;"><div style="color:var(--text-muted,#aaa);font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600;">First 5 Innings</div>';
-                if (first5Items.length) {
-                    first5Items.forEach(function(item) {
-                        var type = item.market_type === 'f5_h2h' ? 'f5ml' : (item.market_type === 'f5_totals' && item.selection === 'Over' ? 'f5over' : (item.market_type === 'f5_totals' ? 'f5under' : 'f5spread'));
-                        html += '<button class="odds-btn" style="width:100%;padding:6px 8px;margin-bottom:4px;" onclick="window.selectGameBet(' + index + ',\'' + type + '\',\'' + esc(item.selection || '') + '\',\'' + esc(pv(item.line)) + '\',\'' + esc(pv(item.odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + (item.selection_label || item.selection || 'F5') + '</span><span class="odds-value">' + fmtOdds(item.odds) + '</span></button>';
-                    });
-                } else {
-                    html += '<div style="color:var(--text-muted,#aaa);font-size:12px;">No verified first-five lines available for this game.</div>';
-                }
-                html += '</div>';
-            }
-            html += '</div>'; // close more-markets container
+            // Inline "More Markets" expandable removed Apr 29 2026 -- those markets
+            // (F5, Team Totals, Alts) now live as top-level sub-tabs above the games
+            // list (window.TMR.marketCatalog) so users can pick a market context first
+            // and see all games filtered to that market in one view.
         });
         container.innerHTML = html;
     };
@@ -8554,16 +8683,33 @@
                 </div>
             </div>
             <div class="sportsbook-sport-tabs" aria-label="Sportsbook tabs">
-                <button type="button" class="sportsbook-sport-tab is-active" onclick="window.selectSportAndShowGames('NBA')">NBA</button>
-                <button type="button" class="sportsbook-sport-tab" onclick="window.selectSportAndShowGames('NHL')">NHL</button>
-                <button type="button" class="sportsbook-sport-tab" onclick="window.selectSportAndShowGames('NFL')">NFL</button>
                 <button type="button" class="sportsbook-sport-tab" onclick="window.selectSportAndShowGames('MLB')">MLB</button>
-                <button type="button" class="sportsbook-sport-tab" onclick="window.selectSportAndShowGames('NCAAB')">NCAAB</button>
+                <button type="button" class="sportsbook-sport-tab is-active" onclick="window.selectSportAndShowGames('NBA')">NBA</button>
+                <button type="button" class="sportsbook-sport-tab" onclick="window.selectSportAndShowGames('NFL')">NFL</button>
+                <button type="button" class="sportsbook-sport-tab" onclick="window.selectSportAndShowGames('NHL')">NHL</button>
                 <button type="button" class="sportsbook-sport-tab" onclick="window.selectSportAndShowGames('NCAAF')">NCAAF</button>
+                <button type="button" class="sportsbook-sport-tab" onclick="window.selectSportAndShowGames('NCAAB')">NCAAB</button>
                 <button type="button" class="sportsbook-sport-tab" onclick="window.toggleSportFamily && window.toggleSportFamily('soccer')">Soccer</button>
-                <button type="button" class="sportsbook-sport-tab" onclick="window.toggleSportFamily && window.toggleSportFamily('tennis')">Tennis</button>
-                <button type="button" class="sportsbook-sport-tab sportsbook-sport-tab--muted">Consensus</button>
+                <div class="sportsbook-sport-tab sportsbook-sport-tab--more" id="sportTabMore" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false" onclick="(function(el){var p=el.querySelector('.sport-more-pop');if(p){var open=p.style.display==='block';p.style.display=open?'none':'block';el.setAttribute('aria-expanded',open?'false':'true');}})(this)">More <i class="fas fa-caret-down" style="margin-left:6px;font-size:.7em;opacity:.7;"></i>
+                    <div class="sport-more-pop" role="menu">
+                        <button type="button" role="menuitem" onclick="event.stopPropagation();window.toggleSportFamily && window.toggleSportFamily('tennis');">Tennis</button>
+                        <button type="button" role="menuitem" onclick="event.stopPropagation();window.selectSportAndShowGames('UFC');">UFC / MMA</button>
+                        <button type="button" role="menuitem" onclick="event.stopPropagation();window.selectSportAndShowGames('Golf');">Golf</button>
+                        <button type="button" role="menuitem" onclick="event.stopPropagation();window.selectSportAndShowGames('Boxing');">Boxing</button>
+                        <button type="button" role="menuitem" onclick="event.stopPropagation();window.selectSportAndShowGames('NASCAR');">NASCAR / F1</button>
+                    </div>
+                </div>
+                <button type="button" class="sportsbook-sport-tab sportsbook-sport-tab--muted" title="Consensus board (coming soon)">Consensus</button>
             </div>
+            <style>
+                .sportsbook-sport-tabs { overflow-x: auto; scrollbar-width: thin; flex-wrap: nowrap; padding-bottom: 4px; }
+                .sportsbook-sport-tabs::-webkit-scrollbar { height: 4px; }
+                .sportsbook-sport-tabs::-webkit-scrollbar-thumb { background: rgba(112, 221, 255, 0.18); border-radius: 4px; }
+                .sportsbook-sport-tab--more { position: relative; cursor: pointer; }
+                .sport-more-pop { display: none; position: absolute; top: calc(100% + 6px); right: 0; background: rgba(11,17,24,0.98); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; min-width: 180px; padding: 6px; z-index: 100; box-shadow: 0 18px 40px rgba(0,0,0,0.42); }
+                .sport-more-pop button { display: block; width: 100%; text-align: left; background: transparent; border: 0; color: #cbd5e1; padding: 9px 12px; border-radius: 6px; font: 600 13px/1 'Inter', sans-serif; cursor: pointer; }
+                .sport-more-pop button:hover { background: rgba(0,255,255,0.08); color: #fff; }
+            </style>
         </div>
 
         <!-- Step 1: Sport Selection -->
@@ -8723,17 +8869,31 @@
                 <h3 id="selectedSportTitle">NBA Games</h3>
                 <span class="games-count" id="gamesCountBadge">0 games</span>
             </div>
+            <!-- Market sub-tabs (per-sport): Game / F5 / Team Totals / Halves / Periods / etc.
+                 Buttons are repopulated by window.TMR.renderMarketSubtabs(sport) when a sport
+                 is selected. Clicking sets window.TMR.selectedMarket and re-renders. -->
+            <div id="marketSubtabs" class="market-subtabs" role="tablist" aria-label="Market filter"></div>
             <div id="gamesListContainer" class="games-list-new">
                 <!-- Games will be loaded dynamically -->
                 <div class="loading-games">Loading games...</div>
             </div>
         </div>
+        <style>
+            .market-subtabs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 14px;padding:5px;background:rgba(11,17,24,0.6);border:1px solid rgba(255,255,255,0.06);border-radius:10px;}
+            .market-subtabs:empty{display:none;}
+            .market-subtab{flex:0 0 auto;padding:9px 16px;border-radius:7px;background:transparent;color:#94a3b8;border:1px solid transparent;font:700 12.5px/1 'Inter',sans-serif;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;transition:background .12s ease,color .12s ease,border-color .12s ease;}
+            .market-subtab:hover{color:#f4f7fb;background:rgba(255,255,255,0.04);}
+            .market-subtab.is-active{background:linear-gradient(135deg,#00ffff,#67e8f9);color:#04111A;border-color:transparent;box-shadow:0 6px 18px rgba(0,255,255,0.18);}
+            .market-subtab .market-subtab__hint{display:block;font-size:9.5px;color:rgba(0,0,0,0.55);margin-top:3px;font-weight:600;letter-spacing:.05em;}
+            .market-subtab:not(.is-active) .market-subtab__hint{color:#64748b;}
+            .market-empty{padding:16px 18px;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:10px;color:#94a3b8;font-size:13.5px;text-align:center;margin:8px 0 0;}
+        </style>
 
         <!-- Step 3: Pick Details (Confirmation) -->
         <div id="pickDetails" class="pick-step">
             <div class="back-button" onclick="goBackToGames()">&#8592; Back to Games</div>
-            <h3>Bet Slip</h3>
-            <div class="pick-slip-kicker">Bet Slip</div>
+            <h3>Pick Slip</h3>
+            <div class="pick-slip-kicker">Pick Slip · Locks to your public record</div>
 
             <div id="betScopeSelector" style="display: none; gap: 0; margin-bottom: 12px; border-radius: 10px; overflow: hidden; border: 2px solid var(--glass-border);">
                 <button type="button" class="bt-scope-btn active" data-scope="full" onclick="window.setBetScope('full')" style="flex: 1; padding: 10px 14px; background: var(--gradient-gold); border: none; color: var(--dark-bg); font-weight: 700; cursor: pointer; font-size: 13px; transition: all 0.2s;" id="btScopeFull">Full Game</button>
@@ -9219,7 +9379,7 @@ window.toggleSportFamily = function (family) {
 }
 
 /* Functional Make Picks header (replaces the marketing kicker/h2) */
-#picks .make-picks-header { padding-top: 4px; padding-bottom: 14px; }
+#picks .make-picks-header { padding-top: 14px; padding-bottom: 16px; }
 #picks .make-picks-title {
     font-family: 'Barlow Condensed', 'Inter', sans-serif;
     font-size: clamp(28px, 3.4vw, 40px);
@@ -22245,8 +22405,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <script src="static/js/platform-production-fix.js?v=20260415d"></script>
     <script src="static/js/sportsbook-dashboard-sync.js?v=20260415d"></script>
-<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260429f">
-<script defer src="static/js/tmr-sitewide.js?v=20260429f"></script>
+<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260429h">
+<script defer src="static/js/tmr-sitewide.js?v=20260429h"></script>
     <style>
         /* Make Your Picks polish: visual-only overrides, no pick-flow logic changes. */
         #picks.page-section {
@@ -24684,8 +24844,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
         body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__inner {
             width: min(100vw - 20px, 1880px);
-            min-height: 58px;
-            padding: 6px 0;
+            min-height: 64px !important;
+            padding: 8px 0 !important;
+            /* Force a real gap between brand / links / right user-card so
+               "Sell Your Picks" can't collide with the account chip. */
+            gap: 20px !important;
+        }
+        /* If the link row gets too wide, let it scroll horizontally inside
+           its column instead of overflowing into the right user card. */
+        body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links {
+            min-width: 0;
+            overflow-x: auto;
+            scrollbar-width: thin;
+            -ms-overflow-style: none;
+            padding-bottom: 2px;
+        }
+        body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links::-webkit-scrollbar { height: 4px; }
+        body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links::-webkit-scrollbar-thumb { background: rgba(112, 221, 255, 0.18); border-radius: 4px; }
+        body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__right {
+            flex: 0 0 auto;
+            margin-left: auto;
         }
 
         body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__brand {
@@ -24714,14 +24892,18 @@ document.addEventListener('DOMContentLoaded', function() {
         #picks .picks-container-modern {
             width: min(100vw - 16px, 1900px);
             max-width: none;
-            padding: 10px 8px 36px;
+            /* Top padding clears the sticky 82px global nav so the Make Picks H1
+               and the sport-tab row are never hidden behind it. */
+            padding: 28px 14px 36px;
         }
 
         #picks .sportsbook-page-shell {
             margin: 0 0 10px !important;
-            padding: 10px 12px !important;
+            /* Bump padding so the headline + sport tabs breathe and the kicker
+               isn't kissing the inner panel border. */
+            padding: 18px 20px 16px !important;
             border: 1px solid #243349 !important;
-            border-radius: 8px !important;
+            border-radius: 12px !important;
             background: #0d1420 !important;
             box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18) !important;
         }
