@@ -443,14 +443,12 @@
                     {key:'total', label:'Total', hint:'O/U goals'},
                     {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'},
                     {key:'live', label:'Live', hint:'Coming soon'} ],
-        'MLB':    [ {key:'game', label:'All Markets', hint:'ML + Run + Total'},
-                    {key:'moneyline', label:'Moneyline', hint:'ML only'},
-                    {key:'spread', label:'Run Line', hint:'+/-1.5 runs'},
-                    {key:'total', label:'Total', hint:'O/U runs'},
-                    {key:'first_5', label:'F5 (5-Inning)', hint:'First 5 innings'},
-                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'},
-                    {key:'alts', label:'Alts', hint:'Alt spreads / totals'},
-                    {key:'live', label:'Live', hint:'Coming soon'} ],
+        // MLB: sportsbook-style top tabs (Game Lines / 5 Inning / Team Totals).
+        // The Game Lines view already shows Run Line + Total + Moneyline as columns
+        // on every row — no need for separate ML/RL/Total filter tabs on MLB.
+        'MLB':    [ {key:'game', label:'Game Lines', hint:'Run Line · Total · ML'},
+                    {key:'first_5', label:'5 Inning Lines', hint:'First 5 innings'},
+                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'} ],
         'Soccer': [ {key:'game', label:'90-Min', hint:'1X2 / Spread / Total'},
                     {key:'moneyline', label:'1X2', hint:'Win / Draw'},
                     {key:'spread', label:'Asian', hint:'Asian handicap'},
@@ -694,15 +692,22 @@
             html += '<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;color:#fca5a5;font-size:14px;"><span style="font-size:20px;">&#9888;</span> Real odds not available yet. Showing matchups only. Enter your own line and odds from your sportsbook after selecting a pick.</div>';
         }
         var spreadLabel = (sport === 'NHL') ? 'Puck Line' : (sport === 'MLB' ? 'Run Line' : 'Spread');
+        // MLB / NHL get the 5-column DK layout: Matchup | RL/PL | Total | ML | More Bets.
+        // Other sports keep the 4-column layout — adding a stub More Bets cell where
+        // there's no obvious next market would just add visual noise.
+        var hasMoreBets = (sport === 'MLB' || sport === 'NHL');
+        var moreBetsTarget = (sport === 'MLB') ? 'first_5' : 'team_totals';
+        var moreBetsLabel = (sport === 'MLB') ? '5 Inning' : 'Team Totals';
         // Wrap the standard board in a filter-aware container so the active
         // market sub-tab (moneyline / spread / total / game) can hide the
         // other columns via CSS without re-templating per-row markup.
-        html += '<div class="games-board-wrap" data-market="' + market + '">';
+        html += '<div class="games-board-wrap" data-market="' + market + '" data-cols="' + (hasMoreBets ? '5' : '4') + '" data-sport="' + sport + '">';
         html += '<div class="market-headers">'
             + '<div class="market-label" data-mkt="matchup">Matchup</div>'
             + '<div class="market-label" data-mkt="spread">' + spreadLabel + '</div>'
-            + '<div class="market-label" data-mkt="ml">Moneyline</div>'
             + '<div class="market-label" data-mkt="total">Total</div>'
+            + '<div class="market-label" data-mkt="ml">Moneyline</div>'
+            + (hasMoreBets ? '<div class="market-label" data-mkt="more">More Bets</div>' : '')
             + '</div>';
         games.forEach(function(game, index) {
             var validation = validationResults[index];
@@ -1064,21 +1069,40 @@
         // Update the summary display
         window.updatePickSummary();
 
-        // Apr 30 2026 fix (Nima): on desktop (>=1100px) the games board and
-        // pick slip render side-by-side via grid; calling showPickStep here
-        // would yank `.active` off gamesListSection. The CSS display:block
-        // !important keeps it visible at the wide breakpoint, but on the
-        // exact transition window it can flicker / show "Loading games...".
-        // Only step-transition on narrow viewports where the slip is a step.
-        var isWideRail = (window.innerWidth || document.documentElement.clientWidth || 0) >= 1100;
-        if (isWideRail) {
-            // Right-rail mode: just make sure pickDetails is "active" without
-            // wiping the games list's active state. has-selection already
-            // unhid the ticket fields above.
-            var pd = document.getElementById('pickDetails');
-            if (pd) pd.classList.add('active');
-        } else {
+        // Apr 30 2026 fix v3 (Nima: Pittsburgh team-total-under on lobby
+        // showed nothing). The page has TWO contexts where odds can be tapped:
+        //   (a) the LOBBY (`#sportSelection` active) — has a cosmetic "Empty
+        //       Slip" preview that never updates; the real slip is far away
+        //       in a sibling DOM section the user cannot see from the lobby.
+        //   (b) the BOARD view (`#gamesListSection.active` inside
+        //       `.picks-board-row`) — slip renders alongside as a sticky
+        //       right-rail on >=1100px.
+        //
+        // Lobby tap MUST step-transition to #pickDetails or the click looks
+        // dead. Board tap on wide desktop should NOT step-transition (would
+        // hide the games board); just mark the slip .active. Board tap on
+        // narrow widths step-transitions because the slip is a hidden step.
+        var pdEl = document.getElementById('pickDetails');
+        var sportSelectionEl = document.getElementById('sportSelection');
+        var gamesListEl = document.getElementById('gamesListSection');
+        var lobbyActive = !!(sportSelectionEl && sportSelectionEl.classList.contains('active'));
+        var boardActive = !!(gamesListEl && gamesListEl.classList.contains('active'));
+
+        var slipVisibleAsRightRail = false;
+        if (pdEl && boardActive) {
+            try {
+                var cs = window.getComputedStyle(pdEl);
+                slipVisibleAsRightRail = cs && cs.display !== 'none' && cs.visibility !== 'hidden';
+            } catch (e) { slipVisibleAsRightRail = false; }
+        }
+
+        if (lobbyActive || !slipVisibleAsRightRail) {
+            // Lobby OR narrow viewport: step transition is the only way the
+            // pick slip will actually surface in front of the user.
             window.showPickStep('pickDetails');
+        } else {
+            // Wide desktop on the board view: slip is already visible.
+            pdEl.classList.add('active');
         }
     };
 
@@ -8723,16 +8747,10 @@
                         <button class="sportsbook-lobby-secondary-btn" onclick="window.showPickStep('picksList')">Pick History</button>
                     </div>
 
-                    <div class="sportsbook-period-bar" role="tablist" aria-label="Market period">
-                        <button type="button" role="tab" class="sportsbook-period-tab is-active" data-period="full" aria-selected="true">Full Game</button>
-                        <button type="button" role="tab" class="sportsbook-period-tab" data-period="1h" aria-selected="false">1st Half</button>
-                        <button type="button" role="tab" class="sportsbook-period-tab" data-period="2h" aria-selected="false">2nd Half</button>
-                        <button type="button" role="tab" class="sportsbook-period-tab" data-period="q1" aria-selected="false">1st Quarter</button>
-                        <button type="button" role="tab" class="sportsbook-period-tab" data-period="q2" aria-selected="false">2nd Quarter</button>
-                        <button type="button" role="tab" class="sportsbook-period-tab" data-period="q3" aria-selected="false">3rd Quarter</button>
-                        <button type="button" role="tab" class="sportsbook-period-tab" data-period="q4" aria-selected="false">4th Quarter</button>
-                        <button type="button" role="tab" class="sportsbook-period-tab" data-period="tt" aria-selected="false">Team Totals</button>
-                    </div>
+                    <!-- Sport-aware period bar. Populated by window.TMR._renderPeriodBar(sport)
+                         which runs on every setSport(). MLB shows Game Lines / 5 Inning / Team Totals;
+                         NBA / NCAAB show full / halves / quarters; NFL / NHL show their own slates. -->
+                    <div id="lobbyPeriodBar" class="sportsbook-period-bar" role="tablist" aria-label="Market period"></div>
 
                     <div class="sportsbook-board-grid">
                         <div class="sportsbook-board-grid-head">
@@ -9279,6 +9297,43 @@ window.toggleSportFamily = function (family) {
         });
     }
 
+    // Per-sport period catalog driving the lobby preview's top tab strip.
+    // Sportsbook-style labels: MLB never shows quarter / half NBA tabs.
+    var PERIOD_CATALOGS = {
+        'NBA':   [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'q1',label:'1st Quarter'},{k:'q2',label:'2nd Quarter'},{k:'q3',label:'3rd Quarter'},{k:'q4',label:'4th Quarter'},{k:'tt',label:'Team Totals'}],
+        'NCAAB': [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'tt',label:'Team Totals'}],
+        'NFL':   [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'q1',label:'1st Quarter'},{k:'q2',label:'2nd Quarter'},{k:'q3',label:'3rd Quarter'},{k:'q4',label:'4th Quarter'},{k:'tt',label:'Team Totals'}],
+        'NCAAF': [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'q1',label:'1st Quarter'},{k:'q2',label:'2nd Quarter'},{k:'q3',label:'3rd Quarter'},{k:'q4',label:'4th Quarter'},{k:'tt',label:'Team Totals'}],
+        'NHL':   [{k:'full',label:'Game Lines'},{k:'p1',label:'1st Period'},{k:'p2',label:'2nd Period'},{k:'p3',label:'3rd Period'},{k:'tt',label:'Team Totals'}],
+        'MLB':   [{k:'full',label:'Game Lines'},{k:'f5',label:'5 Inning Lines'},{k:'tt',label:'Team Totals'}],
+        'Soccer':[{k:'full',label:'Match'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'}],
+        'Tennis':[{k:'full',label:'Match'}]
+    };
+
+    // Rebuild the lobby period tab strip for a given sport. Keeps the active
+    // selection if it's still valid for the new sport, else falls back to 'full'.
+    function renderPeriodBar(sport) {
+        var bar = document.getElementById('lobbyPeriodBar');
+        if (!bar) return;
+        var cat = PERIOD_CATALOGS[sport] || PERIOD_CATALOGS['NBA'];
+        var current = (window.TMR && window.TMR.selectedPeriod) || 'full';
+        if (!cat.some(function(p){ return p.k === current; })) {
+            current = 'full';
+            if (window.TMR) window.TMR.selectedPeriod = 'full';
+        }
+        bar.innerHTML = cat.map(function(p) {
+            var on = p.k === current;
+            return '<button type="button" role="tab" class="sportsbook-period-tab' + (on ? ' is-active' : '') + '"'
+                + ' data-period="' + p.k + '"'
+                + ' aria-selected="' + (on ? 'true' : 'false') + '">' + p.label + '</button>';
+        }).join('');
+        // Rewire click handlers for the freshly rendered buttons.
+        if (typeof bindPeriodTabs === 'function') bindPeriodTabs();
+    }
+    // Expose so renderBoard() and setSport() can call it.
+    window.TMR = window.TMR || {};
+    window.TMR._renderPeriodBar = renderPeriodBar;
+
     function emptyState(sport, message, tone) {
         var icon = tone === 'closed' ? '○' : '●';
         return '<div class="sportsbook-board-empty"><div class="sportsbook-board-empty-icon" aria-hidden="true">' + icon + '</div>' +
@@ -9287,14 +9342,18 @@ window.toggleSportFamily = function (family) {
     }
 
     var PERIOD_LABELS = {
-        full: 'Full Game',
+        full: 'Game Lines',
         '1h': '1st Half',
         '2h': '2nd Half',
         q1: '1st Quarter',
         q2: '2nd Quarter',
         q3: '3rd Quarter',
         q4: '4th Quarter',
-        tt: 'Team Totals'
+        tt: 'Team Totals',
+        f5: '5 Inning Lines',
+        p1: '1st Period',
+        p2: '2nd Period',
+        p3: '3rd Period'
     };
 
     // Sports the backend's market_groups feed supports for team_totals.
@@ -9522,9 +9581,11 @@ window.toggleSportFamily = function (family) {
         }
     };
 
-    // Delegated click handler. Bound once to <document> so it survives every
-    // re-render and catches every team-total button regardless of when it
-    // was rendered. Logs each click loudly so failures are obvious in DevTools.
+    // Delegated click handler. RESTORES the original Units/Line/Odds/Submit
+    // form behavior — route through selectGameBet so the existing
+    // #pickDetails form opens exactly the way ML / spread / total clicks
+    // have worked for months. Force the form visible + scroll it into view
+    // because CSS specificity on the lobby keeps #sportSelection visible.
     if (!window.TMR._ttClickBound) {
         window.TMR._ttClickBound = true;
         document.addEventListener('click', function (ev) {
@@ -9534,54 +9595,47 @@ window.toggleSportFamily = function (family) {
             var gameIndex = parseInt(btn.getAttribute('data-game-index'), 10);
             var betType   = btn.getAttribute('data-bet-type');
             var team      = btn.getAttribute('data-team');
-            var lineRaw   = btn.getAttribute('data-line');
-            var oddsRaw   = btn.getAttribute('data-odds');
+            var line      = btn.getAttribute('data-line');
+            var odds      = btn.getAttribute('data-odds');
             var awayTeam  = btn.getAttribute('data-away');
             var homeTeam  = btn.getAttribute('data-home');
-            var line = (lineRaw != null && lineRaw !== '') ? parseFloat(lineRaw) : null;
-            var odds = (oddsRaw != null && oddsRaw !== '') ? parseInt(oddsRaw, 10) : null;
-            var fullGame = (window.TMR.currentGames && window.TMR.currentGames[gameIndex]) || null;
-            var bookTitle = 'DraftKings';
-            try {
-                if (fullGame && fullGame.bookmakers && fullGame.bookmakers[0] && fullGame.bookmakers[0].title) {
-                    bookTitle = fullGame.bookmakers[0].title;
-                }
-            } catch (e) { /* noop */ }
-            console.log('[TMR][TT] click:', { gameIndex: gameIndex, betType: betType, team: team, line: line, odds: odds, away: awayTeam, home: homeTeam, book: bookTitle });
+            console.log('[TMR][TT] click:', { gameIndex: gameIndex, betType: betType, team: team, line: line, odds: odds });
 
-            // Visual: mark this button selected, unmark siblings.
             try {
                 document.querySelectorAll('[data-tt-pick="1"].selected').forEach(function (b) { b.classList.remove('selected'); });
                 btn.classList.add('selected');
             } catch (e) { /* noop */ }
 
-            window.TMR._ttPopulateSlip({
-                gameIndex: gameIndex,
-                betType: betType,
-                team: team,
-                line: line,
-                odds: odds,
-                awayTeam: awayTeam,
-                homeTeam: homeTeam,
-                sport: window.TMR.selectedSport,
-                market: 'Team Total',
-                book: bookTitle,
-                gameTime: fullGame && fullGame.commence_time,
-                gameId: fullGame && fullGame.id,
-                game: fullGame
-            });
-
-            // If the slip is below the fold (mobile / narrow viewports), nudge it.
-            var aside = document.querySelector('.sportsbook-ticket-preview');
-            if (aside) {
-                try {
-                    var rect = aside.getBoundingClientRect();
-                    var vh = window.innerHeight || document.documentElement.clientHeight;
-                    if (rect.top > vh - 80 || rect.bottom < 0) {
-                        aside.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                } catch (e) { /* noop */ }
+            try {
+                if (typeof window.selectGameBet === 'function') {
+                    window.selectGameBet(gameIndex, betType, team, line, odds, awayTeam, homeTeam);
+                } else {
+                    console.warn('[TMR][TT] window.selectGameBet missing');
+                }
+            } catch (err) {
+                console.error('[TMR][TT] selectGameBet threw:', err);
             }
+
+            // Belt-and-suspenders: force #pickDetails visible (CSS forces
+            // #sportSelection visible too, which can stack above the form),
+            // then scroll the form into the viewport.
+            try {
+                var pd = document.getElementById('pickDetails');
+                if (pd) {
+                    pd.classList.add('active');
+                    pd.style.display = 'block';
+                    var rect = pd.getBoundingClientRect();
+                    var vh = window.innerHeight || document.documentElement.clientHeight;
+                    var topVisible = rect.top >= 0 && rect.top < vh - 100;
+                    if (!topVisible) {
+                        try {
+                            window.scrollTo({ top: Math.max(0, rect.top + window.scrollY - 110), behavior: 'smooth' });
+                        } catch (e) {
+                            window.scrollTo(0, Math.max(0, rect.top + window.scrollY - 110));
+                        }
+                    }
+                }
+            } catch (e) { /* noop */ }
         }, false);
     }
 
@@ -9737,6 +9791,7 @@ window.toggleSportFamily = function (family) {
         rows.setAttribute('data-sport', sport);
         setHeader(sport);
         setActiveTabs(sport);
+        renderPeriodBar(sport);
 
         if (sport === 'Soccer' || sport === 'Tennis' || sport === 'Consensus') {
             rows.innerHTML = emptyState(sport, sport + ' boards open from the rail.', 'group');
