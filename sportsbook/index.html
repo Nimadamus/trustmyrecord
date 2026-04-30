@@ -18309,7 +18309,42 @@ document.addEventListener('DOMContentLoaded', function() {
         })();
     </script>
 <script src="/static/js/forms-fixed.js?v=20260424b"></script>
-<script src="/static/js/forms-login-fix.js?v=20260424b"></script>
+<!-- forms-login-fix.js removed: only the dedicated /login/ form needs it,
+     and on the sportsbook page it was hooking elements that don't exist. -->
+
+<!-- Console-error cap: a single window-level error handler that dedupes
+     identical messages from late-loading legacy scripts so we don't see
+     40+ rows of the same complaint. The original errors are still
+     accessible via window.__tmrErrors for debugging. Reddit Apr 30. -->
+<script>
+(function(){
+    if (window.__tmrErrorCapInstalled) return;
+    window.__tmrErrorCapInstalled = true;
+    window.__tmrErrors = [];
+    var seen = Object.create(null);
+    var realError = console.error.bind(console);
+    var realWarn  = console.warn.bind(console);
+    function record(level, args){
+        try {
+            var key = (args[0] && args[0].message) ? args[0].message : String(args[0]);
+            var bucket = seen[key] = (seen[key] || { level: level, count: 0, sample: args[0] });
+            bucket.count += 1;
+            if (bucket.count <= 1) (level === 'error' ? realError : realWarn).apply(console, args);
+            else if (bucket.count === 2) realWarn('[TMR] error suppressed (repeats):', key);
+            window.__tmrErrors.push({ level: level, key: key, at: Date.now() });
+            if (window.__tmrErrors.length > 200) window.__tmrErrors.shift();
+        } catch (_) { (level === 'error' ? realError : realWarn).apply(console, args); }
+    }
+    console.error = function(){ record('error', Array.prototype.slice.call(arguments)); };
+    console.warn  = function(){ record('warn',  Array.prototype.slice.call(arguments)); };
+    window.addEventListener('error', function(e){
+        record('error', [{ message: (e && e.message) || 'window error', source: e && e.filename, lineno: e && e.lineno }]);
+    });
+    window.addEventListener('unhandledrejection', function(e){
+        record('error', [{ message: 'unhandledrejection: ' + ((e && e.reason && e.reason.message) || e.reason || 'unknown') }]);
+    });
+})();
+</script>
     <script>
         console.log('[TMR] Form handlers loaded');
     </script>
@@ -18550,9 +18585,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     </script>
 
-    <script src="/static/js/social.js?v=20260415f"></script>
-    <script src="/static/js/forums.js?v=20251208c"></script>
-    <!-- forms.js REMOVED - forms-fixed.js handles login/signup -->
+    <!-- social.js / forums.js removed from sportsbook page Apr 30 2026:
+         their initializers target #searchResults / #profile-view / forum
+         containers that don't exist on the picks board, throwing console
+         noise. They're loaded on /feed/ and /forum/ where they belong. -->
     <script src="/static/js/navigation.js?v=20260424e"></script>
 <script src="/static/js/sportsbook-production-fix.js?v=20260426a"></script>
     <script src="/static/js/effects.js?v=20251208c"></script>
@@ -18820,8 +18856,15 @@ document.addEventListener('DOMContentLoaded', function() {
     </script>
 
     <script src="/static/js/app.js?v=20260422a"></script>
-    <script src="/static/js/auto-grader-fixed.js?v=20260415f"></script>
-    <script src="/static/js/nhl-markets.js?v=20260415c"></script>
+    <!-- auto-grader-fixed.js removed Apr 30 2026: it was a legacy
+         localStorage-side grader that re-rated picks from the local
+         tmr_picks cache, double-counting against the real backend
+         grader (services/gradingEngine.js) and writing junk into the
+         visible record on the profile. Backend grader runs every 15
+         min and is the source of truth.
+         nhl-markets.js removed: only used by a deprecated NHL fetch
+         path; the production board fix handles NHL today. -->
+
     <!-- AUTO-GRADER INITIALIZATION -->
     <script>
     // Initialize auto-grader on page load and run every 5 minutes
@@ -18845,10 +18888,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     </script>
     <!-- picks-complete-fix.js REMOVED: it was from an old architecture that overwrote working functions -->
-    <script src="/static/js/stats-engine.js?v=20260415d"></script>
-    <script src="/static/js/challenges-engine.js?v=20260414b"></script>
+    <!-- stats-engine.js / challenges-engine.js / leaderboard.js removed from
+         sportsbook page Apr 30 2026: they target #pointsLeaderboardBody /
+         #picksLeaderboardBody / arena DOM that doesn't exist here and were
+         the bulk of the 40+ console errors a Reddit user flagged. They run
+         on /profile/, /arena/, /handicappers/ where the elements exist. -->
     <script src="/static/js/notifications.js?v=20260423a"></script>
-    <script src="/static/js/leaderboard.js?v=20260415d"></script>
 
     <script>
     // COMPLETE PICKS MODULE - FIXED VERSION v2 - January 13, 2026
@@ -22676,8 +22721,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <script src="/static/js/platform-production-fix.js?v=20260415d"></script>
     <script src="/static/js/sportsbook-dashboard-sync.js?v=20260415d"></script>
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430c">
-<script defer src="/static/js/tmr-sitewide.js?v=20260430c"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430g">
+<script defer src="/static/js/tmr-sitewide.js?v=20260430g"></script>
     <style>
         /* Make Your Picks polish: visual-only overrides, no pick-flow logic changes. */
         #picks.page-section {
