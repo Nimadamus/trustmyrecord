@@ -1184,6 +1184,76 @@
 
                 <!-- TAB: PICKS (default) -->
                 <div class="profile-tab-panel active" data-panel="picks">
+                    <section class="capper-monitor" id="capperMonitor">
+                        <div class="capper-monitor-head">
+                            <div>
+                                <div class="section-title">Capper Performance Monitor</div>
+                                <div class="section-subtitle">Filtered, graded-only performance metrics from the public backend ledger.</div>
+                            </div>
+                        </div>
+
+                        <div class="capper-filter-bar" id="capperFilters">
+                            <label><span>Sport</span><select id="capFilterSport"><option value="">All</option></select></label>
+                            <label><span>Market</span><select id="capFilterMarket">
+                                <option value="">All</option>
+                                <option value="moneyline">Moneyline</option>
+                                <option value="spread">Spread</option>
+                                <option value="total">Total</option>
+                                <option value="team_total">Team Total</option>
+                                <option value="first_five">First Five</option>
+                                <option value="props">Props</option>
+                            </select></label>
+                            <label><span>Status</span><select id="capFilterStatus">
+                                <option value="">All</option>
+                                <option value="graded">Graded</option>
+                                <option value="pending">Pending</option>
+                                <option value="won">Won</option>
+                                <option value="lost">Lost</option>
+                                <option value="push">Push</option>
+                            </select></label>
+                            <label><span>Time</span><select id="capFilterTime">
+                                <option value="all">All Time</option>
+                                <option value="today">Today</option>
+                                <option value="7">Last 7 Days</option>
+                                <option value="30">Last 30 Days</option>
+                                <option value="season">This Season</option>
+                            </select></label>
+                            <label><span>Sort By</span><select id="capFilterSort">
+                                <option value="date_desc">Date</option>
+                                <option value="units_desc">Units</option>
+                                <option value="roi_desc">ROI</option>
+                                <option value="win_rate_desc">Win Rate</option>
+                                <option value="sport_asc">Sport</option>
+                                <option value="market_asc">Market</option>
+                            </select></label>
+                            <button type="button" id="capFilterReset">Reset</button>
+                        </div>
+
+                        <div class="capper-main-row" id="capperMainRow"></div>
+
+                        <div class="capper-table-grid">
+                            <section class="capper-table-card"><h3>Performance by Sport</h3><div id="capTableSport"></div></section>
+                            <section class="capper-table-card"><h3>Performance by Market Type</h3><div id="capTableMarket"></div></section>
+                            <section class="capper-table-card"><h3>Performance by Unit Size</h3><div id="capTableUnits"></div></section>
+                            <section class="capper-table-card"><h3>Performance by Odds Range</h3><div id="capTableOdds"></div></section>
+                            <section class="capper-table-card"><h3>Favorites vs Underdogs</h3><div id="capTableFavDog"></div></section>
+                            <section class="capper-table-card"><h3>Pending Picks Summary</h3><div id="capTablePending"></div></section>
+                        </div>
+
+                        <section class="capper-history-card">
+                            <div class="capper-history-head">
+                                <h3>Pick History</h3>
+                                <span id="capHistoryMeta">0 picks</span>
+                            </div>
+                            <div class="capper-history-scroll">
+                                <table class="capper-history-table">
+                                    <thead><tr><th>Date</th><th>Sport</th><th>Game</th><th>Pick</th><th>Line</th><th>Odds</th><th>Units</th><th>Result</th><th>Profit/Loss</th></tr></thead>
+                                    <tbody id="capHistoryBody"><tr><td colspan="9">Loading picks...</td></tr></tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </section>
+
                     <div class="profile-feed-card">
                         <div class="profile-feed-head">
                             <div>
@@ -2477,6 +2547,155 @@
         .profile-rail-value.is-negative { color: #f87171; }
         .profile-rail-value.is-neutral { color: #f8fafc; }
 
+        .capper-monitor {
+            margin-bottom: 22px;
+            border: 1px solid rgba(91, 214, 220, 0.18);
+            border-radius: 12px;
+            background: linear-gradient(180deg, rgba(7, 16, 29, 0.92), rgba(10, 18, 31, 0.98));
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+            overflow: hidden;
+        }
+        .capper-monitor-head,
+        .capper-history-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+        }
+        .capper-filter-bar {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(130px, 1fr)) auto;
+            gap: 10px;
+            padding: 14px 20px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+            background: rgba(15, 23, 42, 0.42);
+        }
+        .capper-filter-bar label span {
+            display: block;
+            margin-bottom: 5px;
+            color: #94a3b8;
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        .capper-filter-bar select,
+        .capper-filter-bar button {
+            width: 100%;
+            min-height: 38px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 8px;
+            background: rgba(2, 6, 23, 0.82);
+            color: #e2e8f0;
+            font: 700 0.82rem/1 'Inter', sans-serif;
+            padding: 0 10px;
+        }
+        .capper-filter-bar button {
+            align-self: end;
+            cursor: pointer;
+            color: #67e8f9;
+            border-color: rgba(103, 232, 249, 0.28);
+        }
+        .capper-main-row {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+        }
+        .capper-stat {
+            padding: 18px 20px;
+            border-right: 1px solid rgba(148, 163, 184, 0.13);
+            min-width: 0;
+        }
+        .capper-stat:last-child { border-right: 0; }
+        .capper-stat span {
+            display: block;
+            color: #94a3b8;
+            font-size: 0.67rem;
+            font-weight: 800;
+            letter-spacing: 0.13em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .capper-stat strong {
+            display: block;
+            color: #f8fafc;
+            font: 800 clamp(1.15rem, 2vw, 1.55rem)/1 'Barlow', 'Inter', sans-serif;
+            white-space: nowrap;
+        }
+        .capper-pos { color: #4ade80 !important; }
+        .capper-neg { color: #f87171 !important; }
+        .capper-neutral { color: #f8fafc !important; }
+        .capper-table-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0;
+        }
+        .capper-table-card {
+            padding: 18px 20px;
+            border-right: 1px solid rgba(148, 163, 184, 0.12);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+            min-width: 0;
+        }
+        .capper-table-card:nth-child(2n) { border-right: 0; }
+        .capper-table-card h3,
+        .capper-history-head h3 {
+            margin: 0;
+            color: #f8fafc;
+            font: 800 0.95rem/1.2 'Barlow', 'Inter', sans-serif;
+            letter-spacing: 0;
+        }
+        .capper-table,
+        .capper-history-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: auto;
+            margin-top: 12px;
+        }
+        .capper-table th,
+        .capper-table td,
+        .capper-history-table th,
+        .capper-history-table td {
+            padding: 10px 9px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+            text-align: left;
+            color: #cbd5e1;
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+        .capper-table th,
+        .capper-history-table th {
+            color: #94a3b8;
+            font-size: 0.64rem;
+            font-weight: 900;
+            letter-spacing: 0.11em;
+            text-transform: uppercase;
+        }
+        .capper-empty {
+            margin-top: 12px;
+            padding: 14px;
+            border: 1px dashed rgba(148, 163, 184, 0.2);
+            border-radius: 10px;
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+        .capper-history-scroll { overflow-x: auto; }
+        .capper-history-card { padding-bottom: 6px; }
+        .capper-result {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .capper-result.won { background: rgba(74, 222, 128, 0.12); color: #4ade80; }
+        .capper-result.lost { background: rgba(248, 113, 113, 0.12); color: #f87171; }
+        .capper-result.push { background: rgba(148, 163, 184, 0.12); color: #cbd5e1; }
+        .capper-result.pending { background: rgba(103, 232, 249, 0.1); color: #67e8f9; }
+
         .profile-empty-ledger {
             margin-top: 14px;
             padding: 14px 16px;
@@ -3026,6 +3245,12 @@
             .profile-rail { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .profile-rail-card:nth-child(3n) { border-right: 0; }
             .profile-rail-card:nth-child(n+4) { border-top: 1px solid rgba(148, 163, 184, 0.14); }
+            .capper-filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .capper-main-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .capper-stat:nth-child(3n) { border-right: 0; }
+            .capper-stat:nth-child(n+4) { border-top: 1px solid rgba(148, 163, 184, 0.13); }
+            .capper-table-grid { grid-template-columns: 1fr; }
+            .capper-table-card { border-right: 0; }
             body.profile-page .summary-grid,
             body.profile-page.tmr-site-shell .summary-grid {
                 grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
@@ -3061,6 +3286,11 @@
             .profile-rail-card:nth-child(3n) { border-right: 1px solid rgba(148, 163, 184, 0.14); }
             .profile-rail-card:nth-child(2n) { border-right: 0; }
             .profile-rail-card:nth-child(n+3) { border-top: 1px solid rgba(148, 163, 184, 0.14); }
+            .capper-filter-bar { grid-template-columns: 1fr; }
+            .capper-main-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .capper-stat:nth-child(3n) { border-right: 1px solid rgba(148, 163, 184, 0.13); }
+            .capper-stat:nth-child(2n) { border-right: 0; }
+            .capper-stat:nth-child(n+3) { border-top: 1px solid rgba(148, 163, 184, 0.13); }
             body.profile-page .summary-grid,
             body.profile-page.tmr-site-shell .summary-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -4505,6 +4735,7 @@
 
         // Hydrate the PickMonitor-style filterable table on the Picks tab.
         try { initPmPicksTable(picks); } catch (e) { console.warn('[pm-picks] init failed', e); }
+        try { initCapperMonitor(picks); } catch (e) { console.warn('[capper-monitor] init failed', e); }
 
         const stats = computeUnifiedStats(picks);
         renderSummaryBar(stats);
@@ -4586,6 +4817,243 @@
         if (r === 'lost' || r === 'loss') return 'lost';
         if (r === 'push' || r === 'pushed') return 'push';
         return 'pending';
+    }
+
+    const capperFilters = { sport:'', market:'', status:'', time:'all', sort:'date_desc' };
+    let capperPicks = [];
+
+    function initCapperMonitor(picks) {
+        capperPicks = Array.isArray(picks) ? picks.slice() : [];
+        populateCapperFilters();
+        wireCapperFilters();
+        renderCapperMonitor();
+    }
+
+    function populateCapperFilters() {
+        const sportSel = document.getElementById('capFilterSport');
+        if (!sportSel) return;
+        const sports = Array.from(new Set(capperPicks.map(p => String(p.sport_key || '').toLowerCase()).filter(Boolean))).sort();
+        const defaults = ['baseball_mlb','americanfootball_nfl','basketball_nba','icehockey_nhl','basketball_ncaab','americanfootball_ncaaf'];
+        const merged = Array.from(new Set(defaults.concat(sports)));
+        sportSel.innerHTML = '<option value="">All</option>' + merged.map(s => '<option value="' + s + '">' + pmSportLabel(s) + '</option>').join('');
+    }
+
+    function wireCapperFilters() {
+        [
+            ['capFilterSport','sport'], ['capFilterMarket','market'], ['capFilterStatus','status'],
+            ['capFilterTime','time'], ['capFilterSort','sort']
+        ].forEach(([id, key]) => {
+            const el = document.getElementById(id);
+            if (!el || el.dataset.capperWired) return;
+            el.dataset.capperWired = '1';
+            el.addEventListener('change', function() { capperFilters[key] = el.value; renderCapperMonitor(); });
+        });
+        const reset = document.getElementById('capFilterReset');
+        if (reset && !reset.dataset.capperWired) {
+            reset.dataset.capperWired = '1';
+            reset.addEventListener('click', function() {
+                Object.assign(capperFilters, { sport:'', market:'', status:'', time:'all', sort:'date_desc' });
+                [['capFilterSport',''],['capFilterMarket',''],['capFilterStatus',''],['capFilterTime','all'],['capFilterSort','date_desc']].forEach(([id, v]) => {
+                    const el = document.getElementById(id); if (el) el.value = v;
+                });
+                renderCapperMonitor();
+            });
+        }
+    }
+
+    function normalizeCapMarket(market) {
+        const m = String(market || '').toLowerCase();
+        if (['h2h','moneyline'].includes(m)) return 'moneyline';
+        if (m.includes('spread')) return 'spread';
+        if (m === 'team_totals' || m === 'team_total') return 'team_total';
+        if (m.includes('total')) return 'total';
+        if (m.includes('f5') || m.includes('first_five')) return 'first_five';
+        if (m.includes('prop')) return 'props';
+        return m || 'other';
+    }
+
+    function capMarketLabel(key) {
+        return {
+            moneyline:'Moneyline', spread:'Spread', total:'Totals', team_total:'Team Totals',
+            first_five:'First Five', props:'Props', other:'Other'
+        }[key] || pmMarketLabel(key);
+    }
+
+    function capStatus(p) { return normalizeStatus(p && p.status); }
+    function isCapGraded(p) { return ['won','lost','push'].includes(capStatus(p)); }
+    function capDateMs(p) { return new Date((p && (p.locked_at || p.created_at || p.graded_at)) || 0).getTime(); }
+    function capOdds(p) { return Number(p && (p.odds_snapshot != null ? p.odds_snapshot : p.odds)); }
+    function capUnits(p) { const n = Number(p && p.units); return Number.isFinite(n) ? n : 0; }
+    function capPL(p) { const n = Number(p && p.result_units); return Number.isFinite(n) ? n : 0; }
+
+    function getCapperFilteredPicks() {
+        const now = new Date();
+        const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        const seasonStart = new Date(now.getFullYear(), 0, 1).getTime();
+        return capperPicks.filter(p => {
+            if (capperFilters.sport && String(p.sport_key || '').toLowerCase() !== capperFilters.sport) return false;
+            if (capperFilters.market && normalizeCapMarket(p.market_type) !== capperFilters.market) return false;
+            if (capperFilters.status) {
+                if (capperFilters.status === 'graded' && !isCapGraded(p)) return false;
+                else if (capperFilters.status !== 'graded' && capStatus(p) !== capperFilters.status) return false;
+            }
+            const ts = capDateMs(p);
+            if (capperFilters.time === 'today' && ts < startToday) return false;
+            if (capperFilters.time === '7' && ts < Date.now() - 7 * 86400000) return false;
+            if (capperFilters.time === '30' && ts < Date.now() - 30 * 86400000) return false;
+            if (capperFilters.time === 'season' && ts < seasonStart) return false;
+            return true;
+        });
+    }
+
+    function calcCapStats(picks) {
+        const graded = (picks || []).filter(isCapGraded);
+        let wins = 0, losses = 0, pushes = 0, risked = 0, net = 0;
+        graded.forEach(p => {
+            const s = capStatus(p);
+            if (s === 'won') wins++;
+            else if (s === 'lost') losses++;
+            else if (s === 'push') pushes++;
+            risked += capUnits(p);
+            net += capPL(p);
+        });
+        const decisions = wins + losses;
+        return {
+            picks: graded.length,
+            wins, losses, pushes,
+            record: wins + '-' + losses + '-' + pushes,
+            winRate: decisions ? (wins / decisions) * 100 : 0,
+            units: net,
+            roi: risked > 0 ? (net / risked) * 100 : 0,
+            risked
+        };
+    }
+
+    function capValueClass(value, neutralAtZero) {
+        const n = Number(value) || 0;
+        if (n > 0) return 'capper-pos';
+        if (n < 0) return 'capper-neg';
+        return neutralAtZero === false ? '' : 'capper-neutral';
+    }
+    function capPct(v) { const n = Number(v) || 0; return (n > 0 ? '+' : '') + n.toFixed(1) + '%'; }
+    function capUnitsText(v) { const n = Number(v) || 0; return (n > 0 ? '+' : '') + n.toFixed(2) + 'u'; }
+    function capEsc(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch) {
+            return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[ch];
+        });
+    }
+
+    function renderCapperMonitor() {
+        const rows = getCapperFilteredPicks();
+        const sorted = sortCapperRows(rows.slice(), capperFilters.sort);
+        const stats = calcCapStats(rows);
+        const rankText = currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked';
+        const main = document.getElementById('capperMainRow');
+        if (main) {
+            main.innerHTML = [
+                ['Tracked Picks', stats.picks, 'capper-neutral'],
+                ['Record', stats.record, capValueClass(stats.wins - stats.losses)],
+                ['Win Rate', stats.winRate.toFixed(1) + '%', stats.picks ? capValueClass(stats.winRate - 50) : 'capper-neutral'],
+                ['Units', capUnitsText(stats.units), capValueClass(stats.units)],
+                ['ROI', stats.roi.toFixed(1) + '%', capValueClass(stats.roi)],
+                ['Rank', rankText, 'capper-neutral']
+            ].map(([label, value, cls]) => '<div class="capper-stat"><span>' + label + '</span><strong class="' + cls + '">' + value + '</strong></div>').join('');
+        }
+        renderCapBreakdown('capTableSport', rows, [
+            ['MLB', p => pmSportLabel(p.sport_key) === 'MLB'],
+            ['NFL', p => pmSportLabel(p.sport_key) === 'NFL'],
+            ['NBA', p => pmSportLabel(p.sport_key) === 'NBA'],
+            ['NHL', p => pmSportLabel(p.sport_key) === 'NHL'],
+            ['NCAAB', p => pmSportLabel(p.sport_key) === 'NCAAB']
+        ]);
+        renderCapBreakdown('capTableMarket', rows, [
+            ['Team Totals', p => normalizeCapMarket(p.market_type) === 'team_total'],
+            ['Totals', p => normalizeCapMarket(p.market_type) === 'total'],
+            ['Moneyline', p => normalizeCapMarket(p.market_type) === 'moneyline'],
+            ['Spread', p => normalizeCapMarket(p.market_type) === 'spread'],
+            ['First Five', p => normalizeCapMarket(p.market_type) === 'first_five'],
+            ['Props', p => normalizeCapMarket(p.market_type) === 'props']
+        ]);
+        renderCapBreakdown('capTableUnits', rows, [1,2,3,4,5].map(n => [n + 'u Picks', p => Math.round(capUnits(p)) === n]));
+        renderCapBreakdown('capTableOdds', rows, [
+            ['Heavy Favorite', p => capOdds(p) < -200],
+            ['Favorite', p => capOdds(p) >= -200 && capOdds(p) < -110],
+            ['Even', p => capOdds(p) >= -110 && capOdds(p) <= 110],
+            ['Underdog', p => capOdds(p) > 110 && capOdds(p) <= 200],
+            ['Big Underdog', p => capOdds(p) > 200]
+        ]);
+        renderCapBreakdown('capTableFavDog', rows, [
+            ['Favorites', p => capOdds(p) < 0],
+            ['Underdogs', p => capOdds(p) > 0]
+        ]);
+        renderPendingSummary(rows);
+        renderCapHistory(sorted);
+    }
+
+    function renderCapBreakdown(id, rows, buckets) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const hasAnyGraded = rows.some(isCapGraded);
+        if (!hasAnyGraded) {
+            el.innerHTML = '<div class="capper-empty">No graded picks yet.</div>';
+            return;
+        }
+        const body = buckets.map(([label, pred]) => {
+            const s = calcCapStats(rows.filter(p => pred(p)));
+            return '<tr><td>' + label + '</td><td>' + s.picks + '</td><td>' + s.record + '</td><td class="' + (s.picks ? capValueClass(s.winRate - 50) : 'capper-neutral') + '">' + s.winRate.toFixed(1) + '%</td><td class="' + capValueClass(s.units) + '">' + capUnitsText(s.units) + '</td><td class="' + capValueClass(s.roi) + '">' + s.roi.toFixed(1) + '%</td></tr>';
+        }).join('');
+        el.innerHTML = '<table class="capper-table"><thead><tr><th>Category</th><th>Picks</th><th>Record</th><th>Win Rate</th><th>Units</th><th>ROI</th></tr></thead><tbody>' + body + '</tbody></table>';
+    }
+
+    function renderPendingSummary(rows) {
+        const el = document.getElementById('capTablePending');
+        if (!el) return;
+        const pending = rows.filter(p => capStatus(p) === 'pending');
+        const units = pending.reduce((sum, p) => sum + capUnits(p), 0);
+        el.innerHTML = '<table class="capper-table"><thead><tr><th>Category</th><th>Picks</th><th>Record</th><th>Win Rate</th><th>Units</th><th>ROI</th></tr></thead><tbody>'
+            + '<tr><td>Open Tickets</td><td>' + pending.length + '</td><td>0-0-0</td><td class="capper-neutral">0.0%</td><td class="capper-neutral">' + units.toFixed(2) + 'u pending</td><td class="capper-neutral">0.0%</td></tr>'
+            + '</tbody></table>';
+    }
+
+    function sortCapperRows(rows, sort) {
+        const by = {
+            date_desc: (a,b) => capDateMs(b) - capDateMs(a),
+            units_desc: (a,b) => capUnits(b) - capUnits(a),
+            roi_desc: (a,b) => capPL(b) - capPL(a),
+            win_rate_desc: (a,b) => capPL(b) - capPL(a),
+            sport_asc: (a,b) => pmSportLabel(a.sport_key).localeCompare(pmSportLabel(b.sport_key)),
+            market_asc: (a,b) => capMarketLabel(normalizeCapMarket(a.market_type)).localeCompare(capMarketLabel(normalizeCapMarket(b.market_type)))
+        }[sort] || ((a,b) => capDateMs(b) - capDateMs(a));
+        return rows.sort(by);
+    }
+
+    function renderCapHistory(rows) {
+        const tbody = document.getElementById('capHistoryBody');
+        const meta = document.getElementById('capHistoryMeta');
+        if (meta) meta.textContent = rows.length + ' picks';
+        if (!tbody) return;
+        if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="9">No picks match these filters.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = rows.slice(0, 100).map(p => {
+            const status = capStatus(p);
+            const pl = isCapGraded(p) ? capPL(p) : 0;
+            const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team) : (p.game || p.game_name || '—');
+            const line = p.line_snapshot != null ? p.line_snapshot : (p.line != null ? p.line : '—');
+            const odds = capOdds(p);
+            return '<tr>'
+                + '<td>' + (p.locked_at ? new Date(p.locked_at).toLocaleDateString() : '—') + '</td>'
+                + '<td>' + pmSportLabel(p.sport_key) + '</td>'
+                + '<td>' + capEsc(String(game)) + '</td>'
+                + '<td>' + capEsc(String(p.selection || p.pick || '—')) + '</td>'
+                + '<td>' + line + '</td>'
+                + '<td>' + (Number.isFinite(odds) ? (odds > 0 ? '+' : '') + odds : '—') + '</td>'
+                + '<td>' + capUnits(p).toFixed(2) + 'u</td>'
+                + '<td><span class="capper-result ' + status + '">' + (status === 'won' ? 'Win' : status === 'lost' ? 'Loss' : status === 'push' ? 'Push' : 'Pending') + '</span></td>'
+                + '<td class="' + capValueClass(pl) + '">' + (isCapGraded(p) ? capUnitsText(pl) : '—') + '</td>'
+                + '</tr>';
+        }).join('');
     }
 
     function getPmFilteredPicks() {
@@ -4755,7 +5223,7 @@
         const roiValue = Number(p.roi || 0);
         const netUnitsValue = Number(p.net_units || 0);
         const signedClass = (value) => value > 0 ? ' is-positive' : value < 0 ? ' is-negative' : ' is-neutral';
-        const fmtSigned = (value, suffix) => (value > 0 ? '+' : '') + value.toFixed(1) + (suffix || '');
+        const fmtSigned = (value, suffix, decimals) => (value > 0 ? '+' : '') + value.toFixed(decimals == null ? 1 : decimals) + (suffix || '');
         const showEmptyLedgerNote = isOwnProfile && totalPicks === 0 && !p.__recoveredFromLocal;
         const trustPills = '<div class="profile-trust-row">' +
             '<span class="profile-trust-pill"><i class="fas fa-check-circle"></i> Status <strong>' + verifiedText + '</strong></span>' +
@@ -4797,8 +5265,8 @@
         const rail = '<div class="profile-rail" aria-label="Pick monitor stats">' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Tracked Picks</span><span class="profile-rail-value">' + totalPicks + '</span></div>' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Record</span><span class="profile-rail-value' + signedClass(winsValue - lossesValue) + '">' + recordText + '</span></div>' +
-            '<div class="profile-rail-card"><span class="profile-rail-label">Win Rate</span><span class="profile-rail-value' + signedClass(derivedWinRate - 50) + '">' + derivedWinRate.toFixed(1) + '%</span></div>' +
-            '<div class="profile-rail-card"><span class="profile-rail-label">Units</span><span class="profile-rail-value' + signedClass(netUnitsValue) + '">' + fmtSigned(netUnitsValue, 'u') + '</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">Win Rate</span><span class="profile-rail-value' + (totalPicks > 0 ? signedClass(derivedWinRate - 50) : ' is-neutral') + '">' + derivedWinRate.toFixed(1) + '%</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">Units</span><span class="profile-rail-value' + signedClass(netUnitsValue) + '">' + fmtSigned(netUnitsValue, 'u', 2) + '</span></div>' +
             '<div class="profile-rail-card"><span class="profile-rail-label">ROI</span><span class="profile-rail-value' + signedClass(roiValue) + '">' + fmtSigned(roiValue, '%') + '</span></div>' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Rank</span><span class="profile-rail-value">' + rankText + '</span></div>' +
             '</div>';
