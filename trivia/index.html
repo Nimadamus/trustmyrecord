@@ -734,24 +734,68 @@
         }
         .answer-row .form-input { flex: 1; }
         .correct-radio-btn {
-            width: 38px;
-            height: 38px;
-            border-radius: 8px;
+            width: 46px;
+            height: 46px;
+            border-radius: 10px;
             border: 2px solid var(--glass-border);
-            background: transparent;
+            background: rgba(255,255,255,0.04);
             color: var(--text-muted);
-            font-weight: 700;
-            font-size: 14px;
+            font-weight: 800;
+            font-size: 16px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
             flex-shrink: 0;
+            position: relative;
+            user-select: none;
         }
-        .correct-radio-btn:hover { border-color: var(--success); color: var(--success); }
+        .correct-radio-btn:hover {
+            border-color: #00ffff;
+            color: #00ffff;
+            background: rgba(0,255,255,0.08);
+        }
+        .correct-radio-btn:focus-visible {
+            outline: 2px solid #00ffff;
+            outline-offset: 2px;
+        }
         .correct-radio-btn.selected {
-            background: var(--success);
-            border-color: var(--success);
-            color: #000;
+            background: linear-gradient(135deg, #00ffff 0%, #b388ff 100%);
+            border-color: #00ffff;
+            color: #07101a;
+            box-shadow: 0 0 0 3px rgba(0,255,255,0.25), 0 0 18px 4px rgba(179,136,255,0.55);
+            transform: scale(1.08);
         }
+        .correct-radio-btn.selected::after {
+            content: "\2713";
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #00ffff;
+            color: #07101a;
+            font-size: 12px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 8px rgba(0,255,255,0.7);
+        }
+        .answer-row.is-correct .form-input {
+            border-color: rgba(0,255,255,0.55);
+            box-shadow: 0 0 0 2px rgba(0,255,255,0.12);
+        }
+        .correct-answer-summary {
+            margin: 6px 0 4px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .correct-answer-summary strong {
+            color: #00ffff;
+            letter-spacing: 0.5px;
+        }
+        .correct-answer-summary.is-empty strong { color: var(--text-muted); }
         .form-error {
             color: var(--danger);
             font-size: 13px;
@@ -1812,23 +1856,25 @@ function renderCreateView() {
                 '</select>' +
             '</div>' +
             '<div class="form-group">' +
-                '<label>Four Answer Choices <span style="color:var(--text-muted);font-weight:500;">(click A/B/C/D to mark the correct one)</span></label>' +
-                '<div class="answer-row">' +
-                    '<button type="button" class="correct-radio-btn" id="cqCorrectBtn0" onclick="setCorrectAnswer(0)">A</button>' +
+                '<label>Four Answer Choices <span style="color:var(--text-muted);font-weight:500;">(click the A/B/C/D button to mark the correct one)</span></label>' +
+                '<div class="answer-row" id="cqAnswerRow0">' +
+                    '<button type="button" class="correct-radio-btn" id="cqCorrectBtn0" data-letter-idx="0" aria-pressed="false" aria-label="Mark answer A as correct" onclick="setCorrectAnswer(0)">A</button>' +
                     '<input type="text" class="form-input" id="cqAnswer0" placeholder="Answer A" maxlength="120">' +
                 '</div>' +
-                '<div class="answer-row">' +
-                    '<button type="button" class="correct-radio-btn" id="cqCorrectBtn1" onclick="setCorrectAnswer(1)">B</button>' +
+                '<div class="answer-row" id="cqAnswerRow1">' +
+                    '<button type="button" class="correct-radio-btn" id="cqCorrectBtn1" data-letter-idx="1" aria-pressed="false" aria-label="Mark answer B as correct" onclick="setCorrectAnswer(1)">B</button>' +
                     '<input type="text" class="form-input" id="cqAnswer1" placeholder="Answer B" maxlength="120">' +
                 '</div>' +
-                '<div class="answer-row">' +
-                    '<button type="button" class="correct-radio-btn" id="cqCorrectBtn2" onclick="setCorrectAnswer(2)">C</button>' +
+                '<div class="answer-row" id="cqAnswerRow2">' +
+                    '<button type="button" class="correct-radio-btn" id="cqCorrectBtn2" data-letter-idx="2" aria-pressed="false" aria-label="Mark answer C as correct" onclick="setCorrectAnswer(2)">C</button>' +
                     '<input type="text" class="form-input" id="cqAnswer2" placeholder="Answer C" maxlength="120">' +
                 '</div>' +
-                '<div class="answer-row">' +
-                    '<button type="button" class="correct-radio-btn" id="cqCorrectBtn3" onclick="setCorrectAnswer(3)">D</button>' +
+                '<div class="answer-row" id="cqAnswerRow3">' +
+                    '<button type="button" class="correct-radio-btn" id="cqCorrectBtn3" data-letter-idx="3" aria-pressed="false" aria-label="Mark answer D as correct" onclick="setCorrectAnswer(3)">D</button>' +
                     '<input type="text" class="form-input" id="cqAnswer3" placeholder="Answer D" maxlength="120">' +
                 '</div>' +
+                '<input type="hidden" id="cqCorrectIdx" value="">' +
+                '<div class="correct-answer-summary is-empty" id="cqCorrectSummary" aria-live="polite">Correct answer: <strong>none selected yet</strong></div>' +
             '</div>' +
             '<div class="form-group">' +
                 '<label>Explanation <span style="color:var(--text-muted);font-weight:500;">(optional &mdash; shown after the answer is revealed)</span></label>' +
@@ -1843,7 +1889,45 @@ function renderCreateView() {
         '</form>';
 
     selectedCorrectAnswer = -1;
+    var hidden = document.getElementById('cqCorrectIdx');
+    if (hidden) hidden.value = '';
+    updateCorrectAnswerSummary();
+    bindCorrectAnswerDelegation();
     renderCustomQuestionsList();
+}
+
+// Delegated click handler — survives even if inline onclick is stripped or
+// setCorrectAnswer name shadowing breaks. Bound to the form once per render.
+function bindCorrectAnswerDelegation() {
+    var form = document.getElementById('createQuestionForm');
+    if (!form || form.__correctAnswerBound) return;
+    form.addEventListener('click', function(ev) {
+        var btn = ev.target && ev.target.closest ? ev.target.closest('.correct-radio-btn') : null;
+        if (!btn) return;
+        var idxAttr = btn.getAttribute('data-letter-idx');
+        if (idxAttr == null) return;
+        var idx = parseInt(idxAttr, 10);
+        if (isNaN(idx)) return;
+        ev.preventDefault();
+        setCorrectAnswer(idx);
+    });
+    form.__correctAnswerBound = true;
+}
+
+function updateCorrectAnswerSummary() {
+    var summary = document.getElementById('cqCorrectSummary');
+    if (!summary) return;
+    var hidden = document.getElementById('cqCorrectIdx');
+    var raw = hidden ? hidden.value : '';
+    var idx = raw === '' ? -1 : parseInt(raw, 10);
+    var letters = ['A', 'B', 'C', 'D'];
+    if (idx >= 0 && idx <= 3) {
+        summary.classList.remove('is-empty');
+        summary.innerHTML = 'Correct answer: <strong>' + letters[idx] + '</strong>';
+    } else {
+        summary.classList.add('is-empty');
+        summary.innerHTML = 'Correct answer: <strong>none selected yet</strong>';
+    }
 }
 
 // Public entry point used by the page-header + Build-the-Pool buttons.
@@ -1863,12 +1947,51 @@ window.openCreateTrivia = openCreateTrivia;
 var selectedCorrectAnswer = -1;
 
 function setCorrectAnswer(idx) {
+    if (typeof idx !== 'number' || idx < 0 || idx > 3) return;
     selectedCorrectAnswer = idx;
+    var hidden = document.getElementById('cqCorrectIdx');
+    if (hidden) hidden.value = String(idx);
     for (var i = 0; i < 4; i++) {
         var btn = document.getElementById('cqCorrectBtn' + i);
-        if (i === idx) btn.classList.add('selected');
-        else btn.classList.remove('selected');
+        var row = document.getElementById('cqAnswerRow' + i);
+        if (!btn) continue;
+        if (i === idx) {
+            btn.classList.add('selected');
+            btn.setAttribute('aria-pressed', 'true');
+            if (row) row.classList.add('is-correct');
+        } else {
+            btn.classList.remove('selected');
+            btn.setAttribute('aria-pressed', 'false');
+            if (row) row.classList.remove('is-correct');
+        }
     }
+    updateCorrectAnswerSummary();
+    // Clear any pre-existing red error the moment a selection is made.
+    var errEl = document.getElementById('cqError');
+    if (errEl && errEl.style.display !== 'none') {
+        errEl.style.display = 'none';
+        errEl.textContent = '';
+    }
+}
+window.setCorrectAnswer = setCorrectAnswer;
+
+function getSelectedCorrectIdx() {
+    // Prefer the DOM hidden input (state survives even if the JS var was
+    // reset by an unexpected re-render). Fall back to the var, then to the
+    // button with the .selected class.
+    var hidden = document.getElementById('cqCorrectIdx');
+    if (hidden && hidden.value !== '') {
+        var v = parseInt(hidden.value, 10);
+        if (!isNaN(v) && v >= 0 && v <= 3) return v;
+    }
+    if (typeof selectedCorrectAnswer === 'number' && selectedCorrectAnswer >= 0 && selectedCorrectAnswer <= 3) {
+        return selectedCorrectAnswer;
+    }
+    for (var i = 0; i < 4; i++) {
+        var btn = document.getElementById('cqCorrectBtn' + i);
+        if (btn && btn.classList.contains('selected')) return i;
+    }
+    return -1;
 }
 
 async function handleCreateQuestion(e) {
@@ -1895,10 +2018,14 @@ async function handleCreateQuestion(e) {
     }
     var submitBtn = document.querySelector('.form-submit-btn');
 
-    if (!question) { errEl.textContent = 'Please enter a question.'; errEl.style.display = 'block'; return; }
-    if (answers.some(function(a) { return !a; })) { errEl.textContent = 'Please fill in all 4 answers.'; errEl.style.display = 'block'; return; }
-    if (selectedCorrectAnswer < 0) { errEl.textContent = 'Click the letter button (A/B/C/D) next to the correct answer.'; errEl.style.display = 'block'; return; }
-    if (!categoryId) { errEl.textContent = 'Please choose a sport / category.'; errEl.style.display = 'block'; return; }
+    var correctIdx = getSelectedCorrectIdx();
+
+    if (!question) { errEl.textContent = 'Please enter a question.'; errEl.style.display = 'block'; errEl.scrollIntoView({behavior:'smooth', block:'center'}); return; }
+    if (answers.some(function(a) { return !a; })) { errEl.textContent = 'Please fill in all 4 answers.'; errEl.style.display = 'block'; errEl.scrollIntoView({behavior:'smooth', block:'center'}); return; }
+    if (correctIdx < 0) { errEl.textContent = 'Click the letter button (A/B/C/D) next to the correct answer.'; errEl.style.display = 'block'; errEl.scrollIntoView({behavior:'smooth', block:'center'}); return; }
+    if (!categoryId) { errEl.textContent = 'Please choose a sport / category.'; errEl.style.display = 'block'; errEl.scrollIntoView({behavior:'smooth', block:'center'}); return; }
+    // Keep the local var aligned with the resolved index so the rest of the flow uses it.
+    selectedCorrectAnswer = correctIdx;
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
@@ -1926,11 +2053,20 @@ async function handleCreateQuestion(e) {
         document.getElementById('cqQuestion').value = '';
         for (var j = 0; j < 4; j++) {
             document.getElementById('cqAnswer' + j).value = '';
-            document.getElementById('cqCorrectBtn' + j).classList.remove('selected');
+            var resetBtn = document.getElementById('cqCorrectBtn' + j);
+            var resetRow = document.getElementById('cqAnswerRow' + j);
+            if (resetBtn) {
+                resetBtn.classList.remove('selected');
+                resetBtn.setAttribute('aria-pressed', 'false');
+            }
+            if (resetRow) resetRow.classList.remove('is-correct');
         }
         if (explanationEl) explanationEl.value = '';
         if (tagsEl) tagsEl.value = '';
+        var resetHidden = document.getElementById('cqCorrectIdx');
+        if (resetHidden) resetHidden.value = '';
         selectedCorrectAnswer = -1;
+        updateCorrectAnswerSummary();
         await loadCategories();
         await renderCustomQuestionsList();
 
@@ -1966,20 +2102,44 @@ async function renderCustomQuestionsList() {
 
     try {
         var createdQuestions = [];
-        for (var i = 0; i < backendCategories.length; i++) {
-            var cat = backendCategories[i];
-            var data = await api.request('/trivia/categories/' + encodeURIComponent(cat.slug) + '?page=1&limit=50');
-            var questions = data.questions || [];
-            questions.forEach(function(question) {
-                if (String(question.created_by || '').toLowerCase() === String(username).toLowerCase()) {
-                    createdQuestions.push({
-                        question_text: question.question_text,
-                        category_name: cat.name,
-                        difficulty: question.difficulty,
-                        created_at: question.created_at
-                    });
-                }
+        var usedDirectEndpoint = false;
+        try {
+            // Preferred path: dedicated per-user endpoint. Returns every
+            // question the user authored across all categories, not just the
+            // first page of each one.
+            var directData = await api.request('/trivia/users/' + encodeURIComponent(username) + '/created');
+            var directList = (directData && directData.questions) || [];
+            directList.forEach(function(question) {
+                createdQuestions.push({
+                    question_text: question.question_text,
+                    category_name: question.category_name || 'General',
+                    difficulty: question.difficulty,
+                    created_at: question.created_at
+                });
             });
+            usedDirectEndpoint = true;
+        } catch (directErr) {
+            // Fallback: older backend without /users/:username/created.
+            // Scan the first page of every category and filter by created_by.
+            usedDirectEndpoint = false;
+        }
+
+        if (!usedDirectEndpoint) {
+            for (var i = 0; i < backendCategories.length; i++) {
+                var cat = backendCategories[i];
+                var data = await api.request('/trivia/categories/' + encodeURIComponent(cat.slug) + '?page=1&limit=50');
+                var questions = data.questions || [];
+                questions.forEach(function(question) {
+                    if (String(question.created_by || '').toLowerCase() === String(username).toLowerCase()) {
+                        createdQuestions.push({
+                            question_text: question.question_text,
+                            category_name: cat.name,
+                            difficulty: question.difficulty,
+                            created_at: question.created_at
+                        });
+                    }
+                });
+            }
         }
 
         if (!createdQuestions.length) {
