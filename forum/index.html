@@ -1556,6 +1556,517 @@
             }
             .vb-sidebar { position: static; top: auto; }
         }
+
+        /* =====================================================================
+           CLASSIC 2+2 REV 3 (Apr 30 2026)
+           Targeted overrides to push the page closer to the Two Plus Two
+           forum index reference. Loaded last so its rules win the cascade.
+           Goals: dark navy outer bg, centered ~1180px wrapper, 210px left
+           sidebar + ~950px main column, blue gradient nav tabs, red/maroon
+           title box, alternating gray rows w/ yellow folder icons, compact
+           Verdana typography throughout.
+           ===================================================================== */
+
+        body {
+            background: #1a2540 !important;
+            font-family: Verdana, Arial, Helvetica, sans-serif !important;
+            font-size: 11px !important;
+            line-height: 1.4 !important;
+            color: #1a1a1a !important;
+        }
+
+        /* Top dark header bar — tight, horizontal, classic */
+        .vb-topbar.vb-topbar--forum-search {
+            background: #1c1c1c !important;
+            border-bottom: 1px solid #000 !important;
+            padding: 0 !important;
+        }
+        .vb-topbar-inner {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 8px 14px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 16px;
+        }
+        .vb-logo {
+            color: #fff !important;
+            font-size: 17px !important;
+            font-weight: 700 !important;
+            font-family: Georgia, 'Times New Roman', serif !important;
+            text-decoration: none;
+        }
+        .vb-logo span { color: #FFD000 !important; font-weight: 700; }
+        .vb-search.vb-search--full {
+            flex: 1;
+            display: flex;
+            gap: 4px;
+            max-width: 360px;
+            margin-left: auto;
+        }
+        .vb-search input {
+            flex: 1;
+            padding: 4px 8px !important;
+            font-size: 11px !important;
+            border: 1px solid #555 !important;
+            background: #fff !important;
+            color: #000 !important;
+            border-radius: 0 !important;
+        }
+        .vb-search button {
+            padding: 4px 10px !important;
+            background: #34568b !important;
+            color: #fff !important;
+            border: 1px solid #1a2c50 !important;
+            font: 700 11px Verdana, sans-serif !important;
+            cursor: pointer;
+            border-radius: 0 !important;
+        }
+        .vb-topnav {
+            display: flex !important;
+            gap: 14px !important;
+            align-items: center;
+        }
+        .vb-topnav a, .vb-topnav button {
+            color: #cdd6e8 !important;
+            font: 11px Verdana, Arial, sans-serif !important;
+            text-decoration: none !important;
+            padding: 0 !important;
+            background: transparent !important;
+            border: 0 !important;
+            cursor: pointer;
+        }
+        .vb-topnav a:hover { color: #fff !important; text-decoration: underline !important; }
+
+        /* Horizontal blue nav tabs — gradient, classic vBulletin style */
+        .vb-subnav {
+            background: linear-gradient(180deg, #4d76b5 0%, #2f5294 60%, #234080 100%) !important;
+            border-top: 1px solid #6b8fc8 !important;
+            border-bottom: 2px solid #1a2c5a !important;
+            padding: 0 !important;
+        }
+        .vb-subnav-inner {
+            max-width: 1180px !important;
+            margin: 0 auto !important;
+            padding: 0 14px !important;
+            display: flex !important;
+            gap: 0 !important;
+            align-items: stretch !important;
+        }
+        .vb-subnav a, .vb-subnav button {
+            color: #fff !important;
+            font: 700 11px Verdana, Arial, sans-serif !important;
+            padding: 7px 14px !important;
+            text-transform: none !important;
+            letter-spacing: 0 !important;
+            text-decoration: none !important;
+            border: 0 !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.18) !important;
+            background: transparent !important;
+            cursor: pointer;
+            border-radius: 0 !important;
+        }
+        .vb-subnav a:first-child { border-left: 1px solid rgba(255, 255, 255, 0.18); }
+        .vb-subnav a:hover, .vb-subnav button:hover {
+            background: rgba(255, 255, 255, 0.10) !important;
+            color: #ffe066 !important;
+            text-decoration: none !important;
+        }
+
+        /* Centered shell — 210 sidebar + ~950 main */
+        .vb-shell {
+            max-width: 1180px !important;
+            margin: 14px auto 24px auto !important;
+            padding: 0 14px !important;
+            display: grid !important;
+            grid-template-columns: 210px 1fr !important;
+            gap: 14px !important;
+            background: transparent !important;
+        }
+
+        /* Left sidebar */
+        .vb-sidebar {
+            background: transparent !important;
+            border: 0 !important;
+            position: static !important;
+        }
+        .vb-sidebar-group {
+            margin-bottom: 10px !important;
+            border: 1px solid #5a5a5a !important;
+            background: #fff !important;
+        }
+        .vb-sidebar-heading {
+            background: #1c1c1c !important;
+            color: #fff !important;
+            font: 700 11px Verdana, Arial, sans-serif !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+            padding: 6px 10px !important;
+            border-bottom: 1px solid #000 !important;
+            margin: 0 !important;
+        }
+        .tmr-fb-sidebar-list {
+            list-style: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .tmr-fb-sidebar-list li {
+            border-top: 1px solid #d8d8d8 !important;
+            margin: 0 !important;
+        }
+        .tmr-fb-sidebar-list li:first-child { border-top: 0 !important; }
+        .tmr-fb-sidebar-list a {
+            display: block !important;
+            padding: 5px 10px !important;
+            font: 700 11px Verdana, Arial, sans-serif !important;
+            color: #22229c !important;
+            background: #fff !important;
+            text-decoration: none !important;
+            cursor: pointer;
+        }
+        .tmr-fb-sidebar-list li:nth-child(even) a { background: #f4f4f4 !important; }
+        .tmr-fb-sidebar-list a:hover {
+            background: #ffe9d6 !important;
+            color: #cc3300 !important;
+            text-decoration: underline !important;
+        }
+        .tmr-fb-sidebar-list a.is-active {
+            background: #ffd966 !important;
+            color: #1a1a1a !important;
+        }
+
+        /* Main column — white card with classic chrome border */
+        .vb-main {
+            background: #ffffff !important;
+            border: 1px solid #5a5a5a !important;
+            padding: 0 !important;
+            min-width: 0;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            padding: 6px 12px !important;
+            background: #e9ecf2 !important;
+            border-bottom: 1px solid #c4c4c4 !important;
+            color: #555 !important;
+            font: 11px Verdana, Arial, sans-serif !important;
+        }
+        .breadcrumb a {
+            color: #22229c !important;
+            text-decoration: none !important;
+            font-weight: 700 !important;
+            cursor: pointer;
+        }
+        .breadcrumb a:hover { text-decoration: underline !important; color: #cc3300 !important; }
+        .breadcrumb .sep { color: #888 !important; padding: 0 4px; }
+
+        /* Red/maroon title box */
+        .vb-title-strip {
+            background: linear-gradient(180deg, #8b1a1a 0%, #6f1414 100%) !important;
+            color: #fff !important;
+            padding: 10px 14px !important;
+            border-bottom: 1px solid #4a0e0e !important;
+            margin: 0 !important;
+        }
+        #forumPageTitle {
+            font: 700 16px Georgia, 'Times New Roman', serif !important;
+            color: #fff !important;
+            letter-spacing: 0.01em;
+        }
+        .vb-title-strip-sub {
+            font: 11px Verdana, Arial, sans-serif !important;
+            color: #f4d8d8 !important;
+            margin-top: 2px;
+        }
+
+        /* Stats strip */
+        .vb-stats {
+            display: flex !important;
+            gap: 20px !important;
+            padding: 5px 14px !important;
+            background: #d8dfe9 !important;
+            border-bottom: 1px solid #b3b9c4 !important;
+            font: 11px Verdana, Arial, sans-serif !important;
+            color: #333 !important;
+        }
+        .vb-stats div { color: #333 !important; }
+        .vb-stats strong { color: #1a1a1a !important; font-weight: 700 !important; }
+
+        /* Group/section headers — blue band w/ "FORUMS" + right meta */
+        #categoriesContainer .group-header,
+        .vb-section-header {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            background: linear-gradient(180deg, #4d76b5 0%, #2f5294 100%) !important;
+            color: #fff !important;
+            padding: 6px 12px !important;
+            border-top: 1px solid #6b8fc8 !important;
+            border-bottom: 1px solid #1a2c5a !important;
+            margin: 0 !important;
+            font: 700 12px Verdana, Arial, sans-serif !important;
+        }
+        .group-header-title span,
+        .vb-section-header > span:first-child {
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .group-header-meta,
+        .vb-section-meta {
+            color: #d4ddee !important;
+            font-weight: 400 !important;
+            text-transform: none !important;
+            font-size: 10.5px !important;
+        }
+
+        /* Category / forum-index table — compact, alternating rows */
+        .cat-table, .thread-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            background: #fff !important;
+            border: 0 !important;
+            margin: 0 !important;
+            font: 11px Verdana, Arial, sans-serif !important;
+        }
+        .cat-table thead th, .thread-table thead th {
+            background: #d8dfe9 !important;
+            color: #1a1a1a !important;
+            font: 700 10.5px Verdana, Arial, sans-serif !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.04em !important;
+            padding: 5px 10px !important;
+            text-align: left !important;
+            border-bottom: 1px solid #b3b9c4 !important;
+            border-top: 0 !important;
+        }
+        .cat-table thead th.col-num,
+        .thread-table thead th.col-num,
+        .cat-table thead th.col-rating,
+        .thread-table thead th.col-rating { text-align: center !important; width: 70px; }
+        .cat-table thead th.col-last,
+        .thread-table thead th.col-last { width: 220px; }
+
+        .cat-table tbody tr,
+        .thread-table tbody tr {
+            background: #f4f4f4 !important;
+            border-bottom: 1px solid #d4d4d4 !important;
+            cursor: pointer !important;
+        }
+        .cat-table tbody tr:nth-child(even),
+        .thread-table tbody tr:nth-child(even) {
+            background: #e7e7e7 !important;
+        }
+        .cat-table tbody tr:hover,
+        .thread-table tbody tr:hover {
+            background: #ffe9d6 !important;
+        }
+        .cat-table tbody td,
+        .thread-table tbody td {
+            padding: 7px 10px !important;
+            border: 0 !important;
+            vertical-align: middle !important;
+            color: #1a1a1a !important;
+        }
+        .cat-table tbody td.col-num,
+        .thread-table tbody td.col-num,
+        .cat-table tbody td.col-rating,
+        .thread-table tbody td.col-rating { text-align: center !important; color: #444 !important; }
+        .cat-table tbody td.col-last,
+        .thread-table tbody td.col-last { color: #555 !important; }
+
+        /* Forum row inner: yellow folder + title + description */
+        .cat-info {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 10px !important;
+        }
+        .cat-icon {
+            flex: 0 0 22px;
+            width: 22px;
+            height: 18px;
+            background: #fbe27a;
+            border: 1px solid #b89320;
+            border-radius: 2px;
+            position: relative;
+            font-size: 0 !important;
+            line-height: 0 !important;
+            margin-top: 2px;
+            box-shadow: inset 0 -3px 0 #f4d152;
+        }
+        .cat-icon::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: 2px;
+            width: 8px;
+            height: 4px;
+            background: #fbe27a;
+            border: 1px solid #b89320;
+            border-bottom: 0;
+            border-radius: 2px 2px 0 0;
+        }
+        .cat-name {
+            font: 700 12px Verdana, Arial, sans-serif !important;
+            color: #22229c !important;
+        }
+        .cat-name:hover { color: #cc3300 !important; text-decoration: underline; }
+        .cat-desc {
+            font: 11px Verdana, Arial, sans-serif !important;
+            color: #555 !important;
+            margin-top: 2px;
+        }
+        .last-post-info { line-height: 1.3; }
+        .last-post-title {
+            font: 700 11px Verdana, Arial, sans-serif !important;
+            color: #22229c !important;
+        }
+        .last-post-meta { color: #666 !important; font-size: 10.5px !important; }
+        .no-posts { color: #888 !important; font-style: italic; }
+
+        /* Thread index — same alternation rules apply via the shared class */
+        .vb-actionrow {
+            display: flex !important;
+            gap: 6px !important;
+            padding: 6px 10px !important;
+            background: #d8dfe9 !important;
+            border-bottom: 1px solid #b3b9c4 !important;
+            align-items: center !important;
+        }
+        .vb-action-btn {
+            background: #ffffff !important;
+            border: 1px solid #888 !important;
+            padding: 3px 10px !important;
+            font: 700 11px Verdana, Arial, sans-serif !important;
+            color: #22229c !important;
+            cursor: pointer;
+            border-radius: 0 !important;
+        }
+        .vb-action-btn:hover { background: #fff5e6 !important; color: #cc3300 !important; }
+        .vb-action-btn.is-primary {
+            background: #4d76b5 !important;
+            color: #fff !important;
+            border-color: #1a2c5a !important;
+        }
+        .vb-action-btn.is-primary:hover { background: #5e84c4 !important; color: #fff !important; }
+        .vb-actionrow input[type="search"] {
+            margin-left: auto !important;
+            padding: 3px 8px !important;
+            border: 1px solid #888 !important;
+            background: #fff !important;
+            color: #000 !important;
+            font: 11px Verdana, Arial, sans-serif !important;
+            min-width: 200px;
+        }
+        .vb-action-spacer { flex: 1; }
+
+        /* Thread cell (sample threads / real threads) */
+        .tmr-fb-thread-cell {
+            display: flex !important;
+            gap: 10px !important;
+            align-items: flex-start !important;
+        }
+        .tmr-fb-thread-icon {
+            flex: 0 0 22px;
+            width: 22px;
+            height: 18px;
+            background: #fbe27a;
+            border: 1px solid #b89320;
+            border-radius: 2px;
+            position: relative;
+            color: transparent;
+            font-size: 0 !important;
+            margin-top: 2px;
+            box-shadow: inset 0 -3px 0 #f4d152;
+        }
+        .tmr-fb-thread-icon.is-pinned {
+            background: #ffe066;
+            border-color: #b8860b;
+        }
+        .tmr-fb-thread-icon.is-pinned::after {
+            content: '★';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #b8860b !important;
+            font-size: 11px !important;
+        }
+        .tmr-fb-pin-tag {
+            display: inline-block;
+            background: #b8860b;
+            color: #fff;
+            font: 700 9.5px Verdana, sans-serif !important;
+            padding: 1px 5px;
+            border-radius: 2px;
+            margin-right: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .tmr-fb-sample-tag {
+            display: inline-block;
+            background: #555;
+            color: #fff;
+            font: 700 9.5px Verdana, sans-serif !important;
+            padding: 1px 5px;
+            border-radius: 2px;
+            margin-right: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .tmr-fb-thread-title {
+            font: 700 12px Verdana, Arial, sans-serif !important;
+            color: #22229c !important;
+            text-decoration: none !important;
+        }
+        .tmr-fb-thread-title:hover { color: #cc3300 !important; text-decoration: underline !important; }
+        .tmr-fb-thread-meta { color: #666 !important; font-size: 10.5px !important; margin-top: 2px; }
+        .tmr-fb-lastpost { line-height: 1.3; }
+        .tmr-fb-lastpost-title {
+            display: block;
+            font: 700 11px Verdana, sans-serif !important;
+            color: #22229c !important;
+        }
+        .tmr-fb-lastpost-meta { display: block; color: #666 !important; font-size: 10.5px !important; }
+        .tmr-fb-rating-stars { color: #b8860b; font-size: 11px; }
+
+        /* Forum jump bar */
+        .forum-jump-row {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            padding: 6px 10px !important;
+            background: #d8dfe9 !important;
+            border-top: 1px solid #b3b9c4 !important;
+            font: 11px Verdana, Arial, sans-serif !important;
+            color: #1a1a1a !important;
+        }
+        .forum-jump-row select {
+            padding: 2px 6px !important;
+            border: 1px solid #888 !important;
+            background: #fff !important;
+            font: 11px Verdana, Arial, sans-serif !important;
+        }
+
+        /* Active sidebar item highlight via JS-set class */
+        .tmr-fb-sidebar-list a.active { background: #ffd966 !important; color: #1a1a1a !important; }
+
+        /* Responsive */
+        @media (max-width: 960px) {
+            .vb-shell {
+                grid-template-columns: 1fr !important;
+            }
+            .vb-sidebar { margin-bottom: 12px; }
+        }
+        @media (max-width: 720px) {
+            .vb-topnav { display: none !important; }
+            .vb-search.vb-search--full { max-width: none !important; }
+            .vb-subnav-inner { overflow-x: auto !important; flex-wrap: nowrap !important; }
+            .cat-table thead th.col-last,
+            .thread-table thead th.col-last,
+            .cat-table tbody td.col-last,
+            .thread-table tbody td.col-last { display: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -1649,12 +2160,12 @@
     <div class="breadcrumb" id="breadcrumb">
         <a onclick="showCategories()">TrustMyRecord Forums</a>
         <span class="sep">&rsaquo;</span>
-        <span id="forumPageTitleLabel">Sports Betting</span>
+        <span id="forumPageTitleLabel">Forum Home</span>
     </div>
 
     <div class="vb-title-strip">
         <div id="forumPageTitle">TrustMyRecord Sports Betting Forums</div>
-        <div class="vb-title-strip-sub">Classic bulletin-board discussion for picks, handicappers, challenges, polls, trivia, and receipts.</div>
+        <div class="vb-title-strip-sub">Classic bulletin board discussion for picks, handicappers, challenges, polls, trivia, and receipts.</div>
     </div>
 
     <!-- ================= CATEGORIES VIEW ================= -->
@@ -2000,18 +2511,11 @@ function onSidebarPick(el, slug, name) {
 }
 
 // Sample sticky/recent threads used as a layout demonstration on the index.
-// Marked SAMPLE so users can see the table shape until live threads are posted.
+// Per Apr 30 2026 spec: only OFFICIAL system starter threads here. No fake
+// users, no fake replies, no fake views. Empty board until real users post.
 var TMR_FORUM_SAMPLE_THREADS = [
-    { title: 'TrustMyRecord Forum Rules and Posting Guidelines', sticky: true, hot: false, sample: true, starter: 'TrustMyRecord', stars: 5, lastPoster: 'TrustMyRecord', lastTitle: 'Rules and Posting Guidelines', lastTime: 'Today', replies: 0, views: 0 },
-    { title: 'How Verified Records Work', sticky: true, hot: false, sample: true, starter: 'TrustMyRecord', stars: 5, lastPoster: 'TrustMyRecord', lastTitle: 'How Verified Records Work', lastTime: 'Today', replies: 0, views: 0 },
-    { title: 'Official Sports Betting Discussion Thread', sticky: false, hot: true, sample: true, starter: 'Handicapper', stars: 0, lastPoster: '—', lastTitle: 'Discussion', lastTime: '—', replies: 0, views: 0 },
-    { title: '2026 MLB Picks', sticky: false, hot: false, sample: true, starter: 'Handicapper', stars: 0, lastPoster: '—', lastTitle: '2026 MLB Picks', lastTime: '—', replies: 0, views: 0 },
-    { title: 'NBA Game Board Discussion', sticky: false, hot: false, sample: true, starter: 'Handicapper', stars: 0, lastPoster: '—', lastTitle: 'NBA Game Board', lastTime: '—', replies: 0, views: 0 },
-    { title: 'NFL Futures and Season Long Bets', sticky: false, hot: false, sample: true, starter: 'Handicapper', stars: 0, lastPoster: '—', lastTitle: 'NFL Futures', lastTime: '—', replies: 0, views: 0 },
-    { title: 'Pick Seller Questions and Marketplace Rules', sticky: false, hot: false, sample: true, starter: 'TrustMyRecord', stars: 0, lastPoster: '—', lastTitle: 'Marketplace Rules', lastTime: '—', replies: 0, views: 0 },
-    { title: 'Head to Head Challenge Requests', sticky: false, hot: false, sample: true, starter: 'Handicapper', stars: 0, lastPoster: '—', lastTitle: 'Challenge Requests', lastTime: '—', replies: 0, views: 0 },
-    { title: 'Create a League or Season', sticky: false, hot: false, sample: true, starter: 'Handicapper', stars: 0, lastPoster: '—', lastTitle: 'Leagues', lastTime: '—', replies: 0, views: 0 },
-    { title: 'Polls, Trivia, and Community Bets', sticky: false, hot: false, sample: true, starter: 'TrustMyRecord', stars: 0, lastPoster: '—', lastTitle: 'Polls and Trivia', lastTime: '—', replies: 0, views: 0 }
+    { title: 'TrustMyRecord Forum Rules and Posting Guidelines', sticky: true, hot: false, sample: true, starter: 'TrustMyRecord', stars: 0, lastPoster: 'TrustMyRecord', lastTitle: 'Rules and Posting Guidelines', lastTime: '—', replies: 0, views: 0 },
+    { title: 'How Verified Records Work', sticky: true, hot: false, sample: true, starter: 'TrustMyRecord', stars: 0, lastPoster: 'TrustMyRecord', lastTitle: 'How Verified Records Work', lastTime: '—', replies: 0, views: 0 }
 ];
 
 function renderSampleThreads() {
