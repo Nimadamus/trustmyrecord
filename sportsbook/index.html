@@ -9406,10 +9406,35 @@ window.toggleSportFamily = function (family) {
         return null;
     }
 
-    function oddsButton(line, price) {
+    // Single-quote-safe escaper for emitting strings inside onclick="...".
+    var _sbEsc = function(s) { return ('' + (s != null ? s : '')).replace(/'/g, "\\'"); };
+    function oddsButton(line, price, ctx) {
         var lineTxt = (line == null || line === '') ? '—' : line;
         var priceTxt = (price == null || price === '') ? '—' : price;
-        return '<button type="button" class="sb-odds" tabindex="0">' +
+        // ctx = { gameIndex, betType, team, line, odds, awayTeam, homeTeam }
+        // Without ctx, the button renders as a dead placeholder (used when
+        // a market is missing). With ctx, it routes through the canonical
+        // selectGameBet bridge so the slip + Submit flow lights up. Apr 30
+        // incident: Nima reported "click NHL nothing happens" — every lobby
+        // odds cell was being emitted with no onclick at all.
+        var disabled = !ctx || ctx.odds == null || ctx.odds === '' || lineTxt === '—' || priceTxt === '—';
+        if (disabled) {
+            return '<button type="button" class="sb-odds is-empty" tabindex="-1" disabled>' +
+                   '<span class="sb-odds-line">' + lineTxt + '</span>' +
+                   '<span class="sb-odds-price">' + priceTxt + '</span>' +
+                   '</button>';
+        }
+        var lineArg = ctx.line == null ? '' : String(ctx.line);
+        var oddsArg = ctx.odds == null ? '' : String(ctx.odds);
+        var onclick = "window.selectGameBet && window.selectGameBet("
+            + (ctx.gameIndex | 0) + ","
+            + "'" + _sbEsc(ctx.betType) + "',"
+            + "'" + _sbEsc(ctx.team) + "',"
+            + "'" + _sbEsc(lineArg) + "',"
+            + "'" + _sbEsc(oddsArg) + "',"
+            + "'" + _sbEsc(ctx.awayTeam) + "',"
+            + "'" + _sbEsc(ctx.homeTeam) + "')";
+        return '<button type="button" class="sb-odds" tabindex="0" onclick="' + onclick + '">' +
                '<span class="sb-odds-line">' + lineTxt + '</span>' +
                '<span class="sb-odds-price">' + priceTxt + '</span>' +
                '</button>';
@@ -9425,7 +9450,7 @@ window.toggleSportFamily = function (family) {
         return null;
     }
 
-    function renderRow(game) {
+    function renderRow(game, gameIndex) {
         var book = pickFirstBookmaker(game);
         var home = game.home_team || game.homeTeam || (game.teams && game.teams.home) || '';
         var away = game.away_team || game.awayTeam || (game.teams && game.teams.away) || '';
@@ -9441,10 +9466,12 @@ window.toggleSportFamily = function (family) {
             }
         } catch (e) {}
 
-        // Two-sided default cells (top = away, bottom = home)
+        // Two-sided default cells (top = away, bottom = home).
+        // No ctx → buttons render disabled, so missing markets don't fake-click.
         var spreadCell = oddsStack(oddsButton('—', '—'), oddsButton('—', '—'));
         var mlCell = oddsStack(oddsButton('—', '—'), oddsButton('—', '—'));
         var totalCell = oddsStack(oddsButton('—', '—'), oddsButton('—', '—'));
+        var gi = gameIndex | 0;
 
         if (book) {
             var spreadM = findMarket(book, 'spreads');
@@ -9456,8 +9483,8 @@ window.toggleSportFamily = function (family) {
                 var homeLine = homeSpread ? fmtLine(homeSpread.point) : null;
                 var homePx = homeSpread ? fmtPrice(homeSpread.price) : null;
                 spreadCell = oddsStack(
-                    oddsButton(awayLine, awayPx),
-                    oddsButton(homeLine, homePx)
+                    oddsButton(awayLine, awayPx, awaySpread ? { gameIndex: gi, betType: 'spread', team: away, line: awaySpread.point, odds: awaySpread.price, awayTeam: away, homeTeam: home } : null),
+                    oddsButton(homeLine, homePx, homeSpread ? { gameIndex: gi, betType: 'spread', team: home, line: homeSpread.point, odds: homeSpread.price, awayTeam: away, homeTeam: home } : null)
                 );
             }
             var mlM = findMarket(book, 'h2h');
@@ -9465,8 +9492,8 @@ window.toggleSportFamily = function (family) {
                 var awayMl = findOutcome(mlM, away) || (mlM.outcomes && mlM.outcomes[0]);
                 var homeMl = findOutcome(mlM, home) || (mlM.outcomes && mlM.outcomes[1]);
                 mlCell = oddsStack(
-                    oddsButton('ML', awayMl ? fmtPrice(awayMl.price) : null),
-                    oddsButton('ML', homeMl ? fmtPrice(homeMl.price) : null)
+                    oddsButton('ML', awayMl ? fmtPrice(awayMl.price) : null, awayMl ? { gameIndex: gi, betType: 'ml', team: away, line: '', odds: awayMl.price, awayTeam: away, homeTeam: home } : null),
+                    oddsButton('ML', homeMl ? fmtPrice(homeMl.price) : null, homeMl ? { gameIndex: gi, betType: 'ml', team: home, line: '', odds: homeMl.price, awayTeam: away, homeTeam: home } : null)
                 );
             }
             var totalM = findMarket(book, 'totals');
@@ -9482,8 +9509,8 @@ window.toggleSportFamily = function (family) {
                 var overLine = (over && over.point != null) ? 'O ' + over.point : 'O —';
                 var underLine = (under && under.point != null) ? 'U ' + under.point : 'U —';
                 totalCell = oddsStack(
-                    oddsButton(overLine, over ? fmtPrice(over.price) : null),
-                    oddsButton(underLine, under ? fmtPrice(under.price) : null)
+                    oddsButton(overLine, over ? fmtPrice(over.price) : null, over ? { gameIndex: gi, betType: 'over', team: 'Over', line: over.point, odds: over.price, awayTeam: away, homeTeam: home } : null),
+                    oddsButton(underLine, under ? fmtPrice(under.price) : null, under ? { gameIndex: gi, betType: 'under', team: 'Under', line: under.point, odds: under.price, awayTeam: away, homeTeam: home } : null)
                 );
             }
         }
@@ -10092,9 +10119,11 @@ window.toggleSportFamily = function (family) {
         // Coming back to Full Game for the same sport: if we already cached
         // the populated board this session, restore it instantly instead of
         // refetching ESPN (rapid refetches sometimes return empty even when
-        // the first call succeeded).
+        // the first call succeeded). Cache key bumped to v2 (Apr 30 2026) to
+        // invalidate dead-button HTML from before the click-wiring fix.
         window.TMR._fullBoardCache = window.TMR._fullBoardCache || {};
-        var cached = window.TMR._fullBoardCache[sport];
+        var cacheKey = sport + ':v2';
+        var cached = window.TMR._fullBoardCache[cacheKey];
         if (cached) {
             rows.innerHTML = cached;
             return;
@@ -10121,11 +10150,11 @@ window.toggleSportFamily = function (family) {
             window.TMR.currentGames = games;
             var html = '';
             for (var i = 0; i < Math.min(games.length, 8); i++) {
-                html += renderRow(games[i]);
+                html += renderRow(games[i], i);
             }
             rows.innerHTML = html;
             if (window.TMR && window.TMR._fullBoardCache) {
-                window.TMR._fullBoardCache[sport] = html;
+                window.TMR._fullBoardCache[cacheKey] = html;
             }
             console.log('[TMR][lobby] ' + sport + ' rendered ' + Math.min(games.length, 8) + ' games. Source: ' + sourceLabel);
         };
