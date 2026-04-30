@@ -1978,6 +1978,17 @@
     }
 
     async function lockInPick() {
+        // Re-entry guard: a user hammering the Lock Pick button (or a double
+        // event listener fired from a touch device) used to queue a fresh
+        // POST /api/picks for every click. Backend has a partial unique
+        // index so dupes never persist, but the wasted requests caused the
+        // JS sim to flag 5 createPick calls in a row. Block re-entry while
+        // a request is mid-flight; the finally{} below clears the flag.
+        if (window.__tmrLockInFlight) {
+            try { console.info('[TMR submit] re-entry blocked (lock already in flight).'); } catch (_) {}
+            return;
+        }
+        window.__tmrLockInFlight = true;
         clearPickSlipError();
         showSubmitTrace('lockInPick started.');
         const option = state.selectedOption;
@@ -1985,6 +1996,7 @@
             showSubmitTrace('Submit stopped: no selected option in state.');
             showPickSlipError('Select a market before submitting a pick.');
             resetLockButtons();
+            window.__tmrLockInFlight = false;
             return;
         }
 
@@ -1992,6 +2004,7 @@
             showSubmitTrace('Submit stopped: selected option is missing game_id.');
             showPickSlipError('That market is missing its game ID. Refresh the board (Ctrl-F5) and re-select the bet.');
             resetLockButtons();
+            window.__tmrLockInFlight = false;
             return;
         }
 
@@ -1999,6 +2012,7 @@
             showSubmitTrace('Submit stopped: selected game has already started locally.');
             showPickSlipError('This game has already started, so picks are locked.');
             resetLockButtons();
+            window.__tmrLockInFlight = false;
             return;
         }
 
@@ -2007,6 +2021,7 @@
         if (!allowed) {
             showSubmitTrace('Submit stopped: account access check failed.');
             resetLockButtons();
+            window.__tmrLockInFlight = false;
             return;
         }
 
@@ -2033,6 +2048,7 @@
             showSubmitTrace('Submit stopped: invalid odds value.');
             showPickSlipError('Enter valid American odds like -110 or +150.');
             resetLockButtons();
+            window.__tmrLockInFlight = false;
             return;
         }
 
@@ -2041,6 +2057,7 @@
                 showSubmitTrace('Submit stopped: incomplete team total payload.');
                 showPickSlipError('This team total is missing its side or line. Reselect the market and try again.');
                 resetLockButtons();
+                window.__tmrLockInFlight = false;
                 return;
             }
         }
@@ -2117,6 +2134,7 @@
             showPickSlipError('Pick Not Submitted. Something went wrong. Please try again.');
         } finally {
             resetLockButtons();
+            window.__tmrLockInFlight = false;
         }
     }
 
