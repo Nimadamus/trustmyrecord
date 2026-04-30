@@ -2067,6 +2067,326 @@
             .cat-table tbody td.col-last,
             .thread-table tbody td.col-last { display: none !important; }
         }
+
+        /* =====================================================================
+           CLASSIC 2+2 REV 4 (Apr 30 2026)
+           Final-layer override that pushes the visual identity all the way
+           to the real twoplustwo.com look. Earlier rev 3 layer was still
+           reading too modern (dark navy body, gradient bands, soft borders).
+           Real 2+2 / classic vBulletin uses a pale TAN/GRAY body, FLAT solid
+           navy bands, very compact Verdana 11px chrome, and crisp 1px
+           grid borders everywhere.
+           ===================================================================== */
+
+        /* Real 2+2 outer bg is a pale gray-tan, not dark navy. */
+        body { background: #dedfdf !important; color: #000 !important; }
+
+        /* Top dark band — flatter, classic navy, no fade */
+        .vb-topbar.vb-topbar--forum-search {
+            background: #14213d !important;
+            border-bottom: 0 !important;
+        }
+        .vb-topbar-inner {
+            max-width: 1100px !important;
+            padding: 6px 12px !important;
+            gap: 12px !important;
+        }
+        .vb-logo {
+            font-size: 16px !important;
+            color: #ffffff !important;
+            text-shadow: 0 1px 0 #000 !important;
+        }
+        .vb-logo span { color: #ffd966 !important; }
+        .vb-search.vb-search--full { max-width: 320px !important; }
+        .vb-search input {
+            padding: 3px 6px !important;
+            font: 11px Verdana, Arial, sans-serif !important;
+            border: 1px solid #000 !important;
+        }
+        .vb-search button {
+            background: #2a4d80 !important;
+            border-color: #14213d !important;
+            padding: 3px 9px !important;
+        }
+
+        /* Horizontal nav tabs — flat solid navy bar w/ visible click feel */
+        .vb-subnav {
+            background: #14213d !important;
+            border-top: 1px solid #2a4d80 !important;
+            border-bottom: 1px solid #000 !important;
+        }
+        .vb-subnav-inner {
+            max-width: 1100px !important;
+            padding: 0 12px !important;
+        }
+        .vb-subnav a, .vb-subnav button {
+            padding: 5px 12px !important;
+            font: 700 11px Verdana, Arial, sans-serif !important;
+            color: #fff !important;
+            background: transparent !important;
+            border: 0 !important;
+            border-right: 1px solid #2a4d80 !important;
+        }
+        .vb-subnav a:hover, .vb-subnav button:hover {
+            background: #2a4d80 !important;
+            color: #ffe066 !important;
+        }
+
+        /* Outer shell — tighter, narrower, classic 2+2 width */
+        .vb-shell {
+            max-width: 1100px !important;
+            margin: 8px auto !important;
+            padding: 0 8px !important;
+            grid-template-columns: 200px 1fr !important;
+            gap: 8px !important;
+        }
+
+        /* Sidebar — flatter, smaller, dense */
+        .vb-sidebar-group {
+            margin-bottom: 8px !important;
+            border: 1px solid #777 !important;
+            background: #fff !important;
+        }
+        .vb-sidebar-heading {
+            background: #14213d !important;
+            color: #fff !important;
+            font: 700 10.5px Verdana, Arial, sans-serif !important;
+            padding: 4px 8px !important;
+            border-bottom: 1px solid #000 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.04em !important;
+        }
+        .tmr-fb-sidebar-list a {
+            padding: 3px 8px !important;
+            font: 700 11px Verdana, Arial, sans-serif !important;
+            color: #14365b !important;
+            background: #fff !important;
+        }
+        .tmr-fb-sidebar-list li:nth-child(even) a { background: #ededed !important; }
+        .tmr-fb-sidebar-list a:hover {
+            background: #ffefb8 !important;
+            color: #c00 !important;
+        }
+        .tmr-fb-sidebar-list a.is-active,
+        .tmr-fb-sidebar-list a.active {
+            background: #ffd966 !important;
+            color: #000 !important;
+        }
+
+        /* Main column — light cream-tan classic bg, hard 1px frame */
+        .vb-main {
+            background: #efeee5 !important;
+            border: 1px solid #777 !important;
+        }
+
+        /* Breadcrumb — gray strip with bold dark blue links */
+        .breadcrumb {
+            padding: 4px 10px !important;
+            background: #efeee5 !important;
+            border-bottom: 1px solid #777 !important;
+            color: #000 !important;
+            font: 11px Verdana, Arial, sans-serif !important;
+        }
+        .breadcrumb a {
+            color: #14365b !important;
+            font-weight: 700 !important;
+        }
+        .breadcrumb a:hover { color: #c00 !important; }
+
+        /* Title strip — dark maroon, smaller, hard top border */
+        .vb-title-strip {
+            background: #6b1212 !important;
+            color: #fff !important;
+            padding: 8px 12px !important;
+            border-top: 1px solid #380606 !important;
+            border-bottom: 1px solid #380606 !important;
+        }
+        #forumPageTitle {
+            font: 700 14px Georgia, 'Times New Roman', serif !important;
+            color: #fff !important;
+        }
+        .vb-title-strip-sub {
+            color: #f6c8c8 !important;
+            font: 11px Verdana, Arial, sans-serif !important;
+            margin-top: 1px;
+        }
+
+        /* Stats strip — pale stripe under the maroon */
+        .vb-stats {
+            background: #d8d8d8 !important;
+            border-bottom: 1px solid #999 !important;
+            padding: 3px 10px !important;
+            gap: 14px !important;
+            font-size: 10.5px !important;
+            color: #1a1a1a !important;
+        }
+
+        /* Section bands — flat navy, no gradient. Right-side meta in pale text. */
+        #categoriesContainer .group-header,
+        .vb-section-header {
+            background: #14365b !important;
+            color: #fff !important;
+            padding: 5px 10px !important;
+            border: 0 !important;
+            border-top: 1px solid #2c5e98 !important;
+            border-bottom: 1px solid #000 !important;
+            font: 700 11px Verdana, Arial, sans-serif !important;
+        }
+        .group-header-meta, .vb-section-meta {
+            color: #c8d8ee !important;
+            font-weight: 400 !important;
+        }
+
+        /* Category + thread tables — classic 2+2 alternation: white + pale gray */
+        .cat-table, .thread-table {
+            border-collapse: collapse !important;
+            border-top: 0 !important;
+            border-bottom: 1px solid #777 !important;
+            font: 11px Verdana, Arial, sans-serif !important;
+        }
+        .cat-table thead th, .thread-table thead th {
+            background: #c2c5cb !important;
+            color: #000 !important;
+            font: 700 10.5px Verdana, Arial, sans-serif !important;
+            padding: 4px 10px !important;
+            border-bottom: 1px solid #777 !important;
+            border-right: 1px solid #b3b6bb !important;
+            text-transform: none !important;
+            letter-spacing: 0 !important;
+        }
+        .cat-table tbody tr,
+        .thread-table tbody tr {
+            background: #ffffff !important;
+            border-bottom: 1px solid #cfd1d5 !important;
+        }
+        .cat-table tbody tr:nth-child(even),
+        .thread-table tbody tr:nth-child(even) {
+            background: #e9e9e9 !important;
+        }
+        .cat-table tbody tr:hover,
+        .thread-table tbody tr:hover {
+            background: #fff5cc !important;
+        }
+        .cat-table tbody td,
+        .thread-table tbody td {
+            padding: 6px 10px !important;
+            border-right: 1px solid #cfd1d5 !important;
+            color: #000 !important;
+        }
+        .cat-table tbody td:last-child,
+        .thread-table tbody td:last-child { border-right: 0 !important; }
+
+        /* Forum title link styling — classic vBulletin dark blue, smaller */
+        .cat-name {
+            font: 700 11.5px Verdana, Arial, sans-serif !important;
+            color: #14365b !important;
+        }
+        .cat-name:hover { color: #c00 !important; text-decoration: underline; }
+        .cat-desc {
+            color: #555 !important;
+            font: 10.5px Verdana, Arial, sans-serif !important;
+            margin-top: 1px;
+        }
+
+        /* Yellow folder icon — flatter, more 2+2 */
+        .cat-icon, .tmr-fb-thread-icon {
+            width: 20px !important;
+            height: 16px !important;
+            background: #f4cd5c !important;
+            border: 1px solid #8a6f10 !important;
+            box-shadow: inset 0 -2px 0 #d9a72f !important;
+            border-radius: 1px !important;
+            margin-top: 1px !important;
+            flex: 0 0 20px !important;
+        }
+        .cat-icon::before, .tmr-fb-thread-icon::before {
+            top: -3px !important;
+            left: 2px !important;
+            width: 7px !important;
+            height: 4px !important;
+            background: #f4cd5c !important;
+            border: 1px solid #8a6f10 !important;
+            border-bottom: 0 !important;
+        }
+        .tmr-fb-thread-icon.is-pinned {
+            background: #f4cd5c !important;
+            border-color: #8a6f10 !important;
+        }
+        .tmr-fb-thread-icon.is-pinned::after {
+            color: #8a6f10 !important;
+            font-size: 10px !important;
+        }
+
+        /* Last-post column */
+        .last-post-title { font: 700 11px Verdana, sans-serif !important; color: #14365b !important; }
+        .last-post-meta { color: #555 !important; font-size: 10.5px !important; }
+        .no-posts { font: italic 10.5px Verdana, sans-serif !important; color: #777 !important; }
+
+        /* Action row — classic 2+2 control bar */
+        .vb-actionrow {
+            background: #c2c5cb !important;
+            border-bottom: 1px solid #777 !important;
+            padding: 4px 8px !important;
+            gap: 4px !important;
+        }
+        .vb-action-btn {
+            padding: 2px 8px !important;
+            font: 700 10.5px Verdana, Arial, sans-serif !important;
+            background: linear-gradient(180deg, #fff 0%, #ddd 100%) !important;
+            border: 1px solid #777 !important;
+            color: #14365b !important;
+        }
+        .vb-action-btn.is-primary {
+            background: linear-gradient(180deg, #2c5e98 0%, #14365b 100%) !important;
+            border-color: #0a1f36 !important;
+            color: #fff !important;
+        }
+        .vb-actionrow input[type="search"] {
+            padding: 2px 6px !important;
+            border: 1px solid #777 !important;
+            font: 11px Verdana, sans-serif !important;
+            min-width: 180px !important;
+        }
+
+        /* Thread cells inside the sample / live thread table */
+        .tmr-fb-thread-title {
+            font: 700 11.5px Verdana, sans-serif !important;
+            color: #14365b !important;
+        }
+        .tmr-fb-thread-title:hover { color: #c00 !important; }
+        .tmr-fb-thread-meta { color: #555 !important; font-size: 10.5px !important; }
+        .tmr-fb-pin-tag {
+            background: #6b1212 !important;
+            color: #fff !important;
+            font: 700 9px Verdana, sans-serif !important;
+            padding: 1px 4px !important;
+        }
+        .tmr-fb-sample-tag {
+            background: #555 !important;
+            color: #fff !important;
+            font: 700 9px Verdana, sans-serif !important;
+            padding: 1px 4px !important;
+        }
+        .tmr-fb-lastpost-title { color: #14365b !important; font: 700 11px Verdana, sans-serif !important; }
+        .tmr-fb-lastpost-meta { color: #555 !important; font-size: 10.5px !important; }
+
+        /* Forum jump bar */
+        .forum-jump-row {
+            background: #c2c5cb !important;
+            border-top: 1px solid #777 !important;
+            padding: 4px 8px !important;
+            font: 11px Verdana, sans-serif !important;
+        }
+        .forum-jump-row select {
+            font: 11px Verdana, sans-serif !important;
+            border: 1px solid #777 !important;
+        }
+
+        /* Drop the legacy hidden header / nav for this page so the global
+           nav from tmr-sitewide.js stays out of the picture and the 2+2
+           shell takes over visually. */
+        body.tmr-site-shell .tmr-global-nav { display: none !important; }
+        body.tmr-site-shell .tmr-global-footer { background: #14213d !important; }
     </style>
 </head>
 <body>
