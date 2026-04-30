@@ -205,12 +205,19 @@ class TrustMyRecordAPI {
                     };
                 }
 
+                const requestContext = {
+                    sentAuth: !!this.token,
+                    refreshAttempted: false
+                };
+
                 let response = await fetch(url, config);
 
                 // Handle token expiration
                 if (response.status === 401 && this.refreshToken) {
+                    requestContext.refreshAttempted = true;
                     const refreshed = await this.refreshAccessToken(baseUrl);
                     if (refreshed) {
+                        requestContext.sentAuth = true;
                         response = await fetch(url, {
                             ...config,
                             headers: {
@@ -221,7 +228,7 @@ class TrustMyRecordAPI {
                     }
                 }
 
-                const data = await this.handleResponse(response);
+                const data = await this.handleResponse(response, requestContext);
                 this.baseUrl = baseUrl;
                 this.backendAvailable = true;
                 this.isLocaltunnel = baseUrl.includes('loca.lt');
@@ -240,7 +247,7 @@ class TrustMyRecordAPI {
         throw lastError || new Error('Backend unavailable');
     }
 
-    async handleResponse(response) {
+    async handleResponse(response, requestContext) {
         const text = await response.text();
         let data = {};
         try {
@@ -261,8 +268,18 @@ class TrustMyRecordAPI {
                 const first = data.errors[0];
                 message = first.msg || first.message || 'Request validation failed';
             }
+            // Only nuke the session on 401/403 when we actually sent a token
+            // AND the refresh attempt has already been tried (or refreshToken is
+            // gone). A bare 401 from an anonymous call must NOT log a user out.
+            // (Bug fix Apr 30 2026: stray 401s were clearing sessions on every
+            // page switch.)
             if (response.status === 401 || response.status === 403) {
-                this.clearTokens();
+                const triedAuthedRequest = !!(requestContext && requestContext.sentAuth);
+                const refreshAttempted = !!(requestContext && requestContext.refreshAttempted);
+                const noWayToRecover = !this.refreshToken;
+                if (triedAuthedRequest && (refreshAttempted || noWayToRecover)) {
+                    this.clearTokens();
+                }
             }
             const error = new Error(message || `HTTP ${response.status}`);
             error.status = response.status;
