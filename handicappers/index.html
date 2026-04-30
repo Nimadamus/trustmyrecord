@@ -144,9 +144,9 @@
             text-transform: uppercase;
         }
 
-        /* ---------- TABS ---------- */
-        .tabbar {
-            display: flex;
+        /* ---------- TABS (renamed away from .tab-btn / .tabbar to avoid sitewide CSS overrides) ---------- */
+        .lb-tabs {
+            display: flex !important;
             flex-wrap: wrap;
             gap: 6px;
             padding: 6px;
@@ -158,31 +158,38 @@
             overflow-x: auto;
         }
 
-        .tab-btn {
-            flex: 1 1 auto;
-            min-width: 140px;
-            padding: 9px 14px;
-            border: 1px solid transparent;
-            border-radius: 10px;
-            background: transparent;
-            color: var(--muted);
-            font: 700 0.82rem/1 'Inter', sans-serif;
-            letter-spacing: 0.02em;
+        .lb-tab {
+            flex: 1 1 auto !important;
+            min-width: 140px !important;
+            min-height: 0 !important;
+            padding: 10px 14px !important;
+            border: 1px solid transparent !important;
+            border-radius: 10px !important;
+            background: transparent !important;
+            color: var(--muted) !important;
+            font: 700 0.82rem/1 'Inter', sans-serif !important;
+            letter-spacing: 0.02em !important;
             cursor: pointer;
             transition: background 0.15s, color 0.15s, border-color 0.15s;
             white-space: nowrap;
             text-align: center;
+            box-shadow: none !important;
+            transform: none !important;
         }
 
-        .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.03); }
-
-        .tab-btn.active {
-            background: rgba(45,212,191,0.10);
-            border-color: rgba(45,212,191,0.32);
-            color: #d7fffb;
+        .lb-tab:hover {
+            color: var(--text) !important;
+            background: rgba(255,255,255,0.04) !important;
+            border-color: rgba(148,163,184,0.18) !important;
         }
 
-        .tab-count {
+        .lb-tab.active {
+            background: rgba(45,212,191,0.14) !important;
+            border-color: rgba(45,212,191,0.42) !important;
+            color: #d7fffb !important;
+        }
+
+        .lb-tab-count {
             display: inline-block;
             margin-left: 6px;
             padding: 2px 7px;
@@ -190,10 +197,11 @@
             background: rgba(255,255,255,0.07);
             font-size: 0.66rem;
             font-weight: 800;
+            color: inherit;
         }
 
-        .tab-btn.active .tab-count {
-            background: rgba(45,212,191,0.18);
+        .lb-tab.active .lb-tab-count {
+            background: rgba(45,212,191,0.22);
             color: #d7fffb;
         }
 
@@ -716,7 +724,7 @@
             .filters-grid { grid-template-columns: 1fr; }
             .quick-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .preview-stats { grid-template-columns: 1fr; }
-            .tab-btn { min-width: 0; padding: 8px 12px; font-size: 0.78rem; }
+            .lb-tab { min-width: 0 !important; padding: 8px 12px !important; font-size: 0.78rem !important; }
             h1 { font-size: clamp(1.5rem, 6vw, 2rem); }
         }
     </style>
@@ -738,21 +746,21 @@
         </section>
 
         <!-- ============== TABS ============== -->
-        <nav class="tabbar" role="tablist" aria-label="Leaderboard sections">
-            <button type="button" class="tab-btn active" data-tab="handicappers" role="tab" aria-selected="true">
-                Handicapper Records<span class="tab-count" id="tabCountHandicappers">0</span>
+        <nav class="lb-tabs" role="tablist" aria-label="Leaderboard sections">
+            <button type="button" class="lb-tab active" data-tab="handicappers" role="tab" aria-selected="true">
+                Handicapper Records<span class="lb-tab-count" id="tabCountHandicappers">0</span>
             </button>
-            <button type="button" class="tab-btn" data-tab="trivia" role="tab" aria-selected="false">
-                Trivia Points<span class="tab-count" id="tabCountTrivia">0</span>
+            <button type="button" class="lb-tab" data-tab="trivia" role="tab" aria-selected="false">
+                Trivia Points<span class="lb-tab-count" id="tabCountTrivia">0</span>
             </button>
-            <button type="button" class="tab-btn" data-tab="polls" role="tab" aria-selected="false">
-                Poll Leaders<span class="tab-count" id="tabCountPolls">0</span>
+            <button type="button" class="lb-tab" data-tab="polls" role="tab" aria-selected="false">
+                Poll Leaders<span class="lb-tab-count" id="tabCountPolls">0</span>
             </button>
-            <button type="button" class="tab-btn" data-tab="online" role="tab" aria-selected="false">
-                Online Challenges<span class="tab-count" id="tabCountOnline">0</span>
+            <button type="button" class="lb-tab" data-tab="online" role="tab" aria-selected="false">
+                Online Challenges<span class="lb-tab-count" id="tabCountOnline">0</span>
             </button>
-            <button type="button" class="tab-btn" data-tab="h2h" role="tab" aria-selected="false">
-                Handicapper Challenges<span class="tab-count" id="tabCountH2H">0</span>
+            <button type="button" class="lb-tab" data-tab="h2h" role="tab" aria-selected="false">
+                Handicapper Challenges<span class="lb-tab-count" id="tabCountH2H">0</span>
             </button>
         </nav>
 
@@ -1128,7 +1136,7 @@
 
         function activateTab(name) {
             TABS.forEach(function(t) {
-                const btn = document.querySelector('.tab-btn[data-tab="' + t + '"]');
+                const btn = document.querySelector('.lb-tab[data-tab="' + t + '"]');
                 const panel = document.getElementById('panel-' + t);
                 if (!btn || !panel) return;
                 const isActive = (t === name);
@@ -1144,7 +1152,7 @@
         }
 
         function bindTabs() {
-            document.querySelectorAll('.tab-btn').forEach(function(btn) {
+            document.querySelectorAll('.lb-tab').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     activateTab(btn.getAttribute('data-tab'));
                 });
