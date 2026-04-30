@@ -491,8 +491,8 @@
             <img class="nav-avatar" id="navAvatar" src="" alt="">
             <span class="nav-username" id="navUsername"></span>
         </div>
-                    <a href="/sportsbook.html#login" class="btn btn-outline btn-sm" id="navLoginBtn">Log In</a>
-                    <a href="/sportsbook.html#register" class="btn btn-primary btn-sm" id="navRegisterBtn">Register</a>
+                    <a href="/login/" class="btn btn-outline btn-sm" id="navLoginBtn">Log In</a>
+                    <a href="/register/" class="btn btn-primary btn-sm" id="navRegisterBtn">Register</a>
     </div>
 </nav>
 
@@ -504,8 +504,8 @@
             <h1>Turn gaming rivalries into a <span class="gold">trackable</span> <span class="blue">record</span>.</h1>
             <p>Use Arena to issue challenges, log head-to-head results, attach platform identities, and build a public competitive history that is stronger than Discord trash talk and screenshots.</p>
             <div class="hero-actions">
-                    <a href="/sportsbook.html#register" class="btn btn-primary btn-sm">Register</a>
-                    <a href="/sportsbook.html#login" class="btn btn-outline btn-sm">Log In</a>
+                    <a href="/register/" class="btn btn-primary btn-sm">Register</a>
+                    <a href="/login/" class="btn btn-outline btn-sm">Log In</a>
                 <button class="btn btn-gold btn-sm" onclick="openCreateChallenge()">Issue Challenge</button>
             </div>
             <div class="hero-stats" style="justify-content:flex-start; margin-top:22px;">
@@ -628,7 +628,7 @@
                 <i class="fas fa-lock"></i>
                 <h3>Sign in to see your stats</h3>
                 <p>Log in to track your gaming profile, match history, streaks, and rivalries from one place.</p>
-                    <a href="/sportsbook.html#login" class="btn btn-primary" style="margin-top:12px;">Log In</a>
+                    <a href="/login/" class="btn btn-primary" style="margin-top:12px;">Log In</a>
             </div>
             <div id="myStatsData" style="display:none;">
                 <div class="section-header">
@@ -987,7 +987,7 @@ async function loadChallenges() {
         document.getElementById('statActiveChallenges').textContent = allChallenges.filter(c => ['pending','accepted','in_progress'].includes(c.status)).length;
     } catch (e) {
         console.error('Failed to load challenges:', e);
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No open challenges yet</h3><p>The Arena is live, but there is no active challenge board to show yet. Register, link your gamer profile, and post the first matchup instead of leaving this page empty.</p><a href="/sportsbook.html#register" class="btn btn-primary" style="margin-top:12px;">Create an Account</a></div>';
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No open challenges yet</h3><p>The Arena is live, but there is no active challenge board to show yet. Register, link your gamer profile, and post the first matchup instead of leaving this page empty.</p><a href="/register/" class="btn btn-primary" style="margin-top:12px;">Create an Account</a></div>';
     }
 }
 

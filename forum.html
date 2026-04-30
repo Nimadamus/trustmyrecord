@@ -1233,8 +1233,8 @@
         <a href="/" class="logo">TRUSTMYRECORD</a>
         <nav class="nav-links"><a href="/forum/" class="nav-link active">Forum</a></nav>
         <div class="nav-auth">
-            <a href="/sportsbook.html#login" class="nav-link" id="forumHeaderLoginBtn">Log In</a>
-            <a href="/sportsbook.html#register" class="nav-link" id="forumHeaderRegisterBtn">Register</a>
+            <a href="/login/" class="nav-link" id="forumHeaderLoginBtn">Log In</a>
+            <a href="/register/" class="nav-link" id="forumHeaderRegisterBtn">Register</a>
         </div>
     </div>
 </header>
@@ -1946,7 +1946,7 @@ function renderThread() {
         replyAreaEl.innerHTML = '<textarea id="replyText" rows="5" placeholder="Type your reply..."></textarea>' +
             '<button class="btn btn-primary" style="margin-top:10px;" onclick="submitReply()">Post Reply</button>';
     } else {
-                replyAreaEl.innerHTML = '<div class="login-prompt">Replies are tied to real accounts and visible history. <a href="/sportsbook.html#login">Log in</a> to respond, or <a href="/sportsbook.html#register">register</a> to start building a public record.</div>';
+                replyAreaEl.innerHTML = '<div class="login-prompt">Replies are tied to real accounts and visible history. <a href="/login/">Log in</a> to respond, or <a href="/register/">register</a> to start building a public record.</div>';
     }
 }
 
@@ -1986,7 +1986,7 @@ function isUserLoggedIn() {
 
 function openNewThread() {
     if (!isUserLoggedIn()) {
-                window.location.href = '/sportsbook.html#login';
+                window.location.href = '/login/';
         return;
     }
     document.getElementById('newThreadModal').classList.add('active');
@@ -2032,7 +2032,7 @@ function pushForumActivity(type, payload) {
 
 async function submitThread(e) {
     e.preventDefault();
-        if (!isUserLoggedIn()) { window.location.href = '/sportsbook.html#login'; return; }
+        if (!isUserLoggedIn()) { window.location.href = '/login/'; return; }
 
     var title = document.getElementById('ntTitle').value.trim();
     var content = document.getElementById('ntContent').value.trim();
@@ -2073,7 +2073,7 @@ async function submitThread(e) {
 // SUBMIT REPLY
 // ================================================================
 async function submitReply() {
-        if (!isUserLoggedIn()) { window.location.href = '/sportsbook.html#login'; return; }
+        if (!isUserLoggedIn()) { window.location.href = '/login/'; return; }
 
     var textarea = document.getElementById('replyText');
     if (!textarea) return;

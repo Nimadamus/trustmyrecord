@@ -222,8 +222,8 @@
             <a href="/" class="logo">TRUST<span>MY</span>RECORD</a>
             <nav class="nav-links"><a href="/polls/" class="nav-link active">Polls</a></nav>
             <div class="nav-auth">
-                <a href="/sportsbook.html#login" class="nav-link">Log In</a>
-                <a href="/sportsbook.html#register" class="nav-link">Register</a>
+                <a href="/login/" class="nav-link">Log In</a>
+                <a href="/register/" class="nav-link">Register</a>
             </div>
         </div>
     </header>
@@ -519,7 +519,7 @@
             if (state.tab === 'mine') {
                 var user = currentUsername();
                 if (!user) {
-                    listEl.innerHTML = '<div class="tmr-empty-msg"><div class="icon"><i class="fas fa-user-lock"></i></div><div><a href="/sportsbook.html#login">Log in</a> to see polls you created.</div></div>';
+                    listEl.innerHTML = '<div class="tmr-empty-msg"><div class="icon"><i class="fas fa-user-lock"></i></div><div><a href="/login/">Log in</a> to see polls you created.</div></div>';
                     return;
                 }
                 var data = await api.request('/polls/users/' + encodeURIComponent(user) + '/created');
@@ -667,7 +667,7 @@
 
         var loginPrompt = '';
         if (!showResults && !isLoggedIn()) {
-            loginPrompt = '<div class="tmr-empty-msg" style="padding:20px;border:1px dashed var(--tmr-fb-border-strong);border-radius:6px;margin-bottom:14px;"><a href="/sportsbook.html#login">Log in</a> to vote on this poll. Results unlock for you after you cast a vote.</div>';
+            loginPrompt = '<div class="tmr-empty-msg" style="padding:20px;border:1px dashed var(--tmr-fb-border-strong);border-radius:6px;margin-bottom:14px;"><a href="/login/">Log in</a> to vote on this poll. Results unlock for you after you cast a vote.</div>';
             optionsHtml = '';
         }
 
@@ -691,7 +691,7 @@
 
     async function submitVote(e) {
         e.preventDefault();
-        if (!isLoggedIn()) { window.location.href = '/sportsbook.html#login'; return; }
+        if (!isLoggedIn()) { window.location.href = '/login/'; return; }
         var sel = document.querySelector('input[name="pollOption"]:checked');
         if (!sel) return;
         var optionId = parseInt(sel.value);
@@ -726,7 +726,7 @@
 
     // ============== CREATE MODAL ==============
     function openCreatePollModal() {
-        if (!isLoggedIn()) { window.location.href = '/sportsbook.html#login'; return; }
+        if (!isLoggedIn()) { window.location.href = '/login/'; return; }
         document.getElementById('createPollError').classList.remove('is-shown');
         document.getElementById('createPollForm').reset();
         document.getElementById('pollOptions').innerHTML =
