@@ -1064,8 +1064,22 @@
         // Update the summary display
         window.updatePickSummary();
 
-        // Go to confirmation step
-        window.showPickStep('pickDetails');
+        // Apr 30 2026 fix (Nima): on desktop (>=1100px) the games board and
+        // pick slip render side-by-side via grid; calling showPickStep here
+        // would yank `.active` off gamesListSection. The CSS display:block
+        // !important keeps it visible at the wide breakpoint, but on the
+        // exact transition window it can flicker / show "Loading games...".
+        // Only step-transition on narrow viewports where the slip is a step.
+        var isWideRail = (window.innerWidth || document.documentElement.clientWidth || 0) >= 1100;
+        if (isWideRail) {
+            // Right-rail mode: just make sure pickDetails is "active" without
+            // wiping the games list's active state. has-selection already
+            // unhid the ticket fields above.
+            var pd = document.getElementById('pickDetails');
+            if (pd) pd.classList.add('active');
+        } else {
+            window.showPickStep('pickDetails');
+        }
     };
 
     function analyticsTrackSportsbook(eventName, params) {
@@ -9380,10 +9394,131 @@ window.toggleSportFamily = function (family) {
         var pd = document.getElementById('pickDetails');
         if (!pd) return;
         pd.classList.add('active');
+        // Apr 30 2026 fix (Nima): on desktop (>=1100px) the pick slip is a
+        // sticky right-rail at top:90px and is ALREADY visible. scrollIntoView
+        // would bottom-align the slip's tall container against the games list,
+        // dumping the user near the footer with the games board scrolled away.
+        // Only auto-scroll on layouts where the slip is below the viewport.
+        var rect = pd.getBoundingClientRect();
+        var vh = window.innerHeight || document.documentElement.clientHeight;
+        var topVisible = rect.top >= 0 && rect.top < vh - 100;
+        if (topVisible) return; // already in view — let the user keep their scroll position
         try {
-            pd.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            window.scrollTo({
+                top: Math.max(0, rect.top + window.scrollY - 110),
+                behavior: 'smooth'
+            });
         } catch (e) {
-            window.scrollTo(0, pd.getBoundingClientRect().top + window.scrollY - 80);
+            window.scrollTo(0, rect.top + window.scrollY - 110);
+        }
+    };
+
+    // Populate the persistent right-rail Pick Slip (.sportsbook-ticket-preview)
+    // in place. This is what users actually see — the static "No selections
+    // yet" / "Empty Slip" aside next to the lobby board. selectGameBet was
+    // advancing the hidden #pickDetails step instead, which lives below the
+    // fold and looks visually disconnected from the rail.
+    window.TMR._ttPopulateSlip = function (sel) {
+        var aside = document.querySelector('.sportsbook-ticket-preview');
+        if (!aside) {
+            console.warn('[TMR][TT] no .sportsbook-ticket-preview aside on page');
+            return;
+        }
+        var fmtOdds = function (o) {
+            var n = Number(o);
+            if (!Number.isFinite(n)) return '' + (o == null ? '' : o);
+            return n > 0 ? '+' + n : '' + n;
+        };
+        var safe = function (s) {
+            return ('' + (s == null ? '' : s)).replace(/[<>"']/g, function (c) {
+                return ({ '<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c];
+            });
+        };
+        var sideLabel = sel.betType === 'teamover' ? 'Over'
+                      : sel.betType === 'teamunder' ? 'Under'
+                      : (sel.betType || '');
+        var matchup = (sel.awayTeam || '') + ' vs ' + (sel.homeTeam || '');
+        var marketLabel = sel.market || 'Team Total';
+        var bookLabel = sel.book || 'DraftKings';
+        var sport = sel.sport || (window.TMR && window.TMR.selectedSport) || '';
+
+        var head = aside.querySelector('.sportsbook-ticket-preview-head .sportsbook-selector-copy');
+        if (head) head.textContent = matchup;
+        var card = aside.querySelector('.sportsbook-ticket-preview-card');
+        if (!card) return;
+        var safeTeam = safe(sel.team);
+        var safeBook = safe(bookLabel);
+        var oddsTxt  = fmtOdds(sel.odds);
+        var lineTxt  = (sel.line == null || sel.line === '') ? '' : (' ' + sel.line);
+
+        card.innerHTML =
+            '<div class="sportsbook-ticket-preview-topline">' +
+                '<strong>' + safeTeam + ' ' + sideLabel + lineTxt + '</strong>' +
+                '<span>1 pick</span>' +
+            '</div>' +
+            '<div class="sportsbook-ticket-preview-row"><span>Sport</span><strong>' + safe(sport || '—') + '</strong></div>' +
+            '<div class="sportsbook-ticket-preview-row"><span>Game</span><strong>' + safe(matchup) + '</strong></div>' +
+            '<div class="sportsbook-ticket-preview-row"><span>Market</span><strong>' + safe(marketLabel) + '</strong></div>' +
+            '<div class="sportsbook-ticket-preview-row"><span>Selection</span><strong>' + safeTeam + ' ' + sideLabel + lineTxt + '</strong></div>' +
+            '<div class="sportsbook-ticket-preview-row"><span>Odds</span><strong>' + oddsTxt + '</strong></div>' +
+            '<div class="sportsbook-ticket-preview-row"><span>Sportsbook</span><strong>' + safeBook + '</strong></div>' +
+            '<div class="sportsbook-ticket-preview-row" style="align-items:center;">' +
+                '<span><label for="ttSlipUnits" style="cursor:pointer;">Units</label></span>' +
+                '<strong><input id="ttSlipUnits" type="number" min="0.5" max="5" step="0.5" value="1" aria-label="Units to risk"' +
+                    ' style="width:64px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:4px 8px;color:#f8fafc;font-weight:800;text-align:right;"></strong>' +
+            '</div>' +
+            '<div class="sportsbook-ticket-preview-note">Real DraftKings line. Tap Submit to lock to your public record.</div>' +
+            '<button type="button" id="ttSlipSubmit" class="sportsbook-ticket-preview-submit">Submit Pick</button>';
+
+        // Mirror into the existing #pickDetails state + form fields so the
+        // existing lockInPick path (with full save + grading + analytics
+        // wiring) runs untouched on Submit.
+        window.TMR.currentSelectedPick = {
+            gameIndex: sel.gameIndex,
+            betType: sel.betType,
+            team: sel.team,
+            line: sel.line,
+            odds: sel.odds,
+            awayTeam: sel.awayTeam,
+            homeTeam: sel.homeTeam,
+            sport: sport,
+            gameTime: sel.gameTime || null,
+            gameId: sel.gameId || null,
+            game: sel.game || null
+        };
+        window.TMR.selectedBetType = sel.betType;
+        var lineInput = document.getElementById('pickLineInput');
+        if (lineInput) lineInput.value = (sel.line != null ? sel.line : '');
+        var oddsInput = document.getElementById('pickOddsInput');
+        if (oddsInput) oddsInput.value = (sel.odds != null ? sel.odds : '');
+
+        var submit = document.getElementById('ttSlipSubmit');
+        if (submit) {
+            submit.addEventListener('click', function (ev) {
+                ev.preventDefault();
+                var unitsEl = document.getElementById('ttSlipUnits');
+                var u = unitsEl ? parseFloat(unitsEl.value) : 1;
+                if (!Number.isFinite(u) || u <= 0) u = 1;
+                if (u < 0.5) u = 0.5;
+                if (u > 5)   u = 5;
+                var hiddenUnits = document.getElementById('unitsInput');
+                if (hiddenUnits) hiddenUnits.value = String(u);
+                if (typeof window.lockInPick !== 'function') {
+                    console.warn('[TMR][TT] window.lockInPick missing');
+                    alert('Pick locking is unavailable on this page.');
+                    return;
+                }
+                try {
+                    submit.textContent = 'Locking…';
+                    submit.disabled = true;
+                    window.lockInPick();
+                } catch (err) {
+                    console.error('[TMR][TT] lockInPick threw:', err);
+                    alert('Could not lock pick: ' + (err && err.message ? err.message : err));
+                    submit.textContent = 'Submit Pick';
+                    submit.disabled = false;
+                }
+            }, false);
         }
     };
 
@@ -9399,21 +9534,54 @@ window.toggleSportFamily = function (family) {
             var gameIndex = parseInt(btn.getAttribute('data-game-index'), 10);
             var betType   = btn.getAttribute('data-bet-type');
             var team      = btn.getAttribute('data-team');
-            var line      = btn.getAttribute('data-line');
-            var odds      = btn.getAttribute('data-odds');
+            var lineRaw   = btn.getAttribute('data-line');
+            var oddsRaw   = btn.getAttribute('data-odds');
             var awayTeam  = btn.getAttribute('data-away');
             var homeTeam  = btn.getAttribute('data-home');
-            console.log('[TMR][TT] click delegated:', { gameIndex: gameIndex, betType: betType, team: team, line: line, odds: odds });
+            var line = (lineRaw != null && lineRaw !== '') ? parseFloat(lineRaw) : null;
+            var odds = (oddsRaw != null && oddsRaw !== '') ? parseInt(oddsRaw, 10) : null;
+            var fullGame = (window.TMR.currentGames && window.TMR.currentGames[gameIndex]) || null;
+            var bookTitle = 'DraftKings';
             try {
-                if (typeof window.selectGameBet === 'function') {
-                    window.selectGameBet(gameIndex, betType, team, line, odds, awayTeam, homeTeam);
-                } else {
-                    console.warn('[TMR][TT] window.selectGameBet is not a function');
+                if (fullGame && fullGame.bookmakers && fullGame.bookmakers[0] && fullGame.bookmakers[0].title) {
+                    bookTitle = fullGame.bookmakers[0].title;
                 }
-            } catch (err) {
-                console.error('[TMR][TT] selectGameBet threw:', err);
+            } catch (e) { /* noop */ }
+            console.log('[TMR][TT] click:', { gameIndex: gameIndex, betType: betType, team: team, line: line, odds: odds, away: awayTeam, home: homeTeam, book: bookTitle });
+
+            // Visual: mark this button selected, unmark siblings.
+            try {
+                document.querySelectorAll('[data-tt-pick="1"].selected').forEach(function (b) { b.classList.remove('selected'); });
+                btn.classList.add('selected');
+            } catch (e) { /* noop */ }
+
+            window.TMR._ttPopulateSlip({
+                gameIndex: gameIndex,
+                betType: betType,
+                team: team,
+                line: line,
+                odds: odds,
+                awayTeam: awayTeam,
+                homeTeam: homeTeam,
+                sport: window.TMR.selectedSport,
+                market: 'Team Total',
+                book: bookTitle,
+                gameTime: fullGame && fullGame.commence_time,
+                gameId: fullGame && fullGame.id,
+                game: fullGame
+            });
+
+            // If the slip is below the fold (mobile / narrow viewports), nudge it.
+            var aside = document.querySelector('.sportsbook-ticket-preview');
+            if (aside) {
+                try {
+                    var rect = aside.getBoundingClientRect();
+                    var vh = window.innerHeight || document.documentElement.clientHeight;
+                    if (rect.top > vh - 80 || rect.bottom < 0) {
+                        aside.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                } catch (e) { /* noop */ }
             }
-            try { window.TMR._ttScrollToPickSlip(); } catch (e) { /* noop */ }
         }, false);
     }
 
