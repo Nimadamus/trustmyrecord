@@ -314,32 +314,9 @@
 
     function showSubmitTrace(message) {
         try {
-            const text = '[TMR submit] ' + message;
-            console.info(text);
-            let box = document.getElementById('tmrSubmitTrace');
-            if (!box) {
-                box = document.createElement('div');
-                box.id = 'tmrSubmitTrace';
-                box.setAttribute('role', 'status');
-                box.style.cssText = [
-                    'position:fixed',
-                    'right:14px',
-                    'bottom:14px',
-                    'z-index:2147483647',
-                    'max-width:min(420px,calc(100vw - 28px))',
-                    'padding:12px 14px',
-                    'border-radius:10px',
-                    'background:rgba(3,7,18,0.96)',
-                    'border:1px solid rgba(34,211,238,0.55)',
-                    'box-shadow:0 16px 42px rgba(0,0,0,0.42)',
-                    'color:#e0f2fe',
-                    'font:600 13px/1.45 Inter,system-ui,sans-serif',
-                    'white-space:normal'
-                ].join(';');
-                (document.body || document.documentElement).appendChild(box);
-            }
-            box.textContent = text;
-            box.style.display = 'block';
+            console.info('[TMR submit]', message);
+            const oldBox = document.getElementById('tmrSubmitTrace');
+            if (oldBox) oldBox.style.display = 'none';
         } catch (error) {}
     }
 
@@ -1874,9 +1851,30 @@
         box.style.display = 'block';
     }
 
+    function showPickSlipSuccess(title, message) {
+        const slip = document.getElementById('pickDetails') || document.body;
+        let box = document.getElementById('pickSlipSuccess');
+        if (!box) {
+            box = document.createElement('div');
+            box.id = 'pickSlipSuccess';
+            box.setAttribute('role', 'status');
+            box.style.cssText = 'margin:10px 0;padding:14px 16px;border-radius:10px;background:rgba(34,197,94,0.14);border:1px solid rgba(34,197,94,0.62);color:#dcfce7;font-size:14px;line-height:1.45;';
+            const submitBtn = document.getElementById('submitPickBtn') || document.getElementById('ttSlipSubmit') || document.querySelector('#pickDetails button[type="submit"]') || slip.firstElementChild;
+            if (submitBtn && submitBtn.parentNode) {
+                submitBtn.parentNode.insertBefore(box, submitBtn);
+            } else {
+                slip.appendChild(box);
+            }
+        }
+        box.innerHTML = '<strong style="display:block;color:#bbf7d0;font-size:15px;margin-bottom:3px;">' + escapeHtml(title) + '</strong><span>' + escapeHtml(message) + '</span>';
+        box.style.display = 'block';
+    }
+
     function clearPickSlipError() {
         const box = document.getElementById('pickSlipError');
         if (box) box.style.display = 'none';
+        const success = document.getElementById('pickSlipSuccess');
+        if (success) success.style.display = 'none';
     }
 
     // Reset every "Locking…" / disabled submit button across the page back
@@ -1945,7 +1943,15 @@
 
         const oddsValue = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
         const lineValue = lineInput && lineInput.value !== '' ? parseFloat(lineInput.value) : null;
-        const unitsValue = unitsInput ? parseFloat(unitsInput.value || '1') : 1;
+        const unitsRaw = unitsInput ? parseFloat(unitsInput.value || '1') : 1;
+        // Frontend hard-cap: units must be a whole number in [1, 5]. Backend
+        // enforces the same range, but clamping here gives the user
+        // immediate feedback and prevents a wasted API round trip on a 6u
+        // typo.
+        const unitsValue = Math.max(1, Math.min(5, Math.round(Number.isFinite(unitsRaw) ? unitsRaw : 1)));
+        if (unitsInput && String(unitsValue) !== String(unitsInput.value)) {
+            unitsInput.value = String(unitsValue);
+        }
         const submittedSelection = buildSubmittedSelection(option, lineValue);
 
         if (Number.isNaN(oddsValue) || (oddsValue > -100 && oddsValue < 100)) {
@@ -1999,12 +2005,16 @@
             showSubmitTrace('API saved pick. Refreshing pick history.');
             await fetchCurrentUserPicks();
             syncRecordWidgets(state.currentUserPicks);
-            updateText('confirmPickDetail', option.selection_label + ' (' + (oddsValue > 0 ? '+' : '') + oddsValue + ')');
+            const savedSelectionLabel = option.selection_label || submittedSelection || 'Pick';
+            updateText('confirmPickDetail', savedSelectionLabel + ' (' + (oddsValue > 0 ? '+' : '') + oddsValue + ')');
             const responseGame = response && response.pick && response.pick.game ? response.pick.game : null;
             const metaGame = option.game || responseGame || {};
             const awayTeam = metaGame.away_team || option.away_team || '';
             const homeTeam = metaGame.home_team || option.home_team || '';
-            updateText('confirmPickMeta', (awayTeam && homeTeam ? (awayTeam + ' @ ' + homeTeam) : 'Pick saved') + ' | Status: pending');
+            const confirmationTitle = document.querySelector('#pickConfirmation h3');
+            if (confirmationTitle) confirmationTitle.textContent = 'Pick Locked In';
+            updateText('confirmPickMeta', 'Your pick has been saved to your permanent public record.' + (awayTeam && homeTeam ? ' ' + awayTeam + ' @ ' + homeTeam + ' | Status: pending' : ''));
+            showPickSlipSuccess('Pick Locked In', 'Your pick has been saved to your permanent public record.');
             if (typeof window.showPickStep === 'function') window.showPickStep('pickConfirmation');
             showSubmitTrace('Pick saved and confirmation shown.');
         } catch (error) {
@@ -2029,8 +2039,7 @@
             ].join(' | ');
             try { console.error('[TMR][lockInPick] failure', { error, option, data }); } catch (e) {}
             showSubmitTrace('Submit failed: ' + dumped);
-            showPickSlipError('Pick submission failed [' + dumped + ']');
-            try { alert('Pick submission failed [' + dumped + ']'); } catch (_) {}
+            showPickSlipError('Pick Not Submitted. Something went wrong. Please try again.');
         } finally {
             resetLockButtons();
         }
