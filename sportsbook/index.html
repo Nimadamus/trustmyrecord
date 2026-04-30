@@ -247,6 +247,16 @@
                         // Keep records as display metadata only. Never generate betting lines from records.
                         var homeRecord = homeComp.records && homeComp.records[0] && homeComp.records[0].summary;
                         var awayRecord = awayComp.records && awayComp.records[0] && awayComp.records[0].summary;
+                        // ESPN provides team.logo (or team.logos[0].href) and team.abbreviation —
+                        // surface both so the board can render real DK-style logo tiles per team.
+                        var pickLogo = function(t) {
+                            if (!t) return '';
+                            if (t.logo) return t.logo;
+                            if (Array.isArray(t.logos) && t.logos[0] && t.logos[0].href) return t.logos[0].href;
+                            return '';
+                        };
+                        var homeTeamObj = homeComp.team || {};
+                        var awayTeamObj = awayComp.team || {};
                         games.push({
                             id: 'espn_' + evt.id,
                             espn_event_id: evt.id,
@@ -254,6 +264,10 @@
                             sport_title: evt.shortName || sportKey,
                             home_team: homeTeam,
                             away_team: awayTeam,
+                            home_logo: pickLogo(homeTeamObj),
+                            away_logo: pickLogo(awayTeamObj),
+                            home_abbr: homeTeamObj.abbreviation || homeTeamObj.shortDisplayName || '',
+                            away_abbr: awayTeamObj.abbreviation || awayTeamObj.shortDisplayName || '',
                             commence_time: evt.date || comp.date,
                             bookmakers: bookmakers,
                             home_record: homeRecord || '',
@@ -470,6 +484,30 @@
     window.TMR._cachedGames = [];
     window.TMR._cachedSport = null;
 
+    // Build team-logo markup for the matchup column. Real ESPN logo when we
+    // have a URL; clean dark initials chip otherwise. <img> onerror flips back
+    // to initials so a 404'd logo never leaves a broken-image icon on the row.
+    window.TMR._teamLogo = function(logoUrl, abbr, fullName) {
+        var safeAttr = function(s) { return ('' + (s == null ? '' : s)).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+        var initials = '';
+        if (abbr) {
+            initials = ('' + abbr).toUpperCase().slice(0, 3);
+        } else if (fullName) {
+            var parts = ('' + fullName).trim().split(/\s+/).filter(Boolean);
+            if (parts.length === 1) initials = parts[0].slice(0, 3).toUpperCase();
+            else initials = (parts[parts.length - 1][0] || '').toUpperCase() + (parts[parts.length - 2] ? parts[parts.length - 2][0].toUpperCase() : '');
+        }
+        var initialsHtml = '<span class="team-logo__initials">' + safeAttr(initials || '?') + '</span>';
+        if (logoUrl) {
+            return '<div class="team-logo" aria-hidden="true">'
+                + '<img class="team-logo__img" src="' + safeAttr(logoUrl) + '" alt="" loading="lazy" decoding="async"'
+                + ' onerror="this.parentElement.classList.add(\'team-logo--fallback\');this.remove();">'
+                + initialsHtml
+                + '</div>';
+        }
+        return '<div class="team-logo team-logo--fallback" aria-hidden="true">' + initialsHtml + '</div>';
+    };
+
     window.TMR.renderMarketSubtabs = function(sport, games) {
         var host = document.getElementById('marketSubtabs');
         if (!host) return;
@@ -614,8 +652,11 @@
                           + '</button>'
                         : '<div class="odds-more-spacer" data-mkt="more" aria-hidden="true"></div>';
 
+                    var ttLogo = teamName === game.home_team
+                        ? window.TMR._teamLogo(game.home_logo, game.home_abbr, teamName)
+                        : window.TMR._teamLogo(game.away_logo, game.away_abbr, teamName);
                     html += '<div class="team-row">'
-                        + '<div class="team-info" data-mkt="matchup"><div class="team-details"><div class="team-name">' + escHtml(teamName) + '</div></div></div>'
+                        + '<div class="team-info" data-mkt="matchup">' + ttLogo + '<div class="team-details"><div class="team-name">' + escHtml(teamName) + '</div></div></div>'
                         + (over
                             ? '<button class="odds-btn" data-mkt="spread" onclick="window.selectGameBet(' + index + ',\'teamover\',\'' + esc(teamName) + ' Over\',\'' + esc(pv(over.line)) + '\',\'' + esc(pv(over.odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + oLine + '</span><span class="odds-value' + (Number(over.odds) > 0 ? ' positive' : '') + '">' + oOdds + '</span></button>'
                             : '<div class="odds-btn no-odds-btn" data-mkt="spread"><span class="odds-line">Over</span><span class="odds-value">—</span></div>')
@@ -686,10 +727,12 @@
                 var totalFmt  = function(side) { return function(it) { return it.line != null ? side + ' ' + it.line : side; }; };
                 var mlFmt     = function() { return 'F5 ML'; };
 
+                var awayLogoHtmlF5 = window.TMR._teamLogo(game.away_logo, game.away_abbr, game.away_team);
+                var homeLogoHtmlF5 = window.TMR._teamLogo(game.home_logo, game.home_abbr, game.home_team);
                 html += '<div class="game-row game-row--with-more">'
                     + '<div class="game-time-header"><span class="game-time">' + gameTime + '</span></div>'
                     + '<div class="team-row">'
-                    + '<div class="team-info" data-mkt="matchup"><div class="team-details"><div class="team-name">' + escHtml(game.away_team) + '</div>' + awayPitcherHtml + '</div></div>'
+                    + '<div class="team-info" data-mkt="matchup">' + awayLogoHtmlF5 + '<div class="team-details"><div class="team-name">' + escHtml(game.away_team) + '</div>' + awayPitcherHtml + '</div></div>'
                     + cell(awaySpread, 'spread', 'f5spread', '5IP RL', spreadFmt)
                     + cell(overItem,   'total',  'f5over',   'O',     totalFmt('O'))
                     + cell(awayML,     'ml',     'f5ml',     'F5 ML', mlFmt)
@@ -700,7 +743,7 @@
                     + '</button>'
                     + '</div>'
                     + '<div class="team-row">'
-                    + '<div class="team-info" data-mkt="matchup"><div class="team-details"><div class="team-name">' + escHtml(game.home_team) + '</div>' + homePitcherHtml + '</div></div>'
+                    + '<div class="team-info" data-mkt="matchup">' + homeLogoHtmlF5 + '<div class="team-details"><div class="team-name">' + escHtml(game.home_team) + '</div>' + homePitcherHtml + '</div></div>'
                     + cell(homeSpread, 'spread', 'f5spread', '5IP RL', spreadFmt)
                     + cell(underItem,  'total',  'f5under',  'U',     totalFmt('U'))
                     + cell(homeML,     'ml',     'f5ml',     'F5 ML', mlFmt)
@@ -931,17 +974,19 @@
                   + '<span class="odds-value">More &rsaquo;</span>'
                   + '</button>'
                 : '';
+            var awayLogoHtml = window.TMR._teamLogo(game.away_logo, game.away_abbr, game.away_team);
+            var homeLogoHtml = window.TMR._teamLogo(game.home_logo, game.home_abbr, game.home_team);
             html += '<div class="game-row' + (hasMoreBets ? ' game-row--with-more' : '') + '">' +
                 '<div class="game-time-header"><span class="game-time">' + gameTime + sourceIndicator + '</span>' + pendingBadge + '</div>' +
                 '<div class="team-row">' +
-                '<div class="team-info" data-mkt="matchup"><div class="team-details"><div class="team-name">' + game.away_team + '</div>' + awayPitcherHtml + '</div></div>' +
+                '<div class="team-info" data-mkt="matchup">' + awayLogoHtml + '<div class="team-details"><div class="team-name">' + game.away_team + '</div>' + awayPitcherHtml + '</div></div>' +
                 '<button class="odds-btn' + noOddsClass + '" data-mkt="spread" onclick="window.selectGameBet(' + index + ',\'spread\',\'' + esc(game.away_team) + '\',\'' + esc(pv(awaySpread.point != null ? fmtSpread(awaySpread.point) : '')) + '\',\'' + esc(pv(awaySpread.price)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + spdLine(awaySpread.point) + '</span><span class="odds-value">' + spdOdds(awaySpread.price) + '</span></button>' +
                 '<button class="odds-btn' + noOddsClass + '" data-mkt="total" onclick="window.selectGameBet(' + index + ',\'over\',\'Over\',\'' + esc(pv(total)) + '\',\'' + esc(pv(overPrice)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + totLine('Over') + '</span><span class="odds-value">' + totOdds(overPrice) + '</span></button>' +
                 '<button class="odds-btn' + noOddsClass + '" data-mkt="ml" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + esc(game.away_team) + '\',\'ML\',\'' + esc(pv(awayML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (awayML > 0 ? 'positive' : '') + '">' + mlDisplay(awayML) + '</span></button>' +
                 moreBetsCell +
                 '</div>' +
                 '<div class="team-row">' +
-                '<div class="team-info" data-mkt="matchup"><div class="team-details"><div class="team-conjunction">at</div><div class="team-name">' + game.home_team + '</div>' + homePitcherHtml + '</div></div>' +
+                '<div class="team-info" data-mkt="matchup">' + homeLogoHtml + '<div class="team-details"><div class="team-conjunction">at</div><div class="team-name">' + game.home_team + '</div>' + homePitcherHtml + '</div></div>' +
                 '<button class="odds-btn' + noOddsClass + '" data-mkt="spread" onclick="window.selectGameBet(' + index + ',\'spread\',\'' + esc(game.home_team) + '\',\'' + esc(pv(homeSpread.point != null ? fmtSpread(homeSpread.point) : '')) + '\',\'' + esc(pv(homeSpread.price)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + spdLine(homeSpread.point) + '</span><span class="odds-value">' + spdOdds(homeSpread.price) + '</span></button>' +
                 '<button class="odds-btn' + noOddsClass + '" data-mkt="total" onclick="window.selectGameBet(' + index + ',\'under\',\'Under\',\'' + esc(pv(total)) + '\',\'' + esc(pv(underPrice)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + totLine('Under') + '</span><span class="odds-value">' + totOdds(underPrice) + '</span></button>' +
                 '<button class="odds-btn' + noOddsClass + '" data-mkt="ml" onclick="window.selectGameBet(' + index + ',\'ml\',\'' + esc(game.home_team) + '\',\'ML\',\'' + esc(pv(homeML)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">ML</span><span class="odds-value ' + (homeML > 0 ? 'positive' : '') + '">' + mlDisplay(homeML) + '</span></button>' +
@@ -1212,10 +1257,23 @@
             betScopeSelector.style.display = sport === 'MLB' ? 'flex' : 'none';
         }
 
-        // Update UI to show selection
+        // Update UI to show selection — clear all then mark the clicked tile.
         document.querySelectorAll('.bet-pick-btn, .total-btn, .odds-btn').forEach(function(btn) {
             btn.classList.remove('selected');
+            btn.removeAttribute('aria-pressed');
         });
+        try {
+            // Robust click-target lookup — works whether the user clicks the
+            // outer button or one of the inner spans (.odds-line / .odds-value).
+            var tappedBtn = null;
+            if (typeof event !== 'undefined' && event && event.target) {
+                tappedBtn = (event.target.closest && event.target.closest('.odds-btn,.bet-pick-btn,.total-btn')) || null;
+            }
+            if (tappedBtn) {
+                tappedBtn.classList.add('selected');
+                tappedBtn.setAttribute('aria-pressed', 'true');
+            }
+        } catch (e) { /* selection highlight is cosmetic — never block lock-in */ }
 
         // Update summary game
         var summaryGame = document.getElementById('summaryGame');
@@ -1277,7 +1335,13 @@
         if (lobbyActive || !slipVisibleAsRightRail) {
             // Lobby OR narrow viewport: step transition is the only way the
             // pick slip will actually surface in front of the user.
-            window.showPickStep('pickDetails');
+            // Guard against the pick-details step missing from the DOM —
+            // showPickStep would hide every step, leaving a blank page.
+            if (pdEl) {
+                window.showPickStep('pickDetails');
+            } else {
+                console.warn('[TMR] pickDetails section missing — keeping board visible');
+            }
         } else {
             // Wide desktop on the board view: slip is already visible.
             pdEl.classList.add('active');
@@ -26494,6 +26558,359 @@ document.addEventListener('DOMContentLoaded', function() {
             #picks .game-row .team-pitcher { font-size: 11.5px !important; }
             #picks .game-row .odds-btn { min-height: 54px !important; }
             #picks .game-row .odds-btn .odds-line { font-size: 14px !important; }
+        }
+
+        /* ========================================================================
+           DK SPORTSBOOK BOARD — v3 (April 30, 2026)
+           Final-pass override that replaces the boxy/table feel with real
+           DraftKings rows: logo column + team/pitcher stack on the left,
+           large dark odds tiles on the right (line-on-top, green-priced).
+           Highest-priority block — sits at the end of the inline stylesheet so
+           it wins over the v2 grid above without removing the v2 fallbacks.
+           ======================================================================== */
+
+        /* Outer matchup card — taller, deeper navy, no double border. */
+        #picks .game-row {
+            background: linear-gradient(180deg, #131826 0%, #0f1320 100%) !important;
+            border: 1px solid #1d2435 !important;
+            border-radius: 12px !important;
+            margin-bottom: 14px !important;
+            box-shadow: 0 6px 16px -10px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.02) inset !important;
+            overflow: hidden !important;
+        }
+        #picks .game-row:hover {
+            border-color: #2c3a5b !important;
+            box-shadow: 0 10px 22px -12px rgba(0,0,0,0.6), 0 0 0 1px rgba(34,211,238,0.10) inset !important;
+        }
+
+        /* Game header strip — game time on the left, optional SGP badge on the right. */
+        #picks .game-row .game-time-header {
+            background: linear-gradient(180deg, #0c1120 0%, #0a0e1a 100%) !important;
+            border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+            padding: 10px 22px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+        }
+        #picks .game-row .game-time {
+            color: #9aa6bf !important;
+            font: 700 12px/1 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+            letter-spacing: 0.6px !important;
+            text-transform: uppercase !important;
+        }
+        /* Reserved SGP / "Same Game Parlay" badge slot — only renders when the
+           data carries a flag, so we never invent SGP availability. */
+        #picks .game-row .sgp-badge {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 3px 9px !important;
+            border-radius: 4px !important;
+            background: rgba(34,211,238,0.12) !important;
+            border: 1px solid rgba(34,211,238,0.42) !important;
+            color: #67e8f9 !important;
+            font: 800 10px/1 'Inter', sans-serif !important;
+            letter-spacing: 0.8px !important;
+            text-transform: uppercase !important;
+        }
+
+        /* Two horizontal rows per game (away / home). 5-col grid: matchup + 3
+           markets + More Bets. CSS is a stronger override than v2 because it
+           also targets the inline-styled grid-template-columns from v2. */
+        #picks .games-board-wrap[data-cols="5"] .game-row .team-row {
+            grid-template-columns: minmax(260px, 1fr) 124px 124px 124px 130px !important;
+            gap: 10px !important;
+            padding: 14px 22px !important;
+            align-items: center !important;
+        }
+        #picks .games-board-wrap[data-cols="4"] .game-row .team-row {
+            grid-template-columns: minmax(260px, 1fr) 124px 124px 124px !important;
+            gap: 10px !important;
+            padding: 14px 22px !important;
+            align-items: center !important;
+        }
+
+        /* Matchup column — logo + team/pitcher stack like DK. */
+        #picks .game-row .team-info {
+            display: flex !important;
+            align-items: center !important;
+            gap: 14px !important;
+            min-width: 0 !important;
+        }
+        #picks .team-logo {
+            position: relative;
+            width: 38px !important;
+            height: 38px !important;
+            flex: 0 0 38px !important;
+            border-radius: 50% !important;
+            background: #0a0f1a !important;
+            border: 1px solid #1f2a40 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow: hidden !important;
+        }
+        .team-logo__img {
+            width: 32px !important;
+            height: 32px !important;
+            object-fit: contain !important;
+            display: block !important;
+        }
+        .team-logo__initials {
+            font: 800 12.5px/1 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+            letter-spacing: 0.5px !important;
+            color: #cbd5e1 !important;
+            position: absolute !important;
+            inset: 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            opacity: 0;
+        }
+        /* When the <img> is present, hide initials. When the img errors and is
+           removed (and parent gets .team-logo--fallback), initials surface. */
+        .team-logo .team-logo__img + .team-logo__initials { opacity: 0; }
+        .team-logo--fallback .team-logo__initials { opacity: 1 !important; }
+        .team-logo--fallback {
+            background: #131a2a !important;
+        }
+
+        #picks .game-row .team-details {
+            min-width: 0 !important;
+        }
+        #picks .game-row .team-name {
+            color: #f4f7fb !important;
+            font: 700 16px/1.18 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+            letter-spacing: 0.1px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+        #picks .game-row .team-pitcher {
+            color: #8ea0bc !important;
+            font: 600 12px/1.3 'Inter', sans-serif !important;
+            margin-top: 3px !important;
+            letter-spacing: 0.05px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        /* Odds tiles — large rectangular buttons, line on top + odds below.
+           Dark base, sharper hover, green positive prices, white negative. */
+        #picks .game-row .odds-btn {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 4px !important;
+            background: #1a2236 !important;
+            border: 1px solid #28324a !important;
+            border-radius: 7px !important;
+            min-height: 64px !important;
+            padding: 10px 8px !important;
+            transition: background 0.12s ease, border-color 0.12s ease, transform 0.06s ease !important;
+            cursor: pointer !important;
+        }
+        #picks .game-row .odds-btn:hover {
+            background: #232d47 !important;
+            border-color: #3a4b75 !important;
+        }
+        #picks .game-row .odds-btn:active { transform: scale(0.985); }
+        /* Selected tile — clear cyan ring so users can see what's in the slip. */
+        #picks .game-row .odds-btn.selected,
+        #picks .game-row .odds-btn[aria-pressed="true"] {
+            background: #143247 !important;
+            border-color: #22d3ee !important;
+            box-shadow: 0 0 0 1px #22d3ee inset, 0 0 18px rgba(34,211,238,0.22) !important;
+        }
+        #picks .game-row .odds-btn.selected .odds-line,
+        #picks .game-row .odds-btn[aria-pressed="true"] .odds-line {
+            color: #f4f7fb !important;
+        }
+
+        /* Line on top — bright, prominent. */
+        #picks .game-row .odds-btn .odds-line {
+            color: #f4f7fb !important;
+            font: 800 16.5px/1.15 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+            letter-spacing: 0.2px !important;
+        }
+        /* American odds — green for positive, white for negative. */
+        #picks .game-row .odds-btn .odds-value {
+            color: #f8fafc !important;
+            font: 700 13.5px/1 'Inter', sans-serif !important;
+            letter-spacing: 0.3px !important;
+        }
+        #picks .game-row .odds-btn .odds-value.positive {
+            color: #4ade80 !important;
+        }
+
+        /* "No odds posted yet" tile — looks calm, not error-y. */
+        #picks .game-row .odds-btn.no-odds-btn {
+            background: #0f1626 !important;
+            border-style: dashed !important;
+            border-color: #1f2a40 !important;
+            cursor: not-allowed !important;
+        }
+        #picks .game-row .odds-btn.no-odds-btn:hover {
+            background: #0f1626 !important;
+            border-color: #1f2a40 !important;
+        }
+        #picks .game-row .odds-btn.no-odds-btn .odds-line { color: #6c7993 !important; font-weight: 700 !important; }
+        #picks .game-row .odds-btn.no-odds-btn .odds-value { color: #4a5570 !important; }
+
+        /* "More Bets" tile — solid action button, not dashed-teal. */
+        #picks .game-row .odds-more-btn {
+            background: #182842 !important;
+            border: 1px solid #2a4470 !important;
+            color: #67e8f9 !important;
+            border-radius: 7px !important;
+        }
+        #picks .game-row .odds-more-btn:hover {
+            background: #1f3258 !important;
+            border-color: #3a5e96 !important;
+        }
+        #picks .game-row .odds-more-btn .odds-line {
+            color: #c7e8ff !important;
+            font: 800 12.5px/1 'Inter', sans-serif !important;
+            letter-spacing: 0.6px !important;
+            text-transform: uppercase !important;
+        }
+        #picks .game-row .odds-more-btn .odds-value {
+            color: #67e8f9 !important;
+            font-weight: 800 !important;
+            font-size: 12.5px !important;
+        }
+        /* The "More Bets" cell appears in the FIRST team row only. The second
+           team row needs an empty spacer slot so the 5-col grid stays aligned. */
+        #picks .game-row .odds-more-spacer {
+            visibility: hidden !important;
+        }
+
+        /* Subtle divider only between the two team rows — no heavier per-row
+           outline that produces the table-feel. */
+        #picks .game-row .team-row {
+            border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+        }
+        #picks .game-row .team-row:last-of-type {
+            border-bottom: none !important;
+        }
+
+        /* Top market sub-tabs — pill bar, horizontal, large enough to read. */
+        #picks .market-subtabs {
+            background: linear-gradient(180deg, #0d1322 0%, #0a0f1c 100%) !important;
+            border: 1px solid #1d2435 !important;
+            border-radius: 12px !important;
+            padding: 6px !important;
+            gap: 4px !important;
+            margin: 8px 0 16px !important;
+        }
+        #picks .market-subtab {
+            padding: 11px 18px !important;
+            font: 800 12.5px/1 'Inter', sans-serif !important;
+            letter-spacing: 0.7px !important;
+            text-transform: uppercase !important;
+            color: #94a3b8 !important;
+            border-radius: 8px !important;
+        }
+        #picks .market-subtab:hover {
+            color: #e2e8f0 !important;
+            background: rgba(255,255,255,0.04) !important;
+        }
+        #picks .market-subtab.is-active {
+            background: linear-gradient(135deg, #22d3ee 0%, #0891b2 100%) !important;
+            color: #04111a !important;
+            box-shadow: 0 4px 12px rgba(34,211,238,0.28) !important;
+        }
+        #picks .market-subtab .market-subtab__hint {
+            display: block !important;
+            margin-top: 3px !important;
+            font: 600 9.5px/1 'Inter', sans-serif !important;
+            letter-spacing: 0.3px !important;
+            text-transform: none !important;
+        }
+        #picks .market-subtab.is-active .market-subtab__hint {
+            color: rgba(2,15,20,0.65) !important;
+        }
+        #picks .market-subtab:not(.is-active) .market-subtab__hint {
+            color: #64748b !important;
+        }
+
+        /* Market header strip — flush against first row, tight spacing. */
+        #picks .games-board-wrap[data-cols="5"] .market-headers {
+            grid-template-columns: minmax(260px, 1fr) 124px 124px 124px 130px !important;
+            gap: 10px !important;
+        }
+        #picks .games-board-wrap[data-cols="4"] .market-headers {
+            grid-template-columns: minmax(260px, 1fr) 124px 124px 124px !important;
+            gap: 10px !important;
+        }
+        #picks .market-headers {
+            background: linear-gradient(180deg, #0c1120 0%, #0a0e1a 100%) !important;
+            border: 1px solid #1d2435 !important;
+            border-radius: 12px !important;
+            padding: 13px 22px !important;
+            margin-bottom: 8px !important;
+            position: relative !important;
+            top: auto !important;
+        }
+        #picks .market-headers .market-label {
+            color: #8595b0 !important;
+            font: 800 11px/1 'Inter', sans-serif !important;
+            letter-spacing: 1px !important;
+            text-transform: uppercase !important;
+        }
+        #picks .market-headers .market-label:first-child {
+            text-align: left !important;
+        }
+
+        /* Mobile: collapse to 4-col board (drop More Bets), shrink logo,
+           compress padding. The pick slip already stacks under the board
+           because the desktop side-by-side grid is gated >= 1100px. */
+        @media (max-width: 768px) {
+            #picks .games-board-wrap[data-cols="5"] .market-headers,
+            #picks .games-board-wrap[data-cols="5"] .game-row .team-row {
+                grid-template-columns: minmax(0, 1fr) 80px 80px 80px !important;
+                gap: 6px !important;
+                padding: 10px 14px !important;
+            }
+            #picks .games-board-wrap[data-cols="5"] [data-mkt="more"] {
+                display: none !important;
+            }
+            #picks .games-board-wrap[data-cols="4"] .market-headers,
+            #picks .games-board-wrap[data-cols="4"] .game-row .team-row {
+                grid-template-columns: minmax(0, 1fr) 80px 80px 80px !important;
+                gap: 6px !important;
+                padding: 10px 14px !important;
+            }
+            #picks .team-logo {
+                width: 30px !important;
+                height: 30px !important;
+                flex: 0 0 30px !important;
+            }
+            .team-logo__img { width: 24px !important; height: 24px !important; }
+            #picks .game-row .team-info { gap: 10px !important; }
+            #picks .game-row .team-name { font-size: 14px !important; }
+            #picks .game-row .team-pitcher { font-size: 11px !important; }
+            #picks .game-row .odds-btn { min-height: 54px !important; padding: 8px 4px !important; }
+            #picks .game-row .odds-btn .odds-line { font-size: 14px !important; }
+            #picks .game-row .odds-btn .odds-value { font-size: 12px !important; }
+            #picks .market-subtab { padding: 9px 13px !important; font-size: 11.5px !important; }
+        }
+        @media (max-width: 480px) {
+            #picks .games-board-wrap[data-cols="5"] .market-headers,
+            #picks .games-board-wrap[data-cols="5"] .game-row .team-row,
+            #picks .games-board-wrap[data-cols="4"] .market-headers,
+            #picks .games-board-wrap[data-cols="4"] .game-row .team-row {
+                grid-template-columns: minmax(0, 1fr) 64px 64px 64px !important;
+                gap: 4px !important;
+                padding: 9px 11px !important;
+            }
+            #picks .team-logo { width: 26px !important; height: 26px !important; flex: 0 0 26px !important; }
+            .team-logo__img { width: 22px !important; height: 22px !important; }
+            #picks .game-row .odds-btn { min-height: 50px !important; padding: 6px 3px !important; }
+            #picks .game-row .odds-btn .odds-line { font-size: 12.5px !important; }
+            #picks .game-row .odds-btn .odds-value { font-size: 11px !important; }
         }
     </style>
     <link rel="stylesheet" href="/static/css/sportsbook-pro.css?v=20260430a">
