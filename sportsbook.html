@@ -8411,6 +8411,141 @@
                 <a class="make-picks-loggedout-btn" href="/login/">Log In</a>
             </div>
         </div>
+
+        <!-- Pending picks rail: hydrated for signed-in users from /api/picks?username=...&result=pending. -->
+        <section id="pendingPicksRail" class="pending-picks-rail" hidden aria-label="Your pending picks">
+            <div class="pending-picks-rail__head">
+                <div>
+                    <h3 class="pending-picks-rail__title">Locked &amp; waiting for the grader</h3>
+                    <p class="pending-picks-rail__sub">Picks below are part of your public record. The auto-grader runs every 15 minutes once the game is final.</p>
+                </div>
+                <div class="pending-picks-rail__meta">
+                    <span class="pending-picks-rail__count" id="pendingPicksCount">0</span>
+                    <span class="pending-picks-rail__count-label">pending</span>
+                    <a class="pending-picks-rail__view" href="/profile/?tab=picks">View all on profile <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+            <div class="pending-picks-rail__list" id="pendingPicksList"></div>
+            <div class="pending-picks-rail__empty" id="pendingPicksEmpty" hidden>
+                <i class="fas fa-clock"></i> No pending picks right now. Lock one below and it will show up here until it grades.
+            </div>
+        </section>
+        <style>
+            .pending-picks-rail{margin:12px 0 18px;padding:18px 18px 14px;background:linear-gradient(135deg,rgba(0,255,255,0.05),rgba(255,0,255,0.04));border:1px solid rgba(0,255,255,0.18);border-radius:14px;}
+            .pending-picks-rail__head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:12px;}
+            .pending-picks-rail__title{margin:0 0 4px;font:800 16px/1.2 'Barlow','Inter',sans-serif;color:#f4f7fb;letter-spacing:-0.01em;}
+            .pending-picks-rail__sub{margin:0;color:#94a3b8;font-size:12.5px;line-height:1.5;max-width:560px;}
+            .pending-picks-rail__meta{display:flex;align-items:center;gap:10px;font-size:12px;color:#94a3b8;}
+            .pending-picks-rail__count{font:800 22px/1 'Barlow','Inter',sans-serif;color:#00ffff;}
+            .pending-picks-rail__count-label{text-transform:uppercase;letter-spacing:1.5px;font-weight:700;}
+            .pending-picks-rail__view{margin-left:8px;color:#00ffff;text-decoration:none;font-weight:700;}
+            .pending-picks-rail__view:hover{color:#fff;}
+            .pending-picks-rail__list{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;}
+            .pending-pick-card{background:rgba(11,17,24,0.72);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;}
+            .pending-pick-card__top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+            .pending-pick-card__sport{font:700 10px/1 'Inter',sans-serif;text-transform:uppercase;letter-spacing:1.5px;color:#00ffff;background:rgba(0,255,255,0.08);padding:5px 8px;border-radius:6px;}
+            .pending-pick-card__when{font-size:11px;color:#64748b;}
+            .pending-pick-card__pick{color:#f4f7fb;font:600 13.5px/1.4 'Inter',sans-serif;}
+            .pending-pick-card__detail{display:flex;justify-content:space-between;font-size:11.5px;color:#94a3b8;}
+            .pending-pick-card__detail b{color:#cbd5e1;font-weight:700;}
+            .pending-picks-rail__empty{padding:14px;color:#64748b;font-size:13px;text-align:center;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:10px;}
+            .pending-picks-rail__empty i{margin-right:8px;color:#94a3b8;}
+        </style>
+        <script>
+        (function() {
+            const rail        = document.getElementById('pendingPicksRail');
+            const list        = document.getElementById('pendingPicksList');
+            const emptyMsg    = document.getElementById('pendingPicksEmpty');
+            const countLabel  = document.getElementById('pendingPicksCount');
+            if (!rail || !list || !countLabel) return;
+
+            const escapeHtml = s => String(s == null ? '' : s)
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+
+            function fmtOdds(o) {
+                const n = Number(o);
+                if (!Number.isFinite(n)) return '—';
+                return (n > 0 ? '+' : '') + n;
+            }
+            function fmtAgo(ts) {
+                if (!ts) return '';
+                const d = new Date(ts);
+                if (isNaN(d.getTime())) return '';
+                const ms = Date.now() - d.getTime();
+                const m = Math.floor(ms / 60000);
+                if (m < 1) return 'just now';
+                if (m < 60) return m + 'm ago';
+                const h = Math.floor(m / 60);
+                if (h < 24) return h + 'h ago';
+                const dys = Math.floor(h / 24);
+                return dys + 'd ago';
+            }
+            function fmtMarket(m) {
+                return String(m || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            }
+            function getCachedUsername() {
+                try {
+                    if (window.api && window.api._cachedUser && window.api._cachedUser.username) return window.api._cachedUser.username;
+                    const raw = localStorage.getItem('tmr_user') || localStorage.getItem('user');
+                    if (raw) { const u = JSON.parse(raw); if (u && u.username) return u.username; }
+                } catch (e) {}
+                return null;
+            }
+            function isLoggedIn() {
+                if (document.body.getAttribute('data-tmr-auth') === 'logged-in') return true;
+                return !!getCachedUsername();
+            }
+
+            async function loadPending() {
+                if (!isLoggedIn()) { rail.hidden = true; return; }
+                const username = getCachedUsername();
+                if (!username || !window.api || typeof window.api.request !== 'function') return;
+
+                let picks = [];
+                try {
+                    const data = await window.api.request('/picks?username=' + encodeURIComponent(username) + '&result=pending&limit=20');
+                    picks = (data && Array.isArray(data.picks)) ? data.picks : [];
+                } catch (err) {
+                    console.warn('[Sportsbook] pending picks load failed:', err && err.message ? err.message : err);
+                    return;
+                }
+
+                rail.hidden = false;
+                countLabel.textContent = String(picks.length);
+                if (!picks.length) {
+                    list.innerHTML = '';
+                    emptyMsg.hidden = false;
+                    return;
+                }
+                emptyMsg.hidden = true;
+                picks.sort((a, b) => new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0));
+                list.innerHTML = picks.slice(0, 8).map(p => {
+                    const sport  = (p.sport_key || p.sport || '').toString().toUpperCase().replace(/_/g, ' ');
+                    const market = fmtMarket(p.market_type);
+                    const side   = p.selection || p.pick || p.side || '—';
+                    const odds   = fmtOdds(p.odds_snapshot);
+                    const units  = Number(p.units || 0).toFixed(2) + 'u';
+                    const when   = fmtAgo(p.locked_at || p.created_at);
+                    return '<div class="pending-pick-card">'
+                        + '<div class="pending-pick-card__top">'
+                        + '<span class="pending-pick-card__sport">' + escapeHtml(sport || 'PICK') + '</span>'
+                        + '<span class="pending-pick-card__when">' + escapeHtml(when) + '</span>'
+                        + '</div>'
+                        + '<div class="pending-pick-card__pick">' + escapeHtml(side) + '</div>'
+                        + '<div class="pending-pick-card__detail"><span>' + escapeHtml(market || '—') + '</span><span><b>' + escapeHtml(odds) + '</b> · ' + escapeHtml(units) + '</span></div>'
+                        + '</div>';
+                }).join('');
+            }
+
+            // Initial + on auth flip
+            loadPending();
+            new MutationObserver(loadPending).observe(document.body, { attributes: true, attributeFilter: ['data-tmr-auth'] });
+            // Refresh every 60s so the rail clears as picks grade
+            setInterval(loadPending, 60000);
+            // Also refresh after a successful lock — UI fires this custom event from the lock-pick flow
+            window.addEventListener('tmr:pickLocked', loadPending);
+        })();
+        </script>
         <div class="section-header sportsbook-page-shell make-picks-header">
             <div class="sportsbook-page-topbar">
                 <div class="sportsbook-page-intro">
