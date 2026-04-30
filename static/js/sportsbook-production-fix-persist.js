@@ -1927,6 +1927,7 @@
             ].join(' | ');
             try { console.error('[TMR][lockInPick] failure', { error, option, data }); } catch (e) {}
             showPickSlipError('Pick submission failed [' + dumped + ']');
+            try { alert('Pick submission failed [' + dumped + ']'); } catch (_) {}
         } finally {
             resetLockButtons();
         }
