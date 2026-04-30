@@ -6,8 +6,8 @@
     <title>Forum - TrustMyRecord</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260429f">
-<script defer src="static/js/tmr-sitewide.js?v=20260429f"></script>
+<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260429h">
+<script defer src="static/js/tmr-sitewide.js?v=20260429h"></script>
     <style>
         :root {
             --forum-blue: #4f6b9a;
@@ -1925,10 +1925,10 @@ function renderThread() {
         forumUserActions += '</div>';
 
         return '<div class="post-shell' + (post.isOP ? ' op-card' : '') + '">' +
-            '<div class="post-top-bar"><span><span class="post-author-name">' + escHtml(post.username) + '</span>' + editedNote + '</span><span class="post-number">#' + (idx + 1) + ' &middot; ' + formatForumDate(post.created_at) + '</span></div>' +
+            '<div class="post-top-bar"><span><span class="post-author-name" data-tmr-username="' + escHtml(post.username) + '">' + escHtml(post.username) + '</span>' + editedNote + '</span><span class="post-number">#' + (idx + 1) + ' &middot; ' + formatForumDate(post.created_at) + '</span></div>' +
             '<div class="post-layout">' +
             '<aside class="post-user-pane">' +
-            '<div class="post-user-name">' + escHtml(post.username) + '</div>' +
+            '<div class="post-user-name" data-tmr-username="' + escHtml(post.username) + '">' + escHtml(post.username) + '</div>' +
             avatarHtml +
             '<div class="post-user-stats"><div><strong>Joined:</strong> ' + formatJoinedDate(post.user_joined) + '</div><div><strong>Accountability:</strong> Public profile and message access enabled</div></div>' +
             '</aside>' +

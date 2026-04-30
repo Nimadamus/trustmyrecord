@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260429f">
-<script defer src="static/js/tmr-sitewide.js?v=20260429f"></script>
+<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260429h">
+<script defer src="static/js/tmr-sitewide.js?v=20260429h"></script>
     <style>
         :root {
             --neon-cyan: #00ffff;
@@ -1040,8 +1040,14 @@
     <!-- ===== LEADERBOARD VIEW ===== -->
     <div class="view-panel" id="view-leaderboard">
         <div class="glass-card">
-            <h2>&#127942; All-Time Leaderboard</h2>
+            <h2>&#127942; Trivia Points Leaderboard</h2>
+            <p style="margin:0 0 14px;color:#94a3b8;font-size:13.5px;">Top scorers across all categories. Updates after every answered question.</p>
             <div id="leaderboardList"></div>
+        </div>
+        <div class="glass-card" style="margin-top:18px;">
+            <h2>&#128221; Trivia Creators Leaderboard</h2>
+            <p style="margin:0 0 14px;color:#94a3b8;font-size:13.5px;">Who's writing the most questions for the community. Build the trivia ladder.</p>
+            <div id="leaderboardCreatorsList"></div>
         </div>
     </div>
 
@@ -1636,7 +1642,7 @@ async function renderLeaderboard() {
             html += '<div class="lb-row">' +
                 '<div class="row-left">' +
                     '<span class="icon" style="font-size:18px;width:28px;text-align:center;">' + (idx < 3 ? medals[idx] : '#' + (idx + 1)) + '</span>' +
-                    '<div><div class="info-primary">@' + escapeHtml(username) + '</div>' +
+                    '<div><div class="info-primary" data-tmr-username="' + escapeHtml(username) + '">@' + escapeHtml(username) + '</div>' +
                     '<div class="info-secondary">' + quizzes + ' quizzes' + (accuracy ? ' &middot; ' + Math.round(accuracy) + '% accuracy' : '') + '</div></div>' +
                 '</div>' +
                 '<div class="row-right"><div class="pts" style="font-size:15px;font-weight:700;">' + totalPoints + ' pts</div></div>' +
@@ -1646,6 +1652,38 @@ async function renderLeaderboard() {
     } catch(e) {
         console.error('Failed to load leaderboard:', e);
         container.innerHTML = '<div class="empty-state"><div class="big-icon">&#9888;</div><p>Could not load leaderboard.</p></div>';
+    }
+    renderCreatorsLeaderboard();
+}
+
+async function renderCreatorsLeaderboard() {
+    var container = document.getElementById('leaderboardCreatorsList');
+    if (!container) return;
+    container.innerHTML = '<div class="empty-state"><p>Loading creators...</p></div>';
+    try {
+        await api.ready;
+        var data = await api.request('/trivia/leaderboard/creators?limit=50');
+        var rows = data.leaderboard || [];
+        if (!rows.length) {
+            container.innerHTML = '<div class="empty-state"><div class="big-icon">&#128221;</div><p>No questions written yet. Be the first &mdash; head to the Create tab.</p></div>';
+            return;
+        }
+        var medals = ['🥇', '🥈', '🥉'];
+        container.innerHTML = rows.map(function(entry, idx) {
+            var username = entry.username || 'Unknown';
+            var n = Number(entry.questions_created) || 0;
+            return '<div class="lb-row">' +
+                '<div class="row-left">' +
+                    '<span class="icon" style="font-size:18px;width:28px;text-align:center;">' + (idx < 3 ? medals[idx] : '#' + (idx + 1)) + '</span>' +
+                    '<div><div class="info-primary" data-tmr-username="' + escapeHtml(username) + '">@' + escapeHtml(username) + '</div>' +
+                    '<div class="info-secondary">Trivia author</div></div>' +
+                '</div>' +
+                '<div class="row-right"><div class="pts" style="font-size:15px;font-weight:700;">' + n + ' Q' + (n === 1 ? '' : 's') + '</div></div>' +
+            '</div>';
+        }).join('');
+    } catch (e) {
+        console.error('Failed to load creators leaderboard:', e);
+        container.innerHTML = '<div class="empty-state"><div class="big-icon">&#9888;</div><p>Could not load creators leaderboard.</p></div>';
     }
 }
 
@@ -1945,7 +1983,7 @@ async function renderCustomQuestionsList() {
                 '<div class="cq-meta">' +
                     '<span>' + escapeHtml(question.category_name || 'General') + '</span>' +
                     '<span>' + escapeHtml((question.difficulty || 'easy').toUpperCase()) + '</span>' +
-                    '<span>By @' + escapeHtml(username) + '</span>' +
+                    '<span data-tmr-username="' + escapeHtml(username) + '">By @' + escapeHtml(username) + '</span>' +
                     '<span>' + dateStr + '</span>' +
                     '<span>Live</span>' +
                 '</div></div>';
