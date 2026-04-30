@@ -284,6 +284,93 @@
             margin: 0 0 14px;
             opacity: 0.85;
         }
+        .trivia-create-warning {
+            background: rgba(255, 7, 58, 0.08);
+            border: 1px solid rgba(255, 7, 58, 0.4);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin: 0 0 18px;
+            color: #ffd2d8;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .trivia-create-warning strong { color: #ff6b80; }
+
+        /* Report-question button + modal */
+        .quiz-report-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            color: #ffd700;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            padding: 6px 12px;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .quiz-report-btn:hover { background: rgba(255, 215, 0, 0.12); }
+        .quiz-report-row { display: flex; justify-content: center; margin-top: 14px; }
+
+        .report-modal-backdrop {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 10001;
+            padding: 20px;
+        }
+        .report-modal {
+            background: var(--bg-card-solid);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            max-width: 440px;
+            width: 100%;
+            padding: 22px;
+            color: var(--text-primary);
+        }
+        .report-modal h3 { margin: 0 0 6px; font-size: 18px; }
+        .report-modal p { color: var(--text-secondary); font-size: 13px; margin: 0 0 14px; line-height: 1.5; }
+        .report-reason-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+        .report-reason-list label {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px;
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .report-reason-list label:hover { background: rgba(255,255,255,0.04); }
+        .report-modal textarea {
+            width: 100%;
+            min-height: 70px;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 13px;
+            resize: vertical;
+            margin-bottom: 14px;
+        }
+        .report-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .report-modal-actions button {
+            padding: 9px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--glass-border);
+            background: transparent;
+            color: var(--text-primary);
+        }
+        .report-modal-actions .is-primary {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: #fff;
+        }
+        .report-modal-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
         .trivia-loggedout-prompt {
             text-align: center;
             padding: 36px 22px;
@@ -1415,6 +1502,9 @@ function renderQuizQuestion(question, answers, timeLimit) {
                 '<div class="quiz-live-stat">&#127919; ' + totalPointsEarned + ' pts</div>' +
                 (cheatCount > 0 ? '<div class="quiz-live-stat" style="color:var(--danger);">&#9888; ' + cheatCount + ' Flags</div>' : '') +
             '</div>' +
+            '<div class="quiz-report-row">' +
+                '<button type="button" class="quiz-report-btn" onclick="openReportModal()">&#9888; Report this question</button>' +
+            '</div>' +
         '</div>';
 
     startTimer(timeLimit);
@@ -1527,6 +1617,70 @@ async function handleCheat() {
 
     currentQuizProgress++;
     setTimeout(function() { loadNextQuestion(); }, 1500);
+}
+
+// ================================================================
+// REPORT QUESTION
+// ================================================================
+function openReportModal() {
+    if (!currentQuestion || !currentQuestion.id) return;
+    var existing = document.getElementById('reportModalBackdrop');
+    if (existing) existing.remove();
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'report-modal-backdrop';
+    backdrop.id = 'reportModalBackdrop';
+    backdrop.innerHTML =
+        '<div class="report-modal" role="dialog" aria-modal="true">' +
+            '<h3>Report this question</h3>' +
+            '<p>Help us keep trivia clean and fair. Reports are reviewed and accounts that submit nonsense or offensive content can be banned from creating trivia.</p>' +
+            '<div class="report-reason-list">' +
+                '<label><input type="radio" name="reportReason" value="inappropriate"> Inappropriate / vulgar / offensive</label>' +
+                '<label><input type="radio" name="reportReason" value="wrong_answer"> Wrong or unverifiable answer</label>' +
+                '<label><input type="radio" name="reportReason" value="too_easy"> Absurdly easy / pointless</label>' +
+                '<label><input type="radio" name="reportReason" value="too_hard"> Impossible / unfair</label>' +
+                '<label><input type="radio" name="reportReason" value="spam"> Spam / nonsense / off-topic</label>' +
+                '<label><input type="radio" name="reportReason" value="other"> Other</label>' +
+            '</div>' +
+            '<textarea id="reportDetails" placeholder="Optional details (max 500 chars)" maxlength="500"></textarea>' +
+            '<div class="report-modal-actions">' +
+                '<button type="button" onclick="closeReportModal()">Cancel</button>' +
+                '<button type="button" class="is-primary" id="reportSubmitBtn" onclick="submitReport()">Submit report</button>' +
+            '</div>' +
+        '</div>';
+    document.body.appendChild(backdrop);
+    backdrop.addEventListener('click', function(e) {
+        if (e.target === backdrop) closeReportModal();
+    });
+}
+
+function closeReportModal() {
+    var b = document.getElementById('reportModalBackdrop');
+    if (b) b.remove();
+}
+
+async function submitReport() {
+    if (!currentQuestion || !currentQuestion.id) return;
+    var checked = document.querySelector('input[name="reportReason"]:checked');
+    if (!checked) {
+        alert('Pick a reason first.');
+        return;
+    }
+    var details = (document.getElementById('reportDetails') || {}).value || '';
+    var btn = document.getElementById('reportSubmitBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
+
+    try {
+        await api.request('/trivia/questions/' + currentQuestion.id + '/report', {
+            method: 'POST',
+            body: { reason: checked.value, details: details }
+        });
+        if (btn) btn.textContent = 'Reported &#10003;';
+        setTimeout(closeReportModal, 900);
+    } catch(e) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Submit report'; }
+        alert('Could not submit report: ' + (e.message || 'unknown error'));
+    }
 }
 
 // ================================================================
@@ -1861,6 +2015,13 @@ function renderCreateView() {
         '<h2>&#9998; Create a Trivia Question</h2>' +
         '<p class="trivia-create-helper">Create sports trivia for the community. Approved questions can appear in public quizzes, leaderboards, and user profiles.</p>' +
         '<p class="trivia-create-mod-note">Submitted questions may be reviewed before going live.</p>' +
+        '<div class="trivia-create-warning">' +
+            '<strong>&#9888; Keep it real, fun, and on-topic.</strong> ' +
+            'Questions must be sports-related and have one verifiable correct answer. ' +
+            'No vulgar, sexual, racist, or joke questions. No questions that are absurdly easy or impossible to answer. ' +
+            'Other users can report your questions, and accounts that submit nonsense or offensive content will be banned from creating trivia. ' +
+            'You will not see your own questions in the quiz.' +
+        '</div>' +
         '<form id="createQuestionForm" onsubmit="handleCreateQuestion(event)">' +
             '<div class="form-group">' +
                 '<label>Question</label>' +
