@@ -1075,18 +1075,18 @@ button{font:inherit;cursor:pointer}
 .combined-hero.hero-v2 .hero-zone-a {
     position: relative;
     z-index: 2;
-    flex: 1 1 60%;
+    flex: 1 1 70%;
     display: flex;
-    align-items: center;
-    padding: 22px 0 16px;
+    align-items: flex-start;       /* anchor content to the TOP of the hero (was center) */
+    padding: 28px 0 22px;
 }
 .combined-hero.hero-v2 .hero-zone-a-inner {
-    width: min(1240px, calc(100% - 48px));
+    width: min(1320px, calc(100% - 36px));   /* slightly wider so left + right edges sit further out */
     margin: 0 auto;
     display: grid;
     grid-template-columns: minmax(0, 58%) minmax(0, 42%);
-    gap: 36px;
-    align-items: center;
+    gap: 32px;
+    align-items: start;            /* both columns top-anchored */
 }
 
 /* Headline column — keep existing chrome but tighter */
@@ -1299,16 +1299,16 @@ button{font:inherit;cursor:pointer}
     -webkit-backdrop-filter: none;
     padding: 0;
     transform: none;
-    max-width: 480px;
+    max-width: 460px;
     width: 100%;
     justify-self: end;
     align-self: start;
-    margin: 0 -8px 0 0;
+    margin: 6px -16px 0 0;       /* lifted (small top offset) and pushed further right (-16px) */
     color: #f4f7fb;
     font-family: 'Inter', system-ui, sans-serif;
     display: flex;
     flex-direction: column;
-    gap: 22px;
+    gap: 16px;                    /* tighter vertical rhythm */
     text-shadow: 0 1px 18px rgba(0, 0, 0, 0.6);
 }
 .hero-rules-card-top {
@@ -1361,7 +1361,7 @@ button{font:inherit;cursor:pointer}
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 22px;
+    gap: 14px;          /* tighter vertical rhythm */
 }
 .hero-rules-list li {
     display: grid;
@@ -1410,109 +1410,55 @@ button{font:inherit;cursor:pointer}
 }
 
 /* Zone B: 6-tile platform strip pinned at the bottom of the hero */
-.combined-hero.hero-v2 .hero-zone-b {
+/* Hero trust strip — sleek credibility bar at the bottom of the hero.
+   Replaced the cluttered 6-tile platform grid. */
+.hero-trust-strip {
     position: relative;
     z-index: 2;
     flex: 0 0 auto;
-    padding: 14px 0 18px;
-    background: linear-gradient(180deg, rgba(5, 7, 13, 0) 0%, rgba(5, 7, 13, 0.78) 38%, rgba(5, 7, 13, 0.95) 100%);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 14px 0 22px;
+    background: linear-gradient(180deg, rgba(5, 7, 13, 0) 0%, rgba(5, 7, 13, 0.78) 40%, rgba(5, 7, 13, 0.96) 100%);
+    border-top: 1px solid rgba(45, 212, 191, 0.18);
 }
-.combined-hero.hero-v2 .hero-zone-b-inner {
-    width: min(1240px, calc(100% - 48px));
+.hero-trust-strip-inner {
+    width: min(1320px, calc(100% - 36px));
     margin: 0 auto;
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 8px;
-}
-.hero-tile {
-    position: relative;
     display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: rgba(13, 22, 38, 0.78);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    text-decoration: none;
-    color: inherit;
-    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
-    min-width: 0;
-}
-.hero-tile:hover {
-    transform: translateY(-2px);
-    background: rgba(13, 22, 38, 0.95);
-    border-color: var(--tile-accent, rgba(255,255,255,0.16));
-    text-decoration: none;
-}
-.hero-tile--track       { --tile-accent: rgba(0, 229, 199, 0.55); }
-.hero-tile--talk        { --tile-accent: rgba(255, 107, 71, 0.55); }
-.hero-tile--compete     { --tile-accent: rgba(53, 220, 128, 0.55); }
-.hero-tile--picks       { --tile-accent: rgba(0, 229, 199, 0.55); }
-.hero-tile--social      { --tile-accent: rgba(255, 107, 71, 0.55); }
-.hero-tile--forums      { --tile-accent: rgba(34, 211, 238, 0.55); }
-.hero-tile--polls       { --tile-accent: rgba(96, 165, 250, 0.55); }
-.hero-tile--marketplace { --tile-accent: rgba(53, 220, 128, 0.55); }
-.hero-tile--arena       { --tile-accent: rgba(251, 146, 60, 0.55); }
-.hero-tile-icon {
-    flex-shrink: 0;
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid var(--tile-accent, rgba(255,255,255,0.08));
-    display: inline-flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
-}
-.hero-tile-body {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
-}
-.hero-tile-label {
-    font-family: 'JetBrains Mono', 'Menlo', monospace;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 1.6px;
-    color: var(--tile-accent-text, #6f7a8e);
+    column-gap: 22px;
+    row-gap: 8px;
+    color: #cbd5e1;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
 }
-.hero-tile--track       .hero-tile-label,
-.hero-tile--picks       .hero-tile-label { color: var(--tmr-cyan-bright, #2dd4bf); }
-.hero-tile--talk        .hero-tile-label,
-.hero-tile--social      .hero-tile-label { color: #FF6B47; }
-.hero-tile--compete     .hero-tile-label,
-.hero-tile--marketplace .hero-tile-label { color: #35dc80; }
-.hero-tile--forums      .hero-tile-label { color: #22d3ee; }
-.hero-tile--polls       .hero-tile-label { color: #60a5fa; }
-.hero-tile--arena       .hero-tile-label { color: #fb923c; }
-.hero-tile-body strong {
-    font-family: 'Barlow Condensed', 'Inter', sans-serif;
-    font-size: 13.5px;
-    font-weight: 800;
-    color: #fff;
-    line-height: 1.15;
-    letter-spacing: -0.1px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.hero-trust-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #e6edf6;
 }
-.hero-tile-sub {
-    font-size: 10.5px;
-    color: #94a3b8;
-    font-weight: 500;
-    line-height: 1.35;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.hero-trust-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--tmr-cyan-bright, #2dd4bf);
+    box-shadow: 0 0 10px rgba(45, 212, 191, 0.5);
 }
-
-/* Tablet: collapse the 6-tile strip into 3 columns. Mobile rule below stacks to 1. */
-@media (max-width: 1100px) {
-    .combined-hero.hero-v2 .hero-zone-b-inner { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.hero-trust-sep {
+    display: inline-block;
+    width: 1px;
+    height: 14px;
+    background: rgba(148, 163, 184, 0.32);
+}
+@media (max-width: 720px) {
+    .hero-trust-strip-inner { font-size: 11.5px; column-gap: 14px; }
+    .hero-trust-sep { display: none; }
 }
 
 .hero-scroll-cue {
@@ -1568,14 +1514,10 @@ button{font:inherit;cursor:pointer}
     .hero-rules-list strong { font-size: 19px; }
     .hero-rules-list span { font-size: 14px; }
     .hero-rules-foot { font-size: 13px; }
-    .combined-hero.hero-v2 .hero-zone-b-inner {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
 }
 @media (max-width: 640px) {
     .combined-hero.hero-v2 .hero-zone-a-inner,
-    .combined-hero.hero-v2 .hero-zone-b-inner {
+    .hero-trust-strip-inner {
         width: calc(100% - 32px);
     }
     .combined-hero.hero-v2 .hero-headline h1 {
@@ -1767,7 +1709,8 @@ button{font:inherit;cursor:pointer}
 .tmr-features-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
+    gap: 18px;          /* same horizontal + vertical rhythm */
+    grid-auto-rows: 1fr; /* every row matches its tallest card */
 }
 .tmr-feature-card {
     position: relative;
@@ -1775,36 +1718,41 @@ button{font:inherit;cursor:pointer}
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-top: 2px solid rgba(0, 229, 199, 0.5);
     border-radius: 14px;
-    padding: 18px 18px 16px;
-    transition: transform 0.2s ease, border-top-color 0.2s ease, box-shadow 0.2s ease;
+    padding: 22px 22px 20px;       /* equal padding on all 4 sides (slight bottom bump for the link) */
+    transition: transform 0.2s ease, border-top-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;                  /* fill grid-auto-rows so each card matches the row height */
 }
 .tmr-feature-card:hover {
     transform: translateY(-3px);
+    border-color: rgba(45, 212, 191, 0.32);
     border-top-color: var(--tmr-cyan-bright);
     box-shadow: 0 22px 50px rgba(0, 0, 0, 0.42);
 }
 .tmr-feature-num {
     position: absolute;
-    top: 24px;
-    right: 26px;
+    top: 22px;
+    right: 22px;
     font-family: 'JetBrains Mono', 'Menlo', monospace;
     font-size: 12px;
     font-weight: 800;
     letter-spacing: 1.6px;
-    color: rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.22);
 }
 .tmr-feature-icon {
-    font-size: 26px;
-    width: 52px;
-    height: 52px;
-    border-radius: 13px;
+    font-size: 24px;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     background: rgba(0, 229, 199, 0.08);
     border: 1px solid rgba(0, 229, 199, 0.28);
-    margin-bottom: 18px;
+    margin-bottom: 16px;
+    flex-shrink: 0;
 }
 .tmr-feature-card--feed .tmr-feature-icon  { background: rgba(255, 107, 71, 0.08); border-color: rgba(255, 107, 71, 0.32); }
 .tmr-feature-card--forum .tmr-feature-icon { background: rgba(34, 211, 238, 0.08); border-color: rgba(34, 211, 238, 0.32); }
@@ -1821,29 +1769,34 @@ button{font:inherit;cursor:pointer}
     font-size: 22px;
     font-weight: 800;
     color: #fff;
-    margin: 0 0 10px;
+    margin: 0 0 8px;
     letter-spacing: -0.2px;
     line-height: 1.2;
+    text-transform: uppercase;
 }
 .tmr-feature-card p {
     color: #a5b1c6;
     font-size: 14px;
     line-height: 1.55;
     margin: 0;
+    flex-grow: 1;          /* expand body so the link below pins to the bottom */
 }
 .tmr-feature-card p strong { color: #f4f7fb; font-weight: 700; }
 .tmr-feature-link {
     display: inline-flex;
     align-items: center;
     margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
     color: var(--tmr-cyan-bright, #2dd4bf);
     font-size: 12.5px;
     font-weight: 800;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     text-decoration: none;
-    transition: color .15s ease;
+    transition: color .15s ease, border-color .15s ease;
 }
+.tmr-feature-card:hover .tmr-feature-link { color: #67e8f9; border-color: rgba(45, 212, 191, 0.4); }
 .tmr-feature-link:hover { color: #67e8f9; text-decoration: none; }
 
 /* Final CTA eyebrow (Built for Competition pill) */
@@ -2016,62 +1969,17 @@ button{font:inherit;cursor:pointer}
     </div>
   </div>
 
-  <!-- Zone B: 6-tile platform strip — packs the full platform above the fold -->
-  <div class="hero-zone-b hero-zone-b--six">
-    <div class="hero-zone-b-inner">
-      <a class="hero-tile hero-tile--picks" href="/sportsbook.html">
-        <div class="hero-tile-icon" aria-hidden="true">🔒</div>
-        <div class="hero-tile-body">
-          <span class="hero-tile-label">Make Picks</span>
-          <strong>Lock picks. Build a record.</strong>
-          <span class="hero-tile-sub">Sportsbook ticket flow. Public ledger.</span>
-        </div>
-      </a>
-      <a class="hero-tile hero-tile--social" href="/feed/">
-        <div class="hero-tile-icon" aria-hidden="true">💬</div>
-        <div class="hero-tile-body">
-          <span class="hero-tile-label">Social Feed</span>
-          <strong>Prove Your Fandom On The Record.</strong>
-          <span class="hero-tile-sub">Posts, takes, tail/fade, follow rivals.</span>
-        </div>
-      </a>
-      <a class="hero-tile hero-tile--forums" href="/forum/">
-        <div class="hero-tile-icon" aria-hidden="true">🗂</div>
-        <div class="hero-tile-body">
-          <span class="hero-tile-label">Forums</span>
-          <strong>Hardcore sports threads.</strong>
-          <span class="hero-tile-sub">Classic message-board, sport categories.</span>
-        </div>
-      </a>
-      <a class="hero-tile hero-tile--polls" href="/polls/">
-        <div class="hero-tile-icon" aria-hidden="true">📊</div>
-        <div class="hero-tile-body">
-          <span class="hero-tile-label">Polls &amp; Trivia</span>
-          <strong>Vote, debate, climb trivia.</strong>
-          <span class="hero-tile-sub">Sports polls, trivia ladder, reputation.</span>
-        </div>
-      </a>
-      <a class="hero-tile hero-tile--marketplace" href="/marketplace/">
-        <div class="hero-tile-icon" aria-hidden="true">💼</div>
-        <div class="hero-tile-body">
-          <span class="hero-tile-label">Sell Your Picks</span>
-          <strong>Sell picks. Buy picks.</strong>
-          <span class="hero-tile-sub">After your record backs the price tag.</span>
-        </div>
-      </a>
-      <a class="hero-tile hero-tile--arena" href="/arena/">
-        <div class="hero-tile-icon" aria-hidden="true">🎮</div>
-        <div class="hero-tile-body">
-          <span class="hero-tile-label">Console Arena</span>
-          <strong>Pick duels + console matchups.</strong>
-          <span class="hero-tile-sub">MLB The Show · Madden · NBA 2K · EA FC · NHL.</span>
-        </div>
-      </a>
+  <!-- Hero trust strip — sleek credibility bar replacing the old tile cluster -->
+  <div class="hero-trust-strip" aria-label="What TrustMyRecord guarantees">
+    <div class="hero-trust-strip-inner">
+      <span class="hero-trust-item"><span class="hero-trust-dot" aria-hidden="true"></span>No Deleted Picks</span>
+      <span class="hero-trust-sep" aria-hidden="true"></span>
+      <span class="hero-trust-item"><span class="hero-trust-dot" aria-hidden="true"></span>No Edited Records</span>
+      <span class="hero-trust-sep" aria-hidden="true"></span>
+      <span class="hero-trust-item"><span class="hero-trust-dot" aria-hidden="true"></span>No Fake Win Rates</span>
+      <span class="hero-trust-sep" aria-hidden="true"></span>
+      <span class="hero-trust-item"><span class="hero-trust-dot" aria-hidden="true"></span>Public Receipts For Every Capper</span>
     </div>
-    <a class="hero-scroll-cue" href="#how-it-works" data-tour-cta>
-      <span>See how it works</span>
-      <i aria-hidden="true">↓</i>
-    </a>
   </div>
 
 </section>
@@ -2083,8 +1991,8 @@ button{font:inherit;cursor:pointer}
 <section class="tmr-what" id="what-it-is" aria-label="What TrustMyRecord is">
   <div class="tmr-section-inner">
     <header class="tmr-section-head">
-      <h2>A SPORTS SOCIAL NETWORK BUILT AROUND PROOF</h2>
-      <p class="tmr-section-sub">TrustMyRecord combines sports picks, public records, social posting, polls, trivia, rankings, challenges, and tournaments into one competitive sports platform.</p>
+      <h2>WHERE SPORTS FANS PROVE IT IN PUBLIC</h2>
+      <p class="tmr-section-sub">TrustMyRecord is a sports social media, handicapping record, pick selling, and competition platform. Post picks, track verified records, talk sports in the feed, create polls and trivia, join forums, challenge rivals, climb leaderboards, and sell picks once you've proven you're worth following.</p>
     </header>
     <div class="tmr-what-grid">
       <article class="tmr-what-card tmr-what-card--picks">
@@ -2144,11 +2052,12 @@ button{font:inherit;cursor:pointer}
 <section class="tmr-features" aria-label="Platform features">
   <div class="tmr-section-inner">
     <header class="tmr-section-head">
-      <h2>A SPORTSBOOK + SOCIAL NETWORK + COMPETITION PLATFORM</h2>
-      <p class="tmr-section-sub">Make picks. Build a public record. Prove your fandom in classic vBulletin-style forums. Sell picks once the numbers back you up. Challenge rivals in MLB The Show, Madden, NBA 2K, EA FC, and NHL. Climb leaderboards and build a real sports reputation.</p>
+      <h2>EVERYTHING REAL SPORTS FANS DO &mdash; ON ONE PLATFORM</h2>
+      <p class="tmr-section-sub">Post first. Use the community next. Then rank up, sell picks, and compete on console. The whole product flow on one homepage.</p>
     </header>
     <div class="tmr-features-grid">
 
+      <!-- Row 1 — post & interact -->
       <article class="tmr-feature-card tmr-feature-card--picks">
         <div class="tmr-feature-icon" aria-hidden="true">🔒</div>
         <span class="tmr-feature-num">01</span>
@@ -2165,9 +2074,18 @@ button{font:inherit;cursor:pointer}
         <a class="tmr-feature-link" href="/feed/">Open feed →</a>
       </article>
 
+      <article class="tmr-feature-card tmr-feature-card--h2h">
+        <div class="tmr-feature-icon" aria-hidden="true">⚔️</div>
+        <span class="tmr-feature-num">03</span>
+        <h3>Compete</h3>
+        <p>Head-to-head pick duels. Call a rival out, lock both picks, let the boards decide who wins. Public results, bragging rights attached.</p>
+        <a class="tmr-feature-link" href="/arena/">Open duels →</a>
+      </article>
+
+      <!-- Row 2 — community tools -->
       <article class="tmr-feature-card tmr-feature-card--forum">
         <div class="tmr-feature-icon" aria-hidden="true">🗂</div>
-        <span class="tmr-feature-num">03</span>
+        <span class="tmr-feature-num">04</span>
         <h3>Forums</h3>
         <p>Classic vBulletin-style message board. Sport categories, sticky threads, replies and views columns, last-post receipts &mdash; tied to public profiles.</p>
         <a class="tmr-feature-link" href="/forum/">Open forums →</a>
@@ -2175,7 +2093,7 @@ button{font:inherit;cursor:pointer}
 
       <article class="tmr-feature-card tmr-feature-card--polls">
         <div class="tmr-feature-icon" aria-hidden="true">📊</div>
-        <span class="tmr-feature-num">04</span>
+        <span class="tmr-feature-num">05</span>
         <h3>Polls</h3>
         <p>Create polls, vote on debates, see what the board is calling. Every vote ties back to an account, so consensus has receipts.</p>
         <a class="tmr-feature-link" href="/polls/">Open polls →</a>
@@ -2183,42 +2101,35 @@ button{font:inherit;cursor:pointer}
 
       <article class="tmr-feature-card tmr-feature-card--trivia">
         <div class="tmr-feature-icon" aria-hidden="true">🧠</div>
-        <span class="tmr-feature-num">05</span>
+        <span class="tmr-feature-num">06</span>
         <h3>Trivia</h3>
         <p>Build trivia, answer trivia, climb the trivia ladder. Earn sports knowledge status that lives on your profile.</p>
         <a class="tmr-feature-link" href="/trivia/">Open trivia →</a>
       </article>
 
+      <!-- Row 3 — rank, monetize, compete on console -->
+      <article class="tmr-feature-card tmr-feature-card--leaderboards">
+        <div class="tmr-feature-icon" aria-hidden="true">🏆</div>
+        <span class="tmr-feature-num">07</span>
+        <h3>Leaderboards</h3>
+        <p>Sortable rankings by ROI, units, sample size, market splits, trust score. Climb the board, build a name, prove you actually know sports.</p>
+        <a class="tmr-feature-link" href="/handicappers.html">Open leaderboards →</a>
+      </article>
+
       <article class="tmr-feature-card tmr-feature-card--marketplace">
         <div class="tmr-feature-icon" aria-hidden="true">💼</div>
-        <span class="tmr-feature-num">06</span>
+        <span class="tmr-feature-num">08</span>
         <h3>Sell Your Picks</h3>
         <p>Sell picks once the numbers back you up. Buyers see your full public ledger before they pay. Your record is your storefront.</p>
         <a class="tmr-feature-link" href="/marketplace/">Open seller hub →</a>
       </article>
 
-      <article class="tmr-feature-card tmr-feature-card--h2h">
-        <div class="tmr-feature-icon" aria-hidden="true">⚔️</div>
-        <span class="tmr-feature-num">07</span>
-        <h3>Pick Duels</h3>
-        <p>Head-to-head sports pick challenges. Call a rival out, lock both picks, let the boards decide who wins.</p>
-        <a class="tmr-feature-link" href="/arena/">Open arena →</a>
-      </article>
-
       <article class="tmr-feature-card tmr-feature-card--console">
         <div class="tmr-feature-icon" aria-hidden="true">🎮</div>
-        <span class="tmr-feature-num">08</span>
-        <h3>Console Arena</h3>
-        <p>Challenge rivals in <strong>MLB The Show</strong>, <strong>Madden</strong>, <strong>NBA 2K</strong>, <strong>EA FC</strong>, and <strong>NHL</strong>. Console matchups with results that count toward your reputation.</p>
-        <a class="tmr-feature-link" href="/arena/">Open console arena →</a>
-      </article>
-
-      <article class="tmr-feature-card tmr-feature-card--leaderboards">
-        <div class="tmr-feature-icon" aria-hidden="true">🏆</div>
         <span class="tmr-feature-num">09</span>
-        <h3>Leaderboards &amp; Reputation</h3>
-        <p>Sortable rankings by ROI, units, sample size, market splits, trust score. Climb the board, build a name, prove you actually know sports.</p>
-        <a class="tmr-feature-link" href="/handicappers.html">Open leaderboards →</a>
+        <h3>Arena</h3>
+        <p>Challenge rivals in <strong>MLB The Show</strong>, <strong>Madden</strong>, <strong>NBA 2K</strong>, <strong>EA FC</strong>, and <strong>NHL</strong>. Console matchups with results that count toward your reputation.</p>
+        <a class="tmr-feature-link" href="/arena/">Open arena →</a>
       </article>
 
     </div>
