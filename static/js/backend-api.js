@@ -293,6 +293,7 @@ class TrustMyRecordAPI {
     }
 
     async refreshAccessToken(baseUrlOverride) {
+        if (!this.refreshToken) return false;
         try {
             const refreshBaseUrl = baseUrlOverride || this.baseUrl;
             const response = await fetch(`${refreshBaseUrl}/auth/refresh`, {
@@ -308,20 +309,24 @@ class TrustMyRecordAPI {
                 this.saveTokens(data.accessToken || data.access_token, data.refreshToken || data.refresh_token || this.refreshToken);
                 return true;
             }
+            if (response.status === 401 || response.status === 403) {
+                this.clearTokens();
+            }
         } catch (error) {
             console.error('Token refresh failed:', error);
+            // Network failures should not erase a remembered login. Keep the
+            // refresh token and let the next API call retry.
+            return false;
         }
-        
-        this.clearTokens();
         return false;
     }
 
     // ==================== AUTH ROUTES ====================
 
-    async login(usernameOrEmail, password) {
+    async login(usernameOrEmail, password, rememberMe = true) {
         const data = await this.request('/auth/login', {
             method: 'POST',
-            body: { login: usernameOrEmail, password }
+            body: { login: usernameOrEmail, password, rememberMe }
         });
         
         // Handle different response formats
@@ -629,6 +634,17 @@ class TrustMyRecordAPI {
     async markAllNotificationsRead() {
         return this.request('/notifications/read-all', {
             method: 'PUT'
+        });
+    }
+
+    async getNotificationPreferences() {
+        return this.request('/notifications/preferences');
+    }
+
+    async updateNotificationPreferences(prefs) {
+        return this.request('/notifications/preferences', {
+            method: 'PUT',
+            body: JSON.stringify(prefs || {})
         });
     }
 
