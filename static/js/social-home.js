@@ -38,6 +38,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadFeed();
     loadTrending();
     loadSuggested();
+    loadTopCappers();
+    loadArenaWatch();
     loadNotificationBadge();
 });
 
@@ -56,27 +58,32 @@ async function initAuth() {
     }
     const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
     viewerUser = user;
+    var composerCard = document.getElementById('composerCard');
+    var loginBanner = document.getElementById('loginBanner');
+    var compAvatar = document.getElementById('compAvatar');
+    var headerActions = document.getElementById('headerActions');
     if (user) {
-        document.getElementById('loginBanner').style.display = 'none';
-        document.getElementById('composerCard').style.display = 'block';
-        document.getElementById('compAvatar').textContent = (user.displayName || user.username || '?')[0].toUpperCase();
-        document.getElementById('headerActions').innerHTML = `
-                    <a href="/picks/" class="btn btn-primary"><i class="fas fa-plus"></i> Make Pick</a>
-                    <span class="notif-bell" id="notifBell" onclick="location.href='/notifications/'" title="Notifications">
-                <i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge" style="display:none;">0</span>
-            </span>
-                    <a href="/profile/?user=${encodeURIComponent(user.username)}" class="btn btn-ghost"><i class="fas fa-user"></i> ${user.username}</a>
-        `;
-        // Load sidebar stats from backend
+        if (loginBanner) loginBanner.style.display = 'none';
+        if (composerCard) composerCard.style.display = 'block';
+        if (compAvatar) compAvatar.textContent = (user.displayName || user.username || '?')[0].toUpperCase();
+        if (headerActions) {
+            headerActions.innerHTML =
+                '<a href="/sportsbook/" class="btn btn-primary"><i class="fas fa-plus"></i> Make Pick</a>' +
+                '<a href="/profile/?user=' + encodeURIComponent(user.username) + '" class="btn btn-ghost"><i class="fas fa-user"></i> ' + user.username + '</a>';
+        }
         loadSidebarStats(user);
         await hydrateFollowingState();
     } else {
-        document.getElementById('composerCard').style.display = 'none';
-        document.getElementById('loginBanner').style.display = 'block';
+        if (composerCard) composerCard.style.display = 'none';
+        if (loginBanner) loginBanner.style.display = 'block';
     }
-    document.getElementById('compInput').addEventListener('input', e => {
-        document.getElementById('postBtn').disabled = e.target.value.trim().length === 0;
-    });
+    var compInput = document.getElementById('compInput');
+    var postBtn = document.getElementById('postBtn');
+    if (compInput && postBtn) {
+        compInput.addEventListener('input', function(e) {
+            postBtn.disabled = e.target.value.trim().length === 0;
+        });
+    }
 }
 
 async function loadSidebarStats(user) {
@@ -290,10 +297,26 @@ async function loadFeed() {
     if (!items.length) {
         updateHeroCounts(0);
         const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
-        const message = currentFilter === 'following'
-            ? 'No posts from followed accounts yet.'
-            : (user ? 'No posts yet.' : 'Your feed is empty. Sign in to post, follow accounts, and build your timeline.');
-            c.innerHTML = `<div class="empty-state"><i class="fas fa-stream"></i><h3 style="margin-bottom:6px;">Your feed is empty</h3><p>${message}</p><div class="feed-state-actions"><button class="btn btn-primary" onclick="loadFeed()">Refresh Feed</button><a class="btn btn-ghost" href="/picks/">Make a Pick</a></div></div>`;
+        const followingMsg = 'No posts from followed accounts yet. Discover users on the leaderboard or in the forums to start building your following feed.';
+        const defaultMsg = 'Follow users, post picks, join forums, create polls, play trivia, and compete in the arena to start building your public sports record.';
+        const loggedOutMsg = 'Your feed is ready. Create an account to post takes, lock picks, and build a profile tied to public receipts.';
+        const message = currentFilter === 'following' ? followingMsg : (user ? defaultMsg : loggedOutMsg);
+        const primaryAction = user
+            ? '<a class="btn btn-primary" href="/sportsbook/"><i class="fas fa-bolt"></i> Lock a Pick</a>'
+            : '<a class="btn btn-primary" href="/register/"><i class="fas fa-user-plus"></i> Create Account</a>';
+        c.innerHTML =
+            '<div class="empty-state">' +
+                '<i class="fas fa-stream"></i>' +
+                '<h3>Your feed is ready.</h3>' +
+                '<p>' + message + '</p>' +
+                '<div class="empty-state-actions">' +
+                    primaryAction +
+                    '<a href="/handicappers/">Leaderboards</a>' +
+                    '<a href="/forum/">Forums</a>' +
+                    '<a href="/polls/">Polls</a>' +
+                    '<a href="/trivia/">Trivia</a>' +
+                '</div>' +
+            '</div>';
         return;
     }
 
@@ -322,18 +345,18 @@ function renderFeedUnavailable(message) {
     const c = document.getElementById('feedList');
     if (!c) return;
     updateHeroCounts(0);
-    document.getElementById('loadMore').style.display = 'none';
-    c.innerHTML = `
-        <div class="empty-state" style="margin-bottom:12px;">
-            <i class="fas fa-database"></i>
-            <h3 style="margin-bottom:6px;">Feed unavailable</h3>
-            <p>${esc(message || 'Live feed data is not available right now.')}</p>
-            <div class="feed-state-actions">
-                <button class="btn btn-primary" onclick="loadFeed()">Refresh Feed</button>
-                    <a class="btn btn-ghost" href="/picks/">Open Board</a>
-            </div>
-        </div>
-    `;
+    var lm = document.getElementById('loadMore');
+    if (lm) lm.style.display = 'none';
+    c.innerHTML =
+        '<div class="empty-state">' +
+            '<i class="fas fa-database"></i>' +
+            '<h3>Feed unavailable</h3>' +
+            '<p>' + esc(message || 'Live feed data is not available right now.') + '</p>' +
+            '<div class="empty-state-actions">' +
+                '<a class="is-primary" href="javascript:loadFeed()">Refresh Feed</a>' +
+                '<a href="/sportsbook/">Make Picks</a>' +
+            '</div>' +
+        '</div>';
 }
 
 // ==================== RENDER FEED ITEM (UNIFIED) ====================
@@ -347,11 +370,74 @@ function renderFeedItem(item) {
     if (type === 'poll' || ptype === 'poll') {
         return renderPollCard(item);
     }
+    if (type === 'poll_activity') {
+        return renderPollActivityCard(item);
+    }
+    if (type === 'trivia_activity') {
+        return renderTriviaActivityCard(item);
+    }
     if (type === 'activity') {
         return renderActivityCard(item);
     }
     // Text post or hot take
     return renderTextPost(item);
+}
+
+// ==================== RENDER POLL-CREATED ACTIVITY CARD ====================
+function renderPollActivityCard(p) {
+    const display = p.display_name || p.username || 'User';
+    const letter = display[0].toUpperCase();
+    const sport = p.sport ? formatSport(p.sport) : '';
+    const title = p.content || 'New poll';
+    const status = (p.pick_status || 'active').toLowerCase();
+    const statusBadge = status === 'resolved'
+        ? '<span class="pe-chip is-won">RESOLVED</span>'
+        : '<span class="pe-chip is-sport">OPEN</span>';
+    return `<div class="feed-item" data-id="${p.item_id}" data-type="poll_activity">
+        <div class="fi-header">
+            <div class="fi-avatar" style="background:linear-gradient(135deg,var(--neon-purple),var(--accent-blue));">${letter}</div>
+            <div class="fi-meta">
+                <div class="fi-top-row">
+                    <span class="fi-name"><a href="/profile/?user=${encodeURIComponent(p.username)}">${esc(display)}</a></span>
+                    <span class="fi-handle">@${esc(p.username)}</span>
+                    <span class="fi-dot">&bull;</span>
+                    <span class="fi-time">${timeAgo(p.created_at)}</span>
+                </div>
+                <div style="margin-top:3px;color:var(--text-muted);font-size:0.82rem;"><i class="fas fa-poll"></i> Created a ${sport ? esc(sport) + ' ' : ''}poll</div>
+            </div>
+        </div>
+        <a href="/polls/?poll=${p.item_id}" class="pick-embed" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;">
+            <i class="fas fa-poll" style="color:var(--neon-purple);font-size:1.05rem;"></i>
+            <span style="color:var(--text-primary);font-size:0.92rem;font-weight:600;flex:1;">${esc(title)}</span>
+            ${statusBadge}
+        </a>
+    </div>`;
+}
+
+// ==================== RENDER TRIVIA-CREATED ACTIVITY CARD ====================
+function renderTriviaActivityCard(p) {
+    const display = p.display_name || p.username || 'User';
+    const letter = display[0].toUpperCase();
+    const title = p.content || 'New trivia question';
+    return `<div class="feed-item" data-id="${p.item_id}" data-type="trivia_activity">
+        <div class="fi-header">
+            <div class="fi-avatar" style="background:linear-gradient(135deg,var(--neon-cyan),var(--neon-green));color:#000;">${letter}</div>
+            <div class="fi-meta">
+                <div class="fi-top-row">
+                    <span class="fi-name"><a href="/profile/?user=${encodeURIComponent(p.username)}">${esc(display)}</a></span>
+                    <span class="fi-handle">@${esc(p.username)}</span>
+                    <span class="fi-dot">&bull;</span>
+                    <span class="fi-time">${timeAgo(p.created_at)}</span>
+                </div>
+                <div style="margin-top:3px;color:var(--text-muted);font-size:0.82rem;"><i class="fas fa-brain"></i> Created a trivia question</div>
+            </div>
+        </div>
+        <a href="/trivia/" class="pick-embed" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;">
+            <i class="fas fa-brain" style="color:var(--neon-cyan);font-size:1.05rem;"></i>
+            <span style="color:var(--text-primary);font-size:0.92rem;font-weight:600;flex:1;">${esc(title)}</span>
+            <span class="pe-chip is-units">PLAY</span>
+        </a>
+    </div>`;
 }
 
 // ==================== RENDER TEXT POST ====================
@@ -386,57 +472,65 @@ function renderTextPost(p) {
     </div>`;
 }
 
-// ==================== RENDER PICK CARD ====================
+// ==================== RENDER PICK CARD (activity-only, contents redacted) ====================
+// Per Nima: picks are sellable. The feed must NEVER reveal selection/odds/line/
+// units/teams to non-owners. Render as an activity event ("submitted an MLB
+// pick"), with details only present (and shown) for the pick's owner.
 function renderPickCard(p) {
-    const letter = (p.display_name || p.username || '?')[0].toUpperCase();
-    const sel = p.pick_selection || p.selection || '';
-    const mkt = p.pick_market_type || p.market_type || 'pick';
-    const odds = p.pick_odds || p.odds_snapshot || 0;
-    const oddsStr = odds > 0 ? `+${odds}` : `${odds}`;
-    const line = p.pick_line || p.line_snapshot;
-    const units = p.pick_units || p.units || '';
-    const status = p.pick_status || p.status || 'pending';
-    const home = p.pick_home_team || p.home_team || '';
-    const away = p.pick_away_team || p.away_team || '';
+    const display = p.display_name || p.username || 'User';
+    const letter = display[0].toUpperCase();
     const sport = p.pick_sport_key || p.sport || p.sport_key || '';
+    const sportLabel = sport ? formatSport(sport) : 'sports';
     const liked = p.liked_by_user || false;
     const pickId = p.pick_id || p.item_id;
-    const mktLabel = formatMarketLabel(mkt);
-    const statusClass = status === 'won' ? 'won' : status === 'lost' ? 'lost' : status === 'push' ? 'push' : 'pending';
+    const viewer = (typeof viewerUser !== 'undefined') ? viewerUser : null;
+    const isOwner = !!(viewer && Number(viewer.id) === Number(p.user_id));
+    // Contents are redacted server-side for non-owners; for owners we can show
+    // the pick body since they're looking at their own card.
+    const showDetails = isOwner && p.pick_selection;
+    const status = (p.pick_status || p.status || 'pending').toLowerCase();
+    const statusClass = status === 'won' ? 'is-won' : status === 'lost' ? 'is-lost' : '';
+    const statusLabel = status === 'won' ? 'WON' : status === 'lost' ? 'LOST' : status === 'push' ? 'PUSH' : 'LOCKED';
+
+    const ownerEmbed = showDetails
+        ? `<div class="pick-embed">
+            <div class="pe-row">
+                <span class="pe-team">${esc(p.pick_away_team || '')}</span>
+                <span class="pe-chip">@</span>
+                <span class="pe-team">${esc(p.pick_home_team || '')}</span>
+            </div>
+            <div class="pe-row">
+                <span class="pe-chip is-sport"><i class="fas fa-bullseye"></i> ${esc(p.pick_selection || '')}${p.pick_line != null ? ' ' + (Number(p.pick_line) > 0 ? '+' : '') + p.pick_line : ''}</span>
+                <span class="pe-chip"><i class="fas fa-chart-line"></i> ${Number(p.pick_odds) > 0 ? '+' : ''}${p.pick_odds}</span>
+                ${p.pick_units ? `<span class="pe-chip is-units"><i class="fas fa-coins"></i> ${p.pick_units}u</span>` : ''}
+                <span class="pe-chip ${statusClass}">${statusLabel}</span>
+            </div>
+            <div class="rs-empty" style="margin-top:6px;font-size:0.78rem;">Only you can see this pick. Other users see "submitted a pick".</div>
+        </div>`
+        : `<div class="pick-embed" style="display:flex;align-items:center;gap:10px;">
+            <i class="fas fa-lock" style="color:var(--neon-cyan);font-size:1.05rem;"></i>
+            <span style="color:var(--text-secondary);font-size:0.92rem;">Pick contents are private. Only the user who locked it can reveal it.</span>
+            <span class="pe-chip ${statusClass}" style="margin-left:auto;">${statusLabel}</span>
+        </div>`;
+
+    const eyebrow = `<i class="fas fa-bolt"></i> Locked a ${esc(sportLabel)} pick`;
 
     return `<div class="feed-item" data-id="${p.item_id}" data-type="${p.item_type || 'pick'}">
         <div class="fi-header">
-            <div class="fi-avatar" style="background:var(--accent-blue);">${letter}</div>
+            <div class="fi-avatar">${letter}</div>
             <div class="fi-meta">
                 <div class="fi-top-row">
-            <span class="fi-name"><a href="/profile/?user=${p.username}">${p.display_name || p.username}</a></span>
-                    <span class="fi-handle">@${p.username}</span>
+                    <span class="fi-name"><a href="/profile/?user=${encodeURIComponent(p.username)}">${esc(display)}</a></span>
+                    <span class="fi-handle">@${esc(p.username)}</span>
                     <span class="fi-dot">&bull;</span>
                     <span class="fi-time">${timeAgo(p.created_at)}</span>
                 </div>
-                <div style="display:flex;gap:4px;margin-top:3px;">
-                    <span class="fi-badge fi-badge-pick"><i class="fas fa-crosshairs"></i> Pick</span>
-                    ${sport ? `<span class="fi-sport">${formatSport(sport)}</span>` : ''}
-                </div>
+                <div style="margin-top:3px;color:var(--text-muted);font-size:0.82rem;">${eyebrow}</div>
             </div>
         </div>
-        ${p.content ? `<div class="fi-content" style="margin-bottom:8px;">${esc(p.content)}</div>` : ''}
-        <div class="pick-embed">
-            <div class="pe-matchup">
-                <span class="pe-team">${away || sel}</span>
-                <span class="pe-vs">@</span>
-                <span class="pe-team">${home}</span>
-            </div>
-            <div class="pe-details">
-                <span class="pe-chip"><i class="fas fa-crosshairs"></i> ${mktLabel}</span>
-                <span class="pe-chip"><i class="fas fa-bullseye"></i> ${sel}${line ? ' ' + (line > 0 ? '+' : '') + line : ''}</span>
-                <span class="pe-chip"><i class="fas fa-chart-line"></i> ${oddsStr}</span>
-                ${units ? `<span class="pe-chip"><i class="fas fa-coins"></i> ${units}u</span>` : ''}
-            </div>
-            <span class="pe-status ${statusClass}">${status.toUpperCase()}</span>
-        </div>
+        ${ownerEmbed}
         <div class="fi-actions">
-            <button class="fi-action ${liked ? 'liked' : ''}" onclick="likePick(${pickId}, this)"><i class="fas fa-heart"></i> <span>${p.likes_count || 0}</span></button>
+            <button class="fi-action ${liked ? 'is-liked' : ''}" onclick="likePick(${pickId}, this)"><i class="fas fa-heart"></i> <span>${p.likes_count || 0}</span></button>
             <button class="fi-action" onclick="toggleComments(${pickId}, 'pick')"><i class="fas fa-comment"></i> <span>${p.comments_count || 0}</span></button>
             <button class="fi-action" onclick="sharePost('pick-${pickId}')"><i class="fas fa-share"></i></button>
         </div>
@@ -676,7 +770,69 @@ async function loadTrending() {
     } catch(e) {}
     if (heroTrending) heroTrending.textContent = '0';
     setRailCardVisibility('trendingList', true);
-    el.innerHTML = '<div class="empty-state" style="min-height:auto;padding:12px 0;"><p style="margin:0;">No live trending topics yet.</p></div>';
+    el.innerHTML = '<div class="rs-empty">Trending picks will appear here once real users start posting plays.</div>';
+}
+
+// ==================== TOP CAPPERS ====================
+async function loadTopCappers() {
+    const el = document.getElementById('topCappersList');
+    if (!el) return;
+    try {
+        if (api && typeof api.request === 'function') {
+            const data = await api.request('/users/leaderboard?sortBy=net_units&limit=5');
+            const cappers = (data.leaderboard || data.users || []).filter(u => Number(u.total_picks || 0) > 0);
+            if (cappers.length) {
+                setRailCardVisibility('topCappersList', true);
+                el.innerHTML = cappers.map((u, i) => {
+                    const units = Number(u.net_units || 0);
+                    const sign = units >= 0 ? '+' : '';
+                    const color = units > 0 ? 'var(--accent-green)' : units < 0 ? 'var(--accent-red)' : 'var(--text-muted)';
+                    const username = String(u.username || '');
+                    const display = String(u.display_name || u.username || 'User');
+                    const initial = (display[0] || '?').toUpperCase();
+                    return '<div class="rs-user">' +
+                        '<div class="rs-rank">' + (i + 1) + '</div>' +
+                        '<div class="rs-user-avatar">' + initial + '</div>' +
+                        '<div class="rs-user-info">' +
+                            '<div class="rs-user-name"><a href="/profile/?user=' + encodeURIComponent(username) + '">' + display + '</a></div>' +
+                            '<div class="rs-user-detail">' + (u.total_picks || 0) + ' picks · <span style="color:' + color + ';font-weight:700;">' + sign + units.toFixed(1) + 'u</span></div>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+                return;
+            }
+        }
+    } catch (e) {}
+    setRailCardVisibility('topCappersList', true);
+    el.innerHTML = '<div class="rs-empty">Top Cappers will appear once verified public records are created.</div>';
+}
+
+// ==================== LIVE BATTLES (Arena watch) ====================
+async function loadArenaWatch() {
+    const el = document.getElementById('arenaWatchList');
+    if (!el) return;
+    try {
+        if (api && typeof api.request === 'function') {
+            const data = await api.request('/challenges?status=active&limit=5').catch(() => null);
+            const battles = (data && (data.challenges || data.results)) || [];
+            if (battles.length) {
+                setRailCardVisibility('arenaWatchList', true);
+                el.innerHTML = battles.map(b => {
+                    const title = String(b.title || b.name || 'Challenge');
+                    const challenger = String((b.challenger && b.challenger.username) || b.challenger_username || '');
+                    const opponent = String((b.opponent && b.opponent.username) || b.opponent_username || '');
+                    const meta = challenger && opponent ? '@' + challenger + ' vs @' + opponent : (b.sport || '');
+                    return '<div class="rs-item">' +
+                        '<span class="rs-rank"><i class="fas fa-trophy"></i></span>' +
+                        '<span class="rs-text">' + title + '<div class="rs-count">' + meta + '</div></span>' +
+                    '</div>';
+                }).join('');
+                return;
+            }
+        }
+    } catch (e) {}
+    setRailCardVisibility('arenaWatchList', true);
+    el.innerHTML = '<div class="rs-empty">Challenge results and live arena battles will appear here once users start competing.</div>';
 }
 
 async function loadSuggested() {
@@ -712,7 +868,7 @@ async function loadSuggested() {
     } catch(e) {}
     if (heroSuggested) heroSuggested.textContent = '0';
     setRailCardVisibility('suggestedList', true);
-    el.innerHTML = '<div class="empty-state" style="min-height:auto;padding:12px 0;"><p style="margin:0;">No live account suggestions yet.</p></div>';
+    el.innerHTML = '<div class="rs-empty">Suggested users will appear here as the community grows.</div>';
 }
 
 async function hydrateFollowingState() {

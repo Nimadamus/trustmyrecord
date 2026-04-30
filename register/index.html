@@ -252,9 +252,58 @@
                     <label for="confirmValue">Confirm Password</label>
                     <input id="confirmValue" type="password" autocomplete="new-password" required>
                 </div>
+
+                <div class="field">
+                    <label for="headlineValue">Headline <span style="color:var(--muted);font-weight:500;">(140 chars, shows on your profile)</span></label>
+                    <input id="headlineValue" type="text" maxlength="140" placeholder="e.g. Sharp MLB cap. Pittsburgh born. Run line specialist.">
+                </div>
+
+                <div class="field">
+                    <label>Favorite Sports <span style="color:var(--muted);font-weight:500;">(pick all that apply)</span></label>
+                    <div id="favSportsGrid" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
+                        <!-- chips injected by JS -->
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="favTeamsValue">Favorite Teams <span style="color:var(--muted);font-weight:500;">(comma-separated)</span></label>
+                    <input id="favTeamsValue" type="text" maxlength="500" placeholder="e.g. Pittsburgh Steelers, Pittsburgh Penguins, Pirates">
+                </div>
+
                 <div id="message" class="message"></div>
                 <button id="submitBtn" class="submit" type="submit">CREATE ACCOUNT</button>
             </form>
+            <script>
+                // Build favorite-sport chips
+                (function buildSportChips(){
+                    var sports = ['NFL','NBA','MLB','NHL','NCAAF','NCAAB','Soccer','UFC','Boxing','Tennis','Golf','F1'];
+                    var grid = document.getElementById('favSportsGrid');
+                    if (!grid) return;
+                    sports.forEach(function(s){
+                        var btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.dataset.sport = s;
+                        btn.textContent = s;
+                        btn.style.cssText = 'padding:7px 12px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.15s;';
+                        btn.addEventListener('click', function(){
+                            var on = btn.dataset.on === '1';
+                            btn.dataset.on = on ? '' : '1';
+                            btn.style.background = on ? 'rgba(255,255,255,0.04)' : 'var(--cyan)';
+                            btn.style.color = on ? 'var(--text)' : '#062023';
+                            btn.style.borderColor = on ? 'var(--border)' : 'var(--cyan)';
+                        });
+                        grid.appendChild(btn);
+                    });
+                })();
+                window.collectFavSports = function(){
+                    return Array.from(document.querySelectorAll('#favSportsGrid button[data-on="1"]')).map(function(b){ return b.dataset.sport; });
+                };
+                window.collectFavTeams = function(){
+                    var raw = (document.getElementById('favTeamsValue').value || '').trim();
+                    if (!raw) return [];
+                    return raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean).slice(0, 30);
+                };
+            </script>
 
             <div class="switch">Already have an account? <a href="/login/">Log in here</a></div>
         </div>
@@ -319,10 +368,15 @@
                         try { await window.api.ready; } catch (error) {}
                     }
 
-                    const data = await window.api.register({ username, email, password });
+                    var headline = (document.getElementById('headlineValue').value || '').trim();
+                    var favoriteSports = (typeof window.collectFavSports === 'function') ? window.collectFavSports() : [];
+                    var favoriteTeams = (typeof window.collectFavTeams === 'function') ? window.collectFavTeams() : [];
+                    const data = await window.api.register({ username, email, password, headline, favoriteSports, favoriteTeams });
                     if (data && data.user && (data.accessToken || data.access_token || data.tokens)) {
                         await persistBackendLogin(data.user);
-                        window.location.replace('/profile.html');
+                        var ru = data.user || {};
+                        var runame = ru.username || ru.displayName || username || '';
+                        window.location.replace('/profile/' + (runame ? '?user=' + encodeURIComponent(runame) : ''));
                         return;
                     }
 

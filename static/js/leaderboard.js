@@ -73,6 +73,29 @@
         return '<span style="color:' + color + '; font-size: 13px; margin-left: 8px; font-weight: 700;">' + streak + '</span>';
     }
 
+    // Per Nima: green = winning record / positive units / W% > .500
+    // red = losing record / negative units / W% < .500
+    // neutral = exact .500 record OR 0 units OR no sample yet
+    var COLOR_GREEN = 'var(--neon-green)';
+    var COLOR_RED = 'var(--neon-red)';
+    var COLOR_NEUTRAL = 'var(--text-secondary)';
+    function colorForWinRate(rate, sampleSize) {
+        if (!sampleSize || sampleSize < 1) return COLOR_NEUTRAL;
+        if (rate > 50) return COLOR_GREEN;
+        if (rate < 50) return COLOR_RED;
+        return COLOR_NEUTRAL;
+    }
+    function colorForUnits(units) {
+        if (units > 0) return COLOR_GREEN;
+        if (units < 0) return COLOR_RED;
+        return COLOR_NEUTRAL;
+    }
+    function colorForRecord(wins, losses) {
+        if (wins > losses) return COLOR_GREEN;
+        if (wins < losses) return COLOR_RED;
+        return COLOR_NEUTRAL;
+    }
+
     function renderRow(rank, cols) {
         return '<div class="lb-row">' +
             '<div class="lb-col-rank">' + rankBadge(rank) + '</div>' +
@@ -145,13 +168,14 @@
                 const winRate = Number(u.win_rate || 0);
                 const units = Number(u.net_units || 0);
                 const record = wins + '-' + losses + '-' + pushes;
-                const wrColor = winRate >= 57 ? 'var(--neon-green)' : winRate >= 53 ? 'var(--neon-cyan)' : 'var(--text-secondary)';
-                const unitsColor = units > 0 ? 'var(--neon-green)' : units < 0 ? 'var(--neon-red)' : 'var(--text-secondary)';
+                const wrColor = colorForWinRate(winRate, totalPicks);
+                const unitsColor = colorForUnits(units);
+                const recordColor = colorForRecord(wins, losses);
 
                 html += '<div class="lb-row">' +
                     '<div class="lb-col-rank">' + rankBadge(i + 1) + '</div>' +
                     '<div class="lb-col-user" style="font-weight: 700;">' + escapeHtml(u.display_name || u.username || 'User') + verifiedBadge(isVerified(u.verification_status)) + '</div>' +
-                    '<div class="lb-col-stat">' + record + ' <span style="color: var(--text-secondary); font-size: 12px;">(' + totalPicks + ' picks)</span></div>' +
+                    '<div class="lb-col-stat" style="color:' + recordColor + '; font-weight: 700;">' + record + ' <span style="color: var(--text-secondary); font-size: 12px; font-weight: 400;">(' + totalPicks + ' picks)</span></div>' +
                     '<div class="lb-col-stat" style="color:' + wrColor + '; font-weight: 800; font-size: 18px;">' + winRate.toFixed(1) + '%</div>' +
                     '<div class="lb-col-total" style="color:' + unitsColor + '; font-weight: 900; font-size: 18px;">' + (units > 0 ? '+' : '') + units.toFixed(1) + 'u</div>' +
                     '</div>';
@@ -179,13 +203,14 @@
         sorted.forEach(function(u, i) {
             const p = u.picks;
             const record = p.wins + '-' + p.losses + '-' + p.pushes;
-            const wrColor = p.winRate >= 57 ? 'var(--neon-green)' : p.winRate >= 53 ? 'var(--neon-cyan)' : 'var(--text-secondary)';
-            const unitsColor = p.units > 0 ? 'var(--neon-green)' : 'var(--neon-red)';
+            const wrColor = colorForWinRate(p.winRate, p.total);
+            const unitsColor = colorForUnits(p.units);
+            const recordColor = colorForRecord(p.wins, p.losses);
 
             html += '<div class="lb-row">' +
                 '<div class="lb-col-rank">' + rankBadge(i + 1) + '</div>' +
                 '<div class="lb-col-user" style="font-weight: 700;">' + u.displayName + verifiedBadge(u.verified) + streakBadge(p.streak) + '</div>' +
-                '<div class="lb-col-stat">' + record + ' <span style="color: var(--text-secondary); font-size: 12px;">(' + p.total + ' picks)</span></div>' +
+                '<div class="lb-col-stat" style="color:' + recordColor + '; font-weight: 700;">' + record + ' <span style="color: var(--text-secondary); font-size: 12px; font-weight: 400;">(' + p.total + ' picks)</span></div>' +
                 '<div class="lb-col-stat" style="color:' + wrColor + '; font-weight: 800; font-size: 18px;">' + p.winRate.toFixed(1) + '%</div>' +
                 '<div class="lb-col-total" style="color:' + unitsColor + '; font-weight: 900; font-size: 18px;">' + (p.units > 0 ? '+' : '') + p.units.toFixed(1) + 'u</div>' +
                 '</div>';

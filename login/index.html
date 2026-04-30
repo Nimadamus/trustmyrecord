@@ -322,6 +322,55 @@
                 if (typeof window.auth.persistSession === 'function') window.auth.persistSession();
             }
 
+            async function loginWithBackend(login, password) {
+                if (window.api && typeof window.api.login === 'function') {
+                    if (window.api.ready) {
+                        try { await window.api.ready; } catch (error) {}
+                    }
+                    return window.api.login(login, password);
+                }
+
+                const baseUrl = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl)
+                    ? String(CONFIG.api.baseUrl).replace(/\/+$/, '')
+                    : 'https://trustmyrecord-api.onrender.com/api';
+
+                const response = await fetch(baseUrl + '/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ login, password })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(data.error || data.message || 'Login failed.');
+                }
+                if (window.api && typeof window.api.saveTokens === 'function') {
+                    window.api.saveTokens(data.accessToken || data.access_token, data.refreshToken || data.refresh_token);
+                }
+                return {
+                    user: data.user || data,
+                    tokens: data.tokens || data
+                };
+            }
+
+            function finishLoginRedirect(user) {
+                var redirect = '';
+                try {
+                    redirect = sessionStorage.getItem('tmr_post_auth_redirect') || '';
+                    sessionStorage.removeItem('tmr_post_auth_redirect');
+                } catch (error) {}
+
+                if (redirect === 'picks' || redirect === 'sportsbook') {
+                    window.location.replace('/sportsbook/');
+                    return;
+                }
+
+                var uname = user.username || user.displayName || user.email || '';
+                window.location.replace('/profile/' + (uname ? '?user=' + encodeURIComponent(uname) : ''));
+            }
+
             document.getElementById('direct-login-form').addEventListener('submit', async function(event) {
                 event.preventDefault();
                 const login = String(document.getElementById('loginValue').value || '').trim();
@@ -336,17 +385,9 @@
                 setMessage('', '');
 
                 try {
-                    if (!window.api || typeof window.api.login !== 'function') {
-                        throw new Error('Login service unavailable. Refresh and try again.');
-                    }
-
-                    if (window.api.ready) {
-                        try { await window.api.ready; } catch (error) {}
-                    }
-
-                    const result = await window.api.login(login, password);
+                    const result = await loginWithBackend(login, password);
                     await persistBackendLogin(result.user || {}, rememberMe);
-                    window.location.replace('/profile.html');
+                    finishLoginRedirect((result && result.user) || {});
                 } catch (error) {
                     setMessage(error && error.message ? error.message : 'Login failed.', 'error');
                 } finally {

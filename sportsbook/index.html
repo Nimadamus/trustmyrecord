@@ -9731,6 +9731,43 @@ window.toggleSportFamily = function (family) {
             var awayTeam  = btn.getAttribute('data-away');
             var homeTeam  = btn.getAttribute('data-home');
             console.log('[TMR][TT] direct click:', { gameIndex: gameIndex, betType: betType, team: team, line: line, odds: odds });
+            var game = (window.TMR && Array.isArray(window.TMR.currentGames)) ? window.TMR.currentGames[gameIndex] : null;
+            var sport = (window.TMR && window.TMR.selectedSport) || 'MLB';
+            var cleanTeam = String(team || '').replace(/\s+(Over|Under)\s*$/i, '').trim();
+            if (betType === 'teamover' || betType === 'teamunder') {
+                if (typeof window.selectGameBet !== 'function') {
+                    console.error('[TMR][TT] selectGameBet missing — cannot lock pick');
+                    alert('Pick form failed to load. Refresh and try again.');
+                    return;
+                }
+                window.TMR.__suppressPickStep = true;
+                try {
+                    window.selectGameBet(gameIndex, betType, team, line, odds, awayTeam, homeTeam);
+                } finally {
+                    window.TMR.__suppressPickStep = false;
+                }
+            }
+            if (typeof window.TMR._ttPopulateSlip === 'function') {
+                window.TMR._ttPopulateSlip({
+                    gameIndex: gameIndex,
+                    betType: betType,
+                    team: cleanTeam,
+                    line: line,
+                    odds: odds,
+                    awayTeam: awayTeam,
+                    homeTeam: homeTeam,
+                    sport: sport,
+                    league: sport,
+                    market: 'Team Total',
+                    marketType: 'team_totals',
+                    gameTime: game && game.commence_time,
+                    gameId: game && game.id,
+                    game: game
+                });
+            }
+            if (betType === 'teamover' || betType === 'teamunder') {
+                return;
+            }
             if (typeof window.selectGameBet !== 'function') {
                 console.error('[TMR][TT] selectGameBet missing — cannot lock pick');
                 alert('Pick form failed to load. Refresh and try again.');
@@ -9753,6 +9790,17 @@ window.toggleSportFamily = function (family) {
         var pd = document.getElementById('pickDetails');
         if (!pd) return;
         pd.classList.add('active');
+        var preview = document.querySelector('.sportsbook-ticket-preview');
+        if (preview) {
+            try {
+                var pcs = window.getComputedStyle(preview);
+                var prect = preview.getBoundingClientRect();
+                var vhPreview = window.innerHeight || document.documentElement.clientHeight;
+                if (pcs && pcs.display !== 'none' && pcs.visibility !== 'hidden' && prect.top >= 0 && prect.top < vhPreview - 80) {
+                    return;
+                }
+            } catch (e) { /* fall through to legacy form scroll */ }
+        }
         // Apr 30 2026 fix (Nima): on desktop (>=1100px) the pick slip is a
         // sticky right-rail at top:90px and is ALREADY visible. scrollIntoView
         // would bottom-align the slip's tall container against the games list,
@@ -9805,6 +9853,8 @@ window.toggleSportFamily = function (family) {
         if (head) head.textContent = matchup;
         var card = aside.querySelector('.sportsbook-ticket-preview-card');
         if (!card) return;
+        var details = document.getElementById('pickDetails');
+        if (details) details.classList.add('has-selection');
         var safeTeam = safe(sel.team);
         var safeBook = safe(bookLabel);
         var oddsTxt  = fmtOdds(sel.odds);
@@ -9826,8 +9876,8 @@ window.toggleSportFamily = function (family) {
                 '<strong><input id="ttSlipUnits" type="number" min="0.5" max="5" step="0.5" value="1" aria-label="Units to risk"' +
                     ' style="width:64px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:4px 8px;color:#f8fafc;font-weight:800;text-align:right;"></strong>' +
             '</div>' +
-            '<div class="sportsbook-ticket-preview-note">Real DraftKings line. Tap Submit to lock to your public record.</div>' +
-            '<button type="button" id="ttSlipSubmit" class="sportsbook-ticket-preview-submit">Submit Pick</button>';
+            '<div class="sportsbook-ticket-preview-note">Real DraftKings line. Tap Lock Pick to add it to your public record.</div>' +
+            '<button type="button" id="ttSlipSubmit" class="sportsbook-ticket-preview-submit">Lock Pick</button>';
 
         // Mirror into the existing #pickDetails state + form fields so the
         // existing lockInPick path (with full save + grading + analytics
@@ -9836,6 +9886,9 @@ window.toggleSportFamily = function (family) {
             gameIndex: sel.gameIndex,
             betType: sel.betType,
             team: sel.team,
+            league: sport,
+            market: marketLabel,
+            marketType: sel.marketType || 'team_totals',
             line: sel.line,
             odds: sel.odds,
             awayTeam: sel.awayTeam,
@@ -9850,6 +9903,12 @@ window.toggleSportFamily = function (family) {
         if (lineInput) lineInput.value = (sel.line != null ? sel.line : '');
         var oddsInput = document.getElementById('pickOddsInput');
         if (oddsInput) oddsInput.value = (sel.odds != null ? sel.odds : '');
+        var summaryGame = document.getElementById('summaryGame');
+        if (summaryGame) summaryGame.textContent = (sel.awayTeam || '') + ' @ ' + (sel.homeTeam || '');
+        var summaryPick = document.getElementById('summaryPick');
+        if (summaryPick) summaryPick.textContent = (sel.team || '') + ' ' + sideLabel + lineTxt;
+        var summaryOdds = document.getElementById('summaryOdds');
+        if (summaryOdds) summaryOdds.textContent = oddsTxt;
 
         var submit = document.getElementById('ttSlipSubmit');
         if (submit) {
@@ -9874,7 +9933,7 @@ window.toggleSportFamily = function (family) {
                 } catch (err) {
                     console.error('[TMR][TT] lockInPick threw:', err);
                     alert('Could not lock pick: ' + (err && err.message ? err.message : err));
-                    submit.textContent = 'Submit Pick';
+                    submit.textContent = 'Lock Pick';
                     submit.disabled = false;
                 }
             }, false);
@@ -9907,6 +9966,40 @@ window.toggleSportFamily = function (family) {
             } catch (e) { /* noop */ }
 
             try {
+                if (betType === 'teamover' || betType === 'teamunder') {
+                    var game = (window.TMR && Array.isArray(window.TMR.currentGames)) ? window.TMR.currentGames[gameIndex] : null;
+                    var sport = (window.TMR && window.TMR.selectedSport) || 'MLB';
+                    var cleanTeam = String(team || '').replace(/\s+(Over|Under)\s*$/i, '').trim();
+                    if (typeof window.selectGameBet === 'function') {
+                        window.TMR.__suppressPickStep = true;
+                        try {
+                            window.selectGameBet(gameIndex, betType, team, line, odds, awayTeam, homeTeam);
+                        } finally {
+                            window.TMR.__suppressPickStep = false;
+                        }
+                    } else {
+                        console.warn('[TMR][TT] window.selectGameBet missing');
+                    }
+                    if (typeof window.TMR._ttPopulateSlip === 'function') {
+                        window.TMR._ttPopulateSlip({
+                            gameIndex: gameIndex,
+                            betType: betType,
+                            team: cleanTeam,
+                            line: line,
+                            odds: odds,
+                            awayTeam: awayTeam,
+                            homeTeam: homeTeam,
+                            sport: sport,
+                            league: sport,
+                            market: 'Team Total',
+                            marketType: 'team_totals',
+                            gameTime: game && game.commence_time,
+                            gameId: game && game.id,
+                            game: game
+                        });
+                    }
+                    return;
+                }
                 if (typeof window.selectGameBet === 'function') {
                     window.selectGameBet(gameIndex, betType, team, line, odds, awayTeam, homeTeam);
                 } else {
@@ -19115,7 +19208,7 @@ document.addEventListener('DOMContentLoaded', function() {
          their initializers target #searchResults / #profile-view / forum
          containers that don't exist on the picks board, throwing console
          noise. They're loaded on /feed/ and /forum/ where they belong. -->
-    <script src="/static/js/navigation.js?v=20260424e"></script>
+    <script src="/static/js/navigation.js?v=20260430routefix1"></script>
 <script src="/static/js/sportsbook-production-fix.js?v=20260430a"></script>
     <script src="/static/js/effects.js?v=20251208c"></script>
     <script>
@@ -23247,8 +23340,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <script src="/static/js/platform-production-fix.js?v=20260415d"></script>
     <script src="/static/js/sportsbook-dashboard-sync.js?v=20260415d"></script>
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430navfix2">
-<script defer src="/static/js/tmr-sitewide.js?v=20260430navfix2"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430navfix5">
+<script defer src="/static/js/tmr-sitewide.js?v=20260430navfix5"></script>
     <style>
         /* Make Your Picks polish: visual-only overrides, no pick-flow logic changes. */
         #picks.page-section {
@@ -25723,6 +25816,13 @@ document.addEventListener('DOMContentLoaded', function() {
             font-size: 0.74rem;
         }
 
+        body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__button--primary {
+            color: #041017 !important;
+            background: linear-gradient(135deg, #2dd4bf 0%, #77f8ff 62%, #d7ff59 100%) !important;
+            border-color: rgba(45, 212, 191, 0.52) !important;
+            text-shadow: none !important;
+        }
+
         body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links a:hover,
         body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links a[aria-current="page"] {
             color: #70ddff;
@@ -26942,7 +27042,7 @@ document.addEventListener('DOMContentLoaded', function() {
             #picks .game-row .odds-btn .odds-value { font-size: 11px !important; }
         }
     </style>
-    <link rel="stylesheet" href="/static/css/sportsbook-pro.css?v=20260430a">
+    <link rel="stylesheet" href="/static/css/sportsbook-pro.css?v=20260430b">
     <script>
     // Stamp body[data-tmr-auth] so the Make Picks page can hide the
     // logged-out prompt the moment auth flips. Re-runs on auth events.

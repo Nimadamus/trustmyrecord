@@ -94,9 +94,12 @@ class PersistentAuthSystem {
         if (!sessionData) return false;
         const user = sessionData.user || sessionData;
         if (!user || (!user.username && !user.email)) return false;
-        if (user.backendUser && !this.hasBackendCredentials()) {
-            return false;
-        }
+        // Apr 30 2026 fix: do NOT invalidate the local session just because
+        // backend tokens are missing. Tokens can drop for transient reasons
+        // (a single 401 from any endpoint, a refresh-flow hiccup, or browser
+        // extensions clearing localStorage). Keeping the user object lets
+        // the UI stay in a logged-in state; the very next protected API
+        // call will surface a real 401 and the user can re-auth then.
         return true;
     }
 

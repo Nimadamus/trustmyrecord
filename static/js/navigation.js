@@ -6,7 +6,7 @@ const legacyRouteTargets = {
     'my-record': 'my-record/',
     promos: 'promos/',
     consensus: 'consensus/',
-    leaderboards: 'leaderboards/',
+    leaderboards: 'handicappers/',
     live: 'live/',
     marketplace: 'marketplace/',
     groups: 'groups/',
@@ -160,6 +160,11 @@ function activateCanonicalLegacySection(sectionId, updateHistory = true) {
  */
 function showSection(sectionId, updateHistory = true) {
     const normalizedSectionId = normalizeSportsbookSectionId(sectionId);
+
+    if (normalizedSectionId === 'login' || normalizedSectionId === 'signup') {
+        window.location.href = normalizedSectionId === 'login' ? '/login/' : '/register/';
+        return;
+    }
 
     // 'home' from inside the sportsbook page must do a real navigation to
     // the homepage. Previously we pushState('/') which left the picks

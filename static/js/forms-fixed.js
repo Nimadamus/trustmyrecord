@@ -60,6 +60,8 @@ async function directBackendLoginFallback(usernameOrEmail, password, rememberMe)
 async function handleLogin(event) {
     event.preventDefault();
     event.stopPropagation();
+    const loginForm = document.getElementById('loginForm') || document.getElementById('login-form');
+    setSubmitState(loginForm, true, 'LOGGING IN...');
     if (typeof TMRAnalytics !== 'undefined') TMRAnalytics.loginStarted({ button_location: 'login_modal' });
 
     try {
@@ -88,15 +90,29 @@ async function handleLogin(event) {
         const rememberMeEl = document.getElementById('rememberMe');
         const rememberMe = rememberMeEl ? rememberMeEl.checked : true;
 
-        // Attempt login via backend-aware auth system
+        // Attempt login via backend-aware auth system. If anything except a
+        // real "Invalid credentials" / email-not-verified error fires (e.g.
+        // "Server connection unavailable" because api isn't ready, or a
+        // transient network blip), fall back to a direct fetch against the
+        // live backend. Only re-throw errors that are clearly user-facing.
         let user;
         try {
             user = await auth.login(email, password, rememberMe);
         } catch (error) {
-            if (error && error.message === 'Invalid credentials') {
+            const msg = error && error.message ? String(error.message) : '';
+            const isUserError = msg === 'Invalid credentials'
+                || (error && error.code === 'EMAIL_NOT_VERIFIED');
+            if (isUserError && msg === 'Invalid credentials') {
                 user = await directBackendLoginFallback(email, password, rememberMe);
-            } else {
+            } else if (isUserError) {
                 throw error;
+            } else {
+                // Transient / setup error — try the direct path before giving up.
+                try {
+                    user = await directBackendLoginFallback(email, password, rememberMe);
+                } catch (fallbackError) {
+                    throw fallbackError;
+                }
             }
         }
 
@@ -150,6 +166,8 @@ async function handleLogin(event) {
         } else {
             alert('Login failed: ' + error.message);
         }
+    } finally {
+        setSubmitState(loginForm, false, 'LOGGING IN...');
     }
 }
 
@@ -298,6 +316,16 @@ document.addEventListener('DOMContentLoaded', function() {
         loginForm.parentNode.replaceChild(newLoginForm, loginForm);
         // Add our handler
         newLoginForm.addEventListener('submit', handleLogin);
+        const loginButton = newLoginForm.querySelector('button[type="submit"], input[type="submit"]');
+        if (loginButton) {
+            loginButton.addEventListener('click', function(event) {
+                if (newLoginForm.requestSubmit) {
+                    return;
+                }
+                event.preventDefault();
+                handleLogin(event);
+            });
+        }
     }
 
     if (signupForm) {

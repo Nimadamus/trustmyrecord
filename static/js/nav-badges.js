@@ -106,9 +106,13 @@
             const msgLinks = findMessagesLinks();
             msgLinks.forEach(link => setBadge(link, msgCount));
 
-            // Fetch notification unread count
+            // Fetch notification unread count (backend returns { unreadCount }; tolerate { count } too)
             const notifResult = await window.api.request('/notifications/unread-count').catch(() => null);
-            const notifCount = (notifResult && typeof notifResult.count === 'number') ? notifResult.count : 0;
+            let notifCount = 0;
+            if (notifResult) {
+                if (typeof notifResult.unreadCount === 'number') notifCount = notifResult.unreadCount;
+                else if (typeof notifResult.count === 'number') notifCount = notifResult.count;
+            }
 
             // Update notification bell elements
             const notifElements = findNotificationElements();
