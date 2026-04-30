@@ -147,14 +147,6 @@
         return `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23${color}%22/><text x=%2250%22 y=%2264%22 font-size=%2248%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial,sans-serif%22>${letter}</text></svg>`;
     }
 
-    function buildSearchAction() {
-        return `
-            <button class="tmr-global-nav__icon" type="button" data-tmr-search aria-label="Search">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
-            </button>
-        `;
-    }
-
     function buildLoggedOutActions() {
         return `
                 <a class="tmr-global-nav__button" href="/login/" data-tmr-auth-route="login">Log In</a>
@@ -320,6 +312,47 @@
         if (!actions) return;
         const user = getSessionUser();
         actions.innerHTML = user ? buildLoggedInActions(user) : buildLoggedOutActions();
+        cleanupNavActions();
+    }
+
+    function cleanupNavActions() {
+        if (!actions) return;
+        const legacyActionSelector = [
+            ".tmr-global-nav__icon",
+            "[data-tmr-search]",
+            "[data-tmr-notifications]",
+            "[data-tmr-messages]",
+            'a[href="/notifications/"]',
+            'a[href="notifications.html"]',
+            'a[href="/notifications.html"]',
+            'a[href="/messages/"]',
+            'a[href="messages.html"]',
+            'a[href="/messages.html"]',
+            '[aria-label="Search"]',
+            '[aria-label="Notifications"]',
+            '[aria-label="Messages"]'
+        ].join(",");
+
+        actions.querySelectorAll(legacyActionSelector).forEach((element) => {
+            element.remove();
+        });
+
+        actions.querySelectorAll(":scope > a, :scope > button").forEach((element) => {
+            const text = (element.textContent || "").replace(/\s+/g, " ").trim();
+            const isAllowedAuth =
+                element.matches("[data-tmr-logout]") ||
+                element.matches('[data-tmr-auth-route="login"]') ||
+                element.matches('[data-tmr-auth-route="signup"]') ||
+                element.classList.contains("tmr-global-nav__user");
+            if (!text && !isAllowedAuth) {
+                element.remove();
+            }
+        });
+    }
+
+    const actionsObserver = actions ? new MutationObserver(cleanupNavActions) : null;
+    if (actionsObserver) {
+        actionsObserver.observe(actions, { childList: true, subtree: true });
     }
 
     async function handleLogout() {
