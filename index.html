@@ -80,7 +80,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260430navfix2">
+<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260430navfix3">
 <style>
 :root{
   --bg:#f5f7fb;
@@ -1153,15 +1153,25 @@ button{font:inherit;cursor:pointer}
     flex: 0 0 auto;                /* let content set height instead of stretching */
     display: flex;
     align-items: center;            /* center vertically so left + right columns balance */
-    padding: 36px 0 32px;           /* tighter than 90vh sprawl, generous top breathing room */
+    padding: 64px 0 88px;           /* extra bottom space so the trust strip doesn't feel jammed */
 }
 .combined-hero.hero-v2 .hero-zone-a-inner {
     width: min(1100px, calc(100% - 48px));
-    margin: 0 auto;
+    /* Shift the headline ~100px left of dead-center on desktop for a sharper,
+       less centered composition. Uses asymmetric margin (not transform) so it
+       still flows responsively on narrower viewports. */
+    margin-left: max(24px, calc(50% - 650px));
+    margin-right: auto;
     display: grid;
     grid-template-columns: minmax(0, 1fr);   /* single column after Apr 29 hierarchy cleanup */
     gap: 0;
     align-items: center;
+}
+@media (max-width: 1200px) {
+    .combined-hero.hero-v2 .hero-zone-a-inner {
+        margin-left: auto;
+        margin-right: auto;
+    }
 }
 
 /* Headline column — keep existing chrome but tighter */
@@ -1212,6 +1222,17 @@ button{font:inherit;cursor:pointer}
     color: var(--tmr-cyan-bright, #2dd4bf);
     margin: 0 0 0 14px;
     text-shadow: 0 0 22px rgba(45, 212, 191, 0.45);
+}
+.combined-hero.hero-v2 .hero-headline .hero-slogan {
+    font-family: 'Barlow Condensed', 'Inter', sans-serif;
+    font-size: clamp(20px, 1.6vw, 26px);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--tmr-cyan-bright, #2dd4bf);
+    margin: 4px 0 4px;
+    line-height: 1.1;
+    text-shadow: 0 1px 14px rgba(0, 0, 0, 0.55), 0 0 18px rgba(45, 212, 191, 0.25);
 }
 .combined-hero.hero-v2 .hero-headline .lead {
     font-size: clamp(15px, 1.1vw, 18px);
@@ -1513,7 +1534,8 @@ button{font:inherit;cursor:pointer}
     position: relative;
     z-index: 2;
     flex: 0 0 auto;
-    padding: 14px 0 22px;
+    padding: 22px 0 30px;
+    margin-top: 20px;
     background: linear-gradient(180deg, rgba(5, 7, 13, 0) 0%, rgba(5, 7, 13, 0.78) 40%, rgba(5, 7, 13, 0.96) 100%);
     border-top: 1px solid rgba(45, 212, 191, 0.18);
 }
@@ -2019,6 +2041,7 @@ button{font:inherit;cursor:pointer}
       <div class="hero-headline">
         <span class="ch-eyebrow ch-eyebrow--big"><span class="pip"></span>The End Of The Bullshit.</span>
         <h1>Think You Know Sports?<br><span class="accent">Prove It.</span></h1>
+        <p class="hero-slogan">Prove Your Fandom.</p>
         <p class="lead">You think you can pick winners? Great &mdash; you're the reason this site exists. There are so many people like you who are full of crap. We built this site to filter out the bullshitters.</p>
         <p class="lead lead--secondary">Track every pick, build a public record, climb leaderboards, create polls and trivia, challenge other fans, and sell picks once your record proves you are worth following.</p>
         <div class="hero-action-row" role="group" aria-label="Get started">
@@ -2064,7 +2087,7 @@ button{font:inherit;cursor:pointer}
   <div class="tmr-section-inner">
     <header class="tmr-section-head tmr-loop-head">
       <span class="tmr-loop-eyebrow">Post the Play. Lock the Record. Climb the Board.</span>
-      <h2>THE LOOP</h2>
+      <h2>HOW TRUSTMYRECORD WORKS</h2>
       <p class="tmr-section-sub">One simple cycle is the entire reason this site exists. Everything else &mdash; the feed, the forum, polls, trivia, gaming, selling picks &mdash; is built on top of it.</p>
     </header>
 
@@ -2101,7 +2124,7 @@ button{font:inherit;cursor:pointer}
 <style>
   .tmr-loop {
     background: linear-gradient(180deg, rgba(11,17,24,0.0) 0%, rgba(11,17,24,0.45) 100%);
-    padding: 56px 24px 48px;
+    padding: 80px 24px 64px;
     border-top: 1px solid rgba(255,255,255,0.05);
     border-bottom: 1px solid rgba(255,255,255,0.05);
   }
@@ -2392,7 +2415,7 @@ button{font:inherit;cursor:pointer}
 <script src="static/js/config.js?v=20260330"></script>
 <script src="static/js/backend-api.js?v=20260420c"></script>
 <script src="static/js/auth-persistent.js?v=20260421a"></script>
-<script defer src="static/js/tmr-sitewide.js?v=20260430navfix2"></script>
+<script defer src="static/js/tmr-sitewide.js?v=20260430navfix3"></script>
 <script src="static/js/analytics.js?v=20260417"></script>
 <script>
 // Smooth scroll for any "Tour the Site" / scroll-cue CTA
