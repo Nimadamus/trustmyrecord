@@ -4482,6 +4482,24 @@
         } catch (e) {}
         usingRecoveredLocalPicks = false;
 
+        // Normalize status on every loaded pick so downstream widgets
+        // (unit-size breakdown, odds-range, market-type, performance
+        // timeline, etc.) all use the same source of truth — the canonical
+        // values are won/lost/push/pending. Backend or legacy values like
+        // 'win' / 'loss' / 'pushed' / 'PENDING' would otherwise slip past
+        // raw === comparisons and cause "No data" empty states even when
+        // graded picks exist (BetLegend profile bug, Apr 30 2026).
+        picks.forEach(function (p) {
+            if (!p || typeof p !== 'object') return;
+            try { p.status = normalizeStatus(p.status); } catch (e) {}
+            // Also coerce units to a Number once so widgets that bucket by
+            // unit value don't mis-bucket "1.00" string vs 1 number.
+            if (p.units != null && p.units !== '') {
+                const n = Number(p.units);
+                if (Number.isFinite(n)) p.units = n;
+            }
+        });
+
         picks.sort((a, b) => new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0));
         allLoadedPicks = picks;
 
@@ -5366,18 +5384,50 @@
         const g = document.getElementById('unitSizeGrid');
         if (!g) return;
         const src = picksArr || allLoadedPicks;
-        const graded = src.filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
-        const buckets = { '0.5-1u': { min: 0, max: 1.01 }, '1.5-2u': { min: 1.01, max: 2.01 }, '2.5-3u': { min: 2.01, max: 3.01 }, '3u+': { min: 3.01, max: 9999 } };
+        // Use normalizeStatus to catch every graded variant the backend emits
+        // (won/lost/push/pushed/win/loss). The previous raw === comparison
+        // missed graded picks whose status came back as 'win' or 'pushed',
+        // which is why the BetLegend profile showed "No data" with 1 graded
+        // pick on the books.
+        const graded = src.filter(function (p) {
+            const s = (typeof normalizeStatus === 'function' ? normalizeStatus(p.status) : String(p.status || '').toLowerCase());
+            return s === 'won' || s === 'lost' || s === 'push';
+        });
+        if (graded.length === 0) {
+            g.innerHTML = '<div class="empty-state" style="padding:16px;">No data</div>';
+            return;
+        }
+
+        // Whole-unit buckets (1u..5u). The system enforces whole units 1-5 at
+        // submit time so we never need half-unit buckets. Each bucket counts
+        // a pick whose unit value rounds to that integer (so a legacy 1.0 or
+        // 1.00 string still lands in 1u). 5u+ is a soft cap so any data
+        // drift past 5 still surfaces.
+        const buckets = [
+            { label: '1u Picks', test: function (u) { return u <= 1; } },
+            { label: '2u Picks', test: function (u) { return u > 1 && u <= 2; } },
+            { label: '3u Picks', test: function (u) { return u > 2 && u <= 3; } },
+            { label: '4u Picks', test: function (u) { return u > 3 && u <= 4; } },
+            { label: '5u Picks', test: function (u) { return u >= 5; } }
+        ];
+
         const rows = [];
-        for (const [label, range] of Object.entries(buckets)) {
-            const picks = graded.filter(p => { const u = p.units || 1; return u >= range.min && u < range.max; });
+        for (const b of buckets) {
+            const picks = graded.filter(function (p) {
+                const raw = (p.units != null && p.units !== '' ? p.units : 1);
+                const u = Number(raw);
+                return Number.isFinite(u) ? b.test(u) : b.test(1);
+            });
             if (picks.length === 0) continue;
-            const w = picks.filter(p => p.status === 'won').length;
-            const l = picks.filter(p => p.status === 'lost').length;
-            const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
+            const w = picks.filter(function (p) { return (typeof normalizeStatus === 'function' ? normalizeStatus(p.status) : p.status) === 'won'; }).length;
+            const l = picks.filter(function (p) { return (typeof normalizeStatus === 'function' ? normalizeStatus(p.status) : p.status) === 'lost'; }).length;
+            const ph = picks.filter(function (p) { const s = (typeof normalizeStatus === 'function' ? normalizeStatus(p.status) : p.status); return s === 'push'; }).length;
+            const decided = w + l;
+            const wr = decided > 0 ? ((w / decided) * 100).toFixed(1) : '—';
             let units = 0;
-            picks.forEach(p => { units += pickPL(p); });
-            rows.push(bRowExtended(label, w + '-' + l + ' (' + picks.length + ')', wr, units));
+            picks.forEach(function (p) { units += pickPL(p); });
+            const recordCell = w + '-' + l + (ph ? '-' + ph : '') + ' (' + picks.length + ')';
+            rows.push(bRowExtended(b.label, recordCell, wr, units));
         }
         g.innerHTML = rows.join('') || '<div class="empty-state" style="padding:16px;">No data</div>';
     }
@@ -5386,7 +5436,10 @@
         const g = document.getElementById('oddsRangeGrid');
         if (!g) return;
         const src = picksArr || allLoadedPicks;
-        const graded = src.filter(p => p.status === 'won' || p.status === 'lost');
+        const graded = src.filter(function (p) {
+            const s = (typeof normalizeStatus === 'function' ? normalizeStatus(p.status) : String(p.status || '').toLowerCase());
+            return s === 'won' || s === 'lost';
+        });
         const ranges = [
             { label: 'Heavy Fav (-200+)', test: o => o <= -200 },
             { label: 'Favorite (-110 to -199)', test: o => o >= -199 && o <= -110 },
@@ -5396,13 +5449,13 @@
         ];
         const rows = [];
         for (const range of ranges) {
-            const picks = graded.filter(p => { const o = p.odds_snapshot || p.odds || -110; return range.test(o); });
+            const picks = graded.filter(function (p) { const o = Number(p.odds_snapshot != null ? p.odds_snapshot : (p.odds != null ? p.odds : -110)); return Number.isFinite(o) && range.test(o); });
             if (picks.length === 0) continue;
-            const w = picks.filter(p => p.status === 'won').length;
-            const l = picks.filter(p => p.status === 'lost').length;
+            const w = picks.filter(function (p) { return (typeof normalizeStatus === 'function' ? normalizeStatus(p.status) : p.status) === 'won'; }).length;
+            const l = picks.filter(function (p) { return (typeof normalizeStatus === 'function' ? normalizeStatus(p.status) : p.status) === 'lost'; }).length;
             const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
             let units = 0;
-            picks.forEach(p => { units += pickPL(p); });
+            picks.forEach(function (p) { units += pickPL(p); });
             rows.push(bRowExtended(range.label, w + '-' + l + ' (' + picks.length + ')', wr, units));
         }
         g.innerHTML = rows.join('') || '<div class="empty-state" style="padding:16px;">No data</div>';
