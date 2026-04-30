@@ -9355,43 +9355,67 @@ window.toggleSportFamily = function (family) {
                    '<span class="sb-odds-line">' + (side === 'over' ? 'Over' : 'Under') + '</span>' +
                    '<span class="sb-odds-price">—</span></button>';
         }
-        var args = [
-            gameIndex,
-            "'" + betType + "'",
-            "'" + _ttEsc(team) + "'",
-            "'" + _ttEsc(line) + "'",
-            "'" + _ttEsc(odds) + "'",
-            "'" + _ttEsc(awayTeam) + "'",
-            "'" + _ttEsc(homeTeam) + "'"
-        ].join(',');
-        // Wrap selectGameBet so the lobby click also scrolls the pick form
-        // into view. Without this the lobby (#sportSelection) stays visible
-        // above the activated #pickDetails because CSS specificity forces
-        // #picks #sportSelection { display: block } — the form opens far
-        // below the fold and looks like "nothing happened".
-        var onclick = "window.selectGameBet(" + args + "); window.TMR && window.TMR._ttScrollToPickSlip && window.TMR._ttScrollToPickSlip();";
-        return '<button type="button" class="sb-odds" onclick="' + onclick + '">' +
+        // data-attributes + delegated listener (bound below) instead of inline
+        // onclick. Inline onclicks were not reaching selectGameBet for some
+        // users — likely an extension or attribute sanitization stripping
+        // them. Delegation runs on a single document-level listener that
+        // can't be stripped per-button.
+        return '<button type="button" class="sb-odds" data-tt-pick="1"' +
+               ' data-game-index="' + gameIndex + '"' +
+               ' data-bet-type="' + betType + '"' +
+               ' data-team="' + _ttHtmlEsc(team) + '"' +
+               ' data-line="' + _ttHtmlEsc(line) + '"' +
+               ' data-odds="' + _ttHtmlEsc(odds) + '"' +
+               ' data-away="' + _ttHtmlEsc(awayTeam) + '"' +
+               ' data-home="' + _ttHtmlEsc(homeTeam) + '">' +
                '<span class="sb-odds-line">' + _ttHtmlEsc(lineTxt) + '</span>' +
                '<span class="sb-odds-price">' + _ttHtmlEsc(oddsTxt) + '</span></button>';
     }
 
-    // After the lobby fires selectGameBet, jump the user to the activated
-    // #pickDetails form. We also collapse the lobby below so the form takes
-    // the visual top of the viewport — without this, the click looks like
-    // a no-op because the form opens off-screen.
+    // After selectGameBet runs, jump the activated #pickDetails into view.
+    // CSS forces #sportSelection visible, so without this the form opens
+    // far below the fold and the click looks like a no-op.
     window.TMR = window.TMR || {};
     window.TMR._ttScrollToPickSlip = function () {
         var pd = document.getElementById('pickDetails');
         if (!pd) return;
-        // Force the pick form active in case any race kept it hidden.
         pd.classList.add('active');
         try {
             pd.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } catch (e) {
-            // Older browsers — fall back to instant scroll.
             window.scrollTo(0, pd.getBoundingClientRect().top + window.scrollY - 80);
         }
     };
+
+    // Delegated click handler. Bound once to <document> so it survives every
+    // re-render and catches every team-total button regardless of when it
+    // was rendered. Logs each click loudly so failures are obvious in DevTools.
+    if (!window.TMR._ttClickBound) {
+        window.TMR._ttClickBound = true;
+        document.addEventListener('click', function (ev) {
+            var btn = ev.target && ev.target.closest && ev.target.closest('[data-tt-pick="1"]');
+            if (!btn) return;
+            ev.preventDefault();
+            var gameIndex = parseInt(btn.getAttribute('data-game-index'), 10);
+            var betType   = btn.getAttribute('data-bet-type');
+            var team      = btn.getAttribute('data-team');
+            var line      = btn.getAttribute('data-line');
+            var odds      = btn.getAttribute('data-odds');
+            var awayTeam  = btn.getAttribute('data-away');
+            var homeTeam  = btn.getAttribute('data-home');
+            console.log('[TMR][TT] click delegated:', { gameIndex: gameIndex, betType: betType, team: team, line: line, odds: odds });
+            try {
+                if (typeof window.selectGameBet === 'function') {
+                    window.selectGameBet(gameIndex, betType, team, line, odds, awayTeam, homeTeam);
+                } else {
+                    console.warn('[TMR][TT] window.selectGameBet is not a function');
+                }
+            } catch (err) {
+                console.error('[TMR][TT] selectGameBet threw:', err);
+            }
+            try { window.TMR._ttScrollToPickSlip(); } catch (e) { /* noop */ }
+        }, false);
+    }
 
     function _ttRenderRows(sport, rowsEl, games, sourceLabel) {
         // Surface the games to selectGameBet (it indexes via window.TMR.currentGames).
@@ -18421,105 +18445,10 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('[TMR] Form handlers loaded');
     </script>
     <script>
-        (function() {
-            function bindInlineLiveLogin() {
-                const form = document.getElementById('login-form');
-                if (!form || form.dataset.tmrInlineLiveLoginBound === 'true') return;
-                form.dataset.tmrInlineLiveLoginBound = 'true';
-
-                form.addEventListener('submit', async function(event) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    if (typeof event.stopImmediatePropagation === 'function') {
-                        event.stopImmediatePropagation();
-                    }
-
-                    const loginInput = document.getElementById('loginEmail');
-                    const passwordInput = document.getElementById('loginPassword');
-                    const rememberMe = !!document.getElementById('rememberMe')?.checked;
-                    const message = document.getElementById('loginFormMessage');
-                    const submit = form.querySelector('button[type="submit"]');
-                    const login = String(loginInput?.value || '').trim();
-                    const password = passwordInput?.value || '';
-                    const baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.api && CONFIG.api.baseUrl)
-                        ? String(CONFIG.api.baseUrl).replace(/\/+$/, '')
-                        : 'https://trustmyrecord-api.onrender.com/api';
-
-                    if (message) {
-                        message.style.display = 'none';
-                        message.textContent = '';
-                    }
-                    if (submit) {
-                        if (!submit.dataset.originalText) submit.dataset.originalText = submit.textContent || 'LOGIN';
-                        submit.disabled = true;
-                        submit.textContent = 'LOGGING IN...';
-                    }
-
-                    try {
-                        const response = await fetch(baseUrl + '/auth/login', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json'
-                            },
-                            body: JSON.stringify({ login, password })
-                        });
-
-                        const data = await response.json().catch(function() { return {}; });
-                        if (!response.ok) {
-                            throw new Error(data.error || data.message || 'Invalid credentials');
-                        }
-
-                        if (typeof api !== 'undefined' && typeof api.saveTokens === 'function') {
-                            api.saveTokens(data.accessToken || data.access_token, data.refreshToken || data.refresh_token);
-                        }
-
-                        if (typeof auth !== 'undefined') {
-                            const userData = data.user || {};
-                            auth.currentUser = {
-                                id: userData.id || ('user_' + Date.now()),
-                                username: userData.username || login,
-                                email: userData.email || '',
-                                displayName: userData.displayName || userData.username || login,
-                                avatar: userData.avatarUrl || (typeof auth.getDefaultAvatar === 'function' ? auth.getDefaultAvatar(userData.username || login) : ''),
-                                bio: userData.bio || '',
-                                joinedDate: userData.created_at || new Date().toISOString(),
-                                verified: !!userData.emailVerified,
-                                stats: { totalPicks: 0, wins: 0, losses: 0, pushes: 0, winRate: 0, roi: 0 },
-                                social: { followers: [], following: [], reputation: 0, badges: [] },
-                                isPremium: false,
-                                backendUser: true
-                            };
-                            if (typeof auth.setRememberMe === 'function') auth.setRememberMe(rememberMe);
-                            if (typeof auth.persistSession === 'function') auth.persistSession();
-                            if (typeof auth.updateUIForLoggedInUser === 'function') auth.updateUIForLoggedInUser();
-                        }
-
-                        window.location.href = '/profile/';
-                    } catch (error) {
-                        if (message) {
-                            const resetHref = '/reset-password/' + (login ? ('?login=' + encodeURIComponent(login)) : '');
-                            message.style.display = 'block';
-                            message.style.borderColor = 'rgba(255, 107, 107, 0.35)';
-                            message.style.background = 'rgba(255, 107, 107, 0.08)';
-                            message.style.color = '#ffd5d5';
-                            message.innerHTML = 'That username/email and password do not match. If this is your account, <a href="' + resetHref + '" style="color:#ffffff;text-decoration:underline;font-weight:700;">reset your password here</a>.';
-                        } else {
-                            alert('Login failed: ' + (error && error.message ? error.message : 'Unknown error'));
-                        }
-                    } finally {
-                        if (submit) {
-                            submit.disabled = false;
-                            submit.textContent = submit.dataset.originalText || 'LOGIN';
-                        }
-                    }
-                }, true);
-            }
-
-            document.addEventListener('DOMContentLoaded', bindInlineLiveLogin);
-            window.addEventListener('load', bindInlineLiveLogin);
-            setTimeout(bindInlineLiveLogin, 1200);
-        })();
+        // Sportsbook login form is owned by forms-fixed.js (handleLogin).
+        // The previous inline duplicate raced with forms-fixed and called
+        // stopImmediatePropagation, which silently broke the LOGIN button when
+        // script load order shifted. Removed Apr 30 2026 (Nima).
     </script>
     <script>
         // Notifications System
