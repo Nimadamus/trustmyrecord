@@ -1787,10 +1787,44 @@
         updateText('summaryOdds', oddsValue || 'Manual');
     }
 
+    // Inline error rendering for the pick slip. Replaces the legacy alert()
+    // pop-ups so a failed lock surfaces inside the slip itself, where the
+    // user is already looking. Cleared on the next click of any odds button
+    // and on every fresh lockInPick attempt.
+    function showPickSlipError(message) {
+        const slip = document.getElementById('pickDetails') || document.body;
+        let box = document.getElementById('pickSlipError');
+        if (!box) {
+            box = document.createElement('div');
+            box.id = 'pickSlipError';
+            box.setAttribute('role', 'alert');
+            box.style.cssText = 'margin:10px 0;padding:12px 14px;border-radius:10px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.55);color:#fecaca;font-size:13.5px;line-height:1.45;';
+            const submitBtn = document.getElementById('submitPickBtn') || document.querySelector('#pickDetails button[type="submit"]') || slip.firstElementChild;
+            if (submitBtn && submitBtn.parentNode) {
+                submitBtn.parentNode.insertBefore(box, submitBtn);
+            } else {
+                slip.appendChild(box);
+            }
+        }
+        box.textContent = message;
+        box.style.display = 'block';
+    }
+
+    function clearPickSlipError() {
+        const box = document.getElementById('pickSlipError');
+        if (box) box.style.display = 'none';
+    }
+
     async function lockInPick() {
+        clearPickSlipError();
         const option = state.selectedOption;
         if (!option) {
-            alert('Select a market before submitting a pick.');
+            showPickSlipError('Select a market before submitting a pick.');
+            return;
+        }
+
+        if (!option.game_id || /unknown/i.test(String(option.game_id))) {
+            showPickSlipError('That market is missing its game ID. Refresh the board (Ctrl-F5) and re-select the bet.');
             return;
         }
 
@@ -1810,7 +1844,7 @@
         const unitsValue = unitsInput ? parseFloat(unitsInput.value || '1') : 1;
 
         if (Number.isNaN(oddsValue) || (oddsValue > -100 && oddsValue < 100)) {
-            alert('Enter valid American odds like -110 or +150.');
+            showPickSlipError('Enter valid American odds like -110 or +150.');
             return;
         }
 
@@ -1844,9 +1878,23 @@
             updateText('confirmPickMeta', (option.game.away_team + ' @ ' + option.game.home_team) + ' | Status: pending');
             if (typeof window.showPickStep === 'function') window.showPickStep('pickConfirmation');
         } catch (error) {
-            alert('Pick submission failed: ' + (error.message || 'Unknown error'));
+            const raw = String(error && error.message || 'Unknown error');
+            // "Game not found" from the backend almost always means the
+            // browser's cached board is older than the games table -- the
+            // submitted game_id no longer matches a current row. Tell the
+            // user how to recover instead of dumping the raw message.
+            const friendly = /game not found/i.test(raw)
+                ? 'This matchup is no longer on the active board. Refresh the page (Ctrl-F5) and re-select the bet — the line may have moved or the game has started.'
+                : raw;
+            showPickSlipError('Pick submission failed: ' + friendly);
         }
     }
+
+    // Clear inline error whenever the user picks a new market.
+    document.addEventListener('click', function (ev) {
+        const btn = ev.target && ev.target.closest && ev.target.closest('.odds-btn, .market-card, [data-tt-direct-click], [data-bet-type]');
+        if (btn) clearPickSlipError();
+    }, true);
 
     function renderPickCard(pick) {
         const status = normalizeStatus(pick.status, pick.result);
