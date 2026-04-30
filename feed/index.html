@@ -16,8 +16,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/social-home.css?v=20260430a">
-    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430navfix8">
-    <script defer src="/static/js/tmr-sitewide.js?v=20260430navfix8"></script>
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430navfix9">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260430navfix9"></script>
     <style>
         /* Trivia-aligned design tokens (override social-home.css) */
         :root {
@@ -57,8 +57,8 @@
             font-family: 'Inter', sans-serif !important;
             background: var(--dark-bg) !important;
             background-image:
-                radial-gradient(circle at 25% 75%, rgba(0, 255, 255, 0.06) 0%, transparent 50%),
-                radial-gradient(circle at 75% 25%, rgba(255, 215, 0, 0.05) 0%, transparent 50%) !important;
+                radial-gradient(circle at 18% 0%, rgba(45, 212, 191, 0.08) 0%, transparent 34%),
+                linear-gradient(180deg, #08111e 0%, #0b1422 100%) !important;
             color: var(--text-primary) !important;
             min-height: 100vh;
         }
@@ -67,9 +67,7 @@
             content: '';
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background:
-                radial-gradient(ellipse at 20% 20%, rgba(0, 255, 255, 0.05) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, rgba(255, 0, 255, 0.04) 0%, transparent 50%);
+            background: radial-gradient(ellipse at 50% 0%, rgba(45, 212, 191, 0.045) 0%, transparent 52%);
             pointer-events: none;
             z-index: 0;
         }
@@ -77,28 +75,52 @@
         /* ===== PAGE LAYOUT ===== */
         .page-layout {
             display: grid;
-            grid-template-columns: 220px minmax(0, 1fr) 300px;
-            gap: 22px;
-            max-width: 1340px;
+            grid-template-columns: 198px minmax(0, 1fr) 280px;
+            gap: 18px;
+            max-width: 1280px;
             margin: 0 auto;
-            padding: 28px 20px 60px;
+            padding: 18px 20px 56px;
             position: relative;
             z-index: 1;
         }
 
-        /* ===== HERO (matches Trivia page-header style) ===== */
+        body.tmr-site-shell[data-tmr-route="feed"] .tmr-route-note {
+            display: none !important;
+        }
+
+        body.tmr-site-shell[data-tmr-route="feed"] .page-layout {
+            width: min(1280px, calc(100% - 32px)) !important;
+            max-width: 1280px !important;
+            grid-template-columns: 198px minmax(0, 1fr) 280px !important;
+            gap: 18px !important;
+            padding: 18px 0 56px !important;
+        }
+
+        body.tmr-site-shell[data-tmr-route="feed"] .sidebar-link.active {
+            color: #dff7ff !important;
+            border-color: rgba(45, 212, 191, 0.24) !important;
+            background: rgba(45, 212, 191, 0.12) !important;
+            box-shadow: none !important;
+        }
+
+        body.tmr-site-shell[data-tmr-route="feed"] .feed-tab.active {
+            color: #03110d !important;
+            background: linear-gradient(135deg, #7dd3fc, #2dd4bf) !important;
+            box-shadow: none !important;
+        }
+
+        /* ===== COMPACT PAGE INTRO ===== */
         .feed-hero {
-            grid-column: 1 / -1;
             text-align: left;
-            padding: 28px 32px 26px;
-            margin-bottom: 6px;
-            border-radius: 20px;
-            border: 1px solid var(--glass-border);
+            padding: 18px 20px !important;
+            margin-bottom: 12px !important;
+            border-radius: 16px !important;
+            border: 1px solid rgba(148, 163, 184, 0.14) !important;
             background:
-                linear-gradient(135deg, rgba(0, 255, 255, 0.06) 0%, rgba(255, 0, 255, 0.04) 100%),
-                var(--card-bg);
+                linear-gradient(135deg, rgba(45, 212, 191, 0.07), rgba(212, 167, 44, 0.035)),
+                rgba(13, 22, 36, 0.92) !important;
             backdrop-filter: blur(12px);
-            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 16px 40px rgba(2, 8, 18, 0.26) !important;
             position: relative;
             overflow: hidden;
         }
@@ -106,61 +128,61 @@
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+            height: 1px;
+            background: linear-gradient(90deg, rgba(45, 212, 191, 0.6), transparent 72%);
         }
         .feed-hero-eyebrow {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 5px 12px;
+            padding: 0;
             border-radius: 999px;
-            background: rgba(0, 255, 255, 0.08);
-            border: 1px solid rgba(0, 255, 255, 0.25);
-            color: var(--neon-cyan);
-            font-size: 11px;
+            background: transparent;
+            border: 0;
+            color: #7dd3fc;
+            font-size: 10px;
             font-weight: 700;
             letter-spacing: 0.12em;
             text-transform: uppercase;
-            margin-bottom: 14px;
+            margin-bottom: 8px;
         }
         .feed-hero-eyebrow .pip {
             width: 6px; height: 6px; border-radius: 50%;
             background: var(--neon-cyan);
-            box-shadow: 0 0 8px var(--neon-cyan);
+            box-shadow: none;
         }
         .feed-hero h1 {
             font-family: 'Barlow', sans-serif;
-            font-size: clamp(1.9rem, 2.6vw, 2.55rem);
+            font-size: clamp(1.45rem, 1.7vw, 1.9rem) !important;
             font-weight: 800;
-            line-height: 1.08;
-            letter-spacing: -0.02em;
-            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin: 0 0 12px;
+            line-height: 1.05 !important;
+            letter-spacing: -0.02em !important;
+            background: none;
+            -webkit-text-fill-color: #f8fafc;
+            color: #f8fafc;
+            margin: 0 0 6px;
         }
         .feed-hero p {
-            color: var(--text-secondary);
-            font-size: 1rem;
-            line-height: 1.6;
-            max-width: 760px;
-            margin: 0 0 18px;
+            color: #a7b4c5 !important;
+            font-size: 0.92rem !important;
+            line-height: 1.48;
+            max-width: 720px;
+            margin: 0 0 14px !important;
         }
         .feed-hero-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
         }
         .feed-hero-actions .btn {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 11px 18px;
-            border-radius: 12px;
+            min-height: 36px !important;
+            padding: 8px 13px !important;
+            border-radius: 10px !important;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 12px;
             text-decoration: none;
             transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
         }
@@ -168,7 +190,7 @@
             background: linear-gradient(135deg, var(--neon-cyan) 0%, var(--neon-purple) 100%);
             color: #000;
             border: 0;
-            box-shadow: 0 12px 28px rgba(0, 255, 255, 0.25);
+            box-shadow: none !important;
         }
         .feed-hero-actions .btn-ghost {
             background: rgba(255, 255, 255, 0.04);
@@ -183,26 +205,26 @@
         /* ===== LEFT SIDEBAR ===== */
         .left-sidebar {
             position: sticky;
-            top: 22px;
+            top: 88px;
             align-self: start;
         }
         .sidebar-nav {
             background: var(--card-bg);
             backdrop-filter: blur(10px);
             border: 1px solid var(--glass-border);
-            border-radius: 16px;
+            border-radius: 14px !important;
             padding: 8px;
             display: flex;
             flex-direction: column;
             gap: 2px;
-            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+            box-shadow: 0 12px 28px rgba(2, 8, 18, 0.22) !important;
         }
         .sidebar-link {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px 12px;
-            border-radius: 10px;
+            padding: 9px 10px;
+            border-radius: 9px;
             color: var(--text-secondary);
             font-size: 0.9rem;
             font-weight: 600;
@@ -216,10 +238,11 @@
         }
         .sidebar-link:hover i { color: var(--neon-cyan); }
         .sidebar-link.active {
-            color: #000;
-            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            color: #dff7ff;
+            background: rgba(45, 212, 191, 0.12);
+            border: 1px solid rgba(45, 212, 191, 0.24);
         }
-        .sidebar-link.active i { color: #000; }
+        .sidebar-link.active i { color: #7dd3fc; }
         .sidebar-divider {
             height: 1px;
             background: var(--glass-border);
@@ -231,9 +254,9 @@
             background: var(--card-bg);
             backdrop-filter: blur(10px);
             border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 16px;
-            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+            border-radius: 14px !important;
+            padding: 14px;
+            box-shadow: 0 12px 28px rgba(2, 8, 18, 0.22) !important;
         }
         .sidebar-card-title {
             font-family: 'Barlow', sans-serif;
@@ -252,10 +275,10 @@
             background: var(--card-bg);
             backdrop-filter: blur(10px);
             border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 14px;
-            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+            border-radius: 16px !important;
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 12px 28px rgba(2, 8, 18, 0.22) !important;
         }
         .composer-top {
             display: flex;
@@ -263,8 +286,8 @@
             align-items: flex-start;
         }
         .composer-avatar {
-            width: 44px; height: 44px;
-            border-radius: 12px;
+            width: 40px; height: 40px;
+            border-radius: 50%;
             background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
             color: #000;
             font-family: 'Barlow', sans-serif;
@@ -277,14 +300,14 @@
         }
         .composer-textarea {
             flex: 1;
-            min-height: 78px;
+            min-height: 58px !important;
             padding: 10px 12px;
-            border-radius: 10px;
+            border-radius: 12px !important;
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--glass-border);
             color: var(--text-primary);
             font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             resize: vertical;
         }
         .composer-textarea::placeholder { color: var(--text-muted); }
@@ -297,7 +320,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 12px;
+            margin-top: 10px;
+            padding-left: 52px;
             gap: 10px;
             flex-wrap: wrap;
         }
@@ -310,9 +334,9 @@
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--glass-border);
             color: var(--text-secondary);
-            padding: 7px 12px;
+            padding: 7px 10px;
             border-radius: 9px;
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.15s ease;
@@ -371,7 +395,8 @@
             background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
             color: #000;
             border: 0;
-            padding: 9px 18px;
+            min-height: 36px;
+            padding: 8px 18px;
             border-radius: 10px;
             font-weight: 800;
             font-size: 0.85rem;
@@ -386,10 +411,10 @@
             gap: 4px;
             background: var(--card-bg);
             border: 1px solid var(--glass-border);
-            border-radius: 12px;
+            border-radius: 12px !important;
             padding: 4px;
-            margin-bottom: 14px;
-            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.20);
+            margin-bottom: 12px;
+            box-shadow: none !important;
             overflow-x: auto;
             scrollbar-width: none;
         }
@@ -601,16 +626,16 @@
             flex-direction: column;
             gap: 14px;
             position: sticky;
-            top: 22px;
+            top: 88px;
             align-self: start;
         }
         .rs-card {
             background: var(--card-bg);
             backdrop-filter: blur(10px);
             border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 16px;
-            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+            border-radius: 14px !important;
+            padding: 14px;
+            box-shadow: 0 12px 28px rgba(2, 8, 18, 0.22) !important;
             position: relative;
             overflow: hidden;
         }
@@ -618,16 +643,16 @@
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
-            opacity: 0.6;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(45, 212, 191, 0.34), transparent 72%);
+            opacity: 1;
         }
         .rs-title {
             font-family: 'Barlow', sans-serif;
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.10em;
+            letter-spacing: 0.08em !important;
             color: var(--text-primary);
             margin-bottom: 12px;
             display: flex;
@@ -695,22 +720,19 @@
         }
 
         /* "Getting Started" rail card on top */
-        .rs-card.is-getting-started::before {
-            background: linear-gradient(90deg, var(--neon-gold), var(--accent-green));
-            opacity: 1;
-        }
+        .rs-title i { color: #7dd3fc !important; }
         .rs-getting-started-list {
-            display: flex; flex-direction: column; gap: 8px;
+            display: flex; flex-direction: column; gap: 7px;
             margin: 0; padding: 0; list-style: none;
         }
         .rs-getting-started-list li {
             display: flex; gap: 10px; align-items: flex-start;
             color: var(--text-secondary);
-            font-size: 0.84rem;
+            font-size: 0.82rem;
             line-height: 1.4;
         }
         .rs-getting-started-list i {
-            color: var(--neon-cyan);
+            color: #7dd3fc;
             font-size: 0.85rem;
             margin-top: 3px;
             flex-shrink: 0;
@@ -738,17 +760,27 @@
         /* ===== MOBILE ===== */
         @media (max-width: 1080px) {
             .page-layout { grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; }
+            body.tmr-site-shell[data-tmr-route="feed"] .page-layout {
+                grid-template-columns: minmax(0, 1fr) 280px !important;
+                width: min(100%, calc(100% - 28px)) !important;
+                padding-top: 16px !important;
+            }
             .left-sidebar { display: none; }
         }
         @media (max-width: 760px) {
             .page-layout { grid-template-columns: minmax(0, 1fr); padding: 16px 12px 40px; }
+            body.tmr-site-shell[data-tmr-route="feed"] .page-layout {
+                grid-template-columns: minmax(0, 1fr) !important;
+                width: min(100%, calc(100% - 24px)) !important;
+                padding: 14px 0 40px !important;
+            }
             .right-sidebar { position: static; }
             .feed-hero { padding: 22px 18px; }
             .feed-hero h1 { font-size: 1.6rem; }
             .feed-hero p { font-size: 0.9rem; }
             .feed-tabs { padding: 3px; }
             .feed-tab { padding: 8px 10px; font-size: 0.78rem; }
-            .composer-bottom { flex-direction: column; align-items: stretch; }
+            .composer-bottom { flex-direction: column; align-items: stretch; padding-left: 0; }
             .btn-post { width: 100%; }
         }
     </style>
@@ -765,14 +797,11 @@
     <div class="page-layout">
         <aside class="left-sidebar">
             <div class="sidebar-nav">
-                <a href="/" class="sidebar-link"><i class="fas fa-home"></i> Home</a>
                 <a href="/sportsbook/" class="sidebar-link"><i class="fas fa-basketball-ball"></i> Make Picks</a>
                 <a href="/feed/" class="sidebar-link active"><i class="fas fa-stream"></i> Feed</a>
                 <a href="/leaderboards/" class="sidebar-link"><i class="fas fa-chart-line"></i> Leaderboards</a>
                 <a href="/arena/" class="sidebar-link"><i class="fas fa-trophy"></i> Arena</a>
                 <a href="/forum/" class="sidebar-link"><i class="fas fa-comments"></i> Forums</a>
-                <a href="/polls/" class="sidebar-link"><i class="fas fa-poll"></i> Polls</a>
-                <a href="/trivia/" class="sidebar-link"><i class="fas fa-brain"></i> Trivia</a>
                 <a href="/marketplace/" class="sidebar-link"><i class="fas fa-store"></i> Sell Picks</a>
                 <div class="sidebar-divider"></div>
                 <a href="/profile/" class="sidebar-link"><i class="fas fa-user-circle"></i> My Profile</a>
@@ -786,12 +815,12 @@
 
         <main class="main-feed">
             <section class="feed-hero">
-                <div class="feed-hero-eyebrow"><span class="pip"></span>Community Feed</div>
-                <h1>Your feed is ready.</h1>
-                <p>Follow users, post picks, join forums, create polls, play trivia, and compete in the arena to start building your public sports record. Every post here is tied to a real profile with public receipts &mdash; no edits, no resets, no fake screenshots.</p>
+                <div class="feed-hero-eyebrow"><span class="pip"></span>Verified Community</div>
+                <h1>Your Feed</h1>
+                <p>Follow picks, hot takes, polls, trivia, and challenges from users with verified records.</p>
                 <div class="feed-hero-actions">
                     <a href="/sportsbook/" class="btn btn-primary"><i class="fas fa-bolt"></i> Lock a Pick</a>
-                    <a href="/forum/" class="btn btn-ghost"><i class="fas fa-comments"></i> Open Forums</a>
+                    <a href="/forum/" class="btn btn-ghost"><i class="fas fa-comments"></i> Forums</a>
                     <a href="/leaderboards/" class="btn btn-ghost"><i class="fas fa-chart-line"></i> Leaderboards</a>
                 </div>
             </section>
@@ -848,9 +877,7 @@
                 <ul class="rs-getting-started-list">
                     <li><i class="fas fa-check-circle"></i><span>Lock a public pick on any sport.</span></li>
                     <li><i class="fas fa-check-circle"></i><span>Build a verified record &mdash; no edits, no resets.</span></li>
-                    <li><i class="fas fa-check-circle"></i><span>Join forum threads and post hot takes.</span></li>
-                    <li><i class="fas fa-check-circle"></i><span>Create polls or trivia to challenge the community.</span></li>
-                    <li><i class="fas fa-check-circle"></i><span>Climb the leaderboards and sell picks once you've got the receipts.</span></li>
+                    <li><i class="fas fa-check-circle"></i><span>Post takes, polls, or forum replies tied to your profile.</span></li>
                 </ul>
             </div>
             <div class="rs-card">
