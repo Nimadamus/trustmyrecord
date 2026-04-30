@@ -1946,12 +1946,22 @@
         const oddsValue = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
         const lineValue = lineInput && lineInput.value !== '' ? parseFloat(lineInput.value) : null;
         const unitsValue = unitsInput ? parseFloat(unitsInput.value || '1') : 1;
+        const submittedSelection = buildSubmittedSelection(option, lineValue);
 
         if (Number.isNaN(oddsValue) || (oddsValue > -100 && oddsValue < 100)) {
             showSubmitTrace('Submit stopped: invalid odds value.');
             showPickSlipError('Enter valid American odds like -110 or +150.');
             resetLockButtons();
             return;
+        }
+
+        if (option.market_type === 'team_totals') {
+            if (!/\b(over|under)\b/i.test(submittedSelection) || lineValue == null) {
+                showSubmitTrace('Submit stopped: incomplete team total payload.');
+                showPickSlipError('This team total is missing its side or line. Reselect the market and try again.');
+                resetLockButtons();
+                return;
+            }
         }
 
         if (window.api && typeof window.api.loadTokens === 'function') {
@@ -1962,12 +1972,13 @@
             const api = await getApiClientOrFallback();
             await ensureBackendAccessToken(api);
             showSubmitTrace('Submitting pick to API: ' + option.game_id + ' / ' + option.market_type + '.');
-            const response = await api.createPick({
+            const payload = {
                 game_id: option.game_id,
                 external_game_id: option.game_id,
                 sport_key: option.sport_key,
                 market_type: option.market_type,
-                selection: option.selection,
+                selection: submittedSelection,
+                selection_label: option.selection_label || submittedSelection,
                 line_snapshot: lineValue,
                 odds_snapshot: oddsValue,
                 units: unitsValue,
@@ -1979,7 +1990,9 @@
                 source_updated_at: option.source_updated_at,
                 game_snapshot: buildSubmittedGameSnapshot(option),
                 reasoning: reasoningInput ? reasoningInput.value.trim() : ''
-            });
+            };
+            try { console.info('[TMR][lockInPick] final payload', payload); } catch (_) {}
+            const response = await api.createPick(payload);
 
             showSubmitTrace('API saved pick. Refreshing pick history.');
             await fetchCurrentUserPicks();
@@ -2016,6 +2029,23 @@
         } finally {
             resetLockButtons();
         }
+    }
+
+    function buildSubmittedSelection(option, lineValue) {
+        if (!option || option.market_type !== 'team_totals') {
+            return option && option.selection ? option.selection : '';
+        }
+
+        const visible = String(option.selection_label || option.selection || '').trim();
+        const sideMatch = visible.match(/\b(Over|Under)\b/i);
+        const side = sideMatch ? (sideMatch[1][0].toUpperCase() + sideMatch[1].slice(1).toLowerCase()) : '';
+        const team = String(option.selection || visible)
+            .replace(/\s+\b(over|under)\b.*$/i, '')
+            .trim();
+        const line = lineValue != null && Number.isFinite(Number(lineValue)) ? String(Number(lineValue)) : '';
+        if (team && side && line) return team + ' ' + side + ' ' + line;
+        if (team && side) return team + ' ' + side;
+        return visible || team;
     }
 
     function buildSubmittedGameSnapshot(option) {
@@ -2414,16 +2444,16 @@
                         // its team_totals contract (team name + side
                         // is encoded by the market_type + line).
                         var teamOver = teamRaw.replace(/\s+over\s*$/i, '').trim();
-                        selection = teamOver;
                         selectionLabel = teamOver + ' Over' + (lineNum != null ? ' ' + lineNum : '');
+                        selection = selectionLabel;
                         break;
                     }
                     case 'teamunder': {
                         marketType = 'team_totals';
                         groupLabel = 'Team Totals';
                         var teamUnder = teamRaw.replace(/\s+under\s*$/i, '').trim();
-                        selection = teamUnder;
                         selectionLabel = teamUnder + ' Under' + (lineNum != null ? ' ' + lineNum : '');
+                        selection = selectionLabel;
                         break;
                     }
                     case 'over':
