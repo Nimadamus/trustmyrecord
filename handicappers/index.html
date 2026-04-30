@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <link rel="canonical" href="https://trustmyrecord.com/handicappers/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Handicappers Leaderboard | Ranked by ROI, Units, Sample | TrustMyRecord</title>
-    <meta name="description" content="Find verified handicappers ranked by ROI, units, sample size, current streak, and split performance. Every capper backed by a public, audit-ready pick record.">
-    <meta property="og:title" content="Handicappers Leaderboard | Ranked by ROI, Units, Sample">
-    <meta property="og:description" content="Verified handicappers ranked by ROI, units, sample size, and current streak. Every capper backed by a public pick record.">
+    <title>Leaderboards | Handicappers, Trivia, Polls, Challenges | TrustMyRecord</title>
+    <meta name="description" content="Every leaderboard on TrustMyRecord in one hub. Track top handicappers by ROI and units, trivia leaders, poll winners, online challenge champions, and head-to-head pick battles. Public results only.">
+    <meta property="og:title" content="Leaderboards | TrustMyRecord">
+    <meta property="og:description" content="Top handicappers, trivia players, poll leaders, challenge winners, and head-to-head pick battles. Public results only. No fake records.">
     <meta property="og:url" content="https://trustmyrecord.com/handicappers/">
     <meta property="og:type" content="website">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
@@ -18,8 +18,8 @@
       gtag('config', 'G-V5MCVXS2HE');
     </script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430navfix2">
-<script defer src="/static/js/tmr-sitewide.js?v=20260430navfix2"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430navfix3">
+<script defer src="/static/js/tmr-sitewide.js?v=20260430navfix3"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -50,241 +50,527 @@
             color: var(--text);
             font-family: 'Inter', sans-serif;
             background:
-                radial-gradient(circle at 0% 0%, rgba(45,212,191,0.12), transparent 28%),
-                radial-gradient(circle at 100% 0%, rgba(96,165,250,0.08), transparent 24%),
+                radial-gradient(circle at 0% 0%, rgba(45,212,191,0.10), transparent 26%),
+                radial-gradient(circle at 100% 0%, rgba(96,165,250,0.06), transparent 22%),
                 linear-gradient(180deg, #07111c 0%, #0a1421 48%, #0d1726 100%);
         }
 
         a { color: inherit; text-decoration: none; }
 
         .page {
-            width: min(1320px, calc(100% - 40px));
+            width: min(1280px, calc(100% - 36px));
             margin: 0 auto;
-            padding: 22px 0 44px;
+            padding: 20px 0 56px;
         }
 
+        /* ---------- HERO (compact) ---------- */
         .hero {
             display: grid;
-            grid-template-columns: minmax(0, 1.24fr) 340px;
-            gap: 16px;
-            align-items: stretch;
-            margin-bottom: 16px;
-        }
-
-        .hero-panel,
-        .hero-side,
-        .filters-card,
-        .table-card,
-        .rail-card {
-            border: 1px solid var(--line);
-            border-radius: 20px;
-            background:
-                linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
-                var(--card);
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(18px);
-        }
-
-        .hero-panel {
-            display: grid;
             gap: 14px;
-            padding: 24px 26px 22px;
+            padding: 20px 22px 18px;
+            margin-bottom: 14px;
+            border: 1px solid var(--line);
+            border-radius: 18px;
             background:
-                radial-gradient(circle at 8% 0%, rgba(45,212,191,0.16), transparent 32%),
+                radial-gradient(circle at 6% 0%, rgba(45,212,191,0.14), transparent 36%),
                 linear-gradient(155deg, rgba(15, 27, 42, 0.97), rgba(8, 15, 26, 0.99));
+            box-shadow: var(--shadow);
         }
 
         .hero-kicker {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 7px 11px;
+            padding: 6px 11px;
             border-radius: 999px;
             border: 1px solid var(--line-strong);
             background: var(--teal-soft);
             color: #d7fffb;
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             font-weight: 800;
-            letter-spacing: 0.12em;
+            letter-spacing: 0.14em;
             text-transform: uppercase;
+            width: fit-content;
         }
 
         h1, h2, h3 {
             margin: 0;
             font-family: 'Barlow', sans-serif;
-            letter-spacing: -0.03em;
+            letter-spacing: -0.02em;
         }
 
         h1 {
-            max-width: 11ch;
-            font-size: clamp(2.25rem, 4.5vw, 3.55rem);
-            line-height: 0.97;
+            font-size: clamp(1.6rem, 3.2vw, 2.35rem);
+            line-height: 1.05;
             text-transform: none;
         }
 
-        .hero-panel p {
-            max-width: 58ch;
+        .hero p {
+            max-width: 80ch;
             margin: 0;
             color: #c3d0dd;
-            font-size: 0.94rem;
-            line-height: 1.62;
+            font-size: 0.92rem;
+            line-height: 1.55;
         }
 
-        .hero-metrics {
+        .quick-stats {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 10px;
-            margin-top: 2px;
-            padding-top: 16px;
-            border-top: 1px solid rgba(148, 163, 184, 0.14);
+            margin-top: 4px;
         }
 
-        .hero-metric {
-            padding: 12px 13px;
-            border-radius: 15px;
+        .qs-card {
+            padding: 10px 12px;
+            border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.07);
-            background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+            background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015));
         }
 
-        .hero-metric b {
+        .qs-card b {
             display: block;
-            font-size: 1.16rem;
+            font-size: 1.18rem;
             line-height: 1;
+            font-weight: 800;
         }
 
-        .hero-metric span {
+        .qs-card span {
             display: block;
-            margin-top: 7px;
+            margin-top: 6px;
             color: var(--muted);
-            font-size: 0.68rem;
+            font-size: 0.66rem;
             font-weight: 800;
             letter-spacing: 0.1em;
             text-transform: uppercase;
         }
 
-        .hero-side,
-        .filters-card,
-        .table-card,
-        .rail-card {
-            padding: 18px;
+        /* ---------- TABS ---------- */
+        .tabbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 6px;
+            margin-bottom: 14px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: rgba(11, 20, 34, 0.85);
+            box-shadow: var(--shadow-soft);
+            overflow-x: auto;
         }
 
-        .hero-side {
-            display: grid;
-            gap: 12px;
-            align-content: start;
+        .tab-btn {
+            flex: 1 1 auto;
+            min-width: 140px;
+            padding: 9px 14px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--muted);
+            font: 700 0.82rem/1 'Inter', sans-serif;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+
+        .tab-btn.active {
+            background: rgba(45,212,191,0.10);
+            border-color: rgba(45,212,191,0.32);
+            color: #d7fffb;
+        }
+
+        .tab-count {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.07);
+            font-size: 0.66rem;
+            font-weight: 800;
+        }
+
+        .tab-btn.active .tab-count {
+            background: rgba(45,212,191,0.18);
+            color: #d7fffb;
+        }
+
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        /* ---------- CARDS ---------- */
+        .card {
+            border: 1px solid var(--line);
+            border-radius: 16px;
             background:
-                linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)),
-                linear-gradient(160deg, rgba(10, 18, 30, 0.95), rgba(8, 15, 25, 0.98));
+                linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.012)),
+                var(--card);
+            box-shadow: var(--shadow);
+            padding: 16px;
+            margin-bottom: 14px;
         }
 
-        .side-title,
-        .filters-head,
-        .table-head {
+        .card-head {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
             gap: 12px;
+            margin-bottom: 10px;
         }
 
-        .side-title h2,
-        .filters-head h2,
-        .table-head h2 {
-            font-size: 1.1rem;
-            line-height: 1.05;
-        }
+        .card-head h2 { font-size: 1.05rem; line-height: 1.05; }
 
-        .side-note,
-        .filters-head p,
-        .table-head p,
-        .rail-note {
+        .card-head p {
             margin: 4px 0 0;
             color: var(--muted);
             font-size: 0.78rem;
-            line-height: 1.52;
+            line-height: 1.5;
         }
 
-        .challenge-list,
-        .rail-list {
+        /* ---------- GRID LAYOUT ---------- */
+        .layout-2col {
             display: grid;
-            gap: 9px;
+            grid-template-columns: minmax(0, 1fr) 280px;
+            gap: 14px;
+            align-items: start;
         }
 
-        .challenge-row,
-        .rail-item {
+        /* ---------- FILTERS ---------- */
+        .filters-grid {
             display: grid;
-            gap: 5px;
-            padding: 12px;
-            border-radius: 15px;
-            border: 1px solid rgba(255,255,255,0.07);
-            background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025));
-            box-shadow: var(--shadow-soft);
+            grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 8px;
         }
 
-        .challenge-row strong,
-        .rail-item strong {
+        .field { display: grid; gap: 6px; }
+
+        .field label {
+            color: var(--muted);
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            min-height: 40px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 11px;
+            padding: 0 12px;
+            color: var(--text);
+            background: rgba(255,255,255,0.04);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+            font: 600 0.86rem/1 'Inter', sans-serif;
+        }
+
+        .field input::placeholder { color: #7a8ea4; }
+
+        .field input:focus,
+        .field select:focus {
+            outline: none;
+            border-color: rgba(45,212,191,0.38);
+            box-shadow: 0 0 0 3px rgba(45,212,191,0.12);
+        }
+
+        /* ---------- TABLE ---------- */
+        .table-wrap { overflow-x: auto; margin-top: 8px; }
+
+        table {
+            width: 100%;
+            min-width: 760px;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            padding: 0 8px 10px;
+            color: #7c91a8;
+            font-size: 0.64rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            text-align: left;
+            border-bottom: 1px solid rgba(148,163,184,0.18);
+        }
+
+        tbody td {
+            padding: 12px 8px;
+            border-bottom: 1px solid rgba(148,163,184,0.10);
+            font-size: 0.82rem;
+            vertical-align: middle;
+        }
+
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: rgba(255,255,255,0.018); }
+
+        .rank {
+            width: 30px;
+            height: 30px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.07);
+            font-size: 0.74rem;
+            font-weight: 900;
+        }
+
+        .rank.top-1 { background: rgba(212,167,44,0.22); color: #ffe8a3; }
+        .rank.top-2 { background: rgba(148,163,184,0.24); color: #e2e8f0; }
+        .rank.top-3 { background: rgba(194,120,70,0.24); color: #ffd3b5; }
+
+        .person {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .person-avatar {
+            width: 34px;
+            height: 34px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--teal), #b9fff1);
+            color: #06120f;
+            font-size: 0.78rem;
+            font-weight: 900;
+            flex: 0 0 auto;
+            overflow: hidden;
+        }
+
+        .person-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .person-meta { min-width: 0; }
+
+        .person-name {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--text);
             font-size: 0.86rem;
-            line-height: 1.38;
+            font-weight: 800;
         }
 
-        .challenge-row span,
-        .rail-item span {
+        .person-name:hover { color: var(--teal); }
+
+        .person-sub {
+            display: block;
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: 0.72rem;
+            line-height: 1.4;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 240px;
+        }
+
+        .pos { color: var(--green); font-weight: 850; }
+        .neg { color: var(--red); font-weight: 850; }
+        .neutral { color: var(--text); font-weight: 850; }
+
+        /* ---------- BUTTONS / CHIPS ---------- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font: 800 0.78rem/1 'Inter', sans-serif;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            transition: transform 0.12s, background 0.12s, border-color 0.12s;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--teal), #67e8d6);
+            color: #06120f;
+        }
+
+        .btn-primary:hover { transform: translateY(-1px); }
+
+        .btn-outline {
+            background: rgba(255,255,255,0.04);
+            border-color: rgba(148,163,184,0.22);
+            color: var(--text);
+        }
+
+        .btn-outline:hover { border-color: rgba(45,212,191,0.42); color: #d7fffb; }
+
+        .mini-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.18);
+            background: rgba(255,255,255,0.04);
+            color: var(--text);
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+        }
+
+        .mini-link:hover { border-color: rgba(45,212,191,0.38); }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 24px;
+            padding: 0 9px;
+            border-radius: 999px;
+            background: rgba(45,212,191,0.12);
+            border: 1px solid rgba(45,212,191,0.22);
+            color: #d7fffb;
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            width: fit-content;
+        }
+
+        .badge.gold { background: rgba(212,167,44,0.12); border-color: rgba(212,167,44,0.22); color: #ffe8a3; }
+        .badge.red { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.22); color: #fecaca; }
+        .badge.muted { background: rgba(148,163,184,0.12); border-color: rgba(148,163,184,0.22); color: #cbd5e1; }
+
+        .count-chip {
+            display: inline-flex;
+            align-items: center;
+            min-height: 26px;
+            padding: 0 10px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(148,163,184,0.18);
+            color: var(--text);
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+        }
+
+        /* ---------- CHALLENGE GRID ---------- */
+        .challenge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .challenge-card {
+            display: grid;
+            gap: 6px;
+            padding: 13px;
+            border-radius: 13px;
+            border: 1px solid rgba(255,255,255,0.07);
+            background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.018));
+        }
+
+        .challenge-card strong { font-size: 0.9rem; line-height: 1.35; }
+
+        .challenge-card span {
             color: var(--muted);
             font-size: 0.74rem;
             line-height: 1.45;
         }
 
-        .badge,
-        .count-chip,
-        .mini-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: fit-content;
-            min-height: 30px;
-            padding: 0 10px;
-            border-radius: 999px;
-            border: 1px solid rgba(148,163,184,0.18);
-            background: rgba(255,255,255,0.045);
-            color: var(--text);
-            font-size: 0.68rem;
-            font-weight: 800;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-        }
+        /* ---------- RAIL (sub-leaderboards) ---------- */
+        .rail-list { display: grid; gap: 9px; }
 
-        .badge {
-            min-height: 26px;
-            background: rgba(45,212,191,0.12);
-            color: #d7fffb;
-            border-color: rgba(45,212,191,0.22);
-        }
-
-        .badge.gold {
-            background: rgba(212,167,44,0.12);
-            border-color: rgba(212,167,44,0.22);
-            color: #ffe8a3;
-        }
-
-        .content {
+        .rail-item {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 300px;
-            gap: 16px;
-            align-items: start;
+            gap: 4px;
+            padding: 11px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.07);
+            background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.018));
         }
 
-        .filters-card {
-            margin-bottom: 14px;
+        .rail-item strong { font-size: 0.84rem; line-height: 1.35; }
+
+        .rail-item span {
+            color: var(--muted);
+            font-size: 0.72rem;
+            line-height: 1.4;
         }
 
+        /* ---------- EMPTY / LOADING ---------- */
+        .loading,
+        .empty {
+            display: grid;
+            place-items: center;
+            min-height: 140px;
+            border-radius: 13px;
+            border: 1px dashed rgba(148,163,184,0.22);
+            background: rgba(255,255,255,0.025);
+            color: var(--muted);
+            text-align: center;
+            font-size: 0.86rem;
+            padding: 24px 18px;
+        }
+
+        .empty-state {
+            display: grid;
+            gap: 10px;
+            justify-items: center;
+            text-align: center;
+            padding: 28px 18px;
+        }
+
+        .empty-state .icon {
+            display: grid;
+            place-items: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: rgba(45,212,191,0.10);
+            border: 1px solid rgba(45,212,191,0.22);
+            color: #d7fffb;
+            font-size: 1.2rem;
+            font-weight: 900;
+        }
+
+        .empty-state h3 {
+            font-size: 1rem;
+            color: var(--text);
+        }
+
+        .empty-state p {
+            margin: 0;
+            max-width: 46ch;
+            color: var(--muted);
+            font-size: 0.84rem;
+            line-height: 1.55;
+        }
+
+        .empty-state .cta-row {
+            display: inline-flex;
+            gap: 9px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 4px;
+        }
+
+        /* ---------- PREVIEW (handicapper inspect) ---------- */
         .preview-card {
             margin-bottom: 14px;
-            padding: 18px;
+            padding: 16px;
             border: 1px solid var(--line);
-            border-radius: 20px;
+            border-radius: 16px;
             background:
-                linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
+                linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.012)),
                 rgba(11, 20, 34, 0.94);
             box-shadow: var(--shadow);
         }
@@ -293,43 +579,36 @@
             display: flex;
             justify-content: space-between;
             gap: 12px;
-            align-items: start;
+            align-items: flex-start;
             margin-bottom: 12px;
         }
 
-        .preview-title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        .preview-title { display: flex; align-items: center; gap: 12px; }
 
         .preview-avatar {
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             display: inline-grid;
             place-items: center;
-            border-radius: 13px;
+            border-radius: 12px;
             background: linear-gradient(135deg, var(--gold), var(--teal));
             color: #06120f;
             font-size: 0.82rem;
             font-weight: 900;
         }
 
-        .preview-title h3 {
-            font-size: 1.16rem;
-            line-height: 1.05;
-        }
+        .preview-title h3 { font-size: 1.08rem; line-height: 1.05; }
 
         .preview-sub {
             margin-top: 4px;
             color: var(--muted);
-            font-size: 0.76rem;
-            line-height: 1.5;
+            font-size: 0.74rem;
+            line-height: 1.45;
         }
 
         .preview-grid {
             display: grid;
-            grid-template-columns: 290px minmax(0, 1fr);
+            grid-template-columns: 280px minmax(0, 1fr);
             gap: 14px;
             align-items: start;
         }
@@ -342,7 +621,7 @@
 
         .preview-stat {
             padding: 11px 12px;
-            border-radius: 14px;
+            border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.07);
             background: rgba(255,255,255,0.04);
         }
@@ -350,7 +629,7 @@
         .preview-stat span {
             display: block;
             color: var(--muted);
-            font-size: 0.66rem;
+            font-size: 0.64rem;
             font-weight: 800;
             letter-spacing: 0.1em;
             text-transform: uppercase;
@@ -358,50 +637,41 @@
 
         .preview-stat strong {
             display: block;
-            margin-top: 7px;
-            font-size: 0.96rem;
+            margin-top: 6px;
+            font-size: 0.94rem;
             line-height: 1.1;
         }
 
-        .split-list,
-        .pick-list {
-            display: grid;
-            gap: 9px;
-        }
+        .split-list, .pick-list { display: grid; gap: 9px; }
 
-        .split-item,
-        .pick-item {
+        .split-item, .pick-item {
             padding: 11px 12px;
-            border-radius: 14px;
+            border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.07);
             background: rgba(255,255,255,0.04);
         }
 
-        .split-item strong,
-        .pick-item strong {
+        .split-item strong, .pick-item strong {
             display: block;
-            font-size: 0.84rem;
+            font-size: 0.82rem;
             line-height: 1.4;
         }
 
-        .split-item span,
-        .pick-item span {
+        .split-item span, .pick-item span {
             display: block;
             margin-top: 5px;
             color: var(--muted);
-            font-size: 0.74rem;
+            font-size: 0.72rem;
             line-height: 1.45;
         }
 
         .pick-result {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            width: fit-content;
-            margin-top: 8px;
-            padding: 5px 8px;
+            margin-top: 7px;
+            padding: 4px 8px;
             border-radius: 999px;
-            font-size: 0.64rem;
+            font-size: 0.62rem;
             font-weight: 900;
             letter-spacing: 0.1em;
             text-transform: uppercase;
@@ -412,412 +682,357 @@
         .pick-result.push { background: rgba(148,163,184,0.14); color: #e2e8f0; }
         .pick-result.pending { background: rgba(96,165,250,0.14); color: #bfdbfe; }
 
-        .filters-grid {
-            display: grid;
-            grid-template-columns: 1.45fr repeat(3, minmax(0, 1fr));
-            gap: 10px;
-            margin-top: 12px;
-        }
-
-        .field {
-            display: grid;
-            gap: 6px;
-        }
-
-        .field label {
+        .rail-note {
+            margin: 4px 0 0;
             color: var(--muted);
-            font-size: 0.67rem;
-            font-weight: 800;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-        }
-
-        .field input,
-        .field select {
-            width: 100%;
-            min-height: 42px;
-            border: 1px solid rgba(148, 163, 184, 0.18);
-            border-radius: 12px;
-            padding: 0 13px;
-            color: var(--text);
-            background: rgba(255,255,255,0.045);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
-            font: 600 0.88rem/1 'Inter', sans-serif;
-        }
-
-        .field input::placeholder { color: #7a8ea4; }
-
-        .field input:focus,
-        .field select:focus {
-            outline: none;
-            border-color: rgba(45,212,191,0.38);
-            box-shadow: 0 0 0 3px rgba(45,212,191,0.12);
-        }
-
-        .table-wrap {
-            overflow-x: auto;
-            margin-top: 10px;
-        }
-
-        table {
-            width: 100%;
-            min-width: 920px;
-            border-collapse: collapse;
-        }
-
-        thead th {
-            padding: 0 0 10px;
-            color: #7c91a8;
-            font-size: 0.66rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.12em;
-            text-align: left;
-            border-bottom: 1px solid rgba(148,163,184,0.18);
-        }
-
-        tbody td {
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(148,163,184,0.12);
-            font-size: 0.84rem;
-            vertical-align: middle;
-        }
-
-        tbody tr:last-child td { border-bottom: none; }
-        tbody tr:hover { background: rgba(255,255,255,0.018); }
-
-        .rank {
-            width: 32px;
-            height: 32px;
-            display: inline-grid;
-            place-items: center;
-            border-radius: 999px;
-            background: rgba(255,255,255,0.08);
             font-size: 0.76rem;
-            font-weight: 900;
         }
 
-        .rank.top-1 { background: rgba(212,167,44,0.22); color: #ffe8a3; }
-        .rank.top-2 { background: rgba(148,163,184,0.24); color: #e2e8f0; }
-        .rank.top-3 { background: rgba(194,120,70,0.24); color: #ffd3b5; }
-
-        .capper {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 0;
-        }
-
-        .capper-avatar {
-            width: 36px;
-            height: 36px;
-            display: inline-grid;
-            place-items: center;
-            border-radius: 11px;
-            background: linear-gradient(135deg, var(--teal), #b9fff1);
-            color: #06120f;
-            font-size: 0.78rem;
-            font-weight: 900;
-            flex: 0 0 auto;
-        }
-
-        .capper-meta { min-width: 0; }
-
-        .capper-name {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            color: var(--text);
-            font-size: 0.88rem;
-            font-weight: 800;
-        }
-
-        .capper-name:hover { color: var(--teal); }
-
-        .capper-sub {
-            display: block;
-            margin-top: 4px;
+        .filters-foot {
+            margin: 8px 0 0;
+            padding-top: 8px;
             color: var(--muted);
-            font-size: 0.73rem;
-            line-height: 1.45;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 11.5px;
+            border-top: 1px solid var(--line);
         }
 
         .link-actions {
             display: inline-flex;
-            gap: 7px;
+            gap: 6px;
             flex-wrap: wrap;
         }
 
-        .pos { color: var(--green); font-weight: 850; }
-        .neg { color: var(--red); font-weight: 850; }
-        .neutral { color: var(--text); font-weight: 850; }
-
-        .rail-card {
-            display: grid;
-            gap: 12px;
-            align-content: start;
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 1080px) {
+            .layout-2col { grid-template-columns: 1fr; }
+            .preview-grid { grid-template-columns: 1fr; }
+            .quick-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         }
 
-        .rail-card h3 {
-            font-size: 1rem;
-            line-height: 1.05;
-        }
-
-        .loading,
-        .empty {
-            display: grid;
-            place-items: center;
-            min-height: 150px;
-            border-radius: 16px;
-            border: 1px dashed rgba(148,163,184,0.24);
-            background: rgba(255,255,255,0.03);
-            color: var(--muted);
-            text-align: center;
-            font-size: 0.86rem;
-        }
-
-        @media (max-width: 1180px) {
-            .hero,
-            .content {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 760px) {
-            .page {
-                width: min(100% - 22px, 1380px);
-                padding-top: 18px;
-            }
-
-            .hero-panel,
-            .hero-side,
-            .filters-card,
-            .table-card,
-            .rail-card {
-                padding: 16px;
-                border-radius: 18px;
-            }
-
-            .hero-metrics,
-            .filters-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .preview-grid,
-            .preview-stats {
-                grid-template-columns: 1fr;
-            }
-
-            h1 {
-                max-width: none;
-                font-size: clamp(2rem, 10.5vw, 2.8rem);
-            }
+        @media (max-width: 720px) {
+            .page { width: min(100% - 22px, 1280px); padding-top: 14px; }
+            .hero { padding: 16px; border-radius: 14px; }
+            .card { padding: 14px; border-radius: 14px; }
+            .filters-grid { grid-template-columns: 1fr; }
+            .quick-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .preview-stats { grid-template-columns: 1fr; }
+            .tab-btn { min-width: 0; padding: 8px 12px; font-size: 0.78rem; }
+            h1 { font-size: clamp(1.5rem, 6vw, 2rem); }
         }
     </style>
 </head>
 <body>
     <main class="page">
+        <!-- ============== HERO ============== -->
         <section class="hero">
-            <div class="hero-panel">
-                <span class="hero-kicker">Leaderboards</span>
-                <h1>Find the people actually beating the board.</h1>
-                <p>TrustMyRecord surfaces handicappers through public results, not screenshots or vague claims. Sort by ROI, units, sample size, current form, market splits, and trust score, then move straight from leaderboard to challenge.</p>
-                <div class="hero-metrics">
-                    <div class="hero-metric"><b id="heroCapperCount">0</b><span>Ranked cappers</span></div>
-                    <div class="hero-metric"><b id="heroPositiveRoi">0</b><span>Positive ROI</span></div>
-                    <div class="hero-metric"><b id="heroChallengeCount">0</b><span>Open battles</span></div>
-                    <div class="hero-metric"><b id="heroAvgSample">0</b><span>Avg sample size</span></div>
-                </div>
+            <span class="hero-kicker">Leaderboards Hub</span>
+            <h1>Every leaderboard. Every challenge. Every record.</h1>
+            <p>Track the top handicappers, trivia players, poll creators, challenge winners, and sports competitors across TrustMyRecord. Public results only. No fake records. No disappearing losses.</p>
+            <div class="quick-stats" id="quickStats">
+                <div class="qs-card"><b id="qsHandicappers">--</b><span>Ranked Handicappers</span></div>
+                <div class="qs-card"><b id="qsTrivia">--</b><span>Trivia Players</span></div>
+                <div class="qs-card"><b id="qsPolls">--</b><span>Active Polls</span></div>
+                <div class="qs-card"><b id="qsChallenges">--</b><span>Active Challenges</span></div>
+                <div class="qs-card"><b id="qsH2H">--</b><span>Open Head-to-Heads</span></div>
             </div>
-            <aside class="hero-side">
-                <div class="side-title">
-                    <div>
-                        <h2>Live challenge board</h2>
-                        <div class="side-note">Keep the rivalry layer visible so discovery leads directly into action.</div>
-                    </div>
-                    <a href="/arena/" class="mini-link">Open Arena</a>
-                </div>
-                <div id="heroChallenges" class="challenge-list">
-                    <div class="loading">Loading live competition...</div>
-                </div>
-            </aside>
         </section>
 
-        <section class="content">
-            <div>
-                <div class="filters-card">
-                    <div class="filters-head">
-                        <div>
-                            <h2>Board filters</h2>
-                            <p>Refine the leaderboard by sport, sorting logic, and minimum proof threshold.</p>
-                        </div>
-                        <button type="button" class="mini-link" data-action="reset-filters">Reset</button>
-                    </div>
-                    <div class="filters-grid">
-                        <div class="field">
-                            <label for="capperSearch">Search capper</label>
-                            <input id="capperSearch" type="text" placeholder="@username or display name">
-                        </div>
-                        <div class="field">
-                            <label for="sportFilter">Sport</label>
-                            <select id="sportFilter">
-                                <option value="all">All sports</option>
-                                <option value="NFL">NFL</option>
-                                <option value="NBA">NBA</option>
-                                <option value="MLB">MLB</option>
-                                <option value="NHL">NHL</option>
-                                <option value="NCAAB">NCAAB</option>
-                                <option value="NCAAF">NCAAF</option>
-                                <option value="Soccer">Soccer</option>
-                                <option value="UFC">UFC</option>
-                            </select>
-                        </div>
-                        <div class="field">
-                            <label for="sortFilter">Sort by</label>
-                            <select id="sortFilter">
-                                <option value="roi">ROI</option>
-                                <option value="units">Net units</option>
-                                <option value="winRate">Win rate</option>
-                                <option value="totalPicks">Sample size</option>
-                                <option value="avgOdds">Average odds</option>
-                                <option value="streak">Current streak</option>
-                                <option value="bestSport">Best sport ROI</option>
-                                <option value="bestMarket">Best market ROI</option>
-                                <option value="underdogRoi">Underdog ROI</option>
-                                <option value="favoriteRoi">Favorite ROI</option>
-                                <option value="totalsRoi">Totals ROI</option>
-                                <option value="spreadRoi">Spread ROI</option>
-                                <option value="moneylineRoi">Moneyline ROI</option>
-                                <option value="consistency">Consistency score</option>
-                                <option value="trust">Trust score</option>
-                            </select>
-                        </div>
-                        <div class="field">
-                            <label for="sampleFilter">Minimum picks</label>
-                            <select id="sampleFilter">
-                                <option value="5">5 picks</option>
-                                <option value="10">10 picks</option>
-                                <option value="25">25 picks</option>
-                                <option value="50">50 picks</option>
-                                <option value="100">100 picks</option>
-                                <option value="250">250 picks</option>
-                            </select>
-                        </div>
-                        <div class="field">
-                            <label for="periodFilter">Time period</label>
-                            <select id="periodFilter">
-                                <option value="all">All time</option>
-                                <option value="7">Last 7 days</option>
-                                <option value="14">Last 14 days</option>
-                                <option value="30">Last 30 days</option>
-                                <option value="60">Last 60 days</option>
-                                <option value="90">Last 90 days</option>
-                                <option value="180">Last 180 days</option>
-                                <option value="365">Last 365 days</option>
-                                <option value="season">Current season</option>
-                            </select>
-                        </div>
-                        <div class="field">
-                            <label for="roleFilter">Role</label>
-                            <select id="roleFilter">
-                                <option value="all">All cappers</option>
-                                <option value="sellers">Pick sellers only</option>
-                                <option value="positive">Positive ROI only</option>
-                                <option value="hot">Active hot streaks</option>
-                            </select>
-                        </div>
-                    </div>
-                    <p class="filters-foot" style="color: var(--muted); font-size: 11.5px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line);">Sorts that need data the platform does not yet expose for a given capper (market splits, consistency, trust score) keep that capper in the visible list and show a placeholder cell instead of fabricating a number.</p>
-                </div>
+        <!-- ============== TABS ============== -->
+        <nav class="tabbar" role="tablist" aria-label="Leaderboard sections">
+            <button type="button" class="tab-btn active" data-tab="handicappers" role="tab" aria-selected="true">
+                Handicapper Records<span class="tab-count" id="tabCountHandicappers">0</span>
+            </button>
+            <button type="button" class="tab-btn" data-tab="trivia" role="tab" aria-selected="false">
+                Trivia Points<span class="tab-count" id="tabCountTrivia">0</span>
+            </button>
+            <button type="button" class="tab-btn" data-tab="polls" role="tab" aria-selected="false">
+                Poll Leaders<span class="tab-count" id="tabCountPolls">0</span>
+            </button>
+            <button type="button" class="tab-btn" data-tab="online" role="tab" aria-selected="false">
+                Online Challenges<span class="tab-count" id="tabCountOnline">0</span>
+            </button>
+            <button type="button" class="tab-btn" data-tab="h2h" role="tab" aria-selected="false">
+                Handicapper Challenges<span class="tab-count" id="tabCountH2H">0</span>
+            </button>
+        </nav>
 
-                <div id="capperPreviewCard" class="preview-card" style="display:none;">
-                    <div class="preview-head">
-                        <div class="preview-title">
-                            <div id="previewAvatar" class="preview-avatar">T</div>
+        <!-- ============== PANEL: HANDICAPPER RECORDS ============== -->
+        <section class="panel active" id="panel-handicappers" role="tabpanel">
+            <div class="layout-2col">
+                <div>
+                    <div class="card">
+                        <div class="card-head">
                             <div>
-                                <h3 id="previewName">Capper preview</h3>
-                                <div id="previewMeta" class="preview-sub">Recent picks and split snapshot</div>
+                                <h2>Board filters</h2>
+                                <p>Refine the leaderboard by sport, sorting logic, and minimum proof threshold.</p>
+                            </div>
+                            <button type="button" class="mini-link" data-action="reset-filters">Reset</button>
+                        </div>
+                        <div class="filters-grid">
+                            <div class="field">
+                                <label for="capperSearch">Search capper</label>
+                                <input id="capperSearch" type="text" placeholder="@username or display name">
+                            </div>
+                            <div class="field">
+                                <label for="sportFilter">Sport</label>
+                                <select id="sportFilter">
+                                    <option value="all">All sports</option>
+                                    <option value="NFL">NFL</option>
+                                    <option value="NBA">NBA</option>
+                                    <option value="MLB">MLB</option>
+                                    <option value="NHL">NHL</option>
+                                    <option value="NCAAB">NCAAB</option>
+                                    <option value="NCAAF">NCAAF</option>
+                                    <option value="Soccer">Soccer</option>
+                                    <option value="UFC">UFC</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="sortFilter">Sort by</label>
+                                <select id="sortFilter">
+                                    <option value="roi">ROI</option>
+                                    <option value="units">Net units</option>
+                                    <option value="winRate">Win rate</option>
+                                    <option value="totalPicks">Sample size</option>
+                                    <option value="streak">Current streak</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="sampleFilter">Minimum picks</label>
+                                <select id="sampleFilter">
+                                    <option value="5">5 picks</option>
+                                    <option value="10">10 picks</option>
+                                    <option value="25">25 picks</option>
+                                    <option value="50">50 picks</option>
+                                    <option value="100">100 picks</option>
+                                    <option value="250">250 picks</option>
+                                </select>
                             </div>
                         </div>
-                        <div class="link-actions">
-                            <a id="previewProfileLink" class="mini-link" href="/profile/">Full profile</a>
-                            <a id="previewChallengeLink" class="mini-link" href="/arena/">Challenge</a>
-                        </div>
+                        <p class="filters-foot">Sorts that need data the platform does not yet expose for a given capper keep that capper visible and show a placeholder cell instead of fabricating a number.</p>
                     </div>
-                    <div class="preview-grid">
-                        <div>
-                            <div id="previewStats" class="preview-stats">
-                                <div class="loading" style="min-height:120px;">Loading capper snapshot...</div>
+
+                    <div id="capperPreviewCard" class="preview-card" style="display:none;">
+                        <div class="preview-head">
+                            <div class="preview-title">
+                                <div id="previewAvatar" class="preview-avatar">T</div>
+                                <div>
+                                    <h3 id="previewName">Capper preview</h3>
+                                    <div id="previewMeta" class="preview-sub">Recent picks and split snapshot</div>
+                                </div>
+                            </div>
+                            <div class="link-actions">
+                                <a id="previewProfileLink" class="mini-link" href="/profile/">Full profile</a>
+                                <a id="previewChallengeLink" class="mini-link" href="/arena/">Challenge</a>
                             </div>
                         </div>
-                        <div>
+                        <div class="preview-grid">
+                            <div>
+                                <div id="previewStats" class="preview-stats">
+                                    <div class="loading">Loading capper snapshot...</div>
+                                </div>
+                            </div>
                             <div style="display:grid;gap:14px;">
                                 <div>
-                                    <div class="rail-note" style="margin-bottom:10px;">Best current split</div>
+                                    <div class="rail-note" style="margin-bottom:8px;">Best current split</div>
                                     <div id="previewSplits" class="split-list">
-                                        <div class="loading" style="min-height:120px;">Loading split data...</div>
+                                        <div class="loading">Loading split data...</div>
                                     </div>
                                 </div>
                                 <div>
-                                    <div class="rail-note" style="margin-bottom:10px;">Recent verified picks</div>
+                                    <div class="rail-note" style="margin-bottom:8px;">Recent verified picks</div>
                                     <div id="previewPicks" class="pick-list">
-                                        <div class="loading" style="min-height:120px;">Loading recent picks...</div>
+                                        <div class="loading">Loading recent picks...</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <div class="card">
+                        <div class="card-head">
+                            <div>
+                                <h2>Handicapper leaderboard</h2>
+                                <p>Verified ranking data powering profile discovery, record trust, and head-to-head credibility.</p>
+                            </div>
+                            <div class="count-chip" id="resultCount">0 cappers</div>
+                        </div>
+                        <div id="leaderboardState" class="loading">Loading verified handicapper data...</div>
+                        <div id="leaderboardWrap" class="table-wrap" style="display:none;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width:54px;">Rank</th>
+                                        <th>Capper</th>
+                                        <th>Record</th>
+                                        <th>ROI</th>
+                                        <th>Units</th>
+                                        <th>Win%</th>
+                                        <th>Picks</th>
+                                        <th style="width:160px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leaderboardBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="table-card">
-                    <div class="table-head">
-                        <div>
-                            <h2>Handicapper leaderboard</h2>
-                            <p>Verified ranking data powering profile discovery, record trust, and head-to-head credibility.</p>
+                <aside style="display:grid;gap:14px;">
+                    <div class="card" style="margin-bottom:0;">
+                        <div class="card-head"><div><h2>Hot streaks</h2><p>Current heaters from the live board.</p></div></div>
+                        <div id="streakRail" class="rail-list">
+                            <div class="loading">Loading streak leaders...</div>
                         </div>
-                        <div class="count-chip" id="resultCount">0 cappers</div>
                     </div>
-                    <div id="leaderboardState" class="loading">Loading verified handicapper data...</div>
-                    <div id="leaderboardWrap" class="table-wrap" style="display:none;">
+                    <div class="card" style="margin-bottom:0;">
+                        <div class="card-head"><div><h2>Sample-size leaders</h2><p>High-volume records with real sample.</p></div></div>
+                        <div id="volumeRail" class="rail-list">
+                            <div class="loading">Loading volume leaders...</div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <!-- ============== PANEL: TRIVIA ============== -->
+        <section class="panel" id="panel-trivia" role="tabpanel">
+            <div class="layout-2col">
+                <div class="card" style="margin-bottom:0;">
+                    <div class="card-head">
+                        <div>
+                            <h2>Trivia points leaderboard</h2>
+                            <p>Top players by total points earned across every trivia category.</p>
+                        </div>
+                        <div class="link-actions">
+                            <select id="triviaPeriod" class="mini-link" style="padding:0 12px;height:30px;border-radius:999px;background:rgba(255,255,255,0.04);color:var(--text);border:1px solid rgba(148,163,184,0.18);font-weight:800;font-size:0.7rem;">
+                                <option value="all">All time</option>
+                                <option value="month">Last 30 days</option>
+                                <option value="week">Last 7 days</option>
+                            </select>
+                            <a class="mini-link" href="/polls-trivia/">Play Trivia</a>
+                        </div>
+                    </div>
+                    <div id="triviaState" class="loading">Loading trivia leaderboard...</div>
+                    <div id="triviaWrap" class="table-wrap" style="display:none;">
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="width:64px;">Rank</th>
-                                    <th>Capper</th>
-                                    <th>Record</th>
-                                    <th>ROI</th>
-                                    <th>Units</th>
-                                    <th>Win rate</th>
-                                    <th>Picks</th>
-                                    <th style="width:170px;">Actions</th>
+                                    <th style="width:54px;">Rank</th>
+                                    <th>Player</th>
+                                    <th>Total Points</th>
+                                    <th>Correct</th>
+                                    <th>Accuracy</th>
+                                    <th>Categories</th>
                                 </tr>
                             </thead>
-                            <tbody id="leaderboardBody"></tbody>
+                            <tbody id="triviaBody"></tbody>
                         </table>
                     </div>
                 </div>
+
+                <aside class="card" style="margin-bottom:0;">
+                    <div class="card-head"><div><h2>Top question creators</h2><p>Players authoring the most approved trivia questions.</p></div></div>
+                    <div id="triviaCreatorRail" class="rail-list">
+                        <div class="loading">Loading creators...</div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <!-- ============== PANEL: POLLS ============== -->
+        <section class="panel" id="panel-polls" role="tabpanel">
+            <div class="card" style="margin-bottom:0;">
+                <div class="card-head">
+                    <div>
+                        <h2>Poll leaders</h2>
+                        <p>Top voters by points earned on resolved prediction polls.</p>
+                    </div>
+                    <div class="link-actions">
+                        <select id="pollsPeriod" class="mini-link" style="padding:0 12px;height:30px;border-radius:999px;background:rgba(255,255,255,0.04);color:var(--text);border:1px solid rgba(148,163,184,0.18);font-weight:800;font-size:0.7rem;">
+                            <option value="all">All time</option>
+                            <option value="month">Last 30 days</option>
+                            <option value="week">Last 7 days</option>
+                        </select>
+                        <a class="mini-link" href="/polls/">Open Polls</a>
+                    </div>
+                </div>
+                <div id="pollsState" class="loading">Loading poll leaderboard...</div>
+                <div id="pollsWrap" class="table-wrap" style="display:none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:54px;">Rank</th>
+                                <th>Player</th>
+                                <th>Total Points</th>
+                                <th>Polls Voted</th>
+                                <th>Correct</th>
+                                <th>Accuracy</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pollsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============== PANEL: ONLINE CHALLENGES ============== -->
+        <section class="panel" id="panel-online" role="tabpanel">
+            <div class="card">
+                <div class="card-head">
+                    <div>
+                        <h2>Online challenges</h2>
+                        <p>MLB The Show, Madden, NBA 2K, FIFA, trivia battles, sports history, and fan debate matchups.</p>
+                    </div>
+                    <a class="btn btn-primary" href="/arena/">Create Challenge</a>
+                </div>
+                <div id="onlineOpenState" class="loading">Loading open challenges...</div>
+                <div id="onlineOpenWrap" class="challenge-grid" style="display:none;"></div>
             </div>
 
-            <aside class="rail-card">
-                <div>
-                    <h3>Hot streaks</h3>
-                    <div class="rail-note">Current heaters pulled from the same live leaderboard.</div>
-                </div>
-                <div id="streakRail" class="rail-list">
-                    <div class="loading">Loading streak leaders...</div>
+            <div class="layout-2col">
+                <div class="card" style="margin-bottom:0;">
+                    <div class="card-head"><div><h2>Active matchups</h2><p>Challenges that have been accepted and are awaiting score submission.</p></div></div>
+                    <div id="onlineActiveState" class="loading">Loading active matchups...</div>
+                    <div id="onlineActiveWrap" class="rail-list" style="display:none;"></div>
                 </div>
 
-                <div>
-                    <h3>Sample-size leaders</h3>
-                    <div class="rail-note">High-volume records with enough sample to actually matter.</div>
+                <aside class="card" style="margin-bottom:0;">
+                    <div class="card-head"><div><h2>Recent winners</h2><p>Most recently completed gaming wins.</p></div></div>
+                    <div id="onlineCompletedState" class="loading">Loading recent winners...</div>
+                    <div id="onlineCompletedWrap" class="rail-list" style="display:none;"></div>
+                </aside>
+            </div>
+        </section>
+
+        <!-- ============== PANEL: HANDICAPPER CHALLENGES (head-to-head) ============== -->
+        <section class="panel" id="panel-h2h" role="tabpanel">
+            <div class="card" style="margin-bottom:0;">
+                <div class="card-head">
+                    <div>
+                        <h2>Head-to-head pick battles</h2>
+                        <p>Capper vs capper. Same game window, locked records, public outcome.</p>
+                    </div>
+                    <a class="btn btn-primary" href="/arena/?challenge=new">Start Handicapper Challenge</a>
                 </div>
-                <div id="volumeRail" class="rail-list">
-                    <div class="loading">Loading volume leaders...</div>
+                <div id="h2hState" class="loading">Loading head-to-head battles...</div>
+                <div id="h2hWrap" class="table-wrap" style="display:none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Challenger</th>
+                                <th>Opponent</th>
+                                <th>Sport</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Score / Record</th>
+                                <th>Winner</th>
+                            </tr>
+                        </thead>
+                        <tbody id="h2hBody"></tbody>
+                    </table>
                 </div>
-            </aside>
+            </div>
         </section>
     </main>
 
@@ -826,11 +1041,10 @@
 <script src="/static/js/auth-persistent.js?v=20260424a"></script>
 <script src="/static/js/analytics.js?v=20260417"></script>
     <script>
-        let fullLeaderboard = [];
-        let filteredLeaderboard = [];
-        let activePreviewUsername = '';
-
-        function trackHandicappers(eventName, params) {
+        /* =========================================================
+         * SHARED HELPERS
+         * ========================================================= */
+        function trackHub(eventName, params) {
             if (typeof window.TMRAnalytics !== 'undefined' && typeof window.TMRAnalytics.track === 'function') {
                 window.TMRAnalytics.track(eventName, params || {});
             }
@@ -843,12 +1057,6 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
-        }
-
-        function escapeJs(value) {
-            return String(value == null ? '' : value)
-                .replace(/\\/g, '\\\\')
-                .replace(/'/g, "\\'");
         }
 
         function num(value) {
@@ -877,6 +1085,79 @@
             return Math.round(diff / day) + 'd ago';
         }
 
+        function rankClassFor(index) {
+            if (index === 0) return 'top-1';
+            if (index === 1) return 'top-2';
+            if (index === 2) return 'top-3';
+            return '';
+        }
+
+        function avatarHtml(displayName, avatarUrl) {
+            const letter = escapeHtml(String(displayName || '?').charAt(0).toUpperCase());
+            if (avatarUrl) {
+                return '<span class="person-avatar"><img src="' + escapeHtml(avatarUrl) + '" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode(\'' + letter + '\'));this.parentNode &amp;&amp; (this.parentNode.textContent=\'' + letter + '\');"></span>';
+            }
+            return '<span class="person-avatar">' + letter + '</span>';
+        }
+
+        function emptyStateHtml(opts) {
+            const ctas = (opts.ctas || []).map(function(c) {
+                return '<a class="btn ' + (c.primary ? 'btn-primary' : 'btn-outline') + '" href="' + escapeHtml(c.href) + '">' + escapeHtml(c.label) + '</a>';
+            }).join('');
+            return '<div class="empty-state">'
+                + '<div class="icon">' + escapeHtml(opts.icon || '★') + '</div>'
+                + '<h3>' + escapeHtml(opts.title) + '</h3>'
+                + '<p>' + escapeHtml(opts.body) + '</p>'
+                + (ctas ? '<div class="cta-row">' + ctas + '</div>' : '')
+                + '</div>';
+        }
+
+        function setStateAsEmpty(stateEl, html) {
+            stateEl.classList.remove('loading');
+            stateEl.style.background = 'transparent';
+            stateEl.style.border = '0';
+            stateEl.style.minHeight = '0';
+            stateEl.innerHTML = html;
+        }
+
+        /* =========================================================
+         * TAB SWITCHING
+         * ========================================================= */
+        const TABS = ['handicappers', 'trivia', 'polls', 'online', 'h2h'];
+        const tabLoaders = {};
+
+        function activateTab(name) {
+            TABS.forEach(function(t) {
+                const btn = document.querySelector('.tab-btn[data-tab="' + t + '"]');
+                const panel = document.getElementById('panel-' + t);
+                if (!btn || !panel) return;
+                const isActive = (t === name);
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                panel.classList.toggle('active', isActive);
+            });
+            if (tabLoaders[name] && !tabLoaders[name].loaded) {
+                tabLoaders[name].loaded = true;
+                tabLoaders[name].run();
+            }
+            trackHub('leaderboards_tab_changed', { tab: name });
+        }
+
+        function bindTabs() {
+            document.querySelectorAll('.tab-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    activateTab(btn.getAttribute('data-tab'));
+                });
+            });
+        }
+
+        /* =========================================================
+         * HANDICAPPER LEADERBOARD (preserved)
+         * ========================================================= */
+        let fullLeaderboard = [];
+        let filteredLeaderboard = [];
+        let activePreviewUsername = '';
+
         function normalizeEntry(entry) {
             const username = entry.username || entry.user_name || entry.handle || '';
             const wins = num(entry.wins);
@@ -891,15 +1172,11 @@
                 raw: entry,
                 username: username,
                 displayName: entry.display_name || entry.displayName || username,
+                avatarUrl: entry.avatar_url || entry.avatarUrl || '',
                 sport: entry.sport || entry.primary_sport || 'All',
-                wins: wins,
-                losses: losses,
-                pushes: pushes,
+                wins: wins, losses: losses, pushes: pushes,
                 totalPicks: totalPicks,
-                roi: roi,
-                units: units,
-                winRate: winRate,
-                streak: streak
+                roi: roi, units: units, winRate: winRate, streak: streak
             };
         }
 
@@ -907,10 +1184,7 @@
             const game = pick.game_title || pick.matchup || pick.event_name || [pick.away_team, pick.home_team].filter(Boolean).join(' @ ') || 'Recent pick';
             const selection = pick.selection || pick.pick_name || pick.pick || 'Selection';
             const line = pick.line != null ? ' ' + pick.line : pick.line_snapshot != null ? ' ' + pick.line_snapshot : '';
-            return {
-                title: selection + line,
-                game: game
-            };
+            return { title: selection + line, game: game };
         }
 
         function getResultClass(result) {
@@ -919,14 +1193,6 @@
             if (normalized === 'lost' || normalized === 'loss') return 'lost';
             if (normalized === 'push') return 'push';
             return 'pending';
-        }
-
-        function setHeroStats(entries) {
-            const positiveRoi = entries.filter(function(entry) { return entry.roi > 0; }).length;
-            const avgSample = entries.length ? Math.round(entries.reduce(function(sum, entry) { return sum + entry.totalPicks; }, 0) / entries.length) : 0;
-            document.getElementById('heroCapperCount').textContent = String(entries.length);
-            document.getElementById('heroPositiveRoi').textContent = String(positiveRoi);
-            document.getElementById('heroAvgSample').textContent = String(avgSample);
         }
 
         function renderLeaderboard(entries) {
@@ -939,48 +1205,43 @@
             if (!entries.length) {
                 wrap.style.display = 'none';
                 state.style.display = 'block';
-                state.className = '';
-                state.innerHTML = ''
-                    + '<div class="tmr-empty">'
-                    + '  <div class="tmr-empty__icon">★</div>'
-                    + '  <div class="tmr-empty__title">No ranked cappers yet</div>'
-                    + '  <p class="tmr-empty__body">Lock your first pick to start a public record. Once a capper has graded picks behind their name, they show up here ranked by ROI, units, sample size, current streak, and the rest of the metrics in the sort menu.</p>'
-                    + '  <div class="tmr-empty__cta">'
-                    + '    <a class="btn btn-primary" href="/sportsbook/">Lock Your First Pick</a>'
-                    + '    <a class="btn btn-outline" href="/arena/">Invite A Rival</a>'
-                    + '  </div>'
-                    + '</div>';
+                setStateAsEmpty(state, emptyStateHtml({
+                    icon: '★',
+                    title: 'No ranked handicappers yet',
+                    body: 'Lock your first pick to start a public record. Once a capper has graded picks behind their name, they show up here ranked by ROI, units, sample size, and current streak.',
+                    ctas: [
+                        { label: 'Lock Your First Pick', href: '/sportsbook/', primary: true },
+                        { label: 'Invite A Rival', href: '/arena/' }
+                    ]
+                }));
                 return;
             }
 
             state.style.display = 'none';
             wrap.style.display = '';
             body.innerHTML = entries.map(function(entry, index) {
-                const rankClass = index === 0 ? 'top-1' : index === 1 ? 'top-2' : index === 2 ? 'top-3' : '';
+                const rankClass = rankClassFor(index);
                 const record = entry.wins + '-' + entry.losses + (entry.pushes ? '-' + entry.pushes : '');
-                const statClass = function(value) {
-                    return value > 0 ? 'pos' : value < 0 ? 'neg' : 'neutral';
-                };
-                return '<tr>' +
-                    '<td><span class="rank ' + rankClass + '">#' + (index + 1) + '</span></td>' +
-                    '<td><div class="capper">' +
-                        '<span class="capper-avatar">' + escapeHtml((entry.displayName || '?').charAt(0).toUpperCase()) + '</span>' +
-                        '<div class="capper-meta">' +
-                            '<a class="capper-name" href="/profile/?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">' + escapeHtml(entry.displayName) + '</a>' +
-                            '<span class="capper-sub">@' + escapeHtml(entry.username) + ' • ' + escapeHtml(entry.sport || 'All sports') + ' • streak ' + (entry.streak > 0 ? 'W' + entry.streak : entry.streak < 0 ? 'L' + Math.abs(entry.streak) : '0') + '</span>' +
-                        '</div>' +
-                    '</div></td>' +
-                    '<td class="' + statClass(entry.winRate - 50) + '">' + record + '</td>' +
-                    '<td class="' + statClass(entry.roi) + '">' + signed(entry.roi, '%') + '</td>' +
-                    '<td class="' + statClass(entry.units) + '">' + signed(entry.units, 'u') + '</td>' +
-                    '<td class="' + statClass(entry.winRate - 50) + '">' + entry.winRate.toFixed(1) + '%</td>' +
-                    '<td>' + entry.totalPicks + '</td>' +
-                    '<td><div class="link-actions">' +
-                        '<button type="button" class="mini-link" data-action="inspect-capper" data-username="' + escapeHtml(entry.username) + '">Inspect</button>' +
-                        '<a class="mini-link" href="/profile/?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">Profile</a>' +
-                        '<a class="mini-link" href="/arena/?challenge=' + encodeURIComponent(entry.username) + '" data-action="challenge-capper" data-username="' + escapeHtml(entry.username) + '" data-source="board">Challenge</a>' +
-                    '</div></td>' +
-                '</tr>';
+                const statClass = function(value) { return value > 0 ? 'pos' : value < 0 ? 'neg' : 'neutral'; };
+                const streakLabel = entry.streak > 0 ? 'W' + entry.streak : entry.streak < 0 ? 'L' + Math.abs(entry.streak) : '0';
+                return '<tr>'
+                    + '<td><span class="rank ' + rankClass + '">#' + (index + 1) + '</span></td>'
+                    + '<td><div class="person">' + avatarHtml(entry.displayName, entry.avatarUrl)
+                    +     '<div class="person-meta">'
+                    +       '<a class="person-name" href="/profile/?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">' + escapeHtml(entry.displayName) + '</a>'
+                    +       '<span class="person-sub">@' + escapeHtml(entry.username) + ' • ' + escapeHtml(entry.sport || 'All sports') + ' • streak ' + streakLabel + '</span>'
+                    +     '</div></div></td>'
+                    + '<td class="' + statClass(entry.winRate - 50) + '">' + record + '</td>'
+                    + '<td class="' + statClass(entry.roi) + '">' + signed(entry.roi, '%') + '</td>'
+                    + '<td class="' + statClass(entry.units) + '">' + signed(entry.units, 'u') + '</td>'
+                    + '<td class="' + statClass(entry.winRate - 50) + '">' + entry.winRate.toFixed(1) + '%</td>'
+                    + '<td>' + entry.totalPicks + '</td>'
+                    + '<td><div class="link-actions">'
+                    +     '<button type="button" class="mini-link" data-action="inspect-capper" data-username="' + escapeHtml(entry.username) + '">Inspect</button>'
+                    +     '<a class="mini-link" href="/profile/?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">Profile</a>'
+                    +     '<a class="mini-link" href="/arena/?challenge=' + encodeURIComponent(entry.username) + '" data-action="challenge-capper" data-username="' + escapeHtml(entry.username) + '" data-source="board">Challenge</a>'
+                    + '</div></td>'
+                    + '</tr>';
             }).join('');
         }
 
@@ -991,11 +1252,11 @@
                 return;
             }
             rail.innerHTML = entries.map(function(entry) {
-                return '<a class="rail-item" href="/profile/?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="streak_rail">' +
-                    '<strong>' + escapeHtml(entry.displayName) + '</strong>' +
-                    '<span>@' + escapeHtml(entry.username) + ' • ' + entry.winRate.toFixed(1) + '% win rate • ' + signed(entry.units, 'u') + '</span>' +
-                    '<span class="badge">W' + entry.streak + ' current run</span>' +
-                '</a>';
+                return '<a class="rail-item" href="/profile/?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="streak_rail">'
+                    + '<strong>' + escapeHtml(entry.displayName) + '</strong>'
+                    + '<span>@' + escapeHtml(entry.username) + ' • ' + entry.winRate.toFixed(1) + '% win rate • ' + signed(entry.units, 'u') + '</span>'
+                    + '<span class="badge">W' + entry.streak + ' current run</span>'
+                    + '</a>';
             }).join('');
         }
 
@@ -1006,37 +1267,17 @@
                 return;
             }
             rail.innerHTML = entries.map(function(entry) {
-                return '<a class="rail-item" href="/profile/?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="volume_rail">' +
-                    '<strong>' + escapeHtml(entry.displayName) + '</strong>' +
-                    '<span>' + entry.totalPicks + ' picks • ' + signed(entry.roi, '%') + ' ROI • ' + signed(entry.units, 'u') + '</span>' +
-                    '<span class="badge gold">Verified sample</span>' +
-                '</a>';
+                return '<a class="rail-item" href="/profile/?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="volume_rail">'
+                    + '<strong>' + escapeHtml(entry.displayName) + '</strong>'
+                    + '<span>' + entry.totalPicks + ' picks • ' + signed(entry.roi, '%') + ' ROI • ' + signed(entry.units, 'u') + '</span>'
+                    + '<span class="badge gold">Verified sample</span>'
+                    + '</a>';
             }).join('');
         }
 
-        function renderChallenges(entries) {
-            const container = document.getElementById('heroChallenges');
-            document.getElementById('heroChallengeCount').textContent = String(entries.length);
-            if (!entries.length) {
-                container.innerHTML = '<div class="empty">No live arena challenges right now.</div>';
-                return;
-            }
-            container.innerHTML = entries.map(function(entry) {
-                const title = entry.title || entry.game_title || entry.game_slug || 'Open challenge';
-                const challenger = entry.challenger_display || entry.challenger_username || 'Challenger';
-                const challenged = entry.challenged_display || entry.challenged_username || 'Open';
-                const status = String(entry.status || 'pending').replace(/_/g, ' ');
-                return '<a class="challenge-row" href="/arena/" data-action="open-arena-challenge" data-challenge-id="' + escapeHtml(String(entry.id || 'unknown')) + '" data-source="hero">' +
-                    '<span class="badge">' + escapeHtml(status) + '</span>' +
-                    '<strong>' + escapeHtml(title) + '</strong>' +
-                    '<span>' + escapeHtml(challenger) + ' vs ' + escapeHtml(challenged) + ' • ' + escapeHtml(entry.game_title || entry.game_slug || 'Arena') + ' • ' + timeAgo(entry.created_at || entry.createdAt) + '</span>' +
-                '</a>';
-            }).join('');
-        }
-
-        function renderPreviewPlaceholder() {
-            document.getElementById('capperPreviewCard').style.display = 'none';
-            activePreviewUsername = '';
+        function setQuickStats(handicapperEntries) {
+            document.getElementById('qsHandicappers').textContent = String(handicapperEntries.length);
+            document.getElementById('tabCountHandicappers').textContent = String(handicapperEntries.length);
         }
 
         function renderPreviewStats(entry, advancedData) {
@@ -1053,10 +1294,9 @@
             }).join('');
         }
 
-        function renderPreviewSplits(advancedData, entry) {
+        function renderPreviewSplits(advancedData) {
             const container = document.getElementById('previewSplits');
             const candidates = [];
-
             if (advancedData) {
                 const pushSplit = function(label, source) {
                     if (!source || source.picks == null || num(source.picks) === 0) return;
@@ -1067,7 +1307,6 @@
                         picks: num(source.picks)
                     });
                 };
-
                 pushSplit('Favorites', advancedData.favorite);
                 pushSplit('Underdogs', advancedData.underdog);
                 pushSplit('Home', advancedData.home);
@@ -1077,14 +1316,12 @@
                 pushSplit('Total', advancedData.total);
                 pushSplit('First half / first 5', advancedData.firstHalf || advancedData.first5);
             }
-
             candidates.sort(function(a, b) { return b.roi - a.roi; });
             const top = candidates.slice(0, 3);
             if (!top.length) {
-                container.innerHTML = '<div class="empty" style="min-height:110px;">No split data available yet.</div>';
+                container.innerHTML = '<div class="empty" style="min-height:100px;">No split data available yet.</div>';
                 return;
             }
-
             container.innerHTML = top.map(function(item) {
                 return '<div class="split-item"><strong>' + escapeHtml(item.label) + '</strong><span>' + item.record + ' • ' + signed(item.roi, '%') + ' ROI • ' + item.picks + ' picks</span></div>';
             }).join('');
@@ -1093,41 +1330,38 @@
         function renderPreviewPicks(picks) {
             const container = document.getElementById('previewPicks');
             if (!picks.length) {
-                container.innerHTML = '<div class="empty" style="min-height:110px;">No recent picks available.</div>';
+                container.innerHTML = '<div class="empty" style="min-height:100px;">No recent picks available.</div>';
                 return;
             }
-
             container.innerHTML = picks.map(function(pick) {
                 const desc = describeRecentPick(pick);
                 const resultClass = getResultClass(pick.result || pick.status);
                 const odds = pick.odds != null ? ' • ' + pick.odds : '';
                 const units = pick.units != null ? ' • ' + signed(pick.units, 'u') : '';
-                return '<div class="pick-item">' +
-                    '<strong>' + escapeHtml(desc.title) + '</strong>' +
-                    '<span>' + escapeHtml(desc.game) + odds + units + '</span>' +
-                    '<span class="pick-result ' + resultClass + '">' + escapeHtml(resultClass) + '</span>' +
-                '</div>';
+                return '<div class="pick-item">'
+                    + '<strong>' + escapeHtml(desc.title) + '</strong>'
+                    + '<span>' + escapeHtml(desc.game) + odds + units + '</span>'
+                    + '<span class="pick-result ' + resultClass + '">' + escapeHtml(resultClass) + '</span>'
+                    + '</div>';
             }).join('');
         }
 
         async function inspectCapper(username) {
             const entry = fullLeaderboard.find(function(item) { return item.username === username; });
             if (!entry || !window.api) return;
-
             activePreviewUsername = username;
             const card = document.getElementById('capperPreviewCard');
             card.style.display = '';
             document.getElementById('previewAvatar').textContent = (entry.displayName || '?').charAt(0).toUpperCase();
             document.getElementById('previewName').textContent = entry.displayName;
-            document.getElementById('previewMeta').textContent = '@' + entry.username + ' • ' + entry.totalPicks + ' picks • ' + escapeHtml(entry.sport || 'All sports');
+            document.getElementById('previewMeta').textContent = '@' + entry.username + ' • ' + entry.totalPicks + ' picks • ' + (entry.sport || 'All sports');
             document.getElementById('previewProfileLink').href = '/profile/?user=' + encodeURIComponent(entry.username);
             document.getElementById('previewChallengeLink').href = '/arena/?challenge=' + encodeURIComponent(entry.username);
-            document.getElementById('previewStats').innerHTML = '<div class="loading" style="min-height:120px;">Loading capper snapshot...</div>';
-            document.getElementById('previewSplits').innerHTML = '<div class="loading" style="min-height:110px;">Loading split data...</div>';
-            document.getElementById('previewPicks').innerHTML = '<div class="loading" style="min-height:110px;">Loading recent picks...</div>';
+            document.getElementById('previewStats').innerHTML = '<div class="loading">Loading capper snapshot...</div>';
+            document.getElementById('previewSplits').innerHTML = '<div class="loading">Loading split data...</div>';
+            document.getElementById('previewPicks').innerHTML = '<div class="loading">Loading recent picks...</div>';
             card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-            trackHandicappers('handicapper_inspected', { username: username, source: 'board' });
+            trackHub('handicapper_inspected', { username: username, source: 'board' });
 
             try {
                 const profileData = await window.api.getUserProfile(entry.username);
@@ -1136,25 +1370,22 @@
                     window.api.getUserAdvancedStats(entry.username, {}),
                     userId ? window.api.getPicks({ userId: userId, limit: 5, offset: 0 }) : Promise.resolve([])
                 ]);
-
                 if (activePreviewUsername !== username) return;
-
                 const advanced = results[0].status === 'fulfilled' ? (results[0].value && (results[0].value.stats || results[0].value)) : null;
                 const picksPayload = results[1].status === 'fulfilled' ? results[1].value : [];
                 const picks = Array.isArray(picksPayload) ? picksPayload : Array.isArray(picksPayload && picksPayload.picks) ? picksPayload.picks : [];
-
                 renderPreviewStats(entry, advanced);
-                renderPreviewSplits(advanced, entry);
+                renderPreviewSplits(advanced);
                 renderPreviewPicks(picks.slice(0, 5));
             } catch (error) {
                 if (activePreviewUsername !== username) return;
-                document.getElementById('previewStats').innerHTML = '<div class="empty" style="min-height:110px;">Snapshot unavailable.</div>';
-                document.getElementById('previewSplits').innerHTML = '<div class="empty" style="min-height:110px;">Split data unavailable.</div>';
-                document.getElementById('previewPicks').innerHTML = '<div class="empty" style="min-height:110px;">Recent picks unavailable.</div>';
+                document.getElementById('previewStats').innerHTML = '<div class="empty">Snapshot unavailable.</div>';
+                document.getElementById('previewSplits').innerHTML = '<div class="empty">Split data unavailable.</div>';
+                document.getElementById('previewPicks').innerHTML = '<div class="empty">Recent picks unavailable.</div>';
             }
         }
 
-        function applyFilters() {
+        function applyHandicapperFilters() {
             const search = String(document.getElementById('capperSearch').value || '').trim().toLowerCase();
             const sport = document.getElementById('sportFilter').value;
             const sort = document.getElementById('sortFilter').value;
@@ -1170,87 +1401,39 @@
                 if (sort === 'units') return b.units - a.units;
                 if (sort === 'winRate') return b.winRate - a.winRate;
                 if (sort === 'totalPicks') return b.totalPicks - a.totalPicks;
+                if (sort === 'streak') return b.streak - a.streak;
                 return b.roi - a.roi;
             });
 
             renderLeaderboard(filteredLeaderboard);
-            trackHandicappers('handicapper_filters_applied', {
-                search_query: search || '',
-                sport: sport,
-                sort_by: sort,
-                min_sample: minSample,
-                visible_count: filteredLeaderboard.length
+            trackHub('handicapper_filters_applied', {
+                search_query: search || '', sport: sport, sort_by: sort,
+                min_sample: minSample, visible_count: filteredLeaderboard.length
             });
         }
 
-        function resetFilters() {
+        function resetHandicapperFilters() {
             document.getElementById('capperSearch').value = '';
             document.getElementById('sportFilter').value = 'all';
             document.getElementById('sortFilter').value = 'roi';
             document.getElementById('sampleFilter').value = '5';
-            applyFilters();
-        }
-
-        function bindActionClicks() {
-            document.addEventListener('click', function(event) {
-                const actionEl = event.target.closest('[data-action]');
-                if (!actionEl) return;
-
-                const action = actionEl.getAttribute('data-action');
-                if (action === 'reset-filters') {
-                    event.preventDefault();
-                    resetFilters();
-                    return;
-                }
-
-                if (action === 'inspect-capper') {
-                    event.preventDefault();
-                    inspectCapper(actionEl.getAttribute('data-username') || '');
-                    return;
-                }
-
-                if (action === 'open-profile') {
-                    trackHandicappers('handicapper_profile_opened', {
-                        username: actionEl.getAttribute('data-username') || '',
-                        source: actionEl.getAttribute('data-source') || 'board'
-                    });
-                    return;
-                }
-
-                if (action === 'challenge-capper') {
-                    trackHandicappers('handicapper_challenge_clicked', {
-                        username: actionEl.getAttribute('data-username') || '',
-                        source: actionEl.getAttribute('data-source') || 'board'
-                    });
-                    return;
-                }
-
-                if (action === 'open-arena-challenge') {
-                    trackHandicappers('handicapper_arena_opened', {
-                        challenge_id: actionEl.getAttribute('data-challenge-id') || 'unknown',
-                        source: actionEl.getAttribute('data-source') || 'hero'
-                    });
-                }
-            });
+            applyHandicapperFilters();
         }
 
         async function loadHandicappers() {
             const state = document.getElementById('leaderboardState');
             try {
                 const data = await window.api.getLeaderboard({ sortBy: 'roi', limit: 100 });
-                const rawEntries = Array.isArray(data)
-                    ? data
-                    : Array.isArray(data && data.leaderboard)
-                        ? data.leaderboard
-                        : Array.isArray(data && data.users)
-                            ? data.users
-                            : [];
+                const rawEntries = Array.isArray(data) ? data
+                    : Array.isArray(data && data.leaderboard) ? data.leaderboard
+                    : Array.isArray(data && data.users) ? data.users
+                    : [];
 
                 fullLeaderboard = rawEntries.map(normalizeEntry).filter(function(entry) {
                     return entry.username && entry.totalPicks >= 5;
                 });
 
-                setHeroStats(fullLeaderboard);
+                setQuickStats(fullLeaderboard);
                 renderStreakRail(fullLeaderboard
                     .filter(function(entry) { return entry.streak > 0; })
                     .sort(function(a, b) { return b.streak - a.streak; })
@@ -1259,52 +1442,462 @@
                     .slice()
                     .sort(function(a, b) { return b.totalPicks - a.totalPicks; })
                     .slice(0, 4));
-                applyFilters();
+                applyHandicapperFilters();
             } catch (error) {
-                state.className = 'empty';
-                state.textContent = 'Leaderboard data is temporarily unavailable.';
+                state.style.display = 'block';
+                setStateAsEmpty(state, emptyStateHtml({
+                    icon: '!',
+                    title: 'Leaderboard temporarily unavailable',
+                    body: 'We could not load handicapper records right now. Try again in a moment.',
+                    ctas: []
+                }));
                 document.getElementById('streakRail').innerHTML = '<div class="empty">Streak data unavailable.</div>';
                 document.getElementById('volumeRail').innerHTML = '<div class="empty">Volume data unavailable.</div>';
             }
         }
 
-        async function loadChallengeRail() {
+        /* =========================================================
+         * TRIVIA LEADERBOARD
+         * ========================================================= */
+        function renderTriviaLeaderboard(entries) {
+            const state = document.getElementById('triviaState');
+            const wrap = document.getElementById('triviaWrap');
+            const body = document.getElementById('triviaBody');
+            document.getElementById('tabCountTrivia').textContent = String(entries.length);
+            document.getElementById('qsTrivia').textContent = String(entries.length);
+
+            if (!entries.length) {
+                wrap.style.display = 'none';
+                state.style.display = 'block';
+                setStateAsEmpty(state, emptyStateHtml({
+                    icon: '?',
+                    title: 'No trivia leaders yet',
+                    body: 'Play trivia to claim the top spot. Every correct answer adds points to your public profile and ranks you on this board.',
+                    ctas: [
+                        { label: 'Play Trivia Now', href: '/polls-trivia/', primary: true },
+                        { label: 'Browse Categories', href: '/polls-trivia/' }
+                    ]
+                }));
+                return;
+            }
+            state.style.display = 'none';
+            wrap.style.display = '';
+            body.innerHTML = entries.map(function(entry, index) {
+                const accuracy = entry.accuracy != null ? num(entry.accuracy).toFixed(1) + '%' : '--';
+                const correct = num(entry.questions_correct);
+                const total = num(entry.questions_answered);
+                const username = entry.username || '';
+                const displayName = entry.display_name || entry.displayName || username;
+                const cats = num(entry.categories_played != null ? entry.categories_played : entry.categories);
+                return '<tr>'
+                    + '<td><span class="rank ' + rankClassFor(index) + '">#' + (index + 1) + '</span></td>'
+                    + '<td><div class="person">' + avatarHtml(displayName, entry.avatar_url)
+                    +   '<div class="person-meta">'
+                    +     '<a class="person-name" href="/profile/?user=' + encodeURIComponent(username) + '">' + escapeHtml(displayName) + '</a>'
+                    +     '<span class="person-sub">@' + escapeHtml(username) + '</span>'
+                    +   '</div></div></td>'
+                    + '<td class="pos">' + num(entry.total_points).toLocaleString() + '</td>'
+                    + '<td>' + correct + ' / ' + total + '</td>'
+                    + '<td>' + accuracy + '</td>'
+                    + '<td>' + (cats > 0 ? cats : '--') + '</td>'
+                    + '</tr>';
+            }).join('');
+        }
+
+        function renderTriviaCreators(entries) {
+            const rail = document.getElementById('triviaCreatorRail');
+            if (!entries.length) {
+                rail.innerHTML = '<div class="empty">No question creators yet. Submit a trivia question to claim this list.</div>';
+                return;
+            }
+            rail.innerHTML = entries.map(function(entry) {
+                const username = entry.username || '';
+                const display = entry.display_name || entry.displayName || username;
+                return '<a class="rail-item" href="/profile/?user=' + encodeURIComponent(username) + '">'
+                    + '<strong>' + escapeHtml(display) + '</strong>'
+                    + '<span>@' + escapeHtml(username) + ' • ' + num(entry.questions_created) + ' questions authored</span>'
+                    + '<span class="badge gold">Creator</span>'
+                    + '</a>';
+            }).join('');
+        }
+
+        async function loadTrivia() {
+            const period = document.getElementById('triviaPeriod').value;
+            const state = document.getElementById('triviaState');
+            state.style.display = 'block';
+            state.className = 'loading';
+            state.textContent = 'Loading trivia leaderboard...';
+            document.getElementById('triviaWrap').style.display = 'none';
+
             try {
-                const data = await window.api.request('/gaming/challenges?limit=5');
-                const challenges = Array.isArray(data && data.challenges) ? data.challenges : [];
-                const openChallenges = challenges.filter(function(entry) {
-                    const status = String(entry.status || '').toLowerCase();
-                    return ['pending', 'accepted', 'in_progress', 'open'].indexOf(status) !== -1;
-                }).slice(0, 4);
-                renderChallenges(openChallenges);
+                const data = await window.api.request('/trivia/leaderboard?period=' + encodeURIComponent(period) + '&limit=50');
+                const entries = Array.isArray(data && data.leaderboard) ? data.leaderboard : [];
+                renderTriviaLeaderboard(entries);
             } catch (error) {
-                renderChallenges([]);
+                renderTriviaLeaderboard([]);
+            }
+
+            try {
+                const creatorsData = await window.api.request('/trivia/leaderboard/creators?limit=8');
+                const creators = Array.isArray(creatorsData && creatorsData.leaderboard) ? creatorsData.leaderboard : [];
+                renderTriviaCreators(creators);
+            } catch (error) {
+                renderTriviaCreators([]);
             }
         }
 
-        function bindFilters() {
-            ['capperSearch', 'sportFilter', 'sortFilter', 'sampleFilter'].forEach(function(id) {
-                document.getElementById(id).addEventListener(id === 'capperSearch' ? 'input' : 'change', applyFilters);
+        /* =========================================================
+         * POLL LEADERBOARD
+         * ========================================================= */
+        function renderPollLeaderboard(entries) {
+            const state = document.getElementById('pollsState');
+            const wrap = document.getElementById('pollsWrap');
+            const body = document.getElementById('pollsBody');
+            document.getElementById('tabCountPolls').textContent = String(entries.length);
+
+            if (!entries.length) {
+                wrap.style.display = 'none';
+                state.style.display = 'block';
+                setStateAsEmpty(state, emptyStateHtml({
+                    icon: '◎',
+                    title: 'No poll leaders yet',
+                    body: 'Create a poll and get the crowd involved. Votes on resolved polls earn points and rank players on this board.',
+                    ctas: [
+                        { label: 'Create A Poll', href: '/polls/', primary: true },
+                        { label: 'Browse Active Polls', href: '/polls/' }
+                    ]
+                }));
+                return;
+            }
+            state.style.display = 'none';
+            wrap.style.display = '';
+            body.innerHTML = entries.map(function(entry, index) {
+                const accuracy = entry.accuracy != null ? num(entry.accuracy).toFixed(1) + '%' : '--';
+                const correct = num(entry.polls_correct);
+                const total = num(entry.polls_voted);
+                const username = entry.username || '';
+                const displayName = entry.display_name || entry.displayName || username;
+                return '<tr>'
+                    + '<td><span class="rank ' + rankClassFor(index) + '">#' + (index + 1) + '</span></td>'
+                    + '<td><div class="person">' + avatarHtml(displayName, entry.avatar_url)
+                    +   '<div class="person-meta">'
+                    +     '<a class="person-name" href="/profile/?user=' + encodeURIComponent(username) + '">' + escapeHtml(displayName) + '</a>'
+                    +     '<span class="person-sub">@' + escapeHtml(username) + '</span>'
+                    +   '</div></div></td>'
+                    + '<td class="pos">' + num(entry.total_points).toLocaleString() + '</td>'
+                    + '<td>' + total + '</td>'
+                    + '<td>' + correct + '</td>'
+                    + '<td>' + accuracy + '</td>'
+                    + '</tr>';
+            }).join('');
+        }
+
+        async function loadPolls() {
+            const period = document.getElementById('pollsPeriod').value;
+            const state = document.getElementById('pollsState');
+            state.style.display = 'block';
+            state.className = 'loading';
+            state.textContent = 'Loading poll leaderboard...';
+            document.getElementById('pollsWrap').style.display = 'none';
+
+            try {
+                const data = await window.api.request('/polls/leaderboard?period=' + encodeURIComponent(period) + '&limit=50');
+                const entries = Array.isArray(data && data.leaderboard) ? data.leaderboard : [];
+                renderPollLeaderboard(entries);
+            } catch (error) {
+                renderPollLeaderboard([]);
+            }
+
+            // Active polls quick stat
+            try {
+                const active = await window.api.request('/polls/active?limit=50');
+                const list = Array.isArray(active && active.polls) ? active.polls
+                    : Array.isArray(active) ? active : [];
+                document.getElementById('qsPolls').textContent = String(list.length);
+            } catch (error) {
+                document.getElementById('qsPolls').textContent = '0';
+            }
+        }
+
+        /* =========================================================
+         * ONLINE CHALLENGES (gaming)
+         * ========================================================= */
+        function gamingChallengeLabel(entry) {
+            return entry.title || entry.game_title || entry.game_slug || entry.game || 'Open challenge';
+        }
+
+        function renderOpenChallenges(entries) {
+            const state = document.getElementById('onlineOpenState');
+            const wrap = document.getElementById('onlineOpenWrap');
+            if (!entries.length) {
+                wrap.style.display = 'none';
+                state.style.display = 'block';
+                setStateAsEmpty(state, emptyStateHtml({
+                    icon: '+',
+                    title: 'No active challenges yet',
+                    body: 'Start the first one. Pick a game like MLB The Show, Madden, NBA 2K, or a trivia battle, name a stake, and an opponent shows up.',
+                    ctas: [
+                        { label: 'Create Challenge', href: '/arena/', primary: true }
+                    ]
+                }));
+                return;
+            }
+            state.style.display = 'none';
+            wrap.style.display = '';
+            wrap.innerHTML = entries.map(function(entry) {
+                const challenger = entry.challenger_display || entry.challenger_username || 'Challenger';
+                const challenged = entry.challenged_display || entry.challenged_username || 'Open';
+                const status = String(entry.status || 'pending').replace(/_/g, ' ');
+                const title = gamingChallengeLabel(entry);
+                return '<a class="challenge-card" href="/arena/" data-action="open-arena-challenge" data-challenge-id="' + escapeHtml(String(entry.id || 'unknown')) + '" data-source="open">'
+                    + '<span class="badge">' + escapeHtml(status) + '</span>'
+                    + '<strong>' + escapeHtml(title) + '</strong>'
+                    + '<span>' + escapeHtml(challenger) + ' vs ' + escapeHtml(challenged) + '</span>'
+                    + '<span>' + escapeHtml(entry.game_title || entry.game_slug || 'Arena') + ' • ' + timeAgo(entry.created_at || entry.createdAt) + '</span>'
+                    + '</a>';
+            }).join('');
+        }
+
+        function renderActiveChallenges(entries) {
+            const state = document.getElementById('onlineActiveState');
+            const wrap = document.getElementById('onlineActiveWrap');
+            if (!entries.length) {
+                wrap.style.display = 'none';
+                state.style.display = 'block';
+                setStateAsEmpty(state, emptyStateHtml({
+                    icon: '◇',
+                    title: 'Nothing live right now',
+                    body: 'Active matchups appear here once someone accepts an open challenge.',
+                    ctas: []
+                }));
+                return;
+            }
+            state.style.display = 'none';
+            wrap.style.display = '';
+            wrap.innerHTML = entries.map(function(entry) {
+                const challenger = entry.challenger_display || entry.challenger_username || 'Challenger';
+                const challenged = entry.challenged_display || entry.challenged_username || 'Opponent';
+                return '<a class="rail-item" href="/arena/" data-action="open-arena-challenge" data-challenge-id="' + escapeHtml(String(entry.id || 'unknown')) + '" data-source="active">'
+                    + '<strong>' + escapeHtml(gamingChallengeLabel(entry)) + '</strong>'
+                    + '<span>' + escapeHtml(challenger) + ' vs ' + escapeHtml(challenged) + '</span>'
+                    + '<span class="badge">' + escapeHtml(String(entry.status || 'in progress').replace(/_/g, ' ')) + '</span>'
+                    + '</a>';
+            }).join('');
+        }
+
+        function renderCompletedChallenges(entries) {
+            const state = document.getElementById('onlineCompletedState');
+            const wrap = document.getElementById('onlineCompletedWrap');
+            if (!entries.length) {
+                wrap.style.display = 'none';
+                state.style.display = 'block';
+                setStateAsEmpty(state, emptyStateHtml({
+                    icon: '★',
+                    title: 'No winners yet',
+                    body: 'Completed challenges show up here with the verified winner.',
+                    ctas: []
+                }));
+                return;
+            }
+            state.style.display = 'none';
+            wrap.style.display = '';
+            wrap.innerHTML = entries.map(function(entry) {
+                const winner = entry.winner_username || entry.winner || 'TBD';
+                return '<a class="rail-item" href="/profile/?user=' + encodeURIComponent(winner) + '">'
+                    + '<strong>' + escapeHtml(winner) + ' won</strong>'
+                    + '<span>' + escapeHtml(gamingChallengeLabel(entry)) + ' • ' + timeAgo(entry.completed_at || entry.updated_at || entry.created_at) + '</span>'
+                    + '<span class="badge gold">Winner</span>'
+                    + '</a>';
+            }).join('');
+        }
+
+        async function loadOnlineChallenges() {
+            try {
+                const data = await window.api.request('/gaming/challenges?limit=30');
+                const all = Array.isArray(data && data.challenges) ? data.challenges : [];
+                const open = all.filter(function(c) {
+                    const s = String(c.status || '').toLowerCase();
+                    return s === 'pending' || s === 'open';
+                }).slice(0, 12);
+                const active = all.filter(function(c) {
+                    const s = String(c.status || '').toLowerCase();
+                    return s === 'accepted' || s === 'in_progress' || s === 'live';
+                }).slice(0, 6);
+                const completed = all.filter(function(c) {
+                    const s = String(c.status || '').toLowerCase();
+                    return s === 'completed' || s === 'finished' || s === 'resolved';
+                }).slice(0, 6);
+
+                renderOpenChallenges(open);
+                renderActiveChallenges(active);
+                renderCompletedChallenges(completed);
+
+                const liveCount = open.length + active.length;
+                document.getElementById('qsChallenges').textContent = String(liveCount);
+                document.getElementById('tabCountOnline').textContent = String(liveCount);
+            } catch (error) {
+                renderOpenChallenges([]);
+                renderActiveChallenges([]);
+                renderCompletedChallenges([]);
+                document.getElementById('qsChallenges').textContent = '0';
+                document.getElementById('tabCountOnline').textContent = '0';
+            }
+        }
+
+        /* =========================================================
+         * HANDICAPPER CHALLENGES (head-to-head)
+         * ========================================================= */
+        function renderH2H(entries) {
+            const state = document.getElementById('h2hState');
+            const wrap = document.getElementById('h2hWrap');
+            const body = document.getElementById('h2hBody');
+            document.getElementById('tabCountH2H').textContent = String(entries.length);
+            document.getElementById('qsH2H').textContent = String(entries.length);
+
+            if (!entries.length) {
+                wrap.style.display = 'none';
+                state.style.display = 'block';
+                const isAuthed = window.api && typeof window.api.isAuthenticated === 'function' ? window.api.isAuthenticated() : !!localStorage.getItem('tmr_token');
+                setStateAsEmpty(state, emptyStateHtml({
+                    icon: 'VS',
+                    title: isAuthed ? 'No head-to-head battles yet' : 'Sign in to see head-to-head battles',
+                    body: isAuthed
+                        ? 'Pick a rival, lock the same game window, and let the public record decide. Winners post here automatically.'
+                        : 'Handicapper challenges are personal head-to-head matchups — sign in to load yours, or start your first one.',
+                    ctas: isAuthed
+                        ? [{ label: 'Start Handicapper Challenge', href: '/arena/?challenge=new', primary: true }]
+                        : [{ label: 'Sign In', href: '/login/', primary: true }, { label: 'Browse Cappers', href: '#handicappers' }]
+                }));
+                return;
+            }
+            state.style.display = 'none';
+            wrap.style.display = '';
+            body.innerHTML = entries.map(function(entry) {
+                const status = String(entry.status || 'pending').replace(/_/g, ' ');
+                const sport = entry.sport || '--';
+                const type = entry.challenge_type || entry.type || 'Pick battle';
+                const score = (entry.challenger_score != null && entry.challenged_score != null)
+                    ? entry.challenger_score + ' - ' + entry.challenged_score
+                    : entry.score || '--';
+                const winner = entry.winner_username ? '@' + entry.winner_username : '--';
+                const challengerHandle = entry.challenger_username || 'Challenger';
+                const challengedHandle = entry.challenged_username || 'Opponent';
+                return '<tr>'
+                    + '<td><div class="person">' + avatarHtml(challengerHandle, entry.challenger_avatar)
+                    +   '<div class="person-meta"><a class="person-name" href="/profile/?user=' + encodeURIComponent(challengerHandle) + '">@' + escapeHtml(challengerHandle) + '</a></div></div></td>'
+                    + '<td><div class="person">' + avatarHtml(challengedHandle, entry.challenged_avatar)
+                    +   '<div class="person-meta"><a class="person-name" href="/profile/?user=' + encodeURIComponent(challengedHandle) + '">@' + escapeHtml(challengedHandle) + '</a></div></div></td>'
+                    + '<td>' + escapeHtml(sport) + '</td>'
+                    + '<td>' + escapeHtml(type) + '</td>'
+                    + '<td><span class="badge ' + (status === 'completed' ? 'gold' : status === 'pending' ? 'muted' : '') + '">' + escapeHtml(status) + '</span></td>'
+                    + '<td>' + escapeHtml(String(score)) + '</td>'
+                    + '<td>' + escapeHtml(winner) + '</td>'
+                    + '</tr>';
+            }).join('');
+        }
+
+        async function loadH2H() {
+            try {
+                const data = await window.api.request('/challenges?limit=50');
+                const entries = Array.isArray(data && data.challenges) ? data.challenges : [];
+                renderH2H(entries);
+            } catch (error) {
+                renderH2H([]);
+            }
+        }
+
+        /* =========================================================
+         * GLOBAL ACTION DELEGATION
+         * ========================================================= */
+        function bindActionClicks() {
+            document.addEventListener('click', function(event) {
+                const actionEl = event.target.closest('[data-action]');
+                if (!actionEl) return;
+                const action = actionEl.getAttribute('data-action');
+
+                if (action === 'reset-filters') {
+                    event.preventDefault();
+                    resetHandicapperFilters();
+                    return;
+                }
+                if (action === 'inspect-capper') {
+                    event.preventDefault();
+                    inspectCapper(actionEl.getAttribute('data-username') || '');
+                    return;
+                }
+                if (action === 'open-profile') {
+                    trackHub('handicapper_profile_opened', {
+                        username: actionEl.getAttribute('data-username') || '',
+                        source: actionEl.getAttribute('data-source') || 'board'
+                    });
+                    return;
+                }
+                if (action === 'challenge-capper') {
+                    trackHub('handicapper_challenge_clicked', {
+                        username: actionEl.getAttribute('data-username') || '',
+                        source: actionEl.getAttribute('data-source') || 'board'
+                    });
+                    return;
+                }
+                if (action === 'open-arena-challenge') {
+                    trackHub('arena_challenge_opened', {
+                        challenge_id: actionEl.getAttribute('data-challenge-id') || 'unknown',
+                        source: actionEl.getAttribute('data-source') || 'hub'
+                    });
+                }
             });
         }
 
-        async function bootstrapHandicappersPage() {
+        function bindHandicapperFilters() {
+            ['capperSearch', 'sportFilter', 'sortFilter', 'sampleFilter'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener(id === 'capperSearch' ? 'input' : 'change', applyHandicapperFilters);
+            });
+        }
+
+        function bindLeaderboardSubFilters() {
+            const tp = document.getElementById('triviaPeriod');
+            if (tp) tp.addEventListener('change', loadTrivia);
+            const pp = document.getElementById('pollsPeriod');
+            if (pp) pp.addEventListener('change', loadPolls);
+        }
+
+        /* =========================================================
+         * BOOTSTRAP
+         * ========================================================= */
+        async function bootstrapHub() {
             bindActionClicks();
-            bindFilters();
-            trackHandicappers('handicappers_page_viewed', {});
+            bindHandicapperFilters();
+            bindLeaderboardSubFilters();
+            bindTabs();
+
+            tabLoaders.handicappers = { loaded: true, run: loadHandicappers };
+            tabLoaders.trivia = { loaded: false, run: loadTrivia };
+            tabLoaders.polls = { loaded: false, run: loadPolls };
+            tabLoaders.online = { loaded: false, run: loadOnlineChallenges };
+            tabLoaders.h2h = { loaded: false, run: loadH2H };
+
+            trackHub('leaderboards_hub_viewed', {});
+
+            // Always load handicapper data + online challenge count for hero stats
             await Promise.all([
                 loadHandicappers(),
-                loadChallengeRail()
+                loadOnlineChallenges()
             ]);
+
+            // Activate tab from hash if present
+            const hash = String(window.location.hash || '').replace('#', '');
+            if (hash && TABS.indexOf(hash) !== -1) {
+                activateTab(hash);
+            }
         }
 
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', bootstrapHandicappersPage);
+            document.addEventListener('DOMContentLoaded', bootstrapHub);
         } else {
-            bootstrapHandicappersPage();
+            bootstrapHub();
         }
     </script>
 </body>
 </html>
-
-
