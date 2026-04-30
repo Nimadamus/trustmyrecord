@@ -1256,7 +1256,19 @@ async function loadCategories() {
         await api.ready;
         clearTimeout(_triviaSlowTimer); clearTimeout(_triviaRetryTimer);
         var data = await api.request('/trivia/categories');
-        backendCategories = data.categories || data || [];
+        var rawCats = data.categories || data || [];
+        // Hide the "Betting Knowledge" category (parlay/vig/juice/ATS/EV
+        // jargon questions). Nima asked these gone — they're betting math,
+        // not sports trivia. Backend init-db migration disables them too;
+        // this is the instant client-side filter so the category drops
+        // immediately without waiting on the next Render build.
+        backendCategories = rawCats.filter(function (c) {
+            var slug = String(c.slug || '').toLowerCase();
+            var name = String(c.name || '').toLowerCase();
+            if (slug === 'betting') return false;
+            if (name.indexOf('betting knowledge') !== -1) return false;
+            return true;
+        });
         renderCategories();
     } catch(e) {
         clearTimeout(_triviaSlowTimer); clearTimeout(_triviaRetryTimer);
