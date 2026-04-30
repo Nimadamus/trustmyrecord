@@ -9646,6 +9646,12 @@ window.toggleSportFamily = function (family) {
             .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
+    function _ttGameStarted(game) {
+        if (!game || !game.commence_time) return false;
+        var ms = Date.parse(game.commence_time);
+        if (!Number.isFinite(ms)) return false;
+        return ms <= Date.now();
+    }
 
     // Split a game's team_totals items into Away/Home Over/Under buckets.
     // Each backend item carries: { selection, selection_label, line, odds,
@@ -9734,6 +9740,11 @@ window.toggleSportFamily = function (family) {
             var game = (window.TMR && Array.isArray(window.TMR.currentGames)) ? window.TMR.currentGames[gameIndex] : null;
             var sport = (window.TMR && window.TMR.selectedSport) || 'MLB';
             var cleanTeam = String(team || '').replace(/\s+(Over|Under)\s*$/i, '').trim();
+            if (_ttGameStarted(game)) {
+                console.warn('[TMR][TT] blocked started game:', game && game.id);
+                alert('This game has already started, so picks are locked.');
+                return;
+            }
             if (betType === 'teamover' || betType === 'teamunder') {
                 if (typeof window.selectGameBet !== 'function') {
                     console.error('[TMR][TT] selectGameBet missing — cannot lock pick');
@@ -9970,6 +9981,11 @@ window.toggleSportFamily = function (family) {
                     var game = (window.TMR && Array.isArray(window.TMR.currentGames)) ? window.TMR.currentGames[gameIndex] : null;
                     var sport = (window.TMR && window.TMR.selectedSport) || 'MLB';
                     var cleanTeam = String(team || '').replace(/\s+(Over|Under)\s*$/i, '').trim();
+                    if (_ttGameStarted(game)) {
+                        console.warn('[TMR][TT] blocked started game:', game && game.id);
+                        alert('This game has already started, so picks are locked.');
+                        return;
+                    }
                     if (typeof window.selectGameBet === 'function') {
                         window.TMR.__suppressPickStep = true;
                         try {
@@ -10049,6 +10065,7 @@ window.toggleSportFamily = function (family) {
             var awayHasReal = split.away.over || split.away.under;
             var homeHasReal = split.home.over || split.home.under;
             var hasAny = awayHasReal || homeHasReal;
+            var started = _ttGameStarted(game);
             var commence = '';
             try {
                 if (game.commence_time) {
@@ -10066,7 +10083,15 @@ window.toggleSportFamily = function (family) {
                     '</div>' +
                 '</div>';
 
-            if (!hasAny) {
+            if (started) {
+                pending++;
+                html += '<div class="sb-board-col" data-col="tt" style="grid-column: span 3; color:#fca5a5; font-size:13px; padding:6px 4px;">' +
+                            'Started - picks locked for this game.' +
+                        '</div>' +
+                        '<div class="sb-board-col" data-col="action">' +
+                            '<button type="button" class="sb-board-action" disabled aria-disabled="true">Started</button>' +
+                        '</div>';
+            } else if (!hasAny) {
                 pending++;
                 html += '<div class="sb-board-col" data-col="tt" style="grid-column: span 3; color:#94a3b8; font-size:13px; padding:6px 4px;">' +
                             'Team total lines not posted yet for this game.' +
@@ -19209,7 +19234,7 @@ document.addEventListener('DOMContentLoaded', function() {
          containers that don't exist on the picks board, throwing console
          noise. They're loaded on /feed/ and /forum/ where they belong. -->
     <script src="/static/js/navigation.js?v=20260430routefix1"></script>
-<script src="/static/js/sportsbook-production-fix-persist.js?v=20260430pickpersist4"></script>
+<script src="/static/js/sportsbook-production-fix-persist.js?v=20260430pickpersist5"></script>
     <script src="/static/js/effects.js?v=20251208c"></script>
     <script>
     (function() {
