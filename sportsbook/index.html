@@ -21178,7 +21178,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Override showSection to load My Record data
     const originalShowSection = window.showSection;
     window.showSection = function(sectionId) {
-        if (originalShowSection) originalShowSection(sectionId);
+        if (originalShowSection) originalShowSection.apply(this, arguments);
         if (sectionId === 'my-record') {
             loadMyRecordPage();
         }
@@ -22084,7 +22084,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const enhancedShowSection = window.showSection;
     window.showSection = function(sectionId) {
-        if (enhancedShowSection) enhancedShowSection(sectionId);
+        if (enhancedShowSection) enhancedShowSection.apply(this, arguments);
 
         if (sectionId === 'leaderboards') {
             if (typeof window.refreshLeaderboards === 'function') {
