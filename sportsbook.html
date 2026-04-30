@@ -527,7 +527,67 @@
         container.innerHTML = html;
     };
 
+    // ===== Enrich ESPN-sourced games with backend market_groups =====
+    // ESPN scoreboard only carries h2h/spreads/totals. Our backend board
+    // endpoint (/api/games/board/:sportKey) carries the full market_groups
+    // shape (team_totals, first_5, alt_spreads, etc.). We fetch that in
+    // parallel and merge by team-name match so the new market sub-tabs
+    // can light up without breaking the ESPN-primary path.
+    window.TMR._enrichWithBackendBoard = function(sport, games, onDone) {
+        if (!Array.isArray(games) || !games.length) return onDone && onDone(games);
+        var sportKey = window.TMR.sportKeyMap && window.TMR.sportKeyMap[sport];
+        if (!sportKey) return onDone && onDone(games);
+        // Skip if every game already has market_groups (avoid wasted call).
+        var anyMissing = games.some(function(g) { return !Array.isArray(g.market_groups) || !g.market_groups.length; });
+        if (!anyMissing) return onDone && onDone(games);
+
+        var apiBase = (window.api && window.api.baseUrl) ? window.api.baseUrl : 'https://trustmyrecord-api.onrender.com/api';
+        var url = apiBase + '/games/board/' + encodeURIComponent(sportKey) + '?limit=80';
+        var done = false;
+        var finish = function() { if (!done) { done = true; onDone && onDone(games); } };
+        // Fail-open: if backend takes too long, ship what we have.
+        var t = setTimeout(finish, 6000);
+
+        fetch(url, { headers: { 'Accept': 'application/json' } })
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(payload) {
+                if (!payload || !Array.isArray(payload.games) || !payload.games.length) return;
+                var norm = function(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); };
+                var indexByPair = {};
+                payload.games.forEach(function(bg) {
+                    var key = norm(bg.away_team) + '|' + norm(bg.home_team);
+                    indexByPair[key] = bg;
+                });
+                games.forEach(function(g) {
+                    var key = norm(g.away_team) + '|' + norm(g.home_team);
+                    var match = indexByPair[key];
+                    if (!match) return;
+                    if (Array.isArray(match.market_groups) && match.market_groups.length) {
+                        g.market_groups = match.market_groups;
+                    }
+                    // If ESPN had no bookmaker odds but backend does, merge them too.
+                    var espnHasOdds = g.bookmakers && g.bookmakers.length && g.bookmakers[0].markets && g.bookmakers[0].markets.length;
+                    if (!espnHasOdds && Array.isArray(match.bookmakers) && match.bookmakers.length) {
+                        g.bookmakers = match.bookmakers;
+                    }
+                });
+            })
+            .catch(function() { /* fail-open */ })
+            .finally(function() { clearTimeout(t); finish(); });
+    };
+
     window.TMR._renderGamesList = function(container, games, sport) {
+        // First-time enrichment: try to merge backend market_groups, then re-enter
+        // the renderer with enriched data. Subsequent re-renders (market-tab clicks)
+        // hit the cached enriched array directly.
+        var enrichedFlag = '__tmrEnriched_' + sport;
+        if (!container[enrichedFlag]) {
+            container[enrichedFlag] = true;
+            return window.TMR._enrichWithBackendBoard(sport, games, function(merged) {
+                window.TMR._renderGamesList(container, merged || games, sport);
+            });
+        }
+
         // Cache for market-tab re-renders.
         window.TMR._cachedGames = games;
         window.TMR._cachedSport = sport;
