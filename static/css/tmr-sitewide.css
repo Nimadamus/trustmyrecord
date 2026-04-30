@@ -2894,6 +2894,16 @@ html body.tmr-site-shell::before {
 }
 .tmr-global-nav__icon svg { display: block; }
 
+/* Header action cleanup: the top nav should end with profile + Log Out only.
+   Hide legacy icon/action shortcuts if an older nav script renders them. */
+.tmr-global-nav__actions > .tmr-global-nav__icon,
+.tmr-global-nav__actions > a[href="/notifications/"],
+.tmr-global-nav__actions > a[href="notifications.html"],
+.tmr-global-nav__actions > a[href="/messages/"],
+.tmr-global-nav__actions > a[href="messages.html"] {
+    display: none !important;
+}
+
 /* Search overlay */
 .tmr-search-overlay {
     position: fixed; inset: 0; z-index: 9500;
