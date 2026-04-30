@@ -212,6 +212,9 @@
         body.tmr-site-shell > header:not(.tmr-global-nav):not(.tmr-global-footer),
         body.tmr-site-shell > nav.main-nav:not(.tmr-global-nav),
         body.tmr-site-shell > nav.nav:not(.tmr-global-nav),
+        body.tmr-site-shell nav.main-nav:not(.tmr-global-nav),
+        body.tmr-site-shell nav.nav:not(.tmr-global-nav),
+        body.tmr-site-shell nav.nav-links:not(.tmr-global-nav),
         body.tmr-site-shell .messages-top-strip,
         body.tmr-site-shell .sportsbook-top-strip,
         body.tmr-site-shell .notifications-top-strip,
@@ -244,7 +247,7 @@
         el.style.setProperty("overflow", "hidden", "important");
     }
 
-    document.querySelectorAll("body > header, body > nav.nav, body > nav.main-nav, nav.main-nav, nav.nav, body > .messages-top-strip, body > .sportsbook-top-strip, body > .notifications-top-strip, body > .profile-top-strip, body > .friends-top-strip, .messages-top-strip, .sportsbook-top-strip, .notifications-top-strip, .profile-top-strip, .friends-top-strip").forEach((el) => {
+    document.querySelectorAll("body > header, body > nav.nav, body > nav.main-nav, nav.main-nav, nav.nav, nav.nav-links, body > .messages-top-strip, body > .sportsbook-top-strip, body > .notifications-top-strip, body > .profile-top-strip, body > .friends-top-strip, .messages-top-strip, .sportsbook-top-strip, .notifications-top-strip, .profile-top-strip, .friends-top-strip").forEach((el) => {
         if (!el.classList.contains("tmr-global-nav")) {
             hideLegacyNav(el);
         }
@@ -267,10 +270,10 @@
         mutations.forEach((mutation) => {
             mutation.addedNodes.forEach((node) => {
                 if (!(node instanceof Element)) return;
-                if (node.matches("body > header, nav.nav, nav.main-nav, .messages-top-strip, .sportsbook-top-strip, .notifications-top-strip, .profile-top-strip, .friends-top-strip")) {
+                if (node.matches("body > header, nav.nav, nav.main-nav, nav.nav-links, .messages-top-strip, .sportsbook-top-strip, .notifications-top-strip, .profile-top-strip, .friends-top-strip")) {
                     hideLegacyNav(node);
                 }
-                node.querySelectorAll?.("nav.nav, nav.main-nav, .messages-top-strip, .sportsbook-top-strip, .notifications-top-strip, .profile-top-strip, .friends-top-strip").forEach(hideLegacyNav);
+                node.querySelectorAll?.("nav.nav, nav.main-nav, nav.nav-links, .messages-top-strip, .sportsbook-top-strip, .notifications-top-strip, .profile-top-strip, .friends-top-strip").forEach(hideLegacyNav);
             });
         });
     });

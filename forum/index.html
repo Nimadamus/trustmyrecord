@@ -13,8 +13,8 @@
     <meta property="og:type" content="website">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430navfix">
-<script defer src="/static/js/tmr-sitewide.js?v=20260430navfix"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430navfix2">
+<script defer src="/static/js/tmr-sitewide.js?v=20260430navfix2"></script>
     <style>
         :root {
             /* twoplustwo.com palette (rev 2): grayish body, white inner
@@ -1433,6 +1433,130 @@
             border: 1px solid #bbbbbb !important;
         }
     </style>
+    <style>
+        /* ================================================================
+           2+2 SIDEBAR LAYOUT — April 30 2026 redesign
+           Adds a left forum-category sidebar, a dark charcoal section
+           header, and a 2+2-style action row above the thread table.
+           ================================================================ */
+        .vb-shell {
+            max-width: 1100px !important;
+            margin: 0 auto !important;
+            padding: 8px !important;
+            display: grid !important;
+            grid-template-columns: 200px minmax(0, 1fr) !important;
+            gap: 10px !important;
+            align-items: start !important;
+            background: transparent !important;
+            border: 0 !important;
+        }
+        .vb-shell > .vb-main { min-width: 0; }
+
+        .vb-sidebar {
+            background: #f7f7f7;
+            border: 1px solid #bbbbbb;
+            font-family: Verdana, Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            position: sticky;
+            top: 8px;
+            align-self: start;
+        }
+        .vb-sidebar-group { border-bottom: 1px solid #cccccc; }
+        .vb-sidebar-group:last-child { border-bottom: 0; }
+        .vb-sidebar-heading {
+            background: #2c2c2c;
+            color: #ffffff;
+            padding: 5px 10px;
+            font: 700 11px/1.2 Verdana, Arial, sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .tmr-fb-sidebar-list,
+        .vb-sidebar-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            background: #f7f7f7;
+        }
+        .tmr-fb-sidebar-list li,
+        .vb-sidebar-list li { display: block; }
+        .tmr-fb-sidebar-list a,
+        .vb-sidebar-list a {
+            display: block;
+            padding: 5px 12px;
+            color: #22229c !important;
+            text-decoration: none !important;
+            font-size: 11px;
+            font-weight: 600;
+            border-bottom: 1px solid #e2e2e2;
+            cursor: pointer;
+        }
+        .tmr-fb-sidebar-list li:last-child a,
+        .vb-sidebar-list li:last-child a { border-bottom: 0; }
+        .tmr-fb-sidebar-list a:hover,
+        .vb-sidebar-list a:hover {
+            background: #fffce5;
+            color: #cc3300 !important;
+            text-decoration: none !important;
+        }
+        .tmr-fb-sidebar-list a.is-active,
+        .vb-sidebar-list a.is-active {
+            background: #ffffff;
+            color: #000000 !important;
+            font-weight: 700;
+            border-left: 3px solid #1d3a6b;
+            padding-left: 9px;
+        }
+
+        /* Dark charcoal section header above thread table */
+        .vb-section-header {
+            background: #2c2c2c;
+            color: #ffffff;
+            padding: 6px 10px;
+            font: 700 12px/1.3 Verdana, Arial, sans-serif;
+            border: 1px solid #1a1a1a;
+            border-bottom: 0;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .vb-section-header .vb-section-meta {
+            font-weight: 400;
+            font-size: 11px;
+            color: #cccccc;
+        }
+
+        /* Action row above the thread table (matches 2+2 button strip) */
+        .vb-actionrow {
+            display: flex !important;
+            gap: 6px !important;
+            flex-wrap: wrap !important;
+            align-items: center !important;
+            background: #e8e8e8 !important;
+            border: 1px solid #aaaaaa !important;
+            border-top: 0 !important;
+            padding: 5px 8px !important;
+        }
+        .vb-actionrow .vb-action-spacer { flex: 1; }
+        .vb-actionrow input[type="search"] {
+            height: 22px;
+            padding: 0 6px;
+            border: 1px solid #aaaaaa;
+            background: #ffffff;
+            color: #000000;
+            font: 11px Verdana, Arial, sans-serif;
+            min-width: 180px;
+        }
+
+        @media (max-width: 720px) {
+            .vb-shell {
+                grid-template-columns: 1fr !important;
+            }
+            .vb-sidebar { position: static; top: auto; }
+        }
+    </style>
 </head>
 <body>
 
@@ -1448,14 +1572,22 @@
     </div>
 </header>
 
-<!-- Forum-specific search strip (global logo/profile/messages/alerts come from tmr-global-nav) -->
-<div class="vb-topbar vb-topbar--forum-search">
-    <div class="vb-topbar-inner">
-        <div class="vb-search vb-search--full">
+<!-- Dark charcoal top header: logo + search + messages + login -->
+<div class="vb-topbar vb-topbar--forum-search" style="background:#2c2c2c;border-bottom:1px solid #1a1a1a;">
+    <div class="vb-topbar-inner" style="justify-content:space-between;">
+        <a href="/" class="vb-logo" style="font-family:Georgia,'Times New Roman',serif;font-size:18px;letter-spacing:0.02em;">TRUSTMYRECORD<span style="color:#FFD000;"> Forums</span></a>
+        <div class="vb-search vb-search--full" style="max-width:380px;">
             <input type="search" id="searchInput" placeholder="Search forums (titles, posts, threads)" onkeyup="handleSearch(this.value)" autocomplete="off">
             <button type="button" onclick="handleSearch(document.getElementById('searchInput').value)">Search</button>
         </div>
-        <button type="button" onclick="openNewThread()" class="vb-cta">New Thread</button>
+        <div class="vb-topnav" id="forumTopNav">
+            <a href="/messages/">Messages</a>
+            <a href="/notifications/">Alerts</a>
+            <a href="/profile/" id="forumTopProfileLink" style="display:none;">Profile</a>
+            <a href="/login/" id="forumTopLoginLink">Log In</a>
+            <a href="/register/" id="forumTopRegisterLink" class="vb-cta" style="background:#B12704;">Register</a>
+            <button type="button" onclick="logoutForumTop()" id="forumTopLogoutBtn" style="display:none;background:transparent;border:0;color:#DCE6F4;padding:4px 10px;font-weight:600;cursor:pointer;font-size:11px;">Log Out</button>
+        </div>
     </div>
 </div>
 
@@ -1474,6 +1606,45 @@
 
 <!-- ================= MAIN PAGE ================= -->
 <div class="vb-shell">
+
+    <!-- ================= LEFT SIDEBAR (forum categories) ================= -->
+    <aside class="vb-sidebar" aria-label="Forum categories">
+        <div class="vb-sidebar-group">
+            <div class="vb-sidebar-heading">Sports &amp; Games</div>
+            <ul class="tmr-fb-sidebar-list">
+                <li><a data-cat-slug="general-betting" onclick="onSidebarPick(this,'general-betting','Sports Betting')">Sports Betting</a></li>
+                <li><a data-cat-slug="mlb" onclick="onSidebarPick(this,'mlb','MLB')">MLB</a></li>
+                <li><a data-cat-slug="nfl" onclick="onSidebarPick(this,'nfl','NFL')">NFL</a></li>
+                <li><a data-cat-slug="nba" onclick="onSidebarPick(this,'nba','NBA')">NBA</a></li>
+                <li><a data-cat-slug="nhl" onclick="onSidebarPick(this,'nhl','NHL')">NHL</a></li>
+                <li><a data-cat-slug="college-football" onclick="onSidebarPick(this,'college-football','College Football')">College Football</a></li>
+                <li><a data-cat-slug="college-basketball" onclick="onSidebarPick(this,'college-basketball','College Basketball')">College Basketball</a></li>
+                <li><a data-cat-slug="fantasy" onclick="onSidebarPick(this,'fantasy','Fantasy Sports')">Fantasy Sports</a></li>
+                <li><a data-cat-slug="golf" onclick="onSidebarPick(this,'golf','Golf')">Golf</a></li>
+                <li><a data-cat-slug="video-games" onclick="onSidebarPick(this,'video-games','Video Games')">Video Games</a></li>
+            </ul>
+        </div>
+        <div class="vb-sidebar-group">
+            <div class="vb-sidebar-heading">Community</div>
+            <ul class="tmr-fb-sidebar-list">
+                <li><a data-cat-slug="general-discussion" onclick="onSidebarPick(this,'general-discussion','General Discussion')">General Discussion</a></li>
+                <li><a data-cat-slug="trash-talk" onclick="onSidebarPick(this,'trash-talk','Trash Talk')">Trash Talk</a></li>
+                <li><a data-cat-slug="site-feedback" onclick="onSidebarPick(this,'site-feedback','Site Feedback')">Site Feedback</a></li>
+                <li><a data-cat-slug="support" onclick="onSidebarPick(this,'support','Support')">Support</a></li>
+            </ul>
+        </div>
+        <div class="vb-sidebar-group">
+            <div class="vb-sidebar-heading">Marketplace</div>
+            <ul class="tmr-fb-sidebar-list">
+                <li><a data-cat-slug="pick-sellers" onclick="onSidebarPick(this,'pick-sellers','Pick Sellers')">Pick Sellers</a></li>
+                <li><a data-cat-slug="free-picks" onclick="onSidebarPick(this,'free-picks','Free Picks')">Free Picks</a></li>
+                <li><a data-cat-slug="challenges" onclick="onSidebarPick(this,'challenges','Challenges')">Challenges</a></li>
+                <li><a data-cat-slug="contests" onclick="onSidebarPick(this,'contests','Contests')">Contests</a></li>
+            </ul>
+        </div>
+    </aside>
+
+    <main class="vb-main">
 
     <div class="breadcrumb" id="breadcrumb">
         <a onclick="showCategories()">TrustMyRecord Forums</a>
@@ -1495,19 +1666,44 @@
             <div><strong id="statOnline">0</strong> active</div>
         </div>
         <div id="categoriesContainer"></div>
+
+        <div class="vb-section-header">
+            <span>Threads in Forum: <span id="indexSampleSectionName">Sports Betting</span></span>
+            <span class="vb-section-meta">Sample thread layout</span>
+        </div>
+        <div class="vb-actionrow">
+            <button type="button" class="vb-action-btn is-primary" onclick="openNewThread()">+ New Thread</button>
+            <button type="button" class="vb-action-btn" onclick="alert('Subscribe is wired to your account once you sign in.');">★ Subscribe</button>
+            <button type="button" class="vb-action-btn" onclick="showCategories()">Mark Forum Read</button>
+            <span class="vb-action-spacer"></span>
+            <input type="search" placeholder="Search this forum..." onkeyup="if(event.key==='Enter')handleSearch(this.value)">
+        </div>
+        <table class="thread-table">
+            <thead>
+                <tr>
+                    <th>Thread / Thread Starter</th>
+                    <th class="col-rating">Rating</th>
+                    <th class="col-last">Last Post</th>
+                    <th class="col-num">Replies</th>
+                    <th class="col-num">Views</th>
+                </tr>
+            </thead>
+            <tbody id="sampleThreadBody"></tbody>
+        </table>
     </div>
 
     <!-- ================= THREADS VIEW ================= -->
     <div id="viewThreads" style="display:none;">
-        <div class="vb-thread-toolbar">
-            <div class="toolbar-left">
-                <span class="toolbar-label">Forum:</span>
-                <strong id="threadsCategoryLabel">Forum</strong>
-            </div>
-            <div class="toolbar-right">
-                <button class="btn btn-primary btn-sm" type="button" onclick="openNewThread()">New Thread</button>
-                <button class="btn btn-sm" type="button" onclick="showCategories()">Forum Home</button>
-            </div>
+        <div class="vb-section-header">
+            <span>Threads in Forum: <span id="threadsCategoryLabel">Forum</span></span>
+            <span class="vb-section-meta" id="threadsCategoryMeta">&nbsp;</span>
+        </div>
+        <div class="vb-actionrow">
+            <button type="button" class="vb-action-btn is-primary" onclick="openNewThread()">+ New Thread</button>
+            <button type="button" class="vb-action-btn" onclick="alert('Subscribe is wired to your account once you sign in.');">★ Subscribe</button>
+            <button type="button" class="vb-action-btn" onclick="showCategories()">Forum Home</button>
+            <span class="vb-action-spacer"></span>
+            <input type="search" placeholder="Search this forum..." onkeyup="if(event.key==='Enter')handleSearch(this.value)">
         </div>
 
         <table class="thread-table">
@@ -1531,13 +1727,14 @@
 
     <!-- ================= THREAD DETAIL VIEW ================= -->
     <div id="viewThread" style="display:none;">
-        <div class="vb-thread-toolbar">
-            <div class="toolbar-left">
-                <button class="btn btn-sm" type="button" onclick="backToThreads()">&laquo; Back to Thread List</button>
-            </div>
-            <div class="toolbar-right">
-                <button class="btn btn-primary btn-sm" type="button" onclick="openNewThread()">New Thread</button>
-            </div>
+        <div class="vb-section-header">
+            <span id="threadDetailHeader">Thread</span>
+            <span class="vb-section-meta">Single thread</span>
+        </div>
+        <div class="vb-actionrow">
+            <button class="vb-action-btn" type="button" onclick="backToThreads()">&laquo; Back to Thread List</button>
+            <button class="vb-action-btn is-primary" type="button" onclick="openNewThread()">+ New Thread</button>
+            <span class="vb-action-spacer"></span>
         </div>
 
         <div id="postsContainer"></div>
@@ -1547,6 +1744,8 @@
             <div id="replyArea"></div>
         </div>
     </div>
+
+    </main>
 
 </div>
 
@@ -1769,6 +1968,8 @@ function setForumPageHeader(title) {
     if (titleEl) titleEl.textContent = title;
     var crumbLabel = document.getElementById('forumPageTitleLabel');
     if (crumbLabel) crumbLabel.textContent = title;
+    var sampleSection = document.getElementById('indexSampleSectionName');
+    if (sampleSection) sampleSection.textContent = title.replace(/^TrustMyRecord\s+/, '').replace(/\s+Forums?$/i, '') || title;
 }
 
 function setActiveSidebar(slug) {
@@ -1873,6 +2074,8 @@ async function showThreadDetail(threadId) {
     document.getElementById('viewThreads').style.display = 'none';
     document.getElementById('viewThread').style.display = '';
     await loadThread(threadId);
+    var detailHeader = document.getElementById('threadDetailHeader');
+    if (detailHeader) detailHeader.textContent = currentThreadTitle || 'Thread';
     var crumbParts = ['<a onclick="showCategories()">Forums</a>'];
     if (currentCategorySlug) {
         crumbParts.push('<span class="sep">&raquo;</span><a onclick="showThreadsList(\'' + escHtml(currentCategorySlug) + '\',\'' + escHtml(currentCategoryName || currentCategorySlug) + '\',' + (currentCategoryId || 'null') + ')">' + escHtml(currentCategoryName || currentCategorySlug) + '</a>');
@@ -2374,13 +2577,31 @@ function updateForumNavAuth() {
     var registerBtn = document.getElementById('forumHeaderRegisterBtn');
     var loggedIn = isUserLoggedIn();
 
-    if (loginBtn) {
-        loginBtn.style.display = loggedIn ? 'none' : '';
-    }
+    if (loginBtn) loginBtn.style.display = loggedIn ? 'none' : '';
+    if (registerBtn) registerBtn.style.display = loggedIn ? 'none' : '';
 
-    if (registerBtn) {
-        registerBtn.style.display = loggedIn ? 'none' : '';
-    }
+    var topLogin = document.getElementById('forumTopLoginLink');
+    var topRegister = document.getElementById('forumTopRegisterLink');
+    var topProfile = document.getElementById('forumTopProfileLink');
+    var topLogout = document.getElementById('forumTopLogoutBtn');
+    if (topLogin) topLogin.style.display = loggedIn ? 'none' : '';
+    if (topRegister) topRegister.style.display = loggedIn ? 'none' : '';
+    if (topProfile) topProfile.style.display = loggedIn ? '' : 'none';
+    if (topLogout) topLogout.style.display = loggedIn ? '' : 'none';
+}
+
+function logoutForumTop() {
+    try {
+        if (typeof api !== 'undefined' && api.logout) api.logout();
+    } catch (e) {}
+    try {
+        if (typeof auth !== 'undefined' && auth.logout) auth.logout();
+    } catch (e) {}
+    try {
+        localStorage.removeItem('trustmyrecord_session');
+        localStorage.removeItem('tmr_current_user');
+    } catch (e) {}
+    window.location.href = '/';
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
