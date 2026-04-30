@@ -1760,6 +1760,19 @@
         const active = option._domId ? document.getElementById(option._domId) : null;
         if (active) active.classList.add('active');
 
+        // CRITICAL fix Apr 30 2026: flip #pickDetails into "has-selection"
+        // mode. Without this, the desktop two-column layout (.picks-board-row
+        // grid w/ #gamesListSection + #pickDetails sticky right rail) keeps
+        // the bet form, summary, and submit button hidden because the CSS
+        // gate `#pickDetails.has-selection` never fires. Visible symptom:
+        // user clicks an odds button on the MLB board, nothing appears, slip
+        // stays in its empty-state placeholder ("Tap a price on the board")
+        // even though the underlying form fields were populated. Same path
+        // for every sport — fix lives here so every selectOption caller
+        // (bridge, ESPN, market_groups, team-totals) gets it.
+        const pickDetailsEl = document.getElementById('pickDetails');
+        if (pickDetailsEl) pickDetailsEl.classList.add('has-selection');
+
         ensureMetadataFields();
 
         updateText('summaryGame', option.game.away_team + ' @ ' + option.game.home_team);
