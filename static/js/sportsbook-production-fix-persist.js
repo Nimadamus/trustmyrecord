@@ -283,6 +283,7 @@
     async function ensurePicksAccess() {
         const user = getCurrentUser();
         if (!user) {
+            showSubmitTrace('Access blocked: no logged-in user was found.');
             redirectToLoginForPicks('Please log in to submit a pick.');
             return false;
         }
@@ -306,8 +307,64 @@
         }
 
         clearFrontendAuthState();
+        showSubmitTrace('Access blocked: login session expired before submit.');
         redirectToLoginForPicks('Your login session expired. Please log in again before making picks.');
         return false;
+    }
+
+    function showSubmitTrace(message) {
+        try {
+            const text = '[TMR submit] ' + message;
+            console.info(text);
+            let box = document.getElementById('tmrSubmitTrace');
+            if (!box) {
+                box = document.createElement('div');
+                box.id = 'tmrSubmitTrace';
+                box.setAttribute('role', 'status');
+                box.style.cssText = [
+                    'position:fixed',
+                    'right:14px',
+                    'bottom:14px',
+                    'z-index:2147483647',
+                    'max-width:min(420px,calc(100vw - 28px))',
+                    'padding:12px 14px',
+                    'border-radius:10px',
+                    'background:rgba(3,7,18,0.96)',
+                    'border:1px solid rgba(34,211,238,0.55)',
+                    'box-shadow:0 16px 42px rgba(0,0,0,0.42)',
+                    'color:#e0f2fe',
+                    'font:600 13px/1.45 Inter,system-ui,sans-serif',
+                    'white-space:normal'
+                ].join(';');
+                (document.body || document.documentElement).appendChild(box);
+            }
+            box.textContent = text;
+            box.style.display = 'block';
+        } catch (error) {}
+    }
+
+    function describeSubmitError(error) {
+        if (!error) return 'Unknown error';
+        const data = error.data || error.response || null;
+        if (data && typeof data === 'object') {
+            return data.error || data.message || error.message || String(error);
+        }
+        return error.message || String(error);
+    }
+
+    if (!window.TMRSubmitDiagnosticsBound) {
+        window.TMRSubmitDiagnosticsBound = true;
+        window.addEventListener('error', function(event) {
+            showSubmitTrace('JavaScript error: ' + (event && event.message ? event.message : 'unknown'));
+        });
+        window.addEventListener('unhandledrejection', function(event) {
+            const reason = event && event.reason;
+            showSubmitTrace('Promise error: ' + describeSubmitError(reason));
+        });
+        document.addEventListener('click', function(event) {
+            const target = event.target && event.target.closest && event.target.closest('#ttSlipSubmit,#submitPickBtn,button.submit-pick-btn,button.lock-pick-btn,[data-lock-pick-btn]');
+            if (target) showSubmitTrace('Lock button click captured.');
+        }, true);
     }
 
     function getDirectApiBases() {
@@ -1842,21 +1899,26 @@
 
     async function lockInPick() {
         clearPickSlipError();
+        showSubmitTrace('lockInPick started.');
         const option = state.selectedOption;
         if (!option) {
+            showSubmitTrace('Submit stopped: no selected option in state.');
             showPickSlipError('Select a market before submitting a pick.');
             resetLockButtons();
             return;
         }
 
         if (!option.game_id || /unknown/i.test(String(option.game_id))) {
+            showSubmitTrace('Submit stopped: selected option is missing game_id.');
             showPickSlipError('That market is missing its game ID. Refresh the board (Ctrl-F5) and re-select the bet.');
             resetLockButtons();
             return;
         }
 
+        showSubmitTrace('Checking account access for ' + option.market_type + ' / ' + option.game_id + '.');
         const allowed = await ensurePicksAccess();
         if (!allowed) {
+            showSubmitTrace('Submit stopped: account access check failed.');
             resetLockButtons();
             return;
         }
@@ -1872,6 +1934,7 @@
         const unitsValue = unitsInput ? parseFloat(unitsInput.value || '1') : 1;
 
         if (Number.isNaN(oddsValue) || (oddsValue > -100 && oddsValue < 100)) {
+            showSubmitTrace('Submit stopped: invalid odds value.');
             showPickSlipError('Enter valid American odds like -110 or +150.');
             resetLockButtons();
             return;
@@ -1884,6 +1947,7 @@
         try {
             const api = await getApiClientOrFallback();
             await ensureBackendAccessToken(api);
+            showSubmitTrace('Submitting pick to API: ' + option.game_id + ' / ' + option.market_type + '.');
             const response = await api.createPick({
                 game_id: option.game_id,
                 external_game_id: option.game_id,
@@ -1903,11 +1967,17 @@
                 reasoning: reasoningInput ? reasoningInput.value.trim() : ''
             });
 
+            showSubmitTrace('API saved pick. Refreshing pick history.');
             await fetchCurrentUserPicks();
             syncRecordWidgets(state.currentUserPicks);
             updateText('confirmPickDetail', option.selection_label + ' (' + (oddsValue > 0 ? '+' : '') + oddsValue + ')');
-            updateText('confirmPickMeta', (option.game.away_team + ' @ ' + option.game.home_team) + ' | Status: pending');
+            const responseGame = response && response.pick && response.pick.game ? response.pick.game : null;
+            const metaGame = option.game || responseGame || {};
+            const awayTeam = metaGame.away_team || option.away_team || '';
+            const homeTeam = metaGame.home_team || option.home_team || '';
+            updateText('confirmPickMeta', (awayTeam && homeTeam ? (awayTeam + ' @ ' + homeTeam) : 'Pick saved') + ' | Status: pending');
             if (typeof window.showPickStep === 'function') window.showPickStep('pickConfirmation');
+            showSubmitTrace('Pick saved and confirmation shown.');
         } catch (error) {
             const raw = String(error && error.message || 'Unknown error');
             const status = error && error.status;
@@ -1926,6 +1996,7 @@
                 'sel=' + (option.selection || '')
             ].join(' | ');
             try { console.error('[TMR][lockInPick] failure', { error, option, data }); } catch (e) {}
+            showSubmitTrace('Submit failed: ' + dumped);
             showPickSlipError('Pick submission failed [' + dumped + ']');
             try { alert('Pick submission failed [' + dumped + ']'); } catch (_) {}
         } finally {
