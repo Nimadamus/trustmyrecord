@@ -11,8 +11,8 @@
     <meta property="og:title" content="User Profile | TrustMyRecord">
     <meta property="og:description" content="Check out my verified handicapping record and stats.">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430d">
-<script defer src="/static/js/tmr-sitewide.js?v=20260430d"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430e">
+<script defer src="/static/js/tmr-sitewide.js?v=20260430e"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1633,15 +1633,21 @@
                                 <div class="tmr-cap-card__avatar">P</div>
                                 <div class="tmr-cap-card__name"><strong>Period performance</strong><span>ROI and units across rolling time windows.</span></div>
                             </div>
-                            <div class="tmr-cap-card__metrics">
-                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 7d</span><span class="tmr-cap-metric__value is-placeholder">—</span></div>
-                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 14d</span><span class="tmr-cap-metric__value is-placeholder">—</span></div>
-                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 30d</span><span class="tmr-cap-metric__value is-placeholder">—</span></div>
-                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 60d</span><span class="tmr-cap-metric__value is-placeholder">—</span></div>
-                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 90d</span><span class="tmr-cap-metric__value is-placeholder">—</span></div>
-                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 180d</span><span class="tmr-cap-metric__value is-placeholder">—</span></div>
-                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 365d</span><span class="tmr-cap-metric__value is-placeholder">—</span></div>
-                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">All time</span><span class="tmr-cap-metric__value is-placeholder">—</span></div>
+                            <div class="tmr-cap-card__metrics" data-period-grid>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 7d</span><span class="tmr-cap-metric__value is-placeholder" data-period="7d">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 14d</span><span class="tmr-cap-metric__value is-placeholder" data-period="14d">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 30d</span><span class="tmr-cap-metric__value is-placeholder" data-period="30d">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 60d</span><span class="tmr-cap-metric__value is-placeholder" data-period="60d">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 90d</span><span class="tmr-cap-metric__value is-placeholder" data-period="90d">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 180d</span><span class="tmr-cap-metric__value is-placeholder" data-period="180d">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Last 365d</span><span class="tmr-cap-metric__value is-placeholder" data-period="365d">—</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">All time</span><span class="tmr-cap-metric__value is-placeholder" id="advAllTimeRoi">—</span></div>
+                            </div>
+                            <!-- Rolling form (last N graded picks). Same shape as period cells. -->
+                            <div class="tmr-cap-card__metrics" style="margin-top:8px;">
+                                <div class="tmr-cap-metric" title="Last 25 settled picks: net units + ROI + W-L"><span class="tmr-cap-metric__label">Last 25</span><span class="tmr-cap-metric__value is-placeholder" id="advForm25">—</span><span class="tmr-cap-metric__sub" id="advForm25Sub"></span></div>
+                                <div class="tmr-cap-metric" title="Last 50 settled picks: net units + ROI + W-L"><span class="tmr-cap-metric__label">Last 50</span><span class="tmr-cap-metric__value is-placeholder" id="advForm50">—</span><span class="tmr-cap-metric__sub" id="advForm50Sub"></span></div>
+                                <div class="tmr-cap-metric" title="Last 100 settled picks: net units + ROI + W-L"><span class="tmr-cap-metric__label">Last 100</span><span class="tmr-cap-metric__value is-placeholder" id="advForm100">—</span><span class="tmr-cap-metric__sub" id="advForm100Sub"></span></div>
                             </div>
                         </div>
 
@@ -1652,15 +1658,89 @@
                             </div>
                             <div class="tmr-cap-card__metrics">
                                 <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Consistency</span><span class="tmr-cap-metric__value is-placeholder">—</span><span class="tmr-cap-metric__sub">Variance vs. rolling ROI</span></div>
-                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Volatility</span><span class="tmr-cap-metric__value is-placeholder">—</span><span class="tmr-cap-metric__sub">Std dev of monthly units</span></div>
-                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Sample size</span><span class="tmr-cap-metric__value is-placeholder">—</span><span class="tmr-cap-metric__sub">Total graded picks</span></div>
-                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Public-record</span><span class="tmr-cap-metric__value is-placeholder">—</span><span class="tmr-cap-metric__sub">Time-on-platform &amp; lock rate</span></div>
-                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Max drawdown</span><span class="tmr-cap-metric__value is-placeholder">—</span><span class="tmr-cap-metric__sub">Peak-to-trough units</span></div>
-                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Peak units</span><span class="tmr-cap-metric__value is-placeholder">—</span><span class="tmr-cap-metric__sub">All-time high</span></div>
-                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Recovery</span><span class="tmr-cap-metric__value is-placeholder">—</span><span class="tmr-cap-metric__sub">Drawdown to new peak</span></div>
-                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Capper trust</span><span class="tmr-cap-metric__value is-placeholder">—</span><span class="tmr-cap-metric__sub">Composite score</span></div>
+                                <div class="tmr-cap-metric" title="Composite Capper Rating 0-100. Blends ROI band, sample size, eWP edge, Z confidence, drawdown discipline, and consistency. Sample-gated at 25 settled decisions."><span class="tmr-cap-metric__label">Capper Rating</span><span class="tmr-cap-metric__value is-placeholder" id="advCapperRating">—</span><span class="tmr-cap-metric__sub">0&ndash;100 composite (n&ge;25)</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Sample size</span><span class="tmr-cap-metric__value is-placeholder" id="advSampleSize">—</span><span class="tmr-cap-metric__sub">Total graded picks</span></div>
+                                <div class="tmr-cap-metric" title="% of settled picks that pushed (no action)."><span class="tmr-cap-metric__label">Push rate</span><span class="tmr-cap-metric__value is-placeholder" id="advPushRate">—</span><span class="tmr-cap-metric__sub">No-action rate</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Max drawdown</span><span class="tmr-cap-metric__value is-placeholder" id="advMaxDrawdown">—</span><span class="tmr-cap-metric__sub">Peak-to-trough units</span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Peak units</span><span class="tmr-cap-metric__value is-placeholder" id="advPeakUnits">—</span><span class="tmr-cap-metric__sub">All-time high</span></div>
+                                <div class="tmr-cap-metric" title="Days since the last locked pick."><span class="tmr-cap-metric__label">Days since last pick</span><span class="tmr-cap-metric__value is-placeholder" id="advDaysSince">—</span><span class="tmr-cap-metric__sub">Activity recency</span></div>
+                                <div class="tmr-cap-metric" title="Closing Line Value: avg edge vs. closing odds. Populates once closing-odds data lands in the ledger; never synthesized."><span class="tmr-cap-metric__label">CLV</span><span class="tmr-cap-metric__value is-placeholder" id="advClv">—</span><span class="tmr-cap-metric__sub">Closing line value</span></div>
+                            </div>
+
+                            <!-- Best / Worst pulled from existing splits, sample-gated server-side at 3+ picks. -->
+                            <div class="tmr-cap-card__metrics" style="margin-top:8px;">
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best sport</span><span class="tmr-cap-metric__value is-placeholder" id="advBestSport">—</span><span class="tmr-cap-metric__sub" id="advBestSportSub"></span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst sport</span><span class="tmr-cap-metric__value is-placeholder" id="advWorstSport">—</span><span class="tmr-cap-metric__sub" id="advWorstSportSub"></span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best market</span><span class="tmr-cap-metric__value is-placeholder" id="advBestMarket">—</span><span class="tmr-cap-metric__sub" id="advBestMarketSub"></span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst market</span><span class="tmr-cap-metric__value is-placeholder" id="advWorstMarket">—</span><span class="tmr-cap-metric__sub" id="advWorstMarketSub"></span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best day of week</span><span class="tmr-cap-metric__value is-placeholder" id="advBestDow">—</span><span class="tmr-cap-metric__sub" id="advBestDowSub"></span></div>
+                                <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst day of week</span><span class="tmr-cap-metric__value is-placeholder" id="advWorstDow">—</span><span class="tmr-cap-metric__sub" id="advWorstDowSub"></span></div>
                             </div>
                         </div>
+
+                        <!-- ===== PickMonitor-style clean tables ===== -->
+                        <!-- Sport rows | Market rows. Same column set as the old PM card:
+                             Sport / Picks / W-L-P / Units / ROI / eWP / Z. -->
+                        <div class="tmr-cap-card pm-table-card" style="margin-top:14px;">
+                            <div class="tmr-cap-card__head">
+                                <div class="tmr-cap-card__avatar">&#127937;</div>
+                                <div class="tmr-cap-card__name"><strong>Performance by sport</strong><span>Clean PickMonitor-style row breakdown. Sample-gated at 3+ picks per row.</span></div>
+                            </div>
+                            <div class="pm-table-wrap">
+                                <table class="pm-table" id="advTableBySport">
+                                    <thead>
+                                        <tr>
+                                            <th>Sport</th><th class="num">Picks</th><th class="num">W&ndash;L&ndash;P</th><th class="num">Units</th><th class="num">ROI</th><th class="num">eWP</th><th class="num">Z</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="pm-table__empty"><td colspan="7">No sport rows yet &mdash; lock graded picks across at least one sport to populate this table.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="tmr-cap-card pm-table-card" style="margin-top:14px;">
+                            <div class="tmr-cap-card__head">
+                                <div class="tmr-cap-card__avatar">&#128172;</div>
+                                <div class="tmr-cap-card__name"><strong>Performance by market</strong><span>Spread / ML / Total / Team Total / Halves / F5 / Alts breakdown.</span></div>
+                            </div>
+                            <div class="pm-table-wrap">
+                                <table class="pm-table" id="advTableByMarket">
+                                    <thead>
+                                        <tr>
+                                            <th>Market</th><th class="num">Picks</th><th class="num">W&ndash;L&ndash;P</th><th class="num">Units</th><th class="num">ROI</th><th class="num">eWP</th><th class="num">Z</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="pm-table__empty"><td colspan="7">No market rows yet.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <style>
+                            .pm-table-card { padding: 0; overflow: hidden; }
+                            .pm-table-card .tmr-cap-card__head { padding: 14px 18px 8px; }
+                            .pm-table-wrap { overflow-x: auto; }
+                            .pm-table { width: 100%; border-collapse: collapse; font: 500 13px/1.4 'Inter', sans-serif; color: #cbd5e1; }
+                            .pm-table thead th {
+                                padding: 9px 14px; text-align: left;
+                                font: 800 10.5px/1 'Inter', sans-serif; letter-spacing: .12em; text-transform: uppercase;
+                                color: #94a3b8; background: rgba(11, 17, 24, 0.6);
+                                border-bottom: 1px solid rgba(255,255,255,0.06);
+                                position: sticky; top: 0;
+                            }
+                            .pm-table thead th.num { text-align: right; }
+                            .pm-table tbody td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); white-space: nowrap; }
+                            .pm-table tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+                            .pm-table tbody tr:hover td { background: rgba(0,255,255,0.03); }
+                            .pm-table tbody tr:last-child td { border-bottom: 0; }
+                            .pm-table .pm-row__name { color: #f4f7fb; font-weight: 700; letter-spacing: .02em; }
+                            .pm-table .pm-pos { color: #4ade80; font-weight: 700; }
+                            .pm-table .pm-neg { color: #f87171; font-weight: 700; }
+                            .pm-table .pm-table__empty td { padding: 22px 18px; color: #64748b; text-align: center; font-style: italic; }
+                        </style>
 
                         <p style="margin-top:14px;color:var(--tmr-text-muted);font-size:.78rem;">Metrics not yet computed for this account show "&mdash;" instead of fabricated values. Once the underlying ledger has enough graded picks for a metric, the dashboard fills in automatically.</p>
                     </div>
@@ -3408,7 +3488,78 @@
             if (s.avg_daily_picks != null) {
                 set('advAdp', Number(s.avg_daily_picks).toFixed(2) + ' /day');
             }
+            // Sample size lives next to scores cards too.
+            if (s.total_picks != null) set('advSampleSize', String(s.total_picks));
         }
+        // ===== Scores card extras =====
+        const scores = data.scores || {};
+        if (scores.capper_rating != null) {
+            const cr = Number(scores.capper_rating);
+            set('advCapperRating', String(cr) + ' / 100', { signed: cr - 50 });
+        }
+        if (scores.push_rate != null) set('advPushRate', Number(scores.push_rate).toFixed(1) + '%');
+        if (scores.days_since_last_pick != null) {
+            const d = Number(scores.days_since_last_pick);
+            set('advDaysSince', d === 0 ? 'today' : d === 1 ? '1 day' : (d + ' days'));
+        }
+        if (scores.clv != null) {
+            const c = Number(scores.clv);
+            set('advClv', (c >= 0 ? '+' : '') + c.toFixed(2) + ' bps', { signed: c });
+        }
+        // Drawdown card cells.
+        const dd = data.drawdown || {};
+        if (dd.max_drawdown != null) set('advMaxDrawdown', Number(dd.max_drawdown).toFixed(2) + 'u', { signed: -1 });
+        if (dd.peak_units   != null) set('advPeakUnits',   Number(dd.peak_units).toFixed(2) + 'u',   { signed: 1 });
+
+        // ===== Rolling form (last 25 / 50 / 100) =====
+        const form = data.rolling_form || {};
+        const renderForm = (key, valId, subId) => {
+            const f = form['last_' + key];
+            if (!f || !f.total) return;
+            const u = Number(f.net_units || 0);
+            const r = Number(f.roi || 0);
+            const valEl = document.getElementById(valId);
+            const subEl = document.getElementById(subId);
+            if (!valEl) return;
+            valEl.textContent = (u >= 0 ? '+' : '') + u.toFixed(2) + 'u';
+            valEl.classList.remove('is-placeholder');
+            valEl.classList.toggle('is-pos', u > 0);
+            valEl.classList.toggle('is-neg', u < 0);
+            if (subEl) subEl.textContent = (r >= 0 ? '+' : '') + r.toFixed(1) + '% ROI · ' + f.wins + '-' + f.losses;
+        };
+        renderForm(25,  'advForm25',  'advForm25Sub');
+        renderForm(50,  'advForm50',  'advForm50Sub');
+        renderForm(100, 'advForm100', 'advForm100Sub');
+
+        // ===== Best / Worst =====
+        const bw = data.best_worst || {};
+        const fmtBucketLabel = (typeof window.formatBucketLabel === 'function') ? window.formatBucketLabel : (k, v) => String(v || '—');
+        const setBW = (split, kind, valId, subId) => {
+            const grp = bw[split];
+            if (!grp || !grp[kind]) return;
+            const b = grp[kind];
+            const valEl = document.getElementById(valId);
+            const subEl = document.getElementById(subId);
+            if (!valEl) return;
+            valEl.textContent = fmtBucketLabel('by_' + split, b.key);
+            valEl.classList.remove('is-placeholder');
+            const net = Number(b.net) || 0;
+            valEl.classList.toggle('is-pos', net > 0);
+            valEl.classList.toggle('is-neg', net < 0);
+            if (subEl) subEl.textContent = (net >= 0 ? '+' : '') + net.toFixed(2) + 'u · ' + (b.roi >= 0 ? '+' : '') + Number(b.roi).toFixed(1) + '% (' + b.total + ')';
+        };
+        setBW('sport',       'best',  'advBestSport',   'advBestSportSub');
+        setBW('sport',       'worst', 'advWorstSport',  'advWorstSportSub');
+        setBW('market',      'best',  'advBestMarket',  'advBestMarketSub');
+        setBW('market',      'worst', 'advWorstMarket', 'advWorstMarketSub');
+        setBW('day_of_week', 'best',  'advBestDow',     'advBestDowSub');
+        setBW('day_of_week', 'worst', 'advWorstDow',    'advWorstDowSub');
+
+        // ===== PickMonitor-style sport + market tables =====
+        renderPmTable('advTableBySport',   data.splits && data.splits.by_sport,   'by_sport');
+        renderPmTable('advTableByMarket',  data.splits && data.splits.by_market,  'by_market');
+
+        // ===== Streaks / periods / splits cards / charts (original tail) =====
         const st = data.streaks || {};
         if (st.current != null) {
             const cs = Number(st.current);
@@ -3418,7 +3569,7 @@
         if (st.worst != null) set('advWorstStreak', Math.abs(Number(st.worst)) + 'L', { signed: -1 });
         const sc = data.scores || {};
         if (sc.consistency != null) set('advTrust', Number(sc.consistency).toFixed(1));
-        // Period rollups: fill any matching `data-period="..."` slots if present
+        // Period rollups: fill any matching `data-period="..."` slots if present.
         const periods = data.periods || {};
         document.querySelectorAll('[data-period]').forEach(el => {
             const key = el.getAttribute('data-period');
@@ -3431,8 +3582,6 @@
                 el.classList.toggle('is-neg', r < 0);
             }
         });
-
-        // Splits cards + charts
         renderAdvancedSplits(data.splits || {});
         renderEquityCurveChart(data.equity_curve || []);
         renderDrawdownChart(data.equity_curve || []);
@@ -3444,6 +3593,61 @@
         renderSplitBars('advChartDayOfWeek',   data.splits && data.splits.by_day_of_week,  'by_day_of_week');
         renderSplitBars('advChartFavDog',      data.splits && data.splits.by_fav_dog,      'by_fav_dog');
     }
+
+    function renderPmTable(tableId, splitArr, splitKey) {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+        const rows = (Array.isArray(splitArr) ? splitArr : []).filter(b => Number(b.total) >= 3);
+        if (!rows.length) return; // keep the empty-state row
+        const labelOf = (typeof window.formatBucketLabel === 'function') ? (k, v) => window.formatBucketLabel(k, v) : (k, v) => String(v || '—');
+        // Per PickMonitor: rows sorted by net units desc (best at top).
+        rows.sort((a, b) => Number(b.net || 0) - Number(a.net || 0));
+        tbody.innerHTML = rows.map(b => {
+            const net = Number(b.net) || 0;
+            const roi = Number(b.roi) || 0;
+            const w = Number(b.wins) || 0, l = Number(b.losses) || 0, p = Number(b.pushes) || 0;
+            const decisions = w + l;
+            const wr = decisions > 0 ? (w / decisions) : 0;
+            // eWP = (110/210) * (1 + ROI_fraction)
+            const ewp = (110/210) * (1 + (roi / 100));
+            // Z = (W - n*p_breakeven) / sqrt(n*p*(1-p)) where p is the
+            // PickMonitor breakeven of 0.5238 (matches the per-row eWP scale).
+            let z = '';
+            const pBe = 110/210;
+            if (decisions >= 5) {
+                const variance = decisions * pBe * (1 - pBe);
+                if (variance > 0) z = ((w - decisions * pBe) / Math.sqrt(variance)).toFixed(2);
+            }
+            const netCls = net > 0 ? 'pm-pos' : net < 0 ? 'pm-neg' : '';
+            const roiCls = roi > 0 ? 'pm-pos' : roi < 0 ? 'pm-neg' : '';
+            const recCls = decisions === 0 ? '' : (wr >= 0.5 ? 'pm-pos' : 'pm-neg');
+            const ewpCls = ewp >= 0.5238 ? 'pm-pos' : 'pm-neg';
+            return '<tr>'
+                + '<td class="pm-row__name">' + labelOf(splitKey, b.key) + '</td>'
+                + '<td class="num">' + b.total + '</td>'
+                + '<td class="num"><span class="' + recCls + '">' + w + '&ndash;' + l + (p ? '&ndash;' + p : '') + '</span></td>'
+                + '<td class="num ' + netCls + '">' + (net >= 0 ? '+' : '') + net.toFixed(2) + 'u</td>'
+                + '<td class="num ' + roiCls + '">' + (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%</td>'
+                + '<td class="num ' + ewpCls + '">' + (ewp * 100).toFixed(1) + '%</td>'
+                + '<td class="num">' + (z || '&mdash;') + '</td>'
+                + '</tr>';
+        }).join('');
+    }
+
+    // Expose formatBucketLabel for renderPmTable + best/worst helpers.
+    window.formatBucketLabel = (typeof formatBucketLabel === 'function') ? formatBucketLabel : function(splitKey, bucketKey) {
+        if (bucketKey == null || bucketKey === '') return '—';
+        const k = String(bucketKey);
+        if (splitKey === 'by_sport')        return k.toUpperCase().replace(/_/g, ' ');
+        if (splitKey === 'by_market')       return k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',even:'Even (±110)',underdog:'Dog (+110 to +200)',big_underdog:'Big Dog (+200+)'})[k] || k;
+        if (splitKey === 'by_fav_dog')      return ({favorite:'Favorite',underdog:'Underdog'})[k] || k;
+        if (splitKey === 'by_unit_size')    return ({'0.5_to_1u':'0.5–1u','1.5_to_2u':'1.5–2u','2.5_to_3u':'2.5–3u','3u_plus':'3u+'})[k] || k;
+        if (splitKey === 'by_day_of_week')  return ({sun:'Sunday',mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday'})[k] || k;
+        return k;
+    };
 
     function formatBucketLabel(splitKey, bucketKey) {
         if (bucketKey == null || bucketKey === '') return '—';
