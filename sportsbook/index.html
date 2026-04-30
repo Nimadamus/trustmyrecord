@@ -9871,9 +9871,23 @@ window.toggleSportFamily = function (family) {
                 return ({ '<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c];
             });
         };
-        var sideLabel = sel.betType === 'teamover' ? 'Over'
-                      : sel.betType === 'teamunder' ? 'Under'
-                      : (sel.betType || '');
+        // Friendly label per bet type so the slip headline reads
+        // "Lakers ML" / "Celtics -3.5" / "Over 224.5", not "Lakers ml".
+        var sideLabel = (function (bt) {
+            switch (bt) {
+                case 'teamover':  return 'Over';
+                case 'teamunder': return 'Under';
+                case 'over':      return 'Over';
+                case 'under':     return 'Under';
+                case 'spread':    return '';
+                case 'ml':        return 'ML';
+                case 'f5over':    return 'F5 Over';
+                case 'f5under':   return 'F5 Under';
+                case 'f5spread':  return 'F5';
+                case 'f5ml':      return 'F5 ML';
+                default:          return bt ? '' : '';
+            }
+        })(sel.betType);
         var matchup = (sel.awayTeam || '') + ' vs ' + (sel.homeTeam || '');
         var marketLabel = sel.market || 'Team Total';
         var bookLabel = sel.book || 'DraftKings';
