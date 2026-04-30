@@ -521,13 +521,13 @@ html body.tmr-site-shell::after {
 
 .tmr-global-nav {
     border-bottom-color: rgba(148, 163, 184, 0.14);
-    background: rgba(7, 12, 22, 0.86);
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+    background: rgba(7, 12, 22, 0.94);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
 }
 
 .tmr-global-nav__inner {
-    min-height: 68px;
-    gap: 12px;
+    min-height: 64px;
+    gap: 10px;
 }
 
 .tmr-global-nav__brand {
@@ -2897,11 +2897,33 @@ html body.tmr-site-shell::before {
 /* Header action cleanup: the top nav should end with profile + Log Out only.
    Hide legacy icon/action shortcuts if an older nav script renders them. */
 .tmr-global-nav__actions > .tmr-global-nav__icon,
+.tmr-global-nav__actions > [data-tmr-search],
+.tmr-global-nav__actions > [data-tmr-notifications],
+.tmr-global-nav__actions > [data-tmr-messages],
+.tmr-global-nav__actions > [aria-label="Search"],
+.tmr-global-nav__actions > [aria-label="Notifications"],
+.tmr-global-nav__actions > [aria-label="Messages"],
 .tmr-global-nav__actions > a[href="/notifications/"],
 .tmr-global-nav__actions > a[href="notifications.html"],
+.tmr-global-nav__actions > a[href="/notifications.html"],
 .tmr-global-nav__actions > a[href="/messages/"],
-.tmr-global-nav__actions > a[href="messages.html"] {
+.tmr-global-nav__actions > a[href="messages.html"],
+.tmr-global-nav__actions > a[href="/messages.html"],
+.tmr-global-nav__actions > a:empty,
+.tmr-global-nav__actions > button:empty {
     display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
 }
 
 /* Search overlay */
@@ -3225,17 +3247,17 @@ body.tmr-site-shell .friends-top-strip {
    width from the nav row on normal desktop/laptop viewports. */
 @media (min-width: 641px) {
     body.tmr-site-shell .tmr-global-nav__inner {
-        width: min(1700px, calc(100% - 36px)) !important;
-        grid-template-columns: max-content minmax(0, 1fr) max-content !important;
+        width: min(1480px, calc(100% - 32px)) !important;
+        grid-template-columns: minmax(205px, max-content) minmax(0, 1fr) max-content !important;
         grid-template-areas: "brand links actions" !important;
         align-items: center !important;
-        column-gap: clamp(12px, 1.1vw, 22px) !important;
+        column-gap: clamp(10px, 1vw, 18px) !important;
     }
 
     body.tmr-site-shell .tmr-global-nav__brand {
         grid-area: brand !important;
         min-width: max-content !important;
-        font-size: clamp(1.35rem, 1.55vw, 2rem) !important;
+        font-size: clamp(1.22rem, 1.35vw, 1.7rem) !important;
     }
 
     body.tmr-site-shell .tmr-global-nav__panel {
@@ -3246,7 +3268,7 @@ body.tmr-site-shell .friends-top-strip {
         grid-area: links !important;
         min-width: 0 !important;
         justify-content: center !important;
-        gap: clamp(4px, 0.38vw, 8px) !important;
+        gap: clamp(2px, 0.32vw, 6px) !important;
         padding: 0 !important;
         overflow: visible !important;
         scrollbar-width: auto !important;
@@ -3259,8 +3281,9 @@ body.tmr-site-shell .friends-top-strip {
         overflow: visible !important;
         text-overflow: clip !important;
         white-space: nowrap !important;
-        padding: 8px clamp(9px, 0.65vw, 12px) !important;
-        letter-spacing: 0.055em !important;
+        min-height: 34px !important;
+        padding: 7px clamp(7px, 0.52vw, 10px) !important;
+        letter-spacing: 0.045em !important;
     }
 
     body.tmr-site-shell .tmr-global-nav__actions {
@@ -3273,12 +3296,13 @@ body.tmr-site-shell .friends-top-strip {
     }
 
     body.tmr-site-shell .tmr-global-nav__button {
-        padding-left: 12px !important;
-        padding-right: 12px !important;
+        min-height: 34px !important;
+        padding-left: 11px !important;
+        padding-right: 11px !important;
     }
 }
 
-@media (min-width: 641px) and (max-width: 1560px) {
+@media (min-width: 641px) and (max-width: 1180px) {
     body.tmr-site-shell .tmr-global-nav__inner,
     body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__inner {
         width: min(100%, calc(100% - 28px)) !important;
