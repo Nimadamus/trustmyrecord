@@ -1233,6 +1233,11 @@
                     line_snapshot: newPick.line_snapshot,
                     odds_snapshot: newPick.odds_snapshot,
                     units: newPick.units,
+                    // Send the user's stake convention so the backend can convert
+                    // RISK -> TO-WIN before storing. The grader's result-units math
+                    // assumes TO-WIN; without this flag a -110 RISK 3u win was
+                    // overpaying by 0.27u and losses overcharging by 0.30u.
+                    units_mode: (window.TMR && window.TMR.selectedUnitsMode) || 'risk',
                     home_team: newPick.home_team,
                     away_team: newPick.away_team,
                     commence_time: newPick.commence_time
@@ -1743,17 +1748,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title>Make Picks | TrustMyRecord</title>
-    
+    <title>Sportsbook | Lock Picks, Track Public Record, ROI &amp; Units | TrustMyRecord</title>
+
     <link rel="canonical" href="https://trustmyrecord.com/sportsbook/">
-    <meta name="description" content="Tired of fake sports betting gurus? Trust My Record is a 100% transparent, verifiable sports betting platform with records, stats, forums, and social features. This is the end of the bullshit.">
-    <meta name="keywords" content="sports betting transparency, verified sports picks, honest handicapper, sports betting community, sports forum, betting record tracker, no bs sports picks">
+    <meta name="description" content="The TrustMyRecord sportsbook is where you lock public sports picks across MLB, NBA, NFL, NHL, soccer, UFC, and more. Every pick is timestamped, auto-graded, and added to your permanent public record with ROI, units, sample size, and CLV.">
+    <meta name="keywords" content="sports pick tracker, lock sports picks, public sports betting record, sports handicapper tracking, ROI tracker, units tracker, CLV tracker, MLB pick tracker, NBA pick tracker, NFL pick tracker, NHL pick tracker, verified sports picks">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://trustmyrecord.com/sportsbook/">
-    <meta property="og:title" content="Trust My Record | The Future of Transparent Sports Betting">
-    <meta property="og:description" content="100% transparent, verifiable sports betting platform. Track your record, compete with others, and prove your expertise. The end of the bullshit.">
+    <meta property="og:title" content="Sportsbook | Lock Picks, Track Public Record, ROI &amp; Units">
+    <meta property="og:description" content="Lock public sports picks. Every pick is timestamped, auto-graded, and added to your permanent public record with ROI, units, sample size, and CLV.">
     <meta property="og:image" content="https://trustmyrecord.com/static/favicon.svg">
 
     <!-- Twitter -->
@@ -19653,7 +19658,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         selection: newPick.selection,
                         line_snapshot: newPick.line_snapshot,
                         odds_snapshot: newPick.odds_snapshot,
-                        units: newPick.units
+                        units: newPick.units,
+                        units_mode: (window.TMR && window.TMR.selectedUnitsMode) || 'risk'
                     }).then(function(result) {
                         console.log('Pick saved to backend:', result);
                         newPick.id = result.pick ? result.pick.id : result.id;
