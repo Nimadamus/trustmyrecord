@@ -9873,9 +9873,10 @@ window.toggleSportFamily = function (family) {
             }).join('');
         }
 
-        async function loadPendingPicksLobby() {
+        async function loadPendingPicksLobby(opts) {
             if (loading) return;
-            if (Date.now() - lastFetched < REFRESH_THROTTLE_MS) return;
+            var force = opts && opts.force === true;
+            if (!force && (Date.now() - lastFetched < REFRESH_THROTTLE_MS)) return;
             loading = true;
             try {
                 if (!isLoggedIn()) { render(null, { signedOut: true }); return; }
@@ -9904,8 +9905,10 @@ window.toggleSportFamily = function (family) {
         window.TMR.loadPendingPicksLobby = loadPendingPicksLobby;
 
         // Refresh on every successful pick lock + when the page becomes
-        // visible (covers tab-switch back into the sportsbook).
-        function scheduleRefresh() { setTimeout(loadPendingPicksLobby, 400); }
+        // visible (covers tab-switch back into the sportsbook). Force=true
+        // bypasses the rate-limit throttle on explicit refresh events so a
+        // brand-new pick lands in the panel immediately.
+        function scheduleRefresh() { setTimeout(function () { loadPendingPicksLobby({ force: true }); }, 400); }
         window.addEventListener('tmr:pickLocked', scheduleRefresh);
         window.addEventListener('tmr:auth-changed', loadPendingPicksLobby);
         document.addEventListener('visibilitychange', function () { if (!document.hidden) scheduleRefresh(); });
