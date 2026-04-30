@@ -1339,6 +1339,13 @@ button{font:inherit;cursor:pointer}
     flex-direction: column;
     gap: 18px;
 }
+/* Desktop only: nudge the platform card ~50px farther right so the
+   two-column hero feels more balanced. Tablet (<=1100px) and mobile
+   inherit margin: 0 from the rule above and the responsive override
+   below, so they're untouched. */
+@media (min-width: 1100px) {
+    .hero-platform-card { margin-right: -50px; }
+}
 .hero-platform-card-head {
     display: flex;
     align-items: baseline;
