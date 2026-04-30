@@ -12,7 +12,7 @@
         ["/", "Home"],
         [sportsbookPicksHref, "Make Picks"],
         ["/feed/", "Feed"],
-        ["/handicappers/", "Leaderboards"],
+        ["/handicappers/", "Handicappers"],
         ["/arena/", "Arena"],
         ["/forum/", "Forums"],
         ["/marketplace/", "Sell Your Picks"]
@@ -24,7 +24,7 @@
 
     const routeMeta = {
         "sportsbook.html": ["Make Picks", "Lock picks before games start. Build a public, permanent record."],
-        "handicappers.html": ["Leaderboards", "Ranked cappers by ROI, units, sample size, streaks, and verified record."],
+        "handicappers.html": ["Handicappers", "Leaderboards hub: ranked cappers by ROI and units, plus trivia, polls, online and head-to-head challenges."],
         "arena.html": ["Arena", "Challenge rivals in sports picks, MLB The Show, Madden, NBA 2K, EA FC, and NHL."],
         "challenges.html": ["Arena", "Public competition, head-to-head challenges, and rivalry loops."],
         "feed.html": ["Feed", "Locked picks, hot takes, polls, trivia, and challenges from people with a record."],
@@ -368,16 +368,14 @@
     nav.addEventListener("click", (event) => {
         const authRoute = event.target.closest("[data-tmr-auth-route]");
         if (authRoute) {
-            // Do NOT preventDefault here. The anchor's href is the source of
-            // truth for navigation — let the browser handle it natively. If
-            // anything between preventDefault and a JS-driven location.assign
-            // throws (sessionStorage blocked in private mode, etc.), the
-            // button looks broken. Just stash the routing hint and close
-            // the menu; the anchor href takes the user to /login/ or /register/.
-            try {
-                const target = authRoute.getAttribute("data-tmr-auth-route") === "signup" ? "signup" : "login";
-                sessionStorage.setItem("tmr_force_section", target);
-            } catch (_) { /* sessionStorage may be blocked; ignore */ }
+            // Do NOT preventDefault and do NOT stash anything in sessionStorage.
+            // The anchor's href takes the user to /login/ or /register/ natively.
+            // The legacy tmr_force_section handoff used to steer /sportsbook/ to
+            // its inline auth section, but it persists across navigations and
+            // can poison a later /sportsbook/ load -- clicking Log In, then Make
+            // Picks, would bounce you onto the login section instead of the
+            // picks board. Dedicated /login/ and /register/ pages exist now,
+            // so no sessionStorage relay is needed.
             setNavOpen(false);
             return;
         }
@@ -424,7 +422,7 @@
                             <div class="tmr-search-grid">
                                 <a href="/sportsbook/"><strong>Make Picks</strong><span>Lock picks before games start</span></a>
                                 <a href="/feed/"><strong>Feed</strong><span>Posts, takes, locked picks</span></a>
-                                <a href="/handicappers/"><strong>Leaderboards</strong><span>Ranked cappers by ROI, units</span></a>
+                                <a href="/handicappers/"><strong>Handicappers</strong><span>Leaderboards hub: ROI, trivia, polls, challenges</span></a>
                                 <a href="/arena/"><strong>Arena</strong><span>Head-to-head challenges</span></a>
                                 <a href="/polls/"><strong>Polls</strong><span>Sports debates, predictions</span></a>
                                 <a href="/trivia/"><strong>Trivia</strong><span>Sports knowledge games</span></a>

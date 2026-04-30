@@ -551,18 +551,17 @@
         if (rawHash === 'register' || rawHash === 'signup') requested = 'signup';
         if (!requested && rawQuery === 'login') requested = 'login';
         if (!requested && (rawQuery === 'register' || rawQuery === 'signup')) requested = 'signup';
-        if (!requested) {
-            try {
-                const stored = (sessionStorage.getItem('tmr_force_section') || '').trim().toLowerCase();
-                if (stored === 'login' || stored === 'signup') requested = stored;
-            } catch (error) {}
-        }
 
-        if (!requested) return;
-
+        // Always clear any stale tmr_force_section. The old session-storage
+        // handoff caused a "click Log In, then click Make Picks → land on
+        // the login section instead of the picks board" bug. Auth intent must
+        // come from the URL itself (#login / ?auth=login) -- never from
+        // leftover storage from a prior nav click.
         try {
             sessionStorage.removeItem('tmr_force_section');
         } catch (error) {}
+
+        if (!requested) return;
 
         forceSectionActive(requested);
 
@@ -1738,7 +1737,9 @@
         if (bookInput) bookInput.value = option.book_title || '';
         if (timestampInput) timestampInput.value = formatTimestamp(option.source_updated_at);
 
-        if (typeof window.showPickStep === 'function') window.showPickStep('pickDetails');
+        if (!(window.TMR && window.TMR.__suppressPickStep) && typeof window.showPickStep === 'function') {
+            window.showPickStep('pickDetails');
+        }
     }
 
     function updatePickSummary() {
