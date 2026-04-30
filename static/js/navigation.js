@@ -1,7 +1,7 @@
 // Navigation handling for Trust My Record
 
 const legacyRouteTargets = {
-    picks: 'picks/',
+    picks: 'sportsbook/',
     mypicks: 'mypicks/',
     'my-record': 'my-record/',
     promos: 'promos/',
@@ -55,13 +55,16 @@ function isSportsbookLocalSection(sectionId) {
 
 function getSportsbookLocalUrl(sectionId) {
     const normalizedSectionId = normalizeSportsbookSectionId(sectionId);
-    if (normalizedSectionId === 'home') {
-        return '/sportsbook.html';
+    // Use the canonical directory URL (/sportsbook/) instead of the .html
+    // stub. The .html path 30x-redirects to the directory, and we don't
+    // want the browser bar to flash a non-canonical URL after pushState.
+    if (normalizedSectionId === 'home' || normalizedSectionId === 'picks') {
+        return '/sportsbook/';
     }
     if (normalizedSectionId === 'signup') {
-        return '/sportsbook.html#register';
+        return '/sportsbook/#register';
     }
-    return '/sportsbook.html#' + normalizedSectionId;
+    return '/sportsbook/#' + normalizedSectionId;
 }
 
 function getRequestedSportsbookSection(params, hashPath) {
@@ -106,7 +109,20 @@ function activateCurrentPageSection(sectionId, updateHistory = true) {
     }
 
     if (updateHistory && isSportsbookLocalSection(normalizedSectionId)) {
-        window.history.pushState({ section: normalizedSectionId }, '', getSportsbookLocalUrl(normalizedSectionId));
+        // Default 'picks' tab on /sportsbook/ should stay at the bare
+        // canonical URL — no #picks fragment cluttering the bar.
+        const targetUrl = normalizedSectionId === 'picks'
+            ? '/sportsbook/'
+            : getSportsbookLocalUrl(normalizedSectionId);
+        window.history.pushState({ section: normalizedSectionId }, '', targetUrl);
+    } else if (updateHistory && normalizedSectionId === 'home' && isSportsbookDocumentRoute()) {
+        // Guard: never silently rewrite /sportsbook/ to / while the picks
+        // board is still painted on screen. If a user-initiated call
+        // somehow lands here (updateHistory=true), do a real navigation
+        // instead of pushState. Pure-routing passes use updateHistory=false
+        // and skip this branch.
+        window.location.href = '/';
+        return;
     } else if (updateHistory && normalizedSectionId !== 'home') {
         window.history.pushState({ section: normalizedSectionId }, '', '/' + normalizedSectionId);
     } else if (updateHistory && normalizedSectionId === 'home') {
@@ -144,6 +160,20 @@ function activateCanonicalLegacySection(sectionId, updateHistory = true) {
  */
 function showSection(sectionId, updateHistory = true) {
     const normalizedSectionId = normalizeSportsbookSectionId(sectionId);
+
+    // 'home' from inside the sportsbook page must do a real navigation to
+    // the homepage. Previously we pushState('/') which left the picks
+    // board visually rendered (its CSS forces display:block!important)
+    // while the URL bar said only "/". That made the sportsbook page look
+    // like the homepage and broke refresh/bookmark/share behavior.
+    // Only fire on intentional user clicks (updateHistory=true) — during
+    // the initial-routing pass handleRouting() calls us with false, and
+    // we must NOT redirect a direct visit to /sportsbook/ off the page.
+    if (normalizedSectionId === 'home' && updateHistory && isSportsbookDocumentRoute()) {
+        window.location.href = '/';
+        return;
+    }
+
     if (isSportsbookLocalSection(normalizedSectionId)) {
         activateCanonicalLegacySection(normalizedSectionId, updateHistory);
         return;
