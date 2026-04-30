@@ -786,6 +786,15 @@
         var titleEl = document.getElementById('selectedSportTitle');
         if (titleEl) titleEl.textContent = (icons[sport] || '') + ' ' + sport + ' Games';
 
+        // Per-sport "spread" terminology: MLB → Run Line, NHL → Puck Line, soccer → Asian, else → Spread
+        var spreadLabelBySport = { 'MLB': 'Run Line', 'NHL': 'Puck Line', 'Soccer': 'Asian', 'Tennis': 'Set Spread' };
+        var spreadLabel = spreadLabelBySport[sport] || 'Spread';
+        ['boardColSpread', 'btToggleSpread'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = spreadLabel;
+        });
+        document.querySelectorAll('[data-spread-label]').forEach(function(el) { el.textContent = spreadLabel; });
+
         window.showPickStep('gamesListSection');
 
         var container = document.getElementById('gamesListContainer');
@@ -9272,6 +9281,237 @@ window.toggleSportFamily = function (family) {
         tt: 'Team Totals'
     };
 
+    // Sports the backend's market_groups feed supports for team_totals.
+    // (Soccer/Tennis don't carry per-team totals on our feed.)
+    var TT_SUPPORTED_SPORTS = { NBA: 1, NCAAB: 1, NFL: 1, NCAAF: 1, NHL: 1, MLB: 1 };
+
+    function _ttApiBase() {
+        if (window.api && window.api.baseUrl) return window.api.baseUrl;
+        if (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) return window.CONFIG.api.baseUrl;
+        return 'https://trustmyrecord-api.onrender.com/api';
+    }
+
+    function _ttFmtOdds(o) {
+        var n = Number(o);
+        if (!Number.isFinite(n)) return '—';
+        return n > 0 ? '+' + n : '' + n;
+    }
+    function _ttEsc(s) { return ('' + (s != null ? s : '')).replace(/'/g, "\\'"); }
+    function _ttHtmlEsc(s) {
+        return ('' + (s != null ? s : ''))
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    // Split a game's team_totals items into Away/Home Over/Under buckets.
+    // Each backend item carries: { selection, selection_label, line, odds,
+    // market_type:'team_totals', book_key, book_title, source }.
+    function _ttSplitItems(game, items) {
+        var away = String(game.away_team || '').toLowerCase();
+        var home = String(game.home_team || '').toLowerCase();
+        var bucket = {
+            away: { team: game.away_team, over: null, under: null },
+            home: { team: game.home_team, over: null, under: null }
+        };
+        (items || []).forEach(function (it) {
+            if (!it) return;
+            var sel = String(it.selection || it.selection_label || '').toLowerCase();
+            var isOver = sel.indexOf('over') !== -1;
+            var isUnder = sel.indexOf('under') !== -1;
+            // Match team via prefix in selection; fall back to outcome.description.
+            var teamSlot = null;
+            if (sel.indexOf(away) === 0 || sel.indexOf(away) > -1 && sel.indexOf(home) === -1) teamSlot = 'away';
+            else if (sel.indexOf(home) === 0 || sel.indexOf(home) > -1 && sel.indexOf(away) === -1) teamSlot = 'home';
+            if (!teamSlot) return;
+            var slot = bucket[teamSlot];
+            var entry = {
+                line: (it.line != null ? Number(it.line) : null),
+                odds: (it.odds != null ? Number(it.odds) : null),
+                book: it.book_title || it.book_key || '',
+                source: it.source || ''
+            };
+            // Skip manual placeholder rows (no real line+odds) — they were added
+            // server-side as fallback templates and we surface a per-game
+            // "lines not posted yet" message instead.
+            var hasReal = (entry.source !== 'manual') && entry.line != null && entry.odds != null;
+            if (!hasReal) return;
+            if (isOver) slot.over = entry;
+            else if (isUnder) slot.under = entry;
+        });
+        return bucket;
+    }
+
+    function _ttButton(gameIndex, side, team, line, odds, awayTeam, homeTeam) {
+        var hasReal = (line != null && odds != null);
+        var lineTxt = hasReal
+            ? (side === 'over' ? 'O ' : 'U ') + line
+            : '—';
+        var oddsTxt = hasReal ? _ttFmtOdds(odds) : '—';
+        var betType = side === 'over' ? 'teamover' : 'teamunder';
+        if (!hasReal) {
+            return '<button type="button" class="sb-odds" disabled aria-disabled="true">' +
+                   '<span class="sb-odds-line">' + (side === 'over' ? 'Over' : 'Under') + '</span>' +
+                   '<span class="sb-odds-price">—</span></button>';
+        }
+        var args = [
+            gameIndex,
+            "'" + betType + "'",
+            "'" + _ttEsc(team) + "'",
+            "'" + _ttEsc(line) + "'",
+            "'" + _ttEsc(odds) + "'",
+            "'" + _ttEsc(awayTeam) + "'",
+            "'" + _ttEsc(homeTeam) + "'"
+        ].join(',');
+        return '<button type="button" class="sb-odds" onclick="window.selectGameBet(' + args + ')">' +
+               '<span class="sb-odds-line">' + _ttHtmlEsc(lineTxt) + '</span>' +
+               '<span class="sb-odds-price">' + _ttHtmlEsc(oddsTxt) + '</span></button>';
+    }
+
+    function _ttRenderRows(sport, rowsEl, games, sourceLabel) {
+        // Surface the games to selectGameBet (it indexes via window.TMR.currentGames).
+        window.TMR = window.TMR || {};
+        window.TMR.currentGames = games;
+        window.TMR.selectedSport = sport;
+
+        var html = '';
+        var rendered = 0;
+        var pending = 0;
+        games.forEach(function (game, idx) {
+            var groups = Array.isArray(game.market_groups) ? game.market_groups : [];
+            var ttGroup = groups.find(function (g) { return g && g.key === 'team_totals'; });
+            var items = (ttGroup && Array.isArray(ttGroup.items)) ? ttGroup.items : [];
+            var split = _ttSplitItems(game, items);
+            var awayHasReal = split.away.over || split.away.under;
+            var homeHasReal = split.home.over || split.home.under;
+            var hasAny = awayHasReal || homeHasReal;
+            var commence = '';
+            try {
+                if (game.commence_time) {
+                    var d = new Date(game.commence_time);
+                    if (!isNaN(d)) commence = d.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+                }
+            } catch (e) { /* noop */ }
+
+            html += '<div class="sb-board-row sb-tt-row">' +
+                '<div class="sb-board-matchup">' +
+                    '<div class="sb-board-when">' + (commence ? '<span>' + _ttHtmlEsc(commence) + '</span>' : '') + '</div>' +
+                    '<div class="sb-board-teams">' +
+                        '<div class="sb-board-team"><span class="sb-team-tag">A</span><b>' + _ttHtmlEsc(game.away_team || 'Away') + '</b></div>' +
+                        '<div class="sb-board-team"><span class="sb-team-tag">H</span><b>' + _ttHtmlEsc(game.home_team || 'Home') + '</b></div>' +
+                    '</div>' +
+                '</div>';
+
+            if (!hasAny) {
+                pending++;
+                html += '<div class="sb-board-col" data-col="tt" style="grid-column: span 3; color:#94a3b8; font-size:13px; padding:6px 4px;">' +
+                            'Team total lines not posted yet for this game.' +
+                        '</div>' +
+                        '<div class="sb-board-col" data-col="action">' +
+                            '<button type="button" class="sb-board-action" onclick="window.selectSportAndShowGames(\'' + _ttEsc(sport) + '\')">Open Board</button>' +
+                        '</div>';
+            } else {
+                rendered++;
+                // Two stacked rows per game (away on top, home on bottom).
+                var awayOver = split.away.over || {};
+                var awayUnder = split.away.under || {};
+                var homeOver = split.home.over || {};
+                var homeUnder = split.home.under || {};
+                var awayBookLabel = (awayOver.book || awayUnder.book || '').toString();
+                var homeBookLabel = (homeOver.book || homeUnder.book || '').toString();
+                html +=
+                    '<div class="sb-board-col" data-col="team">' +
+                        '<div class="sb-tt-team-stack">' +
+                            '<div class="sb-tt-team-cell"><b>' + _ttHtmlEsc(game.away_team) + '</b>' +
+                                (awayBookLabel ? '<small>' + _ttHtmlEsc(awayBookLabel) + '</small>' : '') +
+                            '</div>' +
+                            '<div class="sb-tt-team-cell"><b>' + _ttHtmlEsc(game.home_team) + '</b>' +
+                                (homeBookLabel ? '<small>' + _ttHtmlEsc(homeBookLabel) + '</small>' : '') +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="sb-board-col" data-col="tt-over">' +
+                        '<div class="sb-odds-stack">' +
+                            _ttButton(idx, 'over', game.away_team, awayOver.line, awayOver.odds, game.away_team, game.home_team) +
+                            _ttButton(idx, 'over', game.home_team, homeOver.line, homeOver.odds, game.away_team, game.home_team) +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="sb-board-col" data-col="tt-under">' +
+                        '<div class="sb-odds-stack">' +
+                            _ttButton(idx, 'under', game.away_team, awayUnder.line, awayUnder.odds, game.away_team, game.home_team) +
+                            _ttButton(idx, 'under', game.home_team, homeUnder.line, homeUnder.odds, game.away_team, game.home_team) +
+                        '</div>' +
+                    '</div>' +
+                    '<button type="button" class="sb-board-action" onclick="window.selectSportAndShowGames(\'' + _ttEsc(sport) + '\')">Open Board</button>';
+            }
+            html += '</div>';
+        });
+
+        if (!html) {
+            rowsEl.innerHTML = emptyState(sport, 'Team Totals not yet posted for ' + sport + ' today.', 'closed');
+            console.log('[TMR][TT] ' + sport + ': 0 games returned (source=' + sourceLabel + ')');
+            return;
+        }
+
+        rowsEl.innerHTML = html;
+        console.log('[TMR][TT] ' + sport + ' rendered: ' + rendered + ' game(s) with lines, ' + pending + ' pending. Source: ' + sourceLabel + '.');
+    }
+
+    function renderTeamTotalsBoard(sport, rowsEl) {
+        if (!TT_SUPPORTED_SPORTS[sport]) {
+            rowsEl.innerHTML = '<div class="sportsbook-board-empty">' +
+                '<div class="sportsbook-board-empty-icon" aria-hidden="true">●</div>' +
+                '<strong>Team Totals not offered for ' + sport + ' on our feed yet.</strong>' +
+                '<span>Tap Full Game to view available markets for ' + sport + '.</span></div>';
+            return;
+        }
+        var sportKey = window.TMR && window.TMR.sportKeyMap && window.TMR.sportKeyMap[sport];
+        if (!sportKey) {
+            rowsEl.innerHTML = emptyState(sport, 'No ' + sport + ' team totals board available right now.', 'closed');
+            return;
+        }
+
+        rowsEl.innerHTML = '<div class="sportsbook-board-empty">' +
+            '<div class="sportsbook-board-empty-icon" aria-hidden="true">●</div>' +
+            '<strong>Loading ' + sport + ' team totals…</strong>' +
+            '<span>Pulling DraftKings lines (with backup books as fallback).</span></div>';
+
+        var url = _ttApiBase() + '/games/board/' + encodeURIComponent(sportKey) + '?limit=80';
+        console.log('[TMR][TT] Fetch ' + sport + ' (' + sportKey + ') from ' + url);
+
+        fetch(url, { headers: { 'Accept': 'application/json' } })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (payload) {
+                // Confirm we're still on the TT tab + same sport before swapping HTML.
+                if (rowsEl.getAttribute('data-sport') !== sport) return;
+                if (!window.TMR || window.TMR.selectedPeriod !== 'tt') return;
+                if (!payload || !Array.isArray(payload.games) || !payload.games.length) {
+                    rowsEl.innerHTML = emptyState(sport, 'Team totals not posted yet for today’s ' + sport + ' slate.', 'closed');
+                    console.log('[TMR][TT] ' + sport + ': backend returned 0 games. Source: backend(odds-api).');
+                    return;
+                }
+                // Inspect the dominant book key to label the source line.
+                var bookCounts = {};
+                payload.games.forEach(function (g) {
+                    var grp = (g.market_groups || []).find(function (x) { return x && x.key === 'team_totals'; });
+                    (grp && grp.items || []).forEach(function (it) {
+                        if (!it || it.source === 'manual') return;
+                        var k = (it.book_key || it.book_title || 'unknown').toLowerCase();
+                        bookCounts[k] = (bookCounts[k] || 0) + 1;
+                    });
+                });
+                var dominantBook = Object.keys(bookCounts).sort(function (a, b) { return bookCounts[b] - bookCounts[a]; })[0] || 'none';
+                var label = 'backend (odds-api) | dominant book: ' + dominantBook;
+                if (dominantBook === 'draftkings') label = 'DraftKings (via backend / odds-api)';
+                _ttRenderRows(sport, rowsEl, payload.games, label);
+            })
+            .catch(function (err) {
+                if (rowsEl.getAttribute('data-sport') !== sport) return;
+                if (!window.TMR || window.TMR.selectedPeriod !== 'tt') return;
+                console.warn('[TMR][TT] backend fetch failed:', err);
+                rowsEl.innerHTML = emptyState(sport, 'Team totals feed temporarily unavailable for ' + sport + '. Try again in a moment.', 'closed');
+            });
+    }
+
     function renderBoard(sport) {
         var rows = document.getElementById('lobbyBoardRows');
         if (!rows) return;
@@ -9285,11 +9525,14 @@ window.toggleSportFamily = function (family) {
             return;
         }
 
-        // Period-aware: only the Full Game tab pulls live ESPN rows. Period
-        // markets (halves, quarters, team totals) drop into a clean
-        // placeholder state until those feeds are wired so we don't fabricate
-        // odds. Default selectedPeriod is 'full' and survives sport switches.
+        // Period-aware: Full Game pulls live ESPN rows; Team Totals routes
+        // through the dedicated team-totals fetcher (backend market board,
+        // DraftKings preferred). Halves and quarters stay placeholder until
+        // those feeds are wired so we don't fabricate odds.
         var period = (window.TMR && window.TMR.selectedPeriod) || 'full';
+        if (period === 'tt') {
+            return renderTeamTotalsBoard(sport, rows);
+        }
         if (period !== 'full') {
             var label = PERIOD_LABELS[period] || period;
             rows.innerHTML = '<div class="sportsbook-board-empty">' +
@@ -18058,6 +18301,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="/static/js/analytics.js?v=20260405"></script>
     <script src="/static/js/backend-api.js?v=20260423a"></script>
     <script src="/static/js/auth-persistent.js?v=20260424a"></script>
+    <script src="/static/js/nhl-markets.js?v=20260430a"></script>
     <script>
         // Backend API integration active
         console.log('[TMR] Backend API URL:', CONFIG?.api?.baseUrl);
@@ -25672,7 +25916,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     </style>
-    <link rel="stylesheet" href="/static/css/sportsbook-pro.css?v=20260429f">
+    <link rel="stylesheet" href="/static/css/sportsbook-pro.css?v=20260430a">
     <script>
     // Stamp body[data-tmr-auth] so the Make Picks page can hide the
     // logged-out prompt the moment auth flips. Re-runs on auth events.
