@@ -1,4 +1,5 @@
 (() => {
+    // Login/register navigation routes directly to /login/ and /register/.
     // Canonical sitewide nav (one set of labels, one set of paths).
     // After the Apr 30 directory migration, .html roots are 30x redirect stubs;
     // every nav target should hit its directory route directly to avoid a
@@ -494,12 +495,12 @@
                     const units = (u.net_units != null && u.net_units !== 0)
                         ? `${u.net_units > 0 ? "+" : ""}${Number(u.net_units).toFixed(2)}u`
                         : "";
-                    const meta = [picks, units].filter(Boolean).join(" · ") || "@" + username;
+                    const meta = [picks, units].filter(Boolean).join(" Â· ") || "@" + username;
                     return `<a class="tmr-search-result tmr-search-result--user" href="/profile/?user=${encodeURIComponent(username)}">
                         <img class="tmr-search-result__avatar" src="${avatar}" alt="">
                         <span class="tmr-search-result__copy">
                             <strong>${escapeHtml(display)}</strong>
-                            <span>@${escapeHtml(username)} · ${escapeHtml(meta)}</span>
+                            <span>@${escapeHtml(username)} Â· ${escapeHtml(meta)}</span>
                         </span>
                     </a>`;
                 }).join("")
@@ -601,12 +602,12 @@
 })();
 
 // ============================================================
-// Sticky team badge (favorite_team) — sitewide helper
+// Sticky team badge (favorite_team) â€” sitewide helper
 // ------------------------------------------------------------
 // Any page can call window.TMR.attachUserBadges(rootSelector) and every
 // element under root with [data-tmr-username] will get a small team badge
 // appended right after the username. Cached per session, fail-open if the
-// API call fails (no badge shown — never a fallback fake team).
+// API call fails (no badge shown â€” never a fallback fake team).
 // ============================================================
 (function() {
     if (window.TMR && window.TMR.attachUserBadges) return;
