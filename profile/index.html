@@ -11,8 +11,8 @@
     <meta property="og:title" content="User Profile | TrustMyRecord">
     <meta property="og:description" content="Check out my verified handicapping record and stats.">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430e">
-<script defer src="/static/js/tmr-sitewide.js?v=20260430e"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430f">
+<script defer src="/static/js/tmr-sitewide.js?v=20260430f"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1181,13 +1181,90 @@
                         <div class="profile-feed-head">
                             <div>
                                 <div class="section-title">Locked Picks</div>
-                                <div class="section-subtitle">Public picks appear here as social posts with timestamp, odds, units, and live grading.</div>
+                                <div class="section-subtitle">PickMonitor-style detailed ledger. Filter by date, sport, market, side, odds range, or result &mdash; the summary bar recomputes for whatever subset you're looking at.</div>
                             </div>
                         </div>
-                        <div class="profile-feed-empty">
-                            <div class="profile-empty-icon"><i class="fas fa-bullseye"></i></div>
-                            <p class="profile-empty-title">No locked picks yet</p>
-                            <p class="profile-empty-body">Once this user posts a pick, it will appear here with timestamp, odds, units, and grading.</p>
+
+                        <!-- Filter toolbar. All controls update window.__pmFilters and re-run renderPmPicksTable(). -->
+                        <div class="pm-filters" id="pmFilters" hidden>
+                            <div class="pm-filter">
+                                <label>From</label>
+                                <input type="date" id="pmFilterFrom">
+                            </div>
+                            <div class="pm-filter">
+                                <label>To</label>
+                                <input type="date" id="pmFilterTo">
+                            </div>
+                            <div class="pm-filter">
+                                <label>Sport</label>
+                                <select id="pmFilterSport"><option value="">All sports</option></select>
+                            </div>
+                            <div class="pm-filter">
+                                <label>Market</label>
+                                <select id="pmFilterMarket"><option value="">All markets</option></select>
+                            </div>
+                            <div class="pm-filter">
+                                <label>Side</label>
+                                <select id="pmFilterSide">
+                                    <option value="">All sides</option>
+                                    <option value="favorite">Favorites</option>
+                                    <option value="underdog">Underdogs</option>
+                                </select>
+                            </div>
+                            <div class="pm-filter">
+                                <label>Odds range</label>
+                                <select id="pmFilterOdds">
+                                    <option value="">All odds</option>
+                                    <option value="heavy_favorite">Heavy fav (-200+)</option>
+                                    <option value="favorite">Favorite (-110 to -200)</option>
+                                    <option value="even">Even (±110)</option>
+                                    <option value="underdog">Dog (+110 to +200)</option>
+                                    <option value="big_underdog">Big dog (+200+)</option>
+                                </select>
+                            </div>
+                            <div class="pm-filter">
+                                <label>Result</label>
+                                <select id="pmFilterResult">
+                                    <option value="">All results</option>
+                                    <option value="won">Wins</option>
+                                    <option value="lost">Losses</option>
+                                    <option value="push">Pushes</option>
+                                    <option value="pending">Pending</option>
+                                </select>
+                            </div>
+                            <button type="button" class="pm-filter-reset" id="pmFilterReset">Reset</button>
+                        </div>
+
+                        <!-- Summary bar that recomputes for the filtered subset. -->
+                        <div class="pm-summary-bar" id="pmSummaryBar" hidden>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">Picks</span><span class="pm-summary-value" id="pmSumPicks">0</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">W&ndash;L&ndash;P</span><span class="pm-summary-value" id="pmSumRecord">&mdash;</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">Units</span><span class="pm-summary-value" id="pmSumUnits">&mdash;</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">ROI</span><span class="pm-summary-value" id="pmSumRoi">&mdash;</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">eWP</span><span class="pm-summary-value" id="pmSumEwp">&mdash;</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">Z</span><span class="pm-summary-value" id="pmSumZ">&mdash;</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">AOP</span><span class="pm-summary-value" id="pmSumAop">&mdash;</span></div>
+                        </div>
+
+                        <div class="pm-picks-wrap">
+                            <table class="pm-picks-table" id="pmPicksTable">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Sport</th>
+                                        <th>Market</th>
+                                        <th>Pick</th>
+                                        <th class="num">Line</th>
+                                        <th class="num">Odds</th>
+                                        <th class="num">Units</th>
+                                        <th>Result</th>
+                                        <th class="num">P/L</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="pm-picks-empty"><td colspan="9">Loading picks&hellip;</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -1740,6 +1817,100 @@
                             .pm-table .pm-pos { color: #4ade80; font-weight: 700; }
                             .pm-table .pm-neg { color: #f87171; font-weight: 700; }
                             .pm-table .pm-table__empty td { padding: 22px 18px; color: #64748b; text-align: center; font-style: italic; }
+
+                            /* ===== PickMonitor-style filterable picks table (Picks tab) ===== */
+                            .pm-filters {
+                                display: grid;
+                                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                                gap: 10px;
+                                padding: 12px 14px;
+                                background: rgba(11, 17, 24, 0.65);
+                                border: 1px solid rgba(255,255,255,0.06);
+                                border-radius: 10px;
+                                margin: 14px 0 10px;
+                                align-items: end;
+                            }
+                            .pm-filter { display: flex; flex-direction: column; gap: 4px; }
+                            .pm-filter label {
+                                font: 700 10px/1 'Inter', sans-serif;
+                                letter-spacing: .12em; text-transform: uppercase; color: #94a3b8;
+                            }
+                            .pm-filter input, .pm-filter select {
+                                padding: 8px 10px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.08);
+                                background: rgba(0,0,0,0.4); color: #f4f7fb;
+                                font: 600 13px/1 'Inter', sans-serif; outline: none;
+                            }
+                            .pm-filter input:focus, .pm-filter select:focus {
+                                border-color: #00ffff; background: rgba(0,255,255,0.04);
+                            }
+                            .pm-filter-reset {
+                                padding: 8px 14px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.16);
+                                background: transparent; color: #cbd5e1;
+                                font: 700 11.5px/1 'Inter', sans-serif; letter-spacing: .04em; text-transform: uppercase;
+                                cursor: pointer; align-self: end; height: 33px;
+                            }
+                            .pm-filter-reset:hover { background: rgba(255,255,255,0.04); color: #fff; }
+
+                            .pm-summary-bar {
+                                display: grid;
+                                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                                gap: 0;
+                                margin-bottom: 10px;
+                                background: linear-gradient(135deg, rgba(0,255,255,0.06), rgba(255,0,255,0.04));
+                                border: 1px solid rgba(0,255,255,0.18);
+                                border-radius: 10px;
+                                overflow: hidden;
+                            }
+                            .pm-summary-cell {
+                                padding: 12px 14px;
+                                display: flex; flex-direction: column; gap: 4px;
+                                border-right: 1px solid rgba(255,255,255,0.04);
+                            }
+                            .pm-summary-cell:last-child { border-right: 0; }
+                            .pm-summary-label {
+                                font: 700 10px/1 'Inter', sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #94a3b8;
+                            }
+                            .pm-summary-value {
+                                font: 800 16px/1.1 'Barlow', 'Inter', sans-serif; color: #f4f7fb;
+                                font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+                            }
+                            .pm-summary-value.pm-pos { color: #4ade80; }
+                            .pm-summary-value.pm-neg { color: #f87171; }
+
+                            .pm-picks-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); }
+                            .pm-picks-table {
+                                width: 100%; border-collapse: collapse;
+                                font: 500 13px/1.4 'Inter', sans-serif; color: #cbd5e1;
+                            }
+                            .pm-picks-table thead th {
+                                padding: 10px 12px; text-align: left;
+                                font: 800 10px/1 'Inter', sans-serif; letter-spacing: .14em; text-transform: uppercase;
+                                color: #94a3b8; background: rgba(11,17,24,0.95);
+                                border-bottom: 1px solid rgba(255,255,255,0.06);
+                                position: sticky; top: 0; z-index: 1;
+                            }
+                            .pm-picks-table thead th.num { text-align: right; }
+                            .pm-picks-table tbody td {
+                                padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); white-space: nowrap;
+                                font-variant-numeric: tabular-nums;
+                            }
+                            .pm-picks-table tbody td.num { text-align: right; }
+                            .pm-picks-table tbody tr:hover td { background: rgba(0,255,255,0.03); }
+                            .pm-picks-table .pm-cell-date { color: #94a3b8; }
+                            .pm-picks-table .pm-cell-pick { color: #f4f7fb; font-weight: 700; max-width: 240px; overflow: hidden; text-overflow: ellipsis; }
+                            .pm-picks-table .pm-pos { color: #4ade80; font-weight: 700; }
+                            .pm-picks-table .pm-neg { color: #f87171; font-weight: 700; }
+                            .pm-picks-table .pm-pending { color: #fbbf24; }
+                            .pm-result {
+                                display: inline-block;
+                                padding: 3px 8px; border-radius: 4px;
+                                font: 800 10px/1 'Inter', sans-serif; letter-spacing: .08em; text-transform: uppercase;
+                            }
+                            .pm-result--won     { background: rgba(74,222,128,0.16);  color: #4ade80; border: 1px solid rgba(74,222,128,0.36); }
+                            .pm-result--lost    { background: rgba(248,113,113,0.16); color: #f87171; border: 1px solid rgba(248,113,113,0.36); }
+                            .pm-result--push    { background: rgba(148,163,184,0.16); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.32); }
+                            .pm-result--pending { background: rgba(251,191,36,0.14);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.36); }
+                            .pm-picks-empty td { padding: 28px 16px; color: #64748b; text-align: center; font-style: italic; }
                         </style>
 
                         <p style="margin-top:14px;color:var(--tmr-text-muted);font-size:.78rem;">Metrics not yet computed for this account show "&mdash;" instead of fabricated values. Once the underlying ledger has enough graded picks for a metric, the dashboard fills in automatically.</p>
@@ -3876,6 +4047,9 @@
         picks.sort((a, b) => new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0));
         allLoadedPicks = picks;
 
+        // Hydrate the PickMonitor-style filterable table on the Picks tab.
+        try { initPmPicksTable(picks); } catch (e) { console.warn('[pm-picks] init failed', e); }
+
         const stats = computeUnifiedStats(picks);
         renderSummaryBar(stats);
         renderPicksTable(picks);
@@ -3883,6 +4057,197 @@
         renderCapperMetrics(picks);
         await refreshAdvancedBreakdowns();
         applyProfileDeepLinkView();
+    }
+
+    // ============================================================
+    // PickMonitor-style filterable picks table (Picks tab)
+    // ============================================================
+    window.__pmFilters = window.__pmFilters || { from:'', to:'', sport:'', market:'', side:'', odds:'', result:'' };
+    let __pmPicks = [];
+
+    function initPmPicksTable(picks) {
+        __pmPicks = Array.isArray(picks) ? picks.slice() : [];
+        // Newest first by locked_at.
+        __pmPicks.sort((a, b) => new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0));
+
+        const filtersEl = document.getElementById('pmFilters');
+        const summaryEl = document.getElementById('pmSummaryBar');
+        if (filtersEl) filtersEl.hidden = false;
+        if (summaryEl) summaryEl.hidden = false;
+
+        // Populate the dynamic option lists (sports + markets) from the data.
+        const sportSel  = document.getElementById('pmFilterSport');
+        const marketSel = document.getElementById('pmFilterMarket');
+        if (sportSel && marketSel) {
+            const sports  = Array.from(new Set(__pmPicks.map(p => String(p.sport_key || '').toLowerCase()).filter(Boolean))).sort();
+            const markets = Array.from(new Set(__pmPicks.map(p => String(p.market_type || '').toLowerCase()).filter(Boolean))).sort();
+            sportSel.innerHTML  = '<option value="">All sports</option>'  + sports.map(s => '<option value="' + s + '">' + pmSportLabel(s) + '</option>').join('');
+            marketSel.innerHTML = '<option value="">All markets</option>' + markets.map(m => '<option value="' + m + '">' + pmMarketLabel(m) + '</option>').join('');
+        }
+
+        // Wire all filter inputs.
+        const ids = [['pmFilterFrom','from'],['pmFilterTo','to'],['pmFilterSport','sport'],['pmFilterMarket','market'],['pmFilterSide','side'],['pmFilterOdds','odds'],['pmFilterResult','result']];
+        ids.forEach(([id, key]) => {
+            const el = document.getElementById(id);
+            if (!el || el.dataset._pmWired) return;
+            el.dataset._pmWired = '1';
+            el.addEventListener('change', () => { window.__pmFilters[key] = el.value; renderPmPicksTable(); });
+        });
+        const resetBtn = document.getElementById('pmFilterReset');
+        if (resetBtn && !resetBtn.dataset._pmWired) {
+            resetBtn.dataset._pmWired = '1';
+            resetBtn.addEventListener('click', () => {
+                window.__pmFilters = { from:'', to:'', sport:'', market:'', side:'', odds:'', result:'' };
+                ids.forEach(([id]) => { const el = document.getElementById(id); if (el) el.value = ''; });
+                renderPmPicksTable();
+            });
+        }
+
+        renderPmPicksTable();
+    }
+
+    function pmSportLabel(s) {
+        if (!s) return '—';
+        const map = { 'baseball_mlb':'MLB', 'basketball_nba':'NBA', 'basketball_ncaab':'NCAAB', 'icehockey_nhl':'NHL', 'americanfootball_nfl':'NFL', 'americanfootball_ncaaf':'NCAAF' };
+        if (map[s]) return map[s];
+        return String(s).toUpperCase().replace(/_/g, ' ');
+    }
+    function pmMarketLabel(m) {
+        return String(m || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+    function pmOddsBucket(odds) {
+        const o = Number(odds);
+        if (!Number.isFinite(o)) return null;
+        if (o < -200) return 'heavy_favorite';
+        if (o < -110) return 'favorite';
+        if (o <= 110) return 'even';
+        if (o <= 200) return 'underdog';
+        return 'big_underdog';
+    }
+    function pmResultClass(p) {
+        const r = String(p.result || p.status || '').toLowerCase();
+        if (r === 'won' || r === 'win')  return 'won';
+        if (r === 'lost' || r === 'loss') return 'lost';
+        if (r === 'push' || r === 'pushed') return 'push';
+        return 'pending';
+    }
+
+    function getPmFilteredPicks() {
+        const f = window.__pmFilters || {};
+        const fromMs = f.from ? new Date(f.from + 'T00:00:00').getTime() : null;
+        const toMs   = f.to   ? new Date(f.to   + 'T23:59:59').getTime() : null;
+        return __pmPicks.filter(p => {
+            const ts = new Date(p.locked_at || p.created_at || 0).getTime();
+            if (fromMs != null && (!Number.isFinite(ts) || ts < fromMs)) return false;
+            if (toMs   != null && (!Number.isFinite(ts) || ts > toMs))   return false;
+            if (f.sport  && String(p.sport_key || '').toLowerCase()  !== f.sport)  return false;
+            if (f.market && String(p.market_type || '').toLowerCase() !== f.market) return false;
+            if (f.side) {
+                const odds = Number(p.odds_snapshot);
+                const isFav = Number.isFinite(odds) && odds < 0;
+                if (f.side === 'favorite' && !isFav) return false;
+                if (f.side === 'underdog' &&  isFav) return false;
+            }
+            if (f.odds) {
+                if (pmOddsBucket(p.odds_snapshot) !== f.odds) return false;
+            }
+            if (f.result) {
+                if (pmResultClass(p) !== f.result) return false;
+            }
+            return true;
+        });
+    }
+
+    function renderPmPicksTable() {
+        const table = document.getElementById('pmPicksTable');
+        if (!table) return;
+        const tbody = table.querySelector('tbody');
+        const rows = getPmFilteredPicks();
+
+        // Summary bar recomputes for the filtered subset.
+        let wins = 0, losses = 0, pushes = 0, risked = 0, net = 0, probSum = 0, probCount = 0;
+        const impliedProb = (o) => {
+            const x = Number(o);
+            if (!Number.isFinite(x) || x === 0) return null;
+            return x > 0 ? 100 / (x + 100) : (-x) / ((-x) + 100);
+        };
+        const probToAmerican = (p) => {
+            if (!Number.isFinite(p) || p <= 0 || p >= 1) return 0;
+            return p >= 0.5 ? -Math.round((p / (1 - p)) * 100) : Math.round(((1 - p) / p) * 100);
+        };
+        rows.forEach(p => {
+            const r = pmResultClass(p);
+            if (r === 'won') wins++;
+            else if (r === 'lost') losses++;
+            else if (r === 'push') pushes++;
+            const u = Number(p.units) || 0;
+            const ru = Number(p.result_units);
+            risked += u;
+            if (Number.isFinite(ru)) net += ru;
+            const ip = impliedProb(p.odds_snapshot);
+            if (ip != null) { probSum += ip; probCount++; }
+        });
+        const decisions = wins + losses;
+        const roiFrac = risked > 0 ? net / risked : 0;
+        const ewp = decisions > 0 ? (110/210) * (1 + roiFrac) : null;
+        const avgProb = probCount > 0 ? probSum / probCount : null;
+        let z = null;
+        if (decisions >= 5 && avgProb != null) {
+            const v = decisions * avgProb * (1 - avgProb);
+            if (v > 0) z = (wins - decisions * avgProb) / Math.sqrt(v);
+        }
+        const setSum = (id, val, signed) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = val;
+            el.classList.toggle('pm-pos', signed != null && signed > 0);
+            el.classList.toggle('pm-neg', signed != null && signed < 0);
+        };
+        setSum('pmSumPicks',  String(rows.length));
+        setSum('pmSumRecord', wins + '-' + losses + (pushes ? '-' + pushes : ''), decisions > 0 ? (wins - losses) : null);
+        setSum('pmSumUnits',  (net >= 0 ? '+' : '') + net.toFixed(2) + 'u', net);
+        setSum('pmSumRoi',    risked > 0 ? (roiFrac >= 0 ? '+' : '') + (roiFrac * 100).toFixed(1) + '%' : '—', roiFrac);
+        setSum('pmSumEwp',    ewp != null ? (ewp * 100).toFixed(1) + '%' : '—', ewp != null ? (ewp - 0.5238) : null);
+        setSum('pmSumZ',      z   != null ? (z >= 0 ? '+' : '') + z.toFixed(2) : '—', z);
+        setSum('pmSumAop',    avgProb != null ? (probToAmerican(avgProb) > 0 ? '+' : '') + probToAmerican(avgProb) : '—');
+
+        // Table body.
+        if (!rows.length) {
+            tbody.innerHTML = '<tr class="pm-picks-empty"><td colspan="9">No picks match the active filters.</td></tr>';
+            return;
+        }
+        const fmtOdds = (o) => Number.isFinite(Number(o)) ? ((Number(o) > 0 ? '+' : '') + Number(o)) : '—';
+        const fmtLine = (l) => (l == null || l === '') ? '—' : (Number.isFinite(Number(l)) && Number(l) > 0 ? '+' : '') + l;
+        const fmtUnits = (u) => Number.isFinite(Number(u)) ? Number(u).toFixed(2) + 'u' : '—';
+        const fmtPL = (p) => {
+            const r = pmResultClass(p);
+            const ru = Number(p.result_units);
+            if (r === 'pending') return '<span class="pm-pending">—</span>';
+            if (!Number.isFinite(ru)) return '<span class="pm-pending">—</span>';
+            const cls = ru > 0 ? 'pm-pos' : ru < 0 ? 'pm-neg' : '';
+            return '<span class="' + cls + '">' + (ru >= 0 ? '+' : '') + ru.toFixed(2) + 'u</span>';
+        };
+        const escHtml = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const fmtDate = (ts) => {
+            const d = new Date(ts);
+            if (isNaN(d.getTime())) return '—';
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
+        };
+        tbody.innerHTML = rows.map(p => {
+            const r = pmResultClass(p);
+            const resultBadge = '<span class="pm-result pm-result--' + r + '">' + (r === 'pending' ? 'Pending' : r === 'push' ? 'Push' : r === 'won' ? 'Win' : 'Loss') + '</span>';
+            return '<tr>'
+                + '<td class="pm-cell-date">' + fmtDate(p.locked_at || p.created_at) + '</td>'
+                + '<td>' + escHtml(pmSportLabel(p.sport_key)) + '</td>'
+                + '<td>' + escHtml(pmMarketLabel(p.market_type)) + '</td>'
+                + '<td class="pm-cell-pick">' + escHtml(p.selection || p.pick || '') + '</td>'
+                + '<td class="num">' + escHtml(fmtLine(p.line_snapshot)) + '</td>'
+                + '<td class="num">' + escHtml(fmtOdds(p.odds_snapshot)) + '</td>'
+                + '<td class="num">' + escHtml(fmtUnits(p.units)) + '</td>'
+                + '<td>' + resultBadge + '</td>'
+                + '<td class="num">' + fmtPL(p) + '</td>'
+                + '</tr>';
+        }).join('');
     }
 
     async function refreshLeaderboardRank() {

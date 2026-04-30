@@ -4,13 +4,19 @@
     <meta charset="UTF-8">
     <link rel="canonical" href="https://trustmyrecord.com/trivia/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sports Trivia - TrustMyRecord</title>
+    <title>Sports Trivia Games | NBA, NFL, MLB, NHL, Soccer Quiz | TrustMyRecord</title>
+    <meta name="description" content="Play sports trivia tied to your public profile. NBA, NFL, MLB, NHL, soccer, UFC, college sports, and historical sports trivia — climb the trivia leaderboard and prove you actually know sports.">
+    <meta name="keywords" content="sports trivia, sports quiz, NBA trivia, NFL trivia, MLB trivia, NHL trivia, soccer trivia, sports knowledge games, sports trivia leaderboard">
+    <meta property="og:title" content="Sports Trivia Games | NBA, NFL, MLB, NHL, Soccer Quiz">
+    <meta property="og:description" content="Play sports trivia tied to your public profile. Climb the trivia leaderboard and prove you actually know sports.">
+    <meta property="og:url" content="https://trustmyrecord.com/trivia/">
+    <meta property="og:type" content="website">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430a">
-<script defer src="/static/js/tmr-sitewide.js?v=20260430a"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430f">
+<script defer src="/static/js/tmr-sitewide.js?v=20260430f"></script>
     <style>
         :root {
             --neon-cyan: #00ffff;
@@ -1533,8 +1539,20 @@ function showAnswerResult(result, wasTimeout) {
         btn.style.background = 'rgba(255,152,0,0.3)';
         btn.style.color = '#ff9800';
     } else if (isCorrect) {
-        var speedBonus = pointsEarned > 10 ? ' (+' + (pointsEarned - 10) + ' speed bonus)' : '';
-        btn.innerHTML = '&#9989; CORRECT! +' + pointsEarned + ' pts' + speedBonus;
+        // Bonus breakdown from the v2 scoring engine: base x speed x streak x daily.
+        var bonuses = result.bonuses || {};
+        var streakInfo = result.streak || {};
+        var daily = result.daily_challenge || {};
+        var bonusBits = [];
+        if (Number(bonuses.speed)  > 1.01) bonusBits.push('Speed ' + Number(bonuses.speed).toFixed(2)  + 'x');
+        if (Number(bonuses.streak) > 1.01) bonusBits.push('Streak ' + Number(bonuses.streak).toFixed(2) + 'x');
+        if (Number(bonuses.daily)  > 1.01) bonusBits.push('Daily 2x');
+        var bonusSuffix = bonusBits.length ? ' (' + bonusBits.join(' &middot; ') + ')' : '';
+        var streakSuffix = streakInfo.current >= 2 ? '  &#128293; ' + streakInfo.current + '-streak' : '';
+        var dailySuffix = (daily.bonus_active && daily.bonus_remaining_after > 0)
+            ? '  &middot; Daily bonus: ' + daily.bonus_remaining_after + ' left today'
+            : '';
+        btn.innerHTML = '&#9989; CORRECT! +' + pointsEarned + ' pts' + bonusSuffix + streakSuffix + dailySuffix;
         btn.style.background = 'rgba(0,200,83,0.3)';
         btn.style.color = '#00c853';
     } else {
