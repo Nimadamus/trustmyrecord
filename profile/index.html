@@ -1258,18 +1258,18 @@
                         <div class="profile-feed-head">
                             <div>
                                 <div class="section-title">Locked Picks</div>
-                                <div class="section-subtitle">PickMonitor-style detailed ledger. Filter by date, sport, market, side, odds range, or result &mdash; the summary bar recomputes for whatever subset you're looking at.</div>
+                                <div class="section-subtitle">Verified locked picks tied to this profile. Filters update the table and stats below.</div>
                             </div>
                         </div>
 
                         <!-- Filter toolbar. All controls update window.__pmFilters and re-run renderPmPicksTable(). -->
                         <div class="pm-filters" id="pmFilters" hidden>
                             <div class="pm-filter">
-                                <label>From</label>
+                                <label>Date From</label>
                                 <input type="date" id="pmFilterFrom">
                             </div>
                             <div class="pm-filter">
-                                <label>To</label>
+                                <label>Date To</label>
                                 <input type="date" id="pmFilterTo">
                             </div>
                             <div class="pm-filter">
@@ -1307,20 +1307,28 @@
                                     <option value="lost">Losses</option>
                                     <option value="push">Pushes</option>
                                     <option value="pending">Pending</option>
+                                    <option value="void">Void / Cancelled</option>
                                 </select>
                             </div>
                             <button type="button" class="pm-filter-reset" id="pmFilterReset">Reset</button>
                         </div>
 
-                        <!-- Summary bar that recomputes for the filtered subset. -->
+                        <!-- One-row monitor strip that recomputes for the filtered subset. -->
                         <div class="pm-summary-bar" id="pmSummaryBar" hidden>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">Picks</span><span class="pm-summary-value" id="pmSumPicks">0</span></div>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">W&ndash;L&ndash;P</span><span class="pm-summary-value" id="pmSumRecord">&mdash;</span></div>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">Units</span><span class="pm-summary-value" id="pmSumUnits">&mdash;</span></div>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">ROI</span><span class="pm-summary-value" id="pmSumRoi">&mdash;</span></div>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">eWP</span><span class="pm-summary-value" id="pmSumEwp">&mdash;</span></div>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">Z</span><span class="pm-summary-value" id="pmSumZ">&mdash;</span></div>
-                            <div class="pm-summary-cell"><span class="pm-summary-label">AOP</span><span class="pm-summary-value" id="pmSumAop">&mdash;</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">Total Picks</span><span class="pm-summary-value" id="pmSumTotal">0</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">Graded Picks</span><span class="pm-summary-value" id="pmSumGraded">0</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">Pending Picks</span><span class="pm-summary-value" id="pmSumPending">0</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">Wins</span><span class="pm-summary-value" id="pmSumWins">0</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">Losses</span><span class="pm-summary-value" id="pmSumLosses">0</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">Pushes</span><span class="pm-summary-value" id="pmSumPushes">0</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">Win %</span><span class="pm-summary-value" id="pmSumWinPct">N/A</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">Units Won</span><span class="pm-summary-value" id="pmSumUnits">0.00u</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">Average Units</span><span class="pm-summary-value" id="pmSumAvgUnits">N/A</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">Average Odds</span><span class="pm-summary-value" id="pmSumAvgOdds">N/A</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">ROI</span><span class="pm-summary-value" id="pmSumRoi">N/A</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">Best Streak</span><span class="pm-summary-value" id="pmSumBestStreak">0</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">Current Streak</span><span class="pm-summary-value" id="pmSumCurrentStreak">0</span></div>
+                            <div class="pm-summary-cell"><span class="pm-summary-label">CLV</span><span class="pm-summary-value" id="pmSumClv">N/A</span></div>
                         </div>
 
                         <div class="pm-picks-wrap">
@@ -4953,9 +4961,9 @@
             main.innerHTML = [
                 ['Tracked Picks', stats.picks, 'capper-neutral'],
                 ['Record', stats.record, capValueClass(stats.wins - stats.losses)],
-                ['Win Rate', stats.winRate.toFixed(1) + '%', stats.picks ? capValueClass(stats.winRate - 50) : 'capper-neutral'],
+                ['Win Rate', (stats.wins + stats.losses) ? stats.winRate.toFixed(1) + '%' : 'N/A', (stats.wins + stats.losses) ? capValueClass(stats.winRate - 50) : 'capper-neutral'],
                 ['Units', capUnitsText(stats.units), capValueClass(stats.units)],
-                ['ROI', stats.roi.toFixed(1) + '%', capValueClass(stats.roi)],
+                ['ROI', stats.picks ? stats.roi.toFixed(1) + '%' : 'N/A', stats.picks ? capValueClass(stats.roi) : 'capper-neutral'],
                 ['Rank', rankText, 'capper-neutral']
             ].map(([label, value, cls]) => '<div class="capper-stat"><span>' + label + '</span><strong class="' + cls + '">' + value + '</strong></div>').join('');
         }
@@ -5011,7 +5019,7 @@
         const pending = rows.filter(p => capStatus(p) === 'pending');
         const units = pending.reduce((sum, p) => sum + capUnits(p), 0);
         el.innerHTML = '<table class="capper-table"><thead><tr><th>Category</th><th>Picks</th><th>Record</th><th>Win Rate</th><th>Units</th><th>ROI</th></tr></thead><tbody>'
-            + '<tr><td>Open Tickets</td><td>' + pending.length + '</td><td>0-0-0</td><td class="capper-neutral">0.0%</td><td class="capper-neutral">' + units.toFixed(2) + 'u pending</td><td class="capper-neutral">0.0%</td></tr>'
+            + '<tr><td>Open Tickets</td><td>' + pending.length + '</td><td>0-0-0</td><td class="capper-neutral">N/A</td><td class="capper-neutral">' + units.toFixed(2) + 'u pending</td><td class="capper-neutral">N/A</td></tr>'
             + '</tbody></table>';
     }
 
@@ -5211,13 +5219,16 @@
         const name = p.display_name || p.username;
         const letter = (p.username || '?').charAt(0).toUpperCase();
         const rankText = currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked';
-        const totalPicks = Number(p.total_picks || p.totalPicks || 0);
+        const gradedProfilePicks = Number(p.graded_picks || p.total_picks || p.totalPicks || 0);
+        const pendingProfilePicks = Number(p.pending_picks || p.pending || 0);
+        const totalPicks = Number(p.total_locked_picks || p.locked_picks || (gradedProfilePicks + pendingProfilePicks) || 0);
         const verifiedText = String(p.verification_status || '').toLowerCase() === 'verified' ? 'Verified' : 'Unverified';
         const winsValue = Number(p.wins || 0);
         const lossesValue = Number(p.losses || 0);
         const pushesValue = Number(p.pushes || 0);
         const recordText = winsValue + '-' + lossesValue + '-' + pushesValue;
-        const derivedWinRate = Number(p.win_rate || ((Number(p.wins || 0) + Number(p.losses || 0)) > 0
+        const winLossSample = winsValue + lossesValue;
+        const derivedWinRate = Number(p.win_rate || (winLossSample > 0
             ? (Number(p.wins || 0) / (Number(p.wins || 0) + Number(p.losses || 0))) * 100
             : 0));
         const roiValue = Number(p.roi || 0);
@@ -5228,7 +5239,7 @@
         const trustPills = '<div class="profile-trust-row">' +
             '<span class="profile-trust-pill"><i class="fas fa-check-circle"></i> Status <strong>' + verifiedText + '</strong></span>' +
             '<span class="profile-trust-pill"><i class="fas fa-user"></i> Member since <strong>' + joinDate + '</strong></span>' +
-            '<span class="profile-trust-pill"><i class="fas fa-database"></i> Ledger <strong>' + totalPicks + ' tracked picks</strong></span>' +
+            '<span class="profile-trust-pill"><i class="fas fa-database"></i> Ledger <strong>' + totalPicks + ' locked picks</strong></span>' +
             (p.__recoveredFromLocal ? '<span class="profile-trust-pill"><i class="fas fa-rotate-left"></i> Legacy recovery <strong>Browser ledger restored</strong></span>' : '') +
             '</div>';
 
@@ -5263,11 +5274,11 @@
               '</div>'
             : '';
         const rail = '<div class="profile-rail" aria-label="Pick monitor stats">' +
-            '<div class="profile-rail-card"><span class="profile-rail-label">Tracked Picks</span><span class="profile-rail-value">' + totalPicks + '</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">Total Picks</span><span class="profile-rail-value">' + totalPicks + '</span></div>' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Record</span><span class="profile-rail-value' + signedClass(winsValue - lossesValue) + '">' + recordText + '</span></div>' +
-            '<div class="profile-rail-card"><span class="profile-rail-label">Win Rate</span><span class="profile-rail-value' + (totalPicks > 0 ? signedClass(derivedWinRate - 50) : ' is-neutral') + '">' + derivedWinRate.toFixed(1) + '%</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">Win Rate</span><span class="profile-rail-value' + (winLossSample > 0 ? signedClass(derivedWinRate - 50) : ' is-neutral') + '">' + (winLossSample > 0 ? derivedWinRate.toFixed(1) + '%' : 'N/A') + '</span></div>' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Units</span><span class="profile-rail-value' + signedClass(netUnitsValue) + '">' + fmtSigned(netUnitsValue, 'u', 2) + '</span></div>' +
-            '<div class="profile-rail-card"><span class="profile-rail-label">ROI</span><span class="profile-rail-value' + signedClass(roiValue) + '">' + fmtSigned(roiValue, '%') + '</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">ROI</span><span class="profile-rail-value' + (gradedProfilePicks > 0 ? signedClass(roiValue) : ' is-neutral') + '">' + (gradedProfilePicks > 0 ? fmtSigned(roiValue, '%') : 'N/A') + '</span></div>' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Rank</span><span class="profile-rail-value">' + rankText + '</span></div>' +
             '</div>';
         const overview = '<div class="profile-overview-grid">' +
