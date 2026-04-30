@@ -157,7 +157,6 @@
 
     function buildLoggedOutActions() {
         return `
-                ${buildSearchAction()}
                 <a class="tmr-global-nav__button" href="/login/" data-tmr-auth-route="login">Log In</a>
                 <a class="tmr-global-nav__button tmr-global-nav__button--primary" href="/register/" data-tmr-auth-route="signup">Join Free</a>
         `;
@@ -170,13 +169,6 @@
         const profileHref = "/profile/?user=" + encodeURIComponent(username);
 
         return `
-            ${buildSearchAction()}
-            <a class="tmr-global-nav__icon" href="/notifications/" aria-label="Notifications"${currentFile === "notifications.html" ? ' aria-current="page"' : ""}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10 21a2 2 0 0 0 4 0"></path></svg>
-            </a>
-            <a class="tmr-global-nav__icon" href="/messages/" aria-label="Messages"${currentFile === "messages.html" ? ' aria-current="page"' : ""}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-            </a>
             <a class="tmr-global-nav__user" href="${profileHref}"${currentFile === "profile.html" ? ' aria-current="page"' : ""}>
                 <img class="tmr-global-nav__user-avatar" src="${avatar}" alt="${escapeHtml(displayName)} avatar">
                 <span class="tmr-global-nav__user-copy">
