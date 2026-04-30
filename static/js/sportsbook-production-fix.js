@@ -1879,14 +1879,23 @@
             if (typeof window.showPickStep === 'function') window.showPickStep('pickConfirmation');
         } catch (error) {
             const raw = String(error && error.message || 'Unknown error');
-            // "Game not found" from the backend almost always means the
-            // browser's cached board is older than the games table -- the
-            // submitted game_id no longer matches a current row. Tell the
-            // user how to recover instead of dumping the raw message.
-            const friendly = /game not found/i.test(raw)
-                ? 'This matchup is no longer on the active board. Refresh the page (Ctrl-F5) and re-select the bet — the line may have moved or the game has started.'
-                : raw;
-            showPickSlipError('Pick submission failed: ' + friendly);
+            const status = error && error.status;
+            const data = error && error.data;
+            // Diagnostic dump: show exactly what was sent and what the backend
+            // said. This is intentionally verbose so the user can copy the
+            // text and a maintainer can see status code + game_id + sport_key
+            // in one shot. Replaces the prior "friendly" string which hid the
+            // info needed to debug a real "Game not found" 404.
+            const dumped = [
+                'status=' + (status || 'n/a'),
+                'msg=' + raw,
+                'game_id=' + (option.game_id || ''),
+                'sport_key=' + (option.sport_key || ''),
+                'market=' + (option.market_type || ''),
+                'sel=' + (option.selection || '')
+            ].join(' | ');
+            try { console.error('[TMR][lockInPick] failure', { error, option, data }); } catch (e) {}
+            showPickSlipError('Pick submission failed [' + dumped + ']');
         }
     }
 
