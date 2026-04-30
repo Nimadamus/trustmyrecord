@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260429f">
+<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260429g">
 <style>
 :root{
   --bg:#f5f7fb;
@@ -1094,11 +1094,11 @@ button{font:inherit;cursor:pointer}
     padding: 36px 0 32px;           /* tighter than 90vh sprawl, generous top breathing room */
 }
 .combined-hero.hero-v2 .hero-zone-a-inner {
-    width: min(1380px, calc(100% - 48px));
+    width: min(1100px, calc(100% - 48px));
     margin: 0 auto;
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
-    gap: 64px;                      /* much wider gap so columns no longer hug each other */
+    grid-template-columns: minmax(0, 1fr);   /* single column after Apr 29 hierarchy cleanup */
+    gap: 0;
     align-items: center;
 }
 
@@ -1962,7 +1962,6 @@ button{font:inherit;cursor:pointer}
         <div class="hero-action-row" role="group" aria-label="Get started">
           <a class="hero-action hero-action--primary auth-link" href="register/">Start Tracking Picks</a>
           <a class="hero-action hero-action--ghost" href="/feed/">Explore the Community</a>
-          <a class="hero-action hero-action--ghost" href="/arena/">Enter the Arena</a>
         </div>
         <div class="ch-warning">
           <div class="ic">⚠</div>
@@ -1970,44 +1969,10 @@ button{font:inherit;cursor:pointer}
         </div>
       </div>
 
-      <aside class="hero-platform-card" aria-label="What's on TrustMyRecord">
-        <div class="hero-platform-card-head">
-          <span class="hero-platform-eyebrow">The Platform</span>
-          <span class="hero-platform-sub">Everything real sports fans do, on one site.</span>
-        </div>
-        <div class="hero-platform-grid">
-          <a class="hero-platform-tile" href="/profile/">
-            <span class="hero-platform-ico" aria-hidden="true">🔒</span>
-            <span class="hero-platform-title">Verified Pick Records</span>
-            <span class="hero-platform-body">Auto-graded, public forever, never edited.</span>
-          </a>
-          <a class="hero-platform-tile" href="/handicappers.html">
-            <span class="hero-platform-ico" aria-hidden="true">🏆</span>
-            <span class="hero-platform-title">Leaderboards</span>
-            <span class="hero-platform-body">ROI, units, trust score, sample-gated.</span>
-          </a>
-          <a class="hero-platform-tile" href="/forum/">
-            <span class="hero-platform-ico" aria-hidden="true">🗂</span>
-            <span class="hero-platform-title">Forums &amp; Trash Talk</span>
-            <span class="hero-platform-body">Classic message-board, sport categories.</span>
-          </a>
-          <a class="hero-platform-tile" href="/polls/">
-            <span class="hero-platform-ico" aria-hidden="true">📊</span>
-            <span class="hero-platform-title">Polls &amp; Trivia</span>
-            <span class="hero-platform-body">Create, vote, climb the trivia ladder.</span>
-          </a>
-          <a class="hero-platform-tile" href="/arena/">
-            <span class="hero-platform-ico" aria-hidden="true">🎮</span>
-            <span class="hero-platform-title">Sports Gaming Arena</span>
-            <span class="hero-platform-body">Madden · NBA 2K · MLB The Show · EA FC.</span>
-          </a>
-          <a class="hero-platform-tile" href="/marketplace/">
-            <span class="hero-platform-ico" aria-hidden="true">💼</span>
-            <span class="hero-platform-title">Sell Your Picks</span>
-            <span class="hero-platform-body">After your record backs the price tag.</span>
-          </a>
-        </div>
-      </aside>
+      <!-- The right-side platform tile aside was removed Apr 29 2026 to stop the
+           hero from competing with itself. Those 6 features now live ONLY in the
+           "MORE THAN A PICK TRACKER" section below the core-loop steps, so the
+           hero can sell the single primary loop: pick → lock → track → climb. -->
     </div>
   </div>
 
@@ -2028,68 +1993,189 @@ button{font:inherit;cursor:pointer}
 
 
 <!-- ===========================================================
-     SECTION 1: WHAT TRUSTMYRECORD IS
+     SECTION 0: THE CORE LOOP (added Apr 29 2026)
+     Pick → Lock → Track → Climb. The single primary user journey
+     the hero promises, broken into 4 explicit steps so a first-time
+     visitor knows exactly what they do here.
 =========================================================== -->
+<section class="tmr-loop" id="core-loop" aria-label="The core loop">
+  <div class="tmr-section-inner">
+    <header class="tmr-section-head tmr-loop-head">
+      <span class="tmr-loop-eyebrow">Post the Play. Lock the Record. Climb the Board.</span>
+      <h2>THE LOOP</h2>
+      <p class="tmr-section-sub">One simple cycle is the entire reason this site exists. Everything else &mdash; the feed, the forum, polls, trivia, gaming, selling picks &mdash; is built on top of it.</p>
+    </header>
+
+    <ol class="tmr-loop-steps">
+      <li class="tmr-loop-step">
+        <span class="tmr-loop-step-num">01</span>
+        <h3>Make Your Pick</h3>
+        <p>Choose the sport, the game, the market, the side, the odds, and the units. The full ticket lives on your profile from the moment you submit it.</p>
+      </li>
+      <li class="tmr-loop-step">
+        <span class="tmr-loop-step-num">02</span>
+        <h3>Lock It In</h3>
+        <p>Once posted, the pick is part of your public record. No edits, no deletes, no "I meant the other side" do-overs. The receipt is the receipt.</p>
+      </li>
+      <li class="tmr-loop-step">
+        <span class="tmr-loop-step-num">03</span>
+        <h3>Track the Result</h3>
+        <p>The auto-grader settles every pick when the game finishes. Wins, losses, units, ROI, and win % update on your profile and feed automatically.</p>
+      </li>
+      <li class="tmr-loop-step">
+        <span class="tmr-loop-step-num">04</span>
+        <h3>Build Credibility</h3>
+        <p>Climb the leaderboards by sport, unit profit, ROI, and win rate. A real public record is the difference between a fan with opinions and a capper worth following.</p>
+      </li>
+    </ol>
+
+    <div class="tmr-loop-cta">
+      <a class="hero-action hero-action--primary auth-link" href="register/">Start Tracking Picks</a>
+      <a class="hero-action hero-action--ghost" href="/sportsbook.html#picks">See the Board</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .tmr-loop {
+    background: linear-gradient(180deg, rgba(11,17,24,0.0) 0%, rgba(11,17,24,0.45) 100%);
+    padding: 56px 24px 48px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .tmr-loop-head { text-align: center; max-width: 760px; margin: 0 auto 36px; }
+  .tmr-loop-eyebrow {
+    display: inline-block;
+    font: 700 11.5px/1 'Inter', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    color: var(--orange, #fd5000);
+    margin-bottom: 14px;
+  }
+  .tmr-loop-head h2 {
+    font: 800 clamp(28px, 4vw, 40px)/1.1 'Barlow', 'Inter', sans-serif;
+    margin: 0 0 12px;
+    letter-spacing: -0.01em;
+    color: #fff;
+  }
+  .tmr-loop-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0 auto 32px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    max-width: 1100px;
+    counter-reset: loop;
+  }
+  @media (max-width: 980px) { .tmr-loop-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { .tmr-loop-steps { grid-template-columns: 1fr; } }
+  .tmr-loop-step {
+    background: rgba(15, 21, 32, 0.78);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 22px 22px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .15s ease, border-color .15s ease;
+  }
+  .tmr-loop-step:hover { transform: translateY(-2px); border-color: rgba(0,229,255,0.35); }
+  .tmr-loop-step::before {
+    content: '';
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--orange, #fd5000), var(--blue, #00aeff));
+    opacity: 0.85;
+  }
+  .tmr-loop-step-num {
+    display: inline-block;
+    font: 800 12px/1 'Barlow', 'Inter', sans-serif;
+    color: var(--orange, #fd5000);
+    background: rgba(253, 80, 0, 0.12);
+    padding: 6px 9px;
+    border-radius: 6px;
+    letter-spacing: 1.5px;
+    margin-bottom: 14px;
+  }
+  .tmr-loop-step h3 {
+    font: 800 18px/1.2 'Barlow', 'Inter', sans-serif;
+    color: #fff;
+    margin: 0 0 8px;
+    letter-spacing: -0.005em;
+  }
+  .tmr-loop-step p {
+    font: 400 13.5px/1.55 'Inter', sans-serif;
+    color: #b6c0cf;
+    margin: 0;
+  }
+  .tmr-loop-cta {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+</style>
+
 <!-- ===========================================================
-     CONSOLIDATED PLATFORM SECTION — single 6-card grid.
-     Replaces the previous trio (What / How It Works / 9-card grid)
-     so 'Make Picks', 'Compete', and 'Lock it in' don't appear in
-     three separate rows saying the same thing.
+     SECTION 1: MORE THAN A PICK TRACKER (renamed Apr 29 2026)
+     Supporting ecosystem features, framed as expansion not as
+     equal competing hero messages.
 =========================================================== -->
 <section class="tmr-features" id="what-it-is" aria-label="Platform features">
   <div class="tmr-section-inner">
     <header class="tmr-section-head">
-      <h2>EVERYTHING SPORTS FANS DO, FINALLY IN ONE PLACE</h2>
-      <p class="tmr-section-sub">A sports social media and competition platform &mdash; not a row of repeated marketing blocks. Six distinct things you can do here.</p>
+      <h2>MORE THAN A PICK TRACKER</h2>
+      <p class="tmr-section-sub">TrustMyRecord is also a sports community built for fans who want to talk, compete, challenge each other, and prove what they know.</p>
     </header>
     <div class="tmr-features-grid">
 
-      <article class="tmr-feature-card tmr-feature-card--picks">
-        <div class="tmr-feature-icon" aria-hidden="true">🔒</div>
-        <span class="tmr-feature-num">01</span>
-        <h3>Make Picks</h3>
-        <p>Post locked picks before games start. Every pick becomes a timestamped public receipt that cannot be edited, deleted, or rewritten later.</p>
-        <a class="tmr-feature-link" href="/sportsbook.html">Open ticket →</a>
-      </article>
-
       <article class="tmr-feature-card tmr-feature-card--feed">
         <div class="tmr-feature-icon" aria-hidden="true">💬</div>
-        <span class="tmr-feature-num">02</span>
-        <h3>Talk Sports</h3>
-        <p>Create posts, react to games, debate picks, talk trash, and follow other fans with real records behind their opinions.</p>
+        <span class="tmr-feature-num">01</span>
+        <h3>Sports Social Network</h3>
+        <p>Follow users, build a profile, talk sports, and connect with other fans &mdash; with real records visible behind every opinion.</p>
         <a class="tmr-feature-link" href="/feed/">Open feed →</a>
       </article>
 
       <article class="tmr-feature-card tmr-feature-card--h2h">
         <div class="tmr-feature-icon" aria-hidden="true">🏆</div>
-        <span class="tmr-feature-num">03</span>
-        <h3>Compete</h3>
-        <p>Challenge rivals, climb leaderboards, enter contests, and prove who actually knows sports.</p>
-        <a class="tmr-feature-link" href="/arena/">Open duels →</a>
+        <span class="tmr-feature-num">02</span>
+        <h3>Leaderboards &amp; Contests</h3>
+        <p>Compete by sport, units, ROI, win percentage, and long-term performance. Sample-gated rankings keep small-sample noise out.</p>
+        <a class="tmr-feature-link" href="/handicappers.html">See leaderboards →</a>
       </article>
 
       <article class="tmr-feature-card tmr-feature-card--polls">
         <div class="tmr-feature-icon" aria-hidden="true">📊</div>
-        <span class="tmr-feature-num">04</span>
+        <span class="tmr-feature-num">03</span>
         <h3>Polls &amp; Trivia</h3>
-        <p>Create polls, vote on debates, build trivia questions, and compete on trivia leaderboards.</p>
+        <p>Create questions, vote on debates, test your sports knowledge, and compete with other fans on the trivia ladder.</p>
         <a class="tmr-feature-link" href="/polls/">Open polls &amp; trivia →</a>
+      </article>
+
+      <article class="tmr-feature-card tmr-feature-card--marketplace">
+        <div class="tmr-feature-icon" aria-hidden="true">💼</div>
+        <span class="tmr-feature-num">04</span>
+        <h3>Sell Picks</h3>
+        <p>If you build a real record, give other users a reason to trust you. The record is the resume; the marketplace is where it converts.</p>
+        <a class="tmr-feature-link" href="/marketplace/">Open seller hub →</a>
       </article>
 
       <article class="tmr-feature-card tmr-feature-card--console">
         <div class="tmr-feature-icon" aria-hidden="true">🎮</div>
         <span class="tmr-feature-num">05</span>
-        <h3>Sports Gaming Arena</h3>
-        <p>Challenge other users in Madden, NBA 2K, MLB The Show, EA FC, NHL, and other sports games.</p>
+        <h3>Sports Gaming Challenges</h3>
+        <p>Challenge others in MLB The Show, Madden, NBA 2K, EA FC, NHL, and other sports games. Settle the trash talk on the sticks.</p>
         <a class="tmr-feature-link" href="/arena/">Open arena →</a>
       </article>
 
-      <article class="tmr-feature-card tmr-feature-card--marketplace">
-        <div class="tmr-feature-icon" aria-hidden="true">💼</div>
+      <article class="tmr-feature-card tmr-feature-card--forum">
+        <div class="tmr-feature-icon" aria-hidden="true">🗂</div>
         <span class="tmr-feature-num">06</span>
-        <h3>Sell Your Picks</h3>
-        <p>Build a verified public record first, then sell picks once your results prove you are worth following.</p>
-        <a class="tmr-feature-link" href="/marketplace/">Open seller hub →</a>
+        <h3>Forums</h3>
+        <p>Classic 2+2-style sports community feel. Clean, simple, readable threads organized by sport &mdash; built for real conversation, not algorithmic noise.</p>
+        <a class="tmr-feature-link" href="/forum/">Open forum →</a>
       </article>
 
     </div>
@@ -2110,7 +2196,7 @@ button{font:inherit;cursor:pointer}
       <a class="btn ghost-light xl" href="sportsbook.html#picks">Make Picks</a>
       <a class="btn ghost-light xl" href="arena.html">Join the Arena</a>
     </div>
-    <p class="tmr-final-fineprint">No fake numbers. No edited screenshots. Just receipts.</p>
+    <p class="tmr-final-fineprint">Your Picks. Your Record. Your Reputation. &middot; No fake numbers. No edited screenshots. Just receipts.</p>
   </div>
 </section>
 
@@ -2142,7 +2228,7 @@ button{font:inherit;cursor:pointer}
 <script src="static/js/config.js?v=20260330"></script>
 <script src="static/js/backend-api.js?v=20260420c"></script>
 <script src="static/js/auth-persistent.js?v=20260421a"></script>
-<script defer src="static/js/tmr-sitewide.js?v=20260429f"></script>
+<script defer src="static/js/tmr-sitewide.js?v=20260429g"></script>
 <script src="static/js/analytics.js?v=20260417"></script>
 <script>
 // Smooth scroll for any "Tour the Site" / scroll-cue CTA
