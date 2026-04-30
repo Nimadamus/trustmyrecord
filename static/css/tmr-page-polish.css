@@ -1,0 +1,291 @@
+/* ============================================================
+   TMR PAGE POLISH STYLESHEET
+   Carries the trivia-page visual identity to other pages so the site
+   reads as one design system: dark bg + neon-cyan/purple accents,
+   Barlow gradient headings, glass cards, readable type sizes.
+
+   Pages opt in by adding `class="tmr-polished-page"` on <body>. Existing
+   page styles still apply; this file just lifts the baseline + provides
+   shared utility classes (.tmr-shell, .tmr-glass, .tmr-h1, .tmr-h2,
+   .tmr-stat-bar, .tmr-cta-primary).
+
+   Created Apr 29, 2026.
+   ============================================================ */
+
+:root {
+    --tmrp-neon-cyan:    #00ffff;
+    --tmrp-neon-purple:  #ff00ff;
+    --tmrp-neon-gold:    #ffd700;
+    --tmrp-text-primary: #ffffff;
+    --tmrp-text-secondary: #b0b0c0;
+    --tmrp-text-muted:   #808090;
+    --tmrp-bg-primary:   #0a0a0f;
+    --tmrp-bg-card:      rgba(20, 20, 35, 0.8);
+    --tmrp-bg-card-solid: rgba(20, 20, 35, 0.95);
+    --tmrp-glass-border: rgba(255, 255, 255, 0.08);
+    --tmrp-glass-hover:  rgba(255, 255, 255, 0.14);
+}
+
+body.tmr-polished-page {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    background: var(--tmrp-bg-primary) !important;
+    background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(0, 255, 255, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(255, 0, 255, 0.04) 0%, transparent 50%) !important;
+    color: var(--tmrp-text-primary) !important;
+    min-height: 100vh;
+}
+body.tmr-polished-page::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(circle at 25% 75%, rgba(0, 255, 255, 0.04) 0%, transparent 55%),
+        radial-gradient(circle at 75% 25%, rgba(255, 215, 0, 0.04) 0%, transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Shell */
+.tmr-shell {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Page header */
+.tmr-page-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+.tmr-page-header h1,
+.tmr-h1 {
+    font-family: 'Barlow', 'Inter', sans-serif;
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--tmrp-neon-cyan), var(--tmrp-neon-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+    margin: 0 0 12px;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+.tmr-page-header p,
+.tmr-page-sub {
+    color: var(--tmrp-text-secondary);
+    font-size: 16px;
+    line-height: 1.6;
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+/* Section heading */
+.tmr-h2 {
+    font-family: 'Barlow', 'Inter', sans-serif;
+    font-size: clamp(1.4rem, 2.2vw, 1.7rem);
+    font-weight: 800;
+    color: var(--tmrp-text-primary);
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+}
+
+/* Glass card */
+.tmr-glass {
+    background: var(--tmrp-bg-card);
+    border: 1px solid var(--tmrp-glass-border);
+    border-radius: 16px;
+    padding: 24px 28px;
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+}
+.tmr-glass + .tmr-glass { margin-top: 18px; }
+.tmr-glass p {
+    color: var(--tmrp-text-secondary);
+    font-size: 15px;
+    line-height: 1.7;
+    margin: 0 0 12px;
+}
+.tmr-glass p:last-child { margin-bottom: 0; }
+.tmr-glass strong { color: var(--tmrp-text-primary); }
+.tmr-glass a {
+    color: var(--tmrp-neon-cyan);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.32);
+}
+.tmr-glass a:hover { border-bottom-color: var(--tmrp-neon-cyan); }
+.tmr-glass ul, .tmr-glass ol { padding-left: 22px; color: var(--tmrp-text-secondary); }
+.tmr-glass ul li, .tmr-glass ol li { font-size: 15px; line-height: 1.7; margin-bottom: 6px; }
+
+/* Primary CTA button */
+.tmr-cta-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 22px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--tmrp-neon-cyan), var(--tmrp-neon-purple));
+    color: #000 !important;
+    font-family: 'Barlow', 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: 0;
+    cursor: pointer;
+    box-shadow: 0 12px 28px rgba(0, 255, 255, 0.20);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.tmr-cta-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 36px rgba(0, 255, 255, 0.30);
+    text-decoration: none;
+}
+.tmr-cta-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--tmrp-text-primary) !important;
+    border: 1px solid var(--tmrp-glass-border);
+    font-family: 'Barlow', 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.tmr-cta-secondary:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--tmrp-neon-cyan);
+}
+
+/* Stat bar */
+.tmr-stat-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 32px;
+    margin-bottom: 36px;
+}
+.tmr-stat-bar .tmr-stat {
+    text-align: center;
+    min-width: 140px;
+    padding: 18px 16px;
+}
+.tmr-stat-value {
+    font-family: 'Barlow', 'Inter', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--tmrp-neon-cyan);
+    line-height: 1.1;
+}
+.tmr-stat-label {
+    font-size: 12px;
+    color: var(--tmrp-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-top: 6px;
+}
+
+/* Tab pill */
+.tmr-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin: 0 auto 32px;
+    background: var(--tmrp-bg-card-solid);
+    border: 1px solid var(--tmrp-glass-border);
+    border-radius: 12px;
+    padding: 4px;
+    max-width: 600px;
+}
+.tmr-tab {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    color: var(--tmrp-text-muted);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: color 0.2s, background 0.2s;
+}
+.tmr-tab:hover { color: var(--tmrp-text-primary); }
+.tmr-tab.is-active {
+    background: var(--tmrp-neon-cyan);
+    color: #000;
+}
+
+/* Empty state */
+.tmr-empty-state {
+    text-align: center;
+    padding: 40px 24px;
+    border: 1px dashed rgba(0, 255, 255, 0.32);
+    border-radius: 14px;
+    background: rgba(0, 255, 255, 0.04);
+    color: var(--tmrp-text-secondary);
+}
+.tmr-empty-state .tmr-empty-icon {
+    font-size: 36px;
+    opacity: 0.6;
+    margin-bottom: 12px;
+}
+.tmr-empty-state h3 {
+    font-family: 'Barlow', 'Inter', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--tmrp-text-primary);
+    margin: 0 0 8px;
+}
+.tmr-empty-state p {
+    color: var(--tmrp-text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0 0 14px;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Form input/textarea baseline */
+.tmr-input,
+.tmr-textarea,
+.tmr-select {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--tmrp-glass-border);
+    background: rgba(0, 0, 0, 0.4);
+    color: var(--tmrp-text-primary);
+    font-family: inherit;
+    font-size: 15px;
+    line-height: 1.4;
+    outline: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+.tmr-input:focus,
+.tmr-textarea:focus,
+.tmr-select:focus {
+    border-color: var(--tmrp-neon-cyan);
+    background: rgba(0, 255, 255, 0.04);
+}
+
+@media (max-width: 720px) {
+    .tmr-shell { padding: 22px 16px 50px; }
+    .tmr-glass { padding: 18px 18px; }
+    .tmr-stat-bar { gap: 16px; }
+}
