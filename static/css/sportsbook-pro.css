@@ -48,6 +48,38 @@
     --sb-shell-max: 1640px;
 }
 
+/* Sportsbook loads after the shared nav stylesheet, so repeat the account-area
+   guard here to prevent old icon shortcuts from reappearing as empty boxes. */
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions > .tmr-global-nav__icon,
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions > [data-tmr-search],
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions > [data-tmr-notifications],
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions > [data-tmr-messages],
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions > [aria-label="Search"],
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions > [aria-label="Notifications"],
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions > [aria-label="Messages"],
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions > a[href="/notifications/"],
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions > a[href="notifications.html"],
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions > a[href="/notifications.html"],
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions > a[href="/messages/"],
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions > a[href="messages.html"],
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions > a[href="/messages.html"],
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions > a:empty,
+body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions > button:empty {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+}
+
 /* ==========================================================================
    Page foundation
    ========================================================================== */
