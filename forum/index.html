@@ -333,6 +333,10 @@ a:hover { color: #cc3300; text-decoration: underline; }
         </div>
         <div class="modal-body">
             <form id="newThreadForm" onsubmit="submitThread(event)">
+                <label for="ntCategory">Forum</label>
+                <select id="ntCategory" style="width:100%;padding:4px 6px;border:1px solid #777;background:#fff;font:11px Verdana,sans-serif;">
+                    <option value="">Select a forum...</option>
+                </select>
                 <label for="ntTitle">Title</label>
                 <input id="ntTitle" type="text" maxlength="160" placeholder="Thread title">
                 <label for="ntContent">Post</label>
@@ -851,10 +855,33 @@ async function loadThread(threadId) {
             currentCategoryId = cachedThread.category_id;
         }
         renderThread();
+        renderReplyArea();
+        // Update header label
+        var detailHeader = document.getElementById('threadDetailHeader');
+        if (detailHeader) detailHeader.textContent = currentThreadTitle || 'Thread';
     } catch (err) {
         showError(container, 'Failed to load thread.');
         console.error('Load thread error:', err);
     }
+}
+
+// Quick-Reply box gets rebuilt every time a thread loads. Logged-out
+// users see a prompt to sign in instead of the textarea.
+function renderReplyArea() {
+    var area = document.getElementById('replyArea');
+    if (!area) return;
+    if (!isUserLoggedIn()) {
+        area.innerHTML = '<div style="color:#555;font-size:11px;">'
+            + '<a href="/login/" style="color:#14365b;font-weight:700;">Log in</a>'
+            + ' or <a href="/register/" style="color:#14365b;font-weight:700;">register</a>'
+            + ' to reply to this thread.</div>';
+        return;
+    }
+    area.innerHTML = '<textarea id="replyText" rows="5" placeholder="Type your reply..."></textarea>'
+        + '<div style="margin-top:6px;display:flex;justify-content:flex-end;gap:6px;">'
+        +   '<button type="button" class="fbtn" onclick="document.getElementById(\'replyText\').value=\'\'">Clear</button>'
+        +   '<button type="button" class="fbtn is-primary" onclick="submitReply()">Post Reply</button>'
+        + '</div>';
 }
 
 /* removed: replaced in renders.js */
@@ -896,15 +923,39 @@ function isUserLoggedIn() {
 
 function openNewThread() {
     if (!isUserLoggedIn()) {
-                window.location.href = '/login/';
+        try { sessionStorage.setItem('tmr_post_auth_redirect', '/forum/'); } catch (e) {}
+        window.location.href = '/login/';
         return;
     }
-    document.getElementById('newThreadModal').classList.add('active');
+    var modal = document.getElementById('newThreadModal');
+    if (!modal) { console.warn('[forum] newThreadModal missing'); return; }
+
+    // Populate the forum dropdown from live categories. If a category is
+    // already selected (user clicked New Thread from inside a thread list),
+    // pre-select it. From the index, the user picks a forum here.
+    var sel = document.getElementById('ntCategory');
+    if (sel) {
+        var opts = ['<option value="">Select a forum...</option>'];
+        (categories || []).forEach(function (c) {
+            var label = c.name || c.slug || 'Forum';
+            opts.push('<option value="' + escHtml(String(c.id)) + '" data-slug="' + escHtml(c.slug || '') + '" data-name="' + escHtml(label) + '">' + escHtml(label) + '</option>');
+        });
+        sel.innerHTML = opts.join('');
+        if (currentCategoryId) sel.value = String(currentCategoryId);
+    }
+
+    modal.classList.add('is-open');
+    setTimeout(function () {
+        var t = document.getElementById('ntTitle');
+        if (t) t.focus();
+    }, 30);
 }
 
 function closeNewThread() {
-    document.getElementById('newThreadModal').classList.remove('active');
-    document.getElementById('newThreadForm').reset();
+    var modal = document.getElementById('newThreadModal');
+    if (modal) modal.classList.remove('is-open');
+    var f = document.getElementById('newThreadForm');
+    if (f) f.reset();
 }
 
 function getForumSessionUser() {
@@ -942,7 +993,7 @@ function pushForumActivity(type, payload) {
 
 async function submitThread(e) {
     e.preventDefault();
-        if (!isUserLoggedIn()) { window.location.href = '/login/'; return; }
+    if (!isUserLoggedIn()) { window.location.href = '/login/'; return; }
 
     var title = document.getElementById('ntTitle').value.trim();
     var content = document.getElementById('ntContent').value.trim();
@@ -950,8 +1001,21 @@ async function submitThread(e) {
     if (title.length < 5) { alert('Title must be at least 5 characters.'); return; }
     if (content.length < 10) { alert('Content must be at least 10 characters.'); return; }
 
-    if (!currentCategoryId) {
-        alert('No category selected. Please go back and select a category.');
+    // Read category from the modal selector first, then fall back to the
+    // currently-open category if the user came from a thread list view.
+    var selEl = document.getElementById('ntCategory');
+    var selectedId = selEl && selEl.value ? selEl.value : null;
+    var selectedOpt = selEl && selEl.selectedOptions ? selEl.selectedOptions[0] : null;
+    var selectedSlug = selectedOpt ? selectedOpt.getAttribute('data-slug') : '';
+    var selectedName = selectedOpt ? selectedOpt.getAttribute('data-name') : '';
+
+    var postCategoryId = selectedId || currentCategoryId || null;
+    var postCategorySlug = selectedSlug || currentCategorySlug || '';
+    var postCategoryName = selectedName || currentCategoryName || '';
+
+    if (!postCategoryId) {
+        alert('Please select a forum to post this thread in.');
+        if (selEl) selEl.focus();
         return;
     }
 
@@ -961,19 +1025,29 @@ async function submitThread(e) {
     try {
         var data = await api.request('/forum/threads', {
             method: 'POST',
-            body: { category_id: currentCategoryId, title: title, content: content }
+            body: { category_id: postCategoryId, title: title, content: content }
         });
         pushForumActivity('forum_thread_created', {
             title: title,
-            category: currentCategoryName || currentCategorySlug || 'Forum',
+            category: postCategoryName || postCategorySlug || 'Forum',
             threadId: data && data.thread ? data.thread.id : null
         });
         closeNewThread();
-        // Reload threads list
-        await loadThreads();
+
+        // After posting, switch into that category and refresh — same
+        // experience whether the user posted from the index or from a
+        // thread list.
+        currentCategoryId = postCategoryId;
+        currentCategorySlug = postCategorySlug || currentCategorySlug;
+        currentCategoryName = postCategoryName || currentCategoryName;
+        if (typeof showThreadsList === 'function' && currentCategorySlug) {
+            await showThreadsList(currentCategorySlug, currentCategoryName, currentCategoryId);
+        } else {
+            await loadThreads();
+        }
     } catch (err) {
         console.error('Create thread error:', err);
-        alert(err.message || 'Failed to create thread. Please try again.');
+        alert((err && err.message) ? err.message : 'Failed to create thread. Please try again.');
     } finally {
         if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Post Thread'; }
     }
