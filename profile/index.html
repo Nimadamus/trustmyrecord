@@ -1232,12 +1232,18 @@
                         <div class="capper-main-row" id="capperMainRow"></div>
 
                         <div class="capper-table-grid">
-                            <section class="capper-table-card"><h3>Performance by Sport</h3><div id="capTableSport"></div></section>
+                            <!-- Apr 30 2026 redesign: 3 visible cards only.
+                                 Performance Overview (composite) / By Market Type / By Sport.
+                                 The legacy Unit Size / Odds / Fav-Dog / Pending containers
+                                 stay in the DOM (hidden via .is-secondary) so the existing
+                                 render functions don't throw on missing elements. -->
+                            <section class="capper-table-card"><h3>Performance Overview</h3><div id="capTableOverview"></div></section>
                             <section class="capper-table-card"><h3>Performance by Market Type</h3><div id="capTableMarket"></div></section>
-                            <section class="capper-table-card"><h3>Performance by Unit Size</h3><div id="capTableUnits"></div></section>
-                            <section class="capper-table-card"><h3>Performance by Odds Range</h3><div id="capTableOdds"></div></section>
-                            <section class="capper-table-card"><h3>Favorites vs Underdogs</h3><div id="capTableFavDog"></div></section>
-                            <section class="capper-table-card"><h3>Pending Picks Summary</h3><div id="capTablePending"></div></section>
+                            <section class="capper-table-card"><h3>Performance by Sport</h3><div id="capTableSport"></div></section>
+                            <section class="capper-table-card is-secondary"><h3>Performance by Unit Size</h3><div id="capTableUnits"></div></section>
+                            <section class="capper-table-card is-secondary"><h3>Performance by Odds Range</h3><div id="capTableOdds"></div></section>
+                            <section class="capper-table-card is-secondary"><h3>Favorites vs Underdogs</h3><div id="capTableFavDog"></div></section>
+                            <section class="capper-table-card is-secondary"><h3>Pending Picks Summary</h3><div id="capTablePending"></div></section>
                         </div>
 
                         <section class="capper-history-card">
@@ -2607,38 +2613,63 @@
             color: #67e8f9;
             border-color: rgba(103, 232, 249, 0.28);
         }
+        /* === KPI strip — single horizontal row, 7 stats (Apr 30 2026) ===
+           Tracked Picks, Record, Win Rate, Units, ROI, Rank, Pending. Each
+           cell carries a small icon + uppercase label + bold value. */
         .capper-main-row {
             display: grid;
-            grid-template-columns: repeat(6, minmax(0, 1fr));
+            grid-template-columns: repeat(7, minmax(0, 1fr));
             border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
         }
         .capper-stat {
-            padding: 18px 20px;
+            padding: 16px 18px;
             border-right: 1px solid rgba(148, 163, 184, 0.13);
             min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 8px;
+            min-height: 96px;
         }
         .capper-stat:last-child { border-right: 0; }
-        .capper-stat span {
+        .capper-stat .capper-stat-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            background: rgba(34, 211, 238, 0.10);
+            color: #22d3ee;
+            font-size: 13px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .capper-stat span.capper-stat-label {
             display: block;
             color: #94a3b8;
-            font-size: 0.67rem;
+            font-size: 0.66rem;
             font-weight: 800;
             letter-spacing: 0.13em;
             text-transform: uppercase;
-            margin-bottom: 8px;
+            margin: 0;
         }
         .capper-stat strong {
             display: block;
             color: #f8fafc;
-            font: 800 clamp(1.15rem, 2vw, 1.55rem)/1 'Barlow', 'Inter', sans-serif;
+            font: 800 clamp(1.30rem, 1.9vw, 1.7rem)/1 'Barlow', 'Inter', sans-serif;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .capper-pos { color: #4ade80 !important; }
         .capper-neg { color: #f87171 !important; }
         .capper-neutral { color: #f8fafc !important; }
+        /* Reduce summary cards to 3: Overview / Market / Sport */
         .capper-table-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 0;
         }
         .capper-table-card {
@@ -2647,7 +2678,12 @@
             border-bottom: 1px solid rgba(148, 163, 184, 0.12);
             min-width: 0;
         }
-        .capper-table-card:nth-child(2n) { border-right: 0; }
+        .capper-table-card:nth-child(3n) { border-right: 0; }
+        /* Hide the remaining legacy 3 cards while keeping their containers
+           in the DOM so existing render pipelines (renderCapBreakdown into
+           capTableUnits / capTableOdds / capTableFavDog / capTablePending)
+           don't throw on missing elements. */
+        .capper-table-card.is-secondary { display: none; }
         .capper-table-card h3,
         .capper-history-head h3 {
             margin: 0;
@@ -3276,9 +3312,11 @@
             .profile-rail-card:nth-child(3n) { border-right: 0; }
             .profile-rail-card:nth-child(n+4) { border-top: 1px solid rgba(148, 163, 184, 0.14); }
             .capper-filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .capper-main-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-            .capper-stat:nth-child(3n) { border-right: 0; }
-            .capper-stat:nth-child(n+4) { border-top: 1px solid rgba(148, 163, 184, 0.13); }
+            /* On mid screens drop to 4 KPI columns; tablet falls back to a
+               horizontal scroll (see .capper-main-row--scroll below). */
+            .capper-main-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+            .capper-stat:nth-child(4n) { border-right: 0; }
+            .capper-stat:nth-child(n+5) { border-top: 1px solid rgba(148, 163, 184, 0.13); }
             .capper-table-grid { grid-template-columns: 1fr; }
             .capper-table-card { border-right: 0; }
             body.profile-page .summary-grid,
@@ -5003,22 +5041,82 @@
         });
     }
 
+    // ===== Helpers used by the Performance Overview card =====
+    function formatAvgOddsForOverview(rows) {
+        // Average implied probability -> back to American (per memory rule:
+        // never arithmetic-mean American odds directly; always implied prob).
+        const valid = (rows || []).map(p => Number(capOdds(p))).filter(o => Number.isFinite(o) && Math.abs(o) >= 100);
+        if (!valid.length) return 'N/A';
+        const probs = valid.map(o => o > 0 ? 100 / (o + 100) : Math.abs(o) / (Math.abs(o) + 100));
+        const avgP = probs.reduce((s, p) => s + p, 0) / probs.length;
+        if (avgP <= 0 || avgP >= 1) return 'N/A';
+        // Convert prob back to American odds.
+        const american = avgP >= 0.5 ? -Math.round(100 * avgP / (1 - avgP)) : Math.round(100 * (1 - avgP) / avgP);
+        if (Math.abs(american) < 100) return 'N/A';
+        return american > 0 ? '+' + american : String(american);
+    }
+    function computeBestStreak(rows) {
+        const chrono = (rows || []).slice().sort((a, b) => capDateMs(a) - capDateMs(b));
+        let cur = 0, best = 0;
+        for (const p of chrono) {
+            const s = capStatus(p);
+            if (s === 'won') { cur++; if (cur > best) best = cur; }
+            else if (s === 'lost') { cur = 0; }
+        }
+        return best;
+    }
+
     function renderCapperMonitor() {
         const rows = getCapperFilteredPicks();
         const sorted = sortCapperRows(rows.slice(), capperFilters.sort);
         const stats = calcCapStats(rows);
         const rankText = currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked';
+
+        // Pending picks count from the same filtered ledger.
+        const pendingCount = rows.filter(p => capStatus(p) === 'pending').length;
+        const pendingUnits = rows.filter(p => capStatus(p) === 'pending').reduce((s, p) => s + capUnits(p), 0);
+
         const main = document.getElementById('capperMainRow');
         if (main) {
-            main.innerHTML = [
-                ['Tracked Picks', stats.picks, 'capper-neutral'],
-                ['Record', stats.record, capValueClass(stats.wins - stats.losses)],
-                ['Win Rate', (stats.wins + stats.losses) ? stats.winRate.toFixed(1) + '%' : 'N/A', (stats.wins + stats.losses) ? capValueClass(stats.winRate - 50) : 'capper-neutral'],
-                ['Units', capUnitsText(stats.units), capValueClass(stats.units)],
-                ['ROI', stats.picks ? stats.roi.toFixed(1) + '%' : 'N/A', stats.picks ? capValueClass(stats.roi) : 'capper-neutral'],
-                ['Rank', rankText, 'capper-neutral']
-            ].map(([label, value, cls]) => '<div class="capper-stat"><span>' + label + '</span><strong class="' + cls + '">' + value + '</strong></div>').join('');
+            const cards = [
+                ['Tracked Picks', String(stats.picks), 'capper-neutral', '\u{1F4CB}'],            // clipboard
+                ['Record',        stats.record,         capValueClass(stats.wins - stats.losses), '\u{1F3C6}'], // trophy
+                ['Win Rate',      (stats.wins + stats.losses) ? stats.winRate.toFixed(1) + '%' : 'N/A',
+                                  (stats.wins + stats.losses) ? capValueClass(stats.winRate - 50) : 'capper-neutral', '\u{1F4CA}'], // chart
+                ['Units',         capUnitsText(stats.units), capValueClass(stats.units), '\u{1F4B0}'],          // bag
+                ['ROI',           stats.picks ? stats.roi.toFixed(1) + '%' : 'N/A',
+                                  stats.picks ? capValueClass(stats.roi) : 'capper-neutral', '\u{1F4C8}'],      // up chart
+                ['Rank',          rankText, 'capper-neutral', '\u{1F947}'],                                     // gold medal
+                ['Pending Picks', String(pendingCount), 'capper-neutral', '\u{23F3}']                           // hourglass
+            ];
+            main.innerHTML = cards.map(([label, value, cls, icon]) =>
+                '<div class="capper-stat">' +
+                    '<span class="capper-stat-icon" aria-hidden="true">' + icon + '</span>' +
+                    '<span class="capper-stat-label">' + label + '</span>' +
+                    '<strong class="' + cls + '">' + value + '</strong>' +
+                '</div>'
+            ).join('');
         }
+
+        // Performance Overview composite card — top metrics in a tidy table.
+        const overview = document.getElementById('capTableOverview');
+        if (overview) {
+            const decided = stats.wins + stats.losses;
+            const overviewRows = [
+                ['Total Picks',     String(stats.picks)],
+                ['Graded',          String(decided + (stats.pushes || 0))],
+                ['Pending',         String(pendingCount) + (pendingCount ? ' (' + pendingUnits.toFixed(2) + 'u open)' : '')],
+                ['Win Rate',        decided ? stats.winRate.toFixed(1) + '%' : 'N/A'],
+                ['Units',           capUnitsText(stats.units)],
+                ['ROI',             stats.picks ? stats.roi.toFixed(1) + '%' : 'N/A'],
+                ['Avg Odds',        formatAvgOddsForOverview(rows)],
+                ['Best Streak',     String(computeBestStreak(rows)) + 'W']
+            ];
+            overview.innerHTML = '<table class="capper-table"><tbody>' + overviewRows.map(function (r) {
+                return '<tr><td style="color:#94a3b8;">' + r[0] + '</td><td style="text-align:right;color:#f8fafc;font-weight:700;">' + r[1] + '</td></tr>';
+            }).join('') + '</tbody></table>';
+        }
+
         renderCapBreakdown('capTableSport', rows, [
             ['MLB', p => pmSportLabel(p.sport_key) === 'MLB'],
             ['NFL', p => pmSportLabel(p.sport_key) === 'NFL'],
