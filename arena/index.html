@@ -77,7 +77,7 @@
         .hero-proof-list { display: grid; gap: 12px; }
         .hero-proof-item { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; padding-top: 10px; border-top: 1px solid rgba(148,163,184,0.12); }
         .hero-proof-item:first-child { border-top: none; padding-top: 0; }
-        .hero-proof-index { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 10px; background: rgba(45,212,191,0.12); color: #d7fffa; font-size: 0.78rem; font-weight: 800; }
+        .hero-proof-index { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; background: rgba(45,212,191,0.12); color: #d7fffa; font-size: 0.95rem; font-weight: 800; }
         .hero-proof-copy strong { display: block; color: #eef4fb; font-size: 0.92rem; }
         .hero-proof-copy span { display: block; margin-top: 4px; color: #97a8bc; font-size: 0.82rem; line-height: 1.48; }
 
@@ -501,13 +501,12 @@
 <div class="hero">
     <div class="hero-shell">
         <div class="hero-copy-card">
-            <span class="hero-kicker">Competitive Layer</span>
-            <h1>Turn gaming rivalries into a <span class="gold">trackable</span> <span class="blue">record</span>.</h1>
-            <p>Use Arena to issue challenges, log head-to-head results, attach platform identities, and build a public competitive history that is stronger than Discord trash talk and screenshots.</p>
+            <span class="hero-kicker">Competition Hub</span>
+            <h1>Turn rivalries into <span class="gold">receipts</span>.</h1>
+            <p>Challenge other users to handicapping contests, online sports games, and head-to-head battles. Track results, build rivalries, and prove who actually wins when the talking stops.</p>
             <div class="hero-actions">
-                    <a href="/register/" class="btn btn-primary btn-sm">Register</a>
-                    <a href="/login/" class="btn btn-outline btn-sm">Log In</a>
-                <button class="btn btn-gold btn-sm" onclick="openCreateChallenge()">Issue Challenge</button>
+                <button class="btn btn-gold" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue Challenge</button>
+                <a href="#panel-challenges" class="btn btn-outline" onclick="scrollToChallenges(event)"><i class="fas fa-list"></i> View Open Challenges</a>
             </div>
             <div class="hero-stats" style="justify-content:flex-start; margin-top:22px;">
                 <div class="hero-stat"><div class="num" id="statTotalMatches">0</div><div class="label">Matches Played</div></div>
@@ -516,19 +515,19 @@
             </div>
         </div>
         <div class="hero-side-card">
-            <h3>Why this page exists</h3>
+            <h3>What Arena is for</h3>
             <div class="hero-proof-list">
                 <div class="hero-proof-item">
-                    <span class="hero-proof-index">01</span>
-                    <div class="hero-proof-copy"><strong>Make rivalries visible</strong><span>Challenge outcomes should stay attached to the same people instead of disappearing into group chats.</span></div>
+                    <span class="hero-proof-index"><i class="fas fa-chart-line"></i></span>
+                    <div class="hero-proof-copy"><strong>Handicapping Contests</strong><span>Challenge another capper on picks, units, ROI, sport-specific cards, or weekly records.</span></div>
                 </div>
                 <div class="hero-proof-item">
-                    <span class="hero-proof-index">02</span>
-                    <div class="hero-proof-copy"><strong>Track real match history</strong><span>Records, streaks, and head-to-head stats should come from logged results, not memory.</span></div>
+                    <span class="hero-proof-index"><i class="fas fa-gamepad"></i></span>
+                    <div class="hero-proof-copy"><strong>Online Game Challenges</strong><span>Set up MLB The Show, Madden, NBA 2K, EA FC, NHL, and other head-to-head matchups.</span></div>
                 </div>
                 <div class="hero-proof-item">
-                    <span class="hero-proof-index">03</span>
-                    <div class="hero-proof-copy"><strong>Keep empty states honest</strong><span>Until the community grows, the page should explain the value clearly instead of looking dead or fake-busy.</span></div>
+                    <span class="hero-proof-index"><i class="fas fa-trophy"></i></span>
+                    <div class="hero-proof-copy"><strong>Rivalry History</strong><span>Keep a permanent public record of challenge results instead of letting everything disappear in Discord or group chats.</span></div>
                 </div>
             </div>
         </div>
@@ -972,6 +971,14 @@ function switchTab(tab) {
     if (tab === 'my-stats') loadMyStats();
 }
 
+function scrollToChallenges(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    switchTab('challenges');
+    const target = document.querySelector('.tabs');
+    if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    analyticsTrack('arena_view_open_challenges_click', {});
+}
+
 // ============================================
 // CHALLENGES
 // ============================================
@@ -988,7 +995,7 @@ async function loadChallenges() {
         document.getElementById('statActiveChallenges').textContent = allChallenges.filter(c => ['pending','accepted','in_progress'].includes(c.status)).length;
     } catch (e) {
         console.error('Failed to load challenges:', e);
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No open challenges yet</h3><p>The Arena is live, but there is no active challenge board to show yet. Register, link your gamer profile, and post the first matchup instead of leaving this page empty.</p><a href="/register/" class="btn btn-primary" style="margin-top:12px;">Create an Account</a></div>';
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No open challenges yet</h3><p>Be the first to issue one. Pick a contest, name an opponent (or leave it open), and start a real head-to-head record.</p><button class="btn btn-gold" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue Challenge</button></div>';
     }
 }
 
@@ -1006,7 +1013,10 @@ function filterByGame(game) {
 function renderChallenges(challenges) {
     const container = document.getElementById('challengesList');
     if (challenges.length === 0) {
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No challenges match this filter</h3><p>There is nothing in this game category yet. Switch filters or issue the first challenge to seed the board with a real matchup.</p></div>';
+        const noneAtAll = !allChallenges || allChallenges.length === 0;
+        container.innerHTML = noneAtAll
+            ? '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No open challenges yet</h3><p>Be the first to issue one. Pick a contest, name an opponent (or leave it open), and start a real head-to-head record.</p><button class="btn btn-gold" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue Challenge</button></div>'
+            : '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No challenges in this game yet</h3><p>Switch filters above or issue the first challenge in this category.</p><button class="btn btn-outline" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue Challenge</button></div>';
         return;
     }
     container.innerHTML = challenges.map(ch => {
