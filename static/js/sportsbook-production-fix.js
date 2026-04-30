@@ -2114,7 +2114,134 @@
         lockFunction(window, 'submitPick', lockInPick);
         lockFunction(window, 'lockInPick', lockInPick);
         window.__tmrProductionLockInPick = lockInPick;
-        window.selectGameBet = function() {};
+
+        // Bridge: the legacy team-totals / F5 / fallback renderers in
+        // sportsbook/index.html still emit odds buttons that call
+        // window.selectGameBet(gameIndex, betType, team, line, odds,
+        // awayTeam, homeTeam). Previously this was a no-op stub, so
+        // every Team Totals click silently did nothing — user couldn't
+        // submit a team-total pick. Route legacy clicks through the
+        // canonical selectOption flow instead by synthesizing a
+        // production-fix option object and registering it in
+        // state.currentOptions.
+        window.selectGameBet = function(gameIndex, betType, team, line, odds, awayTeam, homeTeam) {
+            try {
+                var board = state.currentBoard || [];
+                var game = board[gameIndex] || null;
+                if (!game) {
+                    var sportKeyMap = (window.TMR && window.TMR.sportKeyMap) || {};
+                    var sportDisplay = (window.TMR && window.TMR.selectedSport) || state.selectedSport || '';
+                    game = {
+                        id: 'legacy_' + String(awayTeam || '').replace(/\s+/g, '_') + '_at_' + String(homeTeam || '').replace(/\s+/g, '_'),
+                        sport_key: sportKeyMap[sportDisplay] || sportDisplay || '',
+                        home_team: homeTeam || '',
+                        away_team: awayTeam || '',
+                        commence_time: new Date().toISOString(),
+                        _bookTitle: 'Sportsbook feed',
+                        _bookKey: ''
+                    };
+                }
+
+                var rawLine = (line === '' || line === 'ML' || line === 'Pick' || line == null) ? null : line;
+                var lineNum = rawLine == null ? null : parseFloat(rawLine);
+                if (lineNum != null && isNaN(lineNum)) lineNum = null;
+                var oddsNum = (odds === '' || odds == null) ? null : parseInt(odds, 10);
+                if (oddsNum != null && isNaN(oddsNum)) oddsNum = null;
+
+                var marketType = 'h2h';
+                var groupLabel = 'Full Game';
+                var selection = team || '';
+                var selectionLabel = team || '';
+                var teamRaw = String(team || '').trim();
+
+                switch (betType) {
+                    case 'teamover': {
+                        marketType = 'team_totals';
+                        groupLabel = 'Team Totals';
+                        // The legacy renderer passes "<TeamName> Over"
+                        // for the team arg. Strip the suffix so the
+                        // backend gets a clean selection that matches
+                        // its team_totals contract (team name + side
+                        // is encoded by the market_type + line).
+                        var teamOver = teamRaw.replace(/\s+over\s*$/i, '').trim();
+                        selection = teamOver;
+                        selectionLabel = teamOver + ' Over' + (lineNum != null ? ' ' + lineNum : '');
+                        break;
+                    }
+                    case 'teamunder': {
+                        marketType = 'team_totals';
+                        groupLabel = 'Team Totals';
+                        var teamUnder = teamRaw.replace(/\s+under\s*$/i, '').trim();
+                        selection = teamUnder;
+                        selectionLabel = teamUnder + ' Under' + (lineNum != null ? ' ' + lineNum : '');
+                        break;
+                    }
+                    case 'over':
+                        marketType = 'totals'; groupLabel = 'Game Total';
+                        selection = 'Over';
+                        selectionLabel = 'Over' + (lineNum != null ? ' ' + lineNum : '');
+                        break;
+                    case 'under':
+                        marketType = 'totals'; groupLabel = 'Game Total';
+                        selection = 'Under';
+                        selectionLabel = 'Under' + (lineNum != null ? ' ' + lineNum : '');
+                        break;
+                    case 'spread':
+                        marketType = 'spreads'; groupLabel = 'Full Game';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + (lineNum != null ? ' ' + (lineNum > 0 ? '+' : '') + lineNum : '');
+                        break;
+                    case 'ml':
+                        marketType = 'h2h'; groupLabel = 'Full Game';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' ML';
+                        break;
+                    case 'f5over':
+                        marketType = 'f5_totals'; groupLabel = 'First 5';
+                        selection = 'Over';
+                        selectionLabel = 'F5 Over' + (lineNum != null ? ' ' + lineNum : '');
+                        break;
+                    case 'f5under':
+                        marketType = 'f5_totals'; groupLabel = 'First 5';
+                        selection = 'Under';
+                        selectionLabel = 'F5 Under' + (lineNum != null ? ' ' + lineNum : '');
+                        break;
+                    case 'f5spread':
+                        marketType = 'f5_spreads'; groupLabel = 'First 5';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' F5' + (lineNum != null ? ' ' + (lineNum > 0 ? '+' : '') + lineNum : '');
+                        break;
+                    case 'f5ml':
+                        marketType = 'f5_h2h'; groupLabel = 'First 5';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' F5 ML';
+                        break;
+                }
+
+                var option = createFallbackOption(
+                    game,
+                    gameIndex,
+                    groupLabel,
+                    marketType,
+                    selection,
+                    selectionLabel,
+                    oddsNum,
+                    lineNum,
+                    game._bookTitle || 'Sportsbook feed',
+                    'sportsbook'
+                );
+                var key = 'legacy-' + (option.id || (marketType + '-' + selection)) + '-' + Date.now();
+                var registered = Object.assign({
+                    game: game,
+                    _domId: key,
+                    _optionKey: key
+                }, option);
+                state.currentOptions.set(key, registered);
+                selectOption(key);
+            } catch (err) {
+                console.error('[TMR] selectGameBet bridge failed:', err);
+            }
+        };
         window.updatePickSummary = updatePickSummary;
         lockFunction(window, 'loadGamesWithAllBets', loadGamesWithAllBetsOverride);
         lockFunction(window, 'loadMyPicks', loadMyPicks);
