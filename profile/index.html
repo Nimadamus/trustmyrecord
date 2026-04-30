@@ -1260,6 +1260,7 @@
                                 <div class="section-title">Locked Picks</div>
                                 <div class="section-subtitle">Verified locked picks tied to this profile. Filters update the table and stats below.</div>
                             </div>
+                            <a class="profile-pending-link" id="viewPendingPicksLink" href="/profile/?tab=picks&result=pending">View pending picks</a>
                         </div>
 
                         <!-- Filter toolbar. All controls update window.__pmFilters and re-run renderPmPicksTable(). -->
@@ -2791,6 +2792,27 @@
             color: var(--tmr-text-muted);
             font-size: 0.84rem;
             margin-top: 4px;
+        }
+        .profile-pending-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+            padding: 0 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(103, 232, 249, 0.34);
+            background: rgba(103, 232, 249, 0.08);
+            color: #67e8f9;
+            font: 800 11px/1 'Inter', sans-serif;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .profile-pending-link:hover {
+            border-color: rgba(103, 232, 249, 0.62);
+            background: rgba(103, 232, 249, 0.14);
+            color: #f8fafc;
         }
 
         .profile-feed-empty {
@@ -4797,6 +4819,36 @@
                 renderPmPicksTable();
             });
         }
+        const pendingLink = document.getElementById('viewPendingPicksLink');
+        if (pendingLink && !pendingLink.dataset._pmWired) {
+            pendingLink.dataset._pmWired = '1';
+            pendingLink.addEventListener('click', (event) => {
+                event.preventDefault();
+                window.__pmFilters = Object.assign({}, window.__pmFilters || {}, { result: 'pending' });
+                const resultEl = document.getElementById('pmFilterResult');
+                if (resultEl) resultEl.value = 'pending';
+                renderPmPicksTable();
+                const table = document.getElementById('pmPicksTable');
+                if (table && typeof table.scrollIntoView === 'function') {
+                    table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                try {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('tab', 'picks');
+                    url.searchParams.set('result', 'pending');
+                    history.replaceState(null, '', url.toString());
+                } catch (e) {}
+            });
+        }
+
+        try {
+            const params = new URLSearchParams(window.location.search || '');
+            if (params.get('result') === 'pending' || params.get('filter') === 'pending') {
+                window.__pmFilters.result = 'pending';
+                const resultEl = document.getElementById('pmFilterResult');
+                if (resultEl) resultEl.value = 'pending';
+            }
+        } catch (e) {}
 
         renderPmPicksTable();
     }
