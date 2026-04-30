@@ -368,9 +368,12 @@
     nav.addEventListener("click", (event) => {
         const authRoute = event.target.closest("[data-tmr-auth-route]");
         if (authRoute) {
-            // Don't preventDefault. Let the browser follow the native href
-            // (/login/ or /register/) so the button always works even if
-            // the JS hand-off below fails.
+            // Do NOT preventDefault here. The anchor's href is the source of
+            // truth for navigation — let the browser handle it natively. If
+            // anything between preventDefault and a JS-driven location.assign
+            // throws (sessionStorage blocked in private mode, etc.), the
+            // button looks broken. Just stash the routing hint and close
+            // the menu; the anchor href takes the user to /login/ or /register/.
             try {
                 const target = authRoute.getAttribute("data-tmr-auth-route") === "signup" ? "signup" : "login";
                 sessionStorage.setItem("tmr_force_section", target);
