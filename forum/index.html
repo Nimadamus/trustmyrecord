@@ -13,8 +13,8 @@
     <meta property="og:type" content="website">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430j">
-<script defer src="/static/js/tmr-sitewide.js?v=20260430j"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430navfix">
+<script defer src="/static/js/tmr-sitewide.js?v=20260430navfix"></script>
     <style>
         :root {
             /* twoplustwo.com palette (rev 2): grayish body, white inner
@@ -908,6 +908,11 @@
         .vb-search { display: flex; align-items: center; gap: 4px; }
         .vb-search input { height: 22px; width: 200px; padding: 0 8px; border: 1px solid #1B3D5F; background: #FFF; color: #000; font-size: 11px; font-family: inherit; }
         .vb-search button { height: 22px; padding: 0 10px; background: linear-gradient(180deg,#FFFFFF 0%,#DDD 100%); border: 1px solid #888; color: #2A4D7C; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .vb-topbar--forum-search .vb-topbar-inner { justify-content: flex-start; }
+        .vb-search--full { flex: 1; max-width: 520px; }
+        .vb-search--full input { width: 100%; }
+        .vb-topbar--forum-search .vb-cta { background: #B12704; color: #FFF; padding: 4px 12px; border: 1px solid #7A1A03; font-size: 11px; font-weight: 700; cursor: pointer; }
+        .vb-topbar--forum-search .vb-cta:hover { background: #7A1A03; }
 
         /* ===== SECONDARY TAB STRIP ===== */
         .vb-subnav { background: #4F7AB0; border-bottom: 1px solid #1B3D5F; }
@@ -1443,21 +1448,14 @@
     </div>
 </header>
 
-<!-- ================= TOP HEADER BAR ================= -->
-<div class="vb-topbar">
+<!-- Forum-specific search strip (global logo/profile/messages/alerts come from tmr-global-nav) -->
+<div class="vb-topbar vb-topbar--forum-search">
     <div class="vb-topbar-inner">
-        <a class="vb-logo" href="/">TRUST<span>MY</span>RECORD</a>
-        <div class="vb-search">
-            <input type="search" id="searchInput" placeholder="Search forums" onkeyup="handleSearch(this.value)" autocomplete="off">
+        <div class="vb-search vb-search--full">
+            <input type="search" id="searchInput" placeholder="Search forums (titles, posts, threads)" onkeyup="handleSearch(this.value)" autocomplete="off">
             <button type="button" onclick="handleSearch(document.getElementById('searchInput').value)">Search</button>
         </div>
-        <nav class="vb-topnav">
-            <a href="/profile/">User CP</a>
-            <a href="/messages/">Messages</a>
-            <a href="/notifications/">Alerts</a>
-            <a href="/profile/">Profile</a>
-            <button type="button" onclick="openNewThread()" class="vb-cta">New Thread</button>
-        </nav>
+        <button type="button" onclick="openNewThread()" class="vb-cta">New Thread</button>
     </div>
 </div>
 

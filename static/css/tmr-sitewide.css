@@ -30,8 +30,9 @@ body.tmr-site-shell [data-tmr-legacy-footer="hidden"] {
     display: none !important;
 }
 
-body.tmr-site-shell header:not(.tmr-global-nav):not(.tmr-global-footer),
-body.tmr-site-shell nav.main-nav:not(.tmr-global-nav) {
+body.tmr-site-shell > header:not(.tmr-global-nav):not(.tmr-global-footer),
+body.tmr-site-shell > nav.main-nav:not(.tmr-global-nav),
+body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
     display: none !important;
 }
 
@@ -90,9 +91,9 @@ body.tmr-site-shell nav.main-nav:not(.tmr-global-nav) {
     justify-content: space-evenly;
     align-items: center;
     gap: clamp(6px, 0.8vw, 12px);
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     min-width: 0;
-    row-gap: 6px;
+    row-gap: 0;
     padding-left: clamp(16px, 2vw, 36px);
     padding-right: clamp(8px, 1vw, 18px);
 }
@@ -132,7 +133,7 @@ body.tmr-site-shell nav.main-nav:not(.tmr-global-nav) {
     align-items: center;
     justify-content: flex-end;
     gap: 8px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     min-width: 0;
 }
 
@@ -2967,6 +2968,19 @@ html body.tmr-site-shell::before {
 .tmr-search-grid a strong, .tmr-search-result strong { font-size: 13.5px; font-weight: 700; }
 .tmr-search-grid a span, .tmr-search-result span { color: #94a3b8; font-size: 12px; }
 .tmr-search-empty { color: #94a3b8; font-size: 12.5px; line-height: 1.5; }
+/* Position the unread-count badge nicely on the global nav bell/messages icons */
+.tmr-global-nav__icon { position: relative; }
+.tmr-global-nav__icon .nav-badge {
+    position: absolute !important;
+    top: -4px !important;
+    right: -4px !important;
+    margin: 0 !important;
+}
+.tmr-search-result--user { flex-direction: row !important; align-items: center; gap: 10px !important; }
+.tmr-search-result--user .tmr-search-result__avatar { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; object-fit: cover; background: rgba(255,255,255,0.06); }
+.tmr-search-result--user .tmr-search-result__copy { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.tmr-search-result--user .tmr-search-result__copy strong { line-height: 1.2; }
+.tmr-search-result--user .tmr-search-result__copy span { line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 @media (max-width: 720px) {
     .tmr-search-grid { grid-template-columns: 1fr; }
@@ -3105,6 +3119,28 @@ html body.tmr-site-shell::before {
 
 @media (max-width: 720px) {
     .tmr-cap-card__metrics { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+
+/* Keep the injected global navigation as the only site nav.
+   Some legacy pages define later !important rules for old top strips. */
+body.tmr-site-shell [data-tmr-legacy-nav="hidden"],
+body.tmr-site-shell > header:not(.tmr-global-nav):not(.tmr-global-footer),
+body.tmr-site-shell nav.nav:not(.tmr-global-nav),
+body.tmr-site-shell nav.main-nav:not(.tmr-global-nav),
+body.tmr-site-shell .messages-top-strip,
+body.tmr-site-shell .sportsbook-top-strip,
+body.tmr-site-shell .notifications-top-strip,
+body.tmr-site-shell .profile-top-strip,
+body.tmr-site-shell .friends-top-strip {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
 }
 
 /* Capper pick history table */

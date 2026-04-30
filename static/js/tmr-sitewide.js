@@ -4,17 +4,22 @@
     // every nav target should hit its directory route directly to avoid a
     // pointless redirect hop on every click.
     const sportsbookPicksHref = "/sportsbook/";
+    // Polls + Trivia live under Arena now (Apr 30, 2026). They're surfaced as
+    // sub-modes on the Arena landing alongside handicapping contests and
+    // PS5 sports gaming, so the top nav stays on a single line.
     const routes = [
         ["/", "Home"],
         [sportsbookPicksHref, "Make Picks"],
         ["/feed/", "Feed"],
         ["/handicappers/", "Leaderboards"],
         ["/arena/", "Arena"],
-        ["/polls/", "Polls"],
-        ["/trivia/", "Trivia"],
         ["/forum/", "Forums"],
         ["/marketplace/", "Sell Your Picks"]
     ];
+
+    // Pages that should highlight Arena in the top nav even though they
+    // have their own URL.
+    const ARENA_GROUP = new Set(["arena.html", "challenges.html", "polls.html", "trivia.html"]);
 
     const routeMeta = {
         "sportsbook.html": ["Make Picks", "Lock picks before games start. Build a public, permanent record."],
@@ -200,10 +205,48 @@
     document.body.classList.add("tmr-site-shell");
     document.body.setAttribute("data-tmr-route", currentFile.replace(/\.html$/, ""));
 
-    document.querySelectorAll("header, body > nav.nav, body > nav.main-nav, nav.main-nav, body > .messages-top-strip, body > .sportsbook-top-strip, body > .notifications-top-strip, body > .profile-top-strip, body > .friends-top-strip, .sportsbook-top-strip, .notifications-top-strip, .profile-top-strip, .friends-top-strip").forEach((el) => {
+    const legacyNavStyle = document.createElement("style");
+    legacyNavStyle.id = "tmr-legacy-nav-kill-switch";
+    legacyNavStyle.textContent = `
+        body.tmr-site-shell [data-tmr-legacy-nav="hidden"],
+        body.tmr-site-shell > header:not(.tmr-global-nav):not(.tmr-global-footer),
+        body.tmr-site-shell > nav.main-nav:not(.tmr-global-nav),
+        body.tmr-site-shell > nav.nav:not(.tmr-global-nav),
+        body.tmr-site-shell .messages-top-strip,
+        body.tmr-site-shell .sportsbook-top-strip,
+        body.tmr-site-shell .notifications-top-strip,
+        body.tmr-site-shell .profile-top-strip,
+        body.tmr-site-shell .friends-top-strip {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            min-height: 0 !important;
+            max-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            overflow: hidden !important;
+        }
+    `;
+    document.head.appendChild(legacyNavStyle);
+
+    function hideLegacyNav(el) {
+        if (!el || el.classList.contains("tmr-global-nav")) return;
+        el.setAttribute("data-tmr-legacy-nav", "hidden");
+        el.style.setProperty("display", "none", "important");
+        el.style.setProperty("visibility", "hidden", "important");
+        el.style.setProperty("height", "0", "important");
+        el.style.setProperty("min-height", "0", "important");
+        el.style.setProperty("max-height", "0", "important");
+        el.style.setProperty("margin", "0", "important");
+        el.style.setProperty("padding", "0", "important");
+        el.style.setProperty("border", "0", "important");
+        el.style.setProperty("overflow", "hidden", "important");
+    }
+
+    document.querySelectorAll("body > header, body > nav.nav, body > nav.main-nav, nav.main-nav, nav.nav, body > .messages-top-strip, body > .sportsbook-top-strip, body > .notifications-top-strip, body > .profile-top-strip, body > .friends-top-strip, .messages-top-strip, .sportsbook-top-strip, .notifications-top-strip, .profile-top-strip, .friends-top-strip").forEach((el) => {
         if (!el.classList.contains("tmr-global-nav")) {
-            el.setAttribute("data-tmr-legacy-nav", "hidden");
-            el.style.display = "none";
+            hideLegacyNav(el);
         }
     });
 
@@ -216,10 +259,22 @@
 
     if (currentFile === "index.html") {
         document.querySelectorAll(".shell > .nav").forEach((el) => {
-            el.setAttribute("data-tmr-legacy-nav", "hidden");
-            el.style.display = "none";
+            hideLegacyNav(el);
         });
     }
+
+    const legacyNavObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (!(node instanceof Element)) return;
+                if (node.matches("body > header, nav.nav, nav.main-nav, .messages-top-strip, .sportsbook-top-strip, .notifications-top-strip, .profile-top-strip, .friends-top-strip")) {
+                    hideLegacyNav(node);
+                }
+                node.querySelectorAll?.("nav.nav, nav.main-nav, .messages-top-strip, .sportsbook-top-strip, .notifications-top-strip, .profile-top-strip, .friends-top-strip").forEach(hideLegacyNav);
+            });
+        });
+    });
+    legacyNavObserver.observe(document.body, { childList: true, subtree: true });
 
     const nav = document.createElement("nav");
     nav.className = "tmr-global-nav";
@@ -237,8 +292,15 @@
             <div class="tmr-global-nav__panel">
                 <div class="tmr-global-nav__links">
                     ${routes.slice(1).filter(([href]) => href !== "profile.html").map(([href, label]) => {
-                        const hrefFile = href.split("#")[0].toLowerCase();
-                        const active = currentFile === hrefFile || ((currentFile === "arena.html" || currentFile === "challenges.html") && hrefFile === "arena.html");
+                        const hrefPath = href.split("#")[0].toLowerCase();
+                        const segs = hrefPath.split("/").filter(Boolean);
+                        const hrefFile = segs.length
+                            ? (segs[segs.length - 1].endsWith(".html")
+                                ? segs[segs.length - 1]
+                                : segs[segs.length - 1] + ".html")
+                            : "index.html";
+                        const isArenaLink = hrefFile === "arena.html";
+                        const active = currentFile === hrefFile || (isArenaLink && ARENA_GROUP.has(currentFile));
                         return `<a href="${href}"${active ? ' aria-current="page"' : ""}>${label}</a>`;
                     }).join("")}
                 </div>
@@ -346,7 +408,7 @@
             overlay.innerHTML = `
                 <div class="tmr-search-modal" role="dialog" aria-label="Search TrustMyRecord">
                     <div class="tmr-search-head">
-                        <input type="search" id="tmrSearchInput" placeholder="Search picks, cappers, threads, polls, trivia..." autocomplete="off" autocapitalize="off" autocorrect="off">
+                        <input type="search" id="tmrSearchInput" placeholder="Search users by username or display name, and forum threads..." autocomplete="off" autocapitalize="off" autocorrect="off">
                         <button type="button" class="tmr-search-close" aria-label="Close">&times;</button>
                     </div>
                     <div class="tmr-search-body" id="tmrSearchBody">
@@ -399,21 +461,54 @@
         if (!results) return;
         results.hidden = false;
         results.innerHTML = `<div class="tmr-search-label">Searching for "${escapeHtml(q)}"...</div>`;
-        try {
-            const baseUrl = (window.api && window.api.baseUrl) || "https://trustmyrecord-api.onrender.com/api";
-            const res = await fetch(`${baseUrl}/forum/search?q=${encodeURIComponent(q)}`);
-            const data = await res.json().catch(() => ({}));
-            const threads = (data.results || data.threads || []).slice(0, 8);
-            if (!threads.length) {
-                results.innerHTML = `<div class="tmr-search-label">No matches yet</div><div class="tmr-search-empty">Search runs across forum threads. As polls, trivia, and capper search come online, results will widen here.</div>`;
-                return;
-            }
-            results.innerHTML = `<div class="tmr-search-label">Forum threads</div>` + threads.map(t => {
-                return `<a class="tmr-search-result" href="/forum/?thread=${t.id}"><strong>${escapeHtml(t.title || "Thread")}</strong><span>${escapeHtml(t.category_name || t.username || "")}</span></a>`;
-            }).join("");
-        } catch (err) {
-            results.innerHTML = `<div class="tmr-search-label">Search unavailable</div><div class="tmr-search-empty">Could not reach the search backend. Try again in a moment.</div>`;
+        const baseUrl = (window.api && window.api.baseUrl) || "https://trustmyrecord-api.onrender.com/api";
+
+        const userPromise = fetch(`${baseUrl}/users?query=${encodeURIComponent(q)}&limit=8`)
+            .then(r => r.ok ? r.json() : { users: [] })
+            .catch(() => ({ users: [] }));
+        const threadPromise = fetch(`${baseUrl}/forum/search?q=${encodeURIComponent(q)}`)
+            .then(r => r.ok ? r.json() : {})
+            .catch(() => ({}));
+
+        const [userData, threadData] = await Promise.all([userPromise, threadPromise]);
+        const users = (userData.users || []).slice(0, 8);
+        const threads = (threadData.results || threadData.threads || []).slice(0, 8);
+
+        if (!users.length && !threads.length) {
+            results.innerHTML = `<div class="tmr-search-label">No matches</div><div class="tmr-search-empty">No users or threads matched "${escapeHtml(q)}".</div>`;
+            return;
         }
+
+        const sections = [];
+        if (users.length) {
+            sections.push(
+                `<div class="tmr-search-label">Users</div>` +
+                users.map(u => {
+                    const username = String(u.username || "");
+                    const display = String(u.display_name || u.username || "User");
+                    const avatar = getUserAvatar(u);
+                    const picks = (u.total_picks != null) ? `${u.total_picks} picks` : "";
+                    const units = (u.net_units != null && u.net_units !== 0)
+                        ? `${u.net_units > 0 ? "+" : ""}${Number(u.net_units).toFixed(2)}u`
+                        : "";
+                    const meta = [picks, units].filter(Boolean).join(" · ") || "@" + username;
+                    return `<a class="tmr-search-result tmr-search-result--user" href="/profile/?user=${encodeURIComponent(username)}">
+                        <img class="tmr-search-result__avatar" src="${avatar}" alt="">
+                        <span class="tmr-search-result__copy">
+                            <strong>${escapeHtml(display)}</strong>
+                            <span>@${escapeHtml(username)} · ${escapeHtml(meta)}</span>
+                        </span>
+                    </a>`;
+                }).join("")
+            );
+        }
+        if (threads.length) {
+            sections.push(
+                `<div class="tmr-search-label">Forum threads</div>` +
+                threads.map(t => `<a class="tmr-search-result" href="/forum/?thread=${t.id}"><strong>${escapeHtml(t.title || "Thread")}</strong><span>${escapeHtml(t.category_name || t.username || "")}</span></a>`).join("")
+            );
+        }
+        results.innerHTML = sections.join("");
     }
 
     document.addEventListener("keydown", (e) => {
@@ -434,6 +529,16 @@
     document.addEventListener("visibilitychange", () => {
         if (!document.hidden) renderActions();
     });
+
+    // Load nav-badges.js on every page once the global nav exists, so the bell
+    // and messages icons get unread-count badges without each page importing it.
+    if (!document.querySelector('script[data-tmr-nav-badges]')) {
+        const navBadgesScript = document.createElement("script");
+        navBadgesScript.src = "/static/js/nav-badges.js?v=20260430a";
+        navBadgesScript.async = true;
+        navBadgesScript.setAttribute("data-tmr-nav-badges", "1");
+        document.head.appendChild(navBadgesScript);
+    }
 
     const meta = routeMeta[currentFile];
     if (meta && currentFile !== "index.html") {
@@ -458,28 +563,28 @@
                 <div class="tmr-global-footer__section">
                     <h3 class="tmr-global-footer__heading">Platform</h3>
                     <div class="tmr-global-footer__links">
-                        <a href="picks/">Make Picks</a>
-                        <a href="arena/">Arena</a>
-                        <a href="premium/">Premium</a>
-                        <a href="profile/">Records</a>
+                        <a href="/sportsbook/">Make Picks</a>
+                        <a href="/arena/">Arena</a>
+                        <a href="/premium/">Premium</a>
+                        <a href="/profile/">Records</a>
                     </div>
                 </div>
                 <div class="tmr-global-footer__section">
                     <h3 class="tmr-global-footer__heading">Community</h3>
                     <div class="tmr-global-footer__links">
-                        <a href="feed/">Feed</a>
-                        <a href="forum/">Forum</a>
-                        <a href="hangout/">Hangout</a>
-                        <a href="trivia/">Trivia</a>
+                        <a href="/feed/">Feed</a>
+                        <a href="/forum/">Forum</a>
+                        <a href="/hangout/">Hangout</a>
+                        <a href="/trivia/">Trivia</a>
                     </div>
                 </div>
                 <div class="tmr-global-footer__section">
                     <h3 class="tmr-global-footer__heading">Info</h3>
                     <div class="tmr-global-footer__links">
-                        <a href="about/">About</a>
-                        <a href="terms/">Terms</a>
-                        <a href="privacy/">Privacy</a>
-                        <a href="report-bug/">Report a Bug</a>
+                        <a href="/about/">About</a>
+                        <a href="/terms/">Terms</a>
+                        <a href="/privacy/">Privacy</a>
+                        <a href="/report-bug/">Report a Bug</a>
                     </div>
                 </div>
             </div>
