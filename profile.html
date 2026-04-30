@@ -10,8 +10,8 @@
     <meta property="og:title" content="User Profile | TrustMyRecord">
     <meta property="og:description" content="Check out my verified handicapping record and stats.">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260429f">
-<script defer src="static/js/tmr-sitewide.js?v=20260429f"></script>
+<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260429g">
+<script defer src="static/js/tmr-sitewide.js?v=20260429g"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1470,39 +1470,39 @@
                         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;">
                             <div class="tmr-chart-stage">
                                 <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Equity curve</div><div class="tmr-chart-stage__sub">Cumulative net units</div></div>
-                                <div class="tmr-chart-stage__canvas">Chart populates when data exists</div>
-                            </div>
-                            <div class="tmr-chart-stage">
-                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Monthly units</div><div class="tmr-chart-stage__sub">Units gained/lost per month</div></div>
-                                <div class="tmr-chart-stage__canvas">Chart populates when data exists</div>
-                            </div>
-                            <div class="tmr-chart-stage">
-                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">ROI by sport</div><div class="tmr-chart-stage__sub">Per-sport return on units risked</div></div>
-                                <div class="tmr-chart-stage__canvas">Chart populates when data exists</div>
-                            </div>
-                            <div class="tmr-chart-stage">
-                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Market type performance</div><div class="tmr-chart-stage__sub">Spread / Total / ML / Props</div></div>
-                                <div class="tmr-chart-stage__canvas">Chart populates when data exists</div>
-                            </div>
-                            <div class="tmr-chart-stage">
-                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Odds range performance</div><div class="tmr-chart-stage__sub">ROI by line bucket</div></div>
-                                <div class="tmr-chart-stage__canvas">Chart populates when data exists</div>
-                            </div>
-                            <div class="tmr-chart-stage">
-                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Unit size performance</div><div class="tmr-chart-stage__sub">ROI by stake size</div></div>
-                                <div class="tmr-chart-stage__canvas">Chart populates when data exists</div>
+                                <div class="tmr-chart-stage__canvas" id="advChartEquity">Chart populates when data exists</div>
                             </div>
                             <div class="tmr-chart-stage">
                                 <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Drawdown</div><div class="tmr-chart-stage__sub">Peak-to-trough sequence</div></div>
-                                <div class="tmr-chart-stage__canvas">Chart populates when data exists</div>
+                                <div class="tmr-chart-stage__canvas" id="advChartDrawdown">Chart populates when data exists</div>
                             </div>
                             <div class="tmr-chart-stage">
                                 <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Recent form</div><div class="tmr-chart-stage__sub">Last 20 graded picks</div></div>
-                                <div class="tmr-chart-stage__canvas">Chart populates when data exists</div>
+                                <div class="tmr-chart-stage__canvas" id="advChartRecentForm">Chart populates when data exists</div>
                             </div>
                             <div class="tmr-chart-stage">
-                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Streak history</div><div class="tmr-chart-stage__sub">W and L runs over time</div></div>
-                                <div class="tmr-chart-stage__canvas">Chart populates when data exists</div>
+                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">ROI by sport</div><div class="tmr-chart-stage__sub">Per-sport return on units risked</div></div>
+                                <div class="tmr-chart-stage__canvas" id="advChartRoiSport">Chart populates when data exists</div>
+                            </div>
+                            <div class="tmr-chart-stage">
+                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Market type performance</div><div class="tmr-chart-stage__sub">Spread / Total / ML / Props</div></div>
+                                <div class="tmr-chart-stage__canvas" id="advChartMarket">Chart populates when data exists</div>
+                            </div>
+                            <div class="tmr-chart-stage">
+                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Odds range performance</div><div class="tmr-chart-stage__sub">ROI by line bucket</div></div>
+                                <div class="tmr-chart-stage__canvas" id="advChartOdds">Chart populates when data exists</div>
+                            </div>
+                            <div class="tmr-chart-stage">
+                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Unit size performance</div><div class="tmr-chart-stage__sub">ROI by stake size</div></div>
+                                <div class="tmr-chart-stage__canvas" id="advChartUnitSize">Chart populates when data exists</div>
+                            </div>
+                            <div class="tmr-chart-stage">
+                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Day of week</div><div class="tmr-chart-stage__sub">ROI by day of week</div></div>
+                                <div class="tmr-chart-stage__canvas" id="advChartDayOfWeek">Chart populates when data exists</div>
+                            </div>
+                            <div class="tmr-chart-stage">
+                                <div class="tmr-chart-stage__head"><div class="tmr-chart-stage__title">Favorite vs Underdog</div><div class="tmr-chart-stage__sub">Side split</div></div>
+                                <div class="tmr-chart-stage__canvas" id="advChartFavDog">Chart populates when data exists</div>
                             </div>
                         </div>
                     </div>
@@ -1517,20 +1517,33 @@
                                 <div class="section-subtitle">Sport / league / market / side / odds-range / period splits. Each split needs enough sample to compute.</div>
                             </div>
                         </div>
-                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;">
-                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">S</div><div class="tmr-cap-card__name"><strong>By sport</strong><span>NFL / NBA / MLB / NHL / NCAA / Soccer / UFC</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
-                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">L</div><div class="tmr-cap-card__name"><strong>By league</strong><span>Per-league record + ROI</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
-                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">M</div><div class="tmr-cap-card__name"><strong>By market</strong><span>Spread / Total / ML / Props / Team Totals / Halves / F5</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
-                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">F</div><div class="tmr-cap-card__name"><strong>Fav vs Dog</strong><span>Performance vs price profile</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Favorite</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Underdog</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
-                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">H</div><div class="tmr-cap-card__name"><strong>Home vs Away</strong><span>Side-of-board split</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Home</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Away</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
-                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">O</div><div class="tmr-cap-card__name"><strong>Over vs Under</strong><span>Totals direction split</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Overs</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Unders</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
-                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">G</div><div class="tmr-cap-card__name"><strong>Game segments</strong><span>1H / 2H / F5 (MLB) / Full game</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
-                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">T</div><div class="tmr-cap-card__name"><strong>Teams</strong><span>Most picked / most faded / most/least profitable</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Top</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
-                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">D</div><div class="tmr-cap-card__name"><strong>By day of week</strong><span>Sun / Mon / ... / Sat ROI</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
-                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">$</div><div class="tmr-cap-card__name"><strong>By odds range</strong><span>Heavy fav / fav / even / dog / longshot</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best bucket</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst bucket</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
-                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">U</div><div class="tmr-cap-card__name"><strong>By unit size</strong><span>0.5–1u / 1.5–2u / 2.5–3u / 3u+</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
-                            <div class="tmr-cap-card"><div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">L</div><div class="tmr-cap-card__name"><strong>Live vs Pre-game</strong><span>Where supported</span></div></div><div class="tmr-cap-card__metrics"><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Pregame</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Live</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div></div>
+                        <div id="advSplitsGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;">
+                            <div class="tmr-cap-card" data-split="by_sport">
+                                <div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">S</div><div class="tmr-cap-card__name"><strong>By sport</strong><span>NFL / NBA / MLB / NHL / NCAA / Soccer / UFC</span></div></div>
+                                <div class="tmr-cap-card__metrics" data-split-body><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div>
+                            </div>
+                            <div class="tmr-cap-card" data-split="by_market">
+                                <div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">M</div><div class="tmr-cap-card__name"><strong>By market</strong><span>ML / Spread / Total / Team Totals / Halves / F5 / Periods / Alts</span></div></div>
+                                <div class="tmr-cap-card__metrics" data-split-body><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div>
+                            </div>
+                            <div class="tmr-cap-card" data-split="by_fav_dog">
+                                <div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">F</div><div class="tmr-cap-card__name"><strong>Favorite vs Underdog</strong><span>Performance vs price profile</span></div></div>
+                                <div class="tmr-cap-card__metrics" data-split-body><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Favorite</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Underdog</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div>
+                            </div>
+                            <div class="tmr-cap-card" data-split="by_odds_bucket">
+                                <div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">$</div><div class="tmr-cap-card__name"><strong>By odds range</strong><span>Heavy fav / fav / even / dog / longshot</span></div></div>
+                                <div class="tmr-cap-card__metrics" data-split-body><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best bucket</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst bucket</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div>
+                            </div>
+                            <div class="tmr-cap-card" data-split="by_unit_size">
+                                <div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">U</div><div class="tmr-cap-card__name"><strong>By unit size</strong><span>0.5–1u / 1.5–2u / 2.5–3u / 3u+</span></div></div>
+                                <div class="tmr-cap-card__metrics" data-split-body><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div>
+                            </div>
+                            <div class="tmr-cap-card" data-split="by_day_of_week">
+                                <div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">D</div><div class="tmr-cap-card__name"><strong>By day of week</strong><span>Sun / Mon / ... / Sat ROI</span></div></div>
+                                <div class="tmr-cap-card__metrics" data-split-body><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div>
+                            </div>
                         </div>
+                        <p style="margin-top:14px;color:var(--tmr-text-muted);font-size:.78rem;">Splits with fewer than 3 graded picks in their bucket stay on the &quot;&mdash;&quot; placeholder per the no-fake-data rule. Once enough picks are graded, the best/worst rows update automatically.</p>
                     </div>
                 </div>
 
@@ -3180,6 +3193,197 @@
                 el.classList.toggle('is-neg', r < 0);
             }
         });
+
+        // Splits cards + charts
+        renderAdvancedSplits(data.splits || {});
+        renderEquityCurveChart(data.equity_curve || []);
+        renderDrawdownChart(data.equity_curve || []);
+        renderRecentFormChart(data.equity_curve || []);
+        renderSplitBars('advChartRoiSport',    data.splits && data.splits.by_sport,        'by_sport');
+        renderSplitBars('advChartMarket',      data.splits && data.splits.by_market,       'by_market');
+        renderSplitBars('advChartOdds',        data.splits && data.splits.by_odds_bucket,  'by_odds_bucket');
+        renderSplitBars('advChartUnitSize',    data.splits && data.splits.by_unit_size,    'by_unit_size');
+        renderSplitBars('advChartDayOfWeek',   data.splits && data.splits.by_day_of_week,  'by_day_of_week');
+        renderSplitBars('advChartFavDog',      data.splits && data.splits.by_fav_dog,      'by_fav_dog');
+    }
+
+    function formatBucketLabel(splitKey, bucketKey) {
+        if (bucketKey == null || bucketKey === '') return '—';
+        const k = String(bucketKey);
+        if (splitKey === 'by_sport')        return k.toUpperCase().replace(/_/g, ' ');
+        if (splitKey === 'by_market')       return k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',even:'Even (±110)',underdog:'Dog (+110 to +200)',big_underdog:'Big Dog (+200+)'})[k] || k;
+        if (splitKey === 'by_fav_dog')      return ({favorite:'Favorite',underdog:'Underdog'})[k] || k;
+        if (splitKey === 'by_unit_size')    return ({'0.5_to_1u':'0.5–1u','1.5_to_2u':'1.5–2u','2.5_to_3u':'2.5–3u','3u_plus':'3u+'})[k] || k;
+        if (splitKey === 'by_day_of_week')  return ({sun:'Sunday',mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday'})[k] || k;
+        return k;
+    }
+
+    function renderAdvancedSplits(splits) {
+        const cards = document.querySelectorAll('#advSplitsGrid [data-split]');
+        cards.forEach(card => {
+            const key  = card.getAttribute('data-split');
+            const body = card.querySelector('[data-split-body]');
+            if (!body) return;
+            const arr = Array.isArray(splits[key]) ? splits[key].filter(b => Number(b.total) >= 3) : [];
+            if (!arr.length) return;
+
+            const cell = (label, b) => {
+                const net = Number(b.net) || 0;
+                const roi = Number(b.roi) || 0;
+                const w = Number(b.wins) || 0, l = Number(b.losses) || 0, p = Number(b.pushes) || 0;
+                const recordWinning = (w + l) > 0 && (w / (w + l)) >= 0.5;
+                const recordCls = recordWinning ? 'is-pos' : (w + l > 0 ? 'is-neg' : '');
+                const netCls    = net > 0 ? 'is-pos' : net < 0 ? 'is-neg' : '';
+                const record    = w + '-' + l + (p ? '-' + p : '');
+                return '<div class="tmr-cap-metric">'
+                    + '<span class="tmr-cap-metric__label">' + label + '</span>'
+                    + '<span class="tmr-cap-metric__value ' + netCls + '">' + (net >= 0 ? '+' : '') + net.toFixed(2) + 'u</span>'
+                    + '<span class="tmr-cap-metric__sub"><span class="' + recordCls + '">' + record + '</span> · ' + (roi >= 0 ? '+' : '') + roi.toFixed(1) + '% ROI</span>'
+                    + '</div>';
+            };
+
+            if (key === 'by_fav_dog') {
+                const fav = arr.find(b => b.key === 'favorite');
+                const dog = arr.find(b => b.key === 'underdog');
+                const cells = [];
+                if (fav) cells.push(cell(formatBucketLabel(key, 'favorite'),  fav));
+                if (dog) cells.push(cell(formatBucketLabel(key, 'underdog'), dog));
+                if (cells.length) body.innerHTML = cells.join('');
+                return;
+            }
+
+            // Best is sorted-by-net desc (already sorted by aggregator), worst is the bottom
+            const top = arr.slice(0, Math.min(3, arr.length));
+            body.innerHTML = top.map(b => cell(formatBucketLabel(key, b.key), b)).join('');
+        });
+    }
+
+    function renderEquityCurveChart(equityCurve) {
+        const el = document.getElementById('advChartEquity');
+        if (!el || !Array.isArray(equityCurve) || equityCurve.length < 2) return;
+        const w = 320, h = 180, padX = 24, padY = 16;
+        const ys = equityCurve.map(p => Number(p.units) || 0);
+        const yMax = Math.max(0, Math.max.apply(null, ys));
+        const yMin = Math.min(0, Math.min.apply(null, ys));
+        const yRng = (yMax - yMin) || 1;
+        const xRng = equityCurve.length - 1 || 1;
+        const sx = i => padX + (i / xRng) * (w - padX * 2);
+        const sy = y => h - padY - ((y - yMin) / yRng) * (h - padY * 2);
+        const d  = equityCurve.map((p, i) => (i ? 'L' : 'M') + sx(i).toFixed(2) + ' ' + sy(Number(p.units) || 0).toFixed(2)).join(' ');
+        const last = ys[ys.length - 1];
+        const stroke = last >= 0 ? '#4ade80' : '#f87171';
+        const fillStop = last >= 0 ? 'rgba(74,222,128,0.18)' : 'rgba(248,113,113,0.18)';
+        const zeroY = sy(0);
+        const fill = d + ' L' + sx(xRng).toFixed(2) + ' ' + zeroY.toFixed(2) + ' L' + sx(0).toFixed(2) + ' ' + zeroY.toFixed(2) + ' Z';
+        el.style.padding = '0';
+        el.style.background = 'transparent';
+        el.style.border = '1px solid rgba(148,163,184,0.16)';
+        el.style.color = 'inherit';
+        el.style.font = 'inherit';
+        el.style.letterSpacing = '0';
+        el.style.textTransform = 'none';
+        el.innerHTML = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">'
+            + '<line x1="' + padX + '" x2="' + (w - padX) + '" y1="' + zeroY.toFixed(2) + '" y2="' + zeroY.toFixed(2) + '" stroke="rgba(255,255,255,0.16)" stroke-dasharray="3 4"/>'
+            + '<path d="' + fill + '" fill="' + fillStop + '" stroke="none"/>'
+            + '<path d="' + d + '" fill="none" stroke="' + stroke + '" stroke-width="2"/>'
+            + '<text x="' + (w - padX) + '" y="' + (padY - 4) + '" text-anchor="end" font-size="10" fill="#94a3b8">'
+            + (last >= 0 ? '+' : '') + last.toFixed(2) + 'u</text>'
+            + '</svg>';
+    }
+
+    function renderDrawdownChart(equityCurve) {
+        const el = document.getElementById('advChartDrawdown');
+        if (!el || !Array.isArray(equityCurve) || equityCurve.length < 2) return;
+        let peak = 0;
+        const dd = equityCurve.map(p => {
+            const u = Number(p.units) || 0;
+            if (u > peak) peak = u;
+            return -(peak - u);
+        });
+        const w = 320, h = 180, padX = 24, padY = 16;
+        const yMin = Math.min.apply(null, dd.concat([0]));
+        const yMax = 0;
+        const yRng = (yMax - yMin) || 1;
+        const xRng = dd.length - 1 || 1;
+        const sx = i => padX + (i / xRng) * (w - padX * 2);
+        const sy = y => h - padY - ((y - yMin) / yRng) * (h - padY * 2);
+        const d  = dd.map((y, i) => (i ? 'L' : 'M') + sx(i).toFixed(2) + ' ' + sy(y).toFixed(2)).join(' ');
+        const fill = d + ' L' + sx(xRng).toFixed(2) + ' ' + sy(0).toFixed(2) + ' L' + sx(0).toFixed(2) + ' ' + sy(0).toFixed(2) + ' Z';
+        const maxDd = Math.abs(Math.min.apply(null, dd));
+        el.style.padding = '0'; el.style.background = 'transparent';
+        el.style.border = '1px solid rgba(148,163,184,0.16)';
+        el.style.color = 'inherit'; el.style.font = 'inherit';
+        el.style.letterSpacing = '0'; el.style.textTransform = 'none';
+        el.innerHTML = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">'
+            + '<path d="' + fill + '" fill="rgba(248,113,113,0.18)" stroke="none"/>'
+            + '<path d="' + d + '" fill="none" stroke="#f87171" stroke-width="2"/>'
+            + '<text x="' + (w - padX) + '" y="' + (padY - 4) + '" text-anchor="end" font-size="10" fill="#94a3b8">'
+            + 'Max DD ' + maxDd.toFixed(2) + 'u</text>'
+            + '</svg>';
+    }
+
+    function renderRecentFormChart(equityCurve) {
+        const el = document.getElementById('advChartRecentForm');
+        if (!el || !Array.isArray(equityCurve) || equityCurve.length < 2) return;
+        const slice = equityCurve.slice(-21);
+        const deltas = [];
+        for (let i = 1; i < slice.length; i++) {
+            deltas.push(Number(slice[i].units) - Number(slice[i - 1].units));
+        }
+        if (!deltas.length) return;
+        const w = 320, h = 180, padX = 16, padY = 18;
+        const maxAbs = Math.max(1, Math.max.apply(null, deltas.map(v => Math.abs(v))));
+        const barW = (w - padX * 2) / deltas.length;
+        const zeroY = h / 2;
+        const bars = deltas.map((v, i) => {
+            const x = padX + i * barW;
+            const bh = (Math.abs(v) / maxAbs) * (h / 2 - padY);
+            const y  = v >= 0 ? zeroY - bh : zeroY;
+            const c  = v > 0 ? '#4ade80' : v < 0 ? '#f87171' : 'rgba(255,255,255,0.3)';
+            return '<rect x="' + (x + 1).toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + Math.max(1, barW - 2).toFixed(1) + '" height="' + Math.max(1, bh).toFixed(1) + '" fill="' + c + '"/>';
+        }).join('');
+        const wins = deltas.filter(v => v > 0).length;
+        const losses = deltas.filter(v => v < 0).length;
+        el.style.padding = '0'; el.style.background = 'transparent';
+        el.style.border = '1px solid rgba(148,163,184,0.16)';
+        el.style.color = 'inherit'; el.style.font = 'inherit';
+        el.style.letterSpacing = '0'; el.style.textTransform = 'none';
+        el.innerHTML = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">'
+            + '<line x1="' + padX + '" x2="' + (w - padX) + '" y1="' + zeroY + '" y2="' + zeroY + '" stroke="rgba(255,255,255,0.16)"/>'
+            + bars
+            + '<text x="' + padX + '" y="' + (padY - 4) + '" font-size="10" fill="#94a3b8">Last ' + deltas.length + ' graded · ' + wins + 'W ' + losses + 'L</text>'
+            + '</svg>';
+    }
+
+    function renderSplitBars(elementId, splitArr, splitKey) {
+        const el = document.getElementById(elementId);
+        if (!el || !Array.isArray(splitArr)) return;
+        const data = splitArr.filter(b => Number(b.total) >= 3).slice(0, 8);
+        if (!data.length) return;
+        const maxAbs = Math.max(1, Math.max.apply(null, data.map(b => Math.abs(Number(b.roi) || 0))));
+        const rows = data.map(b => {
+            const roi   = Number(b.roi) || 0;
+            const pct   = Math.min(100, (Math.abs(roi) / maxAbs) * 100);
+            const color = roi >= 0 ? '#4ade80' : '#f87171';
+            const label = formatBucketLabel(splitKey, b.key);
+            const meta  = (Number(b.wins) || 0) + '-' + (Number(b.losses) || 0) + (b.pushes ? '-' + b.pushes : '');
+            return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
+                + '<div style="flex:0 0 110px;font-size:.72rem;color:#cbd5e1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + label + '">' + label + '</div>'
+                + '<div style="flex:1;background:rgba(255,255,255,0.04);border-radius:4px;height:14px;position:relative;overflow:hidden;">'
+                + '<div style="width:' + pct.toFixed(1) + '%;background:' + color + ';height:100%;opacity:0.78;"></div>'
+                + '</div>'
+                + '<div style="flex:0 0 96px;text-align:right;font-size:.72rem;color:' + color + ';font-weight:700;">' + (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%<span style="color:#64748b;font-weight:500;"> · ' + meta + '</span></div>'
+                + '</div>';
+        }).join('');
+        el.style.padding = '10px 12px';
+        el.style.background = 'rgba(11,23,42,0.4)';
+        el.style.border = '1px solid rgba(148,163,184,0.16)';
+        el.style.display = 'block';
+        el.style.color = 'inherit'; el.style.font = 'inherit';
+        el.style.letterSpacing = '0'; el.style.textTransform = 'none';
+        el.style.alignItems = 'stretch'; el.style.justifyContent = 'flex-start';
+        el.innerHTML = rows;
     }
 
     // ======================== LOAD ALL PICKS ========================
