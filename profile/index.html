@@ -11,8 +11,8 @@
     <meta property="og:title" content="User Profile | TrustMyRecord">
     <meta property="og:description" content="Check out my verified handicapping record and stats.">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430a">
-<script defer src="/static/js/tmr-sitewide.js?v=20260430a"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430d">
+<script defer src="/static/js/tmr-sitewide.js?v=20260430d"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1613,6 +1613,18 @@
                                 <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Avg unit size</span><span class="tmr-cap-metric__value is-placeholder" id="advAvgUnit">—</span></div>
                                 <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Largest unit</span><span class="tmr-cap-metric__value is-placeholder" id="advMaxUnit">—</span></div>
                                 <div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Trust score</span><span class="tmr-cap-metric__value is-placeholder" id="advTrust">—</span></div>
+                            </div>
+
+                            <!-- PickMonitor-style derived metrics. Help text on hover so
+                                 first-timers see what each abbreviation means. Anything
+                                 that lacks enough sample stays on the "—" placeholder. -->
+                            <div class="tmr-cap-card__metrics" style="margin-top:8px;">
+                                <div class="tmr-cap-metric" title="Effective Units (eU): net units normalized to a 3u-per-pick standard. (U / AUR) × 3. Stops max-bet juicing of unit profit."><span class="tmr-cap-metric__label">eU (Effective units)</span><span class="tmr-cap-metric__value is-placeholder" id="advEffectiveUnits">—</span><span class="tmr-cap-metric__sub">Profit normalized to 3u/pick</span></div>
+                                <div class="tmr-cap-metric" title="Effective Win % (eWP): the win rate equivalent if every pick had been at -110 juice. Better than raw WP because it accounts for the prices you actually took."><span class="tmr-cap-metric__label">eWP (Effective win %)</span><span class="tmr-cap-metric__value is-placeholder" id="advEffectiveWP">—</span><span class="tmr-cap-metric__sub">Win % equivalent at -110</span></div>
+                                <div class="tmr-cap-metric" title="Z-Score: standardized skill-vs-luck signal. Z = (W − n·p) / √(n·p·(1−p)) where p is the breakeven hit rate at your average odds (AOP). Higher absolute Z = more likely skill than variance."><span class="tmr-cap-metric__label">Z-Score</span><span class="tmr-cap-metric__value is-placeholder" id="advZScore">—</span><span class="tmr-cap-metric__sub">Skill-vs-luck signal</span></div>
+                                <div class="tmr-cap-metric" title="Average Odds per Pick (AOP). Computed as the average implied probability across picks, then converted back to American — never an arithmetic mean of moneylines."><span class="tmr-cap-metric__label">AOP (Avg odds)</span><span class="tmr-cap-metric__value is-placeholder" id="advAop">—</span><span class="tmr-cap-metric__sub">Avg price per pick</span></div>
+                                <div class="tmr-cap-metric" title="Average Units Risked per Pick (AUR). Mean stake across all settled picks."><span class="tmr-cap-metric__label">AUR (Avg risk)</span><span class="tmr-cap-metric__value is-placeholder" id="advAur">—</span><span class="tmr-cap-metric__sub">Avg stake per pick</span></div>
+                                <div class="tmr-cap-metric" title="Average Daily Picks (ADP). total_picks / days active (first → last locked pick)."><span class="tmr-cap-metric__label">ADP (Picks/day)</span><span class="tmr-cap-metric__value is-placeholder" id="advAdp">—</span><span class="tmr-cap-metric__sub">Volume per day</span></div>
                             </div>
                         </div>
 
@@ -3367,9 +3379,35 @@
             set('advPlUnits', (u >= 0 ? '+' : '') + u.toFixed(1) + 'u', { signed: u });
             const flat = Number(s.pl_flat_dollars || 0);
             set('advPlFlat', (flat >= 0 ? '+$' : '-$') + Math.abs(flat).toFixed(0), { signed: flat });
-            if (s.avg_odds != null) set('advAvgOdds', String(s.avg_odds));
-            if (s.avg_units != null) set('advAvgUnit', Number(s.avg_units).toFixed(2) + 'u');
+            if (s.avg_odds != null) {
+                const aopFmt = (s.avg_odds > 0 ? '+' : '') + s.avg_odds;
+                set('advAvgOdds', aopFmt);
+                set('advAop', aopFmt);
+            }
+            if (s.avg_units != null) {
+                const aurFmt = Number(s.avg_units).toFixed(2) + 'u';
+                set('advAvgUnit', aurFmt);
+                set('advAur', aurFmt);
+            }
             if (s.largest_unit != null) set('advMaxUnit', Number(s.largest_unit).toFixed(2) + 'u');
+            // PickMonitor metrics: eU / eWP / Z / ADP. Each is independently
+            // signed (color-coded from its OWN value).
+            if (s.effective_units != null) {
+                const eu = Number(s.effective_units);
+                set('advEffectiveUnits', (eu >= 0 ? '+' : '') + eu.toFixed(2) + 'u', { signed: eu });
+            }
+            if (s.effective_win_rate != null) {
+                const ewp = Number(s.effective_win_rate);
+                // Breakeven at -110 = 52.38%; color from threshold not units.
+                set('advEffectiveWP', ewp.toFixed(1) + '%', { signed: ewp - 52.38 });
+            }
+            if (s.z_score != null) {
+                const z = Number(s.z_score);
+                set('advZScore', (z >= 0 ? '+' : '') + z.toFixed(2), { signed: z });
+            }
+            if (s.avg_daily_picks != null) {
+                set('advAdp', Number(s.avg_daily_picks).toFixed(2) + ' /day');
+            }
         }
         const st = data.streaks || {};
         if (st.current != null) {
