@@ -8640,6 +8640,309 @@
            navigates to them. /sportsbook/ MUST land on the board. */
         #picks.page-section { display: block !important; min-height: 80vh; }
     </style>
+    <!-- ==================== TMR SPORTSBOOK REDESIGN OVERRIDES (May 2026) ====================
+         CSS-only DraftKings-style reskin. Markup, IDs, onclick handlers,
+         modals, ESPN API hooks — all preserved untouched. Loaded LAST in
+         <head> to win specificity battles against earlier inline styles.
+    -->
+    <style id="tmr-sportsbook-redesign-overrides">
+    :root{
+      --dk-bg:#050a14;
+      --dk-bg-2:#0a1322;
+      --dk-surface:#101b30;
+      --dk-surface-2:#16243f;
+      --dk-surface-3:#1d2f4f;
+      --dk-line:#1f2e48;
+      --dk-line-2:#2c4066;
+      --dk-ink:#f1f5fb;
+      --dk-ink-2:#b9c4d6;
+      --dk-muted:#7a8499;
+      --dk-green:#53d337;
+      --dk-green-2:#3eb423;
+      --dk-red:#ef4444;
+      --dk-gold:#f5b400;
+      --dk-teal:#1fb8d9;
+    }
+    body{
+      background:var(--dk-bg) !important;
+      color:var(--dk-ink) !important;
+      font-family:'Inter',system-ui,-apple-system,sans-serif !important;
+      -webkit-font-smoothing:antialiased;
+    }
+    body .animated-grid{display:none !important}
+    body .container{max-width:1480px !important;padding:0 22px !important}
+
+    /* ===== Sport pill nav (top horizontal bar) ===== */
+    body .sportsbook-sports-nav{
+      background:var(--dk-bg-2) !important;
+      border-bottom:1px solid var(--dk-line) !important;
+      padding:14px 22px !important;
+      display:flex !important;align-items:center;gap:8px !important;
+      overflow-x:auto;white-space:nowrap;
+      margin:0 -22px 22px !important;
+      border-radius:0 !important;
+    }
+    body .sportsbook-sports-nav::-webkit-scrollbar{display:none}
+    body .sportsbook-sports-nav button{
+      background:var(--dk-surface) !important;
+      border:1px solid var(--dk-line) !important;
+      color:var(--dk-ink-2) !important;
+      padding:9px 16px !important;
+      border-radius:999px !important;
+      font:700 13px 'Inter',sans-serif !important;
+      letter-spacing:.02em;
+      cursor:pointer;
+      flex-shrink:0;
+      transition:all .12s;
+    }
+    body .sportsbook-sports-nav button:hover{
+      background:var(--dk-surface-2) !important;
+      color:var(--dk-ink) !important;
+    }
+    body .sportsbook-sports-nav button.active{
+      background:linear-gradient(135deg,var(--dk-green),var(--dk-green-2)) !important;
+      color:#0a1f02 !important;
+      border-color:transparent !important;
+      font-weight:800 !important;
+    }
+
+    /* ===== Generic dark surfaces for all card-like elements ===== */
+    body .page-section,
+    body .sportsbook-tool-page,
+    body .market-board,
+    body .board-card,
+    body .game-card,
+    body .market-card,
+    body .promo-card,
+    body .leaderboard-card,
+    body .arena-card,
+    body .feed-card,
+    body .consensus-card,
+    body .challenge-card,
+    body .stat-card,
+    body .big-stat-card,
+    body .adv-stat-box,
+    body .breakdown-section,
+    body .pending-pick-card,
+    body .pick-row,
+    body .activity-item,
+    body .achievement-badge,
+    body .badge-item,
+    body .benefit-card,
+    body .category-card,
+    body .community-card,
+    body .coming-soon{
+      background:var(--dk-surface) !important;
+      border:1px solid var(--dk-line) !important;
+      border-radius:14px !important;
+      box-shadow:none !important;
+      color:var(--dk-ink) !important;
+    }
+
+    /* Section headings */
+    body h1,body h2,body h3,body h4,body h5{
+      color:var(--dk-ink) !important;
+      font-family:'Inter',sans-serif !important;
+      letter-spacing:-.01em !important;
+    }
+    body p,body li,body span,body div{color:inherit}
+    body small,body .muted,body .secondary{color:var(--dk-muted) !important}
+
+    /* Buttons */
+    body button:not(.sportsbook-sports-nav button):not(.close-modal),
+    body .btn,
+    body .bet-pick-btn,
+    body .add-teams-btn,
+    body .become-seller-btn{
+      background:var(--dk-surface-2) !important;
+      border:1px solid var(--dk-line-2) !important;
+      color:var(--dk-ink) !important;
+      border-radius:10px !important;
+      font-family:'Inter',sans-serif !important;
+      font-weight:600 !important;
+      cursor:pointer;
+      transition:all .12s;
+    }
+    body button:not(.sportsbook-sports-nav button):hover,
+    body .btn:hover,
+    body .bet-pick-btn:hover{
+      background:var(--dk-surface-3) !important;
+      border-color:var(--dk-line-2) !important;
+    }
+    body .btn-primary,
+    body .primary,
+    body button.primary,
+    body .lock-pick-btn,
+    body .place-bet-btn{
+      background:linear-gradient(135deg,var(--dk-green),var(--dk-green-2)) !important;
+      color:#0a1f02 !important;
+      border:0 !important;
+      font-weight:800 !important;
+    }
+    body .btn-primary:hover{filter:brightness(1.1)}
+
+    /* Bet pick / odds buttons */
+    body .bet-pick-btn{
+      background:var(--dk-bg-2) !important;
+      border:1px solid var(--dk-line) !important;
+      color:var(--dk-ink) !important;
+      padding:10px 12px !important;
+      font-family:'JetBrains Mono','Inter',monospace !important;
+      font-weight:700 !important;
+    }
+    body .bet-pick-btn:hover{
+      background:var(--dk-surface-3) !important;
+      border-color:var(--dk-green) !important;
+    }
+    body .bet-pick-btn.active,
+    body .bet-pick-btn.selected{
+      background:linear-gradient(135deg,rgba(83,211,55,.22),rgba(83,211,55,.08)) !important;
+      box-shadow:inset 0 0 0 1px var(--dk-green) !important;
+      color:var(--dk-ink) !important;
+    }
+
+    /* Inputs / selects / textareas */
+    body input[type=text],
+    body input[type=email],
+    body input[type=number],
+    body input[type=search],
+    body input[type=password],
+    body input[type=url],
+    body select,
+    body textarea{
+      background:var(--dk-bg-2) !important;
+      border:1px solid var(--dk-line-2) !important;
+      color:var(--dk-ink) !important;
+      border-radius:10px !important;
+      font-family:'Inter',sans-serif !important;
+      padding:9px 12px !important;
+      outline:none !important;
+    }
+    body input:focus,
+    body select:focus,
+    body textarea:focus{
+      border-color:var(--dk-green) !important;
+    }
+
+    /* Modals */
+    body .modal,
+    body .modal-overlay{
+      background:rgba(5,10,20,.78) !important;
+      backdrop-filter:blur(4px);
+    }
+    body .modal-content,
+    body .modal-box{
+      background:var(--dk-surface) !important;
+      border:1px solid var(--dk-line-2) !important;
+      border-radius:16px !important;
+      box-shadow:0 30px 80px rgba(0,0,0,.6) !important;
+      color:var(--dk-ink) !important;
+    }
+    body .close-modal{
+      background:transparent !important;
+      color:var(--dk-ink-2) !important;
+      border:0 !important;
+      font-size:24px !important;
+      cursor:pointer;
+    }
+    body .close-modal:hover{color:var(--dk-red) !important}
+
+    /* Pills / badges (win/loss/pending) */
+    body .pill,
+    body .badge,
+    body .status-pill{
+      border-radius:6px !important;
+      padding:3px 9px !important;
+      font:800 10px 'Inter',sans-serif !important;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+    }
+    body .pill.win,body .badge.win,body .status-win,body .pick-result.win,body .result-win{
+      background:rgba(83,211,55,.16) !important;color:var(--dk-green) !important;
+    }
+    body .pill.loss,body .badge.loss,body .status-loss,body .pick-result.loss,body .result-loss{
+      background:rgba(239,68,68,.16) !important;color:#f87171 !important;
+    }
+    body .pill.pending,body .badge.pending,body .status-pending,body .pick-result.pending,body .result-pending{
+      background:rgba(245,180,0,.16) !important;color:var(--dk-gold) !important;
+    }
+    body .positive{color:var(--dk-green) !important;font-family:'JetBrains Mono',monospace}
+    body .negative{color:#f87171 !important;font-family:'JetBrains Mono',monospace}
+
+    /* Tabs (arena, sportsbook section tabs, etc.) */
+    body .arena-tab,
+    body .arena-poll-filter,
+    body .bt-toggle-btn,
+    body .bt-scope-btn,
+    body [data-sportsbook-tab]:not(.sportsbook-sports-nav button){
+      background:var(--dk-surface-2) !important;
+      border:1px solid var(--dk-line) !important;
+      color:var(--dk-ink-2) !important;
+      border-radius:8px !important;
+      padding:7px 14px !important;
+      font:600 12px 'Inter',sans-serif !important;
+      cursor:pointer;
+    }
+    body .arena-tab.active,
+    body .arena-poll-filter.active,
+    body .bt-toggle-btn.active{
+      background:var(--dk-surface-3) !important;
+      color:var(--dk-ink) !important;
+      border-color:var(--dk-line-2) !important;
+    }
+
+    /* Stat values — monospaced */
+    body .big-stat-value,
+    body .adv-stat-value,
+    body .stat-value{
+      font-family:'JetBrains Mono','Inter',monospace !important;
+      font-weight:700 !important;
+      color:var(--dk-ink) !important;
+      letter-spacing:-.02em !important;
+    }
+    body .big-stat-label,
+    body .adv-stat-label,
+    body .stat-label{
+      color:var(--dk-muted) !important;
+      letter-spacing:.14em !important;
+      text-transform:uppercase !important;
+      font-weight:700 !important;
+      font-size:10.5px !important;
+    }
+
+    /* Tables */
+    body table{
+      background:var(--dk-surface) !important;
+      border:1px solid var(--dk-line) !important;
+      border-radius:10px;
+      overflow:hidden;
+      border-collapse:collapse;
+    }
+    body th{
+      background:var(--dk-surface-2) !important;
+      color:var(--dk-muted) !important;
+      font:700 10.5px 'Inter',sans-serif !important;
+      text-transform:uppercase;letter-spacing:.12em;
+      padding:10px 12px !important;
+      border-bottom:1px solid var(--dk-line) !important;
+      text-align:left;
+    }
+    body td{
+      padding:11px 12px !important;
+      border-bottom:1px solid var(--dk-line) !important;
+      color:var(--dk-ink) !important;
+      background:transparent !important;
+    }
+    body tr:hover td{background:var(--dk-surface-2) !important}
+    body tr:last-child td{border-bottom:0 !important}
+
+    /* Notifications panel left hidden, but ensure styles don't bleed */
+    body #notificationsPanel{display:none !important}
+
+    /* Links inside the sportsbook */
+    body a:not(.sportsbook-sports-nav a){color:var(--dk-teal)}
+    body a:not(.sportsbook-sports-nav a):hover{color:#3dd0ed;text-decoration:underline}
+    </style>
 </head>
 <body>
     <script>
