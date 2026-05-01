@@ -1665,6 +1665,43 @@
             var avatarHint  = document.getElementById('profileAvatarHint');
 
             if (uploaderEl) uploaderEl.hidden = false;
+
+            // Make the avatar in the profile header clickable so the file
+            // picker is one tap away — owners no longer need to scroll to the
+            // pill below the prompt.
+            try {
+                document.body.classList.add('tmrx-is-own-profile');
+                const wireAvatarClick = () => {
+                    const avatarBox = document.querySelector('#profileHeader .profile-avatar');
+                    if (!avatarBox || avatarBox.dataset.tmrxAvatarWired === '1') return false;
+                    avatarBox.dataset.tmrxAvatarWired = '1';
+                    avatarBox.style.cursor = 'pointer';
+                    avatarBox.title = 'Change avatar';
+                    avatarBox.setAttribute('role', 'button');
+                    avatarBox.setAttribute('tabindex', '0');
+                    avatarBox.setAttribute('aria-label', 'Change avatar');
+                    if (!avatarBox.querySelector('.tmrx-avatar-edit-overlay')) {
+                        const overlay = document.createElement('div');
+                        overlay.className = 'tmrx-avatar-edit-overlay';
+                        overlay.innerHTML = '<i class="fas fa-camera"></i><span>Change</span>';
+                        avatarBox.appendChild(overlay);
+                    }
+                    const triggerPicker = () => { if (fileInput) fileInput.click(); };
+                    avatarBox.addEventListener('click', triggerPicker);
+                    avatarBox.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); triggerPicker(); }
+                    });
+                    return true;
+                };
+                if (!wireAvatarClick()) {
+                    let attempts = 0;
+                    const wireT = setInterval(() => {
+                        attempts++;
+                        if (wireAvatarClick() || attempts > 40) clearInterval(wireT);
+                    }, 250);
+                }
+            } catch (_) {}
+
             var skippedKey = 'tmr_profile_setup_skipped_' + (p.username || 'x');
             if (promptEl && setupNeeded && !localStorage.getItem(skippedKey)) {
                 promptEl.hidden = false;
@@ -8620,6 +8657,27 @@
          same autograder + statsAggregator pipeline, just a cleaner UI.
          ============================================================ -->
     <style id="tmrx-stats-redesign-css">
+      /* Avatar click-to-upload overlay (own profile only). Sits on top of the
+         existing .profile-avatar so the file picker is reachable without
+         scrolling to the pill below. */
+      body.tmrx-is-own-profile #profileHeader .profile-avatar { position: relative; overflow: hidden; }
+      .tmrx-avatar-edit-overlay {
+        position: absolute; inset: auto 0 0 0; height: 36%;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 2px;
+        background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.78) 100%);
+        color: #f1f5fb;
+        font: 800 9.5px/1 'Inter', sans-serif;
+        letter-spacing: .14em; text-transform: uppercase;
+        opacity: 0; transition: opacity .15s ease;
+        pointer-events: none;
+      }
+      .tmrx-avatar-edit-overlay i { font-size: 14px; }
+      body.tmrx-is-own-profile #profileHeader .profile-avatar:hover .tmrx-avatar-edit-overlay,
+      body.tmrx-is-own-profile #profileHeader .profile-avatar:focus-visible .tmrx-avatar-edit-overlay {
+        opacity: 1;
+      }
+
       body.profile-page.tmr-social-profile.tmrx-stats-fullwidth .profile-body-grid {
         grid-template-columns: 1fr !important;
         max-width: 1480px !important;
