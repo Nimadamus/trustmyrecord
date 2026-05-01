@@ -80,6 +80,7 @@
         var path = window.location.pathname.replace(/^\/+|\/+$/g, '');
         var query = window.location.search;
         var hash = window.location.hash;
+        var profilePathMatch = path.match(/^profile\/([^\/?#]+)$/i);
         var legacyRouteMap = {
             '': '',
             'home': '',
@@ -103,7 +104,13 @@
         };
 
         var mappedRoute = legacyRouteMap[path];
-        if (mappedRoute) {
+        if (profilePathMatch) {
+            var profileQuery = '?user=' + encodeURIComponent(decodeURIComponent(profilePathMatch[1])) +
+                (query ? '&' + query.slice(1) : '');
+            window.location.replace(
+                window.location.origin + '/profile/' + profileQuery + hash
+            );
+        } else if (mappedRoute) {
             window.location.replace(window.location.origin + '/' + mappedRoute);
         } else {
             // Preserve unknown paths for index-level recovery when needed.
