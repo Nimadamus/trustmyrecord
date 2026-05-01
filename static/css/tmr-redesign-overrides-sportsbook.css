@@ -757,19 +757,24 @@ html body #picks .sportsbook-sport-tabs{
    No markup change. No JS change. CSS only.
 ============================================================================ */
 
-/* v8.1 — Final 4-col layout cleanup:
-   - Less greedy matchup (1.3fr, was 1.7fr) so it sits closer to the left
-   - More dominant Total (1.4fr, was 1.2fr) so it ends meaningfully wide
-   - Equal padding 16/16 inside the row so visual margins are symmetric
-   - Action button + Action header explicitly removed from grid via
-     grid-column placement, not just display:none, so no ghost track */
+/* v8.2 — Aggressive floor reduction so the 4-col row ALWAYS fits
+   inside the shell content width. Total column never gets clipped.
+
+   Math at the tightest realistic center column (viewport 1280px,
+   picks-layout 244 / 1fr / 340 / 22*2 gaps / 24*2 padding):
+     center = 1280 - 244 - 340 - 44 - 48 = 604px
+     shell content (border 2 + my padding 0) = 602px
+     row content (after 12+12 padding) = 578px
+   Floors sum: 180 + 85 + 85 + 110 = 460
+   Plus gap 3*10 = 30, plus padding 24 = 514px row min.
+   514 < 578 -> row fits with 64px of slack distributed across columns. */
 body[data-tmr-test-route="sportsbook"] #picks .sb-board-row,
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-grid-head{
-  grid-template-columns: minmax(220px, 1.3fr) minmax(105px, 1fr) minmax(105px, 1fr) minmax(130px, 1.4fr) !important;
+  grid-template-columns: minmax(180px, 1.3fr) minmax(85px, 1fr) minmax(85px, 1fr) minmax(110px, 1.3fr) !important;
   grid-template-areas: none !important;
-  gap: 0 12px !important;
-  padding-left: 16px !important;
-  padding-right: 16px !important;
+  gap: 0 10px !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
 }
 
 /* Hide the 'Action' header span (5th span in .sportsbook-board-grid-head).
@@ -811,11 +816,15 @@ body[data-tmr-test-route="sportsbook"] #picks .sb-board-row .sb-board-action{
   top: -99999px !important;
 }
 
-/* Shell can hold its overflow:hidden now — the 4-column row fits cleanly. */
+/* Per user requirement: do NOT hide overflow in a way that could clip
+   the Total column. With the aggressive floor reduction above, the row
+   should always fit, but if any edge case overflows, the Total column
+   stays visible (extends slightly past the shell border) instead of
+   disappearing behind a clipped right edge. */
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-shell,
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-stage-panel,
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-selector-shell{
-  overflow-x: hidden !important;
+  overflow-x: visible !important;
   overflow-y: visible !important;
 }
 
