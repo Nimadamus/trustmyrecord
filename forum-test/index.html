@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://trustmyrecord.com/forum/">
+<meta name="robots" content="noindex,nofollow">
+<title>[TEST] Forum 2+2 Redesign | TrustMyRecord</title>
+<meta name="description" content="TrustMyRecord forums. Classic bulletin board sports betting discussion. Picks, handicappers, marketplace, challenges, polls, trivia, and verified records.">
+<meta name="keywords" content="sports betting forum, sports handicapping forum, MLB betting forum, NBA betting forum, NFL betting forum, verified handicapper forum">
+<meta property="og:title" content="TrustMyRecord Forums - Sports Betting Discussion">
+<meta property="og:url" content="https://trustmyrecord.com/forum/">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260501">
+<style>
+/* =====================================================================
+   TrustMyRecord Forums - dark 2+2 redesign (May 2026)
+   Class names preserved 1:1 from prior version so all dynamic JS keeps
+   working. Only the visuals change.
+   ===================================================================== */
+:root{
+  --bg:#0a0e18;
+  --surface:#111827;
+  --surface-2:#1a2236;
+  --surface-3:#222b42;
+  --line:#27314a;
+  --line-2:#34405c;
+  --ink:#e6ecf5;
+  --ink-2:#aab4ca;
+  --muted:#7a8499;
+  --link:#5fb3ff;
+  --link-h:#8accff;
+  --gold:#f5b400;
+  --green:#22c55e;
+  --red:#ef4444;
+  --teal:#1fb8d9;
+  --maroon:#7a1f2b;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,-apple-system,sans-serif;font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--link);text-decoration:none}
+a:hover{color:var(--link-h);text-decoration:underline}
+
+/* Top header band */
+.fhead{background:linear-gradient(180deg,var(--surface-2),var(--surface));border-bottom:1px solid var(--line);position:relative;z-index:1}
+.fhead-in{max-width:1280px;margin:0 auto;padding:14px 22px;display:flex;align-items:center;gap:18px}
+.fhead-logo{color:var(--ink);font:800 18px 'Inter',sans-serif;letter-spacing:-.01em;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.fhead-logo b{color:var(--gold);font-weight:900}
+.fhead-search{flex:1;display:flex;gap:0;max-width:360px;background:var(--bg);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.fhead-search input{flex:1;padding:8px 12px;border:0;background:transparent;color:var(--ink);font:14px 'Inter',sans-serif;outline:none}
+.fhead-search button{padding:6px 14px;background:var(--surface-3);color:var(--ink);border:0;border-left:1px solid var(--line);font:600 12px 'Inter',sans-serif;cursor:pointer;text-transform:uppercase;letter-spacing:.04em}
+.fhead-search button:hover{background:var(--teal);color:#03212a}
+.fhead-links{display:flex;gap:18px;align-items:center;font-size:13px}
+.fhead-links a,.fhead-links button{color:var(--ink-2);text-decoration:none;background:transparent;border:0;padding:0;font:600 13px 'Inter',sans-serif;cursor:pointer}
+.fhead-links a:hover,.fhead-links button:hover{color:var(--teal);text-decoration:none}
+
+/* Horizontal nav tabs */
+.ftabs{background:var(--surface);border-bottom:1px solid var(--line)}
+.ftabs-in{max-width:1280px;margin:0 auto;padding:0 22px;display:flex;gap:2px}
+.ftabs a,.ftabs button{color:var(--ink-2);background:transparent;border:0;padding:10px 16px;font:700 12px 'Inter',sans-serif;text-decoration:none;cursor:pointer;letter-spacing:.04em;text-transform:uppercase;border-bottom:2px solid transparent}
+.ftabs a:hover,.ftabs button:hover{color:var(--ink);background:var(--surface-2);text-decoration:none}
+.ftabs a.is-active,.ftabs button.is-active{color:var(--teal);border-bottom-color:var(--teal)}
+
+/* Main shell */
+.fshell{max-width:1280px;margin:18px auto 60px;padding:0 22px;display:grid;grid-template-columns:240px 1fr;gap:20px;align-items:flex-start}
+.fside{display:flex;flex-direction:column;gap:14px;position:sticky;top:18px;align-self:flex-start}
+.fmain{min-width:0}
+
+/* Sidebar */
+.fside table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.fside .fside-head{background:var(--surface-2);color:var(--ink-2);font:700 10.5px 'Inter',sans-serif;text-transform:uppercase;letter-spacing:.14em;padding:9px 12px;border-bottom:1px solid var(--line)}
+.fside td.fside-row{background:transparent;border-bottom:1px solid var(--line);padding:0}
+.fside tr:last-child td.fside-row{border-bottom:0}
+.fside tr:nth-child(odd) td.fside-row{background:transparent}
+.fside td.fside-row a{display:block;padding:7px 12px;font:500 13px 'Inter',sans-serif;color:var(--ink-2);text-decoration:none;border-radius:6px;margin:1px 4px}
+.fside td.fside-row a:hover{background:var(--surface-2);color:var(--ink);text-decoration:none}
+.fside td.fside-row a.is-active{background:var(--surface-3);color:var(--teal);font-weight:700}
+
+/* Breadcrumb */
+.fcrumb{padding:9px 14px;background:var(--surface);border:1px solid var(--line);border-radius:10px 10px 0 0;border-bottom:0;font:13px 'Inter',sans-serif;color:var(--muted)}
+.fcrumb a{color:var(--ink-2);font-weight:600;cursor:pointer}
+.fcrumb a:hover{color:var(--teal);text-decoration:underline}
+.fcrumb .sep{color:var(--muted);padding:0 6px}
+
+/* Title bar (was maroon, now elevated dark with accent) */
+.ftitle{background:linear-gradient(135deg,var(--surface-3),var(--surface-2));color:var(--ink);border-left:1px solid var(--line);border-right:1px solid var(--line);padding:14px 18px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);position:relative}
+.ftitle:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--teal),var(--gold))}
+.ftitle h1{font:800 18px 'Inter',sans-serif;color:var(--ink);margin:0;letter-spacing:-.01em}
+.ftitle p{color:var(--ink-2);font-size:12px;margin:3px 0 0 0}
+
+/* Stats strip */
+.fstats{padding:9px 14px;background:var(--surface);border-left:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);font:12px 'Inter',sans-serif;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:18px}
+.fstats span{margin-right:0}
+.fstats b{font-weight:700;color:var(--ink);font-family:'JetBrains Mono',monospace}
+
+/* Forum group table */
+.fgroup-table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:0 0 14px 0}
+.fgroup-table tr.fgroup-band td{background:linear-gradient(180deg,var(--surface-3),var(--surface-2));color:var(--ink);font:800 11.5px 'Inter',sans-serif;padding:9px 14px;text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line)}
+.fgroup-table tr.fgroup-band td.fgroup-meta{text-align:right;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:.04em;font-size:11px}
+.fgroup-table tr.fcol-head td{background:var(--surface-2);color:var(--muted);font:700 10.5px 'Inter',sans-serif;padding:7px 14px;text-align:left;text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--line)}
+.fgroup-table tr.fcol-head td.col-num,.fgroup-table tr.fcol-head td.col-last{text-align:center}
+.fgroup-table tr.fcol-head td.col-num{width:80px}
+.fgroup-table tr.fcol-head td.col-last{width:230px;text-align:left}
+.fgroup-table td.fcell{background:transparent;color:var(--ink);padding:11px 14px;vertical-align:top;border-bottom:1px solid var(--line);font-size:13px}
+.fgroup-table tr:last-child td.fcell{border-bottom:0}
+.fgroup-table tr.row-alt td.fcell{background:rgba(255,255,255,.012)}
+.fgroup-table tr.frow:hover td.fcell{background:var(--surface-2);cursor:pointer}
+.fgroup-table td.col-num{text-align:center;color:var(--ink-2);width:80px;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px}
+.fgroup-table td.col-last{width:230px;color:var(--ink-2);font-size:12px}
+
+/* Forum row inner */
+.frowinner{display:flex;gap:12px;align-items:flex-start}
+.ffolder{flex:0 0 22px;width:22px;height:22px;background:var(--surface-3);border:1px solid var(--line-2);border-radius:6px;margin-top:1px;display:flex;align-items:center;justify-content:center;color:var(--ink-2);font-size:11px;font-weight:700;position:relative}
+.ffolder::before{content:"#";color:var(--muted)}
+.ffolder.is-pinned{background:linear-gradient(135deg,rgba(245,180,0,.2),rgba(245,180,0,.08));border-color:rgba(245,180,0,.4);color:var(--gold)}
+.ffolder.is-pinned::before{content:""}
+.ffolder.is-pinned::after{content:"★";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:11px;line-height:1}
+.fname{font:700 14px 'Inter',sans-serif;color:var(--link);text-decoration:none}
+.fname:hover{color:var(--link-h);text-decoration:underline}
+.fdesc{color:var(--muted);font-size:12px;margin-top:3px;line-height:1.45}
+.flpost-title{color:var(--ink);font:600 12.5px 'Inter',sans-serif}
+.flpost-title a{color:var(--link)}
+.flpost-meta{color:var(--muted);font-size:11px;margin-top:2px}
+.flpost-meta b{color:var(--ink-2);font-weight:600}
+.flpost-empty{color:var(--muted);font-style:italic;font-size:11.5px}
+
+/* Action row */
+.factionrow{background:var(--surface);border-left:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:9px 14px;display:flex;gap:8px;align-items:center;border-radius:0 0 10px 10px;margin-bottom:14px}
+.factionrow input[type="search"]{margin-left:auto;padding:6px 10px;border:1px solid var(--line-2);background:var(--bg);color:var(--ink);font:13px 'Inter',sans-serif;min-width:200px;border-radius:7px;outline:none}
+.factionrow input[type="search"]:focus{border-color:var(--teal)}
+.fbtn{padding:7px 14px;font:700 12px 'Inter',sans-serif;background:var(--surface-2);border:1px solid var(--line-2);color:var(--ink);cursor:pointer;border-radius:8px;letter-spacing:.04em;transition:all .12s}
+.fbtn:hover{background:var(--surface-3);color:var(--ink);border-color:var(--line-2)}
+.fbtn.is-primary{background:linear-gradient(135deg,var(--teal),#0e95b3);border-color:transparent;color:#03212a;font-weight:800}
+.fbtn.is-primary:hover{filter:brightness(1.1);color:#03212a}
+
+/* Forum jump */
+.fjump{background:var(--surface);border:1px solid var(--line);border-top:0;padding:8px 14px;font:13px 'Inter',sans-serif;display:flex;align-items:center;gap:8px;border-radius:0 0 10px 10px;color:var(--ink-2);margin-top:-14px;margin-bottom:14px}
+.fjump select{padding:6px 10px;border:1px solid var(--line-2);background:var(--bg);color:var(--ink);font:12px 'Inter',sans-serif;border-radius:7px;outline:none}
+
+/* Thread detail */
+.fthread-post{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin:0 0 12px 0;display:grid;grid-template-columns:180px 1fr;overflow:hidden}
+.fthread-author{background:var(--surface-2);border-right:1px solid var(--line);padding:14px;font-size:12px;color:var(--ink-2)}
+.fthread-author b{color:var(--ink);font-size:13px;display:block;margin-bottom:4px;font-weight:700}
+.fthread-body{padding:14px 18px;font-size:14px;line-height:1.6;color:var(--ink)}
+.fthread-body .meta{color:var(--muted);font-size:11.5px;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:10px}
+.freply{margin:14px 0 0 0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
+.freply h3{font:700 14px 'Inter',sans-serif;margin:0 0 10px 0;color:var(--ink)}
+.freply textarea{width:100%;min-height:110px;padding:10px;border:1px solid var(--line-2);background:var(--bg);color:var(--ink);font:13px 'Inter',sans-serif;resize:vertical;border-radius:8px;outline:none}
+.freply textarea:focus{border-color:var(--teal)}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,5,16,.75);backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center}
+.modal-overlay.is-open{display:flex}
+.modal-box{width:520px;max-width:92%;background:var(--surface);border:1px solid var(--line-2);border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,.6);overflow:hidden}
+.modal-head{background:var(--surface-2);color:var(--ink);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}
+.modal-head h3{font:700 14px 'Inter',sans-serif;margin:0}
+.modal-head .close-btn{background:transparent;color:var(--ink-2);border:0;font-size:22px;cursor:pointer;line-height:1;padding:0 4px}
+.modal-head .close-btn:hover{color:var(--red)}
+.modal-body{padding:16px}
+.modal-body label{display:block;font-weight:700;margin:10px 0 5px 0;color:var(--ink-2);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.modal-body input[type="text"],.modal-body textarea{width:100%;padding:9px 11px;border:1px solid var(--line-2);background:var(--bg);color:var(--ink);font:13px 'Inter',sans-serif;border-radius:8px;outline:none}
+.modal-body input[type="text"]:focus,.modal-body textarea:focus{border-color:var(--teal)}
+.modal-body textarea{resize:vertical;min-height:120px}
+.btn{padding:8px 16px;font:700 12px 'Inter',sans-serif;cursor:pointer;border-radius:8px;letter-spacing:.04em}
+.btn-primary{background:linear-gradient(135deg,var(--teal),#0e95b3);color:#03212a;border:1px solid transparent;font-weight:800}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-outline{background:var(--surface-2);color:var(--ink);border:1px solid var(--line-2)}
+.btn-outline:hover{background:var(--surface-3)}
+
+.fempty{padding:30px 16px;text-align:center;color:var(--muted);font:italic 13px 'Inter',sans-serif;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+
+/* Loading state polish */
+.tmr-loading-state{padding:60px 20px;text-align:center;color:var(--muted)}
+.tmr-spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--teal);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tmr-loading-slow{font-size:12px;margin-top:8px}
+.tmr-loading-retry{margin-top:14px}
+.tmr-loading-retry button{padding:8px 16px;background:var(--teal);color:#03212a;border:0;border-radius:8px;font:700 12px 'Inter',sans-serif;cursor:pointer}
+
+/* Search result thread title (used by JS in search results) */
+.tmr-fb-thread-title{color:var(--link);font-weight:700}
+.tmr-fb-thread-title:hover{color:var(--link-h)}
+
+@media (max-width:980px){
+  .fshell{grid-template-columns:1fr}
+  .fside{position:static;display:none}
+  .fhead-links{display:none}
+  .fhead-search{max-width:none}
+  .ftabs-in{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+  .ftabs-in::-webkit-scrollbar{display:none}
+  .fgroup-table tr.fcol-head td.col-last,
+  .fgroup-table td.col-last{display:none}
+  .fthread-post{grid-template-columns:1fr}
+  .fthread-author{border-right:0;border-bottom:1px solid var(--line)}
+}
+</style>
+<link rel="stylesheet" href="/static/css/tmr-redesign-test.css?v=20260501a">
+</head>
+<body data-tmr-test-route="forum">
+<!-- ==================== TEST ROUTE BANNER ====================
+     /forum-test/ is a fork of the live /forum/ page used to validate the
+     2+2-style forum redesign with the real backend, real auth, real
+     threads/replies. Not for public use. -->
+<div style="position:sticky;top:0;z-index:100000;background:linear-gradient(90deg,#fbbf24,#f59e0b);color:#1a1208;padding:8px 18px;font:800 12px 'Inter',system-ui,sans-serif;text-align:center;letter-spacing:.06em;text-transform:uppercase;border-bottom:2px solid #92400e;">
+  TEST ROUTE · /forum-test/ · 2+2 redesign on real production code · <a href="/forum/" style="color:#1a1208;text-decoration:underline">go to live /forum/</a>
+</div>
+
+<div class="fhead">
+    <div class="fhead-in">
+        <a href="/" class="fhead-logo">TRUST<b>MY</b>RECORD Forums</a>
+        <div class="fhead-search">
+            <input type="search" id="searchInput" placeholder="Search forums" onkeyup="if(event.key==='Enter')handleSearch(this.value)" autocomplete="off">
+            <button type="button" onclick="handleSearch(document.getElementById('searchInput').value)">Search</button>
+        </div>
+        <div class="fhead-links" id="forumTopNav">
+            <a href="/messages/">Messages</a>
+            <a href="/notifications/">Alerts</a>
+            <a href="/profile/" id="forumTopProfileLink" style="display:none;">Profile</a>
+            <a href="/login/" id="forumTopLoginLink">Log In</a>
+            <a href="/register/" id="forumTopRegisterLink">Register</a>
+            <button type="button" onclick="logoutForumTop()" id="forumTopLogoutBtn" style="display:none;">Log Out</button>
+        </div>
+    </div>
+</div>
+
+<div class="ftabs">
+    <div class="ftabs-in">
+        <a href="#" onclick="event.preventDefault();showCategories();">Forum Home</a>
+        <a href="#" onclick="event.preventDefault();showCategories();">Today's Posts</a>
+        <a href="#" onclick="event.preventDefault();showCategories();">Mark Forums Read</a>
+        <a href="/notifications/">Subscribed Threads</a>
+        <a href="/handicappers/">Members</a>
+        <a href="/about/">FAQ</a>
+        <button type="button" onclick="openNewThread()">New Thread</button>
+    </div>
+</div>
+
+<div class="fshell">
+
+    <aside class="fside" aria-label="Forum categories">
+        <table cellpadding="0" cellspacing="0">
+            <thead><tr><td class="fside-head">Sports &amp; Games</td></tr></thead>
+            <tbody>
+                <tr><td class="fside-row"><a data-cat-slug="general-betting" onclick="onSidebarPick(this,'general-betting','Sports Betting')">Sports Betting</a></td></tr>
+                <tr><td class="fside-row"><a data-cat-slug="mlb" onclick="onSidebarPick(this,'mlb','MLB')">MLB</a></td></tr>
+                <tr><td class="fside-row"><a data-cat-slug="nfl" onclick="onSidebarPick(this,'nfl','NFL')">NFL</a></td></tr>
+                <tr><td class="fside-row"><a data-cat-slug="nba" onclick="onSidebarPick(this,'nba','NBA')">NBA</a></td></tr>
+                <tr><td class="fside-row"><a data-cat-slug="nhl" onclick="onSidebarPick(this,'nhl','NHL')">NHL</a></td></tr>
+                <tr><td class="fside-row"><a data-cat-slug="college-football" onclick="onSidebarPick(this,'college-football','College Football')">College Football</a></td></tr>
+                <tr><td class="fside-row"><a data-cat-slug="college-basketball" onclick="onSidebarPick(this,'college-basketball','College Basketball')">College Basketball</a></td></tr>
+                <tr><td class="fside-row"><a data-cat-slug="fantasy" onclick="onSidebarPick(this,'fantasy','Fantasy Sports')">Fantasy Sports</a></td></tr>
+                <tr><td class="fside-row"><a data-cat-slug="golf" onclick="onSidebarPick(this,'golf','Golf')">Golf</a></td></tr>
+                <tr><td class="fside-row"><a data-cat-slug="video-games" onclick="onSidebarPick(this,'video-games','Video Games')">Video Games</a></td></tr>
+            </tbody>
+        </table>
+        <table cellpadding="0" cellspacing="0">
+            <thead><tr><td class="fside-head">Community</td></tr></thead>
+            <tbody>
+                <tr><td class="fside-row"><a data-cat-slug="general-discussion" onclick="onSidebarPick(this,'general-discussion','General Discussion')">General Discussion</a></td></tr>
+                <tr><td class="fside-row"><a data-cat-slug="trash-talk" onclick="onSidebarPick(this,'trash-talk','Trash Talk')">Trash Talk</a></td></tr>
+                <tr><td class="fside-row"><a data-cat-slug="site-feedback" onclick="onSidebarPick(this,'site-feedback','Site Feedback')">Site Feedback</a></td></tr>
+                <tr><td class="fside-row"><a data-cat-slug="support" onclick="onSidebarPick(this,'support','Support')">Support</a></td></tr>
+            </tbody>
+        </table>
+        <table cellpadding="0" cellspacing="0">
+            <thead><tr><td class="fside-head">Marketplace</td></tr></thead>
+            <tbody>
+                <tr><td class="fside-row"><a data-cat-slug="pick-sellers" onclick="onSidebarPick(this,'pick-sellers','Pick Sellers')">Pick Sellers</a></td></tr>
+                <tr><td class="fside-row"><a data-cat-slug="free-picks" onclick="onSidebarPick(this,'free-picks','Free Picks')">Free Picks</a></td></tr>
+                <tr><td class="fside-row"><a data-cat-slug="challenges" onclick="onSidebarPick(this,'challenges','Challenges')">Challenges</a></td></tr>
+                <tr><td class="fside-row"><a data-cat-slug="contests" onclick="onSidebarPick(this,'contests','Contests')">Contests</a></td></tr>
+            </tbody>
+        </table>
+    </aside>
+
+    <main class="fmain">
+
+        <div class="fcrumb" id="breadcrumb">
+            <a onclick="showCategories()">TrustMyRecord Forums</a>
+            <span class="sep">&rsaquo;</span>
+            <span id="forumPageTitleLabel">Forum Home</span>
+        </div>
+
+        <div class="ftitle">
+            <h1 id="forumPageTitle">TrustMyRecord Sports Betting Forums</h1>
+            <p>Classic bulletin board discussion for picks, handicappers, challenges, polls, trivia, and receipts.</p>
+        </div>
+
+        <div class="fstats" aria-label="Board stats">
+            <span><b id="statThreads">0</b> threads</span>
+            <span><b id="statPosts">0</b> posts</span>
+            <span><b id="statUsers">0</b> forums</span>
+            <span><b id="statOnline">0</b> active</span>
+        </div>
+
+        <div id="viewCategories">
+            <div id="categoriesContainer"></div>
+
+            <table class="fgroup-table" cellpadding="2" cellspacing="1">
+                <tr class="fgroup-band">
+                    <td>Threads in Forum: <span id="indexSampleSectionName">Sports Betting</span></td>
+                    <td class="fgroup-meta">Sample thread layout</td>
+                </tr>
+            </table>
+            <div class="factionrow">
+                <button type="button" class="fbtn is-primary" onclick="openNewThread()">+ New Thread</button>
+                <button type="button" class="fbtn" onclick="alert('Subscribe is wired to your account once you sign in.');">Subscribe</button>
+                <button type="button" class="fbtn" onclick="showCategories()">Mark Forum Read</button>
+                <input type="search" placeholder="Search this forum..." onkeyup="if(event.key==='Enter')handleSearch(this.value)">
+            </div>
+            <table class="fgroup-table thread-table" cellpadding="2" cellspacing="1">
+                <tr class="fcol-head">
+                    <td>Thread / Thread Starter</td>
+                    <td class="col-num">Rating</td>
+                    <td class="col-last">Last Post</td>
+                    <td class="col-num">Replies</td>
+                    <td class="col-num">Views</td>
+                </tr>
+                <tbody id="sampleThreadBody"></tbody>
+            </table>
+        </div>
+
+        <div id="viewThreads" style="display:none;">
+            <table class="fgroup-table" cellpadding="2" cellspacing="1">
+                <tr class="fgroup-band">
+                    <td>Threads in Forum: <span id="threadsCategoryLabel">Forum</span></td>
+                    <td class="fgroup-meta" id="threadsCategoryMeta">&nbsp;</td>
+                </tr>
+            </table>
+            <div class="factionrow">
+                <button type="button" class="fbtn is-primary" onclick="openNewThread()">+ New Thread</button>
+                <button type="button" class="fbtn" onclick="alert('Subscribe is wired to your account once you sign in.');">Subscribe</button>
+                <button type="button" class="fbtn" onclick="showCategories()">Forum Home</button>
+                <input type="search" placeholder="Search this forum..." onkeyup="if(event.key==='Enter')handleSearch(this.value)">
+            </div>
+            <table class="fgroup-table thread-table" cellpadding="2" cellspacing="1">
+                <tr class="fcol-head">
+                    <td>Thread / Thread Starter</td>
+                    <td class="col-num">Rating</td>
+                    <td class="col-last">Last Post</td>
+                    <td class="col-num">Replies</td>
+                    <td class="col-num">Views</td>
+                </tr>
+                <tbody id="threadsBody"></tbody>
+            </table>
+            <div class="fjump">
+                <span>Forum Jump:</span>
+                <select id="forumJumpSelect" onchange="handleForumJump(this.value)"></select>
+            </div>
+        </div>
+
+        <div id="viewThread" style="display:none;">
+            <table class="fgroup-table" cellpadding="2" cellspacing="1">
+                <tr class="fgroup-band">
+                    <td id="threadDetailHeader">Thread</td>
+                    <td class="fgroup-meta">Single thread</td>
+                </tr>
+            </table>
+            <div class="factionrow">
+                <button class="fbtn" type="button" onclick="backToThreads()">&laquo; Back to Thread List</button>
+                <button class="fbtn is-primary" type="button" onclick="openNewThread()">+ New Thread</button>
+            </div>
+            <div id="postsContainer"></div>
+            <div class="freply">
+                <h3>Quick Reply</h3>
+                <div id="replyArea"></div>
+            </div>
+        </div>
+
+    </main>
+
+</div>
+
+<div class="modal-overlay" id="newThreadModal">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3>Start New Thread</h3>
+            <button type="button" class="close-btn" onclick="closeNewThread()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="newThreadForm" onsubmit="submitThread(event)">
+                <label for="ntCategory">Forum</label>
+                <select id="ntCategory" style="width:100%;padding:4px 6px;border:1px solid #777;background:#fff;font:11px Verdana,sans-serif;">
+                    <option value="">Select a forum...</option>
+                </select>
+                <label for="ntTitle">Title</label>
+                <input id="ntTitle" type="text" maxlength="160" placeholder="Thread title">
+                <label for="ntContent">Post</label>
+                <textarea id="ntContent" rows="7" placeholder="Write the opening post for this thread..."></textarea>
+                <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+                    <button type="button" class="btn btn-outline" onclick="closeNewThread()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Post Thread</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/config.js?v=20260421a"></script>
+<script src="/static/js/backend-api.js?v=20260423a"></script>
+<script src="/static/js/auth-persistent.js?v=20260424a"></script>
+<script src="/static/js/notifications.js?v=20260423a"></script>
+<script>
+// =====================================================================
+// 2+2-style render overrides (Apr 30 2026)
+// Replaces the old card-based renderCategories / renderSampleThreads /
+// renderThreads with real <table> + <td bgcolor> markup that matches
+// the classic vBulletin index.
+// =====================================================================
+function renderCategories() {
+    var container = document.getElementById('categoriesContainer');
+    if (!container) return;
+    if (!categories.length) {
+        container.innerHTML = '<div class="fempty">No forum categories yet.</div>';
+        return;
+    }
+    var groups = groupCategoriesForDisplay();
+    var html = '';
+    groups.forEach(function(group) {
+        html += '<table class="fgroup-table" cellpadding="2" cellspacing="1">';
+        html += '<tr class="fgroup-band"><td colspan="2">' + escHtml(group.name) + '</td><td class="fgroup-meta" colspan="2">Classic board index</td></tr>';
+        html += '<tr class="fcol-head"><td>Forum</td><td class="col-num">Threads</td><td class="col-num">Posts</td><td class="col-last">Last Post</td></tr>';
+        group.categories.forEach(function(cat, i) {
+            var threadCount = parseInt(cat.thread_count || 0);
+            var postCount = parseInt(cat.post_count || 0);
+            var lastHtml = '<span class="flpost-empty">No live threads yet</span>';
+            if (cat.latest_thread) {
+                var lt = cat.latest_thread;
+                var ltTitle = (lt.title || '').length > 36 ? lt.title.substring(0, 36) + '...' : (lt.title || '');
+                lastHtml = '<div class="flpost-title">' + escHtml(ltTitle) + '</div>'
+                         + '<div class="flpost-meta">by <b>' + escHtml(lt.username || '') + '</b> ' + timeAgo(lt.created_at) + '</div>';
+            }
+            var rowClass = 'frow' + (i % 2 === 1 ? ' row-alt' : '');
+            html += '<tr class="' + rowClass + '" onclick="showThreadsList(\'' + escHtml(cat.slug) + '\',\'' + escHtml(cat.name) + '\',' + (cat.id == null ? 'null' : (typeof cat.id === 'number' ? cat.id : ('\'' + escHtml(String(cat.id)) + '\''))) + ')">'
+                + '<td class="fcell"><div class="frowinner"><span class="ffolder"></span><div><div class="fname">' + escHtml(cat.name) + '</div><div class="fdesc">' + escHtml(cat.description || '') + '</div></div></div></td>'
+                + '<td class="fcell col-num">' + threadCount + '</td>'
+                + '<td class="fcell col-num">' + postCount + '</td>'
+                + '<td class="fcell col-last">' + lastHtml + '</td>'
+                + '</tr>';
+        });
+        html += '</table>';
+    });
+    container.innerHTML = html;
+}
+
+function renderSampleThreads() {
+    var body = document.getElementById('sampleThreadBody');
+    if (!body) return;
+    body.innerHTML = TMR_FORUM_SAMPLE_THREADS.map(function(t, i) {
+        var rowClass = 'frow' + (i % 2 === 1 ? ' row-alt' : '');
+        var folderClass = 'ffolder' + (t.sticky ? ' is-pinned' : '');
+        var stickyTag = t.sticky ? '<span style="background:#6b1212;color:#fff;font:700 9px Verdana,sans-serif;padding:1px 4px;margin-right:4px;text-transform:uppercase;">Sticky</span>' : '';
+        return '<tr class="' + rowClass + '" onclick="openNewThread()">'
+            + '<td class="fcell"><div class="frowinner"><span class="' + folderClass + '"></span><div>'
+            +   stickyTag
+            +   '<a class="fname" href="#" onclick="event.preventDefault();event.stopPropagation();openNewThread();">' + escHtml(t.title) + '</a>'
+            +   '<div class="fdesc">Started by <b>' + escHtml(t.starter) + '</b></div>'
+            + '</div></div></td>'
+            + '<td class="fcell col-num">&nbsp;</td>'
+            + '<td class="fcell col-last"><span class="flpost-empty">' + escHtml(t.lastTime || '—') + ' · by <b>' + escHtml(t.lastPoster || '—') + '</b></span></td>'
+            + '<td class="fcell col-num">' + t.replies + '</td>'
+            + '<td class="fcell col-num">' + t.views + '</td>'
+            + '</tr>';
+    }).join('');
+}
+
+function renderThreads() {
+    var body = document.getElementById('threadsBody');
+    if (!body) return;
+    if (!cachedThreads.length) {
+        body.innerHTML = '<tr><td class="fcell" colspan="5"><div class="fempty">No threads in this forum yet. Be the first to post.</div></td></tr>';
+        updateForumJump();
+        return;
+    }
+    body.innerHTML = cachedThreads.map(function(t, i) {
+        var rowClass = 'frow' + (i % 2 === 1 ? ' row-alt' : '');
+        var folderClass = 'ffolder' + (t.is_pinned || t.sticky ? ' is-pinned' : '');
+        var stickyTag = (t.is_pinned || t.sticky) ? '<span style="background:#6b1212;color:#fff;font:700 9px Verdana,sans-serif;padding:1px 4px;margin-right:4px;text-transform:uppercase;">Sticky</span>' : '';
+        var starter = t.username || (t.user && t.user.username) || 'user';
+        var lastTitle = (t.last_post_title || t.title || '').toString();
+        if (lastTitle.length > 36) lastTitle = lastTitle.substring(0, 36) + '...';
+        var lastUser = t.last_post_username || t.last_username || starter;
+        var lastWhen = t.last_post_at || t.last_post_created_at || t.last_activity || t.updated_at;
+        var lastHtml = lastWhen
+            ? '<div class="flpost-title">' + escHtml(lastTitle) + '</div><div class="flpost-meta">by <b>' + escHtml(lastUser) + '</b> ' + timeAgo(lastWhen) + '</div>'
+            : '<span class="flpost-empty">No replies yet</span>';
+        return '<tr class="' + rowClass + '" onclick="showThreadDetail(' + t.id + ')">'
+            + '<td class="fcell"><div class="frowinner"><span class="' + folderClass + '"></span><div>'
+            +   stickyTag
+            +   '<a class="fname" href="#" onclick="event.preventDefault();event.stopPropagation();showThreadDetail(' + t.id + ');">' + escHtml(t.title || 'Thread') + '</a>'
+            +   '<div class="fdesc">Started by <b>' + escHtml(starter) + '</b> ' + (t.created_at ? timeAgo(t.created_at) : '') + '</div>'
+            + '</div></div></td>'
+            + '<td class="fcell col-num">&nbsp;</td>'
+            + '<td class="fcell col-last">' + lastHtml + '</td>'
+            + '<td class="fcell col-num">' + (t.reply_count != null ? t.reply_count : (t.replies || 0)) + '</td>'
+            + '<td class="fcell col-num">' + (t.view_count != null ? t.view_count : (t.views || 0)) + '</td>'
+            + '</tr>';
+    }).join('');
+    updateForumJump();
+}
+
+function renderThread() {
+    var c = document.getElementById('postsContainer');
+    if (!c) return;
+    if (!cachedPosts.length && cachedThread) {
+        c.innerHTML = '<div class="fempty">Thread has no posts.</div>';
+        return;
+    }
+    c.innerHTML = cachedPosts.map(function(p) {
+        var who = (p.user && (p.user.username || p.user.display_name)) || p.username || 'user';
+        var avatar = (p.user && (p.user.avatar_url || p.user.avatar)) || '';
+        return '<div class="fthread-post">'
+            + '<div class="fthread-author">'
+            +   '<b>' + escHtml(who) + '</b>'
+            +   (avatar ? '<img src="' + escHtml(avatar) + '" alt="" style="width:60px;height:60px;border:1px solid #777;margin-top:4px;">' : '')
+            +   '<div style="color:#555;font-size:10.5px;margin-top:4px;">Joined ' + (p.user && p.user.created_at ? formatJoinedDate(p.user.created_at) : '—') + '</div>'
+            + '</div>'
+            + '<div class="fthread-body">'
+            +   '<div class="meta">' + (p.created_at ? formatForumDate(p.created_at) : '—') + (p.id ? ' &middot; <a href="#post-' + p.id + '" id="post-' + p.id + '">Permalink</a>' : '') + '</div>'
+            +   escHtml(p.content || p.body || '').replace(/\n/g, '<br>')
+            + '</div></div>';
+    }).join('');
+}
+var categories = [];
+var fallbackCategories = [
+    {
+        id: 'cat_general',
+        slug: 'general-betting',
+        name: 'Sports Betting Forum',
+        description: 'Main board for picks, game discussion, polls, trivia, bankroll discipline, and board movement.',
+        icon: '\ud83d\udcac',
+        thread_count: 0,
+        post_count: 0,
+        latest_thread: null,
+        group: 'TrustMyRecord Forums'
+    },
+    {
+        id: 'cat_nfl',
+        slug: 'nfl',
+        name: 'NFL',
+        description: 'Week-to-week football discussion, matchup reads, and betting angles tied to receipts.',
+        icon: '\ud83c\udfc8',
+        thread_count: 0,
+        post_count: 0,
+        latest_thread: null,
+        group: 'Sports Betting Forums'
+    },
+    {
+        id: 'cat_nba',
+        slug: 'nba',
+        name: 'NBA',
+        description: 'Talk sides, totals, props, and scheduling edges with a public record behind the takes.',
+        icon: '\ud83c\udfc0',
+        thread_count: 0,
+        post_count: 0,
+        latest_thread: null,
+        group: 'Sports Betting Forums'
+    },
+    {
+        id: 'cat_nhl',
+        slug: 'nhl',
+        name: 'NHL',
+        description: 'Ice hockey discussion focused on lines, injuries, travel, and long-term win-rate discipline.',
+        icon: '\ud83c\udfd2',
+        thread_count: 0,
+        post_count: 0,
+        latest_thread: null,
+        group: 'Sports Betting Forums'
+    },
+    {
+        id: 'cat_mlb',
+        slug: 'mlb',
+        name: 'MLB',
+        description: 'Baseball betting discussion, pitchers, bullpens, market movement, and daily grind strategy.',
+        icon: '\u26be',
+        thread_count: 0,
+        post_count: 0,
+        latest_thread: null,
+        group: 'Sports Betting Forums'
+    },
+    {
+        id: 'cat_challenges',
+        slug: 'challenges',
+        name: 'Marketplace, Challenges & Arena',
+        description: 'Pick seller questions, open challenges, competition talk, and head-to-head formats.',
+        icon: '\ud83c\udfaf',
+        thread_count: 0,
+        post_count: 0,
+        latest_thread: null,
+        group: 'TrustMyRecord Forums'
+    }
+];
+var usingFallbackCategories = false;
+var cachedThreads = [];
+var cachedThread = null;
+var cachedPosts = [];
+var currentCategorySlug = null;
+var currentCategoryName = null;
+var currentCategoryId = null;
+var currentThreadId = null;
+var currentThreadTitle = null;
+var searchDebounceTimer = null;
+
+function escHtml(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function timeAgo(dateString) {
+    if (!dateString) return 'just now';
+    var date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'just now';
+    var diff = Date.now() - date.getTime();
+    var sec = Math.max(1, Math.floor(diff / 1000));
+    if (sec < 60) return sec + ' sec ago';
+    var min = Math.floor(sec / 60);
+    if (min < 60) return min + (min === 1 ? ' min ago' : ' mins ago');
+    var hrs = Math.floor(min / 60);
+    if (hrs < 24) return hrs + (hrs === 1 ? ' hour ago' : ' hours ago');
+    var days = Math.floor(hrs / 24);
+    if (days < 30) return days + (days === 1 ? ' day ago' : ' days ago');
+    var months = Math.floor(days / 30);
+    if (months < 12) return months + (months === 1 ? ' month ago' : ' months ago');
+    var years = Math.floor(months / 12);
+    return years + (years === 1 ? ' year ago' : ' years ago');
+}
+
+function formatForumDate(dateString) {
+    if (!dateString) return 'Unknown';
+    var date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Unknown';
+    return date.toLocaleString();
+}
+
+function formatJoinedDate(dateString) {
+    if (!dateString) return 'New member';
+    var date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'New member';
+    return date.toLocaleDateString();
+}
+
+function showLoading(el) {
+    if (!el) return;
+    el.innerHTML = '<div class="empty-msg">Loading...</div>';
+}
+
+function showError(el, message) {
+    if (!el) return;
+    el.innerHTML = '<div class="empty-msg"><div style="color:var(--danger);">' + escHtml(message || 'Something went wrong.') + '</div></div>';
+}
+function updateStats() {
+    var threadCount = 0;
+    var postCount = 0;
+    var categoryCount = categories.length;
+    var activeCategoryCount = 0;
+    categories.forEach(function(cat) {
+        threadCount += parseInt(cat.thread_count || 0);
+        postCount += parseInt(cat.post_count || 0);
+        if (parseInt(cat.thread_count || 0) > 0 || parseInt(cat.post_count || 0) > 0 || cat.latest_thread) {
+            activeCategoryCount += 1;
+        }
+    });
+    document.getElementById('statThreads').textContent = threadCount;
+    document.getElementById('statPosts').textContent = postCount;
+    document.getElementById('statUsers').textContent = categoryCount;
+    document.getElementById('statOnline').textContent = activeCategoryCount;
+}
+
+function groupCategoriesForDisplay() {
+    var map = {};
+    categories.forEach(function(cat) {
+        var key = cat.group || 'Forums';
+        if (!map[key]) map[key] = [];
+        map[key].push(cat);
+    });
+    return Object.keys(map).map(function(groupName) {
+        return { name: groupName, categories: map[groupName] };
+    });
+}
+
+function showCategories() {
+    currentCategorySlug = null;
+    currentCategoryName = null;
+    currentCategoryId = null;
+    currentThreadId = null;
+    currentThreadTitle = null;
+
+    document.getElementById('viewCategories').style.display = '';
+    document.getElementById('viewThreads').style.display = 'none';
+    document.getElementById('viewThread').style.display = 'none';
+
+    setForumPageHeader('TrustMyRecord Sports Betting Forums');
+    setActiveSidebar('sports-betting');
+    document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span id="forumPageTitleLabel">Forum Home</span>';
+    window.history.replaceState({}, '', '/forum/');
+    renderCategories();
+    renderSampleThreads();
+    updateStats();
+    updateForumJump();
+}
+
+function setForumPageHeader(title) {
+    var titleEl = document.getElementById('forumPageTitle');
+    if (titleEl) titleEl.textContent = title;
+    var crumbLabel = document.getElementById('forumPageTitleLabel');
+    if (crumbLabel) crumbLabel.textContent = title;
+    var sampleSection = document.getElementById('indexSampleSectionName');
+    if (sampleSection) sampleSection.textContent = title.replace(/^TrustMyRecord\s+/, '').replace(/\s+Forums?$/i, '') || title;
+}
+
+function setActiveSidebar(slug) {
+    var links = document.querySelectorAll('.tmr-fb-sidebar-list a[data-cat-slug]');
+    links.forEach(function(a) {
+        a.classList.toggle('is-active', a.getAttribute('data-cat-slug') === slug);
+    });
+}
+
+function onSidebarPick(el, slug, name) {
+    setActiveSidebar(slug);
+    setForumPageHeader(name);
+    var match = (categories || []).find(function(c) { return (c.slug || '') === slug; });
+    if (match) {
+        showThreadsList(match.slug, match.name, match.id);
+    } else {
+        // Slug not present in live category list yet — show categories index with title swapped.
+        currentCategorySlug = null;
+        currentCategoryId = null;
+        currentCategoryName = name;
+        document.getElementById('viewCategories').style.display = '';
+        document.getElementById('viewThreads').style.display = 'none';
+        document.getElementById('viewThread').style.display = 'none';
+        document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span>' + escHtml(name) + '</span>';
+        window.history.replaceState({}, '', '/forum/#cat-' + encodeURIComponent(slug));
+        renderSampleThreads();
+    }
+}
+
+// Sample sticky/recent threads used as a layout demonstration on the index.
+// Per Apr 30 2026 spec: only OFFICIAL system starter threads here. No fake
+// users, no fake replies, no fake views. Empty board until real users post.
+var TMR_FORUM_SAMPLE_THREADS = [
+    { title: 'TrustMyRecord Forum Rules and Posting Guidelines', sticky: true, hot: false, sample: true, starter: 'TrustMyRecord', stars: 0, lastPoster: 'TrustMyRecord', lastTitle: 'Rules and Posting Guidelines', lastTime: '—', replies: 0, views: 0 },
+    { title: 'How Verified Records Work', sticky: true, hot: false, sample: true, starter: 'TrustMyRecord', stars: 0, lastPoster: 'TrustMyRecord', lastTitle: 'How Verified Records Work', lastTime: '—', replies: 0, views: 0 }
+];
+
+/* removed: replaced in renders.js */
+
+
+async function showThreadsList(slug, name, id) {
+    currentCategorySlug = slug;
+    currentCategoryName = name || slug;
+    currentCategoryId = id || null;
+    currentThreadId = null;
+    currentThreadTitle = null;
+
+    document.getElementById('viewCategories').style.display = 'none';
+    document.getElementById('viewThreads').style.display = '';
+    document.getElementById('viewThread').style.display = 'none';
+    document.getElementById('threadsCategoryLabel').textContent = currentCategoryName || 'Forum';
+    setForumPageHeader(currentCategoryName || 'Forum');
+    setActiveSidebar(slug);
+    document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span>' + escHtml(currentCategoryName || slug || 'Forum') + '</span>';
+    if (slug) {
+        window.history.replaceState({}, '', '/forum/#cat-' + encodeURIComponent(slug));
+    }
+    await loadThreads();
+}
+
+async function showThreadDetail(threadId) {
+    currentThreadId = threadId;
+    document.getElementById('viewCategories').style.display = 'none';
+    document.getElementById('viewThreads').style.display = 'none';
+    document.getElementById('viewThread').style.display = '';
+    await loadThread(threadId);
+    var detailHeader = document.getElementById('threadDetailHeader');
+    if (detailHeader) detailHeader.textContent = currentThreadTitle || 'Thread';
+    var crumbParts = ['<a onclick="showCategories()">Forums</a>'];
+    if (currentCategorySlug) {
+        crumbParts.push('<span class="sep">&raquo;</span><a onclick="showThreadsList(\'' + escHtml(currentCategorySlug) + '\',\'' + escHtml(currentCategoryName || currentCategorySlug) + '\',' + (currentCategoryId || 'null') + ')">' + escHtml(currentCategoryName || currentCategorySlug) + '</a>');
+    }
+    crumbParts.push('<span class="sep">&raquo;</span><span>' + escHtml(currentThreadTitle || 'Thread') + '</span>');
+    document.getElementById('breadcrumb').innerHTML = crumbParts.join('');
+    window.history.replaceState({}, '', '/forum/#thread-' + encodeURIComponent(threadId));
+}
+
+function backToThreads() {
+    if (currentCategorySlug) {
+        showThreadsList(currentCategorySlug, currentCategoryName, currentCategoryId);
+    } else {
+        showCategories();
+    }
+}
+
+// ================================================================
+// LOAD & RENDER CATEGORIES
+// ================================================================
+async function loadCategories() {
+    var container = document.getElementById('categoriesContainer');
+    showLoading(container);
+
+    try {
+        var data = await api.request('/forum/categories');
+        categories = data.categories || [];
+        if (!categories.length) {
+            usingFallbackCategories = true;
+            categories = fallbackCategories.slice();
+        } else {
+            usingFallbackCategories = false;
+        }
+        renderCategories();
+        updateStats();
+        updateForumJump();
+    } catch (err) {
+        console.error('Forum categories fallback:', err);
+        usingFallbackCategories = true;
+        categories = fallbackCategories.slice();
+        renderCategories();
+        updateStats();
+        updateForumJump();
+        container.insertAdjacentHTML('afterbegin', '<div class="forum-trust-note" style="margin-bottom:10px;">Live forum data is temporarily unavailable. Showing empty forum categories without fake threads or seeded users.</div>');
+    }
+}
+
+/* removed: replaced in renders.js */
+
+
+function updateForumJump() {
+    var select = document.getElementById('forumJumpSelect');
+    if (!select) return;
+
+    var options = ['<option value="">Select a forum</option>'];
+    categories.forEach(function(cat) {
+        options.push('<option value="' + escHtml(String(cat.slug || '')) + '">' + escHtml(cat.name || 'Forum') + '</option>');
+    });
+    select.innerHTML = options.join('');
+}
+
+function handleForumJump(slug) {
+    if (!slug) return;
+    currentCategorySlug = slug;
+    var cat = categories.find(function(item) { return item.slug === slug; });
+    currentCategoryName = cat ? cat.name : 'Forum';
+    showThreadsList(slug, currentCategoryName, cat ? cat.id : null);
+}
+
+// ================================================================
+// LOAD & RENDER THREADS
+// ================================================================
+async function loadThreads() {
+    var body = document.getElementById('threadsBody');
+    body.innerHTML = '<tr><td colspan="5" class="empty-msg">Loading threads...</td></tr>';
+
+    try {
+        var isFallbackCategory = fallbackCategories.some(function(cat) {
+            return cat.slug === currentCategorySlug;
+        }) && categories.some(function(cat) {
+            return cat.slug === currentCategorySlug;
+        });
+        if (usingFallbackCategories && isFallbackCategory) {
+            cachedThreads = [];
+            renderThreads();
+            return;
+        }
+        var data = await api.request('/forum/categories/' + encodeURIComponent(currentCategorySlug));
+        cachedThreads = data.threads || [];
+        // Update category id from response if we didn't have it
+        if (data.category) {
+            currentCategoryId = data.category.id;
+            currentCategoryName = data.category.name;
+        }
+        renderThreads();
+    } catch (err) {
+        body.innerHTML = '<tr><td colspan="4" class="empty-msg"><div style="color:var(--danger);">Failed to load threads.</div></td></tr>';
+        console.error('Load threads error:', err);
+    }
+}
+
+/* removed: replaced in renders.js */
+
+
+// ================================================================
+// LOAD & RENDER THREAD DETAIL
+// ================================================================
+async function loadThread(threadId) {
+    var container = document.getElementById('postsContainer');
+    showLoading(container);
+
+    try {
+        var data = await api.request('/forum/threads/' + threadId);
+        cachedThread = data.thread;
+        cachedPosts = data.posts || [];
+        currentThreadTitle = cachedThread.title;
+        // Set category info from thread if not already set
+        if (cachedThread.category_slug) {
+            currentCategorySlug = cachedThread.category_slug;
+            currentCategoryName = cachedThread.category_name || cachedThread.category_slug;
+            currentCategoryId = cachedThread.category_id;
+        }
+        renderThread();
+        renderReplyArea();
+        // Update header label
+        var detailHeader = document.getElementById('threadDetailHeader');
+        if (detailHeader) detailHeader.textContent = currentThreadTitle || 'Thread';
+    } catch (err) {
+        showError(container, 'Failed to load thread.');
+        console.error('Load thread error:', err);
+    }
+}
+
+// Quick-Reply box gets rebuilt every time a thread loads. Logged-out
+// users see a prompt to sign in instead of the textarea.
+function renderReplyArea() {
+    var area = document.getElementById('replyArea');
+    if (!area) return;
+    if (!isUserLoggedIn()) {
+        area.innerHTML = '<div style="color:#555;font-size:11px;">'
+            + '<a href="/login/" style="color:#14365b;font-weight:700;">Log in</a>'
+            + ' or <a href="/register/" style="color:#14365b;font-weight:700;">register</a>'
+            + ' to reply to this thread.</div>';
+        return;
+    }
+    area.innerHTML = '<textarea id="replyText" rows="5" placeholder="Type your reply..."></textarea>'
+        + '<div style="margin-top:6px;display:flex;justify-content:flex-end;gap:6px;">'
+        +   '<button type="button" class="fbtn" onclick="document.getElementById(\'replyText\').value=\'\'">Clear</button>'
+        +   '<button type="button" class="fbtn is-primary" onclick="submitReply()">Post Reply</button>'
+        + '</div>';
+}
+
+/* removed: replaced in renders.js */
+
+
+// ================================================================
+// LIKE POST
+// ================================================================
+async function likePost(postId) {
+    if (!isUserLoggedIn()) {
+        alert('Please log in to like posts.');
+        return;
+    }
+    try {
+        await api.request('/forum/posts/' + postId + '/like', { method: 'POST' });
+        // Reload thread to get updated like counts
+        await loadThread(currentThreadId);
+    } catch (err) {
+        console.error('Like error:', err);
+        alert(err.message || 'Failed to like post.');
+    }
+}
+
+// ================================================================
+// CREATE THREAD
+// ================================================================
+function isUserLoggedIn() {
+    // Check backend JWT
+    if (api.isLoggedIn()) return true;
+    // Check PersistentAuthSystem
+    if (typeof auth !== 'undefined' && auth.isLoggedIn && auth.isLoggedIn()) return true;
+    // Check localStorage session directly
+    try {
+        var s = localStorage.getItem('trustmyrecord_session');
+        if (s) { var p = JSON.parse(s); var u = p.user || p; if (u && u.username) return true; }
+    } catch(e) {}
+    return false;
+}
+
+function openNewThread() {
+    if (!isUserLoggedIn()) {
+        try { sessionStorage.setItem('tmr_post_auth_redirect', '/forum/'); } catch (e) {}
+        window.location.href = '/login/';
+        return;
+    }
+    var modal = document.getElementById('newThreadModal');
+    if (!modal) { console.warn('[forum] newThreadModal missing'); return; }
+
+    // Populate the forum dropdown from live categories. If a category is
+    // already selected (user clicked New Thread from inside a thread list),
+    // pre-select it. From the index, the user picks a forum here.
+    var sel = document.getElementById('ntCategory');
+    if (sel) {
+        var opts = ['<option value="">Select a forum...</option>'];
+        (categories || []).forEach(function (c) {
+            var label = c.name || c.slug || 'Forum';
+            opts.push('<option value="' + escHtml(String(c.id)) + '" data-slug="' + escHtml(c.slug || '') + '" data-name="' + escHtml(label) + '">' + escHtml(label) + '</option>');
+        });
+        sel.innerHTML = opts.join('');
+        if (currentCategoryId) sel.value = String(currentCategoryId);
+    }
+
+    modal.classList.add('is-open');
+    setTimeout(function () {
+        var t = document.getElementById('ntTitle');
+        if (t) t.focus();
+    }, 30);
+}
+
+function closeNewThread() {
+    var modal = document.getElementById('newThreadModal');
+    if (modal) modal.classList.remove('is-open');
+    var f = document.getElementById('newThreadForm');
+    if (f) f.reset();
+}
+
+function getForumSessionUser() {
+    try {
+        if (window.auth && typeof window.auth.getCurrentUser === 'function') {
+            var authUser = window.auth.getCurrentUser();
+            if (authUser && (authUser.username || authUser.email)) return authUser;
+        }
+    } catch(e) {}
+    try {
+        var raw = localStorage.getItem('trustmyrecord_session') || localStorage.getItem('tmr_current_user') || 'null';
+        var parsed = JSON.parse(raw);
+        return parsed && parsed.user ? parsed.user : parsed;
+    } catch(e) {}
+    return null;
+}
+
+function pushForumActivity(type, payload) {
+    var user = getForumSessionUser();
+    if (!user || !user.username) return;
+
+    try {
+        var activities = JSON.parse(localStorage.getItem('tmr_social_activity') || '[]');
+        activities.unshift({
+            id: 'forum_activity_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+            type: type,
+            username: user.username,
+            data: payload || {},
+            timestamp: new Date().toISOString(),
+            visibility: 'public'
+        });
+        localStorage.setItem('tmr_social_activity', JSON.stringify(activities.slice(0, 1000)));
+    } catch(e) {}
+}
+
+async function submitThread(e) {
+    e.preventDefault();
+    if (!isUserLoggedIn()) { window.location.href = '/login/'; return; }
+
+    var title = document.getElementById('ntTitle').value.trim();
+    var content = document.getElementById('ntContent').value.trim();
+
+    if (title.length < 5) { alert('Title must be at least 5 characters.'); return; }
+    if (content.length < 10) { alert('Content must be at least 10 characters.'); return; }
+
+    // Read category from the modal selector first, then fall back to the
+    // currently-open category if the user came from a thread list view.
+    var selEl = document.getElementById('ntCategory');
+    var selectedId = selEl && selEl.value ? selEl.value : null;
+    var selectedOpt = selEl && selEl.selectedOptions ? selEl.selectedOptions[0] : null;
+    var selectedSlug = selectedOpt ? selectedOpt.getAttribute('data-slug') : '';
+    var selectedName = selectedOpt ? selectedOpt.getAttribute('data-name') : '';
+
+    var postCategoryId = selectedId || currentCategoryId || null;
+    var postCategorySlug = selectedSlug || currentCategorySlug || '';
+    var postCategoryName = selectedName || currentCategoryName || '';
+
+    if (!postCategoryId) {
+        alert('Please select a forum to post this thread in.');
+        if (selEl) selEl.focus();
+        return;
+    }
+
+    var submitBtn = e.target.querySelector('button[type="submit"]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Posting...'; }
+
+    try {
+        var data = await api.request('/forum/threads', {
+            method: 'POST',
+            body: { category_id: postCategoryId, title: title, content: content }
+        });
+        pushForumActivity('forum_thread_created', {
+            title: title,
+            category: postCategoryName || postCategorySlug || 'Forum',
+            threadId: data && data.thread ? data.thread.id : null
+        });
+        closeNewThread();
+
+        // After posting, switch into that category and refresh — same
+        // experience whether the user posted from the index or from a
+        // thread list.
+        currentCategoryId = postCategoryId;
+        currentCategorySlug = postCategorySlug || currentCategorySlug;
+        currentCategoryName = postCategoryName || currentCategoryName;
+        if (typeof showThreadsList === 'function' && currentCategorySlug) {
+            await showThreadsList(currentCategorySlug, currentCategoryName, currentCategoryId);
+        } else {
+            await loadThreads();
+        }
+    } catch (err) {
+        console.error('Create thread error:', err);
+        alert((err && err.message) ? err.message : 'Failed to create thread. Please try again.');
+    } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Post Thread'; }
+    }
+}
+
+// ================================================================
+// SUBMIT REPLY
+// ================================================================
+async function submitReply() {
+        if (!isUserLoggedIn()) { window.location.href = '/login/'; return; }
+
+    var textarea = document.getElementById('replyText');
+    if (!textarea) return;
+    var content = textarea.value.trim();
+    if (content.length < 5) { alert('Reply must be at least 5 characters.'); return; }
+
+    // Disable button while posting
+    var btns = textarea.parentElement.querySelectorAll('.btn');
+    btns.forEach(function(b) { b.disabled = true; b.textContent = 'Posting...'; });
+
+    try {
+        await api.request('/forum/threads/' + currentThreadId + '/posts', {
+            method: 'POST',
+            body: { content: content }
+        });
+        pushForumActivity('forum_reply_created', {
+            threadId: currentThreadId,
+            threadTitle: cachedThread && cachedThread.title ? cachedThread.title : 'Forum discussion'
+        });
+        // Reload thread to show new reply
+        await loadThread(currentThreadId);
+        // Scroll to bottom
+        var posts = document.getElementById('postsContainer');
+        if (posts && posts.lastElementChild) {
+            posts.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+        }
+    } catch (err) {
+        console.error('Reply error:', err);
+        alert(err.message || 'Failed to post reply. Please try again.');
+        btns.forEach(function(b) { b.disabled = false; b.textContent = 'Post Reply'; });
+    }
+}
+
+// ================================================================
+// SEARCH
+// ================================================================
+function handleSearch(query) {
+    clearTimeout(searchDebounceTimer);
+    if (!query || query.length < 3) {
+        return;
+    }
+    searchDebounceTimer = setTimeout(function() {
+        performSearch(query);
+    }, 400);
+}
+
+async function performSearch(query) {
+    // Switch to threads view for results
+    currentCategorySlug = null;
+    currentCategoryId = null;
+    document.getElementById('viewCategories').style.display = 'none';
+    document.getElementById('viewThreads').style.display = '';
+    document.getElementById('viewThread').style.display = 'none';
+
+    var bc = document.getElementById('breadcrumb');
+    bc.innerHTML = '<a onclick="showCategories()">Forums</a><span class="sep">&raquo;</span><span>Search: "' + escHtml(query) + '"</span>';
+
+    var body = document.getElementById('threadsBody');
+    body.innerHTML = '<tr><td colspan="5" class="empty-msg">Searching...</td></tr>';
+
+    try {
+        var data = await api.request('/forum/search?q=' + encodeURIComponent(query));
+        var results = data.results || [];
+
+        if (results.length === 0) {
+            body.innerHTML = '<tr><td colspan="5" class="empty-msg"><div>No threads match your search.</div></td></tr>';
+            return;
+        }
+
+        body.innerHTML = results.map(function(t) {
+            var catName = t.category_name || '';
+            var catSlug = t.category_slug || '';
+            return '<tr onclick="currentCategorySlug=\'' + escHtml(catSlug) + '\';currentCategoryName=\'' + escHtml(catName) + '\';showThreadDetail(' + t.id + ')">' +
+                '<td><div class="tmr-fb-thread-cell"><span class="tmr-fb-thread-icon">T</span><div class="tmr-fb-thread-body">' +
+                    '<span class="tag-pill">' + escHtml(catName) + '</span>' +
+                    '<a class="tmr-fb-thread-title" href="#" onclick="event.preventDefault();event.stopPropagation();currentCategorySlug=\'' + escHtml(catSlug) + '\';currentCategoryName=\'' + escHtml(catName) + '\';showThreadDetail(' + t.id + ');">' + escHtml(t.title) + '</a>' +
+                    '<div class="tmr-fb-thread-meta">Started by <strong>' + escHtml(t.username || '') + '</strong> &middot; ' + timeAgo(t.created_at) + '</div>' +
+                '</div></div></td>' +
+                '<td class="col-rating"></td>' +
+                '<td class="col-last"><div class="tmr-fb-lastpost-meta">' + timeAgo(t.created_at) + '</div></td>' +
+                '<td class="col-num">' + (t.reply_count || 0) + '</td>' +
+                '<td class="col-num">' + (t.view_count || 0) + '</td>' +
+                '</tr>';
+        }).join('');
+    } catch (err) {
+        body.innerHTML = '<tr><td colspan="5" class="empty-msg"><div style="color:var(--danger);">Search failed. Please try again.</div></td></tr>';
+        console.error('Search error:', err);
+    }
+}
+
+// ================================================================
+// INIT
+// ================================================================
+function updateForumNavAuth() {
+    var loginBtn = document.getElementById('forumHeaderLoginBtn');
+    var registerBtn = document.getElementById('forumHeaderRegisterBtn');
+    var loggedIn = isUserLoggedIn();
+
+    if (loginBtn) loginBtn.style.display = loggedIn ? 'none' : '';
+    if (registerBtn) registerBtn.style.display = loggedIn ? 'none' : '';
+
+    var topLogin = document.getElementById('forumTopLoginLink');
+    var topRegister = document.getElementById('forumTopRegisterLink');
+    var topProfile = document.getElementById('forumTopProfileLink');
+    var topLogout = document.getElementById('forumTopLogoutBtn');
+    if (topLogin) topLogin.style.display = loggedIn ? 'none' : '';
+    if (topRegister) topRegister.style.display = loggedIn ? 'none' : '';
+    if (topProfile) topProfile.style.display = loggedIn ? '' : 'none';
+    if (topLogout) topLogout.style.display = loggedIn ? '' : 'none';
+}
+
+function logoutForumTop() {
+    try {
+        if (typeof api !== 'undefined' && api.logout) api.logout();
+    } catch (e) {}
+    try {
+        if (typeof auth !== 'undefined' && auth.logout) auth.logout();
+    } catch (e) {}
+    try {
+        localStorage.removeItem('trustmyrecord_session');
+        localStorage.removeItem('tmr_current_user');
+    } catch (e) {}
+    window.location.href = '/';
+}
+
+document.addEventListener('DOMContentLoaded', async function() {
+    updateForumNavAuth();
+
+    // Close modal on outside click
+    document.getElementById('newThreadModal').addEventListener('click', function(e) {
+        if (e.target === this) closeNewThread();
+    });
+
+    // Show loading state while waiting for backend
+    var catContainer = document.getElementById('categoriesContainer');
+    catContainer.innerHTML = '<div class="tmr-loading-state" id="forumLoadingState"><div class="tmr-spinner"></div><p>Loading forum...</p><p class="tmr-loading-slow" id="forumLoadingSlow">Warming up servers... this takes ~30 seconds on first visit.</p><div class="tmr-loading-retry" id="forumLoadingRetry"><p>Could not connect to servers.</p><button onclick="location.reload()">Refresh</button></div></div>';
+    var _forumSlowTimer = setTimeout(function() { var el = document.getElementById('forumLoadingSlow'); if (el) el.style.display = 'block'; }, 5000);
+    var _forumRetryTimer = setTimeout(function() { var el = document.getElementById('forumLoadingRetry'); var sl = document.getElementById('forumLoadingSlow'); if (el) el.style.display = 'block'; if (sl) sl.style.display = 'none'; }, 30000);
+
+    // Wait for backend detection
+    await api.ready;
+    clearTimeout(_forumSlowTimer); clearTimeout(_forumRetryTimer);
+
+    if (!api || typeof api.request !== 'function') {
+        catContainer.innerHTML =
+            '<div class="tmr-loading-state">' +
+            '<div style="font-size:2.5rem;margin-bottom:12px;opacity:0.5;">&#x1F50C;</div>' +
+            '<p>Could not connect to the forum server.</p>' +
+            '<p class="tmr-loading-slow" style="display:block;">The server may be warming up. This takes ~30 seconds on first visit.</p>' +
+            '<div class="tmr-loading-retry" style="display:block;"><button onclick="location.reload()">Try Again</button></div>' +
+            '</div>';
+        return;
+    }
+
+    // Check URL hash for deep link
+    var params = new URLSearchParams(window.location.search);
+    var queryThread = parseInt(params.get('thread'));
+    if (queryThread) {
+        await showThreadDetail(queryThread);
+        return;
+    }
+    var queryCategory = params.get('category');
+    if (queryCategory) {
+        await loadCategories();
+        var queryCatMatch = categories.find(function(item) { return item.slug === queryCategory; });
+        await showThreadsList(queryCategory, queryCatMatch ? queryCatMatch.name : queryCategory, queryCatMatch ? queryCatMatch.id : null);
+        return;
+    }
+
+    var hash = window.location.hash;
+    if (hash && hash.indexOf('#thread-') === 0) {
+        var tid = parseInt(hash.substring(8));
+        if (tid) {
+            await showThreadDetail(tid);
+            return;
+        }
+    }
+    if (hash && hash.indexOf('#cat-') === 0) {
+        var slug = hash.substring(5);
+        if (slug) {
+            await loadCategories();
+            var hashCatMatch = categories.find(function(item) { return item.slug === slug; });
+            await showThreadsList(slug, hashCatMatch ? hashCatMatch.name : slug, hashCatMatch ? hashCatMatch.id : null);
+            return;
+        }
+    }
+
+    // Default: load and show the live forum index.
+    await loadCategories();
+    showCategories();
+});
+
+</script>
+<script src="/static/js/tmr-redesign-loader.js?v=20260501a" defer></script>
+<link rel="stylesheet" href="/static/css/tmr-redesign-test.css?v=20260501a">
+</body>
+</html>
