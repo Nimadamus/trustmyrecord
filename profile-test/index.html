@@ -1198,7 +1198,7 @@
     }
     </style>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501b">
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501c">
 </head>
 <body class="profile-page tmr-social-profile" data-tmr-test-route="profile">
     <!-- ==================== TEST ROUTE BANNER ====================
@@ -1216,6 +1216,42 @@
         <span>Cleaner account presentation</span>
     </div>
     <!-- Legacy hardcoded header removed; sitewide global nav is injected by tmr-sitewide.js -->
+
+    <!-- ==================== TMR PROFILE-TEST 2-COL SHELL ====================
+         X/Twitter-style 2-column layout: left navigation rail + center
+         content. All <section> elements that follow are children of
+         .tmr-pt-shell so the existing renderer JS still finds the same
+         IDs/classes/elements unchanged. The closing </div></main>
+         for .tmr-pt-shell sits at the end of the page-body sections,
+         BEFORE the footer + scripts. -->
+    <div class="tmr-pt-shell">
+    <aside class="tmr-pt-rail" aria-label="Site navigation">
+        <a class="tmr-pt-rail-link" href="/profile/" aria-current="page">
+            <span class="tmr-pt-rail-icn">👤</span><span>My Record</span>
+        </a>
+        <a class="tmr-pt-rail-link" href="/sportsbook/">
+            <span class="tmr-pt-rail-icn">🎯</span><span>Make a Pick</span>
+        </a>
+        <a class="tmr-pt-rail-link" href="/leaderboards/">
+            <span class="tmr-pt-rail-icn">🏆</span><span>Leaderboards</span>
+        </a>
+        <a class="tmr-pt-rail-link" href="/feed/">
+            <span class="tmr-pt-rail-icn">💬</span><span>Feed</span>
+        </a>
+        <a class="tmr-pt-rail-link" href="/forum/">
+            <span class="tmr-pt-rail-icn">🗣️</span><span>Forum</span>
+        </a>
+        <a class="tmr-pt-rail-link" href="/marketplace/">
+            <span class="tmr-pt-rail-icn">💎</span><span>Marketplace</span>
+        </a>
+        <a class="tmr-pt-rail-link" href="/arena/">
+            <span class="tmr-pt-rail-icn">🎮</span><span>Arena</span>
+        </a>
+        <a class="tmr-pt-rail-link" href="/notifications/">
+            <span class="tmr-pt-rail-icn">🔔</span><span>Notifications</span>
+        </a>
+    </aside>
+    <div class="tmr-pt-main">
 
     <!-- ==================== COVER BANNER ==================== -->
     <section class="profile-cover-section">
@@ -7730,6 +7766,9 @@
     init();
     </script>
 
+    </div><!-- /.tmr-pt-main -->
+    </div><!-- /.tmr-pt-shell -->
+
         <footer class="site-footer">
             <div class="site-footer-inner">
                 <div class="site-footer-brand">
@@ -7767,7 +7806,7 @@
     <script src="/static/js/platform-production-fix.js?v=20260415d"></script>
     <script src="/static/js/tmr-redesign-loader.js?v=20260501a" defer></script>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501b">
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501c">
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  8:02:00 PM -->

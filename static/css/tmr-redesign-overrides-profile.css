@@ -1,47 +1,131 @@
 /* ============================================================================
    TMR REDESIGN OVERRIDES — PROFILE (test route only)
 
-   Visual target: /approved-design-previews/index-preview-social.html
-   X / Twitter-style profile: tall cover banner with gradient glow, large
-   round avatar overlapping the cover, identity block, follow/share/message
-   action buttons, inline 5-cell stats strip with vertical dividers, flat
-   tab row with teal underline on active, post-style pick cards in feed.
+   Visual target: /approved-design-previews/index-preview-pickmonitor.html
+   PickMonitor-style dashboard: left navigation rail + center column with
+   single hero card (cover + body inside one bordered card), inline 6-cell
+   stats strip with deltas, performance chart, recent picks table.
 
    Loaded as the LAST stylesheet on /profile-test/ via a <link> after
    tmr-redesign-overrides.css. Selectors scoped to
    body[data-tmr-test-route="profile"] for max specificity.
 
-   Strict no-fake-data discipline — every value rendered comes from the
+   Strict no-fake-data discipline. Every value rendered comes from the
    real backend API via the unmodified profile renderer JS. This CSS
-   only re-styles existing markup. No content injection, no markup
-   change, no JS edits.
+   only re-styles existing markup. The 2-col shell + left nav rail are
+   the ONLY structural additions and contain only real route links —
+   no fake users / records / leaderboards / charts.
 ============================================================================ */
 
-/* ===== 1. Page background + container =================================== */
+/* ===== 1. Page background =============================================== */
 
 body[data-tmr-test-route="profile"]{
-  background: #000510 !important;
-  color: #eef2f8 !important;
+  background: #070b14 !important;
+  color: #e6ecf5 !important;
   font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
   -webkit-font-smoothing: antialiased !important;
 }
 
-body[data-tmr-test-route="profile"] .container{
-  max-width: 1080px !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  width: 100% !important;
+/* ===== 2. The 2-col shell (added on profile-test markup only) =========
+   .tmr-pt-shell wraps all profile sections + a left navigation rail.
+   Layout: 240px rail | 1fr center, centered at max 1480px wide.
+   Below 1080px: rail hidden so profile reflows full-width. */
+
+body[data-tmr-test-route="profile"] .tmr-pt-shell{
+  display: grid !important;
+  grid-template-columns: 240px minmax(0, 1fr) !important;
+  gap: 24px !important;
+  max-width: 1480px !important;
+  margin: 0 auto !important;
+  padding: 18px 22px 60px !important;
   box-sizing: border-box !important;
 }
+@media (max-width: 1080px){
+  body[data-tmr-test-route="profile"] .tmr-pt-shell{
+    grid-template-columns: 1fr !important;
+    padding: 12px 14px 40px !important;
+    gap: 14px !important;
+  }
+  body[data-tmr-test-route="profile"] .tmr-pt-rail{
+    position: static !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    height: auto !important;
+    padding: 8px !important;
+  }
+  body[data-tmr-test-route="profile"] .tmr-pt-rail-link span:nth-child(2){
+    display: none !important;
+  }
+}
 
-/* ===== 2. Top strip — slim, muted ===================================== */
+/* Left navigation rail — PickMonitor "NAVIGATE" card style */
+body[data-tmr-test-route="profile"] .tmr-pt-rail{
+  position: sticky !important;
+  top: 64px !important;
+  align-self: flex-start !important;
+  height: fit-content !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  padding: 14px !important;
+  background: #111a2e !important;
+  border: 1px solid #243049 !important;
+  border-radius: 14px !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-rail::before{
+  content: "Navigate" !important;
+  display: block !important;
+  font: 800 11px 'Inter', sans-serif !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+  color: #7d8aa3 !important;
+  padding: 4px 10px 10px !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-rail-link{
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 9px 10px !important;
+  border-radius: 9px !important;
+  font: 500 14px 'Inter', sans-serif !important;
+  color: #b6c0d4 !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: background .12s, color .12s !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-rail-link:hover{
+  background: #172238 !important;
+  color: #e6ecf5 !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-rail-link[aria-current="page"]{
+  background: linear-gradient(90deg, rgba(34,211,238,0.18), rgba(34,211,238,0.04)) !important;
+  color: #22d3ee !important;
+  font-weight: 600 !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-rail-icn{
+  width: 18px !important;
+  height: 18px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 14px !important;
+}
+
+/* Center column wrapper */
+body[data-tmr-test-route="profile"] .tmr-pt-main{
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 18px !important;
+  border: 0 !important;
+}
+
+/* ===== 3. Top strip — slim ============================================ */
 
 body[data-tmr-test-route="profile"] .profile-top-strip{
-  background: linear-gradient(90deg, #16213a, #0d1525) !important;
-  border-bottom: 1px solid #1f2a40 !important;
-  color: #b8c2d4 !important;
+  background: linear-gradient(90deg, #172238, #111a2e) !important;
+  border-bottom: 1px solid #243049 !important;
+  color: #b6c0d4 !important;
   padding: 9px 22px !important;
   font: 500 12px 'Inter', sans-serif !important;
   display: flex !important;
@@ -50,30 +134,32 @@ body[data-tmr-test-route="profile"] .profile-top-strip{
   flex-wrap: wrap !important;
 }
 body[data-tmr-test-route="profile"] .profile-top-strip strong{
-  color: #f5b400 !important;
+  color: #fbbf24 !important;
   font: 800 11px 'Inter', sans-serif !important;
   letter-spacing: .14em !important;
   text-transform: uppercase !important;
 }
 
-/* ===== 3. Cover banner — tall X/Twitter cover with gradient glow ====== */
+/* ===== 4. Profile hero card — cover + body in one bordered card ====== */
 
 body[data-tmr-test-route="profile"] .profile-cover-section{
   background: transparent !important;
   padding: 0 !important;
+  margin: 0 !important;
 }
 body[data-tmr-test-route="profile"] .profile-cover-section .container{
-  max-width: 1080px !important;
-  margin: 0 auto !important;
   padding: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
 }
 body[data-tmr-test-route="profile"] .profile-cover{
-  height: 200px !important;
-  border: 0 !important;
-  border-radius: 0 !important;
+  height: 140px !important;
+  border: 1px solid #243049 !important;
+  border-bottom: 0 !important;
+  border-radius: 18px 18px 0 0 !important;
   background:
-    radial-gradient(circle at 20% 30%, rgba(34,211,238,.4), transparent 50%),
-    radial-gradient(circle at 80% 60%, rgba(245,180,0,.35), transparent 50%),
+    radial-gradient(600px 200px at 70% 50%, rgba(34,211,238,.35), transparent 70%),
+    radial-gradient(400px 200px at 20% 30%, rgba(251,191,36,.25), transparent 70%),
     linear-gradient(135deg, #0c1a3a, #1a0c3a) !important;
   position: relative !important;
   overflow: hidden !important;
@@ -82,124 +168,165 @@ body[data-tmr-test-route="profile"] .profile-cover-glow{
   display: none !important;
 }
 
-/* ===== 4. Profile header — X/Twitter-style avatar overlap ============ */
-
+/* Header section — body of the hero card (continues directly under cover) */
 body[data-tmr-test-route="profile"] .profile-header-section{
   background: transparent !important;
   padding: 0 !important;
+  margin: 0 !important;
 }
 body[data-tmr-test-route="profile"] .profile-header-section .container{
-  max-width: 1080px !important;
-  margin: 0 auto !important;
+  padding: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+body[data-tmr-test-route="profile"] .profile-header{
+  background: linear-gradient(180deg, #172238, #111a2e) !important;
+  border: 1px solid #243049 !important;
+  border-top: 0 !important;
+  border-radius: 0 0 18px 18px !important;
+  padding: 0 26px 22px !important;
+  margin: 0 !important;
+  position: relative !important;
+}
+body[data-tmr-test-route="profile"] .profile-info{
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Identity row — avatar (rounded square) on left, name/handle column on right
+   Pulls UP onto the cover via negative margin-top. */
+body[data-tmr-test-route="profile"] .profile-identity-row{
+  display: grid !important;
+  grid-template-columns: 116px 1fr auto !important;
+  align-items: end !important;
+  gap: 22px !important;
+  margin-top: -58px !important;
   padding: 0 !important;
 }
 
-body[data-tmr-test-route="profile"] .profile-header{
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  padding: 0 22px 14px !important;
-  margin: 0 !important;
-  position: relative !important;
-  z-index: 2 !important;
-}
-
-/* Pull the avatar up onto the cover, large circle with white border.
-   The live page builds the avatar inside .profile-header — set the first
-   image / avatar wrapper inside .profile-header to the av-big style. */
-body[data-tmr-test-route="profile"] .profile-header img.profile-avatar,
-body[data-tmr-test-route="profile"] .profile-avatar,
-body[data-tmr-test-route="profile"] .avatar-container,
-body[data-tmr-test-route="profile"] .avatar-img{
-  width: 120px !important;
-  height: 120px !important;
-  border-radius: 50% !important;
-  border: 4px solid #000510 !important;
+/* Avatar — 116x116 ROUNDED SQUARE (PickMonitor signature, NOT a circle) */
+body[data-tmr-test-route="profile"] .profile-identity-row .profile-avatar{
+  width: 116px !important;
+  height: 116px !important;
+  min-width: 116px !important;
+  min-height: 116px !important;
+  border-radius: 24px !important;
+  border: 4px solid #111a2e !important;
   background: linear-gradient(135deg, #22d3ee, #a78bfa) !important;
-  box-shadow: 0 8px 30px rgba(0,0,0,.5) !important;
-  margin-top: -58px !important;
-  display: block !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font: 900 42px 'Inter', sans-serif !important;
+  color: #0a0e1a !important;
+  flex-shrink: 0 !important;
+  overflow: hidden !important;
+}
+body[data-tmr-test-route="profile"] .profile-identity-row .profile-avatar img{
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 20px !important;
   object-fit: cover !important;
 }
 
+body[data-tmr-test-route="profile"] .profile-identity-copy{
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  padding-bottom: 6px !important;
+  min-width: 0 !important;
+}
+body[data-tmr-test-route="profile"] .profile-eyebrow{ display: none !important; }
 body[data-tmr-test-route="profile"] .profile-name{
-  color: #eef2f8 !important;
-  font: 800 24px 'Inter', sans-serif !important;
+  color: #e6ecf5 !important;
+  font: 800 26px 'Inter', sans-serif !important;
   letter-spacing: -.01em !important;
   line-height: 1.15 !important;
-  margin: 12px 0 2px !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
 }
 body[data-tmr-test-route="profile"] .profile-handle{
-  color: #7a8499 !important;
+  color: #6b7689 !important;
   font: 500 14px 'Inter', sans-serif !important;
-  margin: 0 !important;
+  margin-top: 4px !important;
+}
+body[data-tmr-test-route="profile"] .profile-headline{
+  color: #1fb8d9 !important;
+  font: italic 500 14px 'Inter', sans-serif !important;
+  margin: 4px 0 0 !important;
+  line-height: 1.4 !important;
 }
 body[data-tmr-test-route="profile"] .profile-bio{
-  color: #eef2f8 !important;
-  font: 500 15px 'Inter', sans-serif !important;
-  line-height: 1.45 !important;
-  max-width: 640px !important;
-  margin: 12px 0 10px !important;
+  color: #b6c0d4 !important;
+  font: 500 14px 'Inter', sans-serif !important;
+  line-height: 1.5 !important;
+  max-width: 520px !important;
+  margin: 8px 0 0 !important;
 }
 body[data-tmr-test-route="profile"] .profile-bio.profile-bio-empty{
-  color: #7a8499 !important;
+  color: #6b7689 !important;
   font-style: italic !important;
 }
 
-/* ===== 5. Action buttons row (Follow / Message / Share) ============== */
-
-body[data-tmr-test-route="profile"] .profile-actions,
-body[data-tmr-test-route="profile"] .profile-header .actions,
-body[data-tmr-test-route="profile"] .profile-header-actions{
+/* Profile-meta (followers / following row) — compact under bio */
+body[data-tmr-test-route="profile"] .profile-meta{
   display: flex !important;
-  gap: 8px !important;
-  flex-wrap: wrap !important;
+  gap: 18px !important;
+  margin: 12px 0 0 !important;
+  font-size: 13px !important;
 }
-body[data-tmr-test-route="profile"] .profile-actions button,
-body[data-tmr-test-route="profile"] .profile-actions .btn,
-body[data-tmr-test-route="profile"] .profile-header-actions button{
-  padding: 9px 18px !important;
-  border-radius: 999px !important;
-  font: 700 14px 'Inter', sans-serif !important;
-  border: 1px solid #2c3a55 !important;
+body[data-tmr-test-route="profile"] .profile-meta-item{
   background: transparent !important;
-  color: #eef2f8 !important;
+  border: 0 !important;
+  color: #6b7689 !important;
+  font: 500 13px 'Inter', sans-serif !important;
   cursor: pointer !important;
+  padding: 0 !important;
 }
-body[data-tmr-test-route="profile"] .profile-actions button.primary,
-body[data-tmr-test-route="profile"] .profile-actions .btn.primary,
-body[data-tmr-test-route="profile"] .profile-header-actions button.primary{
-  background: #eef2f8 !important;
-  color: #000 !important;
-  border-color: #eef2f8 !important;
+body[data-tmr-test-route="profile"] .profile-meta-item:hover{
+  text-decoration: underline !important;
+  color: #b6c0d4 !important;
 }
 
-/* ===== 6. Inline 5-cell stats strip with vertical dividers =========== */
+/* ===== 5. Inline LTR 6-cell stats strip (PickMonitor signature) ====== */
 
 body[data-tmr-test-route="profile"] .profile-stats{
-  background: #0d1525 !important;
-  border: 1px solid #1f2a40 !important;
-  border-radius: 14px !important;
-  padding: 14px !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
   display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
-  gap: 0 !important;
-  margin: 18px 22px 0 !important;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+  gap: 12px !important;
+  margin: 0 !important;
   box-shadow: none !important;
 }
 body[data-tmr-test-route="profile"] .profile-stats > *{
-  padding: 6px 14px !important;
-  border-right: 1px solid #1f2a40 !important;
+  background: #111a2e !important;
+  border: 1px solid #243049 !important;
+  border-radius: 14px !important;
+  padding: 14px !important;
   position: relative !important;
+  overflow: hidden !important;
 }
-body[data-tmr-test-route="profile"] .profile-stats > *:last-child{
-  border-right: 0 !important;
+body[data-tmr-test-route="profile"] .profile-stats > *::before{
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.03), transparent 40%) !important;
+  pointer-events: none !important;
 }
 body[data-tmr-test-route="profile"] .summary-stat-value{
-  font: 700 18px 'JetBrains Mono', 'Inter', monospace !important;
+  font: 700 24px 'JetBrains Mono', 'Inter', monospace !important;
   letter-spacing: -.02em !important;
-  color: #eef2f8 !important;
+  color: #e6ecf5 !important;
   display: block !important;
+  margin-top: 6px !important;
   margin-bottom: 4px !important;
 }
 body[data-tmr-test-route="profile"] .summary-stat-value.positive,
@@ -216,128 +343,141 @@ body[data-tmr-test-route="profile"] .summary-stat-value.red{
 }
 body[data-tmr-test-route="profile"] .summary-stat-value.gold,
 body[data-tmr-test-route="profile"] .summary-stat-value.accent{
-  color: #f5b400 !important;
+  color: #fbbf24 !important;
 }
-body[data-tmr-test-route="profile"] .summary-stat-value.teal{
-  color: #1fb8d9 !important;
-}
+body[data-tmr-test-route="profile"] .summary-stat-value.teal{ color: #22d3ee !important; }
 body[data-tmr-test-route="profile"] .summary-stat-label{
   font: 700 10px 'Inter', sans-serif !important;
   letter-spacing: .14em !important;
   text-transform: uppercase !important;
-  color: #7a8499 !important;
+  color: #7d8aa3 !important;
   display: block !important;
 }
 
-/* Stat cards used elsewhere on profile (achievements, marketplace etc.) */
+/* ===== 6. Stat / KPI / achievement / marketplace cards ============== */
+
 body[data-tmr-test-route="profile"] .stat-card,
 body[data-tmr-test-route="profile"] .achievement-card,
 body[data-tmr-test-route="profile"] .marketplace-card,
 body[data-tmr-test-route="profile"] .recent-pick,
 body[data-tmr-test-route="profile"] .pick-card,
 body[data-tmr-test-route="profile"] .profile-section{
-  background: #0d1525 !important;
-  border: 1px solid #1f2a40 !important;
+  background: #111a2e !important;
+  border: 1px solid #243049 !important;
   border-radius: 14px !important;
   box-shadow: none !important;
-  color: #eef2f8 !important;
+  color: #e6ecf5 !important;
 }
 body[data-tmr-test-route="profile"] .stat-value,
-body[data-tmr-test-route="profile"] .stat-card .value,
 body[data-tmr-test-route="profile"] .kpi-value{
-  color: #eef2f8 !important;
+  color: #e6ecf5 !important;
   font: 700 22px 'JetBrains Mono', 'Inter', monospace !important;
   letter-spacing: -.02em !important;
 }
 body[data-tmr-test-route="profile"] .stat-label,
 body[data-tmr-test-route="profile"] .kpi-label{
-  color: #7a8499 !important;
+  color: #7d8aa3 !important;
   font: 700 10.5px 'Inter', sans-serif !important;
   letter-spacing: .14em !important;
   text-transform: uppercase !important;
 }
 
-/* ===== 7. Profile tabs — flat row with teal underline on active ====== */
+/* ===== 7. Profile tabs ============================================== */
 
 body[data-tmr-test-route="profile"] .profile-tabs-section{
   background: transparent !important;
-  padding: 18px 0 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 body[data-tmr-test-route="profile"] .profile-tabs-section .container{
-  max-width: 1080px !important;
-  margin: 0 auto !important;
+  max-width: none !important;
+  margin: 0 !important;
   padding: 0 !important;
 }
 body[data-tmr-test-route="profile"] .profile-tabs{
-  background: transparent !important;
-  border: 0 !important;
-  border-bottom: 1px solid #1f2a40 !important;
-  border-radius: 0 !important;
+  background: #111a2e !important;
+  border: 1px solid #243049 !important;
+  border-radius: 14px !important;
   display: flex !important;
-  gap: 0 !important;
-  padding: 0 !important;
+  gap: 4px !important;
+  padding: 4px !important;
   flex-wrap: wrap !important;
   overflow-x: auto !important;
 }
-body[data-tmr-test-route="profile"] .profile-tabs .tab,
+body[data-tmr-test-route="profile"] .profile-tabs .profile-tab,
 body[data-tmr-test-route="profile"] .profile-tabs button{
-  flex: 1 !important;
   background: transparent !important;
   border: 0 !important;
-  color: #7a8499 !important;
-  padding: 14px 0 !important;
-  font: 700 14px 'Inter', sans-serif !important;
-  letter-spacing: 0 !important;
-  text-transform: none !important;
+  color: #b6c0d4 !important;
+  padding: 8px 14px !important;
+  font: 600 13px 'Inter', sans-serif !important;
   cursor: pointer !important;
-  border-radius: 0 !important;
+  border-radius: 9px !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
   position: relative !important;
 }
-body[data-tmr-test-route="profile"] .profile-tabs .tab:hover,
+body[data-tmr-test-route="profile"] .profile-tabs .profile-tab:hover,
 body[data-tmr-test-route="profile"] .profile-tabs button:hover{
-  color: #b8c2d4 !important;
-  background: transparent !important;
+  background: #172238 !important;
+  color: #e6ecf5 !important;
 }
-body[data-tmr-test-route="profile"] .profile-tabs .tab.active,
+body[data-tmr-test-route="profile"] .profile-tabs .profile-tab.active,
 body[data-tmr-test-route="profile"] .profile-tabs button.active{
-  color: #eef2f8 !important;
-  background: transparent !important;
-}
-body[data-tmr-test-route="profile"] .profile-tabs .tab.active::after,
-body[data-tmr-test-route="profile"] .profile-tabs button.active::after{
-  content: "" !important;
-  position: absolute !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  bottom: 0 !important;
-  width: 60px !important;
-  height: 3px !important;
-  border-radius: 3px 3px 0 0 !important;
-  background: #1fb8d9 !important;
+  background: #1f2c47 !important;
+  color: #e6ecf5 !important;
+  font-weight: 700 !important;
+  box-shadow: inset 0 0 0 1px #2f3d5c !important;
 }
 
-/* ===== 8. Pick rows / pick history (post-style cards) =============== */
+/* ===== 8. Body section + tab panels ================================= */
+
+body[data-tmr-test-route="profile"] .profile-body-section{
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+body[data-tmr-test-route="profile"] .profile-body-section .container{
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+body[data-tmr-test-route="profile"] .profile-main{
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+body[data-tmr-test-route="profile"] .profile-tab-panel{
+  background: #111a2e !important;
+  border: 1px solid #243049 !important;
+  border-radius: 14px !important;
+  padding: 18px !important;
+  color: #e6ecf5 !important;
+}
+
+/* ===== 9. Pick rows / pick history (PickMonitor recent-picks table) === */
 
 body[data-tmr-test-route="profile"] .pick-row,
 body[data-tmr-test-route="profile"] .pick-history-row,
 body[data-tmr-test-route="profile"] .recent-pick{
+  display: grid !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 14px 12px !important;
   background: transparent !important;
   border: 0 !important;
-  border-bottom: 1px solid #1f2a40 !important;
+  border-bottom: 1px solid #243049 !important;
   border-radius: 0 !important;
-  padding: 18px 22px !important;
   margin-bottom: 0 !important;
-  color: #b8c2d4 !important;
-  cursor: pointer !important;
-  transition: background .15s !important;
+  color: #b6c0d4 !important;
 }
 body[data-tmr-test-route="profile"] .pick-row:hover,
 body[data-tmr-test-route="profile"] .pick-history-row:hover,
 body[data-tmr-test-route="profile"] .recent-pick:hover{
-  background: rgba(255,255,255,.015) !important;
+  background: #172238 !important;
 }
 
-/* Pick result pills (UNITS only — no $ language) */
+/* Pick result pills (UNITS only — never $) */
 body[data-tmr-test-route="profile"] .pick-result.win,
 body[data-tmr-test-route="profile"] .result-win,
 body[data-tmr-test-route="profile"] .pill.win{
@@ -366,9 +506,9 @@ body[data-tmr-test-route="profile"] .pick-result.pending,
 body[data-tmr-test-route="profile"] .result-pending,
 body[data-tmr-test-route="profile"] .pill.pending,
 body[data-tmr-test-route="profile"] .pill.pend{
-  background: rgba(245,180,0,.16) !important;
-  color: #f5b400 !important;
-  border: 1px solid rgba(245,180,0,.3) !important;
+  background: rgba(251,191,36,.16) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(251,191,36,.3) !important;
   border-radius: 6px !important;
   padding: 3px 9px !important;
   font: 800 10px 'Inter', sans-serif !important;
@@ -376,56 +516,82 @@ body[data-tmr-test-route="profile"] .pill.pend{
   letter-spacing: .06em !important;
 }
 
-/* ===== 9. Verified badge ============================================= */
+/* ===== 10. Verified badge =========================================== */
 
 body[data-tmr-test-route="profile"] .verified-badge,
 body[data-tmr-test-route="profile"] .tmr-verified{
-  background: rgba(31,184,217,.15) !important;
-  color: #1fb8d9 !important;
-  border: 1px solid rgba(31,184,217,.35) !important;
+  background: rgba(34,211,238,.15) !important;
+  color: #22d3ee !important;
+  border: 1px solid rgba(34,211,238,.35) !important;
   border-radius: 999px !important;
-  padding: 3px 10px !important;
+  padding: 3px 8px !important;
   font: 700 11px 'Inter', sans-serif !important;
   letter-spacing: .04em !important;
   text-transform: uppercase !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
 }
 
-/* ===== 10. Setup prompt + avatar uploader (X-style cards) ========== */
+/* ===== 11. Buttons ================================================== */
+
+body[data-tmr-test-route="profile"] button.primary,
+body[data-tmr-test-route="profile"] .btn-primary{
+  background: linear-gradient(135deg, #22d3ee, #06b6d4) !important;
+  color: #04222a !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  padding: 10px 16px !important;
+  font: 700 13px 'Inter', sans-serif !important;
+  letter-spacing: .02em !important;
+  cursor: pointer !important;
+}
+body[data-tmr-test-route="profile"] .btn,
+body[data-tmr-test-route="profile"] .btn-secondary{
+  background: #172238 !important;
+  border: 1px solid #243049 !important;
+  color: #e6ecf5 !important;
+  border-radius: 10px !important;
+  padding: 10px 16px !important;
+  font: 600 13px 'Inter', sans-serif !important;
+  cursor: pointer !important;
+}
+
+/* ===== 12. Setup prompt + avatar uploader =========================== */
 
 body[data-tmr-test-route="profile"] .profile-setup-prompt{
-  background: linear-gradient(135deg, #16213a, #0d1525) !important;
-  border: 1px solid #2c3a55 !important;
+  background: linear-gradient(135deg, #172238, #111a2e) !important;
+  border: 1px solid #243049 !important;
   border-radius: 14px !important;
-  max-width: 1080px !important;
-  margin: 18px auto 0 !important;
+  margin: 14px 0 0 !important;
   padding: 18px 20px !important;
 }
 body[data-tmr-test-route="profile"] .profile-setup-prompt__head h3{
-  color: #eef2f8 !important;
+  color: #e6ecf5 !important;
   font: 800 17px 'Inter', sans-serif !important;
 }
 body[data-tmr-test-route="profile"] .profile-setup-prompt__head p{
-  color: #b8c2d4 !important;
+  color: #b6c0d4 !important;
 }
 body[data-tmr-test-route="profile"] .profile-setup-form select,
 body[data-tmr-test-route="profile"] .profile-setup-form input{
-  background: #000510 !important;
-  border: 1px solid #2c3a55 !important;
-  color: #eef2f8 !important;
+  background: #070b14 !important;
+  border: 1px solid #2f3d5c !important;
+  color: #e6ecf5 !important;
   border-radius: 10px !important;
   font: 600 14px 'Inter', sans-serif !important;
   padding: 11px 14px !important;
 }
 body[data-tmr-test-route="profile"] .profile-setup-form select:focus,
 body[data-tmr-test-route="profile"] .profile-setup-form input:focus{
-  border-color: #1fb8d9 !important;
+  border-color: #22d3ee !important;
   outline: none !important;
 }
 body[data-tmr-test-route="profile"] .profile-setup-form__save{
-  background: #eef2f8 !important;
-  color: #000 !important;
+  background: linear-gradient(135deg, #22d3ee, #06b6d4) !important;
+  color: #04222a !important;
   border: 0 !important;
-  border-radius: 999px !important;
+  border-radius: 10px !important;
   padding: 10px 22px !important;
   font: 800 13px 'Inter', sans-serif !important;
   letter-spacing: .04em !important;
@@ -434,9 +600,9 @@ body[data-tmr-test-route="profile"] .profile-setup-form__save{
 }
 body[data-tmr-test-route="profile"] .profile-setup-form__skip{
   background: transparent !important;
-  border: 1px solid #2c3a55 !important;
-  color: #b8c2d4 !important;
-  border-radius: 999px !important;
+  border: 1px solid #2f3d5c !important;
+  color: #b6c0d4 !important;
+  border-radius: 10px !important;
   padding: 10px 18px !important;
   font: 700 12px 'Inter', sans-serif !important;
   text-transform: uppercase !important;
@@ -444,43 +610,42 @@ body[data-tmr-test-route="profile"] .profile-setup-form__skip{
 }
 
 body[data-tmr-test-route="profile"] .profile-avatar-uploader{
-  background: #0d1525 !important;
-  border: 1px solid #1f2a40 !important;
+  background: #111a2e !important;
+  border: 1px solid #243049 !important;
   border-radius: 14px !important;
-  max-width: 1080px !important;
-  margin: 12px auto 0 !important;
+  margin: 12px 0 0 !important;
   padding: 12px 16px !important;
-  color: #b8c2d4 !important;
+  color: #b6c0d4 !important;
 }
 body[data-tmr-test-route="profile"] .profile-avatar-uploader strong{
-  color: #eef2f8 !important;
+  color: #e6ecf5 !important;
 }
 body[data-tmr-test-route="profile"] .profile-avatar-uploader__btn{
-  background: rgba(31,184,217,.10) !important;
-  border: 1px solid rgba(31,184,217,.32) !important;
-  color: #1fb8d9 !important;
-  border-radius: 999px !important;
+  background: rgba(34,211,238,.10) !important;
+  border: 1px solid rgba(34,211,238,.32) !important;
+  color: #22d3ee !important;
+  border-radius: 10px !important;
   padding: 8px 14px !important;
   font: 700 12px 'Inter', sans-serif !important;
 }
 
-/* ===== 11. Modals (incl. profileEditModal — must keep functional) === */
+/* ===== 13. Modals (incl. profileEditModal — must keep functional) === */
 
 body[data-tmr-test-route="profile"] .modal,
 body[data-tmr-test-route="profile"] .modal-overlay{
-  background: rgba(0,5,16,.78) !important;
+  background: rgba(7,11,20,.78) !important;
   backdrop-filter: blur(4px) !important;
 }
 body[data-tmr-test-route="profile"] .modal-content,
 body[data-tmr-test-route="profile"] .modal-box{
-  background: #0d1525 !important;
-  border: 1px solid #2c3a55 !important;
+  background: #111a2e !important;
+  border: 1px solid #2f3d5c !important;
   border-radius: 14px !important;
   box-shadow: 0 30px 80px rgba(0,0,0,.6) !important;
-  color: #eef2f8 !important;
+  color: #e6ecf5 !important;
 }
 
-/* ===== 12. Inputs ==================================================== */
+/* ===== 14. Inputs ================================================== */
 
 body[data-tmr-test-route="profile"] input[type="text"],
 body[data-tmr-test-route="profile"] input[type="email"],
@@ -488,9 +653,9 @@ body[data-tmr-test-route="profile"] input[type="number"],
 body[data-tmr-test-route="profile"] input[type="search"],
 body[data-tmr-test-route="profile"] select,
 body[data-tmr-test-route="profile"] textarea{
-  background: #000510 !important;
-  border: 1px solid #2c3a55 !important;
-  color: #eef2f8 !important;
+  background: #070b14 !important;
+  border: 1px solid #2f3d5c !important;
+  color: #e6ecf5 !important;
   border-radius: 10px !important;
   font-family: 'Inter', sans-serif !important;
   padding: 9px 12px !important;
@@ -498,20 +663,20 @@ body[data-tmr-test-route="profile"] textarea{
 body[data-tmr-test-route="profile"] input:focus,
 body[data-tmr-test-route="profile"] select:focus,
 body[data-tmr-test-route="profile"] textarea:focus{
-  border-color: #1fb8d9 !important;
+  border-color: #22d3ee !important;
   outline: none !important;
 }
 
-/* ===== 13. Empty states (real API, not fake placeholders) =========== */
+/* ===== 15. Empty states (real API, not fake placeholders) =========== */
 
 body[data-tmr-test-route="profile"] .empty-state,
 body[data-tmr-test-route="profile"] .no-picks,
 body[data-tmr-test-route="profile"] .no-data{
   text-align: center !important;
   padding: 30px 20px !important;
-  color: #7a8499 !important;
+  color: #6b7689 !important;
   font: 500 14px 'Inter', sans-serif !important;
   background: transparent !important;
-  border: 1px dashed #1f2a40 !important;
+  border: 1px dashed #243049 !important;
   border-radius: 12px !important;
 }
