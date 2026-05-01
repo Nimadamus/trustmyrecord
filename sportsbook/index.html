@@ -8942,6 +8942,237 @@
     /* Links inside the sportsbook */
     body a:not(.sportsbook-sports-nav a){color:var(--dk-teal)}
     body a:not(.sportsbook-sports-nav a):hover{color:#3dd0ed;text-decoration:underline}
+
+    /* ============================================================
+       TMR REDESIGN MERGE — live-DOM selectors (May 2026)
+       The earlier rules above target legacy class names that aren't
+       on the page anymore. The block below hits the actual classes
+       the live sportsbook renders (.sportsbook-board-*, .sportsbook-
+       market-*, .bet-pick-btn, etc). Pure visual + placeholder
+       display:none — no JS, no markup, no handler changes.
+       ============================================================ */
+
+    /* Page chrome */
+    body .sportsbook-page-topbar{
+      background:var(--dk-bg-2) !important;
+      border-bottom:1px solid var(--dk-line) !important;
+      padding:18px 22px !important;
+    }
+    body .sportsbook-page-intro,
+    body .sportsbook-eyebrow,
+    body .sportsbook-lobby-label{
+      color:var(--dk-muted) !important;
+      letter-spacing:.16em !important;
+      text-transform:uppercase;
+      font-weight:700;
+      font-size:11px;
+    }
+
+    /* Board shells */
+    body .sportsbook-board-shell,
+    body .sportsbook-board-columns,
+    body .sportsbook-board-section,
+    body .sportsbook-rail-board{
+      background:var(--dk-surface) !important;
+      border:1px solid var(--dk-line) !important;
+      border-radius:14px !important;
+      box-shadow:0 12px 28px rgba(0,0,0,.32) !important;
+      padding:0 !important;
+      overflow:hidden;
+    }
+    body .sportsbook-board-shell + .sportsbook-board-shell,
+    body .sportsbook-board-section + .sportsbook-board-section{
+      margin-top:18px !important;
+    }
+
+    /* Section / column / table headers */
+    body .sportsbook-board-section-head,
+    body .sportsbook-board-grid-head,
+    body .sportsbook-board-list-head,
+    body .sportsbook-board-table-head,
+    body .sportsbook-board-table-league,
+    body .sportsbook-board-toolbar{
+      background:var(--dk-bg-2) !important;
+      color:var(--dk-ink-2) !important;
+      border-bottom:1px solid var(--dk-line) !important;
+      padding:12px 16px !important;
+      font:700 11px/1.3 'Inter',sans-serif !important;
+      letter-spacing:.14em !important;
+      text-transform:uppercase;
+    }
+    body .sportsbook-board-toolbar-note{color:var(--dk-muted) !important;font-weight:600 !important}
+
+    /* Rows */
+    body .sportsbook-board-row,
+    body .sportsbook-board-table-row,
+    body .sportsbook-board-grid-body{
+      background:var(--dk-surface) !important;
+      border-bottom:1px solid var(--dk-line) !important;
+      padding:14px 16px !important;
+      transition:background .15s ease;
+    }
+    body .sportsbook-board-row:hover,
+    body .sportsbook-board-table-row:hover{
+      background:var(--dk-surface-2) !important;
+    }
+    body .sportsbook-board-row:last-child,
+    body .sportsbook-board-table-row:last-child{border-bottom:0 !important}
+
+    /* Odds cells & pick buttons — keep clickable, only restyle */
+    body .sportsbook-board-odds-cell,
+    body .bet-pick-btn,
+    body .sportsbook-price-cell{
+      background:var(--dk-surface-2) !important;
+      border:1px solid var(--dk-line-2) !important;
+      color:var(--dk-ink) !important;
+      border-radius:10px !important;
+      padding:10px 14px !important;
+      font:800 14px 'JetBrains Mono','Inter',sans-serif !important;
+      letter-spacing:.01em;
+      cursor:pointer;
+      transition:transform .12s ease, background .12s ease, border-color .12s ease;
+      min-width:78px;
+      text-align:center;
+    }
+    body .bet-pick-btn:hover,
+    body .sportsbook-board-odds-cell:hover{
+      background:var(--dk-surface-3) !important;
+      border-color:var(--dk-green) !important;
+      transform:translateY(-1px);
+    }
+    body .bet-pick-btn.active,
+    body .bet-pick-btn.is-active,
+    body .bet-pick-btn[aria-pressed="true"]{
+      background:linear-gradient(135deg,var(--dk-green),var(--dk-green-2)) !important;
+      border-color:transparent !important;
+      color:#0a1f02 !important;
+    }
+
+    /* Market pill chips (small odds chips inside rows) */
+    body .sportsbook-market-pill{
+      background:var(--dk-surface-2) !important;
+      border:1px solid var(--dk-line) !important;
+      color:var(--dk-ink) !important;
+      border-radius:8px !important;
+      padding:8px 12px !important;
+      font:700 12px 'Inter',sans-serif !important;
+    }
+    body .sportsbook-market-pills{
+      gap:8px !important;
+    }
+    body .sportsbook-market-pill .market-name{color:var(--dk-ink-2) !important;font-weight:600}
+    body .sportsbook-market-pill .market-odds{color:var(--dk-ink) !important;font-weight:800}
+
+    /* Market period / sub-tab bar */
+    body .sportsbook-period-bar,
+    body #marketSubtabs,
+    body .sportsbook-market-rail{
+      background:var(--dk-bg-2) !important;
+      border:1px solid var(--dk-line) !important;
+      border-radius:12px !important;
+      padding:6px !important;
+      display:flex !important;
+      gap:4px !important;
+      flex-wrap:wrap;
+      margin:0 0 16px !important;
+    }
+    body .market-subtab{
+      background:transparent !important;
+      border:0 !important;
+      color:var(--dk-ink-2) !important;
+      padding:8px 14px !important;
+      border-radius:8px !important;
+      font:700 13px 'Inter',sans-serif !important;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      transition:background .12s ease, color .12s ease;
+    }
+    body .market-subtab:hover{background:var(--dk-surface) !important;color:var(--dk-ink) !important}
+    body .market-subtab.is-active{
+      background:linear-gradient(135deg,var(--dk-green),var(--dk-green-2)) !important;
+      color:#0a1f02 !important;
+    }
+    body .market-subtab__hint{
+      font-size:10px !important;
+      font-weight:600 !important;
+      opacity:.7 !important;
+      letter-spacing:.04em;
+      text-transform:none;
+    }
+
+    /* League rail (sidebar) */
+    body .sportsbook-league-rail{
+      background:var(--dk-bg-2) !important;
+      border:1px solid var(--dk-line) !important;
+      border-radius:12px !important;
+      padding:10px !important;
+    }
+
+    /* Pick slip layout */
+    body .sportsbook-picks-layout{
+      background:var(--dk-surface) !important;
+      border:1px solid var(--dk-line) !important;
+      border-radius:14px !important;
+      padding:18px !important;
+    }
+    body .sportsbook-empty-slip{
+      color:var(--dk-muted) !important;
+      text-align:center;
+      padding:28px 18px !important;
+    }
+
+    /* Empty state */
+    body .sportsbook-board-empty{
+      padding:36px 22px !important;
+      text-align:center;
+      color:var(--dk-muted) !important;
+    }
+    body .sportsbook-board-empty-icon{opacity:.5;font-size:30px;margin-bottom:10px}
+
+    /* Auth gate cards */
+    body .sportsbook-auth-card{
+      background:var(--dk-surface) !important;
+      border:1px solid var(--dk-line) !important;
+      border-radius:14px !important;
+      padding:22px !important;
+    }
+    body .sportsbook-auth-grid{gap:14px !important}
+
+    /* Lobby secondary buttons */
+    body .sportsbook-lobby-secondary-btn{
+      background:var(--dk-surface) !important;
+      border:1px solid var(--dk-line) !important;
+      color:var(--dk-ink) !important;
+      border-radius:10px !important;
+      padding:10px 14px !important;
+      font-weight:700 !important;
+    }
+    body .sportsbook-lobby-secondary-btn:hover{
+      background:var(--dk-surface-2) !important;
+      border-color:var(--dk-line-2) !important;
+    }
+
+    /* Tip / banner notes */
+    body .sportsbook-board-tip{
+      background:var(--dk-surface-2) !important;
+      border:1px solid var(--dk-line-2) !important;
+      color:var(--dk-ink-2) !important;
+      border-radius:10px !important;
+      padding:10px 14px !important;
+    }
+
+    /* ===== Placeholder kills (CSS-only, no JS edits) ===== */
+    /* "Live" tab is a stub that does nothing — hide entirely.
+       Functional tabs (game/moneyline/spread/totals/etc.) untouched. */
+    body .market-subtab[data-market="live"]{display:none !important}
+    /* "Sample Market" pill rendered when bookmaker odds missing */
+    body .odds-pending-badge{display:none !important}
+    /* Boilerplate disclaimer paragraph in consensus header */
+    body #consensus .sportsbook-panel-header p{display:none !important}
+    /* "aggregates currently loaded pick data" was the only paragraph;
+       eyebrow + h2 above remain visible. */
     </style>
 </head>
 <body>
