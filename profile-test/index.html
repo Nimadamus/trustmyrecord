@@ -1198,7 +1198,7 @@
     }
     </style>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501k">
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501l">
 </head>
 <body class="profile-page tmr-social-profile" data-tmr-test-route="profile">
     <!-- ==================== TEST ROUTE BANNER ====================
@@ -1209,14 +1209,7 @@
       TEST ROUTE · /profile-test/ · PickMonitor redesign on real production code · <a href="/profile/" style="color:#1a1208;text-decoration:underline">go to live /profile/</a>
     </div>
 
-    <!-- ==================== TMR PROFILE-TEST 3-COL DASH GRID ====================
-         Single wrapping <div class="tmr-pt-dash"> creates a real CSS
-         grid (240 / 1fr / 320). Existing profile sections are wrapped
-         in the center column. Renderer hooks (#profileCover,
-         #profileHeader, #summaryBar, etc.) are preserved at their
-         original IDs — only the parent chain has 2 extra wrapping divs,
-         which getElementById/queryAll-by-class are insensitive to. -->
-    <div class="tmr-pt-dash">
+    <!-- Rails as direct body siblings (no wrapping). Confirmed safe. -->
     <aside class="tmr-pt-leftrail" aria-label="Profile sidebar">
       <div class="tmr-pt-card">
         <h4 class="tmr-pt-card__title">Navigate</h4>
@@ -1234,7 +1227,11 @@
       <div class="tmr-pt-card" data-tmr-pt-watching></div>
       <div class="tmr-pt-card" data-tmr-pt-quickstats></div>
     </aside>
-    <section class="tmr-pt-center">
+    <aside class="tmr-pt-rightrail" aria-label="Community panels">
+      <div class="tmr-pt-card" data-tmr-pt-topcappers></div>
+      <div class="tmr-pt-card" data-tmr-pt-trending></div>
+      <div class="tmr-pt-card" data-tmr-pt-challenges></div>
+    </aside>
 
     <div class="profile-top-strip">
         <strong>Today:</strong>
@@ -7758,14 +7755,6 @@
     init();
     </script>
 
-    </section><!-- /.tmr-pt-center -->
-    <aside class="tmr-pt-rightrail" aria-label="Community panels">
-      <div class="tmr-pt-card" data-tmr-pt-topcappers></div>
-      <div class="tmr-pt-card" data-tmr-pt-trending></div>
-      <div class="tmr-pt-card" data-tmr-pt-challenges></div>
-    </aside>
-    </div><!-- /.tmr-pt-dash -->
-
         <footer class="site-footer">
             <div class="site-footer-inner">
                 <div class="site-footer-brand">
@@ -7804,7 +7793,7 @@
     <script src="/static/js/tmr-redesign-loader.js?v=20260501a" defer></script>
     <script src="/static/js/tmr-redesign-test-profile.js?v=20260501c" defer></script>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501k">
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501l">
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  8:02:00 PM -->
