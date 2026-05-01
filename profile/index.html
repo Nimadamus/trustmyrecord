@@ -5848,7 +5848,12 @@
         }
         if (s.effective_win_rate != null) {
             const v = Number(s.effective_win_rate);
-            setAdv('effective_win_rate', v.toFixed(2) + '%', v - 52.38);
+            // Math correctly emits values outside 0-100 at extreme ROI on
+            // small samples (e.g. 104.76% at +100% ROI on 1 pick), but the
+            // literal number reads as fake. Display "100%+" / "<0%" for the
+            // edges; the underlying value is unchanged.
+            const display = v > 100 ? '100%+' : v < 0 ? '<0%' : v.toFixed(2) + '%';
+            setAdv('effective_win_rate', display, v - 52.38);
         }
         if (s.z_score != null) {
             const v = Number(s.z_score);
