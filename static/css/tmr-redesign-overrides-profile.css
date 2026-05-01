@@ -519,7 +519,43 @@ body[data-tmr-test-route="profile"] .kpi-label{
   text-transform: uppercase !important;
 }
 
-/* ===== 7. Profile tabs ============================================== */
+/* ===== 7a. AGGRESSIVE: hide tabs nav + force panels to stack ========
+   The live profile has 11 tabs (Picks/Posts/Record/Challenges/Polls/
+   Trivia/Tournaments/Advanced/Charts/Splits/Store) gated behind a
+   tab-nav. PickMonitor preview has NO tab nav — content stacks
+   vertically as dashboard cards. Hide the nav and force the panels
+   PickMonitor cares about (picks + record) to display:block always. */
+
+body[data-tmr-test-route="profile"] .profile-tabs-section,
+body[data-tmr-test-route="profile"] .profile-tabs{
+  display: none !important;
+}
+/* Hide all tab panels by default */
+body[data-tmr-test-route="profile"] .profile-tab-panel{
+  display: none !important;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+/* Force-show the panels PickMonitor cares about, in the right order */
+body[data-tmr-test-route="profile"] .profile-tab-panel[data-panel="record"]{
+  display: block !important;
+  order: 1 !important;
+}
+body[data-tmr-test-route="profile"] .profile-tab-panel[data-panel="picks"]{
+  display: block !important;
+  order: 2 !important;
+}
+/* The body-section + main need to be flex containers for `order` to work */
+body[data-tmr-test-route="profile"] .profile-body-section .container,
+body[data-tmr-test-route="profile"] .profile-main{
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+}
+
+/* ===== 7. (legacy) Profile tabs (kept for fallback if user un-hides) ===== */
 
 body[data-tmr-test-route="profile"] .profile-tabs-section{
   background: transparent !important;
