@@ -9175,7 +9175,7 @@
     /* "aggregates currently loaded pick data" was the only paragraph;
        eyebrow + h2 above remain visible. */
     </style>
-    <link rel="stylesheet" href="/static/css/tmr-redesign-test.css?v=20260501a">
+    <link rel="stylesheet" href="/static/css/tmr-redesign-test.css?v=20260501b">
 </head>
 <body data-tmr-test-route="sportsbook">
     <!-- ==================== TEST ROUTE BANNER ====================
@@ -9543,6 +9543,33 @@
                 .sport-more-pop button { display: block; width: 100%; text-align: left; background: transparent; border: 0; color: #cbd5e1; padding: 9px 12px; border-radius: 6px; font: 600 13px/1 'Inter', sans-serif; cursor: pointer; }
                 .sport-more-pop button:hover { background: rgba(0,255,255,0.08); color: #fff; }
             </style>
+        </div>
+
+        <!-- ==================== TMR FEATURED CARDS ROW (test route only) ====================
+             Static visual cards above the board — DK preview style. No fake
+             stats / users / payouts. Each card is informational and links to
+             the relevant section of the app. Removable in one block if not
+             liked. Pure markup; no JS hook depends on these classes.
+        -->
+        <div class="tmr-featured-row" aria-label="What you can do here">
+            <a class="tmr-featured-card tmr-featured-card--lock" href="#picks" onclick="window.showPickStep && window.showPickStep('sportSelection');return false;">
+                <span class="tmr-featured-card__tag">Make a pick</span>
+                <span class="tmr-featured-card__title">Lock a pick to your record</span>
+                <span class="tmr-featured-card__sub">Pick a sport below, choose a market, lock it. Auto-graded.</span>
+                <span class="tmr-featured-card__cta">Start →</span>
+            </a>
+            <a class="tmr-featured-card tmr-featured-card--record" href="/profile/?tab=picks">
+                <span class="tmr-featured-card__tag">Your record</span>
+                <span class="tmr-featured-card__title">Public record &amp; ROI</span>
+                <span class="tmr-featured-card__sub">Every locked pick lives on your timestamped public profile.</span>
+                <span class="tmr-featured-card__cta">View record →</span>
+            </a>
+            <a class="tmr-featured-card tmr-featured-card--leaderboard" href="/leaderboards/">
+                <span class="tmr-featured-card__tag">Leaderboards</span>
+                <span class="tmr-featured-card__title">Top cappers by ROI</span>
+                <span class="tmr-featured-card__sub">Ranked by units won, win rate, sample size, CLV.</span>
+                <span class="tmr-featured-card__cta">See rankings →</span>
+            </a>
         </div>
 
         <!-- Step 1: Sport Selection -->
@@ -28050,11 +28077,11 @@ document.addEventListener('DOMContentLoaded', function() {
     </style>
     <link rel="stylesheet" href="/static/css/sportsbook-pro.css?v=20260430pickslipexp1">
     <link rel="stylesheet" href="/static/css/sportsbook-dk-polish.css?v=20260430hidedup1">
-    <link rel="stylesheet" href="/static/css/tmr-redesign-test.css?v=20260501a">
+    <link rel="stylesheet" href="/static/css/tmr-redesign-test.css?v=20260501b">
     <style id="tmr-redesign-tail-guard">
     /* Inline backstop so nothing loaded later in <body> can overwrite the
        redesign. Source-order LAST + !important = absolute cascade win. */
-    @import url("/static/css/tmr-redesign-test.css?v=20260501a");
+    @import url("/static/css/tmr-redesign-test.css?v=20260501b");
     </style>
     <script>
     // Stamp body[data-tmr-auth] so the Make Picks page can hide the
