@@ -757,26 +757,40 @@ html body #picks .sportsbook-sport-tabs{
    No markup change. No JS change. CSS only.
 ============================================================================ */
 
-/* Reduced floors so the row fits inside .sportsbook-board-shell (which
-   has overflow:hidden from sportsbook-pro.css). At a center column of
-   ~580px+, the row needs to be: matchup(240) + 3*markets(90 floor each)
-   + action(80) + 4*gaps(12) = 638px minimum. Total / Over-Under column
-   stays visible; team names stay readable. */
+/* v7.1 — tighter floors so the row fits inside the shell at wide viewport
+   without needing the horizontal scrollbar, with a slight bias toward
+   the Total column.
+   Min row width: 200 + 90 + 90 + 100 + 60 + 4*10 (gap) + 32 (pad) = 612px.
+   Most center columns (>700px) fit comfortably.
+   - matchup: minmax(200px, 1.4fr) — slightly less greedy than v7's 240/1.7
+   - spread: minmax(90px, .95fr)   — slightly tighter
+   - ml:     minmax(90px, .95fr)   — slightly tighter
+   - total:  minmax(100px, 1.15fr) — bias more space here per user request
+   - action: 60px                  — tightest, lowest priority */
 body[data-tmr-test-route="sportsbook"] #picks .sb-board-row,
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-grid-head{
-  grid-template-columns: minmax(240px, 1.7fr) minmax(95px, 1fr) minmax(95px, 1fr) minmax(95px, 1fr) 80px !important;
-  gap: 0 12px !important;
-  padding-left: 20px !important;
-  padding-right: 20px !important;
+  grid-template-columns: minmax(200px, 1.4fr) minmax(90px, .95fr) minmax(90px, .95fr) minmax(100px, 1.15fr) 60px !important;
+  gap: 0 10px !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
 }
 
-/* Belt-and-suspenders: allow the shell to show overflow if it ever still
-   happens, so columns aren't invisibly clipped. */
+/* Restore overflow:hidden on the shell now that the row fits — kills the
+   scrollbar. If something extreme overflows in a future state, the inline
+   safety net here stays minimal. */
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-shell,
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-stage-panel,
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-selector-shell{
-  overflow-x: auto !important;
+  overflow-x: hidden !important;
   overflow-y: visible !important;
+}
+
+/* Tighten the action button to fit in 60px while still showing its label.
+   v7 had 56px height and 12px font; keep that legible at the new width. */
+body[data-tmr-test-route="sportsbook"] #picks .sb-board-action{
+  font-size: 11px !important;
+  letter-spacing: .03em !important;
+  padding: 0 6px !important;
 }
 
 /* Allow the matchup container to use the full grid-cell width and
