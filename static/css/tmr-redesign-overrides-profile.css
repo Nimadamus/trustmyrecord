@@ -72,43 +72,71 @@ body[data-tmr-test-route="profile"] .profile-tab-panel[data-panel="record"]{
   display: block !important;
 }
 
-/* ===== 1a. Fixed-position rails (NON-INVASIVE, no markup wrapping) ==
-   The rails are added as direct body siblings — they do NOT wrap any
-   existing element, so the live profile renderer's queries cannot be
-   affected. Body padding-left/right creates the 3-column visual at
-   wide viewports. */
+/* ===== 1a. PickMonitor 3-col grid via .tmr-pt-dash wrapper =========
+   Single wrapping <div class="tmr-pt-dash"> creates a real CSS grid
+   centered at max 1480px. Inside: left rail | center | right rail. */
 
-body[data-tmr-test-route="profile"]{
-  padding-left: 268px !important;
-  padding-right: 348px !important;
+body[data-tmr-test-route="profile"] .tmr-pt-dash{
+  display: grid !important;
+  grid-template-columns: 240px minmax(0, 1fr) 320px !important;
+  gap: 24px !important;
+  max-width: 1480px !important;
+  margin: 0 auto !important;
+  padding: 24px 24px 60px !important;
   box-sizing: border-box !important;
+  align-items: start !important;
+}
+@media (max-width: 1280px){
+  body[data-tmr-test-route="profile"] .tmr-pt-dash{
+    grid-template-columns: 240px minmax(0, 1fr) !important;
+  }
+  body[data-tmr-test-route="profile"] .tmr-pt-rightrail{
+    display: none !important;
+  }
+}
+@media (max-width: 980px){
+  body[data-tmr-test-route="profile"] .tmr-pt-dash{
+    grid-template-columns: 1fr !important;
+    padding: 14px !important;
+    gap: 14px !important;
+  }
+  body[data-tmr-test-route="profile"] .tmr-pt-leftrail{
+    position: static !important;
+  }
 }
 
 body[data-tmr-test-route="profile"] .tmr-pt-leftrail{
-  position: fixed !important;
-  top: 60px !important;
-  left: 12px !important;
-  width: 248px !important;
-  bottom: 12px !important;
-  overflow-y: auto !important;
+  position: sticky !important;
+  top: 64px !important;
+  align-self: flex-start !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 12px !important;
-  padding: 0 4px !important;
-  z-index: 50 !important;
+  gap: 14px !important;
 }
 body[data-tmr-test-route="profile"] .tmr-pt-rightrail{
-  position: fixed !important;
-  top: 60px !important;
-  right: 12px !important;
-  width: 328px !important;
-  bottom: 12px !important;
-  overflow-y: auto !important;
+  position: sticky !important;
+  top: 64px !important;
+  align-self: flex-start !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 12px !important;
-  padding: 0 4px !important;
-  z-index: 50 !important;
+  gap: 14px !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-center{
+  min-width: 0 !important;
+  display: block !important;
+}
+/* Center column: kill the production .container max-width / padding
+   so existing sections fill the grid column naturally. */
+body[data-tmr-test-route="profile"] .tmr-pt-center .container,
+body[data-tmr-test-route="profile"] .tmr-pt-center .profile-body-grid{
+  max-width: none !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+/* Section spacing inside center column */
+body[data-tmr-test-route="profile"] .tmr-pt-center > section{
+  margin-bottom: 18px !important;
 }
 
 body[data-tmr-test-route="profile"] .tmr-pt-card{
@@ -202,23 +230,7 @@ body[data-tmr-test-route="profile"] .container{
   margin-right: auto !important;
 }
 
-/* Responsive: hide right rail under 1280px, hide left under 980px */
-@media (max-width: 1280px){
-  body[data-tmr-test-route="profile"]{
-    padding-right: 0 !important;
-  }
-  body[data-tmr-test-route="profile"] .tmr-pt-rightrail{
-    display: none !important;
-  }
-}
-@media (max-width: 980px){
-  body[data-tmr-test-route="profile"]{
-    padding-left: 0 !important;
-  }
-  body[data-tmr-test-route="profile"] .tmr-pt-leftrail{
-    display: none !important;
-  }
-}
+/* (responsive handled by .tmr-pt-dash media queries above) */
 
 /* ===== 2. The 2-col shell (added on profile-test markup only) =========
    .tmr-pt-shell wraps all profile sections + a left navigation rail.

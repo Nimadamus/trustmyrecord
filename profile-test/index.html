@@ -1198,7 +1198,7 @@
     }
     </style>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501j">
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501k">
 </head>
 <body class="profile-page tmr-social-profile" data-tmr-test-route="profile">
     <!-- ==================== TEST ROUTE BANNER ====================
@@ -1209,14 +1209,14 @@
       TEST ROUTE · /profile-test/ · PickMonitor redesign on real production code · <a href="/profile/" style="color:#1a1208;text-decoration:underline">go to live /profile/</a>
     </div>
 
-    <!-- ==================== TMR PROFILE-TEST FIXED-POSITION RAILS ====================
-         Left + right rails added as DIRECT BODY SIBLINGS (no wrapping
-         of any existing element). Rails use position:fixed so they
-         float over the page without changing the document flow. Body
-         gets padding-left and padding-right at media-query widths so
-         the existing profile content shifts away from the rail areas.
-         Renderer queries cannot be affected because no element was
-         moved or wrapped. -->
+    <!-- ==================== TMR PROFILE-TEST 3-COL DASH GRID ====================
+         Single wrapping <div class="tmr-pt-dash"> creates a real CSS
+         grid (240 / 1fr / 320). Existing profile sections are wrapped
+         in the center column. Renderer hooks (#profileCover,
+         #profileHeader, #summaryBar, etc.) are preserved at their
+         original IDs — only the parent chain has 2 extra wrapping divs,
+         which getElementById/queryAll-by-class are insensitive to. -->
+    <div class="tmr-pt-dash">
     <aside class="tmr-pt-leftrail" aria-label="Profile sidebar">
       <div class="tmr-pt-card">
         <h4 class="tmr-pt-card__title">Navigate</h4>
@@ -1231,19 +1231,10 @@
           <a class="tmr-pt-rail-link" href="/notifications/"><span class="tmr-pt-rail-icn">🔔</span><span>Notifications</span></a>
         </nav>
       </div>
-      <!-- Watching + Quick Stats: empty containers populated by
-           tmr-redesign-test-profile.js from window.profileData. CSS
-           hides them via :empty if no real data lands. -->
       <div class="tmr-pt-card" data-tmr-pt-watching></div>
       <div class="tmr-pt-card" data-tmr-pt-quickstats></div>
     </aside>
-    <aside class="tmr-pt-rightrail" aria-label="Community panels">
-      <!-- Right-rail cards await real API wiring. Empty by default;
-           hidden by CSS until populated. No fake content. -->
-      <div class="tmr-pt-card" data-tmr-pt-topcappers></div>
-      <div class="tmr-pt-card" data-tmr-pt-trending></div>
-      <div class="tmr-pt-card" data-tmr-pt-challenges></div>
-    </aside>
+    <section class="tmr-pt-center">
 
     <div class="profile-top-strip">
         <strong>Today:</strong>
@@ -7767,6 +7758,14 @@
     init();
     </script>
 
+    </section><!-- /.tmr-pt-center -->
+    <aside class="tmr-pt-rightrail" aria-label="Community panels">
+      <div class="tmr-pt-card" data-tmr-pt-topcappers></div>
+      <div class="tmr-pt-card" data-tmr-pt-trending></div>
+      <div class="tmr-pt-card" data-tmr-pt-challenges></div>
+    </aside>
+    </div><!-- /.tmr-pt-dash -->
+
         <footer class="site-footer">
             <div class="site-footer-inner">
                 <div class="site-footer-brand">
@@ -7805,7 +7804,7 @@
     <script src="/static/js/tmr-redesign-loader.js?v=20260501a" defer></script>
     <script src="/static/js/tmr-redesign-test-profile.js?v=20260501c" defer></script>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501j">
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501k">
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  8:02:00 PM -->
