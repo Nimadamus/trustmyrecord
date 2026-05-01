@@ -757,12 +757,26 @@ html body #picks .sportsbook-sport-tabs{
    No markup change. No JS change. CSS only.
 ============================================================================ */
 
+/* Reduced floors so the row fits inside .sportsbook-board-shell (which
+   has overflow:hidden from sportsbook-pro.css). At a center column of
+   ~580px+, the row needs to be: matchup(240) + 3*markets(90 floor each)
+   + action(80) + 4*gaps(12) = 638px minimum. Total / Over-Under column
+   stays visible; team names stay readable. */
 body[data-tmr-test-route="sportsbook"] #picks .sb-board-row,
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-grid-head{
-  grid-template-columns: minmax(280px, 2fr) minmax(110px, 1fr) minmax(110px, 1fr) minmax(110px, 1fr) 100px !important;
-  gap: 0 14px !important;
-  padding-left: 22px !important;
-  padding-right: 22px !important;
+  grid-template-columns: minmax(240px, 1.7fr) minmax(95px, 1fr) minmax(95px, 1fr) minmax(95px, 1fr) 80px !important;
+  gap: 0 12px !important;
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+}
+
+/* Belt-and-suspenders: allow the shell to show overflow if it ever still
+   happens, so columns aren't invisibly clipped. */
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-shell,
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-stage-panel,
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-selector-shell{
+  overflow-x: auto !important;
+  overflow-y: visible !important;
 }
 
 /* Allow the matchup container to use the full grid-cell width and
@@ -821,11 +835,32 @@ body[data-tmr-test-route="sportsbook"] #picks .sb-board-action:hover{
   border-color: #53d337 !important;
 }
 
-/* Tablet/narrow viewports — when sportsbook-pro.css media query collapses
-   the row to a stacked layout, our matchup width still needs the unwrap. */
+/* Tablet/narrow viewports (<=1180px) — let sportsbook-pro.css's stacked
+   layout handle this width. We DO NOT override grid-template-columns or
+   grid-template-areas at this size; the production stack
+   (matchup spans full width, then a 3-col row of spread/ml/total, then
+   a full-width action button) is the correct mobile layout and our
+   v6-FINAL minmax block above must be reset here so production wins. */
 @media (max-width: 1180px) {
   body[data-tmr-test-route="sportsbook"] #picks .sb-board-row,
   body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-grid-head{
     grid-template-columns: 1fr 1fr 1fr !important;
+    grid-template-rows: auto auto auto !important;
+    grid-template-areas:
+      "match  match  match"
+      "spread ml     total"
+      "action action action" !important;
+    gap: 10px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  body[data-tmr-test-route="sportsbook"] #picks .sb-board-matchup{ grid-area: match !important; }
+  body[data-tmr-test-route="sportsbook"] #picks .sb-board-row > .sb-board-col[data-col="spread"]{ grid-area: spread !important; }
+  body[data-tmr-test-route="sportsbook"] #picks .sb-board-row > .sb-board-col[data-col="ml"]{ grid-area: ml !important; }
+  body[data-tmr-test-route="sportsbook"] #picks .sb-board-row > .sb-board-col[data-col="total"]{ grid-area: total !important; }
+  body[data-tmr-test-route="sportsbook"] #picks .sb-board-action{
+    grid-area: action !important;
+    width: 100% !important;
+    height: 46px !important;
   }
 }
