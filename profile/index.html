@@ -8039,8 +8039,8 @@
         fileInput.addEventListener('change', function() {
             const file = this.files[0];
             if (!file) return;
-            if (file.size > 2 * 1024 * 1024) { showToast('Image must be under 2MB', 'error'); return; }
-            if (!file.type.match(/^image\/(png|jpeg|gif|webp)$/)) { showToast('Invalid image type', 'error'); return; }
+            if (file.size > 5 * 1024 * 1024) { showToast('Image must be under 5MB', 'error'); return; }
+            if (!file.type.match(/^image\/(png|jpe?g|webp)$/)) { showToast('Please choose a PNG, JPG, or WebP image', 'error'); return; }
             const reader = new FileReader();
             reader.onload = function(e) {
                 pendingAvatarData = e.target.result;
@@ -8063,7 +8063,7 @@
 
                 // Try backend first
                 if (api && typeof api.updateProfile === 'function') {
-                    try { await api.updateProfile(updates); } catch(err) { /* fall through to localStorage */ }
+                    try { await api.updateProfile(updates); } catch(err) { throw new Error((err && err.message) || 'Profile update failed. Please try again.'); }
 
                     // Save favorite teams
                     try {
