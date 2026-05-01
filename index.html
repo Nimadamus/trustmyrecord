@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrustMyRecord — Visual Redesign Previews</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#070b14;color:#e6ecf5;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+body{padding:60px 24px;background:
+  radial-gradient(900px 500px at 80% -10%, rgba(34,211,238,0.1), transparent 60%),
+  radial-gradient(900px 500px at -10% 30%, rgba(167,139,250,0.08), transparent 60%),
+  #070b14}
+.wrap{max-width:1100px;margin:0 auto}
+h1{font-size:34px;font-weight:900;letter-spacing:-.02em;margin-bottom:6px}
+.sub{color:#7a8499;font-size:15px;line-height:1.5;margin-bottom:36px;max-width:680px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+@media (max-width:760px){.grid{grid-template-columns:1fr}}
+a.card{display:block;text-decoration:none;color:inherit;background:linear-gradient(180deg,#172238,#111a2e);border:1px solid #243049;border-radius:16px;padding:22px;transition:all .15s;position:relative;overflow:hidden}
+a.card:before{content:"";position:absolute;inset:0;background:radial-gradient(400px 200px at 80% -30%,rgba(34,211,238,.18),transparent 60%);pointer-events:none;opacity:.6}
+a.card:hover{transform:translateY(-3px);border-color:#2c4066;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.tag{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#fbbf24;font-weight:800}
+h3{font-size:20px;font-weight:800;margin-top:8px;letter-spacing:-.01em}
+.desc{color:#b6c0d4;font-size:13px;line-height:1.5;margin-top:8px}
+.go{margin-top:14px;display:inline-flex;align-items:center;gap:6px;color:#22d3ee;font-weight:700;font-size:13px}
+.note{margin-top:40px;padding:18px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:12px;color:#fcd34d;font-size:13px;line-height:1.5}
+.note b{color:#fbbf24}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>TrustMyRecord — Visual Redesign Previews</h1>
+  <p class="sub">Four direction options. Click any to view full-screen. These are visual mocks only — nothing has been deployed and your live site is untouched. The point is to pick a direction, then I'll apply it to the real pages.</p>
+
+  <div class="grid">
+    <a class="card" href="index-preview-pickmonitor.html">
+      <div class="tag">Homepage Option 1</div>
+      <h3>PickMonitor-style Dashboard</h3>
+      <div class="desc">Profile dashboard with left-to-right stat strip (Record, ROI, Units, Streak, Best Sport), filterable by sport / timeframe / bet type, performance chart, recent picks table, leaderboards rail.</div>
+      <div class="go">View preview →</div>
+    </a>
+
+    <a class="card" href="index-preview-social.html">
+      <div class="tag">Homepage Option 2</div>
+      <h3>X / Twitter-style Profile</h3>
+      <div class="desc">Cover image + avatar overlay, bio + inline stats row, tabs (Picks / Replies / Records / Polls), feed of pick cards as posts with likes/replies/views, "Cappers to follow" suggestions rail.</div>
+      <div class="go">View preview →</div>
+    </a>
+
+    <a class="card" href="sportsbook-preview-dk.html">
+      <div class="tag">Sportsbook</div>
+      <h3>DraftKings-style Odds Board</h3>
+      <div class="desc">Sport pill bar across top, featured cards (SGP boost, live games), 4-column odds grid (Teams / Spread / Total / Moneyline) with inline scores on live games, bet slip rail with "Lock to TMR Record" button.</div>
+      <div class="go">View preview →</div>
+    </a>
+
+    <a class="card" href="forum-preview-2p2.html">
+      <div class="tag">Forum</div>
+      <h3>2+2-style Tabular Forum</h3>
+      <div class="desc">Classic forum layout, sub-forum table with thread/post counts, mods, and last-post columns. Threads view with sticky/hot icons. Sidebar with online users, sport categories, strategy sub-forums.</div>
+      <div class="go">View preview →</div>
+    </a>
+  </div>
+
+  <div class="note">
+    <b>Note:</b> the dark "PREVIEW" banner across the top of each preview is intentional — to keep them visually flagged as mocks. The blank top strip above that banner (where the global TMR nav usually lives) is empty here because this is a sandboxed preview branch with no shared assets. On the real site, the nav appears as it does today.
+  </div>
+</div>
+</body>
+</html>
