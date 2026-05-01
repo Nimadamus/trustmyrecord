@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TMR — Preview: PickMonitor-style Dashboard</title>
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css">
+<style>
+:root{
+  --bg:#070b14;
+  --bg-2:#0b1120;
+  --surface:#111a2e;
+  --surface-2:#172238;
+  --surface-3:#1f2c47;
+  --line:#243049;
+  --line-2:#2f3d5c;
+  --ink:#e6ecf5;
+  --ink-2:#b6c0d4;
+  --muted:#7d8aa3;
+  --teal:#22d3ee;
+  --teal-2:#06b6d4;
+  --gold:#fbbf24;
+  --green:#22c55e;
+  --red:#ef4444;
+  --blue:#3b82f6;
+  --violet:#a78bfa;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{background:
+  radial-gradient(1200px 600px at 80% -10%, rgba(34,211,238,0.08), transparent 60%),
+  radial-gradient(900px 500px at -10% 30%, rgba(167,139,250,0.06), transparent 60%),
+  var(--bg);
+}
+a{color:inherit;text-decoration:none}
+.preview-banner{position:sticky;top:0;z-index:50;background:linear-gradient(90deg,#fbbf24,#f59e0b);color:#1a1208;padding:8px 18px;font-weight:700;font-size:13px;text-align:center;letter-spacing:.02em}
+.preview-banner a{text-decoration:underline}
+
+main.dash{max-width:1440px;margin:0 auto;padding:24px 28px 80px;display:grid;grid-template-columns:240px 1fr 320px;gap:24px}
+@media (max-width:1180px){main.dash{grid-template-columns:1fr;}.left-rail,.right-rail{display:none}}
+
+/* ========== LEFT RAIL ========== */
+.left-rail{position:sticky;top:64px;align-self:start;display:flex;flex-direction:column;gap:18px}
+.rail-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.rail-card h4{margin:0 0 10px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.rail-nav{display:flex;flex-direction:column;gap:2px}
+.rail-nav a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;font-size:14px;color:var(--ink-2);font-weight:500}
+.rail-nav a:hover{background:var(--surface-2);color:var(--ink)}
+.rail-nav a.active{background:linear-gradient(90deg,rgba(34,211,238,0.18),rgba(34,211,238,0.04));color:var(--teal);font-weight:600}
+.rail-nav .ico{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:14px}
+.sport-tags{display:flex;flex-wrap:wrap;gap:6px}
+.sport-tags span{font-size:11px;font-weight:700;letter-spacing:.04em;padding:5px 9px;border-radius:6px;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)}
+.sport-tags span.hot{background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(251,191,36,.06));color:var(--gold);border-color:rgba(251,191,36,.35)}
+
+/* ========== CENTER ========== */
+.profile-hero{background:linear-gradient(180deg,var(--surface-2),var(--surface));border:1px solid var(--line);border-radius:18px;overflow:hidden;position:relative}
+.profile-hero .cover{height:140px;background:
+  radial-gradient(600px 200px at 70% 50%, rgba(34,211,238,.35), transparent 70%),
+  radial-gradient(400px 200px at 20% 30%, rgba(251,191,36,.25), transparent 70%),
+  linear-gradient(135deg,#0c1a3a,#1a0c3a);
+  border-bottom:1px solid var(--line)}
+.profile-hero .body{padding:0 26px 22px;display:grid;grid-template-columns:120px 1fr auto;gap:22px;align-items:end;margin-top:-58px}
+.avatar{width:116px;height:116px;border-radius:24px;background:linear-gradient(135deg,#22d3ee,#a78bfa);border:4px solid var(--surface);display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:900;color:#0a0e1a;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.who h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-.01em}
+.who .handle{display:flex;gap:10px;align-items:center;color:var(--muted);font-size:14px;margin-top:4px}
+.verified{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;background:rgba(34,211,238,.15);color:var(--teal);font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border:1px solid rgba(34,211,238,.35)}
+.bio{margin-top:8px;color:var(--ink-2);font-size:14px;max-width:520px;line-height:1.5}
+.cta-row{display:flex;gap:8px}
+.btn{padding:10px 16px;border-radius:10px;font-weight:600;font-size:13px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);cursor:pointer;transition:all .15s}
+.btn:hover{background:var(--surface-3);border-color:var(--line-2)}
+.btn.primary{background:linear-gradient(135deg,var(--teal),var(--teal-2));color:#04222a;border-color:transparent}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.gold{background:linear-gradient(135deg,var(--gold),#f59e0b);color:#1a1208;border-color:transparent}
+
+/* Filter bar */
+.filterbar{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.filterbar .grp{display:flex;gap:4px;background:var(--bg-2);padding:4px;border-radius:10px;border:1px solid var(--line)}
+.filterbar .grp button{background:transparent;border:0;color:var(--ink-2);padding:6px 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;letter-spacing:.02em}
+.filterbar .grp button.on{background:var(--surface-3);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-2)}
+.filterbar .spacer{flex:1}
+.filterbar select{background:var(--bg-2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:12px;font-weight:600;font-family:inherit}
+
+/* Stats strip — left to right */
+.stats-strip{margin-top:18px;display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+@media (max-width:980px){.stats-strip{grid-template-columns:repeat(3,1fr)}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;position:relative;overflow:hidden}
+.stat:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.03),transparent 40%);pointer-events:none}
+.stat .lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.stat .val{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;margin-top:6px;letter-spacing:-.02em}
+.stat .delta{font-size:11px;font-weight:700;margin-top:4px;display:inline-flex;align-items:center;gap:4px}
+.stat .delta.up{color:var(--green)}
+.stat .delta.dn{color:var(--red)}
+.stat.accent .val{color:var(--teal)}
+.stat.gold .val{color:var(--gold)}
+
+/* Chart card */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:18px}
+.card h3{margin:0 0 4px;font-size:15px;font-weight:700}
+.card .sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.chart{height:240px;position:relative;background:linear-gradient(180deg,rgba(34,211,238,.06),transparent);border-radius:10px;border:1px dashed var(--line);overflow:hidden}
+.chart svg{width:100%;height:100%;display:block}
+
+/* Picks table */
+.picks-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.picks-head .tabs{display:flex;gap:4px;background:var(--bg-2);padding:4px;border-radius:10px;border:1px solid var(--line)}
+.picks-head .tabs button{background:transparent;border:0;color:var(--ink-2);padding:6px 12px;font-size:12px;font-weight:600;border-radius:7px;cursor:pointer}
+.picks-head .tabs button.on{background:var(--surface-3);color:var(--ink)}
+table.picks{width:100%;border-collapse:collapse;font-size:13px}
+table.picks th{text-align:left;padding:10px 12px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;border-bottom:1px solid var(--line)}
+table.picks td{padding:14px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.picks tr:hover{background:var(--surface-2)}
+.sport-pill{display:inline-flex;align-items:center;justify-content:center;min-width:42px;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:800;letter-spacing:.06em}
+.sp-mlb{background:rgba(59,130,246,.18);color:#7eb1ff}
+.sp-nba{background:rgba(251,146,60,.18);color:#fbbf66}
+.sp-nfl{background:rgba(34,197,94,.18);color:#86efac}
+.sp-nhl{background:rgba(167,139,250,.2);color:#c4b5fd}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:6px;font-size:10px;font-weight:800;letter-spacing:.06em}
+.pill.win{background:rgba(34,197,94,.16);color:#4ade80}
+.pill.loss{background:rgba(239,68,68,.16);color:#f87171}
+.pill.pend{background:rgba(251,191,36,.16);color:#fcd34d}
+.units{font-family:'JetBrains Mono',monospace;font-weight:700}
+.units.pos{color:var(--green)}
+.units.neg{color:var(--red)}
+
+/* ========== RIGHT RAIL ========== */
+.right-rail{position:sticky;top:64px;align-self:start;display:flex;flex-direction:column;gap:18px}
+.lb-row{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px}
+.lb-row:hover{background:var(--surface-2)}
+.lb-row .rk{width:22px;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--muted);text-align:center}
+.lb-row .av{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#22d3ee,#a78bfa);display:flex;align-items:center;justify-content:center;font-weight:800;color:#04222a;font-size:13px}
+.lb-row .meta{flex:1;min-width:0}
+.lb-row .name{font-size:13px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-row .stat-line{font-size:11px;color:var(--muted)}
+.lb-row .roi{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--green);font-size:13px}
+.trend-row{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;cursor:pointer}
+.trend-row:hover{background:var(--surface-2)}
+.trend-row .icn{width:32px;height:32px;border-radius:9px;background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:var(--ink-2)}
+.trend-row .body{flex:1}
+.trend-row .ttl{font-size:13px;font-weight:600}
+.trend-row .sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+footer.mini{max-width:1440px;margin:0 auto;padding:30px 28px;color:var(--muted);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="preview-banner">PREVIEW · PickMonitor-style profile dashboard · <a href="/">back to live site</a></div>
+
+<main class="dash">
+  <!-- LEFT RAIL -->
+  <aside class="left-rail">
+    <div class="rail-card">
+      <h4>Navigate</h4>
+      <nav class="rail-nav">
+        <a href="#" class="active"><span class="ico">📊</span>Dashboard</a>
+        <a href="/sportsbook/"><span class="ico">🎯</span>Make a Pick</a>
+        <a href="/leaderboards/"><span class="ico">🏆</span>Leaderboards</a>
+        <a href="/feed/"><span class="ico">💬</span>Feed</a>
+        <a href="/forum/"><span class="ico">🗣️</span>Forum</a>
+        <a href="/marketplace/"><span class="ico">💎</span>Marketplace</a>
+        <a href="/arena/"><span class="ico">🎮</span>Arena</a>
+      </nav>
+    </div>
+    <div class="rail-card">
+      <h4>Watching</h4>
+      <div class="sport-tags">
+        <span class="hot">MLB</span><span>NBA</span><span>NHL</span><span>NFL</span><span>UFC</span><span>SOC</span>
+      </div>
+    </div>
+    <div class="rail-card">
+      <h4>Quick Stats</h4>
+      <div style="font-size:12px;color:var(--ink-2);line-height:1.7">
+        Followers <span style="float:right;font-weight:700;color:var(--ink)">2,148</span><br>
+        Following <span style="float:right;font-weight:700;color:var(--ink)">312</span><br>
+        Joined <span style="float:right;font-weight:700;color:var(--ink)">Mar 2024</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CENTER -->
+  <section class="center">
+    <div class="profile-hero">
+      <div class="cover"></div>
+      <div class="body">
+        <div class="avatar">JM</div>
+        <div class="who">
+          <h1>Jake Morrison <span class="verified">✓ Verified</span></h1>
+          <div class="handle">@sharpjake · Springfield, IL · Joined Mar 2024</div>
+          <p class="bio">MLB/NBA totals specialist. Locking picks publicly since '24. No fluff, no hype — just the work. ROI > clicks.</p>
+        </div>
+        <div class="cta-row">
+          <button class="btn">Share Record</button>
+          <button class="btn primary">Make a Pick</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filterbar">
+      <div class="grp">
+        <button class="on">All Sports</button>
+        <button>MLB</button><button>NBA</button><button>NFL</button><button>NHL</button><button>UFC</button>
+      </div>
+      <div class="grp">
+        <button>1D</button><button>1W</button><button class="on">1M</button><button>3M</button><button>YTD</button><button>All</button>
+      </div>
+      <div class="grp">
+        <button class="on">All Bets</button><button>Spread</button><button>Total</button><button>ML</button><button>Prop</button>
+      </div>
+      <div class="spacer"></div>
+      <select><option>Sort: Newest</option><option>Sort: Highest ROI</option><option>Sort: Most Units</option></select>
+    </div>
+
+    <!-- STATS LEFT TO RIGHT -->
+    <div class="stats-strip">
+      <div class="stat accent"><div class="lbl">Record</div><div class="val">182-141-7</div><div class="delta up">▲ 56.4% W</div></div>
+      <div class="stat gold"><div class="lbl">ROI</div><div class="val">+14.2%</div><div class="delta up">▲ 2.1%</div></div>
+      <div class="stat"><div class="lbl">Units</div><div class="val" style="color:var(--green)">+47.85</div><div class="delta up">▲ +3.2u</div></div>
+      <div class="stat"><div class="lbl">Avg Odds</div><div class="val">-108</div><div class="delta">EV +4.6%</div></div>
+      <div class="stat"><div class="lbl">Streak</div><div class="val" style="color:var(--green)">W7</div><div class="delta up">Hot</div></div>
+      <div class="stat"><div class="lbl">Best Sport</div><div class="val" style="font-size:18px">MLB Tot</div><div class="delta up">62% W</div></div>
+    </div>
+
+    <!-- PERFORMANCE CHART -->
+    <div class="card">
+      <h3>Performance — Last 30 Days</h3>
+      <div class="sub">Cumulative units · all sports · graded picks only</div>
+      <div class="chart">
+        <svg viewBox="0 0 800 240" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="ga" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <g stroke="#243049" stroke-width="1">
+            <line x1="0" x2="800" y1="60" y2="60"/>
+            <line x1="0" x2="800" y1="120" y2="120"/>
+            <line x1="0" x2="800" y1="180" y2="180"/>
+          </g>
+          <path d="M0,200 L40,195 L80,180 L120,170 L160,175 L200,160 L240,155 L280,140 L320,150 L360,135 L400,125 L440,110 L480,118 L520,100 L560,95 L600,80 L640,85 L680,70 L720,60 L760,52 L800,45 L800,240 L0,240 Z" fill="url(#ga)"/>
+          <path d="M0,200 L40,195 L80,180 L120,170 L160,175 L200,160 L240,155 L280,140 L320,150 L360,135 L400,125 L440,110 L480,118 L520,100 L560,95 L600,80 L640,85 L680,70 L720,60 L760,52 L800,45" fill="none" stroke="#22d3ee" stroke-width="2.5"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- RECENT PICKS -->
+    <div class="card">
+      <div class="picks-head">
+        <div>
+          <h3 style="margin:0">Recent Picks</h3>
+          <div class="sub" style="margin:0">All graded and pending picks · publicly locked</div>
+        </div>
+        <div class="tabs">
+          <button class="on">All</button><button>Pending</button><button>Wins</button><button>Losses</button>
+        </div>
+      </div>
+      <table class="picks">
+        <thead><tr><th>Sport</th><th>Pick</th><th>Game</th><th>Odds</th><th>Stake</th><th>Result</th><th>Units</th><th>Locked</th></tr></thead>
+        <tbody>
+          <tr><td><span class="sport-pill sp-mlb">MLB</span></td><td><b>Yankees -1.5</b></td><td>NYY @ BOS</td><td>+115</td><td>2u</td><td><span class="pill win">W</span></td><td class="units pos">+2.30</td><td>2h ago</td></tr>
+          <tr><td><span class="sport-pill sp-nba">NBA</span></td><td><b>Under 224.5</b></td><td>LAL vs DEN</td><td>-108</td><td>1u</td><td><span class="pill pend">Pending</span></td><td class="units">—</td><td>5h ago</td></tr>
+          <tr><td><span class="sport-pill sp-nhl">NHL</span></td><td><b>Oilers ML</b></td><td>EDM @ VAN</td><td>-135</td><td>1u</td><td><span class="pill win">W</span></td><td class="units pos">+0.74</td><td>1d ago</td></tr>
+          <tr><td><span class="sport-pill sp-mlb">MLB</span></td><td><b>Over 8.5</b></td><td>HOU @ TEX</td><td>-115</td><td>2u</td><td><span class="pill loss">L</span></td><td class="units neg">-2.00</td><td>1d ago</td></tr>
+          <tr><td><span class="sport-pill sp-nba">NBA</span></td><td><b>Celtics -6.5</b></td><td>BOS @ MIA</td><td>-110</td><td>2u</td><td><span class="pill win">W</span></td><td class="units pos">+1.82</td><td>2d ago</td></tr>
+          <tr><td><span class="sport-pill sp-nfl">NFL</span></td><td><b>49ers +3</b></td><td>SF @ SEA</td><td>-105</td><td>3u</td><td><span class="pill win">W</span></td><td class="units pos">+2.86</td><td>3d ago</td></tr>
+          <tr><td><span class="sport-pill sp-mlb">MLB</span></td><td><b>Dodgers F5 ML</b></td><td>LAD vs SF</td><td>-145</td><td>1u</td><td><span class="pill loss">L</span></td><td class="units neg">-1.00</td><td>3d ago</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- RIGHT RAIL -->
+  <aside class="right-rail">
+    <div class="rail-card">
+      <h4>Top Cappers · Today</h4>
+      <div class="lb-row"><div class="rk">1</div><div class="av">SK</div><div class="meta"><div class="name">SharpKing</div><div class="stat-line">14-3 · 82% W</div></div><div class="roi">+24.1%</div></div>
+      <div class="lb-row"><div class="rk">2</div><div class="av" style="background:linear-gradient(135deg,#fbbf24,#f59e0b)">MV</div><div class="meta"><div class="name">MoneylineVic</div><div class="stat-line">11-4 · 73% W</div></div><div class="roi">+19.6%</div></div>
+      <div class="lb-row"><div class="rk">3</div><div class="av" style="background:linear-gradient(135deg,#22c55e,#16a34a)">TT</div><div class="meta"><div class="name">TotalsTitan</div><div class="stat-line">9-3 · 75% W</div></div><div class="roi">+18.3%</div></div>
+      <div class="lb-row"><div class="rk">4</div><div class="av" style="background:linear-gradient(135deg,#ef4444,#b91c1c)">UH</div><div class="meta"><div class="name">UnderHunter</div><div class="stat-line">10-5 · 67% W</div></div><div class="roi">+12.7%</div></div>
+      <div class="lb-row"><div class="rk">5</div><div class="av">JM</div><div class="meta"><div class="name">sharpjake (you)</div><div class="stat-line">7-2 · 78% W</div></div><div class="roi">+11.4%</div></div>
+    </div>
+    <div class="rail-card">
+      <h4>Trending</h4>
+      <div class="trend-row"><div class="icn">🔥</div><div class="body"><div class="ttl">Yankees -1.5 (Game 1)</div><div class="sub">187 cappers tracking</div></div></div>
+      <div class="trend-row"><div class="icn">⚡</div><div class="body"><div class="ttl">LAL/DEN Under</div><div class="sub">142 picks · 71% on Under</div></div></div>
+      <div class="trend-row"><div class="icn">📈</div><div class="body"><div class="ttl">Oilers ML</div><div class="sub">Public 64% · Sharps 78%</div></div></div>
+      <div class="trend-row"><div class="icn">💬</div><div class="body"><div class="ttl">"NBA Playoffs Bracket"</div><div class="sub">Forum · 412 replies</div></div></div>
+    </div>
+    <div class="rail-card">
+      <h4>Open Challenges</h4>
+      <div class="trend-row"><div class="icn" style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1a1208">$50</div><div class="body"><div class="ttl">Pick'em vs @CapperKid</div><div class="sub">NBA tonight · 3 picks</div></div></div>
+      <div class="trend-row"><div class="icn" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff">PS5</div><div class="body"><div class="ttl">MLB The Show — BO3</div><div class="sub">Open · $25 entry</div></div></div>
+    </div>
+  </aside>
+</main>
+
+<footer class="mini">PREVIEW FILE · all functionality, links, and global nav remain wired to the live backend. Visual only.</footer>
+
+<script defer src="/static/js/tmr-sitewide.js"></script>
+</body>
+</html>
