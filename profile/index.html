@@ -9412,6 +9412,29 @@
       body.profile-page.tmr-social-profile .capper-monitor {
         display: none !important;
       }
+
+      /* Charts + Splits tabs: kill the 3-up card grid. Force every chart and
+         every split card to stack full-width vertically — matches the
+         approved direction (horizontal rows top-to-bottom, no walls of
+         small boxes). */
+      body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="charts"] .profile-feed-card > div[style*="auto-fit"],
+      body.profile-page.tmr-social-profile #advSplitsGrid {
+        display: block !important;
+      }
+      body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="charts"] .tmr-chart-stage,
+      body.profile-page.tmr-social-profile #advSplitsGrid > .tmr-cap-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 0 16px 0 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="charts"] .tmr-chart-stage__canvas {
+        min-height: 320px !important;
+      }
+      body.profile-page.tmr-social-profile #advSplitsGrid .tmr-cap-card__metrics {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+        gap: 8px !important;
+      }
       body.profile-page.tmr-social-profile .tmrx-stats {
         display: flex !important;
         flex-direction: column !important;
