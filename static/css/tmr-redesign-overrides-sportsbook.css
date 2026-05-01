@@ -334,9 +334,9 @@ html body #picks .sportsbook-board-grid{
 }
 html body #picks .sportsbook-board-grid-head{
   display: grid !important;
-  grid-template-columns: 1.6fr 1fr 1fr 1fr 110px !important;
-  gap: 0 !important;
-  padding: 12px 20px !important;
+  grid-template-columns: 1.5fr 1.05fr 1.05fr 1.05fr 130px !important;
+  gap: 0 16px !important;
+  padding: 12px 24px !important;
   background: #0a1322 !important;
   border-bottom: 1px solid #1f2e48 !important;
   border-top: 0 !important;
@@ -354,11 +354,11 @@ html body #picks .sportsbook-board-grid-head span:first-child{
   text-align: left !important;
 }
 
-/* Game rows (.sb-board-row) — clean wide DK rows, controlled height */
+/* Game rows (.sb-board-row) — clean wide DK rows, breathing room between markets */
 html body #picks .sb-board-row{
   display: grid !important;
-  grid-template-columns: 1.6fr 1fr 1fr 1fr 110px !important;
-  gap: 0 !important;
+  grid-template-columns: 1.5fr 1.05fr 1.05fr 1.05fr 130px !important;
+  gap: 0 16px !important;
   padding: 0 !important;
   min-height: 124px !important;
   background: #101b30 !important;
@@ -372,12 +372,62 @@ html body #picks .sb-board-row{
 html body #picks .sb-board-row:hover{
   background: #16243f !important;
 }
-html body #picks .sb-board-row .sb-board-team{
+/* The matchup container holds .sb-board-when + .sb-board-teams */
+html body #picks .sb-board-row .sb-board-matchup{
   padding: 16px 20px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 4px !important;
+  gap: 8px !important;
   min-width: 0 !important;
+}
+html body #picks .sb-board-row .sb-board-teams{
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+}
+html body #picks .sb-board-row .sb-board-team{
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+}
+/* The "A" / "H" tag span — becomes a logo holder */
+html body #picks .sb-board-team .sb-team-tag{
+  flex: 0 0 auto !important;
+  width: 30px !important;
+  height: 30px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 8px !important;
+  background: #16243f !important;
+  border: 1px solid #2c4066 !important;
+  color: #b9c4d6 !important;
+  font: 800 10.5px 'Inter', sans-serif !important;
+  letter-spacing: .04em !important;
+  overflow: hidden !important;
+}
+/* Real ESPN team logos injected by tmr-redesign-test-sportsbook-logos.js */
+html body #picks .sb-board-team .sb-team-tag .tmr-team-logo{
+  width: 28px !important;
+  height: 28px !important;
+  object-fit: contain !important;
+  background: transparent !important;
+  display: block !important;
+}
+/* When a logo image is present inside the tag, drop the box styling so the
+   logo sits clean against the row background. */
+html body #picks .sb-board-team .sb-team-tag.has-logo{
+  background: transparent !important;
+  border: 0 !important;
+  width: 32px !important;
+  height: 32px !important;
+}
+html body #picks .sb-board-team .sb-team-tag.has-logo .tmr-team-logo{
+  width: 30px !important;
+  height: 30px !important;
 }
 html body #picks .sb-board-team b{
   color: #f1f5fb !important;
@@ -394,8 +444,7 @@ html body #picks .sb-board-when{
 html body #picks .sb-board-col{
   background: transparent !important;
   border: 0 !important;
-  border-left: 1px solid #1f2e48 !important;
-  padding: 14px 12px !important;
+  padding: 14px 4px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
