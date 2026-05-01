@@ -2326,6 +2326,165 @@
 
                 <!-- TAB: ADVANCED METRICS (capper analytics dashboard) -->
                 <div class="profile-tab-panel" data-panel="advanced">
+                    <!-- ===== TMRX REDESIGN (May 1 2026): wide, ledger-driven, universal across profiles.
+                         All values are populated by tmrxRenderRedesign(data) at the end of
+                         loadAdvancedMetrics(). Same /api/users/:username/metrics endpoint, same
+                         autograder + statsAggregator pipeline. No new calculations. ===== -->
+                    <section class="tmrx-stats" aria-label="Advanced statistics">
+                      <div class="tmrx-section">
+                        <div class="tmrx-section-head">
+                          <div>
+                            <div class="tmrx-section-title">Core Handicapper Stats</div>
+                            <div class="tmrx-section-sub">Reads from the same ledger the autograder writes to. Pending picks are excluded from W/L/Push, ROI, and streaks.</div>
+                          </div>
+                          <div class="tmrx-meta" id="tmrxLastGraded"></div>
+                        </div>
+                        <div class="tmrx-ribbon">
+                          <div class="tmrx-cell"><div class="tmrx-label">Record</div><div class="tmrx-value is-placeholder" id="tmrxRecord">&mdash;</div><div class="tmrx-sub">W-L-P · settled</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">Win Rate</div><div class="tmrx-value is-placeholder" id="tmrxWinRate">&mdash;</div><div class="tmrx-sub">wins / (wins+losses)</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">Net Units</div><div class="tmrx-value is-placeholder" id="tmrxNetUnits">&mdash;</div><div class="tmrx-sub">cumulative profit</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">ROI</div><div class="tmrx-value is-placeholder" id="tmrxRoi">&mdash;</div><div class="tmrx-sub">net / risked</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">Avg Odds</div><div class="tmrx-value is-placeholder" id="tmrxAvgOdds">&mdash;</div><div class="tmrx-sub">avg implied &rarr; American</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">Avg Units</div><div class="tmrx-value is-placeholder" id="tmrxAvgUnits">&mdash;</div><div class="tmrx-sub">avg stake / pick</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">Pending</div><div class="tmrx-value is-placeholder" id="tmrxPending">&mdash;</div><div class="tmrx-sub">unresolved</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">Graded</div><div class="tmrx-value is-placeholder" id="tmrxGraded">&mdash;</div><div class="tmrx-sub">settled picks</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">Current Streak</div><div class="tmrx-value is-placeholder" id="tmrxStreak">&mdash;</div><div class="tmrx-sub">live W/L run</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">Best Streak</div><div class="tmrx-value is-placeholder" id="tmrxBestStreak">&mdash;</div><div class="tmrx-sub">longest win run</div></div>
+                        </div>
+                      </div>
+
+                      <div class="tmrx-section">
+                        <div class="tmrx-section-head">
+                          <div>
+                            <div class="tmrx-section-title">Performance by Period</div>
+                            <div class="tmrx-section-sub">Net units and ROI across rolling time windows. All graded picks within the window.</div>
+                          </div>
+                        </div>
+                        <div class="tmrx-period-strip" id="tmrxPeriodStrip">
+                          <div class="tmrx-period-cell" data-tmrx-period="7d"><div class="k">Last 7d</div><div class="v is-placeholder">&mdash;</div><div class="s"></div></div>
+                          <div class="tmrx-period-cell" data-tmrx-period="14d"><div class="k">Last 14d</div><div class="v is-placeholder">&mdash;</div><div class="s"></div></div>
+                          <div class="tmrx-period-cell" data-tmrx-period="30d"><div class="k">Last 30d</div><div class="v is-placeholder">&mdash;</div><div class="s"></div></div>
+                          <div class="tmrx-period-cell" data-tmrx-period="60d"><div class="k">Last 60d</div><div class="v is-placeholder">&mdash;</div><div class="s"></div></div>
+                          <div class="tmrx-period-cell" data-tmrx-period="90d"><div class="k">Last 90d</div><div class="v is-placeholder">&mdash;</div><div class="s"></div></div>
+                          <div class="tmrx-period-cell" data-tmrx-period="180d"><div class="k">Last 180d</div><div class="v is-placeholder">&mdash;</div><div class="s"></div></div>
+                          <div class="tmrx-period-cell" data-tmrx-period="365d"><div class="k">Last 365d</div><div class="v is-placeholder">&mdash;</div><div class="s"></div></div>
+                          <div class="tmrx-period-cell" data-tmrx-period="all"><div class="k">All time</div><div class="v is-placeholder">&mdash;</div><div class="s"></div></div>
+                        </div>
+                      </div>
+
+                      <div class="tmrx-section">
+                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Performance by Sport</div><div class="tmrx-section-sub">From <code>user_sport_stats</code>. Sample-gated at 3+ picks per row.</div></div></div>
+                        <div class="tmrx-table-shell">
+                          <table class="tmrx-table" id="tmrxTableSport">
+                            <thead><tr><th>Sport</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Avg Odds</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>
+                            <tbody><tr class="empty"><td colspan="7">No sport rows yet &mdash; lock graded picks to populate this table.</td></tr></tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div class="tmrx-section">
+                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Performance by Market Type</div><div class="tmrx-section-sub">From <code>user_market_stats</code>. ML / Spread / Total / Team Total / First Five / Halves / Periods / Alts.</div></div></div>
+                        <div class="tmrx-table-shell">
+                          <table class="tmrx-table" id="tmrxTableMarket">
+                            <thead><tr><th>Market</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Avg Odds</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>
+                            <tbody><tr class="empty"><td colspan="7">No market rows yet.</td></tr></tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div class="tmrx-section">
+                        <div class="tmrx-grid-2">
+                          <div>
+                            <div class="tmrx-section-head"><div><div class="tmrx-section-title">Performance by Unit Size</div><div class="tmrx-section-sub">Are bigger plays actually winning?</div></div></div>
+                            <div class="tmrx-table-shell">
+                              <table class="tmrx-table" id="tmrxTableUnitSize">
+                                <thead><tr><th>Bucket</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
+                                <tbody><tr class="empty"><td colspan="6">No unit-size rows yet.</td></tr></tbody>
+                              </table>
+                            </div>
+                          </div>
+                          <div>
+                            <div class="tmrx-section-head"><div><div class="tmrx-section-title">Performance by Odds Range</div><div class="tmrx-section-sub">Where the edge is actually coming from.</div></div></div>
+                            <div class="tmrx-table-shell">
+                              <table class="tmrx-table" id="tmrxTableOddsBucket">
+                                <thead><tr><th>Bucket</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
+                                <tbody><tr class="empty"><td colspan="6">No odds-range rows yet.</td></tr></tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="tmrx-section">
+                        <div class="tmrx-grid-2">
+                          <div>
+                            <div class="tmrx-section-head"><div><div class="tmrx-section-title">Favorites vs Underdogs</div><div class="tmrx-section-sub">Side-of-price split. Implied prob &lt; 50% = underdog.</div></div></div>
+                            <div class="tmrx-table-shell">
+                              <table class="tmrx-table" id="tmrxTableFavDog">
+                                <thead><tr><th>Side</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
+                                <tbody><tr class="empty"><td colspan="6">Not enough sample to split.</td></tr></tbody>
+                              </table>
+                            </div>
+                          </div>
+                          <div>
+                            <div class="tmrx-section-head"><div><div class="tmrx-section-title">Day of Week</div><div class="tmrx-section-sub">From <code>splits.by_day_of_week</code>.</div></div></div>
+                            <div class="tmrx-table-shell">
+                              <table class="tmrx-table" id="tmrxTableDow">
+                                <thead><tr><th>Day</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Net</th><th class="num">ROI</th></tr></thead>
+                                <tbody><tr class="empty"><td colspan="6">No day-of-week rows yet.</td></tr></tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="tmrx-section">
+                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Streaks &amp; Rolling Form</div><div class="tmrx-section-sub">Last 25 / 50 / 100 graded picks. Pushes don't break a streak.</div></div></div>
+                        <div class="tmrx-table-shell">
+                          <table class="tmrx-table" id="tmrxTableForm">
+                            <thead><tr><th>Window</th><th class="num">Picks</th><th class="num">W-L</th><th class="num">Win %</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>
+                            <tbody>
+                              <tr data-tmrx-form="25"><td class="name">Last 25</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td></tr>
+                              <tr data-tmrx-form="50"><td class="name">Last 50</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td></tr>
+                              <tr data-tmrx-form="100"><td class="name">Last 100</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td></tr>
+                              <tr data-tmrx-streak="best"><td class="name">Best Win Streak</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td></tr>
+                              <tr data-tmrx-streak="worst"><td class="name">Worst Loss Streak</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td></tr>
+                              <tr data-tmrx-streak="current"><td class="name">Current Streak</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td></tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div class="tmrx-section">
+                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Advanced Metrics</div><div class="tmrx-section-sub">Computed deterministically from stored fields. Anything without enough sample shows "&mdash;".</div></div></div>
+                        <div class="tmrx-table-shell">
+                          <table class="tmrx-table" id="tmrxTableAdvanced">
+                            <thead><tr><th>Metric</th><th class="num">Value</th><th>Definition</th></tr></thead>
+                            <tbody>
+                              <tr data-tmrx-adv="effective_units"><td class="name">eU (Effective Units)</td><td class="num zero">&mdash;</td><td>(net_units / avg_units_risked) &times; 3 &mdash; strips max-bet juicing.</td></tr>
+                              <tr data-tmrx-adv="effective_win_rate"><td class="name">eWP (Effective Win %)</td><td class="num zero">&mdash;</td><td>Win-rate equivalent if every pick had been -110.</td></tr>
+                              <tr data-tmrx-adv="z_score"><td class="name">Z-Score</td><td class="num zero">&mdash;</td><td>Standardized skill-vs-luck signal at avg-implied-prob baseline. Hidden until 5+ decisions.</td></tr>
+                              <tr data-tmrx-adv="avg_odds"><td class="name">AOP (Avg Odds per Pick)</td><td class="num zero">&mdash;</td><td>Average implied probability converted back to American.</td></tr>
+                              <tr data-tmrx-adv="avg_units"><td class="name">AUR (Avg Units Risked)</td><td class="num zero">&mdash;</td><td>Mean stake across settled picks.</td></tr>
+                              <tr data-tmrx-adv="avg_daily_picks"><td class="name">ADP (Avg Daily Picks)</td><td class="num zero">&mdash;</td><td>Total picks / days active. Hidden until first/last pick exist.</td></tr>
+                              <tr data-tmrx-adv="push_rate"><td class="name">Push Rate</td><td class="num zero">&mdash;</td><td>Pushes / total settled.</td></tr>
+                              <tr data-tmrx-adv="consistency"><td class="name">Consistency Score</td><td class="num zero">&mdash;</td><td>Inverse-stddev of monthly net units. Hidden until 3+ active months.</td></tr>
+                              <tr data-tmrx-adv="capper_rating"><td class="name">Capper Rating</td><td class="num zero">&mdash;</td><td>Composite (ROI &middot; sample &middot; eWP &middot; Z &middot; drawdown &middot; consistency). Hidden until 25+ decisions.</td></tr>
+                              <tr data-tmrx-adv="max_drawdown"><td class="name">Max Drawdown</td><td class="num zero">&mdash;</td><td>Peak-to-trough net units along the equity curve.</td></tr>
+                              <tr data-tmrx-adv="peak_units"><td class="name">Peak Units</td><td class="num zero">&mdash;</td><td>All-time high cumulative net units.</td></tr>
+                              <tr data-tmrx-adv="clv"><td class="name">CLV (Closing Line Value)</td><td class="num zero">&mdash;</td><td><b>Unavailable until closing-line tracking is enabled on the picks table.</b> No estimates, per the no-fake-data rule.</td></tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <div class="tmrx-unavail-note"><b>Note:</b> CLV is intentionally blank. The <code>picks</code> schema does not yet store closing odds, so no honest CLV exists. The backend already returns <code>clv: null</code>; the frontend reflects that instead of inventing a value.</div>
+                      </div>
+
+                    </section>
+                    <!-- ===== END TMRX REDESIGN ===== -->
+
+                    <!-- Legacy cap-card structure preserved (hidden) so existing
+                         loadAdvancedMetrics() ID lookups don't go missing. -->
+                    <div class="tmrx-legacy-stash">
                     <div class="profile-feed-card">
                         <div class="profile-feed-head">
                             <div>
@@ -2582,6 +2741,7 @@
 
                         <p style="margin-top:14px;color:var(--tmr-text-muted);font-size:.78rem;">Metrics not yet computed for this account show "&mdash;" instead of fabricated values. Once the underlying ledger has enough graded picks for a metric, the dashboard fills in automatically.</p>
                     </div>
+                    </div><!-- /tmrx-legacy-stash -->
                 </div>
 
                 <!-- TAB: CHARTS -->
@@ -5136,6 +5296,224 @@
         renderSplitBars('advChartUnitSize',    data.splits && data.splits.by_unit_size,    'by_unit_size');
         renderSplitBars('advChartDayOfWeek',   data.splits && data.splits.by_day_of_week,  'by_day_of_week');
         renderSplitBars('advChartFavDog',      data.splits && data.splits.by_fav_dog,      'by_fav_dog');
+
+        // ===== TMRX REDESIGN: populate the universal wide layout. Same data,
+        // cleaner display. No new calculations — purely a render pass. =====
+        try { tmrxRenderRedesign(data); } catch (e) { console.warn('[tmrx] render failed:', e); }
+    }
+
+    // ============================================================
+    // TMRX REDESIGN — wide universal stats view (May 1 2026)
+    // Renders the redesign block from the same /api/users/:username/metrics
+    // payload. Display layer only — autograder, statsAggregator, and
+    // categorization logic are untouched. CLV stays "—" until the picks
+    // table actually stores closing odds (backend already returns null).
+    // ============================================================
+    function tmrxRenderRedesign(data) {
+        if (!data) return;
+        const s = data.summary || {};
+        const sc = data.scores || {};
+        const dd = data.drawdown || {};
+        const st = data.streaks || {};
+        const periods = data.periods || {};
+        const form = data.rolling_form || {};
+        const splits = data.splits || {};
+
+        const fmtSigned = (n, suffix, decimals) => {
+            const x = Number(n) || 0;
+            return (x >= 0 ? '+' : '') + x.toFixed(decimals != null ? decimals : 2) + (suffix || '');
+        };
+        const fmtAmericanOdds = (o) => {
+            const x = Number(o);
+            if (!Number.isFinite(x) || x === 0) return '—';
+            return (x > 0 ? '+' : '') + Math.round(x);
+        };
+        const setVal = (id, text, signed) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = text;
+            el.classList.remove('is-placeholder');
+            if (signed != null) {
+                el.classList.toggle('is-pos', signed > 0);
+                el.classList.toggle('is-neg', signed < 0);
+            }
+        };
+
+        if (s.total_picks > 0) {
+            const wr = Number(s.win_rate || 0);
+            const decisions = Number(s.wins || 0) + Number(s.losses || 0);
+            const wrSigned = decisions > 0 ? wr - 50 : 0;
+            setVal('tmrxRecord', s.record || '—', wrSigned);
+            setVal('tmrxWinRate', wr.toFixed(1) + '%', wrSigned);
+            const u = Number(s.net_units || 0);
+            setVal('tmrxNetUnits', fmtSigned(u, 'u', 2), u);
+            const r = Number(s.roi || 0);
+            setVal('tmrxRoi', fmtSigned(r, '%', 2), r);
+            if (s.avg_odds != null) setVal('tmrxAvgOdds', fmtAmericanOdds(s.avg_odds));
+            if (s.avg_units != null) setVal('tmrxAvgUnits', Number(s.avg_units).toFixed(2) + 'u');
+            setVal('tmrxPending', String(s.pending_picks || 0));
+            setVal('tmrxGraded', String(s.total_picks));
+        }
+        if (st.current != null) {
+            const cs = Number(st.current);
+            const txt = cs > 0 ? cs + 'W' : cs < 0 ? Math.abs(cs) + 'L' : '0';
+            setVal('tmrxStreak', txt, cs);
+        }
+        if (st.best != null) setVal('tmrxBestStreak', Math.abs(Number(st.best)) + 'W', 1);
+
+        if (s.last_pick_at) {
+            try {
+                const ageMs = Date.now() - new Date(s.last_pick_at).getTime();
+                const ageHr = Math.floor(ageMs / 3600000);
+                const ageDay = Math.floor(ageHr / 24);
+                let txt = '';
+                if (ageHr < 1) txt = 'Last graded · just now';
+                else if (ageHr < 24) txt = 'Last graded · ' + ageHr + 'h ago';
+                else txt = 'Last graded · ' + ageDay + 'd ago';
+                const lg = document.getElementById('tmrxLastGraded');
+                if (lg) lg.textContent = txt;
+            } catch (_) {}
+        }
+
+        document.querySelectorAll('#tmrxPeriodStrip [data-tmrx-period]').forEach(cell => {
+            const key = cell.getAttribute('data-tmrx-period');
+            const v = cell.querySelector('.v');
+            const sub = cell.querySelector('.s');
+            if (key === 'all') {
+                if (s.total_picks > 0) {
+                    const u = Number(s.net_units || 0);
+                    if (v) { v.textContent = fmtSigned(u, 'u', 2); v.classList.remove('is-placeholder'); v.classList.toggle('is-pos', u > 0); v.classList.toggle('is-neg', u < 0); }
+                    if (sub) sub.textContent = fmtSigned(s.roi || 0, '%', 1) + ' · ' + s.total_picks + ' picks';
+                }
+                return;
+            }
+            const p = periods[key];
+            if (!p || !p.total) return;
+            const u = Number(p.net_units || 0);
+            if (v) {
+                v.textContent = fmtSigned(u, 'u', 2);
+                v.classList.remove('is-placeholder');
+                v.classList.toggle('is-pos', u > 0);
+                v.classList.toggle('is-neg', u < 0);
+            }
+            if (sub) sub.textContent = fmtSigned(p.roi || 0, '%', 1) + ' · ' + p.total + ' picks';
+        });
+
+        const labelOf = (typeof window.formatBucketLabel === 'function')
+            ? (k, v) => window.formatBucketLabel(k, v)
+            : (k, v) => String(v || '—');
+        const renderSplitTable = (tableId, splitKey, arr, opts) => {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            const tbody = table.querySelector('tbody');
+            if (!tbody) return;
+            opts = opts || {};
+            const minSample = opts.minSample != null ? opts.minSample : 3;
+            const cols = opts.cols || 7;
+            const rows = (Array.isArray(arr) ? arr : []).filter(b => Number(b.total || 0) >= minSample);
+            if (!rows.length) return;
+            rows.sort((a, b) => Number(b.net || 0) - Number(a.net || 0));
+            const cellFor = (b) => {
+                const w = Number(b.wins) || 0, l = Number(b.losses) || 0, p = Number(b.pushes) || 0;
+                const dec = w + l;
+                const winPct = dec > 0 ? (w / dec) * 100 : 0;
+                const winCls = dec > 0 ? (winPct >= 50 ? 'pos' : 'neg') : 'zero';
+                const net = Number(b.net) || 0;
+                const roi = Number(b.roi) || 0;
+                const netCls = net > 0 ? 'pos' : net < 0 ? 'neg' : 'zero';
+                const roiCls = roi > 0 ? 'pos' : roi < 0 ? 'neg' : 'zero';
+                const cells = [
+                    '<td class="name">' + labelOf('by_' + splitKey, b.key) + '</td>',
+                    '<td class="num">' + b.total + '</td>',
+                    '<td class="num">' + w + '-' + l + (p ? '-' + p : '') + '</td>',
+                    '<td class="num ' + winCls + '">' + (dec > 0 ? winPct.toFixed(1) + '%' : '—') + '</td>',
+                ];
+                if (cols >= 7) cells.push('<td class="num">' + (b.avg_odds != null ? fmtAmericanOdds(b.avg_odds) : '—') + '</td>');
+                cells.push('<td class="num ' + netCls + '">' + fmtSigned(net, 'u', 2) + '</td>');
+                cells.push('<td class="num ' + roiCls + '">' + fmtSigned(roi, '%', 2) + '</td>');
+                return '<tr>' + cells.join('') + '</tr>';
+            };
+            tbody.innerHTML = rows.map(cellFor).join('');
+        };
+        renderSplitTable('tmrxTableSport',      'sport',       splits.by_sport,       { cols: 7 });
+        renderSplitTable('tmrxTableMarket',     'market',      splits.by_market,      { cols: 7 });
+        renderSplitTable('tmrxTableUnitSize',   'unit_size',   splits.by_unit_size,   { cols: 6 });
+        renderSplitTable('tmrxTableOddsBucket', 'odds_bucket', splits.by_odds_bucket, { cols: 6 });
+        renderSplitTable('tmrxTableFavDog',     'fav_dog',     splits.by_fav_dog,     { cols: 6, minSample: 1 });
+        renderSplitTable('tmrxTableDow',        'day_of_week', splits.by_day_of_week, { cols: 6 });
+
+        const setFormRow = (sel, label, total, w, l, net, roi) => {
+            const tr = document.querySelector(sel);
+            if (!tr) return;
+            const dec = w + l;
+            const wp = dec > 0 ? (w / dec) * 100 : 0;
+            const wpCls = dec > 0 ? (wp >= 50 ? 'pos' : 'neg') : 'zero';
+            const netN = Number(net) || 0;
+            const roiN = Number(roi) || 0;
+            tr.innerHTML =
+                '<td class="name">' + label + '</td>' +
+                '<td class="num">' + (total != null ? total : '—') + '</td>' +
+                '<td class="num">' + (w != null ? w + '-' + l : '—') + '</td>' +
+                '<td class="num ' + wpCls + '">' + (dec > 0 ? wp.toFixed(1) + '%' : '—') + '</td>' +
+                '<td class="num ' + (netN > 0 ? 'pos' : netN < 0 ? 'neg' : 'zero') + '">' + (total ? fmtSigned(netN, 'u', 2) : '—') + '</td>' +
+                '<td class="num ' + (roiN > 0 ? 'pos' : roiN < 0 ? 'neg' : 'zero') + '">' + (total ? fmtSigned(roiN, '%', 2) : '—') + '</td>';
+        };
+        for (const N of [25, 50, 100]) {
+            const f = form['last_' + N];
+            if (f && f.total) setFormRow('[data-tmrx-form="' + N + '"]', 'Last ' + N, f.total, f.wins || 0, f.losses || 0, f.net_units, f.roi);
+        }
+        if (st.best != null) setFormRow('[data-tmrx-streak="best"]', 'Best Win Streak', Math.abs(Number(st.best)), Math.abs(Number(st.best)), 0, null, null);
+        if (st.worst != null) setFormRow('[data-tmrx-streak="worst"]', 'Worst Loss Streak', Math.abs(Number(st.worst)), 0, Math.abs(Number(st.worst)), null, null);
+        if (st.current != null) {
+            const cs = Number(st.current);
+            const total = Math.abs(cs);
+            if (cs > 0) setFormRow('[data-tmrx-streak="current"]', 'Current Streak (W)', total, total, 0, null, null);
+            else if (cs < 0) setFormRow('[data-tmrx-streak="current"]', 'Current Streak (L)', total, 0, total, null, null);
+            else setFormRow('[data-tmrx-streak="current"]', 'Current Streak', 0, 0, 0, null, null);
+        }
+
+        const setAdv = (key, valueText, signed) => {
+            const tr = document.querySelector('[data-tmrx-adv="' + key + '"]');
+            if (!tr) return;
+            const td = tr.querySelector('td.num');
+            if (!td) return;
+            td.textContent = valueText;
+            td.classList.remove('zero');
+            td.classList.toggle('pos', signed != null && signed > 0);
+            td.classList.toggle('neg', signed != null && signed < 0);
+        };
+        if (s.effective_units != null) {
+            const v = Number(s.effective_units);
+            setAdv('effective_units', fmtSigned(v, 'u', 2), v);
+        }
+        if (s.effective_win_rate != null) {
+            const v = Number(s.effective_win_rate);
+            setAdv('effective_win_rate', v.toFixed(2) + '%', v - 52.38);
+        }
+        if (s.z_score != null) {
+            const v = Number(s.z_score);
+            setAdv('z_score', fmtSigned(v, '', 2), v);
+        }
+        if (s.avg_odds != null) setAdv('avg_odds', fmtAmericanOdds(s.avg_odds));
+        if (s.avg_units != null) setAdv('avg_units', Number(s.avg_units).toFixed(2) + 'u');
+        if (s.avg_daily_picks != null) setAdv('avg_daily_picks', Number(s.avg_daily_picks).toFixed(2) + ' /day');
+        if (sc.push_rate != null) setAdv('push_rate', Number(sc.push_rate).toFixed(2) + '%');
+        if (sc.consistency != null) {
+            const v = Number(sc.consistency);
+            setAdv('consistency', v.toFixed(1), v - 50);
+        }
+        if (sc.capper_rating != null) {
+            const v = Number(sc.capper_rating);
+            setAdv('capper_rating', String(v) + ' / 100', v - 50);
+        }
+        if (dd.max_drawdown != null) {
+            const v = Number(dd.max_drawdown);
+            setAdv('max_drawdown', '-' + v.toFixed(2) + 'u', -1);
+        }
+        if (dd.peak_units != null) {
+            const v = Number(dd.peak_units);
+            setAdv('peak_units', fmtSigned(v, 'u', 2), v);
+        }
     }
 
     function renderPmTable(tableId, splitArr, splitKey) {
@@ -6248,6 +6626,10 @@
         const onReady = function () {
             const bar = document.getElementById('profileTabsBar');
             if (!bar) return;
+            const TMRX_FULLWIDTH_TABS = { advanced: 1, charts: 1, splits: 1, record: 1 };
+            const tmrxApplyFullwidth = (tab) => {
+                document.body.classList.toggle('tmrx-stats-fullwidth', !!TMRX_FULLWIDTH_TABS[tab]);
+            };
             bar.addEventListener('click', function (e) {
                 const btn = e.target.closest('.profile-tab');
                 if (!btn) return;
@@ -6261,8 +6643,11 @@
                 document.querySelectorAll('.profile-tab-panel').forEach(function (p) {
                     p.classList.toggle('active', p.getAttribute('data-panel') === tab);
                 });
+                tmrxApplyFullwidth(tab);
                 try { history.replaceState(null, '', '#' + tab); } catch (_) {}
             });
+            const initialActive = bar.querySelector('.profile-tab.active');
+            if (initialActive) tmrxApplyFullwidth(initialActive.getAttribute('data-tab'));
             // Honour deep link (#record, #picks, etc.) on load
             const hash = (location.hash || '').replace('#', '');
             if (hash) {
@@ -8191,6 +8576,75 @@
     <script src="/static/js/platform-production-fix.js?v=20260415d"></script>
     <script src="/static/js/tmr-redesign-loader.js?v=20260501profile2" defer></script>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
+
+    <!-- ============================================================
+         TMRX STATS REDESIGN (May 1 2026)
+         Universal wide-layout overlay for the Advanced Metrics tab.
+         Display layer only — same /api/users/:username/metrics endpoint,
+         same autograder + statsAggregator pipeline, just a cleaner UI.
+         ============================================================ -->
+    <style id="tmrx-stats-redesign-css">
+      body.profile-page.tmr-social-profile.tmrx-stats-fullwidth .profile-body-grid {
+        grid-template-columns: 1fr !important;
+        max-width: 1480px !important;
+      }
+      body.profile-page.tmr-social-profile.tmrx-stats-fullwidth .profile-sidebar { display: none !important; }
+      .profile-tab-panel[data-panel="advanced"] .tmrx-legacy-stash { display: none !important; }
+
+      .tmrx-stats { color: #f1f5fb; font: 14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif; }
+      .tmrx-stats .tmrx-section { margin-top: 18px; }
+      .tmrx-stats .tmrx-section-head { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+      .tmrx-stats .tmrx-section-title { font-size: 18px; font-weight: 900; color: #f1f5fb; letter-spacing: 0; }
+      .tmrx-stats .tmrx-section-sub { color: #7a8499; font-size: 12px; margin-top: 3px; }
+      .tmrx-stats .tmrx-meta { font-size: 11.5px; color: #7a8499; font-weight: 800; letter-spacing: .04em; }
+
+      .tmrx-ribbon { display: grid; grid-template-columns: repeat(10, minmax(0,1fr)); gap: 10px; }
+      .tmrx-cell { padding: 14px; border: 1px solid rgba(31,51,80,.55); border-radius: 12px; background: #0a1322; min-height: 92px; display: flex; flex-direction: column; justify-content: center; }
+      .tmrx-label { font-size: 10.5px; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; color: #7a8499; }
+      .tmrx-value { font-size: 24px; font-weight: 900; color: #f1f5fb; margin-top: 6px; line-height: 1.05; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+      .tmrx-value.is-pos { color: #86efac; }
+      .tmrx-value.is-neg { color: #fca5a5; }
+      .tmrx-value.is-placeholder { color: #94a3b8; font-weight: 800; }
+      .tmrx-sub { margin-top: 4px; font-size: 11.5px; color: #7f8ca3; font-weight: 700; }
+
+      .tmrx-period-strip { display: grid; grid-template-columns: repeat(8, minmax(0,1fr)); gap: 8px; }
+      .tmrx-period-cell { padding: 10px; border: 1px solid rgba(31,51,80,.55); border-radius: 10px; background: rgba(2,6,23,.40); text-align: center; }
+      .tmrx-period-cell .k { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; color: #7a8499; }
+      .tmrx-period-cell .v { margin-top: 6px; font-size: 14px; font-weight: 900; color: #f1f5fb; font-variant-numeric: tabular-nums; }
+      .tmrx-period-cell .v.is-pos { color: #86efac; }
+      .tmrx-period-cell .v.is-neg { color: #fca5a5; }
+      .tmrx-period-cell .s { margin-top: 2px; font-size: 11px; color: #7f8ca3; font-weight: 700; }
+
+      .tmrx-table-shell { border: 1px solid rgba(31,51,80,.55); border-radius: 12px; overflow: hidden; background: #0a1322; }
+      .tmrx-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+      .tmrx-table thead th { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .10em; color: #7a8499; background: #08111f; text-align: left; padding: 10px 14px; border-bottom: 1px solid #1F3350; }
+      .tmrx-table thead th.num { text-align: right; }
+      .tmrx-table tbody td { padding: 12px 14px; border-bottom: 1px solid rgba(31,51,80,.55); color: #dbe5f4; font-weight: 600; }
+      .tmrx-table tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+      .tmrx-table tbody tr:last-child td { border-bottom: 0; }
+      .tmrx-table tbody tr:hover td { background: rgba(34,211,238,.04); }
+      .tmrx-table .name { font-weight: 800; color: #f1f5fb; }
+      .tmrx-table .pos { color: #86efac; }
+      .tmrx-table .neg { color: #fca5a5; }
+      .tmrx-table .zero { color: #94a3b8; }
+      .tmrx-table .empty td { padding: 22px 16px; text-align: center; color: #64748b; font-style: italic; }
+
+      .tmrx-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+      .tmrx-unavail-note { margin-top: 14px; padding: 12px 14px; border: 1px dashed rgba(148,163,184,.28); border-radius: 10px; background: rgba(2,6,23,.40); color: #94a3b8; font-size: 12.5px; }
+      .tmrx-unavail-note b { color: #cbd5e1; }
+      .tmrx-unavail-note code { color: #cbd5e1; }
+
+      @media (max-width: 1280px) {
+        .tmrx-stats .tmrx-ribbon { grid-template-columns: repeat(5, minmax(0,1fr)); }
+        .tmrx-stats .tmrx-period-strip { grid-template-columns: repeat(4, minmax(0,1fr)); }
+      }
+      @media (max-width: 1100px) { .tmrx-stats .tmrx-grid-2 { grid-template-columns: 1fr; } }
+      @media (max-width: 720px) {
+        .tmrx-stats .tmrx-ribbon { grid-template-columns: repeat(2, minmax(0,1fr)); }
+        .tmrx-stats .tmrx-period-strip { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      }
+    </style>
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  8:02:00 PM -->
