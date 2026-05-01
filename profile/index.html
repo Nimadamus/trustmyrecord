@@ -5399,16 +5399,52 @@
             if (sub) sub.textContent = fmtSigned(p.roi || 0, '%', 1) + ' · ' + p.total + ' picks';
         });
 
-        const labelOf = (typeof window.formatBucketLabel === 'function')
-            ? (k, v) => window.formatBucketLabel(k, v)
-            : (k, v) => String(v || '—');
+        // Bucket-label resolver. Prefer the global formatBucketLabel from the
+        // existing fill code; otherwise apply a small built-in mapping so live
+        // data renders human-readable even before sample-gating relaxes.
+        const TMRX_LABELS = {
+            // sports
+            baseball_mlb: 'MLB', basketball_nba: 'NBA', icehockey_nhl: 'NHL',
+            americanfootball_nfl: 'NFL', americanfootball_ncaaf: 'NCAAF',
+            basketball_ncaab: 'NCAAB', soccer_epl: 'EPL', mma_mixed_martial_arts: 'MMA',
+            // markets
+            h2h: 'Moneyline', spreads: 'Spread', totals: 'Total',
+            team_totals: 'Team Total',
+            f5_h2h: 'F5 ML', f5_spreads: 'F5 Spread', f5_totals: 'F5 Total',
+            first_half_h2h: '1H ML', first_half_spreads: '1H Spread', first_half_totals: '1H Total',
+            second_half_h2h: '2H ML', second_half_spreads: '2H Spread', second_half_totals: '2H Total',
+            period_1_h2h: 'P1 ML', period_1_spreads: 'P1 Spread', period_1_totals: 'P1 Total',
+            alt_spreads: 'Alt Spread', alt_totals: 'Alt Total',
+            // odds buckets
+            heavy_favorite: 'Heavy Fav (-200+)', favorite: 'Favorite (-110 to -199)',
+            even: 'Even (+100 / -109)', underdog: 'Underdog (+101 to +200)',
+            big_underdog: 'Longshot (+201+)',
+            // unit buckets
+            '0.5_to_1u': '0.5u – 1u', '1.5_to_2u': '1.5u – 2u',
+            '2.5_to_3u': '2.5u – 3u', '3u_plus': '3u +',
+            // day of week
+            sun: 'Sunday', mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday',
+            thu: 'Thursday', fri: 'Friday', sat: 'Saturday',
+        };
+        const labelOf = (k, v) => {
+            if (typeof window.formatBucketLabel === 'function') {
+                const out = window.formatBucketLabel(k, v);
+                if (out && out !== '—') return out;
+            }
+            const key = String(v || '').toLowerCase();
+            if (TMRX_LABELS[key]) return TMRX_LABELS[key];
+            return String(v || '—').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        };
         const renderSplitTable = (tableId, splitKey, arr, opts) => {
             const table = document.getElementById(tableId);
             if (!table) return;
             const tbody = table.querySelector('tbody');
             if (!tbody) return;
             opts = opts || {};
-            const minSample = opts.minSample != null ? opts.minSample : 3;
+            // Show every real row at any sample size; "—" reserved only for
+            // metrics the backend explicitly returns as null (CLV / Z-score
+            // / capper rating). No more "No rows yet" when data exists.
+            const minSample = opts.minSample != null ? opts.minSample : 1;
             const cols = opts.cols || 7;
             const rows = (Array.isArray(arr) ? arr : []).filter(b => Number(b.total || 0) >= minSample);
             if (!rows.length) return;
