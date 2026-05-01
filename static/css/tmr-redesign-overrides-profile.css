@@ -293,6 +293,65 @@ body[data-tmr-test-route="profile"] .profile-meta-item:hover{
   color: #b6c0d4 !important;
 }
 
+/* ===== 4a. Stats hoisted to top of main column =======================
+   tmr-redesign-test-profile.js moves <section id="summaryBar"> from its
+   original location (deep inside the .picks-section panel) into a new
+   .tmr-pt-stats-mount placed right after the profile hero card. */
+
+body[data-tmr-test-route="profile"] .tmr-pt-stats-mount{
+  margin: 0 !important;
+  padding: 0 !important;
+}
+/* If the mount is empty (renderer hasn't populated stats yet), hide it
+   so we don't leave a phantom card with no content. */
+body[data-tmr-test-route="profile"] .tmr-pt-stats-mount:empty{
+  display: none !important;
+}
+
+/* The hoisted summary-bar — force it visible (it has display:none from
+   inline JS until data arrives; once moved AND populated we show it). */
+body[data-tmr-test-route="profile"] .tmr-pt-stats-mount #summaryBar{
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+body[data-tmr-test-route="profile"] .tmr-pt-stats-mount .summary-grid{
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+  gap: 12px !important;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-stats-mount .summary-stat{
+  background: #111a2e !important;
+  border: 1px solid #243049 !important;
+  border-radius: 14px !important;
+  padding: 14px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-stats-mount .summary-stat::before{
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.03), transparent 40%) !important;
+  pointer-events: none !important;
+}
+
+/* If the original summary-bar has not been moved yet (script hasn't run),
+   hide it where it currently lives so the user doesn't see the cramped
+   nested version. The hoist will place it correctly within ~250ms. */
+body[data-tmr-test-route="profile"] .picks-section #summaryBar,
+body[data-tmr-test-route="profile"] .summary-bar:not(.tmr-pt-stats-mount #summaryBar){
+  /* This selector targets the OLD location only; once moved into the
+     mount, the second selector no longer matches. */
+}
+
 /* ===== 5. Inline LTR 6-cell stats strip (PickMonitor signature) ====== */
 
 body[data-tmr-test-route="profile"] .profile-stats{
