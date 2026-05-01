@@ -356,7 +356,7 @@ class PersistentAuthSystem {
         
         const username = this.currentUser.username || this.currentUser.displayName || 'User';
         const avatar = this.currentUser.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + username;
-        const profileUrl = 'profile/?user=' + encodeURIComponent(username);
+        const profileUrl = '/profile/?user=' + encodeURIComponent(username);
         
         // Update main navigation - modify "My Profile" link to show username
         const profileLink = document.querySelector('.profile-link');
