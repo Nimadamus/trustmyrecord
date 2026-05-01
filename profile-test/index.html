@@ -1198,7 +1198,7 @@
     }
     </style>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501d">
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501e">
 </head>
 <body class="profile-page tmr-social-profile" data-tmr-test-route="profile">
     <!-- ==================== TEST ROUTE BANNER ====================
@@ -1225,31 +1225,41 @@
          for .tmr-pt-shell sits at the end of the page-body sections,
          BEFORE the footer + scripts. -->
     <div class="tmr-pt-shell">
-    <aside class="tmr-pt-rail" aria-label="Site navigation">
-        <a class="tmr-pt-rail-link" href="/profile/" aria-current="page">
-            <span class="tmr-pt-rail-icn">👤</span><span>My Record</span>
-        </a>
-        <a class="tmr-pt-rail-link" href="/sportsbook/">
-            <span class="tmr-pt-rail-icn">🎯</span><span>Make a Pick</span>
-        </a>
-        <a class="tmr-pt-rail-link" href="/leaderboards/">
-            <span class="tmr-pt-rail-icn">🏆</span><span>Leaderboards</span>
-        </a>
-        <a class="tmr-pt-rail-link" href="/feed/">
-            <span class="tmr-pt-rail-icn">💬</span><span>Feed</span>
-        </a>
-        <a class="tmr-pt-rail-link" href="/forum/">
-            <span class="tmr-pt-rail-icn">🗣️</span><span>Forum</span>
-        </a>
-        <a class="tmr-pt-rail-link" href="/marketplace/">
-            <span class="tmr-pt-rail-icn">💎</span><span>Marketplace</span>
-        </a>
-        <a class="tmr-pt-rail-link" href="/arena/">
-            <span class="tmr-pt-rail-icn">🎮</span><span>Arena</span>
-        </a>
-        <a class="tmr-pt-rail-link" href="/notifications/">
-            <span class="tmr-pt-rail-icn">🔔</span><span>Notifications</span>
-        </a>
+    <aside class="tmr-pt-leftrail" aria-label="Profile sidebar">
+      <div class="tmr-pt-card tmr-pt-card--nav">
+        <h4 class="tmr-pt-card__title">Navigate</h4>
+        <nav class="tmr-pt-rail" aria-label="Site navigation">
+          <a class="tmr-pt-rail-link" href="/profile/" aria-current="page">
+              <span class="tmr-pt-rail-icn">👤</span><span>My Record</span>
+          </a>
+          <a class="tmr-pt-rail-link" href="/sportsbook/">
+              <span class="tmr-pt-rail-icn">🎯</span><span>Make a Pick</span>
+          </a>
+          <a class="tmr-pt-rail-link" href="/leaderboards/">
+              <span class="tmr-pt-rail-icn">🏆</span><span>Leaderboards</span>
+          </a>
+          <a class="tmr-pt-rail-link" href="/feed/">
+              <span class="tmr-pt-rail-icn">💬</span><span>Feed</span>
+          </a>
+          <a class="tmr-pt-rail-link" href="/forum/">
+              <span class="tmr-pt-rail-icn">🗣️</span><span>Forum</span>
+          </a>
+          <a class="tmr-pt-rail-link" href="/marketplace/">
+              <span class="tmr-pt-rail-icn">💎</span><span>Marketplace</span>
+          </a>
+          <a class="tmr-pt-rail-link" href="/arena/">
+              <span class="tmr-pt-rail-icn">🎮</span><span>Arena</span>
+          </a>
+          <a class="tmr-pt-rail-link" href="/notifications/">
+              <span class="tmr-pt-rail-icn">🔔</span><span>Notifications</span>
+          </a>
+        </nav>
+      </div>
+      <!-- WATCHING + QUICK STATS — populated by tmr-redesign-test-profile.js
+           from window.profileData (real backend data). Empty cards stay
+           hidden via CSS :empty rule. No fake content. -->
+      <div class="tmr-pt-card tmr-pt-card--watching" data-tmr-pt-watching></div>
+      <div class="tmr-pt-card tmr-pt-card--quickstats" data-tmr-pt-quickstats></div>
     </aside>
     <div class="tmr-pt-main">
 
@@ -7767,6 +7777,14 @@
     </script>
 
     </div><!-- /.tmr-pt-main -->
+    <aside class="tmr-pt-rightrail" aria-label="Community panels">
+      <!-- TOP CAPPERS / TRENDING / OPEN CHALLENGES — empty containers
+           awaiting real API wiring. Hidden via CSS :empty if no data
+           ever arrives, so we never display fake stats / fake users. -->
+      <div class="tmr-pt-card tmr-pt-card--leaderboard" data-tmr-pt-topcappers></div>
+      <div class="tmr-pt-card tmr-pt-card--trending" data-tmr-pt-trending></div>
+      <div class="tmr-pt-card tmr-pt-card--challenges" data-tmr-pt-challenges></div>
+    </aside>
     </div><!-- /.tmr-pt-shell -->
 
         <footer class="site-footer">
@@ -7805,9 +7823,9 @@
 
     <script src="/static/js/platform-production-fix.js?v=20260415d"></script>
     <script src="/static/js/tmr-redesign-loader.js?v=20260501a" defer></script>
-    <script src="/static/js/tmr-redesign-test-profile.js?v=20260501a" defer></script>
+    <script src="/static/js/tmr-redesign-test-profile.js?v=20260501b" defer></script>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501d">
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501e">
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  8:02:00 PM -->

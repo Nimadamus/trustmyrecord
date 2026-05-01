@@ -33,53 +33,67 @@ body[data-tmr-test-route="profile"]{
 
 body[data-tmr-test-route="profile"] .tmr-pt-shell{
   display: grid !important;
-  grid-template-columns: 240px minmax(0, 1fr) !important;
+  grid-template-columns: 240px minmax(0, 1fr) 320px !important;
   gap: 24px !important;
   max-width: 1480px !important;
   margin: 0 auto !important;
   padding: 18px 22px 60px !important;
   box-sizing: border-box !important;
+  align-items: start !important;
 }
-@media (max-width: 1080px){
+@media (max-width: 1280px){
+  body[data-tmr-test-route="profile"] .tmr-pt-shell{
+    grid-template-columns: 220px minmax(0, 1fr) !important;
+  }
+  body[data-tmr-test-route="profile"] .tmr-pt-rightrail{
+    display: none !important;
+  }
+}
+@media (max-width: 980px){
   body[data-tmr-test-route="profile"] .tmr-pt-shell{
     grid-template-columns: 1fr !important;
     padding: 12px 14px 40px !important;
     gap: 14px !important;
   }
-  body[data-tmr-test-route="profile"] .tmr-pt-rail{
+  body[data-tmr-test-route="profile"] .tmr-pt-leftrail{
     position: static !important;
-    flex-direction: row !important;
-    overflow-x: auto !important;
-    height: auto !important;
-    padding: 8px !important;
-  }
-  body[data-tmr-test-route="profile"] .tmr-pt-rail-link span:nth-child(2){
-    display: none !important;
   }
 }
 
-/* Left navigation rail — PickMonitor "NAVIGATE" card style */
-body[data-tmr-test-route="profile"] .tmr-pt-rail{
+/* ===== Left rail — sticky column with stacked cards ===== */
+body[data-tmr-test-route="profile"] .tmr-pt-leftrail{
   position: sticky !important;
   top: 64px !important;
   align-self: flex-start !important;
-  height: fit-content !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 2px !important;
-  padding: 14px !important;
+  gap: 14px !important;
+}
+
+/* Generic test-route card */
+body[data-tmr-test-route="profile"] .tmr-pt-card{
   background: #111a2e !important;
   border: 1px solid #243049 !important;
   border-radius: 14px !important;
+  padding: 14px !important;
 }
-body[data-tmr-test-route="profile"] .tmr-pt-rail::before{
-  content: "Navigate" !important;
-  display: block !important;
+/* Empty cards (Watching / Quick Stats / right-rail cards) auto-hide */
+body[data-tmr-test-route="profile"] .tmr-pt-card:empty{
+  display: none !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-card__title{
+  margin: 0 0 10px !important;
   font: 800 11px 'Inter', sans-serif !important;
   letter-spacing: .14em !important;
   text-transform: uppercase !important;
   color: #7d8aa3 !important;
-  padding: 4px 10px 10px !important;
+}
+
+/* Nav rail inside the .tmr-pt-card--nav card */
+body[data-tmr-test-route="profile"] .tmr-pt-rail{
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
 }
 body[data-tmr-test-route="profile"] .tmr-pt-rail-link{
   display: flex !important;
@@ -109,6 +123,70 @@ body[data-tmr-test-route="profile"] .tmr-pt-rail-icn{
   align-items: center !important;
   justify-content: center !important;
   font-size: 14px !important;
+}
+
+/* ===== Watching / Quick Stats inner content ===== */
+body[data-tmr-test-route="profile"] .tmr-pt-tags{
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-tags + .tmr-pt-tags--teams{
+  margin-top: 8px !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-tag{
+  background: #16213a !important;
+  border: 1px solid #243049 !important;
+  color: #b6c0d4 !important;
+  padding: 5px 9px !important;
+  border-radius: 6px !important;
+  font: 700 11px 'Inter', sans-serif !important;
+  letter-spacing: .04em !important;
+  text-transform: uppercase !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-tag--team{
+  background: linear-gradient(135deg, rgba(251,191,36,.18), rgba(251,191,36,.06)) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(251,191,36,.35) !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-quickstats__rows{
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  font: 500 13px 'Inter', sans-serif !important;
+  color: #b6c0d4 !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-qs-row{
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-qs-row b{
+  color: #e6ecf5 !important;
+  font-weight: 700 !important;
+}
+
+/* ===== Right rail — same sticky / card pattern as left ===== */
+body[data-tmr-test-route="profile"] .tmr-pt-rightrail{
+  position: sticky !important;
+  top: 64px !important;
+  align-self: flex-start !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+}
+/* Right-rail card containers populate via real APIs only. Until that
+   wiring exists, the cards stay empty and CSS hides them so we never
+   show fake top-cappers / fake trending / fake challenges. */
+body[data-tmr-test-route="profile"] .tmr-pt-rightrail .tmr-pt-card:empty{
+  display: none !important;
+}
+/* If ALL right-rail cards are empty, hide the rail itself. */
+body[data-tmr-test-route="profile"] .tmr-pt-rightrail:has(.tmr-pt-card:not(:empty)){
+  display: flex !important;
+}
+@supports not (selector(:has(*))){
+  /* Fallback: rail always shows but its empty children hide individually */
 }
 
 /* Center column wrapper */

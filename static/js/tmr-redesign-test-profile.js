@@ -1,23 +1,13 @@
 /* ============================================================================
  * TMR REDESIGN TEST — Profile reorganizer (test route only)
  *
- * Loaded ONLY from /profile-test/. Watches the live profile renderer and
- * REORGANIZES already-rendered real-data DOM elements into PickMonitor
- * dashboard order:
+ * Loaded ONLY from /profile-test/. REORGANIZES already-rendered real-data
+ * DOM nodes into PickMonitor dashboard layout, and POPULATES the new
+ * left-rail cards (Watching, Quick Stats) from window.profileData.
  *
- *   1. profile hero card (cover + header)        [stays in place]
- *   2. <section id="summaryBar">                  [moved to top of main]
- *   3. recent picks card (.picks-section header) [optional hoist later]
- *
- * This script does NOT:
- *   - inject fake stats / fake users / fake records
- *   - hit any external API
- *   - modify any handler / form / modal / API client
- *   - change any production JS file
- *
- * It only moves existing real-data DOM nodes that were rendered by the
- * unmodified profile renderer. If no real data ever renders, the moved
- * containers stay empty and our CSS hides them via :empty selector.
+ * No fake data. No fake users. No external API calls. If a value is not
+ * present in window.profileData, that section is left empty and CSS hides
+ * it via :empty.
  * ============================================================================ */
 
 (function () {
@@ -25,6 +15,7 @@
 
     var MOUNT_CLASS = 'tmr-pt-stats-mount';
 
+    /* ----- 1. Hoist the rendered #summaryBar to top of center column ---- */
     function ensureMount() {
         var main = document.querySelector('.tmr-pt-main');
         if (!main) return null;
@@ -32,8 +23,6 @@
         if (mount) return mount;
         mount = document.createElement('div');
         mount.className = MOUNT_CLASS;
-        mount.setAttribute('aria-label', 'Stats summary');
-        // Insert after .profile-header-section so it sits below the hero card
         var header = main.querySelector('.profile-header-section');
         if (header && header.nextSibling) {
             main.insertBefore(mount, header.nextSibling);
@@ -52,13 +41,7 @@
         if (!mount) return false;
         if (summary.parentNode === mount) return true;
         mount.appendChild(summary);
-        // Force display so the original `style.display="none"` from the
-        // renderer doesn't keep it hidden if the renderer hasn't yet decided
-        // to show it. CSS :empty rule hides the mount until populated.
         try {
-            // If the renderer already rendered something inside summary, show
-            // it. Otherwise leave its display alone — the renderer toggles it
-            // when data arrives.
             if (summary.querySelector('.summary-stat')) {
                 summary.style.display = 'block';
             }
@@ -66,45 +49,115 @@
         return true;
     }
 
-    function init() {
-        // Try once. If summaryBar isn't in DOM yet (renderer hasn't placed
-        // it), retry on a polling interval until it appears or we give up.
-        if (hoistSummaryBar()) {
-            // Already hoisted; also watch for any future re-rendering by the
-            // renderer that might re-create #summaryBar in its old location.
-            startMutationWatch();
+    /* ----- 2. Populate left-rail Watching card from real profile data --- */
+    function escHtml(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+        });
+    }
+
+    function renderWatching() {
+        var container = document.querySelector('[data-tmr-pt-watching]');
+        if (!container) return;
+        var p = window.profileData;
+        if (!p) return;
+        var sports = Array.isArray(p.favorite_sports)
+            ? p.favorite_sports
+            : (p.favorite_sport ? [p.favorite_sport] : []);
+        var teams = Array.isArray(p.favorite_teams) ? p.favorite_teams : [];
+        // If no real favorites set, leave empty so CSS :empty hides the card
+        if (!sports.length && !teams.length) {
+            container.innerHTML = '';
             return;
         }
-        var attempts = 0;
-        var interval = setInterval(function () {
-            attempts++;
-            if (hoistSummaryBar() || attempts > 40) {
-                clearInterval(interval);
-                startMutationWatch();
+        var html = '<h4 class="tmr-pt-card__title">Watching</h4>';
+        if (sports.length) {
+            html += '<div class="tmr-pt-tags">';
+            for (var i = 0; i < sports.length; i++) {
+                html += '<span class="tmr-pt-tag">' + escHtml(sports[i]) + '</span>';
             }
-        }, 250);
+            html += '</div>';
+        }
+        if (teams.length) {
+            html += '<div class="tmr-pt-tags tmr-pt-tags--teams">';
+            for (var j = 0; j < teams.length; j++) {
+                html += '<span class="tmr-pt-tag tmr-pt-tag--team">' + escHtml(teams[j]) + '</span>';
+            }
+            html += '</div>';
+        }
+        container.innerHTML = html;
+    }
+
+    /* ----- 3. Populate left-rail Quick Stats card from real profile data */
+    function fmtJoinedDate(iso) {
+        if (!iso) return '';
+        try {
+            var d = new Date(iso);
+            if (isNaN(d.getTime())) return '';
+            return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        } catch (e) { return ''; }
+    }
+
+    function renderQuickStats() {
+        var container = document.querySelector('[data-tmr-pt-quickstats]');
+        if (!container) return;
+        var p = window.profileData;
+        if (!p) return;
+        var followers = Number(p.follower_count);
+        var following = Number(p.following_count);
+        var joined = fmtJoinedDate(p.created_at || p.joined_at || p.created);
+        var hasAny = (Number.isFinite(followers) || Number.isFinite(following) || joined);
+        if (!hasAny) {
+            container.innerHTML = '';
+            return;
+        }
+        var html = '<h4 class="tmr-pt-card__title">Quick Stats</h4>';
+        html += '<div class="tmr-pt-quickstats__rows">';
+        if (Number.isFinite(followers)) {
+            html += '<div class="tmr-pt-qs-row"><span>Followers</span><b>' +
+                escHtml(followers.toLocaleString()) + '</b></div>';
+        }
+        if (Number.isFinite(following)) {
+            html += '<div class="tmr-pt-qs-row"><span>Following</span><b>' +
+                escHtml(following.toLocaleString()) + '</b></div>';
+        }
+        if (joined) {
+            html += '<div class="tmr-pt-qs-row"><span>Joined</span><b>' +
+                escHtml(joined) + '</b></div>';
+        }
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    /* ----- 4. Run + watch for late-arriving profileData ----------------- */
+    function applyAll() {
+        hoistSummaryBar();
+        renderWatching();
+        renderQuickStats();
     }
 
     function startMutationWatch() {
-        // If the renderer recreates #summaryBar (e.g. after a data refresh)
-        // we re-hoist it.
         try {
-            var observer = new MutationObserver(function (mutations) {
-                for (var i = 0; i < mutations.length; i++) {
-                    var added = mutations[i].addedNodes;
-                    for (var j = 0; j < added.length; j++) {
-                        var node = added[j];
-                        if (node && node.nodeType === 1 &&
-                            (node.id === 'summaryBar' ||
-                             (node.querySelector && node.querySelector('#summaryBar')))) {
-                            hoistSummaryBar();
-                            return;
-                        }
-                    }
-                }
+            var obs = new MutationObserver(function () {
+                hoistSummaryBar();
+                renderWatching();
+                renderQuickStats();
             });
-            observer.observe(document.body, { childList: true, subtree: true });
+            obs.observe(document.body, { childList: true, subtree: true });
         } catch (e) {}
+    }
+
+    function init() {
+        applyAll();
+        // Poll for window.profileData / #summaryBar to land if they're not
+        // already present (renderer is async).
+        var attempts = 0;
+        var iv = setInterval(function () {
+            attempts++;
+            applyAll();
+            if (attempts > 60) clearInterval(iv);
+        }, 500);
+        startMutationWatch();
     }
 
     if (document.readyState === 'loading') {
