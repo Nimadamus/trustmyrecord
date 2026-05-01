@@ -1,94 +1,154 @@
 /* ============================================================================
- * TMR REDESIGN TEST — Profile reorganizer (test route only)
+ * TMR REDESIGN TEST — Profile reorganizer v2 (PickMonitor refactor)
  *
- * Loaded ONLY from /profile-test/. REORGANIZES already-rendered real-data
- * DOM nodes into PickMonitor dashboard layout, and POPULATES the new
- * left-rail cards (Watching, Quick Stats) from window.profileData.
+ * Loaded ONLY from /profile-test/. Strategy: let the live profile renderer
+ * run untouched on the ORIGINAL DOM (no wrappers, no broken renderer).
+ * AFTER the renderer has populated #profileHeader / #summaryBar / etc.,
+ * this script PHYSICALLY MOVES those DOM nodes (no clones) into a new
+ * PickMonitor-style layout shell appended at the top of <body>.
  *
- * No fake data. No fake users. No external API calls. If a value is not
- * present in window.profileData, that section is left empty and CSS hides
- * it via :empty.
+ * Why this is safer than markup wrappers at page load:
+ *   - The renderer sees the EXACT same DOM it expects at init time
+ *   - getElementById still finds the moved nodes (IDs are unique and
+ *     parent-chain-insensitive)
+ *   - Modals, forms, hidden elements stay where they were
+ *   - If any post-render code re-queries elements, it still finds them
+ *
+ * Strict no-fake-data discipline:
+ *   - Real data only — every visible value comes from the existing
+ *     renderers populating real elements
+ *   - Empty containers stay empty, hidden via CSS :empty
+ *   - No fake users / fake stats / fake charts injected
  * ============================================================================ */
 
 (function () {
     'use strict';
 
-    var MOUNT_CLASS = 'tmr-pt-stats-mount';
+    var SHELL_ID = 'tmr-pt-pm-shell';
+    var moved = false;
 
-    /* ----- 1. Hoist the rendered #summaryBar to top of center column ---- */
-    function ensureMount() {
-        var main = document.querySelector('.tmr-pt-main');
-        if (!main) return null;
-        var mount = main.querySelector('.' + MOUNT_CLASS);
-        if (mount) return mount;
-        mount = document.createElement('div');
-        mount.className = MOUNT_CLASS;
-        var header = main.querySelector('.profile-header-section');
-        if (header && header.nextSibling) {
-            main.insertBefore(mount, header.nextSibling);
-        } else if (header) {
-            main.appendChild(mount);
-        } else {
-            main.insertBefore(mount, main.firstChild);
-        }
-        return mount;
-    }
-
-    function hoistSummaryBar() {
-        var summary = document.getElementById('summaryBar');
-        if (!summary) return false;
-        var mount = ensureMount();
-        if (!mount) return false;
-        if (summary.parentNode === mount) return true;
-        mount.appendChild(summary);
-        try {
-            if (summary.querySelector('.summary-stat')) {
-                summary.style.display = 'block';
-            }
-        } catch (e) {}
-        return true;
-    }
-
-    /* ----- 2. Populate left-rail Watching card from real profile data --- */
     function escHtml(s) {
         return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
             return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
         });
     }
 
-    function renderWatching() {
-        var container = document.querySelector('[data-tmr-pt-watching]');
-        if (!container) return;
-        var p = window.profileData;
-        if (!p) return;
-        var sports = Array.isArray(p.favorite_sports)
-            ? p.favorite_sports
-            : (p.favorite_sport ? [p.favorite_sport] : []);
-        var teams = Array.isArray(p.favorite_teams) ? p.favorite_teams : [];
-        // If no real favorites set, leave empty so CSS :empty hides the card
-        if (!sports.length && !teams.length) {
-            container.innerHTML = '';
-            return;
+    /* Build the PickMonitor visual shell at the top of <body>.
+       The shell contains EMPTY mount points where we'll move rendered
+       real-data DOM nodes once the renderer is done. */
+    function buildShell() {
+        if (document.getElementById(SHELL_ID)) return document.getElementById(SHELL_ID);
+        var shell = document.createElement('main');
+        shell.id = SHELL_ID;
+        shell.className = 'tmr-pt-pm-shell';
+        shell.setAttribute('aria-label', 'PickMonitor profile dashboard');
+        shell.innerHTML = '' +
+            '<aside class="tmr-pt-pm-left" aria-label="Profile sidebar">' +
+              '<div class="tmr-pt-pm-card">' +
+                '<h4>Navigate</h4>' +
+                '<nav class="tmr-pt-pm-nav">' +
+                  '<a href="/profile/" aria-current="page"><span>👤</span>My Record</a>' +
+                  '<a href="/sportsbook/"><span>🎯</span>Make a Pick</a>' +
+                  '<a href="/leaderboards/"><span>🏆</span>Leaderboards</a>' +
+                  '<a href="/feed/"><span>💬</span>Feed</a>' +
+                  '<a href="/forum/"><span>🗣️</span>Forum</a>' +
+                  '<a href="/marketplace/"><span>💎</span>Marketplace</a>' +
+                  '<a href="/arena/"><span>🎮</span>Arena</a>' +
+                  '<a href="/notifications/"><span>🔔</span>Notifications</a>' +
+                '</nav>' +
+              '</div>' +
+              '<div class="tmr-pt-pm-card" data-tmr-pm-watching></div>' +
+              '<div class="tmr-pt-pm-card" data-tmr-pm-quickstats></div>' +
+            '</aside>' +
+            '<section class="tmr-pt-pm-center">' +
+              /* hero-card mount: cover + header will be moved here */
+              '<div class="tmr-pt-pm-hero" data-tmr-pm-hero-mount></div>' +
+              /* stats-strip mount: #summaryBar will be moved here */
+              '<div class="tmr-pt-pm-stats" data-tmr-pm-stats-mount></div>' +
+              /* performance card mount: #equityCurve / .eq-line area moved here */
+              '<div class="tmr-pt-pm-perf-card" data-tmr-pm-perf-mount>' +
+                '<h3>Performance</h3>' +
+                '<div class="tmr-pt-pm-perf-empty">Performance chart loads with your real graded picks.</div>' +
+              '</div>' +
+              /* recent picks mount: pick history moved here */
+              '<div class="tmr-pt-pm-picks-card" data-tmr-pm-picks-mount>' +
+                '<h3>Recent Picks</h3>' +
+                '<div class="tmr-pt-pm-picks-empty">Your real picks load here from the database.</div>' +
+              '</div>' +
+            '</section>' +
+            '<aside class="tmr-pt-pm-right" aria-label="Community panels">' +
+              '<div class="tmr-pt-pm-card" data-tmr-pm-topcappers></div>' +
+              '<div class="tmr-pt-pm-card" data-tmr-pm-trending></div>' +
+              '<div class="tmr-pt-pm-card" data-tmr-pm-challenges></div>' +
+            '</aside>';
+        var firstChild = document.body.firstChild;
+        var banner = document.getElementById('tmr-test-route-banner');
+        if (banner && banner.nextSibling) {
+            document.body.insertBefore(shell, banner.nextSibling);
+        } else {
+            document.body.insertBefore(shell, firstChild);
         }
-        var html = '<h4 class="tmr-pt-card__title">Watching</h4>';
-        if (sports.length) {
-            html += '<div class="tmr-pt-tags">';
-            for (var i = 0; i < sports.length; i++) {
-                html += '<span class="tmr-pt-tag">' + escHtml(sports[i]) + '</span>';
-            }
-            html += '</div>';
-        }
-        if (teams.length) {
-            html += '<div class="tmr-pt-tags tmr-pt-tags--teams">';
-            for (var j = 0; j < teams.length; j++) {
-                html += '<span class="tmr-pt-tag tmr-pt-tag--team">' + escHtml(teams[j]) + '</span>';
-            }
-            html += '</div>';
-        }
-        container.innerHTML = html;
+        return shell;
     }
 
-    /* ----- 3. Populate left-rail Quick Stats card from real profile data */
+    /* Move a real DOM element into a mount point. The element keeps its
+       ID and contents — no clone, no copy. The renderer can still find
+       it via getElementById. */
+    function moveInto(mountSelector, elementId) {
+        var mount = document.querySelector(mountSelector);
+        var el = document.getElementById(elementId);
+        if (!mount || !el) return false;
+        if (el.parentNode === mount) return true;
+        mount.appendChild(el);
+        return true;
+    }
+
+    function relocateRenderedNodes() {
+        var shell = buildShell();
+        if (!shell) return false;
+
+        /* Move cover + header into the hero mount (in that order).
+           Both keep their original IDs (#profileCover, #profileHeader)
+           so getElementById still works. */
+        var heroMount = shell.querySelector('[data-tmr-pm-hero-mount]');
+        var cover = document.getElementById('profileCover');
+        var header = document.getElementById('profileHeader');
+        if (heroMount && cover && cover.parentNode !== heroMount) heroMount.appendChild(cover);
+        if (heroMount && header && header.parentNode !== heroMount) heroMount.appendChild(header);
+
+        /* Move #summaryBar into stats mount */
+        moveInto('[data-tmr-pm-stats-mount]', 'summaryBar');
+
+        /* Move the equity curve (performance chart) into perf mount */
+        var perfMount = shell.querySelector('[data-tmr-pm-perf-mount]');
+        var equity = document.getElementById('equityCurve');
+        if (perfMount && equity && equity.parentNode !== perfMount) {
+            // Remove the empty placeholder once real chart is being moved
+            var empty = perfMount.querySelector('.tmr-pt-pm-perf-empty');
+            if (empty) empty.remove();
+            perfMount.appendChild(equity);
+        }
+
+        /* Move the pick history into picks mount. Try a few known IDs the
+           live profile uses for the rendered pick table/list. */
+        var picksMount = shell.querySelector('[data-tmr-pm-picks-mount]');
+        if (picksMount) {
+            var pickTargets = ['ledgerWrap', 'picksList', 'profilePicksList', 'picksTableContainer', 'picksTable'];
+            for (var i = 0; i < pickTargets.length; i++) {
+                var node = document.getElementById(pickTargets[i]);
+                if (node && node.parentNode !== picksMount) {
+                    var emptyP = picksMount.querySelector('.tmr-pt-pm-picks-empty');
+                    if (emptyP) emptyP.remove();
+                    picksMount.appendChild(node);
+                    break;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /* Populate Watching + Quick Stats from real window.profileData. */
     function fmtJoinedDate(iso) {
         if (!iso) return '';
         try {
@@ -98,8 +158,38 @@
         } catch (e) { return ''; }
     }
 
+    function renderWatching() {
+        var container = document.querySelector('[data-tmr-pm-watching]');
+        if (!container) return;
+        var p = window.profileData;
+        if (!p) return;
+        var sports = Array.isArray(p.favorite_sports) ? p.favorite_sports
+            : (p.favorite_sport ? [p.favorite_sport] : []);
+        var teams = Array.isArray(p.favorite_teams) ? p.favorite_teams : [];
+        if (!sports.length && !teams.length) {
+            container.innerHTML = '';
+            return;
+        }
+        var html = '<h4>Watching</h4>';
+        if (sports.length) {
+            html += '<div class="tmr-pt-pm-tags">';
+            for (var i = 0; i < sports.length; i++) {
+                html += '<span class="tmr-pt-pm-tag">' + escHtml(sports[i]) + '</span>';
+            }
+            html += '</div>';
+        }
+        if (teams.length) {
+            html += '<div class="tmr-pt-pm-tags tmr-pt-pm-tags--teams">';
+            for (var j = 0; j < teams.length; j++) {
+                html += '<span class="tmr-pt-pm-tag tmr-pt-pm-tag--team">' + escHtml(teams[j]) + '</span>';
+            }
+            html += '</div>';
+        }
+        container.innerHTML = html;
+    }
+
     function renderQuickStats() {
-        var container = document.querySelector('[data-tmr-pt-quickstats]');
+        var container = document.querySelector('[data-tmr-pm-quickstats]');
         if (!container) return;
         var p = window.profileData;
         if (!p) return;
@@ -107,57 +197,47 @@
         var following = Number(p.following_count);
         var joined = fmtJoinedDate(p.created_at || p.joined_at || p.created);
         var hasAny = (Number.isFinite(followers) || Number.isFinite(following) || joined);
-        if (!hasAny) {
-            container.innerHTML = '';
-            return;
-        }
-        var html = '<h4 class="tmr-pt-card__title">Quick Stats</h4>';
-        html += '<div class="tmr-pt-quickstats__rows">';
+        if (!hasAny) { container.innerHTML = ''; return; }
+        var html = '<h4>Quick Stats</h4><div class="tmr-pt-pm-qs-rows">';
         if (Number.isFinite(followers)) {
-            html += '<div class="tmr-pt-qs-row"><span>Followers</span><b>' +
-                escHtml(followers.toLocaleString()) + '</b></div>';
+            html += '<div class="tmr-pt-pm-qs-row"><span>Followers</span><b>' + escHtml(followers.toLocaleString()) + '</b></div>';
         }
         if (Number.isFinite(following)) {
-            html += '<div class="tmr-pt-qs-row"><span>Following</span><b>' +
-                escHtml(following.toLocaleString()) + '</b></div>';
+            html += '<div class="tmr-pt-pm-qs-row"><span>Following</span><b>' + escHtml(following.toLocaleString()) + '</b></div>';
         }
         if (joined) {
-            html += '<div class="tmr-pt-qs-row"><span>Joined</span><b>' +
-                escHtml(joined) + '</b></div>';
+            html += '<div class="tmr-pt-pm-qs-row"><span>Joined</span><b>' + escHtml(joined) + '</b></div>';
         }
         html += '</div>';
         container.innerHTML = html;
     }
 
-    /* ----- 4. Run + watch for late-arriving profileData ----------------- */
     function applyAll() {
-        hoistSummaryBar();
+        buildShell();
+        relocateRenderedNodes();
         renderWatching();
         renderQuickStats();
     }
 
-    function startMutationWatch() {
-        try {
-            var obs = new MutationObserver(function () {
-                hoistSummaryBar();
-                renderWatching();
-                renderQuickStats();
-            });
-            obs.observe(document.body, { childList: true, subtree: true });
-        } catch (e) {}
-    }
-
     function init() {
         applyAll();
-        // Poll for window.profileData / #summaryBar to land if they're not
-        // already present (renderer is async).
+        // Renderer is async — keep retrying for ~30s so we catch elements
+        // as they become populated.
         var attempts = 0;
         var iv = setInterval(function () {
             attempts++;
             applyAll();
             if (attempts > 60) clearInterval(iv);
         }, 500);
-        startMutationWatch();
+        // Also watch DOM for any late-arriving renderer outputs
+        try {
+            var obs = new MutationObserver(function () {
+                relocateRenderedNodes();
+                renderWatching();
+                renderQuickStats();
+            });
+            obs.observe(document.body, { childList: true, subtree: true });
+        } catch (e) {}
     }
 
     if (document.readyState === 'loading') {
