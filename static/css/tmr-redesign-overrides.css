@@ -1,0 +1,463 @@
+/* ===================================================================
+   TMR REDESIGN OVERRIDES — ports Claude's DK-style preview design
+   onto the LIVE class names used by the deployed sportsbook page.
+   Loaded via <link> at the very end of <head> so it beats every
+   inline <style> block + tmr-sitewide.css on source order.
+   CSS-only. No JS, no markup, no handlers touched.
+   =================================================================== */
+:root{
+  --tmr-bg:#050a14;
+  --tmr-bg-2:#0a1322;
+  --tmr-surface:#101b30;
+  --tmr-surface-2:#16243f;
+  --tmr-surface-3:#1d2f4f;
+  --tmr-line:#1f2e48;
+  --tmr-line-2:#2c4066;
+  --tmr-ink:#f1f5fb;
+  --tmr-ink-2:#b9c4d6;
+  --tmr-muted:#7a8499;
+  --tmr-green:#22c55e;
+  --tmr-green-dk:#53d337;
+  --tmr-red:#ef4444;
+  --tmr-gold:#f5b400;
+  --tmr-teal:#1fb8d9;
+  --tmr-blue:#1d4ed8;
+}
+
+html, body{
+  background:var(--tmr-bg) !important;
+  color:var(--tmr-ink) !important;
+  font-family:'Inter',system-ui,-apple-system,sans-serif !important;
+  -webkit-font-smoothing:antialiased;
+}
+body .animated-grid{display:none !important}
+body .container{max-width:1480px !important;padding:0 22px !important}
+
+/* ===== Sport pills bar (top horizontal) — preview .sport-bar / .sp ===== */
+body .sportsbook-sports-nav{
+  background:var(--tmr-bg-2) !important;
+  border-bottom:1px solid var(--tmr-line) !important;
+  padding:12px 22px !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:8px !important;
+  overflow-x:auto !important;
+  white-space:nowrap !important;
+  border-radius:0 !important;
+  margin:0 -22px 18px !important;
+}
+body .sportsbook-sports-nav::-webkit-scrollbar{display:none}
+body .sportsbook-sports-nav button,
+body .sportsbook-sports-nav a{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:8px !important;
+  padding:8px 14px !important;
+  border-radius:999px !important;
+  background:var(--tmr-surface) !important;
+  border:1px solid var(--tmr-line) !important;
+  font:700 13px 'Inter',sans-serif !important;
+  color:var(--tmr-ink-2) !important;
+  cursor:pointer !important;
+  flex-shrink:0 !important;
+  transition:background .12s, color .12s !important;
+}
+body .sportsbook-sports-nav button:hover,
+body .sportsbook-sports-nav a:hover{
+  background:var(--tmr-surface-2) !important;
+  color:var(--tmr-ink) !important;
+}
+body .sportsbook-sports-nav button.active,
+body .sportsbook-sports-nav a.active{
+  background:linear-gradient(135deg,var(--tmr-green-dk),#3eb423) !important;
+  color:#0a1f02 !important;
+  border-color:transparent !important;
+}
+
+/* ===== League rail / left sidebar — preview .lg-card ===== */
+body .sportsbook-league-rail,
+body .sportsbook-rail-board{
+  background:var(--tmr-surface) !important;
+  border:1px solid var(--tmr-line) !important;
+  border-radius:12px !important;
+  padding:12px !important;
+}
+body .sportsbook-league-rail h3,
+body .sportsbook-league-rail h4,
+body .sportsbook-rail-board h3,
+body .sportsbook-rail-board h4{
+  margin:0 0 10px !important;
+  font:700 11px 'Inter',sans-serif !important;
+  letter-spacing:.14em !important;
+  text-transform:uppercase !important;
+  color:var(--tmr-muted) !important;
+}
+
+/* ===== Game card / board section — preview .game ===== */
+body .sportsbook-board-shell,
+body .sportsbook-board-columns,
+body .sportsbook-board-section{
+  background:var(--tmr-surface) !important;
+  border:1px solid var(--tmr-line) !important;
+  border-radius:14px !important;
+  margin-bottom:12px !important;
+  overflow:hidden !important;
+  padding:0 !important;
+  box-shadow:0 12px 28px rgba(0,0,0,.32) !important;
+}
+body .sportsbook-board-shell + .sportsbook-board-shell,
+body .sportsbook-board-section + .sportsbook-board-section{
+  margin-top:14px !important;
+}
+
+/* ===== Section / column / table heads — preview .gh / .col-h ===== */
+body .sportsbook-board-section-head,
+body .sportsbook-board-grid-head,
+body .sportsbook-board-list-head,
+body .sportsbook-board-table-head,
+body .sportsbook-board-table-league,
+body .sportsbook-board-toolbar{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  padding:10px 16px !important;
+  background:var(--tmr-bg-2) !important;
+  border-bottom:1px solid var(--tmr-line) !important;
+  font:700 11px 'Inter',sans-serif !important;
+  letter-spacing:.10em !important;
+  text-transform:uppercase !important;
+  color:var(--tmr-muted) !important;
+}
+body .sportsbook-board-toolbar-note{
+  color:var(--tmr-muted) !important;
+  font-weight:600 !important;
+  text-transform:none !important;
+  letter-spacing:0 !important;
+}
+
+/* ===== Game row — preview .team-row ===== */
+body .sportsbook-board-row,
+body .sportsbook-board-table-row{
+  display:grid !important;
+  grid-template-columns:1.4fr 1fr 1fr 1fr !important;
+  gap:0 !important;
+  background:var(--tmr-surface) !important;
+  border-bottom:1px solid var(--tmr-line) !important;
+  align-items:center !important;
+}
+body .sportsbook-board-row:last-child,
+body .sportsbook-board-table-row:last-child{border-bottom:0 !important}
+
+/* Team name cell */
+body .sportsbook-board-row .sportsbook-board-team,
+body .sportsbook-board-table-row .sportsbook-board-team,
+body .sportsbook-board-row > :first-child,
+body .sportsbook-board-table-row > :first-child{
+  padding:14px 16px !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:10px !important;
+}
+
+/* ===== Odds cells / pick buttons — preview .odd ===== */
+body .sportsbook-board-odds-cell,
+body .bet-pick-btn,
+body .sportsbook-price-cell{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:10px 8px !important;
+  border:0 !important;
+  border-left:1px solid var(--tmr-line) !important;
+  background:var(--tmr-surface) !important;
+  color:var(--tmr-ink) !important;
+  cursor:pointer !important;
+  transition:background .15s !important;
+  font:700 14px 'JetBrains Mono','Inter',monospace !important;
+  border-radius:0 !important;
+  min-height:60px !important;
+}
+body .sportsbook-board-odds-cell:hover,
+body .bet-pick-btn:hover,
+body .sportsbook-price-cell:hover{
+  background:var(--tmr-surface-3) !important;
+}
+body .bet-pick-btn.active,
+body .bet-pick-btn.is-active,
+body .bet-pick-btn[aria-pressed="true"],
+body .sportsbook-board-odds-cell.picked,
+body .sportsbook-board-odds-cell.active{
+  background:linear-gradient(135deg,rgba(83,211,55,.22),rgba(83,211,55,.08)) !important;
+  box-shadow:inset 0 0 0 1px var(--tmr-green-dk) !important;
+  color:#fff !important;
+}
+/* preview .odd .pt (point) and .px (price) */
+body .bet-pick-btn .market-name,
+body .sportsbook-market-pill .market-name{
+  font:800 14px 'Inter',sans-serif !important;
+  color:var(--tmr-ink) !important;
+}
+body .bet-pick-btn .market-odds,
+body .sportsbook-market-pill .market-odds{
+  font:700 12px 'JetBrains Mono',monospace !important;
+  color:var(--tmr-green-dk) !important;
+  margin-top:2px !important;
+}
+
+/* ===== Market pill chips — preview .leg-style chip ===== */
+body .sportsbook-market-pill{
+  background:var(--tmr-surface-2) !important;
+  border:1px solid var(--tmr-line) !important;
+  color:var(--tmr-ink) !important;
+  border-radius:8px !important;
+  padding:8px 12px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:8px !important;
+}
+body .sportsbook-market-pills{gap:8px !important}
+
+/* ===== Period / sub-tab bar — preview .section-h .filter ===== */
+body .sportsbook-period-bar,
+body #marketSubtabs,
+body .sportsbook-market-rail{
+  display:flex !important;
+  gap:4px !important;
+  background:var(--tmr-surface) !important;
+  padding:4px !important;
+  border-radius:10px !important;
+  border:1px solid var(--tmr-line) !important;
+  margin:0 0 12px !important;
+  flex-wrap:wrap !important;
+}
+body .market-subtab{
+  background:transparent !important;
+  border:0 !important;
+  color:var(--tmr-ink-2) !important;
+  padding:6px 12px !important;
+  border-radius:7px !important;
+  font:700 12px 'Inter',sans-serif !important;
+  cursor:pointer !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:6px !important;
+}
+body .market-subtab:hover{background:var(--tmr-surface-2) !important;color:var(--tmr-ink) !important}
+body .market-subtab.is-active{
+  background:var(--tmr-surface-3) !important;
+  color:var(--tmr-ink) !important;
+}
+body .market-subtab__hint{
+  font:600 10px 'Inter',sans-serif !important;
+  opacity:.6 !important;
+  letter-spacing:.04em !important;
+  text-transform:none !important;
+}
+
+/* ===== Pick slip / right rail — preview .slip ===== */
+body .sportsbook-picks-layout,
+body .sportsbook-rail-board{
+  background:var(--tmr-surface) !important;
+  border:1px solid var(--tmr-line) !important;
+  border-radius:14px !important;
+  overflow:hidden !important;
+}
+body .sportsbook-picks-layout .panel-header,
+body .sportsbook-panel-header{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  padding:14px 16px !important;
+  border-bottom:1px solid var(--tmr-line) !important;
+  background:var(--tmr-bg-2) !important;
+}
+body .sportsbook-eyebrow,
+body .sportsbook-lobby-label,
+body .sportsbook-panel-header h2,
+body .sportsbook-panel-header h3{
+  color:var(--tmr-ink) !important;
+  font:800 14px 'Inter',sans-serif !important;
+  letter-spacing:.02em !important;
+  text-transform:none !important;
+  margin:0 !important;
+}
+body .sportsbook-eyebrow{
+  color:var(--tmr-muted) !important;
+  font-size:11px !important;
+  letter-spacing:.16em !important;
+  text-transform:uppercase !important;
+}
+
+/* Empty / signed-out / error states */
+body .sportsbook-empty-slip,
+body .tmr-pending-empty,
+body .sportsbook-board-empty{
+  color:var(--tmr-muted) !important;
+  text-align:center !important;
+  padding:28px 18px !important;
+}
+
+/* ===== Lobby secondary buttons — preview .promo arr ===== */
+body .sportsbook-lobby-secondary-btn{
+  background:var(--tmr-surface) !important;
+  border:1px solid var(--tmr-line) !important;
+  color:var(--tmr-ink) !important;
+  border-radius:10px !important;
+  padding:10px 14px !important;
+  font:700 12px 'Inter',sans-serif !important;
+  cursor:pointer !important;
+}
+body .sportsbook-lobby-secondary-btn:hover{
+  background:var(--tmr-surface-2) !important;
+  border-color:var(--tmr-line-2) !important;
+}
+
+/* ===== Auth gate cards ===== */
+body .sportsbook-auth-card{
+  background:var(--tmr-surface) !important;
+  border:1px solid var(--tmr-line) !important;
+  border-radius:14px !important;
+  padding:22px !important;
+}
+body .sportsbook-auth-grid{gap:14px !important}
+
+/* ===== Tip / banner ===== */
+body .sportsbook-board-tip{
+  background:var(--tmr-surface-2) !important;
+  border:1px solid var(--tmr-line-2) !important;
+  color:var(--tmr-ink-2) !important;
+  border-radius:10px !important;
+  padding:10px 14px !important;
+}
+
+/* ===== Page chrome ===== */
+body .sportsbook-page-topbar{
+  background:var(--tmr-bg-2) !important;
+  border-bottom:1px solid var(--tmr-line) !important;
+  padding:18px 22px !important;
+}
+body .sportsbook-page-intro{color:var(--tmr-ink-2) !important;font-weight:500 !important}
+
+/* ===== Pending picks panel — preview .leg ===== */
+body .tmr-pending-picks-panel{
+  background:var(--tmr-surface) !important;
+  border:1px solid var(--tmr-line) !important;
+  border-radius:14px !important;
+  overflow:hidden !important;
+}
+body .tmr-pending-picks-head{
+  padding:14px 16px !important;
+  background:var(--tmr-bg-2) !important;
+  border-bottom:1px solid var(--tmr-line) !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+}
+body .tmr-pending-pick{
+  background:var(--tmr-bg-2) !important;
+  border:1px solid var(--tmr-line) !important;
+  border-radius:10px !important;
+  padding:10px 12px !important;
+  margin:8px !important;
+  position:relative !important;
+}
+body .tmr-pending-pick strong{
+  color:var(--tmr-ink) !important;
+  font-weight:800 !important;
+}
+body .tmr-pending-pick-sport,
+body .tmr-pending-pick-meta{
+  color:var(--tmr-muted) !important;
+  font:700 11px 'Inter',sans-serif !important;
+  text-transform:uppercase !important;
+  letter-spacing:.1em !important;
+}
+body .tmr-pending-pick-odds{
+  color:var(--tmr-green-dk) !important;
+  font:700 13px 'JetBrains Mono',monospace !important;
+}
+
+/* ===== Links ===== */
+body a:not(.sportsbook-sports-nav a){color:var(--tmr-teal) !important}
+body a:not(.sportsbook-sports-nav a):hover{color:#3dd0ed !important;text-decoration:underline !important}
+
+/* ===== Placeholder kills (CSS-only — no JS edits) ===== */
+body .market-subtab[data-market="live"]{display:none !important}
+body .odds-pending-badge{display:none !important}
+body #consensus .sportsbook-panel-header p{display:none !important}
+
+/* ===== PROFILE PAGE — preview profile-style cards ===== */
+body.tmr-social-profile{background:var(--tmr-bg) !important;color:var(--tmr-ink) !important}
+body.tmr-social-profile .profile-cover{
+  background:linear-gradient(135deg,var(--tmr-surface-2),var(--tmr-surface)) !important;
+  border-bottom:1px solid var(--tmr-line) !important;
+}
+body.tmr-social-profile .profile-cover-glow{display:none !important}
+body.tmr-social-profile .stat-card,
+body.tmr-social-profile .achievement-card,
+body.tmr-social-profile .marketplace-card,
+body.tmr-social-profile .recent-pick,
+body.tmr-social-profile .pick-card,
+body.tmr-social-profile .roi-card,
+body.tmr-social-profile .splits-card,
+body.tmr-social-profile .profile-section{
+  background:var(--tmr-surface) !important;
+  border:1px solid var(--tmr-line) !important;
+  border-radius:14px !important;
+  box-shadow:0 12px 28px rgba(0,0,0,.32) !important;
+}
+body.tmr-social-profile .stat-value,
+body.tmr-social-profile .kpi-value{
+  color:var(--tmr-green-dk) !important;
+  font:800 26px 'JetBrains Mono',monospace !important;
+}
+body.tmr-social-profile .stat-label,
+body.tmr-social-profile .kpi-label{
+  color:var(--tmr-muted) !important;
+  font:700 11px 'Inter',sans-serif !important;
+  letter-spacing:.14em !important;
+  text-transform:uppercase !important;
+}
+body.tmr-social-profile .profile-tabs,
+body.tmr-social-profile .tabs{
+  display:flex !important;
+  gap:4px !important;
+  background:var(--tmr-surface) !important;
+  padding:4px !important;
+  border-radius:10px !important;
+  border:1px solid var(--tmr-line) !important;
+}
+body.tmr-social-profile .profile-tabs .tab,
+body.tmr-social-profile .tabs button{
+  background:transparent !important;
+  border:0 !important;
+  color:var(--tmr-ink-2) !important;
+  padding:8px 14px !important;
+  border-radius:8px !important;
+  font:700 13px 'Inter',sans-serif !important;
+  cursor:pointer !important;
+}
+body.tmr-social-profile .profile-tabs .tab.active,
+body.tmr-social-profile .tabs button.active{
+  background:linear-gradient(135deg,var(--tmr-green-dk),#3eb423) !important;
+  color:#0a1f02 !important;
+}
+
+/* ===== FORUM PAGE — preview 2+2 dark style ===== */
+body .fhead{background:var(--tmr-bg-2) !important;border-bottom:1px solid var(--tmr-line) !important;color:var(--tmr-ink) !important}
+body .ftabs{background:var(--tmr-surface) !important;border-bottom:1px solid var(--tmr-line) !important}
+body .fshell{background:var(--tmr-bg) !important;color:var(--tmr-ink) !important}
+body .fside{background:var(--tmr-surface) !important;border:1px solid var(--tmr-line) !important;border-radius:12px !important;color:var(--tmr-ink-2) !important}
+body .fcrumb{color:var(--tmr-muted) !important;font:700 11px 'Inter',sans-serif !important;letter-spacing:.14em !important;text-transform:uppercase !important}
+body .ftitle{color:var(--tmr-ink) !important;font:800 22px 'Inter',sans-serif !important;letter-spacing:-.01em !important}
+body .fstats{color:var(--tmr-muted) !important;font:600 12px 'Inter',sans-serif !important}
+body .fgroup-table{background:var(--tmr-surface) !important;border:1px solid var(--tmr-line) !important;border-radius:12px !important;overflow:hidden !important;border-collapse:separate !important;border-spacing:0 !important}
+body .fgroup-table tr.fcol-head td{background:var(--tmr-bg-2) !important;color:var(--tmr-muted) !important;font:700 11px 'Inter',sans-serif !important;letter-spacing:.14em !important;text-transform:uppercase !important;padding:12px 14px !important;border-bottom:1px solid var(--tmr-line) !important}
+body .frow td{background:var(--tmr-surface) !important;border-bottom:1px solid var(--tmr-line) !important;padding:14px !important;color:var(--tmr-ink-2) !important}
+body .frow:hover td{background:var(--tmr-surface-2) !important}
+body .ffolder{color:var(--tmr-green-dk) !important}
+body .fname{color:var(--tmr-ink) !important;font-weight:700 !important}
+body .fbtn{background:var(--tmr-surface-2) !important;border:1px solid var(--tmr-line-2) !important;color:var(--tmr-ink) !important;border-radius:8px !important;padding:8px 14px !important;font:700 12px 'Inter',sans-serif !important;cursor:pointer !important}
+body .fbtn:hover{background:var(--tmr-surface-3) !important}
+body .fthread-post{background:var(--tmr-surface) !important;border:1px solid var(--tmr-line) !important;border-radius:12px !important;color:var(--tmr-ink) !important;padding:16px !important;margin-bottom:12px !important}
