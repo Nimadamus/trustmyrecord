@@ -326,7 +326,7 @@ const App = {
                      class="w-10 h-10 rounded-full">
                 <div class="flex-1">
                     <div class="flex items-center gap-2">
-                        <a href="/profile/${pick.username}" class="font-semibold hover:text-blue-400">${pick.username}</a>
+                        <a href="/profile/?user=${encodeURIComponent(pick.username)}" class="font-semibold hover:text-blue-400">${pick.username}</a>
                         <span class="text-xs text-slate-400">${this.formatTime(pick.created_at)}</span>
                         <span class="text-xs px-2 py-0.5 rounded ${statusColors[pick.status]} text-white">${pick.status}</span>
                     </div>
@@ -511,7 +511,7 @@ const App = {
                 <span class="font-bold text-lg ${medalColors[rank] || 'text-slate-400'} w-8">#${rank}</span>
                 <img src="${user.avatar_url || '/static/images/default-avatar.png'}" class="w-12 h-12 rounded-full">
                 <div>
-                    <a href="/profile/${user.username}" class="font-bold text-lg hover:text-blue-400">${user.username}</a>
+                    <a href="/profile/?user=${encodeURIComponent(user.username)}" class="font-bold text-lg hover:text-blue-400">${user.username}</a>
                     <div class="text-sm text-slate-400">${user.total_picks || 0} picks</div>
                 </div>
             </div>
