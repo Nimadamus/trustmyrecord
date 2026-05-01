@@ -1182,7 +1182,7 @@ button{font:inherit;cursor:pointer}
     gap: 14px;
 }
 .combined-hero.hero-v2 .hero-headline .ch-eyebrow { margin-bottom: 2px; }
-/* Larger pre-headline variant — sized at ~22px so 'The End Of The Bullshit.'
+/* Larger pre-headline variant — sized at ~22px so 'sports social proof'
    reads as a real sub-headline, not a tiny mono pill. */
 .combined-hero.hero-v2 .hero-headline .ch-eyebrow--big {
     font-family: 'Barlow Condensed', 'Inter', sans-serif !important;
@@ -2013,13 +2013,16 @@ button{font:inherit;cursor:pointer}
         <span class="tagline">Receipts over rhetoric</span>
       </div>
     </a>
-    <div class="header-search">
-      <span class="ic">⌕</span>
-      <input type="text" placeholder="Search handicappers, sports, picks, forum threads...">
-    </div>
+    <nav class="tmr-home-toplinks" aria-label="Homepage sections">
+      <a href="/picks/">Records</a>
+      <a href="/challenges/">Challenges</a>
+      <a href="/challenges/">Contests</a>
+      <a href="/feed/">Feed</a>
+      <a href="/forum/">Forum</a>
+    </nav>
     <div class="header-right">
       <a class="btn auth-link" href="/login/">Login</a>
-      <a class="btn accent auth-link" href="/register/">Join Free</a>
+      <a class="btn accent auth-link" href="/register/">Join TrustMyRecord</a>
     </div>
   </div>
 </header>
@@ -2027,55 +2030,53 @@ button{font:inherit;cursor:pointer}
 <!-- Main nav removed: site-wide global nav is injected by tmr-sitewide.js -->
 
 <!-- COMBINED HERO + PROVE IT (single above-the-fold section) -->
-<section class="combined-hero hero-v2">
-  <!-- Full-bleed Curry background + gradient + vignette stack -->
+<section class="tmr-social-hero combined-hero hero-v2">
   <div class="hero-bg" aria-hidden="true">
     <img class="hero-bg-img" src="static/media/steph-curry-hero.gif" alt="" loading="lazy">
     <div class="hero-bg-gradient"></div>
     <div class="hero-bg-vignette"></div>
   </div>
-
-  <!-- Zone A: headline + sample post card -->
-  <div class="hero-zone-a">
-    <div class="hero-zone-a-inner">
-      <div class="hero-headline">
-        <span class="ch-eyebrow ch-eyebrow--big"><span class="pip"></span>The End Of The Bullshit.</span>
-        <h1>Think You Know Sports?<br><span class="accent">Prove It.</span></h1>
-        <p class="hero-slogan">Prove Your Fandom.</p>
-        <p class="lead">TrustMyRecord is where sports fans, pick makers, trivia players, and competitors build a real public record. Track your picks, climb leaderboards, challenge other fans, create polls and trivia, and prove what you know through results instead of talk.</p>
-        <p class="lead lead--secondary">Whether you are here to compete, talk sports, test your knowledge, or build credibility as a handicapper, this is where your record speaks for itself.</p>
-        <div class="hero-action-row" role="group" aria-label="Get started">
-          <a class="hero-action hero-action--primary auth-link" href="/register/">Start Tracking Picks</a>
-          <a class="hero-action hero-action--ghost" href="/feed/">Explore the Community</a>
-        </div>
-        <div class="ch-warning">
-          <div class="ic">⚠</div>
-          <div><b>NO DELETES. NO RESETS. NO DO-OVERS.</b> Once you lock a pick, it's on your record forever.</div>
-        </div>
+  <div class="tmr-social-hero-inner">
+    <div class="tmr-social-copy">
+      <span class="tmr-social-kicker">Sports social network and competition platform</span>
+      <h1>Prove Your Fandom.</h1>
+      <p class="lead">Join a sports community where fans track picks, compete in contests, challenge each other, build verified records, and talk sports in public threads.</p>
+      <div class="tmr-social-actions" role="group" aria-label="Get started">
+        <a class="primary auth-link" href="/register/">Join TrustMyRecord</a>
+        <a class="secondary" href="/feed/">Explore the Community</a>
       </div>
-
-      <!-- The right-side platform tile aside was removed Apr 29 2026 to stop the
-           hero from competing with itself. Those 6 features now live ONLY in the
-           "MORE THAN A PICK TRACKER" section below the core-loop steps, so the
-           hero can sell the single primary loop: pick → lock → track → climb. -->
+      <div class="tmr-social-feature-line" aria-label="TrustMyRecord platform features">
+        <span>Compete</span>
+        <span>Track your record</span>
+        <span>Challenge other fans</span>
+        <span>Join contests</span>
+        <span>Talk sports</span>
+      </div>
     </div>
   </div>
-
-  <!-- Hero trust strip — sleek credibility bar replacing the old tile cluster -->
-  <div class="hero-trust-strip" aria-label="What TrustMyRecord guarantees">
-    <div class="hero-trust-strip-inner">
-      <span class="hero-trust-item"><span class="hero-trust-dot" aria-hidden="true"></span>No Deleted Picks</span>
-      <span class="hero-trust-sep" aria-hidden="true"></span>
-      <span class="hero-trust-item"><span class="hero-trust-dot" aria-hidden="true"></span>No Edited Records</span>
-      <span class="hero-trust-sep" aria-hidden="true"></span>
-      <span class="hero-trust-item"><span class="hero-trust-dot" aria-hidden="true"></span>No Fake Win Rates</span>
-      <span class="hero-trust-sep" aria-hidden="true"></span>
-      <span class="hero-trust-item"><span class="hero-trust-dot" aria-hidden="true"></span>Public Receipts For Every Capper</span>
-    </div>
-  </div>
-
 </section>
-
+<style>
+  .tmr-home-toplinks { flex: 1; display: flex; justify-content: center; align-items: center; gap: 18px; min-width: 260px; }
+  .tmr-home-toplinks a { color: var(--ink-2); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; text-decoration: none; }
+  .tmr-home-toplinks a:hover { color: var(--blue); }
+  .tmr-social-hero { position: relative; min-height: calc(100vh - 112px); overflow: hidden; color: #fff; background: linear-gradient(90deg, rgba(6, 12, 26, .96) 0%, rgba(8, 15, 31, .9) 46%, rgba(8, 15, 31, .52) 100%), radial-gradient(circle at 86% 22%, rgba(255, 106, 61, .22), transparent 34%), #07101f; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .tmr-social-hero .hero-bg { position: absolute; inset: 0; opacity: .38; }
+  .tmr-social-hero .hero-bg-img { width: 100%; height: 100%; object-fit: cover; object-position: center right; }
+  .tmr-social-hero .hero-bg-gradient, .tmr-social-hero .hero-bg-vignette { position: absolute; inset: 0; pointer-events: none; }
+  .tmr-social-hero .hero-bg-gradient { background: linear-gradient(90deg, #07101f 0%, rgba(7,16,31,.8) 44%, rgba(7,16,31,.34) 100%); }
+  .tmr-social-hero .hero-bg-vignette { box-shadow: inset 0 -180px 160px rgba(7,16,31,.9); }
+  .tmr-social-hero-inner { position: relative; z-index: 2; max-width: 1240px; margin: 0 auto; padding: clamp(70px, 9vw, 128px) 24px clamp(54px, 7vw, 92px); display: grid; grid-template-columns: minmax(0, 780px); align-items: center; }
+  .tmr-social-kicker { display: inline-flex; width: fit-content; margin-bottom: 18px; color: #86e7ff; font-size: 12px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+  .tmr-social-hero h1 { margin: 0 0 18px; max-width: 780px; color: #fff; font-size: clamp(58px, 9vw, 116px); line-height: .9; letter-spacing: -.055em; }
+  .tmr-social-hero .lead { max-width: 760px; margin: 0; color: #d9e5f5; font-size: clamp(18px, 2vw, 23px); line-height: 1.55; font-weight: 500; }
+  .tmr-social-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+  .tmr-social-actions a { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; border-radius: 12px; padding: 0 24px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; text-decoration: none; }
+  .tmr-social-actions .primary { color: #07101f; background: linear-gradient(135deg, #67e8f9, #2dd4bf); box-shadow: 0 18px 44px rgba(45, 212, 191, .28); }
+  .tmr-social-actions .secondary { min-height: 44px; color: #e8f2ff; border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.06); font-size: 13px; }
+  .tmr-social-feature-line { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+  .tmr-social-feature-line span { display: inline-flex; align-items: center; min-height: 36px; padding: 8px 12px; border: 1px solid rgba(255,255,255,.14); border-radius: 999px; color: #f4f8ff; background: rgba(255,255,255,.07); font-size: 13px; font-weight: 850; white-space: nowrap; }
+  @media (max-width: 820px) { .header-search { display: none; } .tmr-home-toplinks { order: 3; flex-basis: 100%; justify-content: flex-start; overflow-x: auto; padding-bottom: 2px; } .tmr-social-hero { min-height: auto; } .tmr-social-hero-inner { padding-top: 64px; } .tmr-social-actions { align-items: stretch; } .tmr-social-actions a { width: 100%; } }
+</style>
 
 <!-- ===========================================================
      SECTION 0: THE CORE LOOP (added Apr 29 2026)
