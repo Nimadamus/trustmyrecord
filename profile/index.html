@@ -2476,6 +2476,62 @@
                       </div>
 
                       <div class="tmrx-section">
+                        <div class="tmrx-section-head">
+                          <div>
+                            <div class="tmrx-section-title">Equity Curve &amp; Drawdown</div>
+                            <div class="tmrx-section-sub">Cumulative net units over chronological graded picks. Peak, drawdown, and activity span pulled from the same ledger.</div>
+                          </div>
+                        </div>
+                        <div class="tmrx-table-shell" id="tmrxEquityShell">
+                          <div class="tmrx-equity-wrap"><svg class="tmrx-equity-svg" id="tmrxEquitySvg" viewBox="0 0 1440 220" preserveAspectRatio="none" aria-hidden="true"></svg></div>
+                          <div class="tmrx-equity-empty" id="tmrxEquityEmpty">Equity curve will draw once at least 2 graded picks exist.</div>
+                          <div class="tmrx-dd-strip">
+                            <div class="tmrx-dd-cell"><div class="k">Peak</div><div class="v" id="tmrxDdPeak">&mdash;</div></div>
+                            <div class="tmrx-dd-cell"><div class="k">Max Drawdown</div><div class="v" id="tmrxDdMax">&mdash;</div></div>
+                            <div class="tmrx-dd-cell"><div class="k">Worst Streak</div><div class="v" id="tmrxDdWorst">&mdash;</div></div>
+                            <div class="tmrx-dd-cell"><div class="k">Days Active</div><div class="v" id="tmrxDdDays">&mdash;</div></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="tmrx-section">
+                        <div class="tmrx-section-head">
+                          <div>
+                            <div class="tmrx-section-title">Best &amp; Worst Categories</div>
+                            <div class="tmrx-section-sub">Highest and lowest net-units bucket per split (sport / market / day of week / odds range). Sample-gated server-side at 3+ picks per row.</div>
+                          </div>
+                        </div>
+                        <div class="tmrx-grid-2">
+                          <div>
+                            <div class="tmrx-table-shell">
+                              <table class="tmrx-table" id="tmrxTableBest">
+                                <thead><tr><th>Best</th><th>Bucket</th><th class="num">Net</th><th class="num">ROI</th><th class="num">Picks</th></tr></thead>
+                                <tbody>
+                                  <tr data-tmrx-bw="best.sport"><td class="name">Sport</td><td class="zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td></tr>
+                                  <tr data-tmrx-bw="best.market"><td class="name">Market</td><td class="zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td></tr>
+                                  <tr data-tmrx-bw="best.day_of_week"><td class="name">Day of Week</td><td class="zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td></tr>
+                                  <tr data-tmrx-bw="best.odds_bucket"><td class="name">Odds Range</td><td class="zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td></tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                          <div>
+                            <div class="tmrx-table-shell">
+                              <table class="tmrx-table" id="tmrxTableWorst">
+                                <thead><tr><th>Worst</th><th>Bucket</th><th class="num">Net</th><th class="num">ROI</th><th class="num">Picks</th></tr></thead>
+                                <tbody>
+                                  <tr data-tmrx-bw="worst.sport"><td class="name">Sport</td><td class="zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td></tr>
+                                  <tr data-tmrx-bw="worst.market"><td class="name">Market</td><td class="zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td></tr>
+                                  <tr data-tmrx-bw="worst.day_of_week"><td class="name">Day of Week</td><td class="zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td></tr>
+                                  <tr data-tmrx-bw="worst.odds_bucket"><td class="name">Odds Range</td><td class="zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td><td class="num zero">&mdash;</td></tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="tmrx-section">
                         <div class="tmrx-section-head"><div><div class="tmrx-section-title">Streaks &amp; Rolling Form</div><div class="tmrx-section-sub">Last 25 / 50 / 100 graded picks. Pushes don't break a streak.</div></div></div>
                         <div class="tmrx-table-shell">
                           <table class="tmrx-table" id="tmrxTableForm">
@@ -5587,6 +5643,103 @@
             const v = Number(dd.peak_units);
             setAdv('peak_units', fmtSigned(v, 'u', 2), v);
         }
+
+        // ---- Equity curve + drawdown strip ----
+        const eqShell = document.getElementById('tmrxEquityShell');
+        const eqSvg = document.getElementById('tmrxEquitySvg');
+        const eq = Array.isArray(data.equity_curve) ? data.equity_curve : [];
+        if (eqShell && eqSvg) {
+            if (eq.length < 2) {
+                eqShell.classList.add('tmrx-equity-shell--empty');
+                eqSvg.innerHTML = '';
+            } else {
+                eqShell.classList.remove('tmrx-equity-shell--empty');
+                const W = 1440, H = 220, padX = 16, padY = 16;
+                const ys = eq.map(p => Number(p.units) || 0);
+                const yMax = Math.max(0, Math.max.apply(null, ys));
+                const yMin = Math.min(0, Math.min.apply(null, ys));
+                const yRng = (yMax - yMin) || 1;
+                const xRng = eq.length - 1 || 1;
+                const sx = i => padX + (i / xRng) * (W - padX * 2);
+                const sy = y => H - padY - ((y - yMin) / yRng) * (H - padY * 2);
+                const last = ys[ys.length - 1];
+                const stroke = last >= 0 ? '#22D3EE' : '#fca5a5';
+                const fillTop = last >= 0 ? 'rgba(34,211,238,0.40)' : 'rgba(252,165,165,0.30)';
+                const d = eq.map((p, i) => (i ? 'L' : 'M') + sx(i).toFixed(2) + ' ' + sy(Number(p.units) || 0).toFixed(2)).join(' ');
+                const zeroY = sy(0).toFixed(2);
+                const fillPath = d + ' L' + sx(xRng).toFixed(2) + ' ' + zeroY + ' L' + sx(0).toFixed(2) + ' ' + zeroY + ' Z';
+                const guideY1 = (padY).toFixed(2);
+                const guideY2 = (H - padY).toFixed(2);
+                eqSvg.innerHTML =
+                    '<defs><linearGradient id="tmrxEqGrad" x1="0" y1="0" x2="0" y2="1">' +
+                    '<stop offset="0" stop-color="' + (last >= 0 ? '#22D3EE' : '#fca5a5') + '" stop-opacity=".40"/>' +
+                    '<stop offset="1" stop-color="' + (last >= 0 ? '#22D3EE' : '#fca5a5') + '" stop-opacity="0"/>' +
+                    '</linearGradient></defs>' +
+                    '<line x1="0" y1="' + guideY1 + '" x2="' + W + '" y2="' + guideY1 + '" stroke="#1F3350" stroke-dasharray="4 4"/>' +
+                    '<line x1="0" y1="' + zeroY + '" x2="' + W + '" y2="' + zeroY + '" stroke="rgba(148,163,184,0.32)" stroke-dasharray="3 4"/>' +
+                    '<line x1="0" y1="' + guideY2 + '" x2="' + W + '" y2="' + guideY2 + '" stroke="#1F3350" stroke-dasharray="4 4"/>' +
+                    '<path d="' + fillPath + '" fill="url(#tmrxEqGrad)" stroke="none"/>' +
+                    '<path d="' + d + '" fill="none" stroke="' + stroke + '" stroke-width="2.4"/>';
+            }
+        }
+        const setDd = (id, text, signed) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = text;
+            el.classList.toggle('is-pos', signed != null && signed > 0);
+            el.classList.toggle('is-neg', signed != null && signed < 0);
+        };
+        if (dd.peak_units != null) {
+            const v = Number(dd.peak_units);
+            setDd('tmrxDdPeak', fmtSigned(v, 'u', 2), v);
+        }
+        if (dd.max_drawdown != null) {
+            const v = Number(dd.max_drawdown);
+            setDd('tmrxDdMax', '-' + v.toFixed(2) + 'u', -1);
+        }
+        if (st.worst != null) {
+            const v = Math.abs(Number(st.worst));
+            setDd('tmrxDdWorst', v ? 'L' + v : '0', v ? -1 : null);
+        }
+        if (s.first_pick_at && s.last_pick_at) {
+            try {
+                const span = Math.max(1, Math.ceil((new Date(s.last_pick_at).getTime() - new Date(s.first_pick_at).getTime()) / 86400000) + 1);
+                setDd('tmrxDdDays', String(span));
+            } catch (_) {}
+        } else if (s.first_pick_at || s.last_pick_at) {
+            setDd('tmrxDdDays', '1');
+        }
+
+        // ---- Best & Worst categories ----
+        const bw = data.best_worst || {};
+        const setBw = (selector, bucket) => {
+            const tr = document.querySelector('[data-tmrx-bw="' + selector + '"]');
+            if (!tr) return;
+            const tds = tr.querySelectorAll('td');
+            if (tds.length < 5) return;
+            if (!bucket || bucket.key == null) return;
+            const splitKey = selector.split('.')[1];
+            const net = Number(bucket.net) || 0;
+            const roi = Number(bucket.roi) || 0;
+            tds[1].textContent = labelOf('by_' + splitKey, bucket.key);
+            tds[1].classList.remove('zero');
+            tds[2].textContent = fmtSigned(net, 'u', 2);
+            tds[2].classList.remove('zero');
+            tds[2].classList.toggle('pos', net > 0);
+            tds[2].classList.toggle('neg', net < 0);
+            tds[3].textContent = fmtSigned(roi, '%', 2);
+            tds[3].classList.remove('zero');
+            tds[3].classList.toggle('pos', roi > 0);
+            tds[3].classList.toggle('neg', roi < 0);
+            tds[4].textContent = String(bucket.total != null ? bucket.total : '—');
+            tds[4].classList.remove('zero');
+        };
+        ['sport', 'market', 'day_of_week', 'odds_bucket'].forEach(k => {
+            const grp = bw[k];
+            if (!grp) return;
+            if (grp.best) setBw('best.' + k, grp.best);
+            if (grp.worst) setBw('worst.' + k, grp.worst);
+        });
     }
 
     function renderPmTable(tableId, splitArr, splitKey) {
@@ -8724,6 +8877,18 @@
       .tmrx-table .empty td { padding: 22px 16px; text-align: center; color: #64748b; font-style: italic; }
 
       .tmrx-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+      .tmrx-equity-wrap { padding: 6px 14px 14px; }
+      .tmrx-equity-svg { width: 100%; height: 220px; display: block; }
+      .tmrx-equity-empty { display: none; padding: 28px 16px; text-align: center; color: #64748b; font-size: 12.5px; font-style: italic; }
+      .tmrx-equity-shell--empty .tmrx-equity-wrap { display: none; }
+      .tmrx-equity-shell--empty .tmrx-equity-empty { display: block; }
+      .tmrx-dd-strip { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; padding: 0 14px 14px; }
+      .tmrx-dd-cell { padding: 10px 12px; border: 1px solid rgba(31,51,80,.55); border-radius: 10px; background: rgba(2,6,23,.40); }
+      .tmrx-dd-cell .k { font-size: 10.5px; font-weight: 900; text-transform: uppercase; letter-spacing: .10em; color: #7a8499; }
+      .tmrx-dd-cell .v { margin-top: 4px; font-size: 18px; font-weight: 900; color: #f1f5fb; font-variant-numeric: tabular-nums; }
+      .tmrx-dd-cell .v.is-pos { color: #86efac; }
+      .tmrx-dd-cell .v.is-neg { color: #fca5a5; }
 
       .tmrx-unavail-note { margin-top: 14px; padding: 12px 14px; border: 1px dashed rgba(148,163,184,.28); border-radius: 10px; background: rgba(2,6,23,.40); color: #94a3b8; font-size: 12.5px; }
       .tmrx-unavail-note b { color: #cbd5e1; }
