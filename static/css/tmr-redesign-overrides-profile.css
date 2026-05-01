@@ -273,15 +273,27 @@ body[data-tmr-test-route="profile"] .profile-info{
   margin: 0 !important;
 }
 
-/* Identity row — avatar (rounded square) on left, name/handle column on right
-   Pulls UP onto the cover via negative margin-top. */
+/* Identity row — flex layout so the name column can grow as needed and
+   never gets clipped. Avatar pulls UP onto the cover via negative margin. */
 body[data-tmr-test-route="profile"] .profile-identity-row{
-  display: grid !important;
-  grid-template-columns: 116px 1fr auto !important;
-  align-items: end !important;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: flex-end !important;
   gap: 22px !important;
   margin-top: -58px !important;
   padding: 0 !important;
+}
+body[data-tmr-test-route="profile"] .profile-identity-copy{
+  flex: 1 1 280px !important;
+  min-width: 0 !important;
+}
+body[data-tmr-test-route="profile"] .profile-name{
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  max-width: none !important;
+  word-break: normal !important;
 }
 
 /* Avatar — 116x116 ROUNDED SQUARE (PickMonitor signature, NOT a circle) */
