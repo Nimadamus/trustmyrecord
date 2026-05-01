@@ -26,6 +26,52 @@ body[data-tmr-test-route="profile"]{
   -webkit-font-smoothing: antialiased !important;
 }
 
+/* ===== 1z. AGGRESSIVE HIDES — strip the page back to the
+   PickMonitor preview's structure. Anything that appears in the live
+   profile but NOT in the preview gets hidden. */
+
+/* Hide the marketing top strip (preview has no such ribbon) */
+body[data-tmr-test-route="profile"] .profile-top-strip{
+  display: none !important;
+}
+/* Hide the avatar upload/edit bar from the public-feeling profile.
+   Edit functionality still exists at /profile/?edit=1 or via the
+   profile editor modal — just no top-of-page settings bar in the
+   public view. */
+body[data-tmr-test-route="profile"] #profileAvatarUploader,
+body[data-tmr-test-route="profile"] .profile-avatar-uploader{
+  display: none !important;
+}
+/* Hide the cramped 5-card stat rail the renderer injects INSIDE
+   #profileHeader (.profile-rail) — preview has no such inner block.
+   Stats live as a horizontal strip below the hero (via #summaryBar
+   instead). */
+body[data-tmr-test-route="profile"] .profile-rail{
+  display: none !important;
+}
+/* Hide setup prompt — appears on own profile when no favorites set;
+   not part of the PickMonitor preview hero. */
+body[data-tmr-test-route="profile"] #profileSetupPrompt{
+  display: none !important;
+}
+/* Hide profile-eyebrow ("Trust My Record profile" label) — preview
+   shows just the name + verified pill at top. */
+body[data-tmr-test-route="profile"] .profile-eyebrow{
+  display: none !important;
+}
+/* Hide tabs nav (preview has no tabs) — but force key panels visible */
+body[data-tmr-test-route="profile"] .profile-tabs-section,
+body[data-tmr-test-route="profile"] .profile-tabs{
+  display: none !important;
+}
+body[data-tmr-test-route="profile"] .profile-tab-panel{
+  display: none !important;
+}
+body[data-tmr-test-route="profile"] .profile-tab-panel[data-panel="picks"],
+body[data-tmr-test-route="profile"] .profile-tab-panel[data-panel="record"]{
+  display: block !important;
+}
+
 /* ===== 1a. Fixed-position rails (NON-INVASIVE, no markup wrapping) ==
    The rails are added as direct body siblings — they do NOT wrap any
    existing element, so the live profile renderer's queries cannot be
