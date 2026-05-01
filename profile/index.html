@@ -1601,7 +1601,7 @@
                 <strong>Avatar:</strong>
                 <label class="profile-avatar-uploader__btn" for="profileAvatarFile"><i class="fas fa-camera"></i> Change avatar</label>
                 <input id="profileAvatarFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
-                <span class="profile-avatar-uploader__hint" id="profileAvatarHint">PNG / JPG / WebP, &le; 2 MB. Resized to 256&times;256.</span>
+                <span class="profile-avatar-uploader__hint" id="profileAvatarHint">PNG / JPG / WebP, &le; 5 MB. Resized to 256&times;256.</span>
             </div>
         </div>
     </section>
@@ -1709,8 +1709,11 @@
             if (fileInput) fileInput.addEventListener('change', async function() {
                 var file = fileInput.files && fileInput.files[0];
                 if (!file) return;
-                if (file.size > 2 * 1024 * 1024) {
-                    avatarHint.textContent = 'File too large. Max 2 MB.'; avatarHint.style.color = '#ffd0d6'; return;
+                if (!file.type.match(/^image\/(png|jpe?g|webp)$/)) {
+                    avatarHint.textContent = 'Please choose a PNG, JPG, or WebP image.'; avatarHint.style.color = '#ffd0d6'; return;
+                }
+                if (file.size > 5 * 1024 * 1024) {
+                    avatarHint.textContent = 'File too large. Max 5 MB.'; avatarHint.style.color = '#ffd0d6'; return;
                 }
                 avatarHint.textContent = 'Uploading...'; avatarHint.style.color = '#94a3b8';
                 try {
@@ -4879,6 +4882,7 @@
             // Get current user from auth system
             if (typeof auth !== 'undefined' && auth.isLoggedIn()) {
                 currentUser = auth.getCurrentUser();
+                window.currentUser = currentUser;
             }
 
             if (!profileUsername && currentUser) profileUsername = currentUser.username;
@@ -7995,22 +7999,23 @@
             username: profileUsername || ''
         });
         const modal = document.createElement('div'); modal.id = 'editModal';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
-        const is = 'width:100%;padding:10px 12px;border-radius:6px;border:1px solid #353a4d;background:#0f1117;color:#f0f2f5;font-family:inherit;font-size:.9rem;margin-bottom:14px;';
-        const ls = 'display:block;color:#6b7280;margin-bottom:4px;font-size:.8rem;font-weight:600;';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(7,12,20,0.76);z-index:9999;display:flex;align-items:center;justify-content:center;padding:22px;backdrop-filter:blur(10px);';
+        const is = 'width:100%;padding:12px 14px;border-radius:10px;border:1px solid #d8dde6;background:#ffffff;color:#162231;font-family:inherit;font-size:.92rem;margin-bottom:14px;outline:none;';
+        const ls = 'display:block;color:#637389;margin-bottom:6px;font-size:.76rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;';
         const currentAvatar = profileData.avatar_url || '';
         const avatarPreviewSrc = currentAvatar || 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="#2a2e3d"/><text x="50" y="65" font-size="40" text-anchor="middle" fill="#6b7280">?</text></svg>');
 
-        modal.innerHTML = '<div style="background:#1c1f2a;border:1px solid #2a2e3d;border-radius:12px;padding:32px;max-width:480px;width:90%;max-height:80vh;overflow-y:auto;">' +
-            '<h2 style="font-size:1.2rem;font-weight:700;margin-bottom:24px;">Edit Profile</h2>' +
+        modal.innerHTML = '<div style="background:#ffffff;border:1px solid #d8dde6;border-radius:16px;padding:28px;max-width:560px;width:min(100%,560px);max-height:88vh;overflow-y:auto;box-shadow:0 24px 70px rgba(6,18,34,.28);color:#162231;">' +
+            '<h2 style="font-size:1.35rem;font-weight:800;margin-bottom:6px;color:#162231;">Edit Profile</h2>' +
+            '<p style="font-size:.9rem;color:#637389;margin-bottom:22px;">Update your public identity, avatar, favorite teams, and gaming profile.</p>' +
             '<form id="editForm">' +
             '<label style="' + ls + '">Profile Image</label>' +
             '<div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;">' +
-            '<img id="eAvatarPreview" src="' + avatarPreviewSrc + '" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid #353a4d;background:#0f1117;">' +
+            '<img id="eAvatarPreview" src="' + avatarPreviewSrc + '" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid #d8dde6;background:#f8fafc;">' +
             '<div style="flex:1;">' +
-            '<input type="file" id="eAvatarFile" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;">' +
-            '<button type="button" id="eAvatarBtn" class="btn btn-secondary" style="padding:8px 16px;font-size:.8rem;margin-bottom:6px;">Upload Image</button>' +
-            '<div style="color:#6b7280;font-size:.75rem;">JPG, PNG, GIF, WebP. Max 2MB.</div>' +
+            '<input type="file" id="eAvatarFile" accept="image/png,image/jpeg,image/webp" style="display:none;">' +
+            '<button type="button" id="eAvatarBtn" class="btn btn-secondary" style="padding:9px 16px;font-size:.82rem;margin-bottom:7px;border-radius:999px;background:#f8fafc;color:#162231;border:1px solid #d8dde6;">Upload Image</button>' +
+            '<div style="color:#637389;font-size:.78rem;">JPG, PNG, or WebP. Max 5MB.</div>' +
             '</div></div>' +
             '<label style="' + ls + '">Display Name</label><input id="eDN" value="' + (profileData.display_name || profileData.username || '') + '" style="' + is + '">' +
             '<label style="' + ls + '">Headline (one line, 140 chars)</label><input id="eHeadline" maxlength="140" placeholder="One-line public profile headline" value="' + ((profileData.headline || '').replace(/"/g,'&quot;')) + '" style="' + is + '">' +
@@ -8063,7 +8068,19 @@
 
                 // Try backend first
                 if (api && typeof api.updateProfile === 'function') {
-                    try { await api.updateProfile(updates); } catch(err) { throw new Error((err && err.message) || 'Profile update failed. Please try again.'); }
+                    try {
+                        const profileResult = await api.updateProfile(updates);
+                        if (profileResult && profileResult.user) {
+                            profileData = { ...profileData, ...profileResult.user };
+                            window.profileData = profileData;
+                            if (currentUser && profileResult.user.username === currentUser.username) {
+                                currentUser = { ...currentUser, ...profileResult.user };
+                                window.currentUser = currentUser;
+                            }
+                        }
+                    } catch(err) {
+                        throw new Error((err && err.message) || 'Profile update failed. Please try again.');
+                    }
 
                     // Save favorite teams
                     try {
