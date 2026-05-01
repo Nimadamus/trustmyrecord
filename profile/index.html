@@ -1247,7 +1247,7 @@
                         <option value="Golf">Golf</option>
                     </select>
                     <label class="profile-setup-form__label" for="setupFavTeams">Favorite teams (comma-separated, up to 5)</label>
-                    <input id="setupFavTeams" type="text" placeholder="e.g. Yankees, Knicks, Dolphins" maxlength="180">
+                    <input id="setupFavTeams" type="text" placeholder="Team names, comma-separated" maxlength="180">
                     <div class="profile-setup-form__actions">
                         <button type="submit" class="profile-setup-form__save">Save</button>
                         <button type="button" class="profile-setup-form__skip" id="profileSetupSkip">Skip for now</button>
@@ -1473,8 +1473,8 @@
                     <section class="capper-monitor capper-monitor--v2" id="capperMonitor">
                         <div class="capper-monitor-head">
                             <div>
-                                <div class="section-title">Capper Dashboard</div>
-                                <div class="section-subtitle">All performance metrics in one clean strip. Filters drive every row, every card, and the ledger below.</div>
+                                <div class="section-title">Public Profile Dashboard</div>
+                                <div class="section-subtitle">Verified profile data only. Missing records show zero, N/A, or a clean empty state.</div>
                             </div>
                         </div>
 
@@ -4109,7 +4109,8 @@
     ];
 
     const urlParams = new URLSearchParams(window.location.search);
-    let profileUsername = (urlParams.get('user') || urlParams.get('username') || '').trim() || null;
+    const pathProfileMatch = (window.location.pathname || '').match(/\/profile\/([^/?#]+)/i);
+    let profileUsername = (urlParams.get('user') || urlParams.get('username') || (pathProfileMatch ? decodeURIComponent(pathProfileMatch[1]) : '') || '').trim() || null;
     const profileView = (urlParams.get('view') || '').trim().toLowerCase();
 
     // ======================== UNIFIED STATS ========================
@@ -5059,7 +5060,7 @@
         // SAFEGUARD (Apr 30, 2026): Never inject picks from localStorage as if
         // they were tracked picks. Stale demo/seed data lingering in
         // tmr_picks / trustmyrecord_picks was being shown on real profiles
-        // (e.g. Apr 11 Giants -3.45u, Buffalo Sabres push). The DB is the
+        // stale browser-only sample picks. The DB is the
         // single source of truth — empty backend -> empty table.
         try {
             ['tmr_picks', 'trustmyrecord_picks', 'tmr_picks_legacy'].forEach(function(key) {
@@ -5074,7 +5075,7 @@
         // values are won/lost/push/pending. Backend or legacy values like
         // 'win' / 'loss' / 'pushed' / 'PENDING' would otherwise slip past
         // raw === comparisons and cause "No data" empty states even when
-        // graded picks exist (BetLegend profile bug, Apr 30 2026).
+        // graded picks exist.
         picks.forEach(function (p) {
             if (!p || typeof p !== 'object') return;
             try { p.status = normalizeStatus(p.status); } catch (e) {}
@@ -5690,8 +5691,9 @@
     function renderProfileHeader(p) {
         const el = document.getElementById('profileHeader');
         if (!el) return;
-        const _jd = new Date(p.created_at || Date.now());
-        const joinDate = _jd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const joinDate = p.created_at
+            ? new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            : 'N/A';
         const name = p.display_name || p.username;
         const letter = (p.username || '?').charAt(0).toUpperCase();
         const rankText = currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked';
@@ -5745,8 +5747,8 @@
         }
         const emptyLedgerNote = showEmptyLedgerNote
             ? '<div class="profile-empty-ledger">' +
-                '<p><strong>No live tracked picks are currently tied to this backend account.</strong></p>' +
-                '<p>If your older BetLegend record came from the browser-only build, it can only be restored from the original browser or device that still has that local history.</p>' +
+                '<p><strong>No picks yet.</strong></p>' +
+                '<p>Locked picks will build this public record after they are submitted and graded.</p>' +
               '</div>'
             : '';
         const rail = '<div class="profile-rail" aria-label="Pick monitor stats">' +
@@ -5760,7 +5762,7 @@
         const overview = '<div class="profile-overview-grid">' +
             '<div class="profile-overview-card"><span class="profile-overview-label">Followers</span><span class="profile-overview-value">' + (Number(p.follower_count) || 0) + '</span></div>' +
             '<div class="profile-overview-card"><span class="profile-overview-label">Following</span><span class="profile-overview-value">' + (Number(p.following_count) || 0) + '</span></div>' +
-            '<div class="profile-overview-card"><span class="profile-overview-label">Location</span><span class="profile-overview-value">' + (p.location || 'Not listed') + '</span></div>' +
+            '<div class="profile-overview-card"><span class="profile-overview-label">Location</span><span class="profile-overview-value">' + (p.location || 'N/A') + '</span></div>' +
             '<div class="profile-overview-card"><span class="profile-overview-label">Profile Type</span><span class="profile-overview-value">' + (verifiedText === 'Verified' ? 'Verified capper' : 'Community member') + '</span></div>' +
             '</div>';
 
@@ -5878,9 +5880,9 @@
         const performanceTab = document.getElementById('profilePerformanceTab');
         const triviaTab = document.getElementById('profileTriviaTab');
         const pollsTab = document.getElementById('profilePollsTab');
-        if (performanceTab) performanceTab.href = 'profile/' + (safeUser ? ('?user=' + safeUser) : '');
-        if (triviaTab) triviaTab.href = 'trivia/' + (safeUser ? ('?user=' + safeUser) : '');
-        if (pollsTab) pollsTab.href = 'hangout/' + (safeUser ? ('?user=' + safeUser) : '');
+        if (performanceTab) performanceTab.href = '/profile/' + (safeUser ? ('?user=' + safeUser) : '');
+        if (triviaTab) triviaTab.href = '/trivia/' + (safeUser ? ('?user=' + safeUser) : '');
+        if (pollsTab) pollsTab.href = '/hangout/' + (safeUser ? ('?user=' + safeUser) : '');
     }
 
     // ======================== TAB SWITCHING ========================
@@ -6342,7 +6344,7 @@
         // Use normalizeStatus to catch every graded variant the backend emits
         // (won/lost/push/pushed/win/loss). The previous raw === comparison
         // missed graded picks whose status came back as 'win' or 'pushed',
-        // which is why the BetLegend profile showed "No data" with 1 graded
+        // which is why profiles could show "No data" with graded
         // pick on the books.
         const graded = src.filter(function (p) {
             const s = (typeof normalizeStatus === 'function' ? normalizeStatus(p.status) : String(p.status || '').toLowerCase());
@@ -7597,19 +7599,19 @@
             '<div style="color:#6b7280;font-size:.75rem;">JPG, PNG, GIF, WebP. Max 2MB.</div>' +
             '</div></div>' +
             '<label style="' + ls + '">Display Name</label><input id="eDN" value="' + (profileData.display_name || profileData.username || '') + '" style="' + is + '">' +
-            '<label style="' + ls + '">Headline (one line, 140 chars)</label><input id="eHeadline" maxlength="140" placeholder="e.g. Sharp MLB cap. Pittsburgh born. Run line specialist." value="' + ((profileData.headline || '').replace(/"/g,'&quot;')) + '" style="' + is + '">' +
+            '<label style="' + ls + '">Headline (one line, 140 chars)</label><input id="eHeadline" maxlength="140" placeholder="One-line public profile headline" value="' + ((profileData.headline || '').replace(/"/g,'&quot;')) + '" style="' + is + '">' +
             '<label style="' + ls + '">Bio</label><textarea id="eBio" rows="3" style="' + is + 'resize:vertical;">' + (profileData.bio || '') + '</textarea>' +
             '<label style="' + ls + '">Location</label><input id="eLoc" value="' + (profileData.location || '') + '" style="' + is + '">' +
             '<div style="border-top:1px solid #353a4d;margin:20px 0 16px;padding-top:16px;"><h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;color:#00aeff;">Favorite Teams</h3></div>' +
-            '<label style="' + ls + '">NFL Team</label><input id="eFavNFL" value="' + ((profileData._fav_teams && profileData._fav_teams.NFL) || '') + '" placeholder="e.g. 49ers" style="' + is + '">' +
-            '<label style="' + ls + '">NBA Team</label><input id="eFavNBA" value="' + ((profileData._fav_teams && profileData._fav_teams.NBA) || '') + '" placeholder="e.g. Warriors" style="' + is + '">' +
-            '<label style="' + ls + '">MLB Team</label><input id="eFavMLB" value="' + ((profileData._fav_teams && profileData._fav_teams.MLB) || '') + '" placeholder="e.g. Giants" style="' + is + '">' +
-            '<label style="' + ls + '">NHL Team</label><input id="eFavNHL" value="' + ((profileData._fav_teams && profileData._fav_teams.NHL) || '') + '" placeholder="e.g. Sharks" style="' + is + '">' +
+            '<label style="' + ls + '">NFL Team</label><input id="eFavNFL" value="' + ((profileData._fav_teams && profileData._fav_teams.NFL) || '') + '" placeholder="Favorite NFL team" style="' + is + '">' +
+            '<label style="' + ls + '">NBA Team</label><input id="eFavNBA" value="' + ((profileData._fav_teams && profileData._fav_teams.NBA) || '') + '" placeholder="Favorite NBA team" style="' + is + '">' +
+            '<label style="' + ls + '">MLB Team</label><input id="eFavMLB" value="' + ((profileData._fav_teams && profileData._fav_teams.MLB) || '') + '" placeholder="Favorite MLB team" style="' + is + '">' +
+            '<label style="' + ls + '">NHL Team</label><input id="eFavNHL" value="' + ((profileData._fav_teams && profileData._fav_teams.NHL) || '') + '" placeholder="Favorite NHL team" style="' + is + '">' +
             '<div style="border-top:1px solid #353a4d;margin:20px 0 16px;padding-top:16px;"><h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;color:#ffd700;">Gamer Profile</h3></div>' +
             '<label style="' + ls + '">PSN Username</label><input id="eGamerPSN" value="' + ((profileData._gamer && profileData._gamer.psn_username) || '') + '" placeholder="Your PlayStation Network ID" style="' + is + '">' +
             '<label style="' + ls + '">Xbox Gamertag</label><input id="eGamerXbox" value="' + ((profileData._gamer && profileData._gamer.xbox_gamertag) || '') + '" placeholder="Your Xbox Gamertag" style="' + is + '">' +
             '<label style="' + ls + '">Preferred Console</label><select id="eGamerConsole" style="' + is + '"><option value="">Select...</option><option value="PS5"' + ((profileData._gamer && profileData._gamer.preferred_console === 'PS5') ? ' selected' : '') + '>PS5</option><option value="Xbox"' + ((profileData._gamer && profileData._gamer.preferred_console === 'Xbox') ? ' selected' : '') + '>Xbox</option><option value="PC"' + ((profileData._gamer && profileData._gamer.preferred_console === 'PC') ? ' selected' : '') + '>PC</option></select>' +
-            '<label style="' + ls + '">Favorite Game</label><input id="eGamerFavGame" value="' + ((profileData._gamer && profileData._gamer.favorite_game) || '') + '" placeholder="e.g. MLB The Show 26" style="' + is + '">' +
+            '<label style="' + ls + '">Favorite Game</label><input id="eGamerFavGame" value="' + ((profileData._gamer && profileData._gamer.favorite_game) || '') + '" placeholder="Favorite game" style="' + is + '">' +
             '<label style="' + ls + '">Skill Level</label><select id="eGamerSkill" style="' + is + '"><option value="">Select...</option><option value="Beginner"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Beginner') ? ' selected' : '') + '>Beginner</option><option value="Intermediate"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Intermediate') ? ' selected' : '') + '>Intermediate</option><option value="Advanced"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Advanced') ? ' selected' : '') + '>Advanced</option><option value="Elite"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Elite') ? ' selected' : '') + '>Elite</option><option value="Pro"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Pro') ? ' selected' : '') + '>Pro</option></select>' +
             '<div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px;"><button type="button" class="btn btn-secondary" onclick="document.getElementById(\'editModal\').remove()">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div></form></div>';
         document.body.appendChild(modal);
