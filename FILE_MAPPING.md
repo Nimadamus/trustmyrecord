@@ -33,7 +33,7 @@ Located at: `/approved-design-previews/`
   1. `static/css/social.css`
   2. `static/css/sportsbook.css`
   3. `static/css/tmr-redesign-overrides.css?v=20260501f` (in `<head>`, design overhaul)
-  4. `static/css/tmr-sitewide.css?v=20260430navfix8`
+  4. `static/css/tmr-sitewide.css?v=20260501navspacing`
   5. `static/css/sportsbook-pro.css?v=20260430pickslipexp1`
   6. `static/css/sportsbook-dk-polish.css?v=20260430hidedup1`
   7. `static/css/tmr-redesign-overrides.css?v=20260501f` (in `<body>` — last word, wins cascade)

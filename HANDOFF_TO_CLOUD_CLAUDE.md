@@ -54,7 +54,7 @@ Plus: `.sportsbook-page-topbar`, `.sportsbook-sports-nav` (top sport pills, work
 [0] /static/css/social.css
 [1] /static/css/sportsbook.css
 [2] /static/css/tmr-redesign-overrides.css?v=20260501c   (in <head>, old, harmless)
-[3] /static/css/tmr-sitewide.css?v=20260430navfix8
+[3] /static/css/tmr-sitewide.css?v=20260501navspacing
 [4] /static/css/sportsbook-pro.css?v=20260430pickslipexp1
 [5] /static/css/sportsbook-dk-polish.css?v=20260430hidedup1
 [6] /static/css/tmr-redesign-overrides.css?v=20260501e   (in <body>, my last-resort win)
