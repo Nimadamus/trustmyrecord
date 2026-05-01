@@ -43,6 +43,7 @@
         lastBoardRenderSport: null
     };
     const BOARD_CACHE_TTL_MS = 60000;
+    const BOARD_STALE_CACHE_TTL_MS = 10 * 60 * 1000;
     const LIVE_REFRESH_MS = 20000;
     const MIN_VISIBLE_REFRESH_GAP_MS = 30000;
     const boardCache = new Map();
@@ -493,32 +494,72 @@
     }
 
     function getCachedBoard(sportKey) {
+        const entry = getStoredBoardEntry(sportKey, BOARD_CACHE_TTL_MS);
+        return entry ? entry.data : null;
+    }
+
+    function getStaleCachedBoard(sportKey) {
+        const entry = getStoredBoardEntry(sportKey, BOARD_STALE_CACHE_TTL_MS);
+        if (!entry || !entry.data || (Date.now() - entry.timestamp) <= BOARD_CACHE_TTL_MS) return null;
+        recordBoardEvent('board_stale_cache_available', {
+            sport_key: sportKey,
+            age_ms: Date.now() - entry.timestamp,
+            snapshot: snapshotBoardPayload(entry.data)
+        });
+        return entry.data;
+    }
+
+    function getStoredBoardEntry(sportKey, maxAgeMs) {
         const cached = boardCache.get(sportKey);
-        if (cached && (Date.now() - cached.timestamp) <= BOARD_CACHE_TTL_MS) {
-            return cached.data;
+        if (cached && (Date.now() - cached.timestamp) <= maxAgeMs) {
+            const filtered = filterBoardForOpenGames(cached.data);
+            if (filtered && Array.isArray(filtered.games) && filtered.games.length) {
+                return { data: filtered, timestamp: cached.timestamp };
+            }
         }
-        if (cached) {
+        if (cached && (Date.now() - cached.timestamp) > BOARD_STALE_CACHE_TTL_MS) {
             boardCache.delete(sportKey);
         }
 
-        try {
-            const raw = sessionStorage.getItem(BOARD_CACHE_PREFIX + sportKey);
-            if (!raw) return null;
-            const parsed = JSON.parse(raw);
-            if (!parsed || !parsed.data || (Date.now() - parsed.timestamp) > BOARD_CACHE_TTL_MS) {
-                sessionStorage.removeItem(BOARD_CACHE_PREFIX + sportKey);
-                return null;
-            }
-            boardCache.set(sportKey, parsed);
-            recordBoardEvent('board_session_cache_hit', {
-                sport_key: sportKey,
-                age_ms: Date.now() - parsed.timestamp,
-                snapshot: snapshotBoardPayload(parsed.data)
-            });
-            return parsed.data;
-        } catch (error) {
-            return null;
+        for (const storage of [sessionStorage, localStorage]) {
+            try {
+                const raw = storage.getItem(BOARD_CACHE_PREFIX + sportKey);
+                if (!raw) continue;
+                const parsed = JSON.parse(raw);
+                if (!parsed || !parsed.data || (Date.now() - parsed.timestamp) > maxAgeMs) continue;
+                const filtered = filterBoardForOpenGames(parsed.data);
+                if (!filtered || !Array.isArray(filtered.games) || !filtered.games.length) continue;
+                const entry = { data: filtered, timestamp: parsed.timestamp };
+                boardCache.set(sportKey, entry);
+                recordBoardEvent('board_storage_cache_hit', {
+                    sport_key: sportKey,
+                    age_ms: Date.now() - parsed.timestamp,
+                    storage: storage === localStorage ? 'localStorage' : 'sessionStorage',
+                    snapshot: snapshotBoardPayload(filtered)
+                });
+                return entry;
+            } catch (error) {}
         }
+        return null;
+    }
+
+    function filterBoardForOpenGames(data) {
+        if (!data || !Array.isArray(data.games)) return data;
+        const games = data.games.filter(function(game) {
+            const start = Date.parse(game && game.commence_time);
+            return Number.isNaN(start) || start > Date.now();
+        });
+        return Object.assign({}, data, { games: games });
+    }
+
+    function withStaleBoardSummary(data) {
+        const stale = filterBoardForOpenGames(data);
+        return Object.assign({}, stale, {
+            summary: {
+                severity: 'warning',
+                message: 'Showing recently loaded odds while the live feed refreshes.'
+            }
+        });
     }
 
     function setCachedBoard(sportKey, data) {
@@ -530,6 +571,9 @@
         boardCache.set(sportKey, entry);
         try {
             sessionStorage.setItem(BOARD_CACHE_PREFIX + sportKey, JSON.stringify(entry));
+        } catch (error) {}
+        try {
+            localStorage.setItem(BOARD_CACHE_PREFIX + sportKey, JSON.stringify(entry));
         } catch (error) {}
     }
 
@@ -1675,9 +1719,10 @@
         const title = document.getElementById('selectedSportTitle');
         const badge = document.getElementById('gamesCountBadge');
         const cachedBoard = getCachedBoard(sportKey);
+        const staleBoard = cachedBoard ? null : getStaleCachedBoard(sportKey);
 
         if (title) title.textContent = sport + ' Markets';
-        if (container && !cachedBoard) {
+        if (container && !cachedBoard && !staleBoard) {
             renderBoardLoading(container, sport);
         }
         if (typeof window.showPickStep === 'function') window.showPickStep('gamesListSection');
@@ -1722,6 +1767,8 @@
 
         if (cachedBoard) {
             renderBoardIfCurrent(requestId, sport, badge, cachedBoard);
+        } else if (staleBoard) {
+            renderBoardIfCurrent(requestId, sport, badge, withStaleBoardSummary(staleBoard));
         }
 
         try {
@@ -1796,6 +1843,11 @@
                     message: fallbackError && fallbackError.message ? fallbackError.message : String(fallbackError || 'Unknown error')
                 });
                 if (requestId !== latestBoardRequestId || state.selectedSport !== sport) return;
+                const lastResortStale = staleBoard || getStaleCachedBoard(sportKey);
+                if (lastResortStale) {
+                    renderBoardIfCurrent(requestId, sport, badge, withStaleBoardSummary(lastResortStale));
+                    return;
+                }
                 if (container && !cachedBoard) {
                     container.innerHTML = '<div class="tmr-empty-state">Odds are temporarily unavailable. Please try again shortly. ' +
                         '<div style="margin-top:12px;"><button class="tmr-board-button" onclick="window.tmrSportsbookRefresh()">Retry</button></div></div>';
