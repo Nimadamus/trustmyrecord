@@ -757,40 +757,54 @@ html body #picks .sportsbook-sport-tabs{
    No markup change. No JS change. CSS only.
 ============================================================================ */
 
-/* v7.1 — tighter floors so the row fits inside the shell at wide viewport
-   without needing the horizontal scrollbar, with a slight bias toward
-   the Total column.
-   Min row width: 200 + 90 + 90 + 100 + 60 + 4*10 (gap) + 32 (pad) = 612px.
-   Most center columns (>700px) fit comfortably.
-   - matchup: minmax(200px, 1.4fr) — slightly less greedy than v7's 240/1.7
-   - spread: minmax(90px, .95fr)   — slightly tighter
-   - ml:     minmax(90px, .95fr)   — slightly tighter
-   - total:  minmax(100px, 1.15fr) — bias more space here per user request
-   - action: 60px                  — tightest, lowest priority */
+/* v8 — REMOVE the Open Board action column from the visible board.
+   Per user request: the column was clipping, stealing space from the
+   real betting markets, and 'Open Board' duplicated functionality the
+   user already has via clicking odds directly.
+
+   Strategy: visually hide .sb-board-action AND the 'Action' header
+   span, while keeping the underlying <button> in the DOM with its
+   onclick handler intact. Grid drops from 5 cols to 4. Freed space
+   goes to matchup + Total.
+
+   Min row width: 240 + 110 + 110 + 130 + 3*10 (gap) + 32 (pad) = 652px,
+   distributed across only 4 columns now so each has more breathing room. */
 body[data-tmr-test-route="sportsbook"] #picks .sb-board-row,
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-grid-head{
-  grid-template-columns: minmax(200px, 1.4fr) minmax(90px, .95fr) minmax(90px, .95fr) minmax(100px, 1.15fr) 60px !important;
-  gap: 0 10px !important;
-  padding-left: 16px !important;
-  padding-right: 16px !important;
+  grid-template-columns: minmax(240px, 1.7fr) minmax(110px, 1fr) minmax(110px, 1fr) minmax(130px, 1.2fr) !important;
+  gap: 0 12px !important;
+  padding-left: 18px !important;
+  padding-right: 18px !important;
 }
 
-/* Restore overflow:hidden on the shell now that the row fits — kills the
-   scrollbar. If something extreme overflows in a future state, the inline
-   safety net here stays minimal. */
+/* Hide the 'Action' header span (5th span in .sportsbook-board-grid-head).
+   The first 4 spans (Matchup / Spread / Moneyline / Total) remain. */
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-grid-head span:nth-child(5),
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-grid-head span:last-child{
+  display: none !important;
+}
+
+/* Hide the per-row action button visually, but keep it in the DOM and
+   keep its onclick handler firing. JS that may reference it
+   (window.selectSportAndShowGames) keeps working. */
+body[data-tmr-test-route="sportsbook"] #picks .sb-board-action,
+body[data-tmr-test-route="sportsbook"] #picks .sb-board-row > button.sb-board-action{
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Shell can hold its overflow:hidden now — the 4-column row fits cleanly. */
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-shell,
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-stage-panel,
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-selector-shell{
   overflow-x: hidden !important;
   overflow-y: visible !important;
-}
-
-/* Tighten the action button to fit in 60px while still showing its label.
-   v7 had 56px height and 12px font; keep that legible at the new width. */
-body[data-tmr-test-route="sportsbook"] #picks .sb-board-action{
-  font-size: 11px !important;
-  letter-spacing: .03em !important;
-  padding: 0 6px !important;
 }
 
 /* Allow the matchup container to use the full grid-cell width and
@@ -849,21 +863,17 @@ body[data-tmr-test-route="sportsbook"] #picks .sb-board-action:hover{
   border-color: #53d337 !important;
 }
 
-/* Tablet/narrow viewports (<=1180px) — let sportsbook-pro.css's stacked
-   layout handle this width. We DO NOT override grid-template-columns or
-   grid-template-areas at this size; the production stack
-   (matchup spans full width, then a 3-col row of spread/ml/total, then
-   a full-width action button) is the correct mobile layout and our
-   v6-FINAL minmax block above must be reset here so production wins. */
+/* Tablet/narrow viewports (<=1180px) — stacked layout WITHOUT the action
+   row. Matchup spans full width on top, then a 3-col row of
+   spread/ml/total. Action button stays display:none from the rule above. */
 @media (max-width: 1180px) {
   body[data-tmr-test-route="sportsbook"] #picks .sb-board-row,
   body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-grid-head{
     grid-template-columns: 1fr 1fr 1fr !important;
-    grid-template-rows: auto auto auto !important;
+    grid-template-rows: auto auto !important;
     grid-template-areas:
       "match  match  match"
-      "spread ml     total"
-      "action action action" !important;
+      "spread ml     total" !important;
     gap: 10px !important;
     padding-left: 16px !important;
     padding-right: 16px !important;
@@ -872,9 +882,4 @@ body[data-tmr-test-route="sportsbook"] #picks .sb-board-action:hover{
   body[data-tmr-test-route="sportsbook"] #picks .sb-board-row > .sb-board-col[data-col="spread"]{ grid-area: spread !important; }
   body[data-tmr-test-route="sportsbook"] #picks .sb-board-row > .sb-board-col[data-col="ml"]{ grid-area: ml !important; }
   body[data-tmr-test-route="sportsbook"] #picks .sb-board-row > .sb-board-col[data-col="total"]{ grid-area: total !important; }
-  body[data-tmr-test-route="sportsbook"] #picks .sb-board-action{
-    grid-area: action !important;
-    width: 100% !important;
-    height: 46px !important;
-  }
 }
