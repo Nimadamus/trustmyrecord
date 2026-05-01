@@ -1220,7 +1220,7 @@
       box-shadow: 0 14px 34px rgba(0,0,0,.24) !important;
     }
     body.profile-page.tmr-social-profile .profile-header-section {
-      margin-top: -38px !important;
+      margin-top: 16px !important;
       padding: 0 !important;
       background: transparent !important;
     }
@@ -1444,6 +1444,68 @@
       border-color: rgba(31,184,217,.28) !important;
       color: #e8fbff !important;
     }
+    body.profile-page.tmr-social-profile .tmr-cap-tabs {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      gap: 8px !important;
+      margin: 14px 0 !important;
+      padding: 6px !important;
+      border: 1px solid rgba(148,163,184,.14) !important;
+      border-radius: 12px !important;
+      background: rgba(5,10,20,.55) !important;
+    }
+    body.profile-page.tmr-social-profile .tmr-cap-tab {
+      border: 1px solid transparent !important;
+      border-radius: 10px !important;
+      background: transparent !important;
+      color: #8fa0b8 !important;
+      padding: 8px 11px !important;
+      font-size: 12px !important;
+      font-weight: 900 !important;
+      letter-spacing: .04em !important;
+      text-transform: uppercase !important;
+      cursor: pointer !important;
+    }
+    body.profile-page.tmr-social-profile .tmr-cap-tab.is-active {
+      border-color: rgba(56,189,248,.30) !important;
+      background: rgba(14,165,233,.12) !important;
+      color: #d8f4ff !important;
+    }
+    body.profile-page.tmr-social-profile .tmr-cap-card {
+      border-radius: 12px !important;
+      border-color: rgba(148,163,184,.14) !important;
+      background: linear-gradient(180deg, rgba(15,23,42,.92), rgba(8,13,24,.96)) !important;
+      box-shadow: none !important;
+    }
+    body.profile-page.tmr-social-profile .tmr-cap-card__metrics {
+      display: grid !important;
+      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+      gap: 10px !important;
+    }
+    body.profile-page.tmr-social-profile .tmr-cap-metric {
+      min-height: 74px !important;
+      padding: 12px !important;
+      border-radius: 10px !important;
+      border: 1px solid rgba(148,163,184,.12) !important;
+      background: rgba(2,6,23,.40) !important;
+    }
+    body.profile-page.tmr-social-profile .tmr-cap-metric__label {
+      font-size: 10px !important;
+      letter-spacing: .10em !important;
+      text-transform: uppercase !important;
+      color: #7c8aa1 !important;
+      font-weight: 900 !important;
+    }
+    body.profile-page.tmr-social-profile .tmr-cap-metric__value {
+      font-size: 21px !important;
+      line-height: 1.1 !important;
+      font-weight: 900 !important;
+      color: #eef6ff !important;
+    }
+    body.profile-page.tmr-social-profile .tmr-cap-metric__sub {
+      font-size: 11px !important;
+      color: #7f8ca3 !important;
+    }
     @media (max-width: 1100px) {
       body.profile-page.tmr-social-profile .profile-header,
       body.profile-page.tmr-social-profile .profile-body-grid {
@@ -1463,7 +1525,8 @@
         flex-direction: column !important;
       }
       body.profile-page.tmr-social-profile .profile-overview-grid,
-      body.profile-page.tmr-social-profile .profile-rail {
+      body.profile-page.tmr-social-profile .profile-rail,
+      body.profile-page.tmr-social-profile .tmr-cap-card__metrics {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
       }
       body.profile-page.tmr-social-profile .profile-avatar {
@@ -4853,9 +4916,16 @@
             // Load favorite teams and gamer profile from backend
             try {
                 const teamsData = await api.request('/gaming/teams/' + profileUsername);
-                if (teamsData && teamsData.favorite_teams) {
+                if (teamsData && Array.isArray(teamsData.favorite_teams)) {
+                    const teamRows = teamsData.favorite_teams.filter(t => t && t.team_name);
                     profileData._fav_teams = {};
-                    teamsData.favorite_teams.forEach(t => { profileData._fav_teams[t.sport] = t.team_name; });
+                    teamRows.forEach(t => {
+                        if (t.sport) profileData._fav_teams[t.sport] = t.team_name;
+                    });
+                    profileData.favorite_teams = teamRows.map(t => t.team_name).filter(Boolean);
+                    if (!Array.isArray(profileData.favorite_sports) || profileData.favorite_sports.length === 0) {
+                        profileData.favorite_sports = Array.from(new Set(teamRows.map(t => t.sport).filter(Boolean)));
+                    }
                 }
             } catch(e) { profileData._fav_teams = {}; }
 
@@ -6003,9 +6073,16 @@
         // is the user's own profile, show a single "Set your teams" CTA that
         // jumps to the setup prompt (it always exists in the DOM; we just
         // un-skip + scroll).
-        const favSportsArr = Array.isArray(p.favorite_sports) ? p.favorite_sports
-            : (p.favorite_sport ? [p.favorite_sport] : []);
-        const favTeamsArr  = Array.isArray(p.favorite_teams)  ? p.favorite_teams  : [];
+        const favTeamsFromGaming = p._fav_teams && typeof p._fav_teams === 'object'
+            ? Object.values(p._fav_teams).filter(Boolean)
+            : [];
+        const favSportsFromGaming = p._fav_teams && typeof p._fav_teams === 'object'
+            ? Object.keys(p._fav_teams).filter(Boolean)
+            : [];
+        const favSportsArr = Array.isArray(p.favorite_sports) && p.favorite_sports.length ? p.favorite_sports
+            : (favSportsFromGaming.length ? favSportsFromGaming
+            : (p.favorite_sport ? [p.favorite_sport] : []));
+        const favTeamsArr  = Array.isArray(p.favorite_teams) && p.favorite_teams.length ? p.favorite_teams : favTeamsFromGaming;
         const escTxt = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         let affiliationRow = '';
         if (favSportsArr.length || favTeamsArr.length) {
@@ -6188,6 +6265,66 @@
                 const target = bar.querySelector('.profile-tab[data-tab="' + hash + '"]');
                 if (target) target.click();
             }
+        };
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', onReady);
+        } else {
+            onReady();
+        }
+    })();
+
+    (function initAdvancedMetricTabs() {
+        const onReady = function () {
+            const panel = document.querySelector('.profile-tab-panel[data-panel="advanced"] .profile-feed-card');
+            if (!panel || panel.querySelector('.tmr-cap-tabs')) return;
+            const cards = Array.from(panel.querySelectorAll(':scope > .tmr-cap-card'));
+            if (!cards.length) return;
+            const groups = [
+                { key: 'overview', label: 'Overview' },
+                { key: 'recent', label: 'Recent Form' },
+                { key: 'risk', label: 'Risk Scores' },
+                { key: 'sport', label: 'Sports' },
+                { key: 'market', label: 'Markets' }
+            ];
+            const tabs = document.createElement('div');
+            tabs.className = 'tmr-cap-tabs';
+            tabs.setAttribute('role', 'tablist');
+            groups.forEach(function (group, idx) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'tmr-cap-tab' + (idx === 0 ? ' is-active' : '');
+                btn.dataset.capTab = group.key;
+                btn.textContent = group.label;
+                tabs.appendChild(btn);
+            });
+            const head = panel.querySelector('.profile-feed-head');
+            if (head && head.nextSibling) panel.insertBefore(tabs, head.nextSibling);
+            else panel.insertBefore(tabs, panel.firstChild);
+
+            cards.forEach(function (card, idx) {
+                const text = (card.textContent || '').toLowerCase();
+                let key = 'overview';
+                if (card.querySelector('#advTableBySport') || text.indexOf('performance by sport') !== -1) key = 'sport';
+                else if (card.querySelector('#advTableByMarket') || text.indexOf('performance by market') !== -1) key = 'market';
+                else if (text.indexOf('period performance') !== -1 || text.indexOf('rolling') !== -1 || text.indexOf('last 10') !== -1) key = 'recent';
+                else if (text.indexOf('scores') !== -1 || text.indexOf('z-score') !== -1 || text.indexOf('clv') !== -1 || text.indexOf('drawdown') !== -1) key = 'risk';
+                card.dataset.capPanel = key;
+                card.style.marginTop = idx === 0 ? '0' : '14px';
+            });
+
+            const setActive = function (key) {
+                tabs.querySelectorAll('.tmr-cap-tab').forEach(function (btn) {
+                    btn.classList.toggle('is-active', btn.dataset.capTab === key);
+                });
+                cards.forEach(function (card) {
+                    card.hidden = card.dataset.capPanel !== key;
+                });
+            };
+            tabs.addEventListener('click', function (e) {
+                const btn = e.target.closest('.tmr-cap-tab');
+                if (btn) setActive(btn.dataset.capTab);
+            });
+            setActive('overview');
         };
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', onReady);
