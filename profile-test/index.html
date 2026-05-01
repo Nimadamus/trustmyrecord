@@ -1198,7 +1198,7 @@
     }
     </style>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501h">
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501i">
 </head>
 <body class="profile-page tmr-social-profile" data-tmr-test-route="profile">
     <!-- ==================== TEST ROUTE BANNER ====================
@@ -1208,6 +1208,43 @@
     <div style="position:sticky;top:0;z-index:100000;background:linear-gradient(90deg,#fbbf24,#f59e0b);color:#1a1208;padding:8px 18px;font:800 12px 'Inter',system-ui,sans-serif;text-align:center;letter-spacing:.06em;text-transform:uppercase;border-bottom:2px solid #92400e;">
       TEST ROUTE · /profile-test/ · PickMonitor redesign on real production code · <a href="/profile/" style="color:#1a1208;text-decoration:underline">go to live /profile/</a>
     </div>
+
+    <!-- ==================== TMR PROFILE-TEST FIXED-POSITION RAILS ====================
+         Left + right rails added as DIRECT BODY SIBLINGS (no wrapping
+         of any existing element). Rails use position:fixed so they
+         float over the page without changing the document flow. Body
+         gets padding-left and padding-right at media-query widths so
+         the existing profile content shifts away from the rail areas.
+         Renderer queries cannot be affected because no element was
+         moved or wrapped. -->
+    <aside class="tmr-pt-leftrail" aria-label="Profile sidebar">
+      <div class="tmr-pt-card">
+        <h4 class="tmr-pt-card__title">Navigate</h4>
+        <nav>
+          <a class="tmr-pt-rail-link" href="/profile/" aria-current="page"><span class="tmr-pt-rail-icn">👤</span><span>My Record</span></a>
+          <a class="tmr-pt-rail-link" href="/sportsbook/"><span class="tmr-pt-rail-icn">🎯</span><span>Make a Pick</span></a>
+          <a class="tmr-pt-rail-link" href="/leaderboards/"><span class="tmr-pt-rail-icn">🏆</span><span>Leaderboards</span></a>
+          <a class="tmr-pt-rail-link" href="/feed/"><span class="tmr-pt-rail-icn">💬</span><span>Feed</span></a>
+          <a class="tmr-pt-rail-link" href="/forum/"><span class="tmr-pt-rail-icn">🗣️</span><span>Forum</span></a>
+          <a class="tmr-pt-rail-link" href="/marketplace/"><span class="tmr-pt-rail-icn">💎</span><span>Marketplace</span></a>
+          <a class="tmr-pt-rail-link" href="/arena/"><span class="tmr-pt-rail-icn">🎮</span><span>Arena</span></a>
+          <a class="tmr-pt-rail-link" href="/notifications/"><span class="tmr-pt-rail-icn">🔔</span><span>Notifications</span></a>
+        </nav>
+      </div>
+      <!-- Watching + Quick Stats: empty containers populated by
+           tmr-redesign-test-profile.js from window.profileData. CSS
+           hides them via :empty if no real data lands. -->
+      <div class="tmr-pt-card" data-tmr-pt-watching></div>
+      <div class="tmr-pt-card" data-tmr-pt-quickstats></div>
+    </aside>
+    <aside class="tmr-pt-rightrail" aria-label="Community panels">
+      <!-- Right-rail cards await real API wiring. Empty by default;
+           hidden by CSS until populated. No fake content. -->
+      <div class="tmr-pt-card" data-tmr-pt-topcappers></div>
+      <div class="tmr-pt-card" data-tmr-pt-trending></div>
+      <div class="tmr-pt-card" data-tmr-pt-challenges></div>
+    </aside>
+
     <div class="profile-top-strip">
         <strong>Today:</strong>
         <span>Verified records</span>
@@ -7766,8 +7803,9 @@
 
     <script src="/static/js/platform-production-fix.js?v=20260415d"></script>
     <script src="/static/js/tmr-redesign-loader.js?v=20260501a" defer></script>
+    <script src="/static/js/tmr-redesign-test-profile.js?v=20260501c" defer></script>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501h">
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-profile.css?v=20260501i">
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  8:02:00 PM -->

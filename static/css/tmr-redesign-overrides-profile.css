@@ -26,6 +26,154 @@ body[data-tmr-test-route="profile"]{
   -webkit-font-smoothing: antialiased !important;
 }
 
+/* ===== 1a. Fixed-position rails (NON-INVASIVE, no markup wrapping) ==
+   The rails are added as direct body siblings — they do NOT wrap any
+   existing element, so the live profile renderer's queries cannot be
+   affected. Body padding-left/right creates the 3-column visual at
+   wide viewports. */
+
+body[data-tmr-test-route="profile"]{
+  padding-left: 268px !important;
+  padding-right: 348px !important;
+  box-sizing: border-box !important;
+}
+
+body[data-tmr-test-route="profile"] .tmr-pt-leftrail{
+  position: fixed !important;
+  top: 60px !important;
+  left: 12px !important;
+  width: 248px !important;
+  bottom: 12px !important;
+  overflow-y: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  padding: 0 4px !important;
+  z-index: 50 !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-rightrail{
+  position: fixed !important;
+  top: 60px !important;
+  right: 12px !important;
+  width: 328px !important;
+  bottom: 12px !important;
+  overflow-y: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  padding: 0 4px !important;
+  z-index: 50 !important;
+}
+
+body[data-tmr-test-route="profile"] .tmr-pt-card{
+  background: #111a2e !important;
+  border: 1px solid #243049 !important;
+  border-radius: 14px !important;
+  padding: 14px !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-card:empty{
+  display: none !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-card__title{
+  margin: 0 0 10px !important;
+  font: 800 11px 'Inter', sans-serif !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+  color: #7d8aa3 !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-rail-link{
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 9px 10px !important;
+  border-radius: 9px !important;
+  font: 500 14px 'Inter', sans-serif !important;
+  color: #b6c0d4 !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-rail-link:hover{
+  background: #172238 !important;
+  color: #e6ecf5 !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-rail-link[aria-current="page"]{
+  background: linear-gradient(90deg, rgba(34,211,238,0.18), rgba(34,211,238,0.04)) !important;
+  color: #22d3ee !important;
+  font-weight: 600 !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-rail-icn{
+  width: 18px !important;
+  font-size: 14px !important;
+  text-align: center !important;
+}
+
+/* Watching tags */
+body[data-tmr-test-route="profile"] .tmr-pt-tags{
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-tag{
+  background: #16213a !important;
+  border: 1px solid #243049 !important;
+  color: #b6c0d4 !important;
+  padding: 5px 9px !important;
+  border-radius: 6px !important;
+  font: 700 11px 'Inter', sans-serif !important;
+  letter-spacing: .04em !important;
+  text-transform: uppercase !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-tag--team{
+  background: linear-gradient(135deg, rgba(251,191,36,.18), rgba(251,191,36,.06)) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(251,191,36,.35) !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-tags + .tmr-pt-tags--teams{
+  margin-top: 8px !important;
+}
+
+/* Quick Stats rows */
+body[data-tmr-test-route="profile"] .tmr-pt-quickstats__rows{
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  font: 500 13px 'Inter', sans-serif !important;
+  color: #b6c0d4 !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-qs-row{
+  display: flex !important;
+  justify-content: space-between !important;
+}
+body[data-tmr-test-route="profile"] .tmr-pt-qs-row b{
+  color: #e6ecf5 !important;
+  font-weight: 700 !important;
+}
+
+/* Center max-width — content sits centered in the gap between rails */
+body[data-tmr-test-route="profile"] .container{
+  max-width: 1080px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Responsive: hide right rail under 1280px, hide left under 980px */
+@media (max-width: 1280px){
+  body[data-tmr-test-route="profile"]{
+    padding-right: 0 !important;
+  }
+  body[data-tmr-test-route="profile"] .tmr-pt-rightrail{
+    display: none !important;
+  }
+}
+@media (max-width: 980px){
+  body[data-tmr-test-route="profile"]{
+    padding-left: 0 !important;
+  }
+  body[data-tmr-test-route="profile"] .tmr-pt-leftrail{
+    display: none !important;
+  }
+}
+
 /* ===== 2. The 2-col shell (added on profile-test markup only) =========
    .tmr-pt-shell wraps all profile sections + a left navigation rail.
    Layout: 240px rail | 1fr center, centered at max 1480px wide.
