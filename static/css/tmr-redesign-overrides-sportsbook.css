@@ -757,24 +757,19 @@ html body #picks .sportsbook-sport-tabs{
    No markup change. No JS change. CSS only.
 ============================================================================ */
 
-/* v8 — REMOVE the Open Board action column from the visible board.
-   Per user request: the column was clipping, stealing space from the
-   real betting markets, and 'Open Board' duplicated functionality the
-   user already has via clicking odds directly.
-
-   Strategy: visually hide .sb-board-action AND the 'Action' header
-   span, while keeping the underlying <button> in the DOM with its
-   onclick handler intact. Grid drops from 5 cols to 4. Freed space
-   goes to matchup + Total.
-
-   Min row width: 240 + 110 + 110 + 130 + 3*10 (gap) + 32 (pad) = 652px,
-   distributed across only 4 columns now so each has more breathing room. */
+/* v8.1 — Final 4-col layout cleanup:
+   - Less greedy matchup (1.3fr, was 1.7fr) so it sits closer to the left
+   - More dominant Total (1.4fr, was 1.2fr) so it ends meaningfully wide
+   - Equal padding 16/16 inside the row so visual margins are symmetric
+   - Action button + Action header explicitly removed from grid via
+     grid-column placement, not just display:none, so no ghost track */
 body[data-tmr-test-route="sportsbook"] #picks .sb-board-row,
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-grid-head{
-  grid-template-columns: minmax(240px, 1.7fr) minmax(110px, 1fr) minmax(110px, 1fr) minmax(130px, 1.2fr) !important;
+  grid-template-columns: minmax(220px, 1.3fr) minmax(105px, 1fr) minmax(105px, 1fr) minmax(130px, 1.4fr) !important;
+  grid-template-areas: none !important;
   gap: 0 12px !important;
-  padding-left: 18px !important;
-  padding-right: 18px !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
 }
 
 /* Hide the 'Action' header span (5th span in .sportsbook-board-grid-head).
@@ -782,21 +777,38 @@ body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-grid-head{
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-grid-head span:nth-child(5),
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-grid-head span:last-child{
   display: none !important;
+  grid-column: 1 / 1 !important;
 }
 
-/* Hide the per-row action button visually, but keep it in the DOM and
-   keep its onclick handler firing. JS that may reference it
-   (window.selectSportAndShowGames) keeps working. */
+/* Hide the per-row action button visually AND remove it from grid flow.
+   - display:none removes it from layout
+   - grid-column: 1 / 1 belt-and-suspenders if some rule restores display
+   - position: absolute (with no offsets) takes it out of normal flow as
+     a final safety net while keeping the <button> in the DOM with its
+     onclick handler firing.
+   The button stays clickable in DOM tree (JS that targets it still
+   finds it) but it does not occupy any visible space in the grid. */
 body[data-tmr-test-route="sportsbook"] #picks .sb-board-action,
-body[data-tmr-test-route="sportsbook"] #picks .sb-board-row > button.sb-board-action{
+body[data-tmr-test-route="sportsbook"] #picks .sb-board-row > button.sb-board-action,
+body[data-tmr-test-route="sportsbook"] #picks .sb-board-row .sb-board-action{
   display: none !important;
   visibility: hidden !important;
   width: 0 !important;
   height: 0 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: 0 !important;
+  max-height: 0 !important;
   padding: 0 !important;
   margin: 0 !important;
   border: 0 !important;
+  font-size: 0 !important;
   pointer-events: none !important;
+  grid-column: 1 / 1 !important;
+  grid-row: 1 !important;
+  position: absolute !important;
+  left: -99999px !important;
+  top: -99999px !important;
 }
 
 /* Shell can hold its overflow:hidden now — the 4-column row fits cleanly. */
