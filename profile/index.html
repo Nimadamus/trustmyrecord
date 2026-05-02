@@ -10040,6 +10040,11 @@
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvanced) {
         order: 50 !important;
       }
+      /* Restore visibility of every advanced split panel — Unit Size, Odds Range,
+         Favorites vs Underdogs, Day of Week, Best/Worst Categories, and
+         Streaks & Rolling Form. These were previously hidden, which removed
+         the "Recent form" / streak-window metrics from the visible profile.
+         Each panel handles its own empty state via the is-placeholder class. */
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxEquityShellTop),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxEquityShell),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableUnitSizeTop),
@@ -10056,7 +10061,7 @@
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableWorst),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableFormTop),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableForm) {
-        display: none !important;
+        display: block !important;
       }
       body.profile-page.tmr-social-profile .tmrx-ribbon,
       body.profile-page.tmr-social-profile .tmrx-period-strip {
