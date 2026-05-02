@@ -1819,11 +1819,17 @@
     <section class="profile-tabs-section">
         <div class="container">
             <div class="profile-tabs" role="tablist" id="profileTabsBar">
-                <button type="button" class="profile-tab active" data-tab="picks" id="profilePerformanceTab" role="tab" aria-selected="true">Overview</button>
-                <button type="button" class="profile-tab" data-tab="record" role="tab">Picks</button>
+                <button type="button" class="profile-tab active" data-tab="picks" role="tab" aria-selected="true">Picks</button>
                 <button type="button" class="profile-tab" data-tab="posts" role="tab">Posts</button>
+                <button type="button" class="profile-tab profile-tab--compat" data-tab="record" id="profilePerformanceTab" role="tab">Record</button>
                 <button type="button" class="profile-tab" data-tab="challenges" role="tab">Challenges</button>
+                <button type="button" class="profile-tab" data-tab="polls" id="profilePollsTab" role="tab">Polls</button>
+                <button type="button" class="profile-tab" data-tab="trivia" id="profileTriviaTab" role="tab">Trivia</button>
+                <button type="button" class="profile-tab" data-tab="tournaments" role="tab">Tournaments</button>
+                <button type="button" class="profile-tab profile-tab--compat" data-tab="advanced" role="tab">Advanced Metrics</button>
                 <button type="button" class="profile-tab" data-tab="charts" role="tab">Charts</button>
+                <button type="button" class="profile-tab" data-tab="splits" role="tab">Splits</button>
+                <button type="button" class="profile-tab" data-tab="store" role="tab">Sell Your Picks</button>
             </div>
         </div>
     </section>
@@ -1833,7 +1839,7 @@
         <div class="container profile-body-grid">
             <main class="profile-main">
 
-                <!-- TAB: OVERVIEW (default) -->
+                <!-- TAB: PICKS (default) -->
                 <div class="profile-tab-panel active" data-panel="picks">
                     <!-- ===== TMRX REDESIGN moved to default tab so the wide
                          layout is what every visitor sees first. Same data,
@@ -6368,9 +6374,8 @@
             '</tr>';
         }).join('');
         if (meta) {
-            const graded = picks.filter(p => /^(won|lost|push)$/i.test(p.status)).length;
-            const pending = picks.filter(p => /^pending$/i.test(p.status)).length;
-            meta.textContent = picks.length + ' visible · ' + graded + ' graded · ' + pending + ' pending';
+            const settled = picks.filter(p => /^(won|lost|push|void|cancelled)$/i.test(p.status)).length;
+            meta.textContent = settled + ' settled public picks';
         }
     }
 
@@ -7361,23 +7366,19 @@
             '<div class="profile-overview-card"><span class="profile-overview-label">Profile Type</span><span class="profile-overview-value">' + (verifiedText === 'Verified' ? 'Verified capper' : 'Community member') + '</span></div>' +
             '</div>';
 
-        let primaryActions = '';
+        let actions = '';
         if (isOwnProfile) {
-            primaryActions = '<button class="btn btn-secondary" onclick="openEditModal()">Edit Profile</button>';
+            actions = '<div class="profile-actions">' +
+                '<button class="btn btn-secondary" onclick="openEditModal()">Edit Profile</button>' +
+                '</div>';
         } else if (currentUser) {
             const ft = isFollowingProfile ? 'Unfollow' : 'Follow';
             const fc = isFollowingProfile ? 'btn-secondary' : 'btn-primary';
             const fa = isFollowingProfile ? 'doUnfollow' : 'doFollow';
-            primaryActions = '<button class="btn ' + fc + '" onclick="' + fa + '(' + profileUserId + ')">' + ft + '</button>' +
+            actions = '<div class="profile-actions"><button class="btn ' + fc + '" onclick="' + fa + '(' + profileUserId + ')">' + ft + '</button>' +
                 '<button class="btn btn-secondary" onclick="location.href=\'messages/?to=' + encodeURIComponent(p.username) + '\'">Message</button>' +
-                '<button class="btn btn-secondary" onclick="location.href=\'arena/?challenge=' + encodeURIComponent(p.username) + '\'">Challenge</button>';
+                '<button class="btn btn-secondary" onclick="location.href=\'arena/?challenge=' + encodeURIComponent(p.username) + '\'">Challenge</button></div>';
         }
-        // Share + Embed always render, even for logged-out viewers, so any
-        // visitor can broadcast or embed a public profile.
-        const shareActions =
-            '<button class="btn btn-secondary" onclick="openShareModal()" title="Share this profile" data-tmr-share-btn><i class="fas fa-share-alt" style="margin-right:6px;"></i>Share</button>' +
-            '<button class="btn btn-secondary" onclick="showEmbedModal()" title="Embed this profile on your site" data-tmr-embed-btn><i class="fas fa-code" style="margin-right:6px;"></i>Embed</button>';
-        const actions = '<div class="profile-actions">' + primaryActions + shareActions + '</div>';
 
         // Headline (Twitter-style 140-char tagline). Always rendered; empty
         // state prompts own-profile owner to add one.
@@ -9181,260 +9182,58 @@
         showToast('CSV downloaded', 'success');
     }
 
-    // ======================== SHARE PROFILE MODAL ========================
-    // Builds a canonical profile URL with UTM params, then renders a
-    // popover with X / Facebook / Reddit / Threads / Copy Link options.
-    // Tweet/post text auto-pulls live record + ROI from the visible
-    // ribbon so the share preview reads "78-42, +18.4u, +14.2% ROI".
-    function buildShareUrl(source) {
-        const user = profileUsername || (profileData && profileData.username) || '';
-        const params = new URLSearchParams({
-            utm_source: source || 'trustmyrecord',
-            utm_medium: 'profile_share',
-            utm_campaign: 'user_profile',
-            utm_content: user
-        });
-        return 'https://trustmyrecord.com/profile/?user=' + encodeURIComponent(user) + '&' + params.toString();
-    }
-
-    function buildShareText() {
-        // Pull live ribbon text -- never fabricate. If a value is still
-        // a placeholder (mdash) we just omit it from the share text.
-        const grab = (id) => {
-            const el = document.getElementById(id);
-            if (!el) return null;
-            const t = (el.textContent || '').trim();
-            if (!t || t === '—' || /placeholder/.test(el.className || '')) return null;
-            return t;
-        };
-        const user = profileUsername || (profileData && profileData.username) || 'this handicapper';
-        const record = grab('tmrxRecordTop');
-        const roi = grab('tmrxRoiTop');
-        const units = grab('tmrxNetUnitsTop');
-        const bits = [];
-        if (record) bits.push(record);
-        if (units) bits.push(units);
-        if (roi) bits.push(roi + ' ROI');
-        const stats = bits.length ? ' (' + bits.join(' · ') + ')' : '';
-        return 'Track @' + user + '’s verified betting record on TrustMyRecord' + stats + '.';
-    }
-
-    function openShareModal() {
-        const existing = document.getElementById('shareModal');
-        if (existing) existing.remove();
-
-        const user = profileUsername || (profileData && profileData.username) || '';
-        if (!user) { showToast('Profile not loaded yet', 'error'); return; }
-
-        const text = buildShareText();
-        const xUrl       = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(buildShareUrl('twitter'));
-        const fbUrl      = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(buildShareUrl('facebook'));
-        const redditUrl  = 'https://www.reddit.com/submit?url=' + encodeURIComponent(buildShareUrl('reddit')) + '&title=' + encodeURIComponent(text);
-        const threadsUrl = 'https://www.threads.net/intent/post?text=' + encodeURIComponent(text + ' ' + buildShareUrl('threads'));
-        const copyUrl    = buildShareUrl('trustmyrecord');
-
-        const modal = document.createElement('div');
-        modal.id = 'shareModal';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(7,12,20,0.78);z-index:9999;display:flex;align-items:center;justify-content:center;padding:22px;backdrop-filter:blur(10px);';
-
-        const btnRow = (label, icon, color, href, source) =>
-            '<a href="' + href + '" target="_blank" rel="noopener noreferrer" '
-            + 'onclick="window.tmrTrackShare && window.tmrTrackShare(\'' + source + '\')" '
-            + 'style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1px solid rgba(148,163,184,0.18);background:rgba(15,22,36,0.7);color:#eef4fb;text-decoration:none;font-weight:600;font-size:.92rem;transition:background .15s, border-color .15s;" '
-            + 'onmouseover="this.style.background=\'rgba(45,212,191,0.12)\';this.style.borderColor=\'#2dd4bf\'" '
-            + 'onmouseout="this.style.background=\'rgba(15,22,36,0.7)\';this.style.borderColor=\'rgba(148,163,184,0.18)\'">'
-            + '<span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:' + color + ';color:#fff;flex:0 0 auto;"><i class="' + icon + '"></i></span>'
-            + '<span style="flex:1;">' + label + '</span>'
-            + '<i class="fas fa-arrow-up-right-from-square" style="opacity:.55;font-size:.78rem;"></i>'
-            + '</a>';
-
-        modal.innerHTML = '<div style="background:#0b1422;border:1px solid rgba(148,163,184,0.22);border-radius:18px;padding:24px;max-width:440px;width:min(100%,440px);box-shadow:0 24px 70px rgba(0,0,0,0.55);color:#eef4fb;">'
-            + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
-            +   '<h2 style="font-size:1.15rem;font-weight:800;margin:0;">Share profile</h2>'
-            +   '<button type="button" aria-label="Close" onclick="document.getElementById(\'shareModal\').remove()" style="background:transparent;border:0;color:#97a8bc;font-size:1.4rem;cursor:pointer;padding:4px 8px;line-height:1;">&times;</button>'
-            + '</div>'
-            + '<p style="color:#97a8bc;font-size:.86rem;margin:0 0 18px 0;">Send <strong style="color:#2dd4bf;">@' + user + '</strong>’s verified record anywhere.</p>'
-            + '<div style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px;">'
-            +   btnRow('Share on X (Twitter)', 'fa-brands fa-x-twitter', '#000000', xUrl,       'twitter')
-            +   btnRow('Share on Facebook',    'fa-brands fa-facebook',   '#1877F2', fbUrl,      'facebook')
-            +   btnRow('Share on Reddit',      'fa-brands fa-reddit',     '#FF4500', redditUrl,  'reddit')
-            +   btnRow('Share on Threads',     'fa-brands fa-threads',    '#000000', threadsUrl, 'threads')
-            + '</div>'
-            + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:6px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Profile link</div>'
-            + '<div style="display:flex;gap:8px;align-items:stretch;">'
-            +   '<input id="shareCopyInput" readonly value="' + copyUrl.replace(/"/g,'&quot;') + '" style="flex:1;padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,0.22);background:#070d18;color:#2dd4bf;font-family:ui-monospace,Menlo,monospace;font-size:.78rem;outline:none;">'
-            +   '<button class="btn btn-primary" onclick="(function(){var el=document.getElementById(\'shareCopyInput\');el.select();document.execCommand(\'copy\');window.tmrTrackShare && window.tmrTrackShare(\'copy_link\');showToast(\'Profile link copied!\',\'success\');})()" style="padding:10px 16px;font-size:.82rem;white-space:nowrap;"><i class="fas fa-link" style="margin-right:6px;"></i>Copy</button>'
-            + '</div>'
-            + '</div>';
-
-        document.body.appendChild(modal);
-        modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-        // ESC closes
-        document.addEventListener('keydown', function escClose(e){ if (e.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', escClose); } });
-
-        analyticsTrack('profile_share_modal_opened', { username: user });
-    }
-    window.openShareModal = openShareModal;
-    window.tmrTrackShare = function(source) {
-        try { analyticsTrack('profile_share_clicked', { username: profileUsername || '', source: source }); } catch(_) {}
-    };
-
     // ======================== EMBEDDABLE WIDGET ========================
-    // Sizes per spec: Small 400x160, Medium 600x220 (default), Large 800x320.
-    const TMR_EMBED_SIZES = {
-        sm: { w: 400, h: 160, label: 'Small (400 × 160)' },
-        md: { w: 600, h: 220, label: 'Medium (600 × 220)' },
-        lg: { w: 800, h: 320, label: 'Large (800 × 320)' }
-    };
-
-    function tmrEmbedIframeUrl(user, size) {
-        // Direct query-string form (no 404 redirect, no flicker inside an
-        // iframe). The clean /embed/<username> URL still works for direct
-        // browser navigation -- 404.html catches it and forwards here.
-        return 'https://trustmyrecord.com/embed/?u=' + encodeURIComponent(user) + '&size=' + (size || 'md') + '&theme=dark';
-    }
-
-    function tmrBuildEmbedCode(user, size) {
-        const dim = TMR_EMBED_SIZES[size] || TMR_EMBED_SIZES.md;
-        const url = tmrEmbedIframeUrl(user, size);
-        return '<!-- TrustMyRecord verified profile widget -->\n'
-            + '<iframe\n'
-            + '  src="' + url + '"\n'
-            + '  title="TrustMyRecord verified profile for ' + user + '"\n'
-            + '  width="' + dim.w + '"\n'
-            + '  height="' + dim.h + '"\n'
-            + '  frameborder="0"\n'
-            + '  loading="lazy"\n'
-            + '  referrerpolicy="strict-origin-when-cross-origin"\n'
-            + '  style="border:1px solid #1f2a3c;border-radius:14px;background:transparent;max-width:100%;"\n'
-            + '  scrolling="no">\n'
-            + '</iframe>';
-    }
-
-    function tmrBuildScriptCode(user) {
-        const open  = String.fromCharCode(60) + 'script';
-        const close = String.fromCharCode(60) + '/script>';
-        return [
-            '<!-- TrustMyRecord auto-resizing widget -->',
-            open,
-            '  src="https://trustmyrecord.com/static/js/profile-widget-embed.js"',
-            '  data-username="' + user + '"',
-            '  data-theme="dark"',
-            '  data-refresh="15000"',
-            '  data-max-width="600px">',
-            close
-        ].join('\n');
-    }
-
     function showEmbedModal() {
         const existing = document.getElementById('embedModal');
         if (existing) existing.remove();
 
-        const user = profileUsername || (profileData && profileData.username) || '';
-        if (!user) { showToast('Profile not loaded yet', 'error'); return; }
-        const profileShareUrl = (typeof buildShareUrl === 'function') ? buildShareUrl('trustmyrecord') : 'https://trustmyrecord.com/profile/?user=' + encodeURIComponent(user);
+        const user = profileUsername || 'user';
+        const encodedUser = encodeURIComponent(user);
+        const profileUrl = `https://trustmyrecord.com/profile/?user=${encodedUser}`;
+        const widgetUrl = `https://trustmyrecord.com/profile-widget.html?user=${encodedUser}&theme=dark&refresh=15000`;
+        const iframeCode = `<!-- TrustMyRecord Live Profile Widget -->\n<iframe\n  src="${widgetUrl}"\n  title="TrustMyRecord profile for ${user}"\n  width="100%"\n  height="260"\n  style="max-width:420px;border:0;overflow:hidden;background:transparent;"\n  loading="lazy"\n  referrerpolicy="strict-origin-when-cross-origin"\n  scrolling="no">\n</iframe>`;
+        const scriptTagOpen = String.fromCharCode(60) + 'script';
+        const scriptTagClose = String.fromCharCode(60) + '/script>';
+        const scriptCode = [
+            '<!-- TrustMyRecord Auto-Resizing Profile Widget -->',
+            scriptTagOpen,
+            '  src="https://trustmyrecord.com/static/js/profile-widget-embed.js"',
+            '  data-username="' + user + '"',
+            '  data-theme="dark"',
+            '  data-refresh="15000"',
+            '  data-max-width="420px">',
+            scriptTagClose
+        ].join('\n');
+        const previewCode = `<iframe src="${widgetUrl}" title="TrustMyRecord profile for ${user}" width="100%" height="260" style="max-width:420px;border:0;overflow:hidden;background:transparent;" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" scrolling="no"></iframe>`;
 
         const modal = document.createElement('div');
         modal.id = 'embedModal';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(7,12,20,0.78);z-index:9999;display:flex;align-items:center;justify-content:center;padding:22px;backdrop-filter:blur(10px);';
-
-        const sizeBtn = (key) => {
-            const s = TMR_EMBED_SIZES[key];
-            return '<button type="button" data-tmr-size="' + key + '" '
-                + 'style="flex:1;padding:9px 10px;border-radius:9px;border:1px solid rgba(148,163,184,0.22);background:#0b1422;color:#cfdbe8;font-weight:700;font-size:.78rem;cursor:pointer;transition:all .15s;letter-spacing:.02em;">'
-                + s.label
-                + '</button>';
-        };
-
-        modal.innerHTML = '<div style="background:#0b1422;border:1px solid rgba(148,163,184,0.22);border-radius:18px;padding:24px;max-width:720px;width:min(100%,720px);max-height:90vh;overflow-y:auto;box-shadow:0 24px 70px rgba(0,0,0,0.55);color:#eef4fb;">'
-            + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
-            +   '<h2 style="font-size:1.15rem;font-weight:800;margin:0;">Embed verified profile</h2>'
-            +   '<button type="button" aria-label="Close" onclick="document.getElementById(\'embedModal\').remove()" style="background:transparent;border:0;color:#97a8bc;font-size:1.4rem;cursor:pointer;padding:4px 8px;line-height:1;">&times;</button>'
-            + '</div>'
-            + '<p style="color:#97a8bc;font-size:.86rem;margin:0 0 16px 0;">Drop a live auto-updating <strong style="color:#2dd4bf;">@' + user + '</strong> badge on any website. Pick a size, copy the snippet.</p>'
-
-            // Size selector
-            + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Size</div>'
-            + '<div id="tmrEmbedSizeRow" style="display:flex;gap:8px;margin-bottom:18px;">'
-            +   sizeBtn('sm') + sizeBtn('md') + sizeBtn('lg')
-            + '</div>'
-
-            // Live preview
-            + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Live preview</div>'
-            + '<div id="tmrEmbedPreviewBox" style="background:#070d18;border:1px dashed rgba(148,163,184,0.18);border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;min-height:200px;overflow:auto;">'
-            +   '<div id="tmrEmbedPreviewSlot" style="display:flex;align-items:center;justify-content:center;"></div>'
-            + '</div>'
-
-            // Iframe snippet
-            + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Iframe snippet</div>'
-            + '<textarea id="embedCodeArea" readonly style="width:100%;height:170px;padding:12px;border-radius:10px;border:1px solid rgba(148,163,184,0.22);background:#070d18;color:#2dd4bf;font-family:ui-monospace,Menlo,monospace;font-size:.76rem;resize:vertical;margin-bottom:8px;outline:none;"></textarea>'
-            + '<div style="display:flex;justify-content:flex-end;margin-bottom:16px;"><button class="btn btn-primary" onclick="copyTextValue(\'embedCodeArea\', \'Iframe code copied!\')"><i class="fas fa-copy" style="margin-right:6px;"></i>Copy iframe</button></div>'
-
-            // Auto-resize script (advanced)
-            + '<details style="margin-bottom:14px;">'
-            +   '<summary style="cursor:pointer;font-size:.78rem;color:#cfdbe8;font-weight:700;letter-spacing:.04em;text-transform:uppercase;">Advanced &mdash; auto-resizing script</summary>'
-            +   '<p style="color:#97a8bc;font-size:.78rem;margin:8px 0 8px 0;">Drops a JS tag that auto-fits height as picks load. Use when you don’t want a fixed height.</p>'
-            +   '<textarea id="scriptEmbedCodeArea" readonly style="width:100%;height:140px;padding:12px;border-radius:10px;border:1px solid rgba(148,163,184,0.22);background:#070d18;color:#2dd4bf;font-family:ui-monospace,Menlo,monospace;font-size:.76rem;resize:vertical;outline:none;"></textarea>'
-            +   '<div style="display:flex;justify-content:flex-end;margin-top:8px;"><button class="btn btn-secondary" onclick="copyTextValue(\'scriptEmbedCodeArea\', \'Script embed code copied!\')"><i class="fas fa-copy" style="margin-right:6px;"></i>Copy script</button></div>'
-            + '</details>'
-
-            // Profile link with UTM
-            + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Public profile link</div>'
-            + '<div style="display:flex;gap:8px;align-items:stretch;margin-bottom:14px;">'
-            +   '<input id="profileShareLinkArea" readonly value="' + profileShareUrl.replace(/"/g,'&quot;') + '" style="flex:1;padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,0.22);background:#070d18;color:#2dd4bf;font-family:ui-monospace,Menlo,monospace;font-size:.76rem;outline:none;">'
-            +   '<button class="btn btn-secondary" onclick="copyTextValue(\'profileShareLinkArea\', \'Profile link copied!\')" style="padding:10px 14px;font-size:.82rem;white-space:nowrap;"><i class="fas fa-link" style="margin-right:6px;"></i>Copy</button>'
-            + '</div>'
-
-            + '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">'
-            +   '<button class="btn btn-secondary" onclick="document.getElementById(\'embedModal\').remove()">Close</button>'
-            + '</div>'
-            + '</div>';
-
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+        modal.innerHTML = '<div style="background:#1c1f2a;border:1px solid #2a2e3d;border-radius:12px;padding:28px;max-width:600px;width:100%;max-height:85vh;overflow-y:auto;">' +
+            '<h2 style="font-size:1.15rem;font-weight:700;margin-bottom:6px;">Share Your Live TrustMyRecord Profile</h2>' +
+            '<p style="color:var(--text-muted);font-size:.85rem;margin-bottom:20px;">Use your public profile link anywhere, or embed a live auto-updating widget that refreshes every 15 seconds.</p>' +
+            '<div style="margin-bottom:20px;"><div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;">LIVE PREVIEW:</div>' +
+            '<div style="background:#0f1117;border-radius:8px;padding:20px;display:flex;justify-content:center;">' + previewCode + '</div></div>' +
+            '<div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;">PUBLIC PROFILE LINK:</div>' +
+            '<textarea id="profileShareLinkArea" readonly style="width:100%;height:68px;padding:12px;border-radius:8px;border:1px solid var(--border-color);background:#0f1117;color:#22c55e;font-family:monospace;font-size:.75rem;resize:none;margin-bottom:10px;"></textarea>' +
+            '<div style="display:flex;justify-content:flex-end;margin-bottom:16px;"><button class="btn btn-secondary" onclick="copyTextValue(\'profileShareLinkArea\', \'Profile link copied!\')">Copy Link</button></div>' +
+            '<div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;">IFRAME EMBED:</div>' +
+            '<textarea id="embedCodeArea" readonly style="width:100%;height:160px;padding:12px;border-radius:8px;border:1px solid var(--border-color);background:#0f1117;color:#22c55e;font-family:monospace;font-size:.75rem;resize:vertical;margin-bottom:10px;"></textarea>' +
+            '<div style="display:flex;justify-content:flex-end;margin-bottom:16px;"><button class="btn btn-secondary" onclick="copyTextValue(\'embedCodeArea\', \'Iframe code copied!\')">Copy Iframe</button></div>' +
+            '<div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;">SCRIPT EMBED:</div>' +
+            '<textarea id="scriptEmbedCodeArea" readonly style="width:100%;height:132px;padding:12px;border-radius:8px;border:1px solid var(--border-color);background:#0f1117;color:#22c55e;font-family:monospace;font-size:.75rem;resize:vertical;"></textarea>' +
+            '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">' +
+            '<button class="btn btn-secondary" onclick="document.getElementById(\'embedModal\').remove()">Close</button>' +
+            '<button class="btn btn-primary" onclick="copyTextValue(\'scriptEmbedCodeArea\', \'Script embed code copied!\')">Copy Script</button></div></div>';
         document.body.appendChild(modal);
         modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-        document.addEventListener('keydown', function escClose(e){ if (e.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', escClose); } });
 
-        // Default to medium. Re-render iframe + preview on size change.
-        let currentSize = 'md';
-        const refresh = () => {
-            const dim = TMR_EMBED_SIZES[currentSize];
-            // Snippets
-            document.getElementById('embedCodeArea').value = tmrBuildEmbedCode(user, currentSize);
-            document.getElementById('scriptEmbedCodeArea').value = tmrBuildScriptCode(user);
-            // Live preview iframe (rebuild so size attrs apply cleanly)
-            const slot = document.getElementById('tmrEmbedPreviewSlot');
-            slot.innerHTML = '';
-            const ifr = document.createElement('iframe');
-            ifr.src = tmrEmbedIframeUrl(user, currentSize);
-            ifr.title = 'TrustMyRecord profile preview for ' + user;
-            ifr.width = String(dim.w);
-            ifr.height = String(dim.h);
-            ifr.setAttribute('frameborder', '0');
-            ifr.loading = 'lazy';
-            ifr.referrerPolicy = 'strict-origin-when-cross-origin';
-            ifr.scrolling = 'no';
-            ifr.style.cssText = 'border:1px solid #1f2a3c;border-radius:14px;background:transparent;max-width:100%;';
-            slot.appendChild(ifr);
-            // Highlight selected size button
-            modal.querySelectorAll('[data-tmr-size]').forEach(b => {
-                const active = b.getAttribute('data-tmr-size') === currentSize;
-                b.style.background      = active ? 'rgba(45,212,191,0.16)' : '#0b1422';
-                b.style.borderColor     = active ? '#2dd4bf' : 'rgba(148,163,184,0.22)';
-                b.style.color           = active ? '#2dd4bf' : '#cfdbe8';
-            });
-        };
-        modal.querySelectorAll('[data-tmr-size]').forEach(b => {
-            b.addEventListener('click', () => {
-                currentSize = b.getAttribute('data-tmr-size');
-                refresh();
-                analyticsTrack('profile_embed_size_changed', { username: user, size: currentSize });
-            });
-        });
-        refresh();
-
+        document.getElementById('profileShareLinkArea').value = profileUrl;
+        document.getElementById('embedCodeArea').value = iframeCode;
+        document.getElementById('scriptEmbedCodeArea').value = scriptCode;
         analyticsTrack('profile_embed_modal_opened', {
-            username: user,
-            profile_url: profileShareUrl
+            username: profileUsername || '',
+            profile_url: profileUrl
         });
     }
 
@@ -10040,11 +9839,6 @@
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvanced) {
         order: 50 !important;
       }
-      /* Restore visibility of every advanced split panel — Unit Size, Odds Range,
-         Favorites vs Underdogs, Day of Week, Best/Worst Categories, and
-         Streaks & Rolling Form. These were previously hidden, which removed
-         the "Recent form" / streak-window metrics from the visible profile.
-         Each panel handles its own empty state via the is-placeholder class. */
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxEquityShellTop),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxEquityShell),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableUnitSizeTop),
@@ -10061,7 +9855,7 @@
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableWorst),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableFormTop),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableForm) {
-        display: block !important;
+        display: none !important;
       }
       body.profile-page.tmr-social-profile .tmrx-ribbon,
       body.profile-page.tmr-social-profile .tmrx-period-strip {
@@ -10213,23 +10007,22 @@
         order: 10 !important;
       }
       body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="record"].profile-flow-record {
-        order: 20 !important;
-      }
-      body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="record"].profile-flow-record:not(.active) {
-        display: none !important;
-      }
-      body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="record"].profile-flow-record.active {
         display: block !important;
+        order: 20 !important;
       }
 
       body.profile-page.tmr-social-profile .tmrx-stats {
         gap: 24px !important;
       }
-      body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicks),
+      body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicks) {
+        display: none !important;
+      }
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvancedTop),
-      body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvanced),
+      body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvanced) {
+        display: none !important;
+      }
       body.profile-page.tmr-social-profile .tmrx-section:has(.tmrx-filter-bar) {
-        display: block !important;
+        display: none !important;
       }
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxEquityShellTop),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxEquityShell) {
