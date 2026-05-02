@@ -2536,6 +2536,37 @@
             </div>
         </div>
     </section>
+    <section class="advanced-glossary-bottom" id="advancedMetricsGlossaryBottom" aria-label="Advanced metrics glossary">
+        <div class="container">
+            <div class="stats-table-card advanced-glossary-card">
+                <div class="stats-table-head">
+                    <div>
+                        <div class="section-title">Advanced Metrics Glossary</div>
+                        <div class="stats-table-note">Reference definitions only. Profile stats above remain driven by the locked-pick ledger and autograder output.</div>
+                    </div>
+                </div>
+                <div class="picks-table-wrapper advanced-glossary-wrap" style="border:none;border-radius:0;box-shadow:none;background:transparent;">
+                    <table class="stats-summary-table advanced-glossary-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Definition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td class="stats-metric-label">eU (Effective Units)</td><td class="stats-metric-context">Profit normalized to a 3-unit pick size so oversized bets do not distort performance.</td></tr>
+                            <tr><td class="stats-metric-label">eWP (Effective Win %)</td><td class="stats-metric-context">The win-rate equivalent of the profile's ROI if every pick were priced at -110.</td></tr>
+                            <tr><td class="stats-metric-label">AOP (Avg Odds per Pick)</td><td class="stats-metric-context">Average implied probability converted back to American odds.</td></tr>
+                            <tr><td class="stats-metric-label">AUR (Avg Units Risked)</td><td class="stats-metric-context">Average stake size across settled picks.</td></tr>
+                            <tr><td class="stats-metric-label">ADP (Avg Daily Picks)</td><td class="stats-metric-context">Total picks divided by active ledger days.</td></tr>
+                            <tr><td class="stats-metric-label">Max Drawdown</td><td class="stats-metric-context">Largest peak-to-trough unit decline in the equity curve.</td></tr>
+                            <tr><td class="stats-metric-label">CLV (Closing Line Value)</td><td class="stats-metric-context">Unavailable until closing-line tracking is enabled on stored picks. No estimates are displayed.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
                 </div><!-- /panel record -->
 
                 <!-- TAB: CHALLENGES -->
@@ -7476,11 +7507,22 @@
                 document.querySelectorAll('.profile-tab-panel').forEach(function (p) {
                     p.classList.toggle('active', p.getAttribute('data-panel') === tab);
                 });
+                const recordPanel = document.querySelector('.profile-tab-panel[data-panel="record"]');
+                if (recordPanel) {
+                    recordPanel.classList.toggle('profile-flow-record', tab === 'picks' || tab === 'record');
+                }
                 tmrxApplyFullwidth(tab);
                 try { history.replaceState(null, '', '#' + tab); } catch (_) {}
             });
             const initialActive = bar.querySelector('.profile-tab.active');
-            if (initialActive) tmrxApplyFullwidth(initialActive.getAttribute('data-tab'));
+            if (initialActive) {
+                const initialTab = initialActive.getAttribute('data-tab');
+                tmrxApplyFullwidth(initialTab);
+                const recordPanel = document.querySelector('.profile-tab-panel[data-panel="record"]');
+                if (recordPanel) {
+                    recordPanel.classList.toggle('profile-flow-record', initialTab === 'picks' || initialTab === 'record');
+                }
+            }
             // Honour deep link (#record, #picks, etc.) on load
             const hash = (location.hash || '').replace('#', '');
             if (hash) {
@@ -7630,7 +7672,7 @@
         const pend = picks.length - graded;
         countEl.textContent = graded + ' graded' + (pend > 0 ? ' + ' + pend + ' pending' : '') + ' | sorted by ' + sortLabel(currentTableSort);
 
-        // Running totals (oldest first)
+        // Cumulative totals (oldest first)
         const chrono = [...picks].sort((a, b) => getPickTimestamp(a) - getPickTimestamp(b));
         let rt = 0;
         const rtMap = new Map();
@@ -7690,7 +7732,7 @@
             '<td data-label="Odds">' + odds + '</td>' +
             '<td data-label="Units">' + units + '</td>' +
             '<td data-label="Result"><span class="result-badge ' + status + '">' + status.toUpperCase() + '</span></td>' +
-            '<td data-label="Net Units" class="profit-cell ' + plc + '">' + pl + '<div class="ledger-subline">Running ' + rd + '</div></td>' +
+            '<td data-label="Net Units" class="profit-cell ' + plc + '">' + pl + '<div class="ledger-subline">' + rd + '</div></td>' +
             '<td data-label="Closing Line" class="ledger-closing">' + formatLineValue(closingLine) + '</td>' +
             '<td data-label="CLV" class="profit-cell ' + clvClass + '">' + formatClvValue(clvValue) + '</td>' +
             '<td data-label="Book">' + book + '</td>' +
@@ -9102,7 +9144,7 @@
 
         const chrono = [...allLoadedPicks].reverse();
         let rt = 0;
-        const rows = [['Date', 'Sport', 'Matchup', 'Pick', 'Line', 'Odds', 'Units', 'Result', 'P/L', 'Running Total']];
+        const rows = [['Date', 'Sport', 'Matchup', 'Pick', 'Line', 'Odds', 'Units', 'Result', 'P/L', 'Cumulative Total']];
 
         chrono.forEach(p => {
             const date = p.locked_at || p.created_at || '';
@@ -9922,15 +9964,28 @@
         display: none !important;
       }
 
+      body.profile-page.tmr-social-profile .profile-main {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 24px !important;
+      }
+      body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="picks"] {
+        order: 10 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="record"].profile-flow-record {
+        display: block !important;
+        order: 20 !important;
+      }
+
       body.profile-page.tmr-social-profile .tmrx-stats {
         gap: 24px !important;
       }
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicks) {
-        order: 55 !important;
+        display: none !important;
       }
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvancedTop),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvanced) {
-        order: 70 !important;
+        display: none !important;
       }
       body.profile-page.tmr-social-profile .tmrx-section:has(.tmrx-filter-bar) {
         display: none !important;
@@ -9939,6 +9994,11 @@
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxEquityShell) {
         display: block !important;
         order: 45 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="record"].profile-flow-record > .summary-bar,
+      body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="record"].profile-flow-record > #analyticsSection,
+      body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="record"].profile-flow-record > #capperMetricsSection {
+        display: none !important;
       }
 
       body.profile-page.tmr-social-profile .tmrx-section-head {
@@ -10019,9 +10079,272 @@
       body.profile-page.tmr-social-profile .tmrx-label {
         color: #afbdd0 !important;
       }
+
+      body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="record"].profile-flow-record .picks-section {
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="record"].profile-flow-record .picks-section .container {
+        width: 100% !important;
+        max-width: none !important;
+      }
+      body.profile-page.tmr-social-profile .records-section-head {
+        margin-bottom: 16px !important;
+        padding-top: 2px !important;
+      }
+      body.profile-page.tmr-social-profile .records-section-head .section-title {
+        font-size: 22px !important;
+        letter-spacing: 0 !important;
+      }
+      body.profile-page.tmr-social-profile .records-section-head::after {
+        content: none !important;
+      }
+      body.profile-page.tmr-social-profile .ledger-filter-card {
+        padding: 14px !important;
+        border-radius: 14px !important;
+        background: linear-gradient(180deg, rgba(13, 24, 40, .94), rgba(8, 17, 31, .94)) !important;
+        border: 1px solid rgba(73, 96, 130, .72) !important;
+        box-shadow: 0 14px 32px rgba(0,0,0,.22) !important;
+      }
+      body.profile-page.tmr-social-profile .ledger-filter-head {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 16px !important;
+        margin-bottom: 12px !important;
+      }
+      body.profile-page.tmr-social-profile .ledger-filter-title {
+        font-size: 13px !important;
+        letter-spacing: .12em !important;
+        text-transform: uppercase !important;
+        color: #dbeafe !important;
+      }
+      body.profile-page.tmr-social-profile .ledger-filter-subtitle,
+      body.profile-page.tmr-social-profile .table-note {
+        font-size: 12px !important;
+        color: #8fa1b8 !important;
+      }
+      body.profile-page.tmr-social-profile .ledger-filter-status {
+        padding: 7px 10px !important;
+        border-radius: 999px !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+        white-space: nowrap !important;
+      }
+      body.profile-page.tmr-social-profile #pickFilters.filter-toolbar {
+        display: grid !important;
+        grid-template-columns: minmax(260px, 1.55fr) repeat(4, minmax(150px, 1fr)) !important;
+        gap: 9px !important;
+        padding: 0 !important;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+      }
+      body.profile-page.tmr-social-profile .filter-search-wrap {
+        position: relative !important;
+        min-width: 0 !important;
+      }
+      body.profile-page.tmr-social-profile .filter-control,
+      body.profile-page.tmr-social-profile .filter-button,
+      body.profile-page.tmr-social-profile .filter-search-input {
+        min-height: 38px !important;
+        height: 38px !important;
+        border-radius: 10px !important;
+        border: 1px solid rgba(148, 163, 184, .22) !important;
+        background: rgba(2, 6, 23, .38) !important;
+        color: #eef5ff !important;
+        font-size: 13px !important;
+        font-weight: 650 !important;
+        box-shadow: none !important;
+      }
+      body.profile-page.tmr-social-profile .filter-search-input {
+        width: 100% !important;
+        padding-left: 34px !important;
+      }
+      body.profile-page.tmr-social-profile .ledger-filter-actions {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        margin: 12px 0 0 !important;
+      }
+      body.profile-page.tmr-social-profile .filter-chip-row {
+        display: flex !important;
+        gap: 8px !important;
+        flex-wrap: wrap !important;
+      }
+      body.profile-page.tmr-social-profile .filter-button {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 13px !important;
+        width: auto !important;
+        color: #cbd7e8 !important;
+      }
+      body.profile-page.tmr-social-profile .filter-button:hover {
+        border-color: rgba(34, 211, 238, .45) !important;
+        color: #ffffff !important;
+        background: rgba(34, 211, 238, .08) !important;
+      }
+      body.profile-page.tmr-social-profile .ledger-toolbar-meta {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin-left: auto !important;
+      }
+      body.profile-page.tmr-social-profile .ledger-page-size {
+        width: 86px !important;
+      }
+
+      body.profile-page.tmr-social-profile .picks-table-wrapper {
+        border: 1px solid rgba(73, 96, 130, .72) !important;
+        border-radius: 14px !important;
+        background: #07111f !important;
+        box-shadow: 0 18px 38px rgba(0,0,0,.24) !important;
+        overflow-x: auto !important;
+      }
+      body.profile-page.tmr-social-profile .picks-table {
+        min-width: 1320px !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+        font-size: 14px !important;
+      }
+      body.profile-page.tmr-social-profile .picks-table thead th {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 3 !important;
+        padding: 14px 16px !important;
+        background: #111d31 !important;
+        color: #d8e4f4 !important;
+        font-size: 11px !important;
+        font-weight: 900 !important;
+        letter-spacing: .1em !important;
+        border-bottom: 1px solid rgba(96,125,166,.7) !important;
+        white-space: nowrap !important;
+      }
+      body.profile-page.tmr-social-profile .picks-table tbody tr {
+        background: transparent !important;
+        border: 0 !important;
+        transform: none !important;
+        box-shadow: none !important;
+      }
+      body.profile-page.tmr-social-profile .picks-table tbody td {
+        padding: 16px !important;
+        font-size: 14px !important;
+        border-bottom: 1px solid rgba(73, 96, 130, .42) !important;
+        background: rgba(11, 21, 36, .74) !important;
+        vertical-align: middle !important;
+      }
+      body.profile-page.tmr-social-profile .picks-table tbody tr:nth-child(even) td {
+        background: rgba(15, 29, 48, .78) !important;
+      }
+      body.profile-page.tmr-social-profile .picks-table tbody tr:hover td {
+        background: rgba(34, 211, 238, .06) !important;
+      }
+      body.profile-page.tmr-social-profile .picks-table tbody td:first-child {
+        border-left: 3px solid rgba(148, 163, 184, .24) !important;
+      }
+      body.profile-page.tmr-social-profile .picks-table tbody tr.row-won td:first-child {
+        border-left-color: #4ade80 !important;
+      }
+      body.profile-page.tmr-social-profile .picks-table tbody tr.row-lost td:first-child {
+        border-left-color: #fb7185 !important;
+      }
+      body.profile-page.tmr-social-profile .picks-table tbody tr.row-push td:first-child {
+        border-left-color: #fbbf24 !important;
+      }
+      body.profile-page.tmr-social-profile .picks-table tbody tr.row-pending td:first-child {
+        border-left-color: #22d3ee !important;
+      }
+      body.profile-page.tmr-social-profile .ledger-pick-title {
+        font-size: 14px !important;
+        font-weight: 850 !important;
+        color: #f8fbff !important;
+      }
+      body.profile-page.tmr-social-profile .ledger-pick-meta,
+      body.profile-page.tmr-social-profile .ledger-game-meta,
+      body.profile-page.tmr-social-profile .ledger-muted,
+      body.profile-page.tmr-social-profile .ledger-subline {
+        margin-top: 3px !important;
+        color: #93a4bb !important;
+        font-size: 12px !important;
+      }
+      body.profile-page.tmr-social-profile .result-badge {
+        min-width: 70px !important;
+        height: 28px !important;
+        padding: 0 12px !important;
+        border-radius: 999px !important;
+        font-size: 11px !important;
+        font-weight: 900 !important;
+        letter-spacing: .08em !important;
+        box-shadow: none !important;
+      }
+      body.profile-page.tmr-social-profile .profit-cell {
+        font-size: 15px !important;
+        font-weight: 900 !important;
+        text-align: right !important;
+        font-variant-numeric: tabular-nums !important;
+      }
+      body.profile-page.tmr-social-profile .profit-cell .ledger-subline {
+        font-weight: 700 !important;
+      }
+
+      body.profile-page.tmr-social-profile .advanced-glossary-bottom {
+        margin-top: 26px !important;
+        padding: 0 !important;
+      }
+      body.profile-page.tmr-social-profile .advanced-glossary-bottom .container {
+        padding: 0 !important;
+        max-width: none !important;
+      }
+      body.profile-page.tmr-social-profile .advanced-glossary-card {
+        margin-bottom: 0 !important;
+      }
+      body.profile-page.tmr-social-profile .advanced-glossary-table {
+        display: table !important;
+        width: 100% !important;
+        border-collapse: collapse !important;
+        min-width: 760px !important;
+      }
+      body.profile-page.tmr-social-profile .advanced-glossary-table thead {
+        display: table-header-group !important;
+      }
+      body.profile-page.tmr-social-profile .advanced-glossary-table tbody {
+        display: table-row-group !important;
+      }
+      body.profile-page.tmr-social-profile .advanced-glossary-table tr {
+        display: table-row !important;
+        border: 0 !important;
+        transform: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+      }
+      body.profile-page.tmr-social-profile .advanced-glossary-table th,
+      body.profile-page.tmr-social-profile .advanced-glossary-table td {
+        display: table-cell !important;
+        padding: 14px 16px !important;
+        border-bottom: 1px solid rgba(73, 96, 130, .45) !important;
+        font-size: 14px !important;
+        vertical-align: top !important;
+      }
+      body.profile-page.tmr-social-profile .advanced-glossary-table th {
+        color: #d8e4f4 !important;
+        background: #111d31 !important;
+        text-transform: uppercase !important;
+        letter-spacing: .1em !important;
+        font-size: 11px !important;
+      }
       @media (max-width: 720px) {
         body.profile-page.tmr-social-profile .tmrx-table {
           min-width: 980px !important;
+        }
+        body.profile-page.tmr-social-profile #pickFilters.filter-toolbar {
+          grid-template-columns: 1fr !important;
+        }
+        body.profile-page.tmr-social-profile .ledger-filter-head,
+        body.profile-page.tmr-social-profile .ledger-filter-actions {
+          align-items: stretch !important;
+          flex-direction: column !important;
         }
       }
     </style>
