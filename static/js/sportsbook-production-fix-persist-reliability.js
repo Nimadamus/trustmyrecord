@@ -2662,6 +2662,7 @@
         // state.currentOptions.
         window.selectGameBet = function(gameIndex, betType, team, line, odds, awayTeam, homeTeam) {
             try {
+                clearPickSlipError();
                 var board = state.currentBoard || [];
                 var tmrGames = (window.TMR && Array.isArray(window.TMR.currentGames)) ? window.TMR.currentGames : [];
                 var game = board[gameIndex] || tmrGames[gameIndex] || null;
@@ -2793,8 +2794,15 @@
                 selectOption(key);
             } catch (err) {
                 console.error('[TMR] selectGameBet bridge failed:', err);
+                showPickSlipError('Could not open that team total pick. Refresh the board and try again.');
             }
         };
+        // Keep the production bridge in control. sportsbook/index.html still
+        // defines older inline selectGameBet variants later in the document;
+        // those overwrites caused MLB Team Totals clicks to fall back to a
+        // stale no-op path. Lock the bridge after installing it so every
+        // dynamically rendered team-total button reaches the same slip flow.
+        lockFunction(window, 'selectGameBet', window.selectGameBet);
         window.updatePickSummary = updatePickSummary;
         lockFunction(window, 'loadGamesWithAllBets', loadGamesWithAllBetsOverride);
         lockFunction(window, 'loadMyPicks', loadMyPicks);
