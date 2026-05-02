@@ -5062,6 +5062,176 @@
         };
     }
 
+    function oddsToProbability(odds) {
+        const value = Number(odds);
+        if (!Number.isFinite(value) || Math.abs(value) < 100) return null;
+        return value > 0 ? 100 / (value + 100) : Math.abs(value) / (Math.abs(value) + 100);
+    }
+
+    function probabilityToAmerican(probability) {
+        const value = Number(probability);
+        if (!Number.isFinite(value) || value <= 0 || value >= 1) return null;
+        return value >= 0.5
+            ? -Math.round((100 * value) / (1 - value))
+            : Math.round((100 * (1 - value)) / value);
+    }
+
+    function getPickOdds(pick) {
+        const value = Number(pick && (pick.odds_snapshot != null ? pick.odds_snapshot : pick.odds));
+        return Number.isFinite(value) ? value : -110;
+    }
+
+    function getPickUnits(pick) {
+        const value = Number(pick && pick.units);
+        return Number.isFinite(value) && value > 0 ? value : 1;
+    }
+
+    function getPickRiskUnits(pick) {
+        const units = getPickUnits(pick);
+        const odds = getPickOdds(pick);
+        return odds < 0 ? units * Math.abs(odds) / 100 : units;
+    }
+
+    function computeCoreLedgerStatsFromPicks(picks) {
+        const source = Array.isArray(picks) ? picks : [];
+        const graded = source.filter(function(pick) {
+            const status = normalizeStatus(pick && pick.status);
+            return status === 'won' || status === 'lost' || status === 'push';
+        });
+        const decisions = graded.filter(function(pick) {
+            const status = normalizeStatus(pick && pick.status);
+            return status === 'won' || status === 'lost';
+        });
+        const wins = graded.filter(function(pick) { return normalizeStatus(pick && pick.status) === 'won'; }).length;
+        const losses = graded.filter(function(pick) { return normalizeStatus(pick && pick.status) === 'lost'; }).length;
+        const pushes = graded.filter(function(pick) { return normalizeStatus(pick && pick.status) === 'push'; }).length;
+        const pending = source.filter(function(pick) { return normalizeStatus(pick && pick.status) === 'pending'; }).length;
+        const netUnits = graded.reduce(function(total, pick) { return total + pickPL(pick); }, 0);
+        const riskedUnits = graded.reduce(function(total, pick) { return total + getPickRiskUnits(pick); }, 0);
+        const avgUnits = graded.length
+            ? graded.reduce(function(total, pick) { return total + getPickUnits(pick); }, 0) / graded.length
+            : 0;
+        const validProbabilities = graded
+            .map(function(pick) { return oddsToProbability(getPickOdds(pick)); })
+            .filter(function(value) { return value != null; });
+        const avgOdds = validProbabilities.length
+            ? probabilityToAmerican(validProbabilities.reduce(function(total, value) { return total + value; }, 0) / validProbabilities.length)
+            : null;
+        const effectiveUnits = graded.reduce(function(total, pick) {
+            const units = getPickUnits(pick);
+            if (!units) return total;
+            return total + (pickPL(pick) / units) * 3;
+        }, 0);
+
+        const chronological = graded.slice().sort(function(a, b) {
+            return new Date(a.locked_at || a.created_at || a.graded_at || 0) - new Date(b.locked_at || b.created_at || b.graded_at || 0);
+        });
+        let bestStreak = 0;
+        let currentWinRun = 0;
+        chronological.forEach(function(pick) {
+            const status = normalizeStatus(pick.status);
+            if (status === 'won') {
+                currentWinRun += 1;
+                bestStreak = Math.max(bestStreak, currentWinRun);
+            } else if (status === 'lost') {
+                currentWinRun = 0;
+            }
+        });
+
+        let streakType = '';
+        let streakCount = 0;
+        chronological.slice().reverse().some(function(pick) {
+            const status = normalizeStatus(pick.status);
+            if (status === 'push') return false;
+            if (!streakType) {
+                streakType = status;
+                streakCount = 1;
+                return false;
+            }
+            if (status === streakType) {
+                streakCount += 1;
+                return false;
+            }
+            return true;
+        });
+
+        const lastGraded = chronological.length
+            ? chronological[chronological.length - 1].graded_at || chronological[chronological.length - 1].locked_at || chronological[chronological.length - 1].created_at
+            : null;
+
+        return {
+            wins,
+            losses,
+            pushes,
+            pending,
+            graded: graded.length,
+            decisions: decisions.length,
+            record: wins + '-' + losses + '-' + pushes,
+            winRate: decisions.length ? wins / decisions.length * 100 : 0,
+            netUnits,
+            riskedUnits,
+            roi: riskedUnits > 0 ? netUnits / riskedUnits * 100 : 0,
+            avgOdds,
+            avgUnits,
+            effectiveUnits,
+            currentStreak: streakType === 'won' ? streakCount : streakType === 'lost' ? -streakCount : 0,
+            bestStreak,
+            lastGraded
+        };
+    }
+
+    function renderCoreHandicapperStatsFromPicks(picks) {
+        const stats = computeCoreLedgerStatsFromPicks(picks);
+        const fmtSigned = function(value, suffix, decimals) {
+            const n = Number(value) || 0;
+            return (n >= 0 ? '+' : '') + n.toFixed(decimals == null ? 2 : decimals) + (suffix || '');
+        };
+        const fmtAmerican = function(value) {
+            const n = Number(value);
+            if (!Number.isFinite(n) || n === 0) return 'N/A';
+            return (n > 0 ? '+' : '') + Math.round(n);
+        };
+        const setBoth = function(baseId, text, signed) {
+            [baseId, baseId + 'Top'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.textContent = text;
+                el.classList.remove('is-placeholder');
+                el.classList.toggle('is-pos', signed != null && signed > 0);
+                el.classList.toggle('is-neg', signed != null && signed < 0);
+            });
+        };
+        const winRateSigned = stats.decisions ? stats.winRate - 50 : 0;
+        setBoth('tmrxRecord', stats.record, winRateSigned);
+        setBoth('tmrxWinRate', stats.winRate.toFixed(1) + '%', winRateSigned);
+        setBoth('tmrxNetUnits', fmtSigned(stats.netUnits, 'u', 2), stats.netUnits);
+        setBoth('tmrxRoi', fmtSigned(stats.roi, '%', 2), stats.roi);
+        setBoth('tmrxAvgOdds', fmtAmerican(stats.avgOdds));
+        setBoth('tmrxAvgUnits', stats.avgUnits.toFixed(2) + 'u');
+        setBoth('tmrxEffectiveUnits', fmtSigned(stats.effectiveUnits, 'u', 2), stats.effectiveUnits);
+        setBoth('tmrxPending', String(stats.pending));
+        setBoth('tmrxGraded', String(stats.graded));
+        setBoth('tmrxStreak', stats.currentStreak > 0 ? stats.currentStreak + 'W' : stats.currentStreak < 0 ? Math.abs(stats.currentStreak) + 'L' : '0', stats.currentStreak);
+        setBoth('tmrxBestStreak', stats.bestStreak + 'W', stats.bestStreak);
+
+        ['tmrxLastGraded', 'tmrxLastGradedTop'].forEach(function(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (!stats.graded) {
+                el.textContent = stats.pending ? 'No graded picks yet · ' + stats.pending + ' pending' : 'No graded picks yet';
+                return;
+            }
+            try {
+                const ageMs = Date.now() - new Date(stats.lastGraded).getTime();
+                const ageHr = Math.max(0, Math.floor(ageMs / 3600000));
+                const ageDay = Math.floor(ageHr / 24);
+                el.textContent = ageHr < 1 ? 'Last graded · just now' : ageHr < 24 ? 'Last graded · ' + ageHr + 'h ago' : 'Last graded · ' + ageDay + 'd ago';
+            } catch (_) {
+                el.textContent = stats.graded + ' graded picks';
+            }
+        });
+    }
+
     // ======================== PROFIT/LOSS FOR A SINGLE PICK ========================
     function pickPL(pick) {
         if (pick.result_units != null && !isNaN(pick.result_units)) return parseFloat(pick.result_units);
@@ -6457,6 +6627,7 @@
         try { initCapperMonitor(picks); } catch (e) { console.warn('[capper-monitor] init failed', e); }
 
         const stats = computeUnifiedStats(picks);
+        renderCoreHandicapperStatsFromPicks(picks);
         renderSummaryBar(stats);
         renderPicksTable(picks);
         renderAnalytics(stats);
@@ -9369,7 +9540,7 @@
         border: 1px solid rgba(148, 163, 184, 0.12) !important;
         border-radius: 12px !important;
         background: rgba(2, 6, 23, 0.24) !important;
-        overflow-x: auto !important;
+        overflow-x: hidden !important;
       }
       body.profile-page.tmr-social-profile .capper-table {
         min-width: 760px !important;
@@ -9614,10 +9785,10 @@
         box-shadow: 0 14px 34px rgba(0,0,0,.20) !important;
       }
       body.profile-page.tmr-social-profile .tmrx-ribbon {
-        grid-template-columns: repeat(10, minmax(132px, 1fr)) !important;
+        grid-template-columns: repeat(10, minmax(0, 1fr)) !important;
       }
       body.profile-page.tmr-social-profile .tmrx-period-strip {
-        grid-template-columns: repeat(8, minmax(132px, 1fr)) !important;
+        grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
       }
       body.profile-page.tmr-social-profile .tmrx-cell,
       body.profile-page.tmr-social-profile .tmrx-period-cell {
@@ -9634,8 +9805,8 @@
       }
       body.profile-page.tmr-social-profile .tmrx-value,
       body.profile-page.tmr-social-profile .tmrx-period-cell .v {
-        white-space: nowrap !important;
-        overflow: visible !important;
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
         text-overflow: clip !important;
       }
       body.profile-page.tmr-social-profile .tmrx-table-shell {
@@ -9658,7 +9829,28 @@
       body.profile-page.tmr-social-profile .tmrx-unavail-note {
         display: none !important;
       }
-    </style>
+          body.profile-page.tmr-social-profile {
+        overflow-x: clip !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-ribbon::-webkit-scrollbar,
+      body.profile-page.tmr-social-profile .tmrx-period-strip::-webkit-scrollbar {
+        display: none !important;
+      }
+      @media (max-width: 1180px) {
+        body.profile-page.tmr-social-profile .tmrx-ribbon {
+          grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+        }
+        body.profile-page.tmr-social-profile .tmrx-period-strip {
+          grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        }
+      }
+      @media (max-width: 680px) {
+        body.profile-page.tmr-social-profile .tmrx-ribbon,
+        body.profile-page.tmr-social-profile .tmrx-period-strip {
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+      }
+</style>
 <style>
       /* Hard reset for the profile masthead: one component, no floating strip. */
       body.profile-page.tmr-social-profile .profile-cover-section{display:none!important}
