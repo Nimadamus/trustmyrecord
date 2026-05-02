@@ -2665,7 +2665,35 @@
                 clearPickSlipError();
                 var board = state.currentBoard || [];
                 var tmrGames = (window.TMR && Array.isArray(window.TMR.currentGames)) ? window.TMR.currentGames : [];
-                var game = board[gameIndex] || tmrGames[gameIndex] || null;
+                // Team-totals legacy renderer (sportsbook/index.html
+                // _ttRenderRows) overwrites window.TMR.currentGames with the
+                // TT board but leaves state.currentBoard pointing at the
+                // previous Full-Game board. Index-based lookup against
+                // state.currentBoard then resolves to the WRONG game, so the
+                // team-name in the selection ("New York Mets Under 4.5")
+                // fails backend validation against the wrong game's teams.
+                // Resolve by matching the click's awayTeam/homeTeam args
+                // against the candidate game; prefer the actively-rendered
+                // board (window.TMR.currentGames). Full-Game clicks never
+                // touch this bridge (they go through tmrSelectOption
+                // directly), so this only affects team-totals.
+                var matchesTeams = function (g) {
+                    if (!g) return false;
+                    var ht = String(g.home_team || '').trim().toLowerCase();
+                    var at = String(g.away_team || '').trim().toLowerCase();
+                    var argHome = String(homeTeam || '').trim().toLowerCase();
+                    var argAway = String(awayTeam || '').trim().toLowerCase();
+                    if (!argHome && !argAway) return true;
+                    return (ht === argHome && at === argAway);
+                };
+                var game = null;
+                if (matchesTeams(tmrGames[gameIndex])) game = tmrGames[gameIndex];
+                else if (matchesTeams(board[gameIndex])) game = board[gameIndex];
+                else {
+                    var foundInTmr = tmrGames.find(matchesTeams) || null;
+                    var foundInBoard = board.find(matchesTeams) || null;
+                    game = foundInTmr || foundInBoard || tmrGames[gameIndex] || board[gameIndex] || null;
+                }
                 if (!game) {
                     var sportKeyMap = (window.TMR && window.TMR.sportKeyMap) || {};
                     var sportDisplay = (window.TMR && window.TMR.selectedSport) || state.selectedSport || '';
