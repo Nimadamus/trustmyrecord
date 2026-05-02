@@ -44,7 +44,8 @@
         "privacy.html": ["Privacy", "How TrustMyRecord handles account, profile, and platform data."],
         "reset-password.html": ["Reset Password", "Recover account access without leaving the product shell."],
         "verify-email.html": ["Verify Email", "Confirm account ownership before using record and social features."],
-        "report-bug.html": ["Report a Bug", "Spot something broken on TrustMyRecord? Send it straight to the team."],`n        "contact.html": ["Contact Us", "Send a private message to the TrustMyRecord team without exposing an email address."]
+        "report-bug.html": ["Report a Bug", "Spot something broken on TrustMyRecord? Send it straight to the team."],
+        "contact.html": ["Contact Us", "Send a private message to the TrustMyRecord team without exposing an email address."]
     };
 
     // Derive the current "file" key for routeMeta. After the directory
@@ -615,7 +616,8 @@
                         <a href="/about/">About</a>
                         <a href="/terms/">Terms</a>
                         <a href="/privacy/">Privacy</a>
-                        <a href="/report-bug/">Report a Bug</a>
+                        <a href="/contact/">Contact Us</a>
+                            <a href="/report-bug/">Report a Bug</a>
                     </div>
                 </div>
             </div>
