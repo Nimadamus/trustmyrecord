@@ -14,6 +14,17 @@
         SerieA: 'soccer_italy_serie_a',
         Bundesliga: 'soccer_germany_bundesliga',
         Ligue1: 'soccer_france_ligue_one',
+        LigaMX: 'soccer_mexico_ligamx',
+        NWSL: 'soccer_nwsl',
+        UEL: 'soccer_uefa_europa_league',
+        UECL: 'soccer_uefa_conference_league',
+        CONCACAF: 'soccer_concacaf_champions',
+        Championship: 'soccer_england_championship',
+        Eredivisie: 'soccer_netherlands_eredivisie',
+        Primeira: 'soccer_portugal_primeira_liga',
+        Scotland: 'soccer_scotland_premiership',
+        Argentina: 'soccer_argentina_liga_profesional',
+        Brazil: 'soccer_brazil_serie_a',
         NCAAB: 'basketball_ncaab',
         NCAAF: 'americanfootball_ncaaf',
         ATP: 'tennis_atp',
@@ -737,7 +748,7 @@
     }
 
     function prewarmCoreBoards() {
-        ['MLB', 'NHL', 'NBA', 'WNBA', 'NFL', 'NCAAB', 'NCAAF', 'Soccer', 'MLS', 'UCL', 'LaLiga', 'SerieA', 'Bundesliga', 'Ligue1', 'ATP', 'WTA'].forEach(function(sport, index) {
+        ['MLB', 'NHL', 'NBA', 'WNBA', 'NFL', 'NCAAB', 'NCAAF', 'Soccer', 'MLS', 'UCL', 'UEL', 'UECL', 'LaLiga', 'SerieA', 'Bundesliga', 'Ligue1', 'LigaMX', 'NWSL', 'Championship', 'Eredivisie', 'Primeira', 'Scotland', 'Argentina', 'Brazil', 'CONCACAF', 'ATP', 'WTA'].forEach(function(sport, index) {
             window.setTimeout(function() {
                 prefetchSportBoard(sport);
             }, 200 + (index * 120));
