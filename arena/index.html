@@ -14,7 +14,7 @@
       gtag('config', 'G-V5MCVXS2HE');
     </script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260502navspread1">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260501navspacing">
 <script defer src="/static/js/tmr-sitewide.js?v=20260501navspacing"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -216,6 +216,11 @@
         .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); max-width: 760px; margin: 0 auto; }
         .empty-state i { font-size: 48px; margin-bottom: 16px; display: block; color: var(--border); }
         .empty-state h3 { color: var(--text-dim); margin-bottom: 8px; }
+        .challenges-grid > .empty-state,
+        .challenges-grid > .loading {
+            grid-column: 1 / -1;
+            width: 100%;
+        }
 
         /* RESPONSIVE */
         @media (max-width: 768px) {
@@ -881,7 +886,7 @@
         }
     </style>
 </head>
-<body class="tmr-site-shell">
+<body>
 
 <!-- Legacy hardcoded nav removed; sitewide global nav is injected by tmr-sitewide.js -->
 
@@ -1523,13 +1528,56 @@ function updateArenaSummaryStats() {
 // ============================================
 // CHALLENGES
 // ============================================
+const OPEN_CHALLENGES_TIMEOUT_MS = 12000;
+
+async function requestOpenChallenges() {
+    if (typeof api === 'undefined' || !api || typeof api.request !== 'function') {
+        throw new Error('Arena API client unavailable');
+    }
+
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = setTimeout(() => {
+        if (controller) controller.abort();
+    }, OPEN_CHALLENGES_TIMEOUT_MS);
+
+    try {
+        return await api.request('/gaming/challenges?limit=50', controller ? { signal: controller.signal } : {});
+    } catch (error) {
+        if (error && error.name === 'AbortError') {
+            throw new Error('Open challenges request timed out');
+        }
+        throw error;
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+function renderOpenChallengesEmptyState(filtered) {
+    const container = document.getElementById('challengesList');
+    if (!container) return;
+
+    if (filtered) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No challenges in this game yet</h3><p>Switch filters above or issue the first challenge in this category.</p><button class="btn btn-outline" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button></div>';
+        return;
+    }
+
+    container.innerHTML = '<div class="empty-state"><i class="fas fa-bolt"></i><h3>No open challenges yet.</h3><p>Be the first to issue one.</p><button class="btn btn-gold" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button></div>';
+}
+
+function renderOpenChallengesErrorState() {
+    const container = document.getElementById('challengesList');
+    if (!container) return;
+    container.innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><h3>Could not load open challenges.</h3><p>Try again.</p><button class="btn btn-outline" style="margin-top:12px;" onclick="loadChallenges()"><i class="fas fa-rotate-right"></i> Retry</button></div>';
+}
+
 async function loadChallenges() {
     const container = document.getElementById('challengesList');
+    if (container) {
+        container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+    }
+
     try {
-        let data;
-        if (api && typeof api.request === 'function') {
-            data = await api.request('/gaming/challenges?limit=50');
-        }
+        const data = await requestOpenChallenges();
         if (!data || !data.challenges) data = { challenges: [] };
         allChallenges = data.challenges;
         renderChallenges(allChallenges);
@@ -1540,7 +1588,10 @@ async function loadChallenges() {
         if (currentTab === 'my-challenges') renderMyChallenges();
     } catch (e) {
         console.error('Failed to load challenges:', e);
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No open challenges yet. Be the first to post one.</h3><p>Issue a challenge to another member or leave the opponent blank to make it open.</p><button class="btn btn-gold" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button></div>';
+        allChallenges = [];
+        const openStat = document.getElementById('statOpenChallenges');
+        if (openStat) openStat.textContent = '0';
+        renderOpenChallengesErrorState();
     }
 }
 
@@ -1559,9 +1610,7 @@ function renderChallenges(challenges) {
     const container = document.getElementById('challengesList');
     if (challenges.length === 0) {
         const noneAtAll = !allChallenges || allChallenges.length === 0;
-        container.innerHTML = noneAtAll
-            ? '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No open challenges yet. Be the first to post one.</h3><p>Issue a challenge to another member or leave the opponent blank to make it open.</p><button class="btn btn-gold" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button></div>'
-            : '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No challenges in this game yet</h3><p>Switch filters above or issue the first challenge in this category.</p><button class="btn btn-outline" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button></div>';
+        renderOpenChallengesEmptyState(!noneAtAll);
         return;
     }
     container.innerHTML = challenges.map(ch => {
