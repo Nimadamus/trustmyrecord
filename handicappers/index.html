@@ -1114,7 +1114,7 @@
 
         function formatStreak(value) {
             const streak = Number(value || 0);
-            if (!streak) return '0';
+            if (!streak) return 'N/A';
             return streak > 0 ? 'W' + streak : 'L' + Math.abs(streak);
         }
 
@@ -1251,9 +1251,7 @@
                     member.username.toLowerCase().includes(q) ||
                     member.displayName.toLowerCase().includes(q);
                 const matchesSport = sport === 'all' || (member.stats.sports || []).includes(sport);
-                const hasActivity = Number(member.stats.totalPicks || 0) > 0 || gradedCount(member) > 0;
-                const explicitLookup = q.length > 0 || sport !== 'all';
-                return matchesSearch && matchesSport && (explicitLookup || hasActivity);
+                return matchesSearch && matchesSport;
             });
 
             const byNumber = getter => (a, b) => getter(b) - getter(a);
@@ -1277,7 +1275,7 @@
                 : 'Showing ' + visibleMembers.length + ' of ' + members.length + ' members.';
 
             if (!visibleMembers.length) {
-                els.rows.innerHTML = '<div class="hm-empty"><strong>Founding records are being built now.</strong>Early members will appear here once they have locked pick activity. Search by username to find a specific production member.</div>';
+                els.rows.innerHTML = '<div class="hm-empty"><strong>No members match these filters.</strong>Clear the search or sport filter to see every public production member.</div>';
                 return;
             }
 
