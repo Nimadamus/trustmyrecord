@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
+    <title>TrustMyRecord — Verified Profile</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: transparent;
+            --card: #0b1422;
+            --card-2: rgba(255,255,255,0.04);
+            --border: rgba(148,163,184,0.18);
+            --text: #eef4fb;
+            --muted: #97a8bc;
+            --accent: #2dd4bf;
+            --accent-2: #8df5ea;
+            --good: #22c55e;
+            --bad: #ef4444;
+            --neutral: #94a3b8;
+        }
+        body.theme-light {
+            color-scheme: light;
+            --card: #ffffff;
+            --card-2: #f1f5f9;
+            --border: rgba(15,23,42,0.12);
+            --text: #142133;
+            --muted: #5f7088;
+            --accent: #0f766e;
+            --accent-2: #0d9488;
+            --good: #16a34a;
+            --bad: #dc2626;
+            --neutral: #64748b;
+        }
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        a { color: inherit; }
+
+        .tmr-card {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100vh;
+            background:
+                radial-gradient(circle at 0% 0%, rgba(45,212,191,0.10), transparent 40%),
+                linear-gradient(180deg, var(--card) 0%, #070d18 100%);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        body.theme-light .tmr-card {
+            background:
+                radial-gradient(circle at 0% 0%, rgba(15,118,110,0.08), transparent 40%),
+                linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        }
+
+        /* HEADER ROW */
+        .tmr-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .tmr-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #06120f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1rem;
+            flex: 0 0 auto;
+            overflow: hidden;
+        }
+        .tmr-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .tmr-identity { min-width: 0; flex: 1; }
+        .tmr-name {
+            font-size: 0.95rem;
+            font-weight: 800;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .tmr-handle {
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tmr-verified {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(45,212,191,0.16);
+            color: var(--accent);
+            padding: 2px 7px;
+            border-radius: 999px;
+            font-size: 0.66rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .tmr-brand {
+            font-size: 0.66rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+        .tmr-brand strong { color: var(--accent); }
+
+        /* STATS ROW */
+        .tmr-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            padding: 10px 14px;
+        }
+        .tmr-stat {
+            background: var(--card-2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 6px;
+            text-align: center;
+            min-width: 0;
+        }
+        .tmr-stat-label {
+            font-size: 0.6rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .tmr-stat-value {
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .good { color: var(--good); }
+        .bad  { color: var(--bad); }
+        .neutral { color: var(--neutral); }
+
+        /* RECENT PICKS (md / lg only) */
+        .tmr-recent {
+            padding: 4px 14px 8px;
+            display: none;
+        }
+        .tmr-recent-label {
+            font-size: 0.62rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .tmr-form {
+            display: flex;
+            gap: 4px;
+        }
+        .tmr-form-box {
+            flex: 1;
+            height: 18px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.62rem;
+            font-weight: 800;
+            color: white;
+        }
+
+        /* PICK ROWS (lg only) */
+        .tmr-picks {
+            padding: 0 14px 6px;
+            display: none;
+        }
+        .tmr-pick-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 6px 0;
+            border-top: 1px solid var(--border);
+            font-size: 0.74rem;
+        }
+        .tmr-pick-row:first-child { border-top: 0; }
+        .tmr-pick-name {
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text);
+            font-weight: 600;
+        }
+        .tmr-pick-meta {
+            color: var(--muted);
+            font-size: 0.7rem;
+            flex: 0 0 auto;
+        }
+        .tmr-pick-result {
+            font-weight: 800;
+            font-size: 0.7rem;
+            min-width: 28px;
+            text-align: right;
+        }
+
+        /* FOOTER CTA */
+        .tmr-foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 14px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.7rem;
+            margin-top: auto;
+        }
+        .tmr-cta {
+            color: #06120f;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border-radius: 999px;
+            padding: 7px 12px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            transition: transform .15s;
+        }
+        .tmr-cta:hover { transform: translateY(-1px); }
+
+        /* SIZE VARIANTS — drive layout density */
+        body.tmr-size-sm .tmr-grid { grid-template-columns: repeat(4, minmax(0,1fr)); padding: 8px 12px; gap: 6px; }
+        body.tmr-size-sm .tmr-head { padding: 10px 12px; }
+        body.tmr-size-sm .tmr-avatar { width: 34px; height: 34px; }
+        body.tmr-size-sm .tmr-name { font-size: 0.85rem; }
+        body.tmr-size-sm .tmr-handle { font-size: 0.7rem; }
+        body.tmr-size-sm .tmr-stat { padding: 6px 4px; }
+        body.tmr-size-sm .tmr-stat-value { font-size: 0.85rem; }
+        body.tmr-size-sm .tmr-foot { padding: 8px 12px; font-size: 0.66rem; }
+        body.tmr-size-sm .tmr-recent { display: none !important; }
+        body.tmr-size-sm .tmr-picks  { display: none !important; }
+
+        body.tmr-size-md .tmr-recent { display: block; }
+        body.tmr-size-lg .tmr-recent { display: block; }
+        body.tmr-size-lg .tmr-picks  { display: block; }
+
+        /* lg: tighten so 5 picks + grid + form + footer fit inside 320px */
+        body.tmr-size-lg .tmr-head { padding: 10px 14px; }
+        body.tmr-size-lg .tmr-grid { padding: 8px 14px; gap: 8px; }
+        body.tmr-size-lg .tmr-stat { padding: 7px 5px; }
+        body.tmr-size-lg .tmr-stat-value { font-size: 0.92rem; }
+        body.tmr-size-lg .tmr-recent { padding: 2px 14px 6px; }
+        body.tmr-size-lg .tmr-form-box { height: 14px; font-size: 0.6rem; }
+        body.tmr-size-lg .tmr-pick-row { padding: 4px 0; font-size: 0.72rem; }
+        body.tmr-size-lg .tmr-foot { padding: 8px 14px; }
+
+        .tmr-loading,
+        .tmr-error {
+            padding: 28px 18px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+    </style>
+</head>
+<body class="tmr-size-md">
+    <div id="tmrCard" class="tmr-card">
+        <div class="tmr-loading">Loading verified profile…</div>
+    </div>
+
+    <script>
+    (function () {
+        // ---------------- Resolve username ----------------
+        // Priority: ?u= -> ?user= -> last non-empty path segment after /embed/
+        function resolveUsername() {
+            var qs = new URLSearchParams(window.location.search);
+            var u  = (qs.get('u') || qs.get('user') || '').trim();
+            if (u) return u;
+            var path = (window.location.pathname || '').replace(/\/+$/, '');
+            // Match /embed/<username> (catches both /embed/foo and /embed/foo/)
+            var m = path.match(/\/embed\/+([^\/?#]+)$/i);
+            if (m) {
+                try { return decodeURIComponent(m[1]); } catch (_) { return m[1]; }
+            }
+            return '';
+        }
+
+        var qs       = new URLSearchParams(window.location.search);
+        var username = resolveUsername();
+        var size     = (qs.get('size') || 'md').toLowerCase();
+        var theme    = (qs.get('theme') || 'dark').toLowerCase();
+        if (!['sm','md','lg'].includes(size)) size = 'md';
+
+        document.body.classList.remove('tmr-size-sm','tmr-size-md','tmr-size-lg');
+        document.body.classList.add('tmr-size-' + size);
+        if (theme === 'light') document.body.classList.add('theme-light');
+
+        var apiBase  = 'https://trustmyrecord-api.onrender.com/api';
+        var siteBase = 'https://trustmyrecord.com';
+        var card = document.getElementById('tmrCard');
+
+        function escapeHtml(v) {
+            return String(v == null ? '' : v)
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+        function statClass(v) {
+            var n = Number(v || 0);
+            if (n > 0) return 'good';
+            if (n < 0) return 'bad';
+            return 'neutral';
+        }
+        function fmtUnits(v) {
+            var n = Number(v || 0);
+            return (n > 0 ? '+' : '') + n.toFixed(2) + 'u';
+        }
+        function fmtPct(v) {
+            var n = Number(v || 0);
+            return (n > 0 ? '+' : '') + n.toFixed(1) + '%';
+        }
+        function profileLink() {
+            return siteBase + '/profile/?user=' + encodeURIComponent(username)
+                 + '&utm_source=embed&utm_medium=widget&utm_campaign=user_profile&utm_content=' + encodeURIComponent(username);
+        }
+
+        async function fetchJson(url) {
+            var sep = url.indexOf('?') === -1 ? '?' : '&';
+            var resp = await fetch(url + sep + '_ts=' + Date.now(), { cache: 'no-store' });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            return resp.json();
+        }
+
+        function sportShort(sport_key) {
+            var k = String(sport_key || '').toLowerCase();
+            if (k.indexOf('mlb') !== -1) return 'MLB';
+            if (k.indexOf('nba') !== -1 || k.indexOf('basketball') !== -1) return 'NBA';
+            if (k.indexOf('nhl') !== -1 || k.indexOf('hockey') !== -1) return 'NHL';
+            if (k.indexOf('nfl') !== -1 || k.indexOf('football') !== -1) return 'NFL';
+            return k.replace(/_/g,' ').toUpperCase();
+        }
+
+        function renderPickRow(p) {
+            // p comes from /stats/advanced -> recentForm:
+            // { id, market_type, selection, status, result_units, odds_snapshot, units, locked_at, sport_key }
+            var status = String(p.status || '').toLowerCase();
+            var resultLabel = status === 'won' ? 'W' : status === 'lost' ? 'L' : (status === 'push' ? 'P' : '·');
+            var resultColor = status === 'won' ? 'var(--good)' : status === 'lost' ? 'var(--bad)' : 'var(--neutral)';
+            var name = p.selection || p.pick_text || p.market_label || '';
+            var meta = sportShort(p.sport_key || p.sport);
+            return '<div class="tmr-pick-row">'
+                +    '<div class="tmr-pick-name">' + escapeHtml(name || '—') + '</div>'
+                +    '<div class="tmr-pick-meta">' + escapeHtml(meta) + '</div>'
+                +    '<div class="tmr-pick-result" style="color:' + resultColor + '">' + resultLabel + '</div>'
+                + '</div>';
+        }
+
+        async function load() {
+            if (!username) {
+                card.innerHTML = '<div class="tmr-error">Missing username. Use <code>/embed/&lt;username&gt;</code> or <code>?u=username</code>.</div>';
+                return;
+            }
+            try {
+                var profileResp, advancedResp;
+                try {
+                    [profileResp, advancedResp] = await Promise.all([
+                        fetchJson(apiBase + '/users/' + encodeURIComponent(username)),
+                        fetchJson(apiBase + '/users/' + encodeURIComponent(username) + '/stats/advanced')
+                    ]);
+                } catch (e) {
+                    card.innerHTML = '<div class="tmr-error">Profile not found.</div>';
+                    return;
+                }
+
+                var profile     = (profileResp && profileResp.user) || profileResp || {};
+                var summary     = (advancedResp && advancedResp.summary) || {};
+                var recentForm  = (advancedResp && advancedResp.recentForm) || [];
+                // recentForm rows already carry selection/market_type/sport/status/result_units,
+                // so the lg-size "last 5 picks" list pulls from the same payload -- one API call.
+                var picks       = recentForm.slice(0, 5);
+
+                var displayName = profile.display_name || profile.username || username;
+                var handle      = profile.username || username;
+                var initial     = String(handle).charAt(0).toUpperCase() || '?';
+                var record      = Number(summary.wins || 0) + '-' + Number(summary.losses || 0) + '-' + Number(summary.pushes || 0);
+                var totalPicks  = Number(summary.total_picks || 0);
+                var verified    = ['verified','trusted','premium'].includes(String(profile.verification_status || '').toLowerCase());
+
+                var html = ''
+                    + '<div class="tmr-head">'
+                    +   '<div class="tmr-avatar">'
+                    +     (profile.avatar_url ? '<img src="' + escapeHtml(profile.avatar_url) + '" alt="' + escapeHtml(displayName) + '">' : escapeHtml(initial))
+                    +   '</div>'
+                    +   '<div class="tmr-identity">'
+                    +     '<div class="tmr-name">' + escapeHtml(displayName) + '</div>'
+                    +     '<div class="tmr-handle">@' + escapeHtml(handle)
+                    +       (verified ? ' <span class="tmr-verified"><i>✓</i> Verified</span>' : '')
+                    +     '</div>'
+                    +   '</div>'
+                    +   '<div class="tmr-brand"><strong>Trust</strong>MyRecord</div>'
+                    + '</div>'
+
+                    + '<div class="tmr-grid">'
+                    +   '<div class="tmr-stat"><div class="tmr-stat-label">Record</div><div class="tmr-stat-value">' + escapeHtml(record) + '</div></div>'
+                    +   '<div class="tmr-stat"><div class="tmr-stat-label">Win Rate</div><div class="tmr-stat-value">' + escapeHtml(Number(summary.win_rate || 0).toFixed(1) + '%') + '</div></div>'
+                    +   '<div class="tmr-stat"><div class="tmr-stat-label">Net Units</div><div class="tmr-stat-value ' + statClass(summary.net_units) + '">' + escapeHtml(fmtUnits(summary.net_units)) + '</div></div>'
+                    +   '<div class="tmr-stat"><div class="tmr-stat-label">ROI</div><div class="tmr-stat-value ' + statClass(summary.roi) + '">' + escapeHtml(fmtPct(summary.roi)) + '</div></div>'
+                    + '</div>'
+
+                    + '<div class="tmr-recent">'
+                    +   '<div class="tmr-recent-label">Recent Form' + (totalPicks ? ' &middot; ' + totalPicks + ' picks' : '') + '</div>'
+                    +   (recentForm.length
+                        ? '<div class="tmr-form">' + recentForm.slice(0, 12).map(function(it){
+                            var s = String(it.status || '').toLowerCase();
+                            var lbl = s === 'won' ? 'W' : s === 'lost' ? 'L' : 'P';
+                            var bg  = s === 'won' ? 'var(--good)' : s === 'lost' ? 'var(--bad)' : 'var(--neutral)';
+                            return '<div class="tmr-form-box" style="background:' + bg + '">' + lbl + '</div>';
+                          }).join('') + '</div>'
+                        : '<div style="color:var(--muted);font-size:.72rem;">No graded picks yet</div>')
+                    + '</div>'
+
+                    + (size === 'lg'
+                        ? '<div class="tmr-picks">' + (picks.length ? picks.slice(0,5).map(renderPickRow).join('') : '<div style="color:var(--muted);font-size:.72rem;padding:6px 0;">No graded picks yet</div>') + '</div>'
+                        : '')
+
+                    + '<div class="tmr-foot">'
+                    +   '<span>Live · ' + escapeHtml(new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })) + '</span>'
+                    +   '<a class="tmr-cta" href="' + profileLink() + '" target="_blank" rel="noopener">View full verified profile →</a>'
+                    + '</div>';
+
+                card.innerHTML = html;
+
+                // Auto-resize when embedded via the script tag (postMessage to parent).
+                if (window.parent && window.parent !== window) {
+                    var h = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+                    try { window.parent.postMessage({ type: 'tmr-profile-widget-height', height: h }, '*'); } catch(_){}
+                }
+            } catch (e) {
+                card.innerHTML = '<div class="tmr-error">Unable to load live profile data right now.</div>';
+            }
+        }
+
+        load();
+        // Light auto-refresh — every 60s. Embed widgets are usually long-lived.
+        setInterval(load, 60000);
+    })();
+    </script>
+</body>
+</html>

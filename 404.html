@@ -81,6 +81,7 @@
         var query = window.location.search;
         var hash = window.location.hash;
         var profilePathMatch = path.match(/^profile\/([^\/?#]+)$/i);
+        var embedPathMatch   = path.match(/^embed\/([^\/?#]+)$/i);
         var legacyRouteMap = {
             '': '',
             'home': '',
@@ -104,7 +105,14 @@
         };
 
         var mappedRoute = legacyRouteMap[path];
-        if (profilePathMatch) {
+        if (embedPathMatch) {
+            // /embed/<username> -> /embed/?u=<username> (preserves ?size, ?theme, etc.)
+            var embedQuery = '?u=' + encodeURIComponent(decodeURIComponent(embedPathMatch[1])) +
+                (query ? '&' + query.slice(1) : '');
+            window.location.replace(
+                window.location.origin + '/embed/' + embedQuery + hash
+            );
+        } else if (profilePathMatch) {
             var profileQuery = '?user=' + encodeURIComponent(decodeURIComponent(profilePathMatch[1])) +
                 (query ? '&' + query.slice(1) : '');
             window.location.replace(
