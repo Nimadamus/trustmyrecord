@@ -1821,12 +1821,12 @@
             <div class="profile-tabs" role="tablist" id="profileTabsBar">
                 <button type="button" class="profile-tab active" data-tab="picks" role="tab" aria-selected="true">Picks</button>
                 <button type="button" class="profile-tab" data-tab="posts" role="tab">Posts</button>
-                <button type="button" class="profile-tab" data-tab="record" id="profilePerformanceTab" role="tab">Record</button>
+                <button type="button" class="profile-tab profile-tab--compat" data-tab="record" id="profilePerformanceTab" role="tab">Record</button>
                 <button type="button" class="profile-tab" data-tab="challenges" role="tab">Challenges</button>
                 <button type="button" class="profile-tab" data-tab="polls" id="profilePollsTab" role="tab">Polls</button>
                 <button type="button" class="profile-tab" data-tab="trivia" id="profileTriviaTab" role="tab">Trivia</button>
                 <button type="button" class="profile-tab" data-tab="tournaments" role="tab">Tournaments</button>
-                <button type="button" class="profile-tab" data-tab="advanced" role="tab">Advanced Metrics</button>
+                <button type="button" class="profile-tab profile-tab--compat" data-tab="advanced" role="tab">Advanced Metrics</button>
                 <button type="button" class="profile-tab" data-tab="charts" role="tab">Charts</button>
                 <button type="button" class="profile-tab" data-tab="splits" role="tab">Splits</button>
                 <button type="button" class="profile-tab" data-tab="store" role="tab">Sell Your Picks</button>
@@ -1890,7 +1890,7 @@
                         <div class="tmrx-section-head">
                           <div>
                             <div class="tmrx-section-title">Filters</div>
-                            <div class="tmrx-section-sub">Filters update breakdown tables and the pick history below. (Wire-up in progress.)</div>
+                            <div class="tmrx-section-sub">Use the Pick History controls for ledger filtering.</div>
                           </div>
                         </div>
                         <div class="tmrx-filter-bar">
@@ -1925,11 +1925,11 @@
                       </div>
 
                       <div class="tmrx-section">
-                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Performance by Sport</div><div class="tmrx-section-sub">From <code>user_sport_stats</code>.</div></div></div>
+                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Performance by Sport &amp; League</div><div class="tmrx-section-sub">Sport and league are separated so each row scans cleanly.</div></div></div>
                         <div class="tmrx-table-shell">
                           <table class="tmrx-table" id="tmrxTableSportTop">
-                            <thead><tr><th>Sport</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Avg Odds</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>
-                            <tbody><tr class="empty"><td colspan="7">No sport rows yet.</td></tr></tbody>
+                            <thead><tr><th>Sport</th><th>League</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Avg Odds</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>
+                            <tbody><tr class="empty"><td colspan="8">No sport rows yet.</td></tr></tbody>
                           </table>
                         </div>
                       </div>
@@ -2650,11 +2650,11 @@
                       </div>
 
                       <div class="tmrx-section">
-                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Performance by Sport</div><div class="tmrx-section-sub">From <code>user_sport_stats</code>. Sample-gated at 3+ picks per row.</div></div></div>
+                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Performance by Sport &amp; League</div><div class="tmrx-section-sub">Sport and league are separated so each row scans cleanly.</div></div></div>
                         <div class="tmrx-table-shell">
                           <table class="tmrx-table" id="tmrxTableSport">
-                            <thead><tr><th>Sport</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Avg Odds</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>
-                            <tbody><tr class="empty"><td colspan="7">No sport rows yet &mdash; lock graded picks to populate this table.</td></tr></tbody>
+                            <thead><tr><th>Sport</th><th>League</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Avg Odds</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>
+                            <tbody><tr class="empty"><td colspan="8">No sport rows yet &mdash; lock graded picks to populate this table.</td></tr></tbody>
                           </table>
                         </div>
                       </div>
@@ -5954,6 +5954,27 @@
             if (TMRX_LABELS[key]) return TMRX_LABELS[key];
             return String(v || '—').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
         };
+        const sportLeagueOf = (raw) => {
+            const key = String(raw || '').toLowerCase();
+            const known = {
+                baseball_mlb: ['Baseball', 'MLB'],
+                basketball_nba: ['Basketball', 'NBA'],
+                basketball_ncaab: ['Basketball', 'NCAAB'],
+                icehockey_nhl: ['Hockey', 'NHL'],
+                americanfootball_nfl: ['Football', 'NFL'],
+                americanfootball_ncaaf: ['Football', 'NCAAF'],
+                soccer_epl: ['Soccer', 'EPL'],
+                mma_mixed_martial_arts: ['MMA', 'MMA']
+            };
+            if (known[key]) return known[key];
+            const parts = key.split('_').filter(Boolean);
+            if (parts.length > 1) {
+                const league = parts[parts.length - 1].toUpperCase();
+                const sport = parts.slice(0, -1).join(' ').replace(/\b\w/g, c => c.toUpperCase());
+                return [sport || 'Other', league || 'Other'];
+            }
+            return [labelOf('by_sport', raw), '—'];
+        };
         const renderSplitTable = (tableId, splitKey, arr, opts) => {
             const table = document.getElementById(tableId);
             if (!table) return;
@@ -5977,12 +5998,20 @@
                 const roi = Number(b.roi) || 0;
                 const netCls = net > 0 ? 'pos' : net < 0 ? 'neg' : 'zero';
                 const roiCls = roi > 0 ? 'pos' : roi < 0 ? 'neg' : 'zero';
-                const cells = [
-                    '<td class="name">' + labelOf('by_' + splitKey, b.key) + '</td>',
+                const labelCells = opts.sportLeague
+                    ? (function() {
+                        const parts = sportLeagueOf(b.key);
+                        return [
+                            '<td class="name">' + parts[0] + '</td>',
+                            '<td class="league">' + parts[1] + '</td>'
+                        ];
+                    })()
+                    : ['<td class="name">' + labelOf('by_' + splitKey, b.key) + '</td>'];
+                const cells = labelCells.concat([
                     '<td class="num">' + b.total + '</td>',
                     '<td class="num">' + w + '-' + l + (p ? '-' + p : '') + '</td>',
                     '<td class="num ' + winCls + '">' + (dec > 0 ? winPct.toFixed(1) + '%' : '—') + '</td>',
-                ];
+                ]);
                 if (cols >= 7) cells.push('<td class="num">' + (b.avg_odds != null ? fmtAmericanOdds(b.avg_odds) : '—') + '</td>');
                 cells.push('<td class="num ' + netCls + '">' + fmtSigned(net, 'u', 2) + '</td>');
                 cells.push('<td class="num ' + roiCls + '">' + fmtSigned(roi, '%', 2) + '</td>');
@@ -5990,7 +6019,7 @@
             };
             tbody.innerHTML = rows.map(cellFor).join('');
         };
-        renderSplitTable('tmrxTableSport',      'sport',       splits.by_sport,       { cols: 7 });
+        renderSplitTable('tmrxTableSport',      'sport',       splits.by_sport,       { cols: 7, sportLeague: true });
         renderSplitTable('tmrxTableMarket',     'market',      splits.by_market,      { cols: 7 });
         renderSplitTable('tmrxTableUnitSize',   'unit_size',   splits.by_unit_size,   { cols: 6 });
         renderSplitTable('tmrxTableOddsBucket', 'odds_bucket', splits.by_odds_bucket, { cols: 6 });
@@ -9540,7 +9569,7 @@
         border: 1px solid rgba(148, 163, 184, 0.12) !important;
         border-radius: 12px !important;
         background: rgba(2, 6, 23, 0.24) !important;
-        overflow-x: hidden !important;
+        overflow-x: auto !important;
       }
       body.profile-page.tmr-social-profile .capper-table {
         min-width: 760px !important;
@@ -9778,7 +9807,7 @@
       body.profile-page.tmr-social-profile .tmrx-period-strip {
         display: grid !important;
         gap: 0 !important;
-        overflow-x: auto !important;
+        overflow-x: hidden !important;
         background: linear-gradient(180deg,#101b30,#0a1322) !important;
         border: 1px solid rgba(31,51,80,.75) !important;
         border-radius: 12px !important;
@@ -9829,7 +9858,7 @@
       body.profile-page.tmr-social-profile .tmrx-unavail-note {
         display: none !important;
       }
-          body.profile-page.tmr-social-profile {
+      body.profile-page.tmr-social-profile {
         overflow-x: clip !important;
       }
       body.profile-page.tmr-social-profile .tmrx-ribbon::-webkit-scrollbar,
@@ -9850,7 +9879,7 @@
           grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         }
       }
-</style>
+    </style>
 <style>
       /* Hard reset for the profile masthead: one component, no floating strip. */
       body.profile-page.tmr-social-profile .profile-cover-section{display:none!important}
@@ -9883,6 +9912,117 @@
         body.profile-page.tmr-social-profile .profile-avatar{width:88px!important;height:88px!important;min-width:88px!important}
         body.profile-page.tmr-social-profile .profile-overview-grid,
         body.profile-page.tmr-social-profile .profile-rail{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+      }
+    </style>
+    <style id="tmr-profile-cleanup-20260502">
+      /* Profile cleanup: the visible profile now has one record system. The
+         legacy Record / Advanced tabs remain in the DOM only so existing
+         render functions can keep writing to their compatibility IDs. */
+      body.profile-page.tmr-social-profile .profile-tab--compat {
+        display: none !important;
+      }
+
+      body.profile-page.tmr-social-profile .tmrx-stats {
+        gap: 24px !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicks) {
+        order: 55 !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvancedTop),
+      body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvanced) {
+        order: 70 !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-section:has(.tmrx-filter-bar) {
+        display: none !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxEquityShellTop),
+      body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxEquityShell) {
+        display: block !important;
+        order: 45 !important;
+      }
+
+      body.profile-page.tmr-social-profile .tmrx-section-head {
+        margin-bottom: 14px !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-section-title {
+        font-size: 20px !important;
+        letter-spacing: 0 !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-section-sub {
+        font-size: 13px !important;
+        color: #91a0b5 !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-table-shell {
+        border-color: rgba(73, 96, 130, .75) !important;
+        background: linear-gradient(180deg, #0c1728, #08111f) !important;
+        box-shadow: 0 18px 38px rgba(0,0,0,.22) !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-table {
+        min-width: 1040px !important;
+        font-size: 15px !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-table thead th {
+        padding: 15px 18px !important;
+        background: #111d31 !important;
+        color: #d7e3f4 !important;
+        font-size: 12px !important;
+        letter-spacing: .08em !important;
+        border-bottom: 1px solid rgba(96, 125, 166, .65) !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-table tbody td {
+        padding: 16px 18px !important;
+        color: #e8f0fb !important;
+        font-size: 15px !important;
+        border-bottom: 1px solid rgba(73, 96, 130, .5) !important;
+        vertical-align: middle !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-table tbody tr:nth-child(even) td {
+        background: rgba(148, 163, 184, .035) !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-table tbody tr:hover td {
+        background: rgba(34, 211, 238, .07) !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-table .name,
+      body.profile-page.tmr-social-profile .tmrx-table .league {
+        color: #f8fbff !important;
+        font-weight: 850 !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-table .league {
+        color: #b9c6d8 !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-table .num {
+        font-variant-numeric: tabular-nums !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-table .pos {
+        color: #5ee68a !important;
+        font-weight: 900 !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-table .neg {
+        color: #ff8a8a !important;
+        font-weight: 900 !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-table .zero {
+        color: #9aa8bb !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-ribbon,
+      body.profile-page.tmr-social-profile .tmrx-period-strip {
+        border-color: rgba(73, 96, 130, .75) !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-cell {
+        min-height: 98px !important;
+        padding: 18px 16px !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-value {
+        font-size: clamp(24px, 1.8vw, 30px) !important;
+        font-weight: 950 !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-label {
+        color: #afbdd0 !important;
+      }
+      @media (max-width: 720px) {
+        body.profile-page.tmr-social-profile .tmrx-table {
+          min-width: 980px !important;
+        }
       }
     </style>
 </body>
