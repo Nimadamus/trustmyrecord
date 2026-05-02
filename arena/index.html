@@ -470,6 +470,105 @@
                 flex-basis: 100%;
             }
         }
+
+        /* ARENA REDESIGN */
+        body {
+            background:
+                radial-gradient(circle at 16% 8%, rgba(0, 174, 255, 0.18), transparent 26%),
+                radial-gradient(circle at 88% 18%, rgba(168, 85, 247, 0.16), transparent 24%),
+                linear-gradient(180deg, #050814 0%, #07111f 46%, #05070d 100%) !important;
+        }
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            padding: 42px 24px 30px;
+            background:
+                linear-gradient(135deg, rgba(0, 174, 255, 0.10), rgba(168, 85, 247, 0.08)),
+                linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+            background-size: 42px 42px;
+            mask-image: linear-gradient(180deg, rgba(0,0,0,0.75), transparent 82%);
+        }
+
+        .hero-shell { position: relative; z-index: 1; gap: 22px; }
+        .hero-copy-card, .hero-side-card, .arena-action-card, .gaming-room, .open-challenges-market {
+            border: 1px solid rgba(120, 210, 255, 0.18);
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.025)),
+                rgba(6, 16, 31, 0.88);
+            box-shadow: 0 24px 70px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+            backdrop-filter: blur(18px);
+        }
+
+        .hero-copy-card { min-height: 100%; padding: clamp(24px, 4vw, 38px); }
+        .hero-side-card { padding: 24px; }
+        .hero-kicker { color: #9ff7ff; background: rgba(0,174,255,0.12); border-color: rgba(0,174,255,0.28); }
+        .hero h1 { max-width: 13ch; font-size: clamp(2.6rem, 5.6vw, 4.65rem); line-height: 0.92; }
+        .hero p { max-width: 720px; margin: 14px 0 0; color: #b7c6d8; font-size: 1rem; line-height: 1.65; }
+        .hero-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 24px; max-width: 620px; }
+        .hero-actions .btn { justify-content: center; padding: 13px 16px; display: inline-flex; align-items: center; gap: 7px; }
+        .hero-stats { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px !important; margin-top: 24px !important; }
+        .hero-stat { border: 1px solid rgba(120, 210, 255, 0.14); border-radius: 14px; padding: 14px 10px; background: rgba(255,255,255,0.04); text-align: left; }
+        .hero-stat .num { color: #28e8ff; text-shadow: 0 0 20px rgba(40,232,255,0.4); }
+        .hero-stat .label { color: #9fb0c5; line-height: 1.25; }
+        .hero-proof-item { border-top-color: rgba(120, 210, 255, 0.13); }
+        .hero-proof-index { background: linear-gradient(135deg, rgba(0,174,255,0.2), rgba(168,85,247,0.16)); color: #bdf7ff; }
+
+        .arena-section { margin-bottom: 30px; }
+        .arena-section-title { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 16px; }
+        .arena-section-title h2 { font-family: var(--font-display); font-size: clamp(1.35rem, 3vw, 2rem); margin: 0; letter-spacing: -0.02em; }
+        .arena-section-title p { color: #9fb0c5; max-width: 680px; margin: 6px 0 0; line-height: 1.55; }
+        .arena-action-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+        .arena-action-card { min-height: 190px; border-radius: 18px; padding: 20px; color: #eef7ff; display: flex; flex-direction: column; gap: 12px; transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; text-align: left; font-family: var(--font-body); cursor: pointer; }
+        .arena-action-card:hover { transform: translateY(-4px); border-color: rgba(40,232,255,0.42); box-shadow: 0 28px 80px rgba(0,0,0,0.42), 0 0 34px rgba(0,174,255,0.12); color: #fff; }
+        .arena-action-icon { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; color: #06111f; background: linear-gradient(135deg, #28e8ff, #8df5ea); font-size: 1.25rem; box-shadow: 0 0 28px rgba(40,232,255,0.28); }
+        .arena-action-card h3 { margin: 4px 0 0; font-family: var(--font-display); font-size: 1.22rem; }
+        .arena-action-card p { margin: 0; color: #a9bad0; line-height: 1.5; font-size: .92rem; }
+        .arena-action-cta { margin-top: auto; color: #78e8ff; font-weight: 800; font-size: .86rem; }
+
+        .gaming-room { border-radius: 20px; padding: 22px; }
+        .game-logo-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+        .game-logo-card { border: 1px solid rgba(120,210,255,0.16); border-radius: 16px; min-height: 132px; padding: 16px; cursor: pointer; background: linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.02)); display: flex; flex-direction: column; justify-content: space-between; transition: transform .2s ease, border-color .2s ease, background .2s ease; text-align: left; font-family: var(--font-body); }
+        .game-logo-card:hover { transform: translateY(-3px); border-color: rgba(40,232,255,0.46); background: linear-gradient(145deg, rgba(0,174,255,0.15), rgba(168,85,247,0.08)); }
+        .game-logo-mark { font-family: var(--font-display); font-size: clamp(1.35rem, 2.4vw, 2rem); font-weight: 800; line-height: .95; letter-spacing: 0; color: #fff; text-shadow: 0 0 24px rgba(40,232,255,0.28); }
+        .game-logo-sub { color: #9fb0c5; font-size: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+        .gaming-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+        .gaming-actions .btn { display: inline-flex; align-items: center; gap: 7px; padding: 12px 16px; }
+
+        .tabs { position: sticky; top: 72px; z-index: 40; gap: 8px; }
+        .tab { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+        .tab.active { color: #06111f; background: linear-gradient(135deg, #28e8ff, #8df5ea); border-color: transparent; }
+        .open-challenges-market { border-radius: 20px; padding: 20px; }
+        .challenge-card { min-height: 260px; }
+        .cc-title { font-size: 1.02rem; }
+        .cc-meta { flex-wrap: wrap; line-height: 1.4; }
+        .empty-state { border: 1px solid rgba(120,210,255,0.16); border-radius: 18px; background: rgba(255,255,255,0.035); }
+
+        @media (max-width: 980px) {
+            .arena-action-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .game-logo-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 640px) {
+            .hero { padding: 24px 14px; }
+            .hero-actions, .arena-action-grid, .game-logo-grid { grid-template-columns: 1fr; }
+            .hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .hero h1 { font-size: 2.55rem; }
+            .arena-section-title { display: block; }
+            .gaming-actions .btn { width: 100%; justify-content: center; }
+            .tabs { position: relative; top: auto; width: calc(100% - 20px); }
+        }
     </style>
 </head>
 <body>
@@ -480,41 +579,44 @@
 <div class="hero">
     <div class="hero-shell">
         <div class="hero-copy-card">
-            <span class="hero-kicker">Competition Hub</span>
-            <h1>Turn rivalries into <span class="gold">receipts</span>.</h1>
-            <p>Challenge other users to handicapping contests, online sports games, and head-to-head battles. Track results, build rivalries, and prove who actually wins when the talking stops.</p>
+            <span class="hero-kicker">Arena Control Center</span>
+            <h1>Challenge. Compete. Prove it.</h1>
+            <p>Issue sports betting challenges, create polls and trivia, jump into online gaming matchups, and accept open challenges from the community.</p>
             <div class="hero-actions">
-                <button class="btn btn-gold" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue Challenge</button>
-                <a href="#panel-challenges" class="btn btn-outline" onclick="scrollToChallenges(event)"><i class="fas fa-list"></i> View Open Challenges</a>
+                <button class="btn btn-gold" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button>
+                <a href="/trivia/" class="btn btn-outline"><i class="fas fa-question"></i> Create Trivia</a>
+                <a href="/polls/" class="btn btn-outline"><i class="fas fa-square-poll-vertical"></i> Start a Poll</a>
+                <button class="btn btn-primary" onclick="switchTab('gaming-room')"><i class="fas fa-gamepad"></i> Enter Gaming Room</button>
             </div>
-            <div class="hero-stats" style="justify-content:flex-start; margin-top:22px;">
-                <div class="hero-stat"><div class="num" id="statTotalMatches">0</div><div class="label">Matches Played</div></div>
-                <div class="hero-stat"><div class="num" id="statActiveChallenges">0</div><div class="label">Active Challenges</div></div>
-                <div class="hero-stat"><div class="num" id="statGamers">0</div><div class="label">Gamers</div></div>
+            <div class="hero-stats">
+                <div class="hero-stat"><div class="num" id="statOpenChallenges">0</div><div class="label">Open Challenges</div></div>
+                <div class="hero-stat"><div class="num" id="statActiveGamers">0</div><div class="label">Active Gamers</div></div>
+                <div class="hero-stat"><div class="num" id="statTriviaMatches">0</div><div class="label">Trivia Matches</div></div>
+                <div class="hero-stat"><div class="num" id="statPollBattles">0</div><div class="label">Poll Battles</div></div>
             </div>
         </div>
         <div class="hero-side-card">
-            <h3>What Arena is for</h3>
+            <h3>What you can do in Arena</h3>
             <div class="hero-proof-list">
                 <div class="hero-proof-item">
                     <span class="hero-proof-index"><i class="fas fa-chart-line"></i></span>
-                    <div class="hero-proof-copy"><strong>Handicapping Contests</strong><span>Challenge another capper on picks, units, ROI, sport-specific cards, or weekly records.</span></div>
+                    <div class="hero-proof-copy"><strong>Handicapping Challenges</strong><span>Challenge another capper on picks, units, ROI, sport-specific cards, or weekly records.</span></div>
+                </div>
+                <div class="hero-proof-item">
+                    <span class="hero-proof-index"><i class="fas fa-square-poll-vertical"></i></span>
+                    <div class="hero-proof-copy"><strong>Poll Battles</strong><span>Create debate-style polls or prediction polls and challenge the community to take a side.</span></div>
+                </div>
+                <div class="hero-proof-item">
+                    <span class="hero-proof-index"><i class="fas fa-brain"></i></span>
+                    <div class="hero-proof-copy"><strong>Trivia Battles</strong><span>Create sports trivia challenges and compete head to head for public bragging rights.</span></div>
                 </div>
                 <div class="hero-proof-item">
                     <span class="hero-proof-index"><i class="fas fa-gamepad"></i></span>
-                    <div class="hero-proof-copy"><strong>Online Game Challenges</strong><span>Set up MLB The Show, Madden, NBA 2K, EA FC, NHL, and other head-to-head matchups.</span></div>
-                </div>
-                <div class="hero-proof-item">
-                    <span class="hero-proof-index"><i class="fas fa-poll"></i></span>
-                    <div class="hero-proof-copy"><strong>Polls</strong><span>Sports debates, prediction polls, and community calls. <a href="/polls/" style="color:#2dd4bf;font-weight:700;">Open Polls &rarr;</a></span></div>
-                </div>
-                <div class="hero-proof-item">
-                    <span class="hero-proof-index"><i class="fas fa-question"></i></span>
-                    <div class="hero-proof-copy"><strong>Trivia</strong><span>Sports trivia, custom questions, and reputation leaderboards. <a href="/trivia/" style="color:#2dd4bf;font-weight:700;">Play Trivia &rarr;</a></span></div>
+                    <div class="hero-proof-copy"><strong>Gaming Matchups</strong><span>Set up MLB The Show, Madden, NBA 2K, EA FC, NHL, and other head-to-head matchups.</span></div>
                 </div>
                 <div class="hero-proof-item">
                     <span class="hero-proof-index"><i class="fas fa-trophy"></i></span>
-                    <div class="hero-proof-copy"><strong>Rivalry History</strong><span>Keep a permanent public record of challenge results instead of letting everything disappear in Discord or group chats.</span></div>
+                    <div class="hero-proof-copy"><strong>Rivalry History / Results</strong><span>Keep a public record of completed challenges, match scores, standings, and rivalry results.</span></div>
                 </div>
             </div>
         </div>
@@ -523,35 +625,144 @@
 
 <!-- TABS -->
 <div class="tabs">
-    <div class="tab active" data-tab="challenges" onclick="switchTab('challenges')"><i class="fas fa-gamepad" style="margin-right:6px;"></i>Challenges</div>
-    <div class="tab" data-tab="matches" onclick="switchTab('matches')"><i class="fas fa-gamepad" style="margin-right:6px;"></i>Recent Matches</div>
-    <div class="tab" data-tab="leaderboard" onclick="switchTab('leaderboard')"><i class="fas fa-trophy" style="margin-right:6px;"></i>Leaderboard</div>
-    <div class="tab" data-tab="mlb-the-show" onclick="switchTab('mlb-the-show')"><i class="fas fa-baseball" style="margin-right:6px;"></i>MLB The Show</div>
-    <a href="/polls/" class="tab" data-tab="polls" style="text-decoration:none;"><i class="fas fa-poll" style="margin-right:6px;"></i>Polls</a>
-    <a href="/trivia/" class="tab" data-tab="trivia" style="text-decoration:none;"><i class="fas fa-question" style="margin-right:6px;"></i>Trivia</a>
-    <div class="tab" data-tab="my-stats" onclick="switchTab('my-stats')"><i class="fas fa-chart-bar" style="margin-right:6px;"></i>My Stats</div>
+    <div class="tab active" data-tab="challenges" onclick="switchTab('challenges')"><i class="fas fa-bolt"></i>Open Challenges</div>
+    <div class="tab" data-tab="my-challenges" onclick="switchTab('my-challenges')"><i class="fas fa-user-shield"></i>My Challenges</div>
+    <div class="tab" data-tab="gaming-room" onclick="switchTab('gaming-room')"><i class="fas fa-gamepad"></i>Gaming Room</div>
+    <a href="/polls/" class="tab" data-tab="polls" style="text-decoration:none;"><i class="fas fa-square-poll-vertical"></i>Poll Battles</a>
+    <a href="/trivia/" class="tab" data-tab="trivia" style="text-decoration:none;"><i class="fas fa-brain"></i>Trivia</a>
+    <div class="tab" data-tab="leaderboard" onclick="switchTab('leaderboard')"><i class="fas fa-trophy"></i>Leaderboard / Results</div>
 </div>
 
 <!-- MAIN CONTENT -->
 <div class="main">
 
+    <section class="arena-section">
+        <div class="arena-section-title">
+            <div>
+                <h2>Choose Your Competition</h2>
+                <p>Use Arena as the launch point for challenges, poll battles, trivia battles, gaming matchups, open contests, and recent results.</p>
+            </div>
+        </div>
+        <div class="arena-action-grid">
+            <button class="arena-action-card" onclick="openCreateChallenge()">
+                <span class="arena-action-icon"><i class="fas fa-bolt"></i></span>
+                <h3>Issue a Challenge</h3>
+                <p>Challenge another member directly or post an open challenge anyone can accept.</p>
+                <span class="arena-action-cta">Create challenge</span>
+            </button>
+            <a class="arena-action-card" href="/trivia/">
+                <span class="arena-action-icon"><i class="fas fa-brain"></i></span>
+                <h3>Create Trivia</h3>
+                <p>Create sports trivia challenges and compete head to head.</p>
+                <span class="arena-action-cta">Open trivia</span>
+            </a>
+            <a class="arena-action-card" href="/polls/">
+                <span class="arena-action-icon"><i class="fas fa-square-poll-vertical"></i></span>
+                <h3>Challenge to Polls</h3>
+                <p>Create debate-style polls or prediction polls and challenge the community.</p>
+                <span class="arena-action-cta">Start poll battle</span>
+            </a>
+            <button class="arena-action-card" onclick="switchTab('gaming-room')">
+                <span class="arena-action-icon"><i class="fas fa-gamepad"></i></span>
+                <h3>Gaming Room</h3>
+                <p>Enter the online gaming hub for MLB The Show, Madden, NBA 2K, EA FC, and NHL.</p>
+                <span class="arena-action-cta">Enter gaming room</span>
+            </button>
+            <button class="arena-action-card" onclick="scrollToChallenges(event)">
+                <span class="arena-action-icon"><i class="fas fa-store"></i></span>
+                <h3>Open Challenges</h3>
+                <p>Browse posted open challenges from the community and accept one.</p>
+                <span class="arena-action-cta">View marketplace</span>
+            </button>
+            <button class="arena-action-card" onclick="switchTab('leaderboard')">
+                <span class="arena-action-icon"><i class="fas fa-ranking-star"></i></span>
+                <h3>Rivalry Results</h3>
+                <p>See completed challenge history, gaming standings, and community results.</p>
+                <span class="arena-action-cta">View results</span>
+            </button>
+        </div>
+    </section>
+
+    <section class="arena-section gaming-room" id="gamingRoomShowcase">
+        <div class="arena-section-title">
+            <div>
+                <h2>Gaming Room</h2>
+                <p>Pick a game, challenge a specific member, or post an open gaming challenge and wait for someone to accept.</p>
+            </div>
+        </div>
+        <div class="game-logo-grid">
+            <button class="game-logo-card" onclick="openCreateChallenge('mlb-the-show-26')"><span class="game-logo-mark">MLB<br>The Show</span><span class="game-logo-sub">Baseball</span></button>
+            <button class="game-logo-card" onclick="openCreateChallenge('madden-26')"><span class="game-logo-mark">Madden</span><span class="game-logo-sub">Football</span></button>
+            <button class="game-logo-card" onclick="openCreateChallenge('nba-2k26')"><span class="game-logo-mark">NBA<br>2K</span><span class="game-logo-sub">Basketball</span></button>
+            <button class="game-logo-card" onclick="openCreateChallenge('ea-fc-26')"><span class="game-logo-mark">EA<br>FC</span><span class="game-logo-sub">Soccer</span></button>
+            <button class="game-logo-card" onclick="openCreateChallenge('nhl-26')"><span class="game-logo-mark">NHL</span><span class="game-logo-sub">Hockey</span></button>
+        </div>
+        <div class="gaming-actions">
+            <button class="btn btn-primary" onclick="openCreateChallenge()"><i class="fas fa-user-plus"></i> Challenge a Member</button>
+            <button class="btn btn-outline" onclick="openCreateChallenge()"><i class="fas fa-broadcast-tower"></i> Post Open Gaming Challenge</button>
+        </div>
+    </section>
+
     <!-- ===== CHALLENGES TAB ===== -->
     <div class="panel active" id="panel-challenges">
+        <section class="open-challenges-market">
+            <div class="section-header">
+                <div>
+                    <h2>Open Challenges</h2>
+                    <h3>Live competition marketplace</h3>
+                </div>
+                <button class="btn btn-gold" onclick="openCreateChallenge()"><i class="fas fa-plus"></i> Issue a Challenge</button>
+            </div>
+
+            <div class="game-filters" id="gameFilters">
+                <div class="game-pill active" data-game="all" onclick="filterByGame('all')"><span class="icon"><i class="fas fa-gamepad"></i></span> All Games</div>
+                <div class="game-pill" data-game="mlb-the-show-26" onclick="filterByGame('mlb-the-show-26')"><span class="icon">&#9918;</span> MLB The Show</div>
+                <div class="game-pill" data-game="nba-2k26" onclick="filterByGame('nba-2k26')"><span class="icon">&#127936;</span> NBA 2K</div>
+                <div class="game-pill" data-game="madden-26" onclick="filterByGame('madden-26')"><span class="icon">&#127944;</span> Madden</div>
+                <div class="game-pill" data-game="ea-fc-26" onclick="filterByGame('ea-fc-26')"><span class="icon">&#9917;</span> EA FC</div>
+                <div class="game-pill" data-game="nhl-26" onclick="filterByGame('nhl-26')"><span class="icon">&#127954;</span> NHL</div>
+            </div>
+
+            <div id="challengesList" class="challenges-grid">
+                <div class="loading"><div class="spinner"></div></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ===== MY CHALLENGES TAB ===== -->
+    <div class="panel" id="panel-my-challenges">
         <div class="section-header">
-            <h2>Open Challenges</h2>
-            <button class="btn btn-gold" onclick="openCreateChallenge()"><i class="fas fa-plus"></i> Issue Challenge</button>
+            <h2>My Challenges</h2>
+            <button class="btn btn-gold" onclick="openCreateChallenge()"><i class="fas fa-plus"></i> Issue a Challenge</button>
         </div>
-
-        <div class="game-filters" id="gameFilters">
-            <div class="game-pill active" data-game="all" onclick="filterByGame('all')"><span class="icon"><i class="fas fa-gamepad"></i></span> All Games</div>
-            <div class="game-pill" data-game="mlb-the-show-26" onclick="filterByGame('mlb-the-show-26')"><span class="icon">&#9918;</span> MLB The Show</div>
-            <div class="game-pill" data-game="nba-2k26" onclick="filterByGame('nba-2k26')"><span class="icon">&#127936;</span> NBA 2K</div>
-            <div class="game-pill" data-game="madden-26" onclick="filterByGame('madden-26')"><span class="icon">&#127944;</span> Madden</div>
-            <div class="game-pill" data-game="ea-fc-26" onclick="filterByGame('ea-fc-26')"><span class="icon">&#9917;</span> EA FC</div>
-            <div class="game-pill" data-game="nhl-26" onclick="filterByGame('nhl-26')"><span class="icon">&#127954;</span> NHL</div>
+        <div id="myChallengesList" class="challenges-grid">
+            <div class="empty-state"><i class="fas fa-user-shield"></i><h3>Sign in to see your challenges</h3><p>Your direct challenges, accepted matchups, and pending responses will appear here.</p></div>
         </div>
+    </div>
 
-        <div id="challengesList" class="challenges-grid">
+    <!-- ===== GAMING ROOM TAB ===== -->
+    <div class="panel" id="panel-gaming-room">
+        <div class="section-header">
+            <h2>Gaming Room</h2>
+            <button class="btn btn-primary" onclick="openLogMatch()"><i class="fas fa-plus"></i> Log Match Result</button>
+        </div>
+        <div class="gaming-room" style="margin-bottom:20px;">
+            <div class="game-logo-grid">
+                <button class="game-logo-card" onclick="openCreateChallenge('mlb-the-show-26')"><span class="game-logo-mark">MLB<br>The Show</span><span class="game-logo-sub">Challenge flow</span></button>
+                <button class="game-logo-card" onclick="openCreateChallenge('madden-26')"><span class="game-logo-mark">Madden</span><span class="game-logo-sub">Challenge flow</span></button>
+                <button class="game-logo-card" onclick="openCreateChallenge('nba-2k26')"><span class="game-logo-mark">NBA<br>2K</span><span class="game-logo-sub">Challenge flow</span></button>
+                <button class="game-logo-card" onclick="openCreateChallenge('ea-fc-26')"><span class="game-logo-mark">EA<br>FC</span><span class="game-logo-sub">Challenge flow</span></button>
+                <button class="game-logo-card" onclick="openCreateChallenge('nhl-26')"><span class="game-logo-mark">NHL</span><span class="game-logo-sub">Challenge flow</span></button>
+            </div>
+            <div class="gaming-actions">
+                <button class="btn btn-primary" onclick="openCreateChallenge()"><i class="fas fa-user-plus"></i> Challenge a Member</button>
+                <button class="btn btn-outline" onclick="openCreateChallenge()"><i class="fas fa-broadcast-tower"></i> Post Open Gaming Challenge</button>
+            </div>
+        </div>
+        <div class="section-header">
+            <h3>Recent Gaming Results</h3>
+        </div>
+        <div id="gamingRoomMatches" class="match-feed">
             <div class="loading"><div class="spinner"></div></div>
         </div>
     </div>
@@ -676,7 +887,7 @@
 <div class="modal-overlay" id="createChallengeModal">
     <div class="modal">
         <button class="close-btn" onclick="closeModal('createChallengeModal')">&times;</button>
-        <h2><i class="fas fa-gamepad" style="color:var(--accent-gold);margin-right:8px;"></i>Issue Challenge</h2>
+        <h2><i class="fas fa-gamepad" style="color:var(--accent-gold);margin-right:8px;"></i>Issue a Challenge</h2>
         <form id="createChallengeForm" onsubmit="submitChallenge(event)">
             <div class="form-group">
                 <label>Game</label>
@@ -721,7 +932,7 @@
                 <textarea class="form-control" id="ccDesc" rows="2" placeholder="Add details, trash talk, rules..."></textarea>
             </div>
             <button type="submit" class="btn btn-gold btn-block" style="margin-top:8px;padding:12px;font-size:15px;">
-                <i class="fas fa-paper-plane"></i> Send Challenge
+                <i class="fas fa-paper-plane"></i> Post Challenge
             </button>
         </form>
     </div>
@@ -929,6 +1140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadRecentMatches();
     loadLeaderboard();
     loadMLBHub();
+    updateArenaSummaryStats();
 });
 
 function updateNavUser() {
@@ -958,6 +1170,8 @@ function switchTab(tab) {
 
     analyticsTrack('arena_tab_switched', { tab_name: tab });
     if (tab === 'my-stats') loadMyStats();
+    if (tab === 'my-challenges') renderMyChallenges();
+    if (tab === 'gaming-room') loadGamingRoom();
 }
 
 function scrollToChallenges(e) {
@@ -966,6 +1180,24 @@ function scrollToChallenges(e) {
     const target = document.querySelector('.tabs');
     if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     analyticsTrack('arena_view_open_challenges_click', {});
+}
+
+function updateArenaSummaryStats() {
+    try {
+        const triviaPoints = JSON.parse(localStorage.getItem('tmr_trivia_points') || '{}');
+        const pollVotes = JSON.parse(localStorage.getItem('tmr_poll_votes') || '{}');
+        const triviaTotal = Object.values(triviaPoints).reduce((sum, item) => sum + (parseInt(item.totalAnswered) || 0), 0);
+        const pollTotal = Object.keys(pollVotes).length;
+        const triviaEl = document.getElementById('statTriviaMatches');
+        const pollEl = document.getElementById('statPollBattles');
+        if (triviaEl) triviaEl.textContent = triviaTotal;
+        if (pollEl) pollEl.textContent = pollTotal;
+    } catch (e) {
+        const triviaEl = document.getElementById('statTriviaMatches');
+        const pollEl = document.getElementById('statPollBattles');
+        if (triviaEl) triviaEl.textContent = '0';
+        if (pollEl) pollEl.textContent = '0';
+    }
 }
 
 // ============================================
@@ -981,10 +1213,14 @@ async function loadChallenges() {
         if (!data || !data.challenges) data = { challenges: [] };
         allChallenges = data.challenges;
         renderChallenges(allChallenges);
-        document.getElementById('statActiveChallenges').textContent = allChallenges.filter(c => ['pending','accepted','in_progress'].includes(c.status)).length;
+        const openCount = allChallenges.filter(c => c.status === 'pending' && !c.challenged_id).length;
+        const activeCount = allChallenges.filter(c => ['pending','accepted','in_progress'].includes(c.status)).length;
+        const openStat = document.getElementById('statOpenChallenges');
+        if (openStat) openStat.textContent = openCount || activeCount;
+        if (currentTab === 'my-challenges') renderMyChallenges();
     } catch (e) {
         console.error('Failed to load challenges:', e);
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No open challenges yet</h3><p>Be the first to issue one. Pick a contest, name an opponent (or leave it open), and start a real head-to-head record.</p><button class="btn btn-gold" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue Challenge</button></div>';
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No open challenges yet. Be the first to post one.</h3><p>Issue a challenge to another member or leave the opponent blank to make it open.</p><button class="btn btn-gold" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button></div>';
     }
 }
 
@@ -1004,8 +1240,8 @@ function renderChallenges(challenges) {
     if (challenges.length === 0) {
         const noneAtAll = !allChallenges || allChallenges.length === 0;
         container.innerHTML = noneAtAll
-            ? '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No open challenges yet</h3><p>Be the first to issue one. Pick a contest, name an opponent (or leave it open), and start a real head-to-head record.</p><button class="btn btn-gold" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue Challenge</button></div>'
-            : '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No challenges in this game yet</h3><p>Switch filters above or issue the first challenge in this category.</p><button class="btn btn-outline" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue Challenge</button></div>';
+            ? '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No open challenges yet. Be the first to post one.</h3><p>Issue a challenge to another member or leave the opponent blank to make it open.</p><button class="btn btn-gold" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button></div>'
+            : '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No challenges in this game yet</h3><p>Switch filters above or issue the first challenge in this category.</p><button class="btn btn-outline" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button></div>';
         return;
     }
     container.innerHTML = challenges.map(ch => {
@@ -1023,6 +1259,7 @@ function renderChallenges(challenges) {
                 <div class="cc-status ${statusClass}">${ch.status.replace('_',' ')}</div>
             </div>
             <div class="cc-title">${ch.title || (ch.game_title + ' Challenge')}</div>
+            ${ch.description ? `<div style="color:var(--text-dim);font-size:13px;line-height:1.45;margin:-2px 0 12px;">${ch.description}</div>` : ''}
             <div class="cc-players">
                 <div class="cc-player">
                     <img class="cc-player-avatar" src="${ch.challenger_avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + (ch.challenger_username||'user')}" alt="">
@@ -1054,10 +1291,11 @@ function renderChallenges(challenges) {
             ` : ''}
             <div class="cc-meta">
                 <span><i class="fas fa-gamepad"></i> Best of ${ch.best_of || 1}</span>
+                <span><i class="fas fa-scale-balanced"></i> ${ch.stake || ch.terms || 'Honor system'}</span>
                 <span><i class="fas fa-clock"></i> ${timeAgo(ch.created_at)}</span>
             </div>
             ${canAccept ? `<div class="cc-actions">
-                <button class="btn btn-success btn-sm" onclick="respondChallenge(${ch.id},'accept')"><i class="fas fa-check"></i> Accept</button>
+                <button class="btn btn-success btn-sm" onclick="respondChallenge(${ch.id},'accept')"><i class="fas fa-check"></i> Accept Challenge</button>
                 <button class="btn btn-danger btn-sm" onclick="respondChallenge(${ch.id},'decline')"><i class="fas fa-times"></i> Decline</button>
             </div>` : ''}
             ${canCancel ? `<div class="cc-actions">
@@ -1071,6 +1309,40 @@ function renderChallenges(challenges) {
 
     // Async load gamertags into challenge cards
     loadGamertagsForChallengeCards();
+}
+
+function renderMyChallenges() {
+    const container = document.getElementById('myChallengesList');
+    if (!container) return;
+    if (!currentUser) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-lock"></i><h3>Sign in to see your challenges</h3><p>Your direct challenges, accepted matchups, and pending responses will appear here.</p><a href="/login/" class="btn btn-primary" style="margin-top:12px;">Log In</a></div>';
+        return;
+    }
+    const mine = (allChallenges || []).filter(ch => ch.challenger_id === currentUser.id || ch.challenged_id === currentUser.id);
+    if (mine.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-user-shield"></i><h3>No challenges on your board yet</h3><p>Issue a challenge or accept an open challenge to start building your rivalry history.</p><button class="btn btn-gold" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button></div>';
+        return;
+    }
+    container.innerHTML = mine.map(ch => {
+        const sport = (ch.game_sport || ch.game_slug || '').toLowerCase().replace(/\s+/g,'');
+        const sportClass = sport.includes('mlb') ? 'mlb' : sport.includes('nba') ? 'nba' : sport.includes('nfl') ? 'nfl' : sport.includes('nhl') ? 'nhl' : sport.includes('soccer') ? 'soccer' : '';
+        const statusClass = ch.status;
+        return `
+        <div class="challenge-card ${statusClass}">
+            <div class="cc-header">
+                <div class="cc-game-badge ${sportClass}">${ch.game_title || ch.game_slug}</div>
+                <div class="cc-status ${statusClass}">${String(ch.status || '').replace('_',' ')}</div>
+            </div>
+            <div class="cc-title">${ch.title || ((ch.game_title || 'Arena') + ' Challenge')}</div>
+            ${ch.description ? `<div style="color:var(--text-dim);font-size:13px;line-height:1.45;margin-bottom:12px;">${ch.description}</div>` : ''}
+            <div class="cc-meta">
+                <span><i class="fas fa-user"></i> ${ch.challenger_username || 'Challenger'} vs ${ch.challenged_username || 'Open'}</span>
+                <span><i class="fas fa-gamepad"></i> Best of ${ch.best_of || 1}</span>
+                <span><i class="fas fa-clock"></i> ${timeAgo(ch.created_at)}</span>
+            </div>
+            ${(ch.status === 'in_progress' || ch.status === 'accepted') ? `<div class="cc-actions"><button class="btn btn-primary btn-sm" onclick="openLogMatchForChallenge(${ch.id}, '${ch.game_slug || ''}')"><i class="fas fa-plus"></i> Log Match Result</button></div>` : ''}
+        </div>`;
+    }).join('');
 }
 
 async function loadGamertagsForChallengeCards() {
@@ -1123,10 +1395,17 @@ async function loadRecentMatches(game) {
         }
         if (!data || !data.matches) data = { matches: [] };
         renderMatchFeed(container, data.matches);
-        document.getElementById('statTotalMatches').textContent = data.matches.length;
+        const gamingRoomContainer = document.getElementById('gamingRoomMatches');
+        if (gamingRoomContainer && currentTab === 'gaming-room') renderMatchFeed(gamingRoomContainer, data.matches);
     } catch (e) {
         container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>Match feed unavailable</h3><p>The recent match feed could not load right now. You can still log a result and build the board from real entries.</p><button class="btn btn-outline" style="margin-top:12px;" onclick="openLogMatch()">Log a Match</button></div>';
     }
+}
+
+function loadGamingRoom() {
+    const container = document.getElementById('gamingRoomMatches');
+    if (container) container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+    loadRecentMatches();
 }
 
 function renderMatchFeed(container, matches) {
@@ -1211,7 +1490,8 @@ async function loadLeaderboard(game) {
         }
         if (!data || !data.leaderboard) data = { leaderboard: [] };
         renderLeaderboard(container, data.leaderboard);
-        document.getElementById('statGamers').textContent = data.leaderboard.length;
+        const activeGamers = document.getElementById('statActiveGamers');
+        if (activeGamers) activeGamers.textContent = data.leaderboard.length;
     } catch (e) {
         container.innerHTML = '<div class="empty-state"><i class="fas fa-trophy"></i><h3>No rankings yet</h3><p>The leaderboard will populate once enough matches are logged to compare players fairly.</p></div>';
     }
@@ -1403,12 +1683,17 @@ async function loadMyStats() {
 // ============================================
 // MODALS & FORMS
 // ============================================
-function openCreateChallenge() {
+function openCreateChallenge(presetGame) {
     if (!currentUser) { alert('Please sign in first'); return; }
     analyticsTrack('arena_create_challenge_opened', {
-        current_filter: currentGameFilter || 'all'
+        current_filter: presetGame || currentGameFilter || 'all'
     });
     document.getElementById('createChallengeModal').classList.add('open');
+    if (presetGame) {
+        document.getElementById('ccGame').value = presetGame;
+    } else if (currentGameFilter && currentGameFilter !== 'all') {
+        document.getElementById('ccGame').value = currentGameFilter;
+    }
 }
 
 function openLogMatch(presetGame) {
