@@ -1596,6 +1596,75 @@
             </div>
         </div>
     </section>
+
+    <section class="profile-advanced-strip-section" id="profileAdvancedMetricsSection" aria-label="Advanced capper metrics">
+        <div class="container">
+            <div class="profile-advanced-strip-card">
+                <div class="profile-advanced-strip-head">
+                    <div>
+                        <h2>Advanced Capper Metrics</h2>
+                        <p>Ledger-driven analytics from graded picks. Missing fields stay neutral until the backend has enough data.</p>
+                    </div>
+                    <span id="profileAdvancedMetricsStatus">Loading verified metrics...</span>
+                </div>
+                <div class="profile-advanced-metric-grid">
+                    <article class="profile-advanced-metric" data-advanced-metric-card="z_score">
+                        <span class="profile-advanced-metric__label">Z Score</span>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvZScore">Not enough data yet</strong>
+                        <span class="profile-advanced-metric__sub" id="profileAdvZScoreSub">Requires larger graded sample</span>
+                    </article>
+                    <article class="profile-advanced-metric" data-advanced-metric-card="roi">
+                        <span class="profile-advanced-metric__label">ROI</span>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvRoi">Not enough data yet</strong>
+                        <span class="profile-advanced-metric__sub" id="profileAdvRoiSub">Return on risked units</span>
+                    </article>
+                    <article class="profile-advanced-metric" data-advanced-metric-card="units">
+                        <span class="profile-advanced-metric__label">Units</span>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvUnits">Not enough data yet</strong>
+                        <span class="profile-advanced-metric__sub" id="profileAdvUnitsSub">Net settled units</span>
+                    </article>
+                    <article class="profile-advanced-metric" data-advanced-metric-card="win_rate">
+                        <span class="profile-advanced-metric__label">Win Rate</span>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvWinRate">Not enough data yet</strong>
+                        <span class="profile-advanced-metric__sub" id="profileAdvWinRateSub">Wins divided by decisions</span>
+                    </article>
+                    <article class="profile-advanced-metric" data-advanced-metric-card="avg_odds">
+                        <span class="profile-advanced-metric__label">Avg Odds</span>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvAvgOdds">Not enough data yet</strong>
+                        <span class="profile-advanced-metric__sub" id="profileAdvAvgOddsSub">Average market price</span>
+                    </article>
+                    <article class="profile-advanced-metric" data-advanced-metric-card="avg_unit_size">
+                        <span class="profile-advanced-metric__label">Avg Unit Size</span>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvAvgUnitSize">Not enough data yet</strong>
+                        <span class="profile-advanced-metric__sub" id="profileAdvAvgUnitSizeSub">Mean stake per graded pick</span>
+                    </article>
+                    <article class="profile-advanced-metric" data-advanced-metric-card="avg_daily_picks">
+                        <span class="profile-advanced-metric__label">Avg Daily Picks</span>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvAvgDailyPicks">Not enough data yet</strong>
+                        <span class="profile-advanced-metric__sub" id="profileAdvAvgDailyPicksSub">Total picks over active days</span>
+                    </article>
+                    <article class="profile-advanced-metric" data-advanced-metric-card="clv">
+                        <span class="profile-advanced-metric__label">CLV</span>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvClv">Coming once enough graded data is available</strong>
+                        <span class="profile-advanced-metric__sub" id="profileAdvClvSub">Closing-line value</span>
+                    </article>
+                    <article class="profile-advanced-metric" data-advanced-metric-card="max_drawdown">
+                        <span class="profile-advanced-metric__label">Max Drawdown</span>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvMaxDrawdown">Not enough data yet</strong>
+                        <span class="profile-advanced-metric__sub" id="profileAdvMaxDrawdownSub">Peak-to-trough units</span>
+                    </article>
+                </div>
+                <div class="profile-advanced-support-grid" aria-label="Advanced supporting sections">
+                    <div>Performance by Sport<span>Shown in Overview from verified ledger rows.</span></div>
+                    <div>Performance by League<span>Shown with sport breakdowns when league data exists.</span></div>
+                    <div>Performance by Market Type<span>ML, spread, total, team total, periods, and alts.</span></div>
+                    <div>Performance by Time Period<span>Rolling windows and all-time record.</span></div>
+                    <div>Equity Curve / Drawdown<span>Draws once enough graded picks exist.</span></div>
+                    <div>Full Pick History / Ledger<span>Visible below as the source of truth.</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
     <style>
         .profile-setup-prompt{margin:14px auto 0;padding:18px 20px;background:linear-gradient(135deg,rgba(0,255,255,0.06),rgba(255,0,255,0.04));border:1px solid rgba(0,255,255,0.22);border-radius:14px;max-width:920px;}
         .profile-setup-prompt__head h3{margin:0 0 4px;font:800 17px/1.2 'Barlow','Inter',sans-serif;color:#f4f7fb;letter-spacing:-0.01em;}
@@ -1618,6 +1687,40 @@
         .profile-avatar-uploader__btn{cursor:pointer;padding:8px 14px;border-radius:8px;background:rgba(0,255,255,0.10);border:1px solid rgba(0,255,255,0.32);color:#00ffff;font:700 12px/1 'Inter',sans-serif;letter-spacing:.04em;text-transform:uppercase;}
         .profile-avatar-uploader__btn:hover{background:rgba(0,255,255,0.18);}
         .profile-avatar-uploader__hint{color:#64748b;font-size:11.5px;}
+
+        .profile-advanced-strip-section{padding:18px 0 0;background:transparent;}
+        .profile-advanced-strip-section .container{width:min(100% - 44px,1260px);max-width:1260px;margin:0 auto;padding:0;}
+        .profile-advanced-strip-card{padding:18px;border:1px solid rgba(148,163,184,.16);border-radius:16px;background:linear-gradient(180deg,#111b2e 0%,#08111f 100%);box-shadow:0 18px 42px rgba(0,0,0,.28);color:#eef6ff;}
+        .profile-advanced-strip-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:14px;}
+        .profile-advanced-strip-head h2{margin:0;font:900 22px/1.1 'Barlow','Inter',sans-serif;letter-spacing:0;color:#f8fbff;}
+        .profile-advanced-strip-head p{margin:5px 0 0;color:#91a0b5;font-size:13px;line-height:1.45;}
+        .profile-advanced-strip-head span{flex:0 0 auto;padding:7px 10px;border:1px solid rgba(148,163,184,.16);border-radius:999px;background:rgba(2,6,23,.36);color:#aebbd0;font-size:11px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;}
+        .profile-advanced-metric-grid{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:10px;}
+        .profile-advanced-metric{min-width:0;min-height:126px;padding:13px 12px;border:1px solid rgba(68,91,126,.72);border-radius:10px;background:linear-gradient(180deg,rgba(15,27,46,.98),rgba(8,17,31,.98));box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 12px 28px rgba(0,0,0,.18);display:flex;flex-direction:column;justify-content:flex-start;gap:7px;}
+        .profile-advanced-metric__label{color:#afbdd0;font-size:10px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;line-height:1.15;}
+        .profile-advanced-metric__value{color:#f8fbff;font-size:clamp(17px,1.18vw,22px);font-weight:950;line-height:1.05;letter-spacing:0;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;}
+        .profile-advanced-metric__value.is-empty{color:#a6b2c4;font-size:13px;font-weight:850;line-height:1.18;}
+        .profile-advanced-metric__value.is-pos{color:#22c55e;}
+        .profile-advanced-metric__value.is-neg{color:#ef4444;}
+        .profile-advanced-metric__sub{margin-top:auto;color:#7f8ca3;font-size:11px;font-weight:700;line-height:1.25;}
+        .profile-advanced-support-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:12px;}
+        .profile-advanced-support-grid div{min-height:70px;padding:11px;border:1px solid rgba(148,163,184,.13);border-radius:10px;background:rgba(2,6,23,.32);color:#e7eef8;font-size:12px;font-weight:850;line-height:1.2;}
+        .profile-advanced-support-grid span{display:block;margin-top:5px;color:#8491a6;font-size:11px;font-weight:650;line-height:1.25;}
+        @media(max-width:1180px){
+            .profile-advanced-metric-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+            .profile-advanced-support-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+        }
+        @media(max-width:720px){
+            .profile-advanced-strip-section .container{width:min(100% - 28px,1260px);}
+            .profile-advanced-strip-card{padding:14px;border-radius:14px;}
+            .profile-advanced-strip-head{align-items:flex-start;flex-direction:column;}
+            .profile-advanced-strip-head h2{font-size:20px;}
+            .profile-advanced-metric-grid,.profile-advanced-support-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+            .profile-advanced-metric{min-height:118px;}
+        }
+        @media(max-width:420px){
+            .profile-advanced-metric-grid,.profile-advanced-support-grid{grid-template-columns:1fr;}
+        }
 
         /* Sticky team badge -- shown next to a username everywhere (forum, polls, trivia, feed). */
         .tmr-team-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;margin-left:6px;border-radius:5px;background:rgba(0,255,255,0.08);border:1px solid rgba(0,255,255,0.22);color:#67e8f9;font:700 10px/1.4 'Inter',sans-serif;letter-spacing:.04em;text-transform:uppercase;vertical-align:1px;white-space:nowrap;}
@@ -1819,17 +1922,11 @@
     <section class="profile-tabs-section">
         <div class="container">
             <div class="profile-tabs" role="tablist" id="profileTabsBar">
-                <button type="button" class="profile-tab active" data-tab="picks" role="tab" aria-selected="true">Picks</button>
+                <button type="button" class="profile-tab active" data-tab="picks" id="profilePerformanceTab" role="tab" aria-selected="true">Overview</button>
+                <button type="button" class="profile-tab" data-tab="record" role="tab">Picks</button>
                 <button type="button" class="profile-tab" data-tab="posts" role="tab">Posts</button>
-                <button type="button" class="profile-tab profile-tab--compat" data-tab="record" id="profilePerformanceTab" role="tab">Record</button>
                 <button type="button" class="profile-tab" data-tab="challenges" role="tab">Challenges</button>
-                <button type="button" class="profile-tab" data-tab="polls" id="profilePollsTab" role="tab">Polls</button>
-                <button type="button" class="profile-tab" data-tab="trivia" id="profileTriviaTab" role="tab">Trivia</button>
-                <button type="button" class="profile-tab" data-tab="tournaments" role="tab">Tournaments</button>
-                <button type="button" class="profile-tab profile-tab--compat" data-tab="advanced" role="tab">Advanced Metrics</button>
                 <button type="button" class="profile-tab" data-tab="charts" role="tab">Charts</button>
-                <button type="button" class="profile-tab" data-tab="splits" role="tab">Splits</button>
-                <button type="button" class="profile-tab" data-tab="store" role="tab">Sell Your Picks</button>
             </div>
         </div>
     </section>
@@ -1839,7 +1936,7 @@
         <div class="container profile-body-grid">
             <main class="profile-main">
 
-                <!-- TAB: PICKS (default) -->
+                <!-- TAB: OVERVIEW (default) -->
                 <div class="profile-tab-panel active" data-panel="picks">
                     <!-- ===== TMRX REDESIGN moved to default tab so the wide
                          layout is what every visitor sees first. Same data,
@@ -5659,12 +5756,18 @@
     // Advanced Metrics tab placeholders. Anything the aggregator returns
     // null for stays as the '—' placeholder per the no-fake-data rule.
     async function loadAdvancedMetrics(username) {
-        if (!username || !api || typeof api.request !== 'function') return;
+        if (!username || !api || typeof api.request !== 'function') {
+            const statusEl = document.getElementById('profileAdvancedMetricsStatus');
+            if (statusEl) statusEl.textContent = 'Metrics unavailable';
+            return;
+        }
         let data;
         try {
             data = await api.request('/users/' + encodeURIComponent(username) + '/metrics');
         } catch (err) {
             console.warn('[Profile] /metrics aggregator unavailable:', err && err.message ? err.message : err);
+            const statusEl = document.getElementById('profileAdvancedMetricsStatus');
+            if (statusEl) statusEl.textContent = 'Metrics unavailable';
             return;
         }
         if (!data) return;
@@ -5833,8 +5936,106 @@
 
         // ===== TMRX REDESIGN: populate the universal wide layout. Same data,
         // cleaner display. No new calculations — purely a render pass. =====
+        try { renderProfileAdvancedMetricsStrip(data); } catch (e) { console.warn('[Profile] advanced strip render failed:', e); }
         try { tmrxRenderRedesign(data); } catch (e) { console.warn('[tmrx] render failed:', e); }
         try { tmrxRenderPickHistory(username); } catch (e) { console.warn('[tmrx] pick history failed:', e); }
+    }
+
+    function renderProfileAdvancedMetricsStrip(data) {
+        const statusEl = document.getElementById('profileAdvancedMetricsStatus');
+        if (statusEl) statusEl.textContent = 'Verified backend metrics';
+        const s = (data && data.summary) || {};
+        const scores = (data && data.scores) || {};
+        const dd = (data && data.drawdown) || {};
+        const decisions = Number(s.wins || 0) + Number(s.losses || 0);
+        const graded = Number(s.total_picks || decisions + Number(s.pushes || 0) || 0);
+
+        const fmtSigned = (n, suffix, decimals) => {
+            const x = Number(n);
+            if (!Number.isFinite(x)) return null;
+            return (x >= 0 ? '+' : '') + x.toFixed(decimals == null ? 2 : decimals) + (suffix || '');
+        };
+        const fmtAmericanOdds = (o) => {
+            const x = Number(o);
+            if (!Number.isFinite(x) || x === 0) return null;
+            return (x > 0 ? '+' : '') + Math.round(x);
+        };
+        const setCard = (id, value, sub, signed) => {
+            const el = document.getElementById(id);
+            const subEl = document.getElementById(id + 'Sub');
+            if (!el) return;
+            if (value == null || value === '') {
+                el.textContent = id === 'profileAdvClv'
+                    ? 'Coming once enough graded data is available'
+                    : 'Not enough data yet';
+                el.className = 'profile-advanced-metric__value is-empty';
+            } else {
+                el.textContent = value;
+                el.className = 'profile-advanced-metric__value';
+                if (signed != null) {
+                    el.classList.toggle('is-pos', signed > 0);
+                    el.classList.toggle('is-neg', signed < 0);
+                }
+            }
+            if (subEl && sub) subEl.textContent = sub;
+        };
+
+        setCard(
+            'profileAdvZScore',
+            s.z_score != null ? fmtSigned(s.z_score, '', 2) : null,
+            s.z_score != null ? 'Skill-vs-luck signal' : 'Requires larger graded sample',
+            s.z_score != null ? Number(s.z_score) : null
+        );
+        setCard(
+            'profileAdvRoi',
+            graded > 0 && s.roi != null ? fmtSigned(s.roi, '%', 1) : null,
+            graded > 0 ? 'Return on risked units' : 'Requires graded picks',
+            s.roi != null ? Number(s.roi) : null
+        );
+        setCard(
+            'profileAdvUnits',
+            graded > 0 && s.net_units != null ? fmtSigned(s.net_units, 'u', 2) : null,
+            graded > 0 ? graded + ' graded picks' : 'Requires graded picks',
+            s.net_units != null ? Number(s.net_units) : null
+        );
+        setCard(
+            'profileAdvWinRate',
+            decisions > 0 && s.win_rate != null ? Number(s.win_rate).toFixed(1) + '%' : null,
+            decisions > 0 ? Number(s.wins || 0) + '-' + Number(s.losses || 0) + ' decisions' : 'Requires wins and losses',
+            decisions > 0 && s.win_rate != null ? Number(s.win_rate) - 50 : null
+        );
+        setCard(
+            'profileAdvAvgOdds',
+            s.avg_odds != null ? fmtAmericanOdds(s.avg_odds) : null,
+            s.avg_odds != null ? 'Average backend odds' : 'Coming once enough graded data is available',
+            null
+        );
+        setCard(
+            'profileAdvAvgUnitSize',
+            s.avg_units != null ? Number(s.avg_units).toFixed(2) + 'u' : null,
+            s.avg_units != null ? 'Mean stake per graded pick' : 'Coming once enough graded data is available',
+            null
+        );
+        setCard(
+            'profileAdvAvgDailyPicks',
+            s.avg_daily_picks != null ? Number(s.avg_daily_picks).toFixed(2) + ' /day' : null,
+            s.avg_daily_picks != null ? 'Active ledger days' : 'Coming once enough graded data is available',
+            null
+        );
+        const clv = scores.clv != null ? Number(scores.clv) : null;
+        setCard(
+            'profileAdvClv',
+            clv != null && Number.isFinite(clv) ? fmtSigned(clv, ' bps', 2) : null,
+            clv != null && Number.isFinite(clv) ? 'Closing-line value' : 'Closing-line tracking is not yet available',
+            clv
+        );
+        const maxDd = dd.max_drawdown != null ? Number(dd.max_drawdown) : null;
+        setCard(
+            'profileAdvMaxDrawdown',
+            maxDd != null && Number.isFinite(maxDd) ? '-' + Math.abs(maxDd).toFixed(2) + 'u' : null,
+            maxDd != null && Number.isFinite(maxDd) ? 'Peak-to-trough units' : 'Requires enough graded picks',
+            maxDd != null && Number.isFinite(maxDd) && maxDd > 0 ? -1 : null
+        );
     }
 
     // ============================================================
@@ -7366,19 +7567,23 @@
             '<div class="profile-overview-card"><span class="profile-overview-label">Profile Type</span><span class="profile-overview-value">' + (verifiedText === 'Verified' ? 'Verified capper' : 'Community member') + '</span></div>' +
             '</div>';
 
-        let actions = '';
+        let primaryActions = '';
         if (isOwnProfile) {
-            actions = '<div class="profile-actions">' +
-                '<button class="btn btn-secondary" onclick="openEditModal()">Edit Profile</button>' +
-                '</div>';
+            primaryActions = '<button class="btn btn-secondary" onclick="openEditModal()">Edit Profile</button>';
         } else if (currentUser) {
             const ft = isFollowingProfile ? 'Unfollow' : 'Follow';
             const fc = isFollowingProfile ? 'btn-secondary' : 'btn-primary';
             const fa = isFollowingProfile ? 'doUnfollow' : 'doFollow';
-            actions = '<div class="profile-actions"><button class="btn ' + fc + '" onclick="' + fa + '(' + profileUserId + ')">' + ft + '</button>' +
+            primaryActions = '<button class="btn ' + fc + '" onclick="' + fa + '(' + profileUserId + ')">' + ft + '</button>' +
                 '<button class="btn btn-secondary" onclick="location.href=\'messages/?to=' + encodeURIComponent(p.username) + '\'">Message</button>' +
-                '<button class="btn btn-secondary" onclick="location.href=\'arena/?challenge=' + encodeURIComponent(p.username) + '\'">Challenge</button></div>';
+                '<button class="btn btn-secondary" onclick="location.href=\'arena/?challenge=' + encodeURIComponent(p.username) + '\'">Challenge</button>';
         }
+        // Share + Embed always render, even for logged-out viewers, so any
+        // visitor can broadcast or embed a public profile.
+        const shareActions =
+            '<button class="btn btn-secondary" onclick="openShareModal()" title="Share this profile" data-tmr-share-btn><i class="fas fa-share-alt" style="margin-right:6px;"></i>Share</button>' +
+            '<button class="btn btn-secondary" onclick="showEmbedModal()" title="Embed this profile on your site" data-tmr-embed-btn><i class="fas fa-code" style="margin-right:6px;"></i>Embed</button>';
+        const actions = '<div class="profile-actions">' + primaryActions + shareActions + '</div>';
 
         // Headline (Twitter-style 140-char tagline). Always rendered; empty
         // state prompts own-profile owner to add one.
@@ -9182,58 +9387,260 @@
         showToast('CSV downloaded', 'success');
     }
 
-    // ======================== EMBEDDABLE WIDGET ========================
-    function showEmbedModal() {
-        const existing = document.getElementById('embedModal');
+    // ======================== SHARE PROFILE MODAL ========================
+    // Builds a canonical profile URL with UTM params, then renders a
+    // popover with X / Facebook / Reddit / Threads / Copy Link options.
+    // Tweet/post text auto-pulls live record + ROI from the visible
+    // ribbon so the share preview reads "78-42, +18.4u, +14.2% ROI".
+    function buildShareUrl(source) {
+        const user = profileUsername || (profileData && profileData.username) || '';
+        const params = new URLSearchParams({
+            utm_source: source || 'trustmyrecord',
+            utm_medium: 'profile_share',
+            utm_campaign: 'user_profile',
+            utm_content: user
+        });
+        return 'https://trustmyrecord.com/profile/?user=' + encodeURIComponent(user) + '&' + params.toString();
+    }
+
+    function buildShareText() {
+        // Pull live ribbon text -- never fabricate. If a value is still
+        // a placeholder (mdash) we just omit it from the share text.
+        const grab = (id) => {
+            const el = document.getElementById(id);
+            if (!el) return null;
+            const t = (el.textContent || '').trim();
+            if (!t || t === '—' || /placeholder/.test(el.className || '')) return null;
+            return t;
+        };
+        const user = profileUsername || (profileData && profileData.username) || 'this handicapper';
+        const record = grab('tmrxRecordTop');
+        const roi = grab('tmrxRoiTop');
+        const units = grab('tmrxNetUnitsTop');
+        const bits = [];
+        if (record) bits.push(record);
+        if (units) bits.push(units);
+        if (roi) bits.push(roi + ' ROI');
+        const stats = bits.length ? ' (' + bits.join(' · ') + ')' : '';
+        return 'Track @' + user + '’s verified betting record on TrustMyRecord' + stats + '.';
+    }
+
+    function openShareModal() {
+        const existing = document.getElementById('shareModal');
         if (existing) existing.remove();
 
-        const user = profileUsername || 'user';
-        const encodedUser = encodeURIComponent(user);
-        const profileUrl = `https://trustmyrecord.com/profile/?user=${encodedUser}`;
-        const widgetUrl = `https://trustmyrecord.com/profile-widget.html?user=${encodedUser}&theme=dark&refresh=15000`;
-        const iframeCode = `<!-- TrustMyRecord Live Profile Widget -->\n<iframe\n  src="${widgetUrl}"\n  title="TrustMyRecord profile for ${user}"\n  width="100%"\n  height="260"\n  style="max-width:420px;border:0;overflow:hidden;background:transparent;"\n  loading="lazy"\n  referrerpolicy="strict-origin-when-cross-origin"\n  scrolling="no">\n</iframe>`;
-        const scriptTagOpen = String.fromCharCode(60) + 'script';
-        const scriptTagClose = String.fromCharCode(60) + '/script>';
-        const scriptCode = [
-            '<!-- TrustMyRecord Auto-Resizing Profile Widget -->',
-            scriptTagOpen,
+        const user = profileUsername || (profileData && profileData.username) || '';
+        if (!user) { showToast('Profile not loaded yet', 'error'); return; }
+
+        const text = buildShareText();
+        const xUrl       = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(buildShareUrl('twitter'));
+        const fbUrl      = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(buildShareUrl('facebook'));
+        const redditUrl  = 'https://www.reddit.com/submit?url=' + encodeURIComponent(buildShareUrl('reddit')) + '&title=' + encodeURIComponent(text);
+        const threadsUrl = 'https://www.threads.net/intent/post?text=' + encodeURIComponent(text + ' ' + buildShareUrl('threads'));
+        const copyUrl    = buildShareUrl('trustmyrecord');
+
+        const modal = document.createElement('div');
+        modal.id = 'shareModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(7,12,20,0.78);z-index:9999;display:flex;align-items:center;justify-content:center;padding:22px;backdrop-filter:blur(10px);';
+
+        const btnRow = (label, icon, color, href, source) =>
+            '<a href="' + href + '" target="_blank" rel="noopener noreferrer" '
+            + 'onclick="window.tmrTrackShare && window.tmrTrackShare(\'' + source + '\')" '
+            + 'style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1px solid rgba(148,163,184,0.18);background:rgba(15,22,36,0.7);color:#eef4fb;text-decoration:none;font-weight:600;font-size:.92rem;transition:background .15s, border-color .15s;" '
+            + 'onmouseover="this.style.background=\'rgba(45,212,191,0.12)\';this.style.borderColor=\'#2dd4bf\'" '
+            + 'onmouseout="this.style.background=\'rgba(15,22,36,0.7)\';this.style.borderColor=\'rgba(148,163,184,0.18)\'">'
+            + '<span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:' + color + ';color:#fff;flex:0 0 auto;"><i class="' + icon + '"></i></span>'
+            + '<span style="flex:1;">' + label + '</span>'
+            + '<i class="fas fa-arrow-up-right-from-square" style="opacity:.55;font-size:.78rem;"></i>'
+            + '</a>';
+
+        modal.innerHTML = '<div style="background:#0b1422;border:1px solid rgba(148,163,184,0.22);border-radius:18px;padding:24px;max-width:440px;width:min(100%,440px);box-shadow:0 24px 70px rgba(0,0,0,0.55);color:#eef4fb;">'
+            + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
+            +   '<h2 style="font-size:1.15rem;font-weight:800;margin:0;">Share profile</h2>'
+            +   '<button type="button" aria-label="Close" onclick="document.getElementById(\'shareModal\').remove()" style="background:transparent;border:0;color:#97a8bc;font-size:1.4rem;cursor:pointer;padding:4px 8px;line-height:1;">&times;</button>'
+            + '</div>'
+            + '<p style="color:#97a8bc;font-size:.86rem;margin:0 0 18px 0;">Send <strong style="color:#2dd4bf;">@' + user + '</strong>’s verified record anywhere.</p>'
+            + '<div style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px;">'
+            +   btnRow('Share on X (Twitter)', 'fa-brands fa-x-twitter', '#000000', xUrl,       'twitter')
+            +   btnRow('Share on Facebook',    'fa-brands fa-facebook',   '#1877F2', fbUrl,      'facebook')
+            +   btnRow('Share on Reddit',      'fa-brands fa-reddit',     '#FF4500', redditUrl,  'reddit')
+            +   btnRow('Share on Threads',     'fa-brands fa-threads',    '#000000', threadsUrl, 'threads')
+            + '</div>'
+            + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:6px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Profile link</div>'
+            + '<div style="display:flex;gap:8px;align-items:stretch;">'
+            +   '<input id="shareCopyInput" readonly value="' + copyUrl.replace(/"/g,'&quot;') + '" style="flex:1;padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,0.22);background:#070d18;color:#2dd4bf;font-family:ui-monospace,Menlo,monospace;font-size:.78rem;outline:none;">'
+            +   '<button class="btn btn-primary" onclick="(function(){var el=document.getElementById(\'shareCopyInput\');el.select();document.execCommand(\'copy\');window.tmrTrackShare && window.tmrTrackShare(\'copy_link\');showToast(\'Profile link copied!\',\'success\');})()" style="padding:10px 16px;font-size:.82rem;white-space:nowrap;"><i class="fas fa-link" style="margin-right:6px;"></i>Copy</button>'
+            + '</div>'
+            + '</div>';
+
+        document.body.appendChild(modal);
+        modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+        // ESC closes
+        document.addEventListener('keydown', function escClose(e){ if (e.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', escClose); } });
+
+        analyticsTrack('profile_share_modal_opened', { username: user });
+    }
+    window.openShareModal = openShareModal;
+    window.tmrTrackShare = function(source) {
+        try { analyticsTrack('profile_share_clicked', { username: profileUsername || '', source: source }); } catch(_) {}
+    };
+
+    // ======================== EMBEDDABLE WIDGET ========================
+    // Sizes per spec: Small 400x160, Medium 600x220 (default), Large 800x320.
+    const TMR_EMBED_SIZES = {
+        sm: { w: 400, h: 160, label: 'Small (400 × 160)' },
+        md: { w: 600, h: 220, label: 'Medium (600 × 220)' },
+        lg: { w: 800, h: 320, label: 'Large (800 × 320)' }
+    };
+
+    function tmrEmbedIframeUrl(user, size) {
+        // Direct query-string form (no 404 redirect, no flicker inside an
+        // iframe). The clean /embed/<username> URL still works for direct
+        // browser navigation -- 404.html catches it and forwards here.
+        return 'https://trustmyrecord.com/embed/?u=' + encodeURIComponent(user) + '&size=' + (size || 'md') + '&theme=dark';
+    }
+
+    function tmrBuildEmbedCode(user, size) {
+        const dim = TMR_EMBED_SIZES[size] || TMR_EMBED_SIZES.md;
+        const url = tmrEmbedIframeUrl(user, size);
+        return '<!-- TrustMyRecord verified profile widget -->\n'
+            + '<iframe\n'
+            + '  src="' + url + '"\n'
+            + '  title="TrustMyRecord verified profile for ' + user + '"\n'
+            + '  width="' + dim.w + '"\n'
+            + '  height="' + dim.h + '"\n'
+            + '  frameborder="0"\n'
+            + '  loading="lazy"\n'
+            + '  referrerpolicy="strict-origin-when-cross-origin"\n'
+            + '  style="border:1px solid #1f2a3c;border-radius:14px;background:transparent;max-width:100%;"\n'
+            + '  scrolling="no">\n'
+            + '</iframe>';
+    }
+
+    function tmrBuildScriptCode(user) {
+        const open  = String.fromCharCode(60) + 'script';
+        const close = String.fromCharCode(60) + '/script>';
+        return [
+            '<!-- TrustMyRecord auto-resizing widget -->',
+            open,
             '  src="https://trustmyrecord.com/static/js/profile-widget-embed.js"',
             '  data-username="' + user + '"',
             '  data-theme="dark"',
             '  data-refresh="15000"',
-            '  data-max-width="420px">',
-            scriptTagClose
+            '  data-max-width="600px">',
+            close
         ].join('\n');
-        const previewCode = `<iframe src="${widgetUrl}" title="TrustMyRecord profile for ${user}" width="100%" height="260" style="max-width:420px;border:0;overflow:hidden;background:transparent;" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" scrolling="no"></iframe>`;
+    }
+
+    function showEmbedModal() {
+        const existing = document.getElementById('embedModal');
+        if (existing) existing.remove();
+
+        const user = profileUsername || (profileData && profileData.username) || '';
+        if (!user) { showToast('Profile not loaded yet', 'error'); return; }
+        const profileShareUrl = (typeof buildShareUrl === 'function') ? buildShareUrl('trustmyrecord') : 'https://trustmyrecord.com/profile/?user=' + encodeURIComponent(user);
 
         const modal = document.createElement('div');
         modal.id = 'embedModal';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
-        modal.innerHTML = '<div style="background:#1c1f2a;border:1px solid #2a2e3d;border-radius:12px;padding:28px;max-width:600px;width:100%;max-height:85vh;overflow-y:auto;">' +
-            '<h2 style="font-size:1.15rem;font-weight:700;margin-bottom:6px;">Share Your Live TrustMyRecord Profile</h2>' +
-            '<p style="color:var(--text-muted);font-size:.85rem;margin-bottom:20px;">Use your public profile link anywhere, or embed a live auto-updating widget that refreshes every 15 seconds.</p>' +
-            '<div style="margin-bottom:20px;"><div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;">LIVE PREVIEW:</div>' +
-            '<div style="background:#0f1117;border-radius:8px;padding:20px;display:flex;justify-content:center;">' + previewCode + '</div></div>' +
-            '<div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;">PUBLIC PROFILE LINK:</div>' +
-            '<textarea id="profileShareLinkArea" readonly style="width:100%;height:68px;padding:12px;border-radius:8px;border:1px solid var(--border-color);background:#0f1117;color:#22c55e;font-family:monospace;font-size:.75rem;resize:none;margin-bottom:10px;"></textarea>' +
-            '<div style="display:flex;justify-content:flex-end;margin-bottom:16px;"><button class="btn btn-secondary" onclick="copyTextValue(\'profileShareLinkArea\', \'Profile link copied!\')">Copy Link</button></div>' +
-            '<div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;">IFRAME EMBED:</div>' +
-            '<textarea id="embedCodeArea" readonly style="width:100%;height:160px;padding:12px;border-radius:8px;border:1px solid var(--border-color);background:#0f1117;color:#22c55e;font-family:monospace;font-size:.75rem;resize:vertical;margin-bottom:10px;"></textarea>' +
-            '<div style="display:flex;justify-content:flex-end;margin-bottom:16px;"><button class="btn btn-secondary" onclick="copyTextValue(\'embedCodeArea\', \'Iframe code copied!\')">Copy Iframe</button></div>' +
-            '<div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;">SCRIPT EMBED:</div>' +
-            '<textarea id="scriptEmbedCodeArea" readonly style="width:100%;height:132px;padding:12px;border-radius:8px;border:1px solid var(--border-color);background:#0f1117;color:#22c55e;font-family:monospace;font-size:.75rem;resize:vertical;"></textarea>' +
-            '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">' +
-            '<button class="btn btn-secondary" onclick="document.getElementById(\'embedModal\').remove()">Close</button>' +
-            '<button class="btn btn-primary" onclick="copyTextValue(\'scriptEmbedCodeArea\', \'Script embed code copied!\')">Copy Script</button></div></div>';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(7,12,20,0.78);z-index:9999;display:flex;align-items:center;justify-content:center;padding:22px;backdrop-filter:blur(10px);';
+
+        const sizeBtn = (key) => {
+            const s = TMR_EMBED_SIZES[key];
+            return '<button type="button" data-tmr-size="' + key + '" '
+                + 'style="flex:1;padding:9px 10px;border-radius:9px;border:1px solid rgba(148,163,184,0.22);background:#0b1422;color:#cfdbe8;font-weight:700;font-size:.78rem;cursor:pointer;transition:all .15s;letter-spacing:.02em;">'
+                + s.label
+                + '</button>';
+        };
+
+        modal.innerHTML = '<div style="background:#0b1422;border:1px solid rgba(148,163,184,0.22);border-radius:18px;padding:24px;max-width:720px;width:min(100%,720px);max-height:90vh;overflow-y:auto;box-shadow:0 24px 70px rgba(0,0,0,0.55);color:#eef4fb;">'
+            + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
+            +   '<h2 style="font-size:1.15rem;font-weight:800;margin:0;">Embed verified profile</h2>'
+            +   '<button type="button" aria-label="Close" onclick="document.getElementById(\'embedModal\').remove()" style="background:transparent;border:0;color:#97a8bc;font-size:1.4rem;cursor:pointer;padding:4px 8px;line-height:1;">&times;</button>'
+            + '</div>'
+            + '<p style="color:#97a8bc;font-size:.86rem;margin:0 0 16px 0;">Drop a live auto-updating <strong style="color:#2dd4bf;">@' + user + '</strong> badge on any website. Pick a size, copy the snippet.</p>'
+
+            // Size selector
+            + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Size</div>'
+            + '<div id="tmrEmbedSizeRow" style="display:flex;gap:8px;margin-bottom:18px;">'
+            +   sizeBtn('sm') + sizeBtn('md') + sizeBtn('lg')
+            + '</div>'
+
+            // Live preview
+            + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Live preview</div>'
+            + '<div id="tmrEmbedPreviewBox" style="background:#070d18;border:1px dashed rgba(148,163,184,0.18);border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;min-height:200px;overflow:auto;">'
+            +   '<div id="tmrEmbedPreviewSlot" style="display:flex;align-items:center;justify-content:center;"></div>'
+            + '</div>'
+
+            // Iframe snippet
+            + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Iframe snippet</div>'
+            + '<textarea id="embedCodeArea" readonly style="width:100%;height:170px;padding:12px;border-radius:10px;border:1px solid rgba(148,163,184,0.22);background:#070d18;color:#2dd4bf;font-family:ui-monospace,Menlo,monospace;font-size:.76rem;resize:vertical;margin-bottom:8px;outline:none;"></textarea>'
+            + '<div style="display:flex;justify-content:flex-end;margin-bottom:16px;"><button class="btn btn-primary" onclick="copyTextValue(\'embedCodeArea\', \'Iframe code copied!\')"><i class="fas fa-copy" style="margin-right:6px;"></i>Copy iframe</button></div>'
+
+            // Auto-resize script (advanced)
+            + '<details style="margin-bottom:14px;">'
+            +   '<summary style="cursor:pointer;font-size:.78rem;color:#cfdbe8;font-weight:700;letter-spacing:.04em;text-transform:uppercase;">Advanced &mdash; auto-resizing script</summary>'
+            +   '<p style="color:#97a8bc;font-size:.78rem;margin:8px 0 8px 0;">Drops a JS tag that auto-fits height as picks load. Use when you don’t want a fixed height.</p>'
+            +   '<textarea id="scriptEmbedCodeArea" readonly style="width:100%;height:140px;padding:12px;border-radius:10px;border:1px solid rgba(148,163,184,0.22);background:#070d18;color:#2dd4bf;font-family:ui-monospace,Menlo,monospace;font-size:.76rem;resize:vertical;outline:none;"></textarea>'
+            +   '<div style="display:flex;justify-content:flex-end;margin-top:8px;"><button class="btn btn-secondary" onclick="copyTextValue(\'scriptEmbedCodeArea\', \'Script embed code copied!\')"><i class="fas fa-copy" style="margin-right:6px;"></i>Copy script</button></div>'
+            + '</details>'
+
+            // Profile link with UTM
+            + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Public profile link</div>'
+            + '<div style="display:flex;gap:8px;align-items:stretch;margin-bottom:14px;">'
+            +   '<input id="profileShareLinkArea" readonly value="' + profileShareUrl.replace(/"/g,'&quot;') + '" style="flex:1;padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,0.22);background:#070d18;color:#2dd4bf;font-family:ui-monospace,Menlo,monospace;font-size:.76rem;outline:none;">'
+            +   '<button class="btn btn-secondary" onclick="copyTextValue(\'profileShareLinkArea\', \'Profile link copied!\')" style="padding:10px 14px;font-size:.82rem;white-space:nowrap;"><i class="fas fa-link" style="margin-right:6px;"></i>Copy</button>'
+            + '</div>'
+
+            + '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">'
+            +   '<button class="btn btn-secondary" onclick="document.getElementById(\'embedModal\').remove()">Close</button>'
+            + '</div>'
+            + '</div>';
+
         document.body.appendChild(modal);
         modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+        document.addEventListener('keydown', function escClose(e){ if (e.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', escClose); } });
 
-        document.getElementById('profileShareLinkArea').value = profileUrl;
-        document.getElementById('embedCodeArea').value = iframeCode;
-        document.getElementById('scriptEmbedCodeArea').value = scriptCode;
+        // Default to medium. Re-render iframe + preview on size change.
+        let currentSize = 'md';
+        const refresh = () => {
+            const dim = TMR_EMBED_SIZES[currentSize];
+            // Snippets
+            document.getElementById('embedCodeArea').value = tmrBuildEmbedCode(user, currentSize);
+            document.getElementById('scriptEmbedCodeArea').value = tmrBuildScriptCode(user);
+            // Live preview iframe (rebuild so size attrs apply cleanly)
+            const slot = document.getElementById('tmrEmbedPreviewSlot');
+            slot.innerHTML = '';
+            const ifr = document.createElement('iframe');
+            ifr.src = tmrEmbedIframeUrl(user, currentSize);
+            ifr.title = 'TrustMyRecord profile preview for ' + user;
+            ifr.width = String(dim.w);
+            ifr.height = String(dim.h);
+            ifr.setAttribute('frameborder', '0');
+            ifr.loading = 'lazy';
+            ifr.referrerPolicy = 'strict-origin-when-cross-origin';
+            ifr.scrolling = 'no';
+            ifr.style.cssText = 'border:1px solid #1f2a3c;border-radius:14px;background:transparent;max-width:100%;';
+            slot.appendChild(ifr);
+            // Highlight selected size button
+            modal.querySelectorAll('[data-tmr-size]').forEach(b => {
+                const active = b.getAttribute('data-tmr-size') === currentSize;
+                b.style.background      = active ? 'rgba(45,212,191,0.16)' : '#0b1422';
+                b.style.borderColor     = active ? '#2dd4bf' : 'rgba(148,163,184,0.22)';
+                b.style.color           = active ? '#2dd4bf' : '#cfdbe8';
+            });
+        };
+        modal.querySelectorAll('[data-tmr-size]').forEach(b => {
+            b.addEventListener('click', () => {
+                currentSize = b.getAttribute('data-tmr-size');
+                refresh();
+                analyticsTrack('profile_embed_size_changed', { username: user, size: currentSize });
+            });
+        });
+        refresh();
+
         analyticsTrack('profile_embed_modal_opened', {
-            username: profileUsername || '',
-            profile_url: profileUrl
+            username: user,
+            profile_url: profileShareUrl
         });
     }
 
@@ -9839,6 +10246,11 @@
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvanced) {
         order: 50 !important;
       }
+      /* Restore visibility of every advanced split panel — Unit Size, Odds Range,
+         Favorites vs Underdogs, Day of Week, Best/Worst Categories, and
+         Streaks & Rolling Form. These were previously hidden, which removed
+         the "Recent form" / streak-window metrics from the visible profile.
+         Each panel handles its own empty state via the is-placeholder class. */
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxEquityShellTop),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxEquityShell),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableUnitSizeTop),
@@ -9855,7 +10267,7 @@
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableWorst),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableFormTop),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableForm) {
-        display: none !important;
+        display: block !important;
       }
       body.profile-page.tmr-social-profile .tmrx-ribbon,
       body.profile-page.tmr-social-profile .tmrx-period-strip {
@@ -10007,22 +10419,23 @@
         order: 10 !important;
       }
       body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="record"].profile-flow-record {
-        display: block !important;
         order: 20 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="record"].profile-flow-record:not(.active) {
+        display: none !important;
+      }
+      body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="record"].profile-flow-record.active {
+        display: block !important;
       }
 
       body.profile-page.tmr-social-profile .tmrx-stats {
         gap: 24px !important;
       }
-      body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicks) {
-        display: none !important;
-      }
+      body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicks),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvancedTop),
-      body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvanced) {
-        display: none !important;
-      }
+      body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvanced),
       body.profile-page.tmr-social-profile .tmrx-section:has(.tmrx-filter-bar) {
-        display: none !important;
+        display: block !important;
       }
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxEquityShellTop),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxEquityShell) {
