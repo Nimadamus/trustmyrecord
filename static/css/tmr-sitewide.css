@@ -30,6 +30,318 @@ body.tmr-site-shell [data-tmr-legacy-footer="hidden"] {
     display: none !important;
 }
 
+/* ===================================================================
+   TrustMyRecord shared visual system
+   Additive sitewide polish only. These rules intentionally target common
+   live classes/IDs without renaming hooks, handlers, or data attributes.
+   =================================================================== */
+:root {
+    --tmr-app-bg: #050914;
+    --tmr-app-bg-2: #08111f;
+    --tmr-card: rgba(13, 22, 38, 0.94);
+    --tmr-card-strong: rgba(18, 31, 52, 0.98);
+    --tmr-card-soft: rgba(15, 27, 46, 0.78);
+    --tmr-border: rgba(148, 163, 184, 0.18);
+    --tmr-border-strong: rgba(45, 212, 191, 0.36);
+    --tmr-text-strong: #f8fafc;
+    --tmr-text-soft: #cbd5e1;
+    --tmr-text-muted: #94a3b8;
+    --tmr-accent: #2dd4bf;
+    --tmr-accent-2: #38bdf8;
+    --tmr-action: #7dd3fc;
+    --tmr-success: #22c55e;
+    --tmr-warning: #f59e0b;
+    --tmr-danger: #ef4444;
+    --tmr-page-max: 1440px;
+    --tmr-page-pad: clamp(16px, 2.4vw, 34px);
+    --tmr-radius-sm: 8px;
+    --tmr-radius-md: 12px;
+    --tmr-radius-lg: 16px;
+    --tmr-shadow-card: 0 18px 50px rgba(0, 0, 0, 0.28);
+}
+
+html {
+    background: var(--tmr-app-bg);
+}
+
+body.tmr-site-shell {
+    min-width: 0;
+    overflow-x: hidden;
+    font-family: var(--tmr-font);
+    line-height: 1.5;
+}
+
+body.tmr-site-shell,
+body.tmr-site-shell * {
+    box-sizing: border-box;
+}
+
+body.tmr-site-shell img,
+body.tmr-site-shell video,
+body.tmr-site-shell canvas,
+body.tmr-site-shell svg {
+    max-width: 100%;
+}
+
+body.tmr-site-shell main,
+body.tmr-site-shell .page-shell,
+body.tmr-site-shell .page-container,
+body.tmr-site-shell .container,
+body.tmr-site-shell .content,
+body.tmr-site-shell .shell,
+body.tmr-site-shell .fshell,
+body.tmr-site-shell .arena-shell,
+body.tmr-site-shell .tmr-fb-shell {
+    width: min(var(--tmr-page-max), calc(100% - (var(--tmr-page-pad) * 2)));
+    max-width: var(--tmr-page-max);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+body.tmr-site-shell .container,
+body.tmr-site-shell .content,
+body.tmr-site-shell .shell {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+body.tmr-site-shell h1,
+body.tmr-site-shell h2,
+body.tmr-site-shell h3 {
+    color: var(--tmr-text-strong);
+    letter-spacing: 0;
+}
+
+body.tmr-site-shell p,
+body.tmr-site-shell li,
+body.tmr-site-shell td,
+body.tmr-site-shell th,
+body.tmr-site-shell label {
+    color: inherit;
+}
+
+body.tmr-site-shell a {
+    color: inherit;
+}
+
+body.tmr-site-shell .card,
+body.tmr-site-shell .sidebar-card,
+body.tmr-site-shell .composer-card,
+body.tmr-site-shell .post-card,
+body.tmr-site-shell .feed-card,
+body.tmr-site-shell .profile-card,
+body.tmr-site-shell .stats-card,
+body.tmr-site-shell .leaderboard-card,
+body.tmr-site-shell .tmr-poll-card,
+body.tmr-site-shell .tmr-poll-detail,
+body.tmr-site-shell .fthread-post,
+body.tmr-site-shell .modal-box,
+body.tmr-site-shell .sportsbook-board-shell,
+body.tmr-site-shell .sportsbook-rail-board,
+body.tmr-site-shell .sportsbook-league-rail,
+body.tmr-site-shell .challenge-card,
+body.tmr-site-shell .arena-card,
+body.tmr-site-shell .game-tile {
+    background: linear-gradient(180deg, rgba(18, 31, 52, 0.96), rgba(10, 18, 32, 0.94));
+    border: 1px solid var(--tmr-border);
+    border-radius: var(--tmr-radius-md);
+    box-shadow: var(--tmr-shadow-card);
+}
+
+body.tmr-site-shell .section-header,
+body.tmr-site-shell .card-header,
+body.tmr-site-shell .tmr-section-header,
+body.tmr-site-shell .factionrow,
+body.tmr-site-shell .tmr-fb-topbar,
+body.tmr-site-shell .sportsbook-board-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+body.tmr-site-shell .btn,
+body.tmr-site-shell .button,
+body.tmr-site-shell button,
+body.tmr-site-shell input[type="submit"],
+body.tmr-site-shell .tmr-btn,
+body.tmr-site-shell .fbtn,
+body.tmr-site-shell .btn-post,
+body.tmr-site-shell .load-more-btn,
+body.tmr-site-shell .tmr-fb-action-btn {
+    min-height: 38px;
+    border-radius: var(--tmr-radius-sm);
+    font-family: var(--tmr-font);
+    font-weight: 800;
+    letter-spacing: 0;
+}
+
+body.tmr-site-shell button,
+body.tmr-site-shell .btn,
+body.tmr-site-shell .tmr-btn,
+body.tmr-site-shell .fbtn {
+    touch-action: manipulation;
+}
+
+body.tmr-site-shell .btn-primary,
+body.tmr-site-shell .tmr-btn-primary,
+body.tmr-site-shell .fbtn.is-primary,
+body.tmr-site-shell .tmr-fb-action-btn.is-primary,
+body.tmr-site-shell .btn-post,
+body.tmr-site-shell button[type="submit"] {
+    background: linear-gradient(135deg, var(--tmr-accent), var(--tmr-accent-2));
+    border-color: transparent;
+    color: #03131a;
+    text-shadow: none;
+}
+
+body.tmr-site-shell .btn-outline,
+body.tmr-site-shell .tmr-btn-outline,
+body.tmr-site-shell .fbtn,
+body.tmr-site-shell .composer-action,
+body.tmr-site-shell .feed-tab,
+body.tmr-site-shell .tmr-fb-tab {
+    border: 1px solid var(--tmr-border);
+    background: rgba(15, 23, 42, 0.72);
+    color: var(--tmr-text-soft);
+}
+
+body.tmr-site-shell button:hover,
+body.tmr-site-shell .btn:hover,
+body.tmr-site-shell .tmr-btn:hover,
+body.tmr-site-shell .fbtn:hover,
+body.tmr-site-shell .tmr-fb-tab:hover {
+    transform: translateY(-1px);
+}
+
+body.tmr-site-shell .bet-pick-btn:hover,
+body.tmr-site-shell .sportsbook-price-cell:hover,
+body.tmr-site-shell .sb-odds:hover,
+body.tmr-site-shell .total-btn:hover,
+body.tmr-site-shell .tmr-global-nav button:hover {
+    transform: none;
+}
+
+body.tmr-site-shell input,
+body.tmr-site-shell textarea,
+body.tmr-site-shell select {
+    width: 100%;
+    max-width: 100%;
+    min-height: 40px;
+    border: 1px solid var(--tmr-border);
+    border-radius: var(--tmr-radius-sm);
+    background: rgba(5, 10, 20, 0.72);
+    color: var(--tmr-text-strong);
+    font-family: var(--tmr-font);
+    font-size: 0.95rem;
+    outline: none;
+}
+
+body.tmr-site-shell input[type="checkbox"],
+body.tmr-site-shell input[type="radio"] {
+    width: auto;
+    min-height: 0;
+    box-shadow: none;
+}
+
+body.tmr-site-shell textarea {
+    min-height: 98px;
+    resize: vertical;
+}
+
+body.tmr-site-shell input:focus,
+body.tmr-site-shell textarea:focus,
+body.tmr-site-shell select:focus {
+    border-color: var(--tmr-border-strong);
+    box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.12);
+}
+
+body.tmr-site-shell input::placeholder,
+body.tmr-site-shell textarea::placeholder {
+    color: rgba(203, 213, 225, 0.52);
+}
+
+body.tmr-site-shell table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+body.tmr-site-shell th {
+    color: var(--tmr-text-muted);
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+body.tmr-site-shell td {
+    color: var(--tmr-text-soft);
+}
+
+body.tmr-site-shell .empty-state,
+body.tmr-site-shell .tmr-empty-msg,
+body.tmr-site-shell .fempty,
+body.tmr-site-shell .no-data-message,
+body.tmr-site-shell .loading-state,
+body.tmr-site-shell .error-state {
+    border: 1px dashed rgba(148, 163, 184, 0.26);
+    border-radius: var(--tmr-radius-md);
+    background: rgba(15, 23, 42, 0.48);
+    color: var(--tmr-text-muted);
+    padding: clamp(18px, 3vw, 34px);
+    text-align: center;
+}
+
+body.tmr-site-shell .stat,
+body.tmr-site-shell .stat-card,
+body.tmr-site-shell .profile-stat,
+body.tmr-site-shell .stats-grid > *,
+body.tmr-site-shell .core-stat {
+    border: 1px solid var(--tmr-border);
+    background: rgba(15, 23, 42, 0.74);
+    border-radius: var(--tmr-radius-sm);
+}
+
+body.tmr-site-shell .stat-value,
+body.tmr-site-shell .core-stat-value,
+body.tmr-site-shell .record-value {
+    color: var(--tmr-text-strong);
+    font-weight: 900;
+    letter-spacing: 0;
+}
+
+@media (max-width: 860px) {
+    body.tmr-site-shell main,
+    body.tmr-site-shell .page-shell,
+    body.tmr-site-shell .page-container,
+    body.tmr-site-shell .container,
+    body.tmr-site-shell .content,
+    body.tmr-site-shell .shell,
+    body.tmr-site-shell .fshell,
+    body.tmr-site-shell .arena-shell,
+    body.tmr-site-shell .tmr-fb-shell {
+        width: min(100%, calc(100% - 24px));
+    }
+
+    body.tmr-site-shell .section-header,
+    body.tmr-site-shell .card-header,
+    body.tmr-site-shell .tmr-section-header,
+    body.tmr-site-shell .factionrow,
+    body.tmr-site-shell .tmr-fb-topbar {
+        align-items: stretch;
+    }
+
+    body.tmr-site-shell .section-header > *,
+    body.tmr-site-shell .card-header > *,
+    body.tmr-site-shell .tmr-section-header > *,
+    body.tmr-site-shell .factionrow > *,
+    body.tmr-site-shell .tmr-fb-topbar > * {
+        min-width: 0;
+    }
+}
+
 body.tmr-site-shell > header:not(.tmr-global-nav):not(.tmr-global-footer),
 body.tmr-site-shell > nav.main-nav:not(.tmr-global-nav),
 body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
