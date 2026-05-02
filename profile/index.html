@@ -1608,20 +1608,20 @@
                     <span id="profileAdvancedMetricsStatus">Loading verified metrics...</span>
                 </div>
                 <div class="profile-advanced-metric-grid">
-                    <article class="profile-advanced-metric" data-advanced-metric-card="z_score">
-                        <span class="profile-advanced-metric__label">Z Score</span>
-                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvZScore">Not enough data yet</strong>
-                        <span class="profile-advanced-metric__sub" id="profileAdvZScoreSub">Requires larger graded sample</span>
-                    </article>
-                    <article class="profile-advanced-metric" data-advanced-metric-card="roi">
-                        <span class="profile-advanced-metric__label">ROI</span>
-                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvRoi">Not enough data yet</strong>
-                        <span class="profile-advanced-metric__sub" id="profileAdvRoiSub">Return on risked units</span>
+                    <article class="profile-advanced-metric" data-advanced-metric-card="record">
+                        <span class="profile-advanced-metric__label">Record</span>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvRecord">Not enough data yet</strong>
+                        <span class="profile-advanced-metric__sub" id="profileAdvRecordSub">Verified W-L-P</span>
                     </article>
                     <article class="profile-advanced-metric" data-advanced-metric-card="units">
                         <span class="profile-advanced-metric__label">Units</span>
                         <strong class="profile-advanced-metric__value is-empty" id="profileAdvUnits">Not enough data yet</strong>
                         <span class="profile-advanced-metric__sub" id="profileAdvUnitsSub">Net settled units</span>
+                    </article>
+                    <article class="profile-advanced-metric" data-advanced-metric-card="roi">
+                        <span class="profile-advanced-metric__label">ROI</span>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvRoi">Not enough data yet</strong>
+                        <span class="profile-advanced-metric__sub" id="profileAdvRoiSub">Return on risked units</span>
                     </article>
                     <article class="profile-advanced-metric" data-advanced-metric-card="win_rate">
                         <span class="profile-advanced-metric__label">Win Rate</span>
@@ -1639,7 +1639,7 @@
                         <span class="profile-advanced-metric__sub" id="profileAdvAvgUnitSizeSub">Mean stake per graded pick</span>
                     </article>
                     <article class="profile-advanced-metric" data-advanced-metric-card="avg_daily_picks">
-                        <span class="profile-advanced-metric__label">Avg Daily Picks</span>
+                        <span class="profile-advanced-metric__label">Picks Per Day</span>
                         <strong class="profile-advanced-metric__value is-empty" id="profileAdvAvgDailyPicks">Not enough data yet</strong>
                         <span class="profile-advanced-metric__sub" id="profileAdvAvgDailyPicksSub">Total picks over active days</span>
                     </article>
@@ -2167,8 +2167,8 @@
                       <div class="tmrx-section">
                         <div class="tmrx-section-head">
                           <div>
-                            <div class="tmrx-section-title">Pick History</div>
-                            <div class="tmrx-section-sub">Every settled pick on the verified record. Source of truth for everything above.</div>
+                            <div class="tmrx-section-title">Public Ledger</div>
+                            <div class="tmrx-section-sub">Every settled public pick on the verified record. Pending picks stay hidden until graded.</div>
                           </div>
                           <div class="tmrx-meta" id="tmrxPickMeta"></div>
                         </div>
@@ -5981,6 +5981,12 @@
         };
 
         setCard(
+            'profileAdvRecord',
+            graded > 0 ? Number(s.wins || 0) + '-' + Number(s.losses || 0) + '-' + Number(s.pushes || 0) : null,
+            graded > 0 ? graded + ' graded public picks' : 'Requires graded picks',
+            decisions > 0 ? Number(s.wins || 0) - Number(s.losses || 0) : null
+        );
+        setCard(
             'profileAdvZScore',
             s.z_score != null ? fmtSigned(s.z_score, '', 2) : null,
             s.z_score != null ? 'Skill-vs-luck signal' : 'Requires larger graded sample',
@@ -6023,12 +6029,17 @@
             null
         );
         const clv = scores.clv != null ? Number(scores.clv) : null;
-        setCard(
-            'profileAdvClv',
-            clv != null && Number.isFinite(clv) ? fmtSigned(clv, ' bps', 2) : null,
-            clv != null && Number.isFinite(clv) ? 'Closing-line value' : 'Closing-line tracking is not yet available',
-            clv
-        );
+        const clvAvailable = clv != null && Number.isFinite(clv);
+        const clvCard = document.querySelector('[data-advanced-metric-card="clv"]');
+        if (clvCard) clvCard.hidden = !clvAvailable;
+        if (clvAvailable) {
+            setCard(
+                'profileAdvClv',
+                fmtSigned(clv, ' bps', 2),
+                'Closing-line value',
+                clv
+            );
+        }
         const maxDd = dd.max_drawdown != null ? Number(dd.max_drawdown) : null;
         setCard(
             'profileAdvMaxDrawdown',
@@ -10877,6 +10888,415 @@
         body.profile-page.tmr-social-profile .ledger-filter-actions {
           align-items: stretch !important;
           flex-direction: column !important;
+        }
+      }
+    </style>
+    <style id="tmr-profile-public-polish-20260502">
+      body.profile-page.tmr-social-profile {
+        background:
+          linear-gradient(180deg, #07111f 0%, #0b1626 42%, #07101d 100%) !important;
+      }
+      body.profile-page.tmr-social-profile #profileAvatarUploader[hidden],
+      body.profile-page.tmr-social-profile #profileSetupPrompt[hidden],
+      body.profile-page.tmr-social-profile .profile-advanced-metric[hidden] {
+        display: none !important;
+      }
+      body.profile-page.tmr-social-profile .profile-header-section {
+        margin-top: 24px !important;
+      }
+      body.profile-page.tmr-social-profile .profile-header {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1.05fr) minmax(430px, .95fr) !important;
+        gap: 24px !important;
+        padding: 30px !important;
+        border: 1px solid rgba(115, 139, 174, .28) !important;
+        border-radius: 18px !important;
+        background:
+          linear-gradient(135deg, rgba(19, 34, 56, .98) 0%, rgba(7, 17, 31, .98) 58%, rgba(5, 13, 24, .98) 100%) !important;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, .38) !important;
+      }
+      body.profile-page.tmr-social-profile .profile-header::after {
+        content: "Verified Record" !important;
+        position: absolute !important;
+        top: 20px !important;
+        right: 22px !important;
+        padding: 7px 10px !important;
+        border: 1px solid rgba(34, 211, 238, .42) !important;
+        border-radius: 999px !important;
+        background: rgba(34, 211, 238, .09) !important;
+        color: #a7f3ff !important;
+        font-size: 11px !important;
+        font-weight: 900 !important;
+        letter-spacing: .08em !important;
+        text-transform: uppercase !important;
+      }
+      body.profile-page.tmr-social-profile .profile-identity-row {
+        margin-bottom: 18px !important;
+      }
+      body.profile-page.tmr-social-profile .profile-avatar {
+        width: 112px !important;
+        height: 112px !important;
+        min-width: 112px !important;
+        border-radius: 24px !important;
+        border: 1px solid rgba(226, 232, 240, .42) !important;
+        background: linear-gradient(135deg, #22d3ee, #f8b84e) !important;
+      }
+      body.profile-page.tmr-social-profile .profile-avatar img {
+        border-radius: 24px !important;
+      }
+      body.profile-page.tmr-social-profile .profile-eyebrow {
+        color: #67e8f9 !important;
+        font-size: 11px !important;
+        font-weight: 900 !important;
+        letter-spacing: .14em !important;
+        text-transform: uppercase !important;
+      }
+      body.profile-page.tmr-social-profile .profile-name {
+        margin-top: 6px !important;
+        color: #f8fbff !important;
+        font-size: clamp(34px, 4vw, 54px) !important;
+        font-weight: 950 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-handle {
+        color: #9fb0c7 !important;
+        font-size: 16px !important;
+        font-weight: 750 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-trust-row {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        margin: 18px 0 0 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-trust-pill,
+      body.profile-page.tmr-social-profile .profile-affiliation-chip {
+        border: 1px solid rgba(129, 154, 190, .22) !important;
+        border-radius: 999px !important;
+        background: rgba(3, 10, 22, .38) !important;
+        color: #cbd7e8 !important;
+        box-shadow: none !important;
+      }
+      body.profile-page.tmr-social-profile .profile-trust-pill strong {
+        color: #f8fbff !important;
+      }
+      body.profile-page.tmr-social-profile .profile-bio,
+      body.profile-page.tmr-social-profile .profile-bio-empty {
+        max-width: 720px !important;
+        margin-top: 18px !important;
+        color: #d9e5f5 !important;
+        font-size: 15px !important;
+        line-height: 1.55 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-overview-grid,
+      body.profile-page.tmr-social-profile .profile-meta {
+        display: none !important;
+      }
+      body.profile-page.tmr-social-profile .profile-actions {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+        margin-top: 20px !important;
+      }
+      body.profile-page.tmr-social-profile .profile-actions .btn {
+        height: 42px !important;
+        padding: 0 16px !important;
+        border-radius: 10px !important;
+        font-size: 12px !important;
+        font-weight: 900 !important;
+        letter-spacing: .04em !important;
+        text-transform: uppercase !important;
+      }
+      body.profile-page.tmr-social-profile .profile-actions [data-tmr-share-btn] {
+        border-color: rgba(34, 211, 238, .5) !important;
+        background: #22d3ee !important;
+        color: #04111a !important;
+      }
+      body.profile-page.tmr-social-profile .profile-rail {
+        align-self: stretch !important;
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 1px solid rgba(117, 140, 173, .24) !important;
+        border-radius: 16px !important;
+        background: rgba(3, 10, 22, .36) !important;
+        overflow: hidden !important;
+      }
+      body.profile-page.tmr-social-profile .profile-rail-card {
+        min-height: 112px !important;
+        padding: 18px !important;
+        border: 0 !important;
+        border-right: 1px solid rgba(117, 140, 173, .18) !important;
+        border-bottom: 1px solid rgba(117, 140, 173, .18) !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+      }
+      body.profile-page.tmr-social-profile .profile-rail-card:nth-child(2n) {
+        border-right: 0 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-rail-card:nth-last-child(-n+2) {
+        border-bottom: 0 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-rail-label,
+      body.profile-page.tmr-social-profile .profile-advanced-metric__label {
+        color: #93a7c0 !important;
+        font-size: 11px !important;
+        font-weight: 900 !important;
+        letter-spacing: .11em !important;
+        text-transform: uppercase !important;
+      }
+      body.profile-page.tmr-social-profile .profile-rail-value {
+        margin-top: 8px !important;
+        color: #f8fbff !important;
+        font-size: clamp(25px, 2.2vw, 34px) !important;
+        line-height: 1 !important;
+        font-weight: 950 !important;
+        letter-spacing: 0 !important;
+        font-variant-numeric: tabular-nums !important;
+      }
+      body.profile-page.tmr-social-profile .profile-rail-value.is-positive,
+      body.profile-page.tmr-social-profile .profile-advanced-metric__value.is-pos {
+        color: #48e08a !important;
+      }
+      body.profile-page.tmr-social-profile .profile-rail-value.is-negative,
+      body.profile-page.tmr-social-profile .profile-advanced-metric__value.is-neg {
+        color: #fb7185 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-advanced-strip-section {
+        padding-top: 22px !important;
+      }
+      body.profile-page.tmr-social-profile .profile-advanced-strip-card {
+        padding: 0 !important;
+        border: 1px solid rgba(115, 139, 174, .25) !important;
+        border-radius: 18px !important;
+        background: #081322 !important;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, .28) !important;
+        overflow: hidden !important;
+      }
+      body.profile-page.tmr-social-profile .profile-advanced-strip-head {
+        align-items: center !important;
+        margin: 0 !important;
+        padding: 20px 22px !important;
+        border-bottom: 1px solid rgba(115, 139, 174, .2) !important;
+        background: linear-gradient(180deg, rgba(17, 30, 50, .9), rgba(9, 19, 34, .9)) !important;
+      }
+      body.profile-page.tmr-social-profile .profile-advanced-strip-head h2 {
+        font-size: 24px !important;
+      }
+      body.profile-page.tmr-social-profile .profile-advanced-strip-head p {
+        max-width: 760px !important;
+      }
+      body.profile-page.tmr-social-profile .profile-advanced-metric-grid {
+        display: grid !important;
+        grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+        gap: 0 !important;
+        border-bottom: 1px solid rgba(115, 139, 174, .18) !important;
+      }
+      body.profile-page.tmr-social-profile .profile-advanced-metric {
+        min-height: 138px !important;
+        padding: 18px 14px !important;
+        border: 0 !important;
+        border-right: 1px solid rgba(115, 139, 174, .18) !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        justify-content: center !important;
+      }
+      body.profile-page.tmr-social-profile .profile-advanced-metric:last-child {
+        border-right: 0 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-advanced-metric__value {
+        margin-top: 5px !important;
+        color: #f8fbff !important;
+        font-size: clamp(22px, 2vw, 32px) !important;
+        line-height: 1.05 !important;
+        font-weight: 950 !important;
+        letter-spacing: 0 !important;
+        font-variant-numeric: tabular-nums !important;
+        overflow-wrap: anywhere !important;
+      }
+      body.profile-page.tmr-social-profile .profile-advanced-metric__value.is-empty {
+        color: #aab8cc !important;
+        font-size: 16px !important;
+        line-height: 1.25 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-advanced-metric__sub {
+        color: #7f91aa !important;
+        font-size: 12px !important;
+        line-height: 1.35 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-advanced-support-grid {
+        display: grid !important;
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+        gap: 0 !important;
+        margin: 0 !important;
+        border: 0 !important;
+        background: rgba(6, 15, 28, .92) !important;
+      }
+      body.profile-page.tmr-social-profile .profile-advanced-support-grid > div {
+        min-height: 82px !important;
+        padding: 16px 14px !important;
+        border: 0 !important;
+        border-right: 1px solid rgba(115, 139, 174, .14) !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        color: #e8f1fd !important;
+        font-size: 13px !important;
+        font-weight: 900 !important;
+        letter-spacing: 0 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-advanced-support-grid > div:last-child {
+        border-right: 0 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-advanced-support-grid span {
+        display: block !important;
+        margin-top: 6px !important;
+        color: #8396af !important;
+        font-size: 12px !important;
+        font-weight: 650 !important;
+        line-height: 1.35 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-tabs-section {
+        padding-top: 22px !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-section {
+        border-radius: 16px !important;
+        border: 1px solid rgba(115, 139, 174, .2) !important;
+        background: #081322 !important;
+        box-shadow: none !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-section-head {
+        padding: 20px 22px 0 !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-section-title {
+        color: #f8fbff !important;
+        font-size: 21px !important;
+        font-weight: 950 !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-section-sub {
+        max-width: 760px !important;
+        color: #91a4bd !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-table-shell {
+        margin: 16px 22px 22px !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(115, 139, 174, .2) !important;
+        background: rgba(3, 10, 22, .38) !important;
+      }
+      @media (max-width: 1180px) {
+        body.profile-page.tmr-social-profile .profile-header {
+          grid-template-columns: 1fr !important;
+        }
+        body.profile-page.tmr-social-profile .profile-rail {
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+        body.profile-page.tmr-social-profile .profile-rail-card:nth-child(n) {
+          border-right: 1px solid rgba(117, 140, 173, .18) !important;
+          border-bottom: 1px solid rgba(117, 140, 173, .18) !important;
+        }
+        body.profile-page.tmr-social-profile .profile-rail-card:nth-child(3n) {
+          border-right: 0 !important;
+        }
+        body.profile-page.tmr-social-profile .profile-rail-card:nth-last-child(-n+3) {
+          border-bottom: 0 !important;
+        }
+        body.profile-page.tmr-social-profile .profile-advanced-metric-grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        }
+        body.profile-page.tmr-social-profile .profile-advanced-metric:nth-child(4n) {
+          border-right: 0 !important;
+        }
+        body.profile-page.tmr-social-profile .profile-advanced-metric {
+          border-bottom: 1px solid rgba(115, 139, 174, .18) !important;
+        }
+        body.profile-page.tmr-social-profile .profile-advanced-support-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+      }
+      @media (max-width: 720px) {
+        body.profile-page.tmr-social-profile .profile-header-section .container,
+        body.profile-page.tmr-social-profile .profile-advanced-strip-section .container,
+        body.profile-page.tmr-social-profile .profile-tabs-section .container,
+        body.profile-page.tmr-social-profile .profile-body-grid {
+          width: min(100% - 28px, 1260px) !important;
+        }
+        body.profile-page.tmr-social-profile .profile-header {
+          padding: 18px !important;
+        }
+        body.profile-page.tmr-social-profile .profile-header::after {
+          position: static !important;
+          justify-self: start !important;
+          order: -1 !important;
+        }
+        body.profile-page.tmr-social-profile .profile-identity-row {
+          flex-direction: row !important;
+          align-items: center !important;
+        }
+        body.profile-page.tmr-social-profile .profile-avatar {
+          width: 78px !important;
+          height: 78px !important;
+          min-width: 78px !important;
+          border-radius: 18px !important;
+        }
+        body.profile-page.tmr-social-profile .profile-avatar img {
+          border-radius: 18px !important;
+        }
+        body.profile-page.tmr-social-profile .profile-name {
+          font-size: 31px !important;
+        }
+        body.profile-page.tmr-social-profile .profile-rail,
+        body.profile-page.tmr-social-profile .profile-advanced-metric-grid,
+        body.profile-page.tmr-social-profile .profile-advanced-support-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+        body.profile-page.tmr-social-profile .profile-rail-card:nth-child(n),
+        body.profile-page.tmr-social-profile .profile-advanced-metric:nth-child(n),
+        body.profile-page.tmr-social-profile .profile-advanced-support-grid > div:nth-child(n) {
+          border-right: 1px solid rgba(117, 140, 173, .18) !important;
+          border-bottom: 1px solid rgba(117, 140, 173, .18) !important;
+        }
+        body.profile-page.tmr-social-profile .profile-rail-card:nth-child(2n),
+        body.profile-page.tmr-social-profile .profile-advanced-metric:nth-child(2n),
+        body.profile-page.tmr-social-profile .profile-advanced-support-grid > div:nth-child(2n) {
+          border-right: 0 !important;
+        }
+        body.profile-page.tmr-social-profile .profile-advanced-strip-head {
+          align-items: flex-start !important;
+          flex-direction: column !important;
+          padding: 18px !important;
+        }
+        body.profile-page.tmr-social-profile .profile-advanced-metric {
+          min-height: 124px !important;
+          padding: 15px 12px !important;
+        }
+        body.profile-page.tmr-social-profile .profile-advanced-metric__value {
+          font-size: 24px !important;
+        }
+        body.profile-page.tmr-social-profile .profile-advanced-metric__value.is-empty {
+          font-size: 14px !important;
+        }
+        body.profile-page.tmr-social-profile .tmrx-section-head {
+          padding: 18px 16px 0 !important;
+        }
+        body.profile-page.tmr-social-profile .tmrx-table-shell {
+          margin: 14px 16px 18px !important;
+        }
+      }
+      @media (max-width: 440px) {
+        body.profile-page.tmr-social-profile .profile-identity-row {
+          flex-direction: column !important;
+          align-items: flex-start !important;
+        }
+        body.profile-page.tmr-social-profile .profile-rail,
+        body.profile-page.tmr-social-profile .profile-advanced-metric-grid,
+        body.profile-page.tmr-social-profile .profile-advanced-support-grid {
+          grid-template-columns: 1fr !important;
+        }
+        body.profile-page.tmr-social-profile .profile-rail-card:nth-child(n),
+        body.profile-page.tmr-social-profile .profile-advanced-metric:nth-child(n),
+        body.profile-page.tmr-social-profile .profile-advanced-support-grid > div:nth-child(n) {
+          border-right: 0 !important;
         }
       }
     </style>
