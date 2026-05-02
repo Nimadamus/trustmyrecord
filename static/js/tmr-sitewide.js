@@ -12,7 +12,7 @@
         ["/", "Home"],
         [sportsbookPicksHref, "Make Picks"],
         ["/feed/", "Feed"],
-        ["/leaderboards/", "Leaderboards"],
+        ["/handicappers/", "Find Handicappers"],
         ["/arena/", "Arena"],
         ["/forum/", "Forums"],
         ["/marketplace/", "Sell Your Picks"]
@@ -25,7 +25,7 @@
     const routeMeta = {
         "sportsbook.html": ["Make Picks", "Lock picks before games start. Build a public, permanent record."],
         "leaderboards.html": ["Leaderboards", "Handicapping records, trivia points, polls, online challenges, and handicapper challenges &mdash; every leaderboard in one hub."],
-        "handicappers.html": ["Leaderboards", "Handicapping records, trivia points, polls, online challenges, and handicapper challenges &mdash; every leaderboard in one hub."],
+        "handicappers.html": ["Find Handicappers", "Search members, compare verified records, follow cappers, and open public profiles."],
         "arena.html": ["Arena", "Challenge rivals in sports picks, MLB The Show, Madden, NBA 2K, EA FC, and NHL."],
         "challenges.html": ["Arena", "Public competition, head-to-head challenges, and rivalry loops."],
         "feed.html": ["Feed", "Locked picks, hot takes, polls, trivia, and challenges from people with a record."],
