@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/contact/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us | TrustMyRecord</title>
+    <meta name="description" content="Contact the TrustMyRecord team through a private form. No public email address is exposed.">
+    <meta name="robots" content="noindex,follow">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260502navspread1">
+    <link rel="stylesheet" href="/static/css/tmr-page-polish.css?v=20260429a">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260502contact1"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { min-height: 100vh; }
+        a { color: var(--tmrp-neon-cyan); text-decoration: none; }
+        a:hover { color: var(--tmrp-neon-gold); }
+        .form-row { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 8px; }
+        @media (min-width: 720px) { .form-row.cols-2 { grid-template-columns: 1fr 1fr; } }
+        .form-label { display: block; font-size: 13px; color: var(--tmrp-text-secondary); margin-bottom: 6px; font-weight: 600; letter-spacing: 0.02em; }
+        .form-help  { font-size: 12px; color: var(--tmrp-text-muted); margin-top: 4px; }
+        .form-required { color: var(--tmrp-neon-cyan); }
+        textarea.tmr-textarea { min-height: 180px; resize: vertical; }
+        .honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; opacity: 0; }
+        .alert { border-radius: 12px; padding: 14px 16px; margin-top: 16px; font-size: 14px; line-height: 1.5; display: none; }
+        .alert.is-shown { display: block; }
+        .alert-success { background: rgba(0, 255, 136, 0.08); border: 1px solid rgba(0, 255, 136, 0.32); color: #b6ffd9; }
+        .alert-error { background: rgba(255, 80, 100, 0.10); border: 1px solid rgba(255, 80, 100, 0.36); color: #ffd0d6; }
+    </style>
+</head>
+<body class="tmr-polished-page">
+
+<main class="tmr-shell">
+    <header class="tmr-page-header">
+        <h1 class="tmr-h1">Contact Us</h1>
+        <p class="tmr-page-sub">Send a private message to the TrustMyRecord team. The form routes to our inbox without publishing an email address on the site.</p>
+    </header>
+
+    <section class="tmr-glass">
+        <h2 class="tmr-h2">Send a message</h2>
+        <p>Use this for account questions, partnership notes, marketplace questions, or anything that is not a bug. For broken pages or grading issues, use <a href="/report-bug/">Report a Bug</a>.</p>
+
+        <form id="contactForm" novalidate style="margin-top:18px;">
+            <input type="text" class="honeypot" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+            <div class="form-row cols-2">
+                <div>
+                    <label class="form-label" for="contactTopic">Topic <span class="form-required">*</span></label>
+                    <select id="contactTopic" name="topic" class="tmr-select" required>
+                        <option value="general">General question</option>
+                        <option value="account">Account or login</option>
+                        <option value="picks">Picks or records</option>
+                        <option value="marketplace">Marketplace</option>
+                        <option value="billing">Billing</option>
+                        <option value="partnership">Partnership</option>
+                        <option value="security">Security or privacy</option>
+                        <option value="feedback">Feedback</option>
+                        <option value="other">Something else</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" for="contactSubject">Subject</label>
+                    <input id="contactSubject" name="subject" type="text" class="tmr-input" placeholder="Short summary" maxlength="140">
+                </div>
+            </div>
+
+            <div class="form-row" style="margin-top:14px;">
+                <div>
+                    <label class="form-label" for="contactMessage">Message <span class="form-required">*</span></label>
+                    <textarea id="contactMessage" name="message" class="tmr-textarea" required minlength="10" maxlength="5000" placeholder="What should we know?"></textarea>
+                    <div class="form-help"><span id="contactCharCount">0</span> / 5000 - minimum 10 characters.</div>
+                </div>
+            </div>
+
+            <div class="form-row cols-2" style="margin-top:14px;">
+                <div>
+                    <label class="form-label" for="contactUsername">Your username (optional)</label>
+                    <input id="contactUsername" name="username" type="text" class="tmr-input" placeholder="auto-filled if you're signed in" maxlength="64">
+                </div>
+                <div>
+                    <label class="form-label" for="contactEmail">Reply-to email (optional)</label>
+                    <input id="contactEmail" name="email" type="email" class="tmr-input" placeholder="so we can follow up if needed">
+                    <div class="form-help">Only used to reply to this message.</div>
+                </div>
+            </div>
+
+            <input id="contactPageUrl" name="pageUrl" type="hidden">
+
+            <div style="display:flex;gap:12px;margin-top:22px;flex-wrap:wrap;">
+                <button type="submit" id="contactSubmitBtn" class="tmr-cta-primary"><i class="fas fa-paper-plane"></i> Send Message</button>
+                <a href="/report-bug/" class="tmr-cta-secondary"><i class="fas fa-bug"></i> Report a Bug</a>
+            </div>
+
+            <div class="alert alert-success" id="contactAlertSuccess">
+                <strong>Sent.</strong> Your message was sent to the TrustMyRecord team. If you left an email, we'll follow up there if needed.
+            </div>
+            <div class="alert alert-error" id="contactAlertError">
+                <strong>Hmm, something went wrong.</strong> <span id="contactAlertErrorMsg">Please try again in a moment.</span>
+            </div>
+        </form>
+    </section>
+</main>
+
+<script>
+(function() {
+    var form = document.getElementById('contactForm');
+    if (!form) return;
+
+    var messageInput = document.getElementById('contactMessage');
+    var charCount = document.getElementById('contactCharCount');
+    var submitBtn = document.getElementById('contactSubmitBtn');
+    var alertSuccess = document.getElementById('contactAlertSuccess');
+    var alertError = document.getElementById('contactAlertError');
+    var alertErrorMsg = document.getElementById('contactAlertErrorMsg');
+    var pageUrlInput = document.getElementById('contactPageUrl');
+    var usernameInput = document.getElementById('contactUsername');
+    var emailInput = document.getElementById('contactEmail');
+
+    pageUrlInput.value = location.href;
+
+    try {
+        var cached = null;
+        if (window.api && window.api._cachedUser) cached = window.api._cachedUser;
+        if (!cached) {
+            var raw = localStorage.getItem('tmr_user') || localStorage.getItem('user');
+            if (raw) cached = JSON.parse(raw);
+        }
+        if (cached) {
+            if (cached.username && !usernameInput.value) usernameInput.value = cached.username;
+            if (cached.email && !emailInput.value) emailInput.value = cached.email;
+        }
+    } catch (e) {}
+
+    messageInput.addEventListener('input', function() {
+        charCount.textContent = String(messageInput.value.length);
+    });
+
+    function showError(msg) {
+        alertSuccess.classList.remove('is-shown');
+        alertErrorMsg.textContent = msg || 'Please try again in a moment.';
+        alertError.classList.add('is-shown');
+    }
+    function showSuccess() {
+        alertError.classList.remove('is-shown');
+        alertSuccess.classList.add('is-shown');
+    }
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        alertSuccess.classList.remove('is-shown');
+        alertError.classList.remove('is-shown');
+
+        var message = (messageInput.value || '').trim();
+        if (message.length < 10) {
+            showError('Please add at least a sentence before sending (10+ characters).');
+            messageInput.focus();
+            return;
+        }
+
+        var payload = {
+            topic: document.getElementById('contactTopic').value || 'general',
+            subject: (document.getElementById('contactSubject').value || '').trim(),
+            message: message,
+            username: (usernameInput.value || '').trim(),
+            email: (emailInput.value || '').trim(),
+            pageUrl: (pageUrlInput.value || '').trim(),
+            honeypot: form.elements['company'] ? form.elements['company'].value : ''
+        };
+
+        submitBtn.disabled = true;
+        var originalLabel = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+        try {
+            var bases = [];
+            if (window.api && window.api.baseUrl) bases.push(window.api.baseUrl);
+            bases.push('https://trustmyrecord-api.onrender.com/api');
+            var lastErrText = 'Unknown error';
+            var ok = false;
+            for (var i = 0; i < bases.length && !ok; i++) {
+                try {
+                    var res = await fetch(bases[i] + '/support/contact', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (res.ok) { ok = true; break; }
+                    var data = null;
+                    try { data = await res.json(); } catch (e) {}
+                    lastErrText = (data && data.error) || ('Server returned ' + res.status);
+                } catch (err) {
+                    lastErrText = err && err.message ? err.message : 'Network error';
+                }
+            }
+            if (ok) {
+                showSuccess();
+                messageInput.value = '';
+                document.getElementById('contactSubject').value = '';
+                charCount.textContent = '0';
+            } else {
+                showError(lastErrText);
+            }
+        } catch (err) {
+            showError(err && err.message ? err.message : 'Network error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalLabel;
+        }
+    });
+})();
+</script>
+
+</body>
+</html>
