@@ -121,6 +121,10 @@
         .tmr-poll-status.active { background: #DCFCE7; color: #14532D; }
         .tmr-poll-status.closed { background: #E5E7EB; color: #374151; }
         .tmr-poll-status.expired { background: #FEE2E2; color: #7F1D1D; }
+        .tmr-poll-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 5px 0 4px; }
+        .tmr-poll-badge { display: inline-flex; align-items: center; max-width: 210px; padding: 2px 8px; border-radius: 999px; border: 1px solid #C7D2FE; background: #EEF2FF; color: #1E3A8A; font-size: 0.68rem; font-weight: 800; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tmr-poll-badge.is-entity { border-color: #A7F3D0; background: #ECFDF5; color: #065F46; }
+        .tmr-poll-badge.is-category { border-color: #FED7AA; background: #FFF7ED; color: #9A3412; }
         .tmr-poll-card-meta { color: var(--tmr-fb-muted); font-size: 0.78rem; }
         .tmr-poll-card-meta strong { color: var(--tmr-fb-text); font-weight: 700; }
         .tmr-poll-card-meta .sep { margin: 0 6px; opacity: 0.5; }
@@ -257,6 +261,20 @@
                 </div>
                 <div class="tmr-fb-sidebar-divider"></div>
                 <div class="tmr-fb-sidebar-section">
+                    <div class="tmr-fb-sidebar-label">Sport</div>
+                    <ul class="tmr-fb-sidebar-list" id="pollSportList">
+                        <li><a onclick="setSportFilter(null)"><span>All Sports</span></a></li>
+                    </ul>
+                </div>
+                <div class="tmr-fb-sidebar-divider"></div>
+                <div class="tmr-fb-sidebar-section">
+                    <div class="tmr-fb-sidebar-label">League</div>
+                    <ul class="tmr-fb-sidebar-list" id="pollLeagueList">
+                        <li><a onclick="setLeagueFilter(null)"><span>All Leagues</span></a></li>
+                    </ul>
+                </div>
+                <div class="tmr-fb-sidebar-divider"></div>
+                <div class="tmr-fb-sidebar-section">
                     <div class="tmr-fb-sidebar-label">Categories</div>
                     <ul class="tmr-fb-sidebar-list" id="pollCategoryList">
                         <li><a onclick="setCategoryFilter(null,'All Categories')"><span>All Categories</span></a></li>
@@ -286,6 +304,12 @@
 
             <div class="tmr-fb-actionrow">
                 <button type="button" class="tmr-fb-action-btn is-primary" onclick="openCreatePollModal()"><i class="fas fa-plus"></i> Create Poll</button>
+                <select id="sportFilter" class="tmr-fb-action-btn" style="padding:7px 10px;">
+                    <option value="">All Sports</option>
+                </select>
+                <select id="leagueFilter" class="tmr-fb-action-btn" style="padding:7px 10px;">
+                    <option value="">All Leagues</option>
+                </select>
                 <select id="categoryFilter" class="tmr-fb-action-btn" style="padding:7px 10px;">
                     <option value="">All Categories</option>
                 </select>
@@ -326,6 +350,24 @@
                     <div class="tmr-form-row">
                         <label for="pollQuestion">Question</label>
                         <input id="pollQuestion" type="text" maxlength="300" placeholder="The actual question being voted on" required>
+                    </div>
+                    <div class="tmr-form-row is-inline">
+                        <div>
+                            <label for="pollSport">Sport <span style="color:var(--tmr-fb-red);">*</span></label>
+                            <select id="pollSport" onchange="onPollSportChange()" required>
+                                <option value="">Select sport</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="pollLeague">League <span style="color:var(--tmr-fb-muted);font-weight:600;">(recommended)</span></label>
+                            <select id="pollLeague">
+                                <option value="">Select sport first</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="tmr-form-row">
+                        <label for="pollTeamPlayer">Team or Player (optional)</label>
+                        <input id="pollTeamPlayer" type="text" maxlength="160" placeholder="e.g. San Francisco Giants, New York Giants, Caitlin Clark">
                     </div>
                     <div class="tmr-form-row">
                         <label for="pollDescription">Description (optional)</label>
@@ -405,12 +447,29 @@
     // ============================================================
     var state = {
         tab: 'active',
+        sportFilter: '',
+        leagueFilter: '',
         categoryFilter: '',
         polls: [],
         categories: [],
         currentPollId: null,
         currentPollDetail: null,
         sessionUser: null
+    };
+
+    var SPORT_OPTIONS = ['Basketball', 'Baseball', 'Football', 'Hockey', 'Soccer', 'Tennis', 'Golf', 'MMA', 'Boxing', 'Esports', 'Other'];
+    var LEAGUES_BY_SPORT = {
+        Baseball: ['MLB', 'MiLB', 'NCAA Baseball', 'KBO', 'NPB', 'Other'],
+        Football: ['NFL', 'NCAAF', 'UFL', 'CFL', 'Other'],
+        Basketball: ['NBA', 'WNBA', 'NCAAB', 'EuroLeague', 'Other'],
+        Hockey: ['NHL', 'NCAAH', 'AHL', 'Other'],
+        Soccer: ['EPL', 'MLS', 'Champions League', 'La Liga', 'Serie A', 'Bundesliga', 'Ligue 1', 'World Cup', 'Other'],
+        Tennis: ['ATP', 'WTA', 'Grand Slam', 'Other'],
+        Golf: ['PGA Tour', 'LPGA', 'LIV Golf', 'Other'],
+        MMA: ['UFC', 'Bellator', 'PFL', 'ONE', 'Other'],
+        Boxing: ['WBC', 'WBA', 'IBF', 'WBO', 'Other'],
+        Esports: ['League of Legends', 'CS2', 'Valorant', 'Dota 2', 'Call of Duty League', 'Other'],
+        Other: ['Other']
     };
 
     function escHtml(v) {
@@ -482,6 +541,98 @@
         loadPolls();
     }
 
+    function setSportFilter(sport) {
+        state.sportFilter = sport || '';
+        state.leagueFilter = '';
+        var sportSel = document.getElementById('sportFilter');
+        var leagueSel = document.getElementById('leagueFilter');
+        if (sportSel) sportSel.value = state.sportFilter;
+        populateLeagueSelect(leagueSel, state.sportFilter, true);
+        renderFilterSidebars();
+        loadPolls();
+    }
+
+    function setLeagueFilter(league) {
+        state.leagueFilter = league || '';
+        var leagueSel = document.getElementById('leagueFilter');
+        if (leagueSel) leagueSel.value = state.leagueFilter;
+        renderFilterSidebars();
+        loadPolls();
+    }
+
+    function populateLeagueSelect(sel, sport, includeAll) {
+        if (!sel) return;
+        var leagues = sport ? (LEAGUES_BY_SPORT[sport] || ['Other']) : [];
+        var first = includeAll ? 'All Leagues' : (sport ? 'No league selected' : 'Select sport first');
+        sel.innerHTML = '<option value="">' + first + '</option>' + leagues.map(function(l) {
+            return '<option value="' + escHtml(l) + '">' + escHtml(l) + '</option>';
+        }).join('');
+        sel.disabled = !includeAll && !sport;
+    }
+
+    function normalizePollSport(p) {
+        return (p && p.sport && String(p.sport).trim()) ? String(p.sport).trim() : 'Other';
+    }
+
+    function pollBadgeHtml(p) {
+        var sport = normalizePollSport(p);
+        var league = String((p && p.league) || '').trim();
+        var entity = String((p && (p.team_player || p.teamPlayer || p.team || p.player)) || '').trim();
+        var category = String((p && p.category_name) || '').trim();
+        var html = '';
+        html += '<span class="tmr-poll-badge">' + escHtml(league || sport) + '</span>';
+        if (entity) html += '<span class="tmr-poll-badge is-entity">' + escHtml(entity) + '</span>';
+        if (category) html += '<span class="tmr-poll-badge is-category">' + escHtml(category) + '</span>';
+        return html ? '<div class="tmr-poll-badges">' + html + '</div>' : '';
+    }
+
+    function renderFilterSidebars() {
+        var sportList = document.getElementById('pollSportList');
+        if (sportList) {
+            sportList.innerHTML = '<li><a class="' + (!state.sportFilter ? 'is-active' : '') + '" onclick="setSportFilter(null)"><span>All Sports</span></a></li>' +
+                SPORT_OPTIONS.map(function(s) {
+                    return '<li><a class="' + (state.sportFilter === s ? 'is-active' : '') + '" onclick="setSportFilter(\'' + escHtml(s) + '\')"><span>' + escHtml(s) + '</span></a></li>';
+                }).join('');
+        }
+        var leagueList = document.getElementById('pollLeagueList');
+        if (leagueList) {
+            var leagues = state.sportFilter ? (LEAGUES_BY_SPORT[state.sportFilter] || ['Other']) : Object.keys(LEAGUES_BY_SPORT).reduce(function(acc, sport) {
+                LEAGUES_BY_SPORT[sport].forEach(function(l) { if (acc.indexOf(l) === -1) acc.push(l); });
+                return acc;
+            }, []);
+            leagueList.innerHTML = '<li><a class="' + (!state.leagueFilter ? 'is-active' : '') + '" onclick="setLeagueFilter(null)"><span>All Leagues</span></a></li>' +
+                leagues.map(function(l) {
+                    return '<li><a class="' + (state.leagueFilter === l ? 'is-active' : '') + '" onclick="setLeagueFilter(\'' + escHtml(l) + '\')"><span>' + escHtml(l) + '</span></a></li>';
+                }).join('');
+        }
+    }
+
+    function initSportLeagueControls() {
+        var pollSport = document.getElementById('pollSport');
+        if (pollSport) {
+            pollSport.innerHTML = '<option value="">Select sport</option>' + SPORT_OPTIONS.map(function(s) {
+                return '<option value="' + escHtml(s) + '">' + escHtml(s) + '</option>';
+            }).join('');
+        }
+        populateLeagueSelect(document.getElementById('pollLeague'), '', false);
+        var sportFilter = document.getElementById('sportFilter');
+        if (sportFilter) {
+            sportFilter.innerHTML = '<option value="">All Sports</option>' + SPORT_OPTIONS.map(function(s) {
+                return '<option value="' + escHtml(s) + '">' + escHtml(s) + '</option>';
+            }).join('');
+            sportFilter.onchange = function() { setSportFilter(this.value); };
+        }
+        var leagueFilter = document.getElementById('leagueFilter');
+        populateLeagueSelect(leagueFilter, '', true);
+        if (leagueFilter) leagueFilter.onchange = function() { setLeagueFilter(this.value); };
+        renderFilterSidebars();
+    }
+
+    function onPollSportChange() {
+        var sport = document.getElementById('pollSport').value;
+        populateLeagueSelect(document.getElementById('pollLeague'), sport, false);
+    }
+
     // ============== LOADERS ==============
     async function loadCategories() {
         try {
@@ -513,6 +664,10 @@
         listEl.innerHTML = '<div class="tmr-loading">Loading polls...</div>';
         try {
             var endpoint, polls;
+            var filterQs = [];
+            if (state.sportFilter) filterQs.push('sport=' + encodeURIComponent(state.sportFilter));
+            if (state.leagueFilter) filterQs.push('league=' + encodeURIComponent(state.leagueFilter));
+            if (state.categoryFilter) filterQs.push('category=' + encodeURIComponent(state.categoryFilter));
             if (state.tab === 'mine') {
                 var user = currentUsername();
                 if (!user) {
@@ -521,25 +676,27 @@
                 }
                 var data = await api.request('/polls/users/' + encodeURIComponent(user) + '/created');
                 polls = data.polls || [];
+                if (state.sportFilter) polls = polls.filter(function(p) { return normalizePollSport(p) === state.sportFilter; });
+                if (state.leagueFilter) polls = polls.filter(function(p) { return (p.league || '') === state.leagueFilter; });
+                if (state.categoryFilter) polls = polls.filter(function(p) { return (p.category_slug || '') === state.categoryFilter; });
             } else if (state.tab === 'active') {
-                var qs = ['status=active'];
-                if (state.categoryFilter) qs.push('sport=' + encodeURIComponent(state.categoryFilter));
+                var qs = ['status=active'].concat(filterQs);
                 var data = await api.request('/polls?' + qs.join('&'));
                 polls = data.polls || [];
             } else if (state.tab === 'expired') {
                 // List polls and filter to closed/expired
-                var data = await api.request('/polls?status=all&limit=50');
+                var data = await api.request('/polls?' + ['status=all', 'limit=50'].concat(filterQs).join('&'));
                 polls = (data.polls || []).filter(function(p) {
                     if (p.status === 'resolved' || p.status === 'closed') return true;
                     if (p.voting_deadline && new Date(p.voting_deadline) < new Date()) return true;
                     return false;
                 });
             } else if (state.tab === 'most_voted') {
-                var data = await api.request('/polls?status=all&limit=50');
+                var data = await api.request('/polls?' + ['status=all', 'limit=50'].concat(filterQs).join('&'));
                 polls = (data.polls || []).slice().sort(function(a, b) { return (b.vote_count||0) - (a.vote_count||0); });
             } else {
                 // newest
-                var data = await api.request('/polls?status=all&limit=30');
+                var data = await api.request('/polls?' + ['status=all', 'limit=30'].concat(filterQs).join('&'));
                 polls = (data.polls || []).slice().sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); });
             }
             state.polls = polls;
@@ -571,6 +728,7 @@
                         '<span class="tmr-poll-card-title">' + escHtml(p.title) + '</span>' +
                         '<span class="tmr-poll-status ' + statusClass + '">' + statusLabel + '</span>' +
                     '</div>' +
+                    pollBadgeHtml(p) +
                     '<div class="tmr-poll-card-meta">By <strong data-tmr-username="' + escHtml(p.username || '') + '">' + escHtml(p.username || 'unknown') + '</strong>' +
                         (p.category_name ? '<span class="sep">&middot;</span> ' + escHtml(p.category_name) : '') +
                         '<span class="sep">&middot;</span> <strong>' + totalVotes + '</strong> vote' + (totalVotes === 1 ? '' : 's') +
@@ -672,6 +830,7 @@
             '<div class="tmr-poll-detail-head">' +
                 '<div>' +
                     '<div class="tmr-poll-detail-title">' + escHtml(p.title) + '</div>' +
+                    pollBadgeHtml(p) +
                     (p.description ? '<div class="tmr-poll-detail-desc">' + escHtml(String(p.description).replace('[hide-results-until-vote]','').trim()) + '</div>' : '') +
                     '<div class="tmr-poll-detail-meta">By <strong data-tmr-username="' + escHtml(p.username || '') + '">' + escHtml(p.username || 'unknown') + '</strong>' +
                         (p.category_name ? ' &middot; ' + escHtml(p.category_name) : '') +
@@ -729,6 +888,7 @@
         document.getElementById('pollOptions').innerHTML =
             '<div class="tmr-option-row"><input type="text" maxlength="200" placeholder="Option 1"><button type="button" class="tmr-option-remove" onclick="removeOptionRow(this)" title="Remove">&times;</button></div>' +
             '<div class="tmr-option-row"><input type="text" maxlength="200" placeholder="Option 2"><button type="button" class="tmr-option-remove" onclick="removeOptionRow(this)" title="Remove">&times;</button></div>';
+        populateLeagueSelect(document.getElementById('pollLeague'), '', false);
         document.getElementById('createPollModal').classList.add('is-open');
     }
     function closeCreatePollModal() { document.getElementById('createPollModal').classList.remove('is-open'); }
@@ -841,6 +1001,9 @@
         var title = document.getElementById('pollTitle').value.trim();
         var question = document.getElementById('pollQuestion').value.trim();
         var description = document.getElementById('pollDescription').value.trim();
+        var sport = document.getElementById('pollSport').value.trim();
+        var league = document.getElementById('pollLeague').value.trim();
+        var teamPlayer = document.getElementById('pollTeamPlayer').value.trim();
         var categoryId = document.getElementById('pollCategory').value;
         var expiresAt = document.getElementById('pollExpires').value;
         var publicResults = document.getElementById('pollPublicResults').checked;
@@ -858,6 +1021,7 @@
 
         if (title.length < 5) { errorEl.textContent = 'Title must be at least 5 characters.'; errorEl.classList.add('is-shown'); return; }
         if (question.length < 5) { errorEl.textContent = 'Question must be at least 5 characters.'; errorEl.classList.add('is-shown'); return; }
+        if (!sport) { errorEl.textContent = 'Choose a sport so this poll can be organized correctly.'; errorEl.classList.add('is-shown'); return; }
         if (scoringMode !== 'closest' && options.length < 2) {
             errorEl.textContent = 'Provide at least 2 answer choices (or switch to Closest-numeric scoring).'; errorEl.classList.add('is-shown'); return;
         }
@@ -901,8 +1065,14 @@
 
         var payload = {
             title: title + ' — ' + question,
+            question: question,
             description: fullDescription,
+            sport: sport,
+            league: league || '',
+            team_player: teamPlayer || '',
+            category: categoryId || '',
             scoring_mode: scoringMode,
+            expires: expiresAt || '',
         };
         if (scoringMode !== 'closest') payload.options = options;
         else payload.options = []; // backend allows empty options on closest-numeric parents
@@ -941,6 +1111,9 @@
                 var filtered = state.polls.filter(function(p) {
                     return (p.title || '').toLowerCase().indexOf(q) !== -1 ||
                            (p.username || '').toLowerCase().indexOf(q) !== -1 ||
+                           normalizePollSport(p).toLowerCase().indexOf(q) !== -1 ||
+                           (p.league || '').toLowerCase().indexOf(q) !== -1 ||
+                           (p.team_player || '').toLowerCase().indexOf(q) !== -1 ||
                            (p.description || '').toLowerCase().indexOf(q) !== -1;
                 });
                 var saved = state.polls;
@@ -954,6 +1127,7 @@
     // ============== INIT ==============
     document.addEventListener('DOMContentLoaded', async function() {
         try { if (window.api && api.ready) await api.ready; } catch(e){}
+        initSportLeagueControls();
         await loadCategories();
         // Deep link
         var hash = window.location.hash || '';
