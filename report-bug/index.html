@@ -54,7 +54,7 @@
         .form-help  { font-size: 12px; color: var(--tmrp-text-muted); margin-top: 4px; }
         .form-required { color: var(--tmrp-neon-cyan); }
 
-        textarea.tmr-textarea { min-height: 180px; resize: vertical; }
+        textarea.tmr-textarea { min-height: 180px; resize: vertical; }`r`n        textarea.tmr-textarea--compact { min-height: 120px; }
         .honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; opacity: 0; }
 
         .alert { border-radius: 12px; padding: 14px 16px; margin-top: 16px; font-size: 14px; line-height: 1.5; display: none; }
@@ -117,7 +117,17 @@
                     <div class="form-help"><span id="bugCharCount">0</span> / 5000 — minimum 10 characters.</div>
                 </div>
             </div>
-
+            <div class="form-row cols-2" style="margin-top:14px;">
+                <div>
+                    <label class="form-label" for="bugSteps">Steps to reproduce (optional)</label>
+                    <textarea id="bugSteps" name="stepsToReproduce" class="tmr-textarea tmr-textarea--compact" maxlength="2500" placeholder="1. Open... 2. Click... 3. See..."></textarea>
+                </div>
+                <div>
+                    <label class="form-label" for="bugBrowserDevice">Browser / device (optional)</label>
+                    <input id="bugBrowserDevice" name="browserDevice" type="text" class="tmr-input" placeholder="Chrome on iPhone, Safari on Mac, etc." maxlength="500">
+                    <div class="form-help">Auto-detected browser info is also included with the report.</div>
+                </div>
+            </div>
             <div class="form-row cols-2" style="margin-top:14px;">
                 <div>
                     <label class="form-label" for="bugUsername">Your username (optional)</label>
@@ -142,7 +152,7 @@
             </div>
 
             <div class="alert alert-success" id="bugAlertSuccess">
-                <strong>Got it.</strong> Your report was sent to the team. If you left an email, we'll follow up if we have questions.
+                <strong>Received.</strong> Your bug report was received by TrustMyRecord. If you left an email, we'll follow up if we have questions.
             </div>
             <div class="alert alert-error" id="bugAlertError">
                 <strong>Hmm, something went wrong.</strong> <span id="bugAlertErrorMsg">Please try again in a moment.</span>
@@ -169,6 +179,8 @@
     var usernameInput = document.getElementById('bugUsername');
     var emailInput    = document.getElementById('bugEmail');
     var descInput     = document.getElementById('bugDescription');
+    var stepsInput    = document.getElementById('bugSteps');
+    var browserDeviceInput = document.getElementById('bugBrowserDevice');
     var charCount     = document.getElementById('bugCharCount');
     var submitBtn     = document.getElementById('bugSubmitBtn');
     var alertSuccess  = document.getElementById('bugAlertSuccess');
@@ -181,6 +193,7 @@
 
     document.getElementById('metaPage').textContent = ref || '(opened directly)';
     document.getElementById('metaBrowser').textContent = (navigator.userAgent || '—').slice(0, 140);
+    if (browserDeviceInput && !browserDeviceInput.value) browserDeviceInput.value = (navigator.userAgent || '').slice(0, 180);
     document.getElementById('metaWhen').textContent = new Date().toLocaleString();
 
     try {
@@ -222,12 +235,21 @@
             return;
         }
 
+        var emailValue = (emailInput.value || '').trim();
+        if (emailValue && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(emailValue)) {
+            showError('Please enter a valid reply-to email address or leave it blank.');
+            emailInput.focus();
+            return;
+        }
+
         var payload = {
             category: document.getElementById('bugCategory').value || 'bug',
             description: description,
             pageUrl: (pageUrlInput.value || '').trim(),
             username: (usernameInput.value || '').trim(),
-            email:    (emailInput.value || '').trim(),
+            email:    emailValue,
+            stepsToReproduce: stepsInput ? (stepsInput.value || '').trim() : '',
+            browserDevice: browserDeviceInput ? (browserDeviceInput.value || '').trim() : '',
             honeypot: form.elements['company'] ? form.elements['company'].value : ''
         };
 
@@ -261,6 +283,7 @@
             if (ok) {
                 showSuccess();
                 descInput.value = '';
+                if (stepsInput) stepsInput.value = '';
                 charCount.textContent = '0';
             } else {
                 showError(lastErrText);
