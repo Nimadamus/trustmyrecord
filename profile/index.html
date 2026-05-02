@@ -1548,15 +1548,6 @@
     </div>
     <!-- Legacy hardcoded header removed; sitewide global nav is injected by tmr-sitewide.js -->
 
-    <!-- ==================== COVER BANNER ==================== -->
-    <section class="profile-cover-section">
-        <div class="container">
-            <div class="profile-cover" id="profileCover" aria-hidden="true">
-                <div class="profile-cover-glow"></div>
-            </div>
-        </div>
-    </section>
-
     <!-- ==================== PROFILE HEADER ==================== -->
     <section class="profile-header-section">
         <div class="container">
@@ -1598,7 +1589,7 @@
 
             <!-- Avatar uploader for own profile. Hidden until isOwnProfile resolves true. -->
             <div id="profileAvatarUploader" class="profile-avatar-uploader" hidden>
-                <strong>Avatar:</strong>
+                <strong>Edit Profile</strong>
                 <label class="profile-avatar-uploader__btn" for="profileAvatarFile"><i class="fas fa-camera"></i> Change avatar</label>
                 <input id="profileAvatarFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
                 <span class="profile-avatar-uploader__hint" id="profileAvatarHint">PNG / JPG / WebP, &le; 5 MB. Resized to 256&times;256.</span>
@@ -9216,7 +9207,7 @@
 
 
     <script src="/static/js/platform-production-fix.js?v=20260415d"></script>
-    <script src="/static/js/tmr-redesign-loader.js?v=20260501profile2" defer></script>
+    <script src="/static/js/tmr-redesign-loader.js?v=20260502profilehero1" defer></script>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
 
     <!-- ============================================================
@@ -9666,6 +9657,40 @@
       }
       body.profile-page.tmr-social-profile .tmrx-unavail-note {
         display: none !important;
+      }
+    </style>
+<style>
+      /* Hard reset for the profile masthead: one component, no floating strip. */
+      body.profile-page.tmr-social-profile .profile-cover-section{display:none!important}
+      body.profile-page.tmr-social-profile .profile-header-section{margin-top:18px!important;padding:0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;position:relative!important;z-index:2!important}
+      body.profile-page.tmr-social-profile .profile-header-section .container,
+      body.profile-page.tmr-social-profile .profile-tabs-section .container,
+      body.profile-page.tmr-social-profile .profile-body-grid{width:min(100% - 44px,1260px)!important;max-width:1260px!important;margin-left:auto!important;margin-right:auto!important;padding-left:0!important;padding-right:0!important}
+      body.profile-page.tmr-social-profile .profile-header{position:relative!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:18px!important;width:100%!important;margin:0 auto!important;padding:28px!important;border:1px solid rgba(148,163,184,.16)!important;border-radius:16px!important;background:linear-gradient(180deg,#111b2e 0%,#0a1322 100%)!important;box-shadow:0 18px 42px rgba(0,0,0,.34)!important;overflow:visible!important;color:#eef6ff!important}
+      body.profile-page.tmr-social-profile .profile-header::before{content:none!important;display:none!important}
+      body.profile-page.tmr-social-profile .profile-info{position:relative!important;z-index:1!important;width:100%!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;min-width:0!important}
+      body.profile-page.tmr-social-profile .profile-identity-row{justify-content:flex-start!important;align-items:center!important;gap:18px!important;margin-bottom:14px!important}
+      body.profile-page.tmr-social-profile .profile-avatar{width:108px!important;height:108px!important;min-width:108px!important;border-radius:20px!important;border:1px solid rgba(148,163,184,.32)!important;background:linear-gradient(135deg,#1fb8d9,#f5b400)!important;box-shadow:0 14px 30px rgba(0,0,0,.34)!important;overflow:hidden!important}
+      body.profile-page.tmr-social-profile .profile-avatar img{border-radius:20px!important;object-fit:cover!important}
+      body.profile-page.tmr-social-profile .profile-name{font-size:clamp(30px,3vw,44px)!important;line-height:1!important;letter-spacing:0!important}
+      body.profile-page.tmr-social-profile .profile-overview-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important;margin-top:16px!important}
+      body.profile-page.tmr-social-profile .profile-rail{position:relative!important;z-index:1!important;width:100%!important;margin:0!important;padding:14px 0 0!important;border-top:1px solid rgba(148,163,184,.12)!important;display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:10px!important}
+      body.profile-page.tmr-social-profile .profile-rail-card{min-height:78px!important;padding:13px 14px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;background:#0a1322!important;border:1px solid rgba(148,163,184,.14)!important;border-radius:12px!important;box-shadow:none!important}
+      body.profile-page.tmr-social-profile .profile-avatar-uploader{width:100%!important;max-width:none!important;margin:14px 0 0!important;padding:14px 16px!important;background:#0a1322!important;border:1px solid rgba(148,163,184,.14)!important;border-radius:12px!important;box-shadow:none!important}
+      body.profile-page.tmr-social-profile .profile-tabs-section{padding-top:18px!important}
+      body.profile-page.tmr-social-profile .profile-tabs{margin:0 auto!important;width:100%!important;background:#0a1322!important;border:1px solid rgba(148,163,184,.14)!important;border-radius:12px!important;box-shadow:none!important}
+      @media(max-width:1100px){body.profile-page.tmr-social-profile .profile-rail{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+      @media(max-width:720px){
+        body.profile-page.tmr-social-profile .profile-header-section .container,
+        body.profile-page.tmr-social-profile .profile-tabs-section .container,
+        body.profile-page.tmr-social-profile .profile-body-grid{width:min(100% - 28px,1260px)!important}
+        body.profile-page.tmr-social-profile .profile-header{padding:18px 16px!important;border-radius:14px!important}
+        body.profile-page.tmr-social-profile .profile-header::before{content:none!important;display:none!important}
+        body.profile-page.tmr-social-profile .profile-info{padding:0!important;border-radius:0!important}
+        body.profile-page.tmr-social-profile .profile-identity-row{align-items:flex-start!important;flex-direction:column!important}
+        body.profile-page.tmr-social-profile .profile-avatar{width:88px!important;height:88px!important;min-width:88px!important}
+        body.profile-page.tmr-social-profile .profile-overview-grid,
+        body.profile-page.tmr-social-profile .profile-rail{grid-template-columns:repeat(2,minmax(0,1fr))!important}
       }
     </style>
 </body>
