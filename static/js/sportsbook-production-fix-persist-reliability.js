@@ -877,6 +877,68 @@
                 '<input type="text" id="pickTimestampInput" readonly style="width: 100%; padding: 12px 14px; background: var(--card-bg); border: 2px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 16px; font-family: \'Exo 2\', sans-serif;" />';
             details.appendChild(wrapper);
         }
+
+        polishPickSlipLayout();
+    }
+
+    function polishPickSlipLayout() {
+        const root = document.getElementById('pickDetails');
+        if (!root) return;
+
+        const marketInput = document.getElementById('pickMarketInput');
+        if (marketInput) {
+            const wrapper = marketInput.closest('.option-group');
+            if (wrapper && wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
+        }
+
+        const orderMap = [
+            { id: 'pickLineInput',      order: 1 },
+            { id: 'pickOddsInput',      order: 2 },
+            { id: 'unitsInput',         order: 3 },
+            { id: 'pickBookInput',      order: 4 },
+            { id: 'pickReasoning',      order: 5 },
+            { id: 'pickTimestampInput', order: 6 }
+        ];
+        const options = root.querySelector('.pick-options');
+        if (options) {
+            options.style.display = 'flex';
+            options.style.flexDirection = 'column';
+            options.style.gap = '20px';
+            options.style.margin = '24px 0';
+            orderMap.forEach(function (entry) {
+                const input = document.getElementById(entry.id);
+                if (!input) return;
+                const wrapper = input.closest('.option-group');
+                if (!wrapper) return;
+                wrapper.style.order = String(entry.order);
+                wrapper.style.marginBottom = '0';
+            });
+        }
+
+        const unitsInput = document.getElementById('unitsInput');
+        if (unitsInput) {
+            const row = unitsInput.parentElement;
+            if (row && !row.classList.contains('tmr-units-row')) {
+                row.classList.add('tmr-units-row');
+            }
+            unitsInput.style.width = '';
+        }
+
+        const reasoning = document.getElementById('pickReasoning');
+        if (reasoning) {
+            reasoning.setAttribute('rows', '5');
+            reasoning.setAttribute('placeholder', 'Optional reasoning');
+            reasoning.classList.add('tmr-reasoning-clean');
+        }
+
+        const submitBtn = root.querySelector('.submit-pick-btn');
+        if (submitBtn) {
+            const icon = submitBtn.querySelector('.btn-icon');
+            if (icon && icon.parentNode) icon.parentNode.removeChild(icon);
+            const text = submitBtn.querySelector('.btn-text');
+            if (text) text.textContent = 'SUBMIT';
+            else submitBtn.textContent = 'SUBMIT';
+        }
     }
 
     function getLineInputLabel(option) {
@@ -1050,6 +1112,29 @@
             '.tmr-option-odds{min-width:94px;padding:13px 14px;border-radius:12px;background:linear-gradient(180deg,rgba(63,72,88,0.98),rgba(40,46,58,0.98));font-size:30px;letter-spacing:-0.05em;}',
             '@keyframes tmrShimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}',
             '@media (max-width: 700px){.tmr-loading-topline{padding:14px 14px 12px;align-items:flex-start;flex-direction:column;}.tmr-loading-tabs{width:100%;}.tmr-loading-tab{flex:1 1 calc(50% - 6px);min-width:unset;}.tmr-loading-matchup,.tmr-loading-lines{grid-template-columns:1fr;}.tmr-market-head{padding:16px;grid-template-columns:1fr;align-items:flex-start;}.tmr-market-body{padding:0 16px 16px;}.tmr-market-summary{width:100%;justify-content:space-between;}.tmr-option-grid{grid-template-columns:1fr;}.tmr-team-name{font-size:16px;}.tmr-team-side{min-width:46px;padding:4px 7px;}.tmr-matchup-divider{padding-left:56px;}.tmr-option-btn{min-height:auto;padding:12px 13px;grid-template-columns:minmax(0,1fr) auto;}.tmr-market-count{width:100%;text-align:center;}.tmr-market-caret{display:none;}.tmr-board-filter-tab{min-width:unset;flex:1 1 calc(50% - 6px);}.tmr-group-header{grid-template-columns:minmax(0,1fr) auto;}.tmr-group-metahead{display:none;}#picks .pick-options{grid-template-columns:1fr;}#picks .games-header{align-items:flex-start;flex-direction:column;}#picks .sport-cards-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}#picks .sport-card{min-height:132px;padding:16px 14px!important;}#picks .sport-name{font-size:16px!important;}#picks .submit-pick-btn{padding:15px 16px;font-size:14px;}}'
+            ,'#pickDetails .pick-options{display:flex!important;flex-direction:column!important;gap:20px!important;margin:24px 0!important;}'
+            ,'#pickDetails .option-group{margin-bottom:0!important;width:100%;box-sizing:border-box;}'
+            ,'#pickDetails .option-group label{display:block;color:#9aa7b8;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;font-size:11px;margin-bottom:8px;}'
+            ,'#pickDetails .option-group input[type="text"],#pickDetails .option-group input[type="number"]{width:100%!important;box-sizing:border-box;padding:14px 16px!important;background:#14181f!important;border:1px solid rgba(255,255,255,0.08)!important;border-radius:12px!important;color:#f8fafc!important;font-size:16px!important;font-weight:600;}'
+            ,'#pickDetails .option-group input[readonly]{background:rgba(255,255,255,0.03)!important;color:#cbd5e1!important;cursor:default;}'
+            ,'#pickDetails .option-group input:focus{outline:none!important;border-color:rgba(120,255,181,0.34)!important;box-shadow:0 0 0 3px rgba(47,143,83,0.18)!important;}'
+            ,'#pickDetails .tmr-units-row{display:flex!important;flex-wrap:wrap;align-items:stretch;gap:10px!important;margin-top:8px;}'
+            ,'#pickDetails .tmr-units-row #unitsInput{flex:1 1 120px;min-width:0;width:auto!important;font-size:18px!important;font-weight:800;text-align:center;}'
+            ,'#pickDetails .tmr-units-row #unitsModeToggle{flex:1 1 220px;display:flex;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);min-width:0;}'
+            ,'#pickDetails .tmr-units-row #unitsModeToggle .units-mode-btn{flex:1;padding:12px 14px;font-size:13px;border-radius:0;}'
+            ,'@media (max-width:560px){#pickDetails .tmr-units-row{flex-direction:column;}#pickDetails .tmr-units-row #unitsInput,#pickDetails .tmr-units-row #unitsModeToggle{flex:1 1 auto;width:100%;}}'
+            ,'#pickDetails #pickReasoning,#pickDetails .tmr-reasoning-clean{width:100%!important;box-sizing:border-box;min-height:120px!important;padding:14px 16px!important;background:#14181f!important;border:1px solid rgba(255,255,255,0.08)!important;border-radius:12px!important;color:#f8fafc!important;font-size:15px!important;line-height:1.5;resize:vertical;font-family:inherit;}'
+            ,'#pickDetails #pickReasoning::placeholder{color:#6b7280;}'
+            ,'#pickDetails #pickReasoning:focus{outline:none!important;border-color:rgba(120,255,181,0.34)!important;box-shadow:0 0 0 3px rgba(47,143,83,0.15)!important;}'
+            ,'#pickDetails .submit-pick-btn{width:100%;background:linear-gradient(180deg,#2f8f53,#256e41)!important;color:#f5fff8!important;border:1px solid rgba(120,255,181,0.28)!important;border-radius:14px!important;padding:18px 20px!important;font-size:16px!important;font-weight:900!important;letter-spacing:0.16em!important;text-transform:uppercase;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease,background .15s ease;}'
+            ,'#pickDetails .submit-pick-btn:hover{transform:translateY(-1px);background:linear-gradient(180deg,#36a45f,#2a7a48)!important;box-shadow:0 12px 28px rgba(47,143,83,0.28);}'
+            ,'#pickDetails .submit-pick-btn:disabled{opacity:0.55;cursor:not-allowed;transform:none;box-shadow:none;}'
+            ,'#pickDetails .pick-summary-card{background:linear-gradient(180deg,#11151c,#0a0d12)!important;border:1px solid rgba(255,255,255,0.08)!important;border-radius:16px!important;padding:18px 20px!important;}'
+            ,'#pickDetails .pick-summary-card .summary-section{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px dashed rgba(255,255,255,0.06);}'
+            ,'#pickDetails .pick-summary-card .summary-section:first-of-type{border-top:none;}'
+            ,'#pickDetails .pick-summary-card .summary-label{color:#7f8da2;font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;}'
+            ,'#pickDetails .pick-summary-card .summary-value{color:#f8fafc;font-weight:800;font-size:15px;text-align:right;}'
+            ,'#pickDetails{box-sizing:border-box;}'
         ].join('');
         document.head.appendChild(style);
     }
@@ -2021,6 +2106,11 @@
                     gameId: option.game_id || game.id || null,
                     game: game
                 });
+
+                const slipSubmit = document.getElementById('ttSlipSubmit');
+                if (slipSubmit && /lock/i.test(slipSubmit.textContent || '')) {
+                    slipSubmit.textContent = 'Submit';
+                }
             } catch (e) {
                 console.warn('[TMR][slip] _ttPopulateSlip wiring failed:', e && e.message);
             }
@@ -2120,7 +2210,7 @@
                 btn.disabled = false;
                 btn.removeAttribute('disabled');
                 if (/locking/i.test(btn.textContent || '')) {
-                    btn.textContent = btn.getAttribute('data-original-label') || 'Lock Pick';
+                    btn.textContent = btn.getAttribute('data-original-label') || 'Submit';
                 }
             } catch (_) {}
         });
