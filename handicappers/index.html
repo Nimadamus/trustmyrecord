@@ -52,7 +52,7 @@
         button, input, select { font: inherit; }
 
         .hm-page {
-            width: min(1460px, calc(100% - 36px));
+            width: min(1680px, calc(100% - 40px));
             margin: 0 auto;
             padding: 28px 0 62px;
         }
@@ -305,19 +305,23 @@
             border: 1px solid var(--line);
             border-radius: 14px;
             background: rgba(7, 13, 24, 0.72);
-            overflow: hidden;
+            overflow-x: auto;
+            overflow-y: visible;
+            scrollbar-color: rgba(45, 212, 191, 0.45) rgba(15, 26, 44, 0.8);
+            scrollbar-width: thin;
         }
 
         .hm-table {
-            min-width: 1360px;
+            width: 100%;
+            min-width: 1640px;
         }
 
         .hm-row {
             display: grid;
-            grid-template-columns: minmax(250px, 1.2fr) 82px 86px 82px 92px 76px 88px 132px minmax(210px, 1fr) 116px 196px;
-            gap: 12px;
+            grid-template-columns: minmax(270px, 1.22fr) 90px 92px 88px 96px 82px 94px 150px minmax(240px, 1fr) 126px minmax(240px, 240px);
+            gap: 14px;
             align-items: center;
-            padding: 14px 16px;
+            padding: 16px 20px;
             border-bottom: 1px solid rgba(148, 163, 184, 0.12);
         }
 
@@ -337,7 +341,7 @@
         }
 
         .hm-member-row {
-            min-height: 74px;
+            min-height: 82px;
             background: rgba(10, 18, 32, 0.72);
             transition: background 0.14s ease;
         }
@@ -447,14 +451,17 @@
             display: flex;
             justify-content: flex-end;
             gap: 8px;
+            min-width: 0;
         }
 
         .hm-btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            flex: 0 0 auto;
+            min-width: 104px;
             min-height: 34px;
-            padding: 0 12px;
+            padding: 0 14px;
             border: 1px solid rgba(148, 163, 184, 0.28);
             border-radius: 999px;
             background: rgba(255, 255, 255, 0.06);
@@ -530,6 +537,7 @@
 
             .hm-table-wrap {
                 overflow-x: auto;
+                overflow-y: visible;
             }
 
             .hm-scroll-hint { display: inline; }
@@ -537,7 +545,7 @@
 
         @media (max-width: 720px) {
             .hm-page {
-                width: min(100% - 24px, 1460px);
+                width: min(100% - 24px, 1680px);
                 padding-top: 18px;
             }
 
@@ -599,6 +607,11 @@
             .hm-actions {
                 justify-content: flex-start;
                 flex-wrap: wrap;
+                width: 100%;
+            }
+
+            .hm-btn {
+                min-width: 128px;
             }
         }
     </style>
@@ -1114,7 +1127,7 @@
 
         function formatStreak(value) {
             const streak = Number(value || 0);
-            if (!streak) return 'N/A';
+            if (!streak) return '0';
             return streak > 0 ? 'W' + streak : 'L' + Math.abs(streak);
         }
 
@@ -1251,7 +1264,9 @@
                     member.username.toLowerCase().includes(q) ||
                     member.displayName.toLowerCase().includes(q);
                 const matchesSport = sport === 'all' || (member.stats.sports || []).includes(sport);
-                return matchesSearch && matchesSport;
+                const hasActivity = Number(member.stats.totalPicks || 0) > 0 || gradedCount(member) > 0;
+                const explicitLookup = q.length > 0 || sport !== 'all';
+                return matchesSearch && matchesSport && (explicitLookup || hasActivity);
             });
 
             const byNumber = getter => (a, b) => getter(b) - getter(a);
@@ -1275,7 +1290,7 @@
                 : 'Showing ' + visibleMembers.length + ' of ' + members.length + ' members.';
 
             if (!visibleMembers.length) {
-                els.rows.innerHTML = '<div class="hm-empty"><strong>No members match these filters.</strong>Clear the search or sport filter to see every public production member.</div>';
+                els.rows.innerHTML = '<div class="hm-empty"><strong>Founding records are being built now.</strong>Early members will appear here once they have locked pick activity. Search by username to find a specific production member.</div>';
                 return;
             }
 
@@ -1305,7 +1320,7 @@
                     '<div class="hm-last-pick" data-label="Last pick"><strong>' + escapeHtml(lastPick.title) + '</strong><span>' + escapeHtml(lastPick.meta) + '</span></div>' +
                     '<div class="hm-stat is-muted" data-label="Last active">' + escapeHtml(formatLastActive(member.lastActive)) + '</div>' +
                     '<div class="hm-actions">' +
-                        '<a class="hm-btn" href="' + profileHref + '">View profile</a>' +
+                        '<a class="hm-btn" href="' + profileHref + '">View Profile</a>' +
                         '<button class="hm-btn hm-btn--primary ' + (member.isFollowing ? 'hm-btn--following' : '') + '" type="button" data-follow="' + escapeHtml(member.username) + '"' + followDisabled + '>' + escapeHtml(followLabel) + '</button>' +
                     '</div>' +
                 '</div>';
