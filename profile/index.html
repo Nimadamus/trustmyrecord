@@ -7560,7 +7560,7 @@
         const trustPills = '<div class="profile-trust-row">' +
             '<span class="profile-trust-pill"><i class="fas fa-check-circle"></i> Status <strong>' + verifiedText + '</strong></span>' +
             '<span class="profile-trust-pill"><i class="fas fa-user"></i> Member since <strong>' + joinDate + '</strong></span>' +
-            '<span class="profile-trust-pill"><i class="fas fa-database"></i> Ledger <strong>' + totalPicks + ' locked picks</strong></span>' +
+            '<span class="profile-trust-pill"><i class="fas fa-database"></i> Ledger <strong>' + gradedProfilePicks + ' graded picks</strong></span>' +
             (p.__recoveredFromLocal ? '<span class="profile-trust-pill"><i class="fas fa-rotate-left"></i> Legacy recovery <strong>Browser ledger restored</strong></span>' : '') +
             '</div>';
 
@@ -7598,11 +7598,11 @@
         const emptyLedgerNote = showEmptyLedgerNote
             ? '<div class="profile-empty-ledger">' +
                 '<p><strong>No picks yet.</strong></p>' +
-                '<p>Locked picks will build this public record after they are submitted and graded.</p>' +
+                '<p>Graded picks will build this public record after they are settled.</p>' +
               '</div>'
             : '';
         const rail = '<div class="profile-rail" aria-label="Pick monitor stats">' +
-            '<div class="profile-rail-card"><span class="profile-rail-label">Total Picks</span><span class="profile-rail-value">' + totalPicks + '</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">Graded Picks</span><span class="profile-rail-value">' + gradedProfilePicks + '</span></div>' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Record</span><span class="profile-rail-value' + signedClass(winsValue - lossesValue) + '">' + recordText + '</span></div>' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Win Rate</span><span class="profile-rail-value' + (winLossSample > 0 ? signedClass(derivedWinRate - 50) : ' is-neutral') + '">' + (winLossSample > 0 ? derivedWinRate.toFixed(1) + '%' : 'N/A') + '</span></div>' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Units</span><span class="profile-rail-value' + signedClass(netUnitsValue) + '">' + fmtSigned(netUnitsValue, 'u', 2) + '</span></div>' +
