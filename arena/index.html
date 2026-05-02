@@ -569,6 +569,316 @@
             .gaming-actions .btn { width: 100%; justify-content: center; }
             .tabs { position: relative; top: auto; width: calc(100% - 20px); }
         }
+
+        /* FULL ARENA OVERHAUL */
+        body {
+            background:
+                linear-gradient(90deg, rgba(0, 234, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(rgba(0, 234, 255, 0.035) 1px, transparent 1px),
+                linear-gradient(180deg, #02040b 0%, #06101d 42%, #03050c 100%) !important;
+            background-size: 54px 54px, 54px 54px, auto;
+        }
+
+        .hero {
+            min-height: min(820px, calc(100vh - 68px));
+            display: flex;
+            align-items: center;
+            padding: 54px 24px 34px;
+            border-bottom: 1px solid rgba(0, 234, 255, 0.22);
+            background:
+                linear-gradient(115deg, rgba(0, 234, 255, 0.15), transparent 38%),
+                linear-gradient(245deg, rgba(124, 58, 237, 0.18), transparent 34%),
+                #02040b;
+        }
+
+        .hero-shell {
+            width: min(1380px, 100%);
+            grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+            gap: 26px;
+        }
+
+        .hero-copy-card,
+        .hero-side-card {
+            border-radius: 8px;
+            border: 1px solid rgba(80, 229, 255, 0.26);
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.018)),
+                rgba(3, 11, 23, 0.92);
+            box-shadow:
+                0 32px 90px rgba(0, 0, 0, 0.55),
+                inset 0 1px 0 rgba(255,255,255,0.09);
+        }
+
+        .hero-copy-card {
+            position: relative;
+            overflow: hidden;
+            padding: clamp(26px, 5vw, 54px);
+        }
+
+        .hero-copy-card::after {
+            content: "";
+            position: absolute;
+            inset: auto 0 0 0;
+            height: 4px;
+            background: linear-gradient(90deg, #00eaff, #7c3aed, #39ff88);
+            box-shadow: 0 0 30px rgba(0, 234, 255, 0.7);
+        }
+
+        .hero-kicker {
+            border-radius: 4px;
+            background: rgba(0, 234, 255, 0.12);
+            color: #baf9ff;
+            letter-spacing: .16em;
+        }
+
+        .hero h1 {
+            max-width: 10.5ch;
+            margin-top: 8px;
+            font-size: clamp(3.4rem, 7.2vw, 6.9rem);
+            line-height: .82;
+            text-transform: uppercase;
+        }
+
+        .hero p {
+            max-width: 780px;
+            font-size: clamp(1rem, 1.5vw, 1.22rem);
+            color: #c5d5e8;
+        }
+
+        .hero-actions {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            max-width: 100%;
+            gap: 10px;
+        }
+
+        .hero-actions .btn {
+            min-height: 76px;
+            border-radius: 6px;
+            flex-direction: column;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            font-size: .8rem;
+        }
+
+        .hero-stats {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1px !important;
+            border: 1px solid rgba(80,229,255,.18);
+            background: rgba(80,229,255,.16);
+        }
+
+        .hero-stat {
+            border: 0;
+            border-radius: 0;
+            background: rgba(2, 8, 18, .86);
+            padding: 16px 14px;
+        }
+
+        .hero-stat .num {
+            font-size: clamp(1.8rem, 3.5vw, 3rem);
+            color: #00eaff;
+        }
+
+        .arena-board {
+            display: grid;
+            gap: 14px;
+        }
+
+        .arena-board-top {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            align-items: center;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(80,229,255,.18);
+        }
+
+        .arena-board-title {
+            font-family: var(--font-display);
+            font-size: 1.85rem;
+            line-height: .95;
+            letter-spacing: 0;
+            text-transform: uppercase;
+        }
+
+        .arena-live-chip {
+            border: 1px solid rgba(57,255,136,.38);
+            background: rgba(57,255,136,.1);
+            color: #a9ffc9;
+            border-radius: 999px;
+            padding: 8px 11px;
+            font-size: .72rem;
+            font-weight: 900;
+            letter-spacing: .12em;
+        }
+
+        .arena-lanes {
+            display: grid;
+            gap: 10px;
+        }
+
+        .arena-lane {
+            display: grid;
+            grid-template-columns: 48px 1fr auto;
+            gap: 12px;
+            align-items: center;
+            padding: 13px;
+            border: 1px solid rgba(80,229,255,.15);
+            border-radius: 6px;
+            background: rgba(255,255,255,.035);
+        }
+
+        .arena-lane-icon {
+            width: 48px;
+            height: 48px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, #00eaff, #7c3aed);
+            color: #fff;
+            border-radius: 6px;
+            font-size: 1.15rem;
+        }
+
+        .arena-lane strong {
+            display: block;
+            color: #f3f8ff;
+            font-size: .98rem;
+        }
+
+        .arena-lane span {
+            display: block;
+            margin-top: 3px;
+            color: #9fb2c8;
+            font-size: .84rem;
+            line-height: 1.35;
+        }
+
+        .arena-lane-code {
+            color: #00eaff;
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: .78rem;
+        }
+
+        .tabs {
+            top: 70px;
+            border-radius: 0;
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            justify-content: center;
+            background: rgba(2, 7, 16, .94);
+            border-width: 1px 0;
+            box-shadow: 0 14px 36px rgba(0,0,0,.28);
+        }
+
+        .tab {
+            border-radius: 4px;
+            padding: 12px 16px;
+            text-transform: uppercase;
+            letter-spacing: .035em;
+            font-size: .78rem;
+        }
+
+        .main {
+            max-width: 1380px;
+            padding-top: 30px;
+        }
+
+        .arena-section-title {
+            border-left: 4px solid #00eaff;
+            padding-left: 14px;
+        }
+
+        .arena-action-grid {
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .arena-action-card {
+            min-height: 244px;
+            border-radius: 6px;
+            padding: 18px;
+            border-color: rgba(80,229,255,.2);
+            background:
+                linear-gradient(160deg, rgba(0,234,255,.13), rgba(255,255,255,.025) 42%),
+                rgba(3, 10, 22, .92);
+        }
+
+        .arena-action-card:nth-child(2),
+        .arena-action-card:nth-child(5) {
+            background:
+                linear-gradient(160deg, rgba(124,58,237,.18), rgba(255,255,255,.025) 42%),
+                rgba(3, 10, 22, .92);
+        }
+
+        .arena-action-card:nth-child(3),
+        .arena-action-card:nth-child(6) {
+            background:
+                linear-gradient(160deg, rgba(57,255,136,.12), rgba(255,255,255,.025) 42%),
+                rgba(3, 10, 22, .92);
+        }
+
+        .arena-action-icon {
+            border-radius: 5px;
+        }
+
+        .gaming-room,
+        .open-challenges-market {
+            border-radius: 6px;
+            background:
+                linear-gradient(180deg, rgba(0,234,255,.08), rgba(255,255,255,.02)),
+                rgba(3, 10, 22, .92);
+        }
+
+        .game-logo-grid {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .game-logo-card {
+            min-height: 176px;
+            border-radius: 6px;
+            border-color: rgba(80,229,255,.22);
+            background:
+                linear-gradient(145deg, rgba(0,234,255,.12), rgba(124,58,237,.08)),
+                #07101d;
+        }
+
+        .game-logo-mark {
+            font-size: clamp(1.75rem, 3vw, 2.7rem);
+            text-transform: uppercase;
+        }
+
+        .challenges-grid {
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+        }
+
+        .challenge-card {
+            border-radius: 6px;
+            background:
+                linear-gradient(180deg, rgba(0,234,255,.075), rgba(255,255,255,.018)),
+                rgba(3, 10, 22, .94);
+        }
+
+        @media (max-width: 1180px) {
+            .hero-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .arena-action-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 860px) {
+            .hero { min-height: auto; }
+            .hero-shell { grid-template-columns: 1fr; }
+            .arena-action-grid, .game-logo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .tabs { position: relative; top: auto; justify-content: flex-start; }
+        }
+
+        @media (max-width: 560px) {
+            .hero-actions, .hero-stats, .arena-action-grid, .game-logo-grid { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 3rem; }
+            .arena-lane { grid-template-columns: 42px 1fr; }
+            .arena-lane-code { display: none; }
+        }
     </style>
 </head>
 <body>
@@ -596,27 +906,37 @@
             </div>
         </div>
         <div class="hero-side-card">
-            <h3>What you can do in Arena</h3>
-            <div class="hero-proof-list">
-                <div class="hero-proof-item">
-                    <span class="hero-proof-index"><i class="fas fa-chart-line"></i></span>
-                    <div class="hero-proof-copy"><strong>Handicapping Challenges</strong><span>Challenge another capper on picks, units, ROI, sport-specific cards, or weekly records.</span></div>
+            <div class="arena-board">
+                <div class="arena-board-top">
+                    <div class="arena-board-title">Arena<br>Command Board</div>
+                    <div class="arena-live-chip">LIVE HUB</div>
                 </div>
-                <div class="hero-proof-item">
-                    <span class="hero-proof-index"><i class="fas fa-square-poll-vertical"></i></span>
-                    <div class="hero-proof-copy"><strong>Poll Battles</strong><span>Create debate-style polls or prediction polls and challenge the community to take a side.</span></div>
-                </div>
-                <div class="hero-proof-item">
-                    <span class="hero-proof-index"><i class="fas fa-brain"></i></span>
-                    <div class="hero-proof-copy"><strong>Trivia Battles</strong><span>Create sports trivia challenges and compete head to head for public bragging rights.</span></div>
-                </div>
-                <div class="hero-proof-item">
-                    <span class="hero-proof-index"><i class="fas fa-gamepad"></i></span>
-                    <div class="hero-proof-copy"><strong>Gaming Matchups</strong><span>Set up MLB The Show, Madden, NBA 2K, EA FC, NHL, and other head-to-head matchups.</span></div>
-                </div>
-                <div class="hero-proof-item">
-                    <span class="hero-proof-index"><i class="fas fa-trophy"></i></span>
-                    <div class="hero-proof-copy"><strong>Rivalry History / Results</strong><span>Keep a public record of completed challenges, match scores, standings, and rivalry results.</span></div>
+                <div class="arena-lanes">
+                    <div class="arena-lane">
+                        <span class="arena-lane-icon"><i class="fas fa-chart-line"></i></span>
+                        <div><strong>Handicapping Challenges</strong><span>Challenge another capper on picks, units, ROI, sport cards, or weekly records.</span></div>
+                        <span class="arena-lane-code">H2H</span>
+                    </div>
+                    <div class="arena-lane">
+                        <span class="arena-lane-icon"><i class="fas fa-square-poll-vertical"></i></span>
+                        <div><strong>Poll Battles</strong><span>Create debate polls and prediction polls that force the community to pick a side.</span></div>
+                        <span class="arena-lane-code">VOTE</span>
+                    </div>
+                    <div class="arena-lane">
+                        <span class="arena-lane-icon"><i class="fas fa-brain"></i></span>
+                        <div><strong>Trivia Battles</strong><span>Create sports trivia challenges and compete head to head.</span></div>
+                        <span class="arena-lane-code">IQ</span>
+                    </div>
+                    <div class="arena-lane">
+                        <span class="arena-lane-icon"><i class="fas fa-gamepad"></i></span>
+                        <div><strong>Gaming Matchups</strong><span>Jump into MLB The Show, Madden, NBA 2K, EA FC, and NHL challenges.</span></div>
+                        <span class="arena-lane-code">VS</span>
+                    </div>
+                    <div class="arena-lane">
+                        <span class="arena-lane-icon"><i class="fas fa-trophy"></i></span>
+                        <div><strong>Rivalry Results</strong><span>Track completed challenges, match scores, standings, and rivalry history.</span></div>
+                        <span class="arena-lane-code">REC</span>
+                    </div>
                 </div>
             </div>
         </div>
