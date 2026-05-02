@@ -3,18 +3,18 @@
 > **The End of the Bullshit** - A transparent, verifiable sports betting platform.
 
 🌐 **Live Site**: [trustmyrecord.com](https://trustmyrecord.com)
-📊 **Status**: Fully Static | 100% Client-Side
+📊 **Status**: GitHub Pages frontend backed by the TrustMyRecord API
 
 ---
 
 ## Overview
 
-Trust My Record is a sports betting transparency platform where every pick is tracked and verified. Built as a fully static single-page application with no backend dependencies.
+Trust My Record is a sports social and accountability platform where picks are locked, timestamped, graded by the backend, and attached to public profiles.
 
 ### Features
 
-- ✅ **Pick Tracking** - Record and track all your bets
-- ✅ **Real-Time Statistics** - Win rates, ROI, streaks
+- ✅ **Locked Pick Tracking** - Submit picks into a permanent public record
+- ✅ **Backend Statistics** - Win rates, units, ROI, streaks, and graded pick history
 - ✅ **Social Feed** - Share picks and follow others
 - ✅ **Leaderboards** - Global and sport-specific rankings
 - ✅ **Challenges** - Compete head-to-head
@@ -22,7 +22,7 @@ Trust My Record is a sports betting transparency platform where every pick is tr
 - ✅ **Notifications** - Stay updated with filters
 - ✅ **Premium Tiers** - Bronze, Silver, Gold, Platinum
 - ✅ **Polls & Trivia** - Community engagement
-- ✅ **100% Static** - No server required
+- ✅ **Public Profiles** - Shareable verified records backed by API data
 
 ---
 
@@ -30,8 +30,8 @@ Trust My Record is a sports betting transparency platform where every pick is tr
 
 ### Frontend
 - **HTML5/CSS3** - Modern, responsive design
-- **Vanilla JavaScript** - Zero dependencies
-- **localStorage** - All data stored client-side
+- **Vanilla JavaScript** - Static frontend pages
+- **TrustMyRecord API** - Auth, picks, grading, forums, polls, trivia, challenges, and profile data
 - **Google Fonts** - Orbitron & Exo 2
 
 ### Hosting
@@ -99,17 +99,7 @@ trustmyrecord/
 
 ## Data Storage
 
-All user data is stored in browser localStorage:
-- **Picks** - All submitted bets
-- **Profile** - User information
-- **Feed Posts** - Social posts
-- **Following** - Who you follow
-- **Poll Votes** - Poll participation
-- **Trivia Scores** - Game results
-- **Messages** - Conversation history
-- **Notifications** - User alerts
-
-Data persists in the user's browser. No backend database required.
+Production data lives in the backend. The frontend may use browser storage for session persistence, UI preferences, cached state, or graceful fallbacks, but the canonical records, pick grading, profile stats, forum posts, polls, trivia scores, and challenge data are API-backed.
 
 ---
 

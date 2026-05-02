@@ -14,7 +14,7 @@
     <meta property="og:url" content="https://trustmyrecord.com/handicappers/">
     <meta property="og:type" content="website">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260502navspread1">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260502handicappers">
     <script defer src="/static/js/tmr-sitewide.js?v=20260502handicappers"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -205,6 +205,18 @@
             color: var(--muted);
             font-size: 0.82rem;
             font-weight: 800;
+        }
+
+        .hm-leader-card--empty {
+            grid-column: 1 / -1;
+            min-height: 104px;
+            border-style: dashed;
+            background: rgba(8, 15, 27, 0.72);
+        }
+
+        .hm-stat.is-neutral,
+        .hm-count strong.is-muted {
+            color: #9fb0c6;
         }
 
         .hm-controls {
@@ -591,22 +603,21 @@
         }
     </style>
 </head>
-<body class="tmr-site-shell">
+<body>
     <main class="hm-page">
         <section class="hm-hero">
             <div>
                 <p class="hm-kicker">Member Discovery</p>
                 <h1>Handicappers</h1>
-                <p>Search every TrustMyRecord profile, compare verified performance, follow members, and open public pick histories without hiding new users who have not made picks yet.</p>
-                <p class="hm-production-note">Preview build: production-directory-filter-20260502</p>
+                <p>Discover production members with real locked-pick activity, compare verified records, follow cappers, and open public pick histories.</p>
             </div>
             <div class="hm-counts" aria-label="Directory summary">
                 <div class="hm-count"><strong id="hmTotalMembers">0</strong><span>Total Members</span><small>Production accounts only</small></div>
                 <div class="hm-count"><strong id="hmActiveMembers">0</strong><span>Active Pick Makers</span><small>Members with real picks</small></div>
                 <div class="hm-count"><strong id="hmTotalPicks">0</strong><span>Total Verified Picks</span><small>Stored pick rows</small></div>
-                <div class="hm-count"><strong id="hmBestRecord">N/A</strong><span>Best Current Record</span><small id="hmBestRecordUser">No graded picks yet</small></div>
-                <div class="hm-count"><strong id="hmTopUnits">N/A</strong><span>Top Units Leader</span><small id="hmTopUnitsUser">No graded picks yet</small></div>
-                <div class="hm-count"><strong id="hmRecentActivity">N/A</strong><span>Most Recent Pick Activity</span><small id="hmRecentActivityUser">No pick activity yet</small></div>
+                <div class="hm-count"><strong id="hmBestRecord" class="is-muted" title="Not enough graded picks yet">--</strong><span>Best Current Record</span><small id="hmBestRecordUser">No qualified records yet</small></div>
+                <div class="hm-count"><strong id="hmTopUnits" class="is-muted" title="Not enough graded picks yet">--</strong><span>Top Units Leader</span><small id="hmTopUnitsUser">No qualified records yet</small></div>
+                <div class="hm-count"><strong id="hmRecentActivity" class="is-muted" title="Not enough graded picks yet">--</strong><span>Most Recent Pick Activity</span><small id="hmRecentActivityUser">No pick activity yet</small></div>
             </div>
         </section>
 
@@ -614,12 +625,12 @@
             <div class="hm-section-head">
                 <div>
                     <h2>Top Performers</h2>
-                    <p>Leaders are calculated only from real production members and stored pick results.</p>
+                    <p>Leaders require at least 10 graded picks. Thin samples stay out of promoted rankings.</p>
                 </div>
                 <span class="hm-production-note">Showing <strong id="hmVisibleMembers">0</strong> filtered members</span>
             </div>
             <div class="hm-featured" id="hmFeaturedLeaders">
-                <div class="hm-leader-card"><b>Loading</b><strong>N/A</strong><span>Waiting for member data</span></div>
+                <div class="hm-leader-card hm-leader-card--empty"><b>Loading</b><strong>--</strong><span>Waiting for qualified member data</span></div>
             </div>
         </section>
 
@@ -708,6 +719,7 @@
 
         let members = [];
         let visibleMembers = [];
+        const MIN_TOP_PERFORMER_GRADED_PICKS = 10;
         const social = window.socialSystem || (typeof SocialSystem !== 'undefined' ? new SocialSystem() : null);
 
         function escapeHtml(value) {
@@ -865,6 +877,7 @@
                 wins,
                 losses,
                 pushes,
+                gradedPicks: wins + losses + pushes,
                 pending,
                 totalPicks,
                 units: numberFrom(user.net_units, user.units, stats.net_units, stats.units, stats.totalUnits, stats.total_units) || 0,
@@ -942,6 +955,7 @@
                 wins,
                 losses,
                 pushes,
+                gradedPicks: graded.length,
                 pending,
                 totalPicks: normalized.length,
                 units,
@@ -1000,6 +1014,7 @@
                             wins,
                             losses,
                             pushes,
+                            gradedPicks: wins + losses + pushes,
                             pending,
                             totalPicks,
                             units: numberFrom(summary.net_units) || 0,
@@ -1134,6 +1149,7 @@
         }
 
         function statClass(value) {
+            if (value == null || !Number.isFinite(Number(value))) return 'is-neutral';
             const num = Number(value || 0);
             if (num > 0) return 'is-positive';
             if (num < 0) return 'is-negative';
@@ -1154,7 +1170,16 @@
         }
 
         function leaderValue(value, formatter) {
-            return value ? formatter(value) : 'N/A';
+            return value ? formatter(value) : '--';
+        }
+
+        function gradedCount(member) {
+            const stats = member && member.stats ? member.stats : {};
+            return Number(stats.gradedPicks != null ? stats.gradedPicks : (Number(stats.wins || 0) + Number(stats.losses || 0) + Number(stats.pushes || 0))) || 0;
+        }
+
+        function isQualifiedTopPerformer(member) {
+            return gradedCount(member) >= MIN_TOP_PERFORMER_GRADED_PICKS;
         }
 
         function bestBy(list, predicate, score) {
@@ -1166,19 +1191,20 @@
 
         function renderSummary() {
             const pickedMembers = members.filter(member => Number(member.stats.totalPicks || 0) > 0);
-            const gradedMembers = members.filter(member => (member.stats.wins + member.stats.losses + member.stats.pushes) > 0);
+            const gradedMembers = members.filter(member => gradedCount(member) > 0);
+            const qualifiedMembers = gradedMembers.filter(isQualifiedTopPerformer);
             const totalPicks = members.reduce((sum, member) => sum + Number(member.stats.totalPicks || 0), 0);
-            const bestRecord = bestBy(gradedMembers, member => (member.stats.wins + member.stats.losses) > 0, member => Number(member.stats.winRate || 0));
-            const topUnits = bestBy(pickedMembers, () => true, member => Number(member.stats.units || 0));
+            const bestRecord = bestBy(qualifiedMembers, member => (member.stats.wins + member.stats.losses) > 0, member => Number(member.stats.winRate || 0));
+            const topUnits = bestBy(qualifiedMembers, () => true, member => Number(member.stats.units || 0));
             const recent = bestBy(pickedMembers, () => true, getActivityTime);
 
             setText(els.total, String(members.length));
             setText(els.active, String(pickedMembers.length));
             setText(els.totalPicks, String(totalPicks));
             setText(els.bestRecord, leaderValue(bestRecord, member => formatRecord(member.stats)));
-            setText(els.bestRecordUser, bestRecord ? '@' + bestRecord.username + ' · ' + formatPercent(bestRecord.stats.winRate, true) : 'No graded picks yet');
+            setText(els.bestRecordUser, bestRecord ? '@' + bestRecord.username + ' · ' + formatPercent(bestRecord.stats.winRate, true) : 'No qualified records yet');
             setText(els.topUnits, leaderValue(topUnits, member => formatUnits(member.stats.units, true)));
-            setText(els.topUnitsUser, topUnits ? '@' + topUnits.username : 'No graded picks yet');
+            setText(els.topUnitsUser, topUnits ? '@' + topUnits.username : 'No qualified records yet');
             setText(els.recentActivity, leaderValue(recent, member => formatLastActive(member.stats.lastActivity || member.lastActive)));
             setText(els.recentActivityUser, recent ? '@' + recent.username : 'No pick activity yet');
             renderFeaturedLeaders();
@@ -1186,19 +1212,21 @@
 
         function renderFeaturedLeaders() {
             const withPicks = members.filter(member => Number(member.stats.totalPicks || 0) > 0);
-            const graded = members.filter(member => (member.stats.wins + member.stats.losses) > 0);
+            const qualified = members.filter(isQualifiedTopPerformer);
             const cards = [
-                ['Units Leader', bestBy(withPicks, () => true, member => Number(member.stats.units || 0)), member => formatUnits(member.stats.units, true)],
-                ['Best ROI', bestBy(graded, member => member.stats.roi != null, member => Number(member.stats.roi || 0)), member => formatPercent(member.stats.roi, true)],
-                ['Most Picks', bestBy(withPicks, () => true, member => Number(member.stats.totalPicks || 0)), member => member.stats.totalPicks + ' picks'],
-                ['Best Win Rate', bestBy(graded, member => member.stats.winRate != null, member => Number(member.stats.winRate || 0)), member => formatPercent(member.stats.winRate, true)],
-                ['Newest Active Capper', bestBy(withPicks, () => true, getActivityTime), member => formatLastActive(member.stats.lastActivity || member.lastActive)]
-            ];
+                ['Units Leader', bestBy(qualified, () => true, member => Number(member.stats.units || 0)), member => formatUnits(member.stats.units, true)],
+                ['Best ROI', bestBy(qualified, member => member.stats.roi != null, member => Number(member.stats.roi || 0)), member => formatPercent(member.stats.roi, true)],
+                ['Most Picks', bestBy(qualified, () => true, member => Number(member.stats.totalPicks || 0)), member => member.stats.totalPicks + ' picks'],
+                ['Best Win Rate', bestBy(qualified, member => member.stats.winRate != null, member => Number(member.stats.winRate || 0)), member => formatPercent(member.stats.winRate, true)],
+                ['Newest Active Capper', bestBy(withPicks, member => gradedCount(member) > 0, getActivityTime), member => formatLastActive(member.stats.lastActivity || member.lastActive)]
+            ].filter(([, member]) => !!member);
+
+            if (!cards.length) {
+                els.featured.innerHTML = '<div class="hm-leader-card hm-leader-card--empty"><b>Verified rankings are warming up</b><strong>Not enough qualified data yet</strong><span>Once users have at least ' + MIN_TOP_PERFORMER_GRADED_PICKS + ' graded picks, the leaderboard will populate automatically.</span></div>';
+                return;
+            }
 
             els.featured.innerHTML = cards.map(([label, member, formatter]) => {
-                if (!member) {
-                    return '<div class="hm-leader-card"><b>' + escapeHtml(label) + '</b><strong>N/A</strong><span>No qualifying data yet</span></div>';
-                }
                 return '<div class="hm-leader-card">' +
                     '<b>' + escapeHtml(label) + '</b>' +
                     '<strong>' + escapeHtml(member.displayName) + '</strong>' +
@@ -1223,7 +1251,9 @@
                     member.username.toLowerCase().includes(q) ||
                     member.displayName.toLowerCase().includes(q);
                 const matchesSport = sport === 'all' || (member.stats.sports || []).includes(sport);
-                return matchesSearch && matchesSport;
+                const hasActivity = Number(member.stats.totalPicks || 0) > 0 || gradedCount(member) > 0;
+                const explicitLookup = q.length > 0 || sport !== 'all';
+                return matchesSearch && matchesSport && (explicitLookup || hasActivity);
             });
 
             const byNumber = getter => (a, b) => getter(b) - getter(a);
@@ -1247,13 +1277,14 @@
                 : 'Showing ' + visibleMembers.length + ' of ' + members.length + ' members.';
 
             if (!visibleMembers.length) {
-                els.rows.innerHTML = '<div class="hm-empty"><strong>No members match these filters yet.</strong>Try a different username search, sport filter, or sort.</div>';
+                els.rows.innerHTML = '<div class="hm-empty"><strong>Founding records are being built now.</strong>Early members will appear here once they have locked pick activity. Search by username to find a specific production member.</div>';
                 return;
             }
 
             els.rows.innerHTML = visibleMembers.map(member => {
                 const stats = member.stats || defaultStats();
                 const hasPicks = Number(stats.totalPicks || 0) > 0;
+                const hasGraded = gradedCount(member) > 0;
                 const profileHref = '/profile/?user=' + encodeURIComponent(member.username);
                 const sports = (stats.sports && stats.sports.length ? stats.sports : ['None yet'])
                     .map(sport => '<span class="hm-sport">' + escapeHtml(sport) + '</span>')
@@ -1268,8 +1299,8 @@
                     '</div>' +
                     '<div class="hm-stat" data-label="Record">' + escapeHtml(formatRecord(stats)) + '</div>' +
                     '<div class="hm-stat ' + statClass(stats.units) + '" data-label="Units">' + escapeHtml(formatUnits(stats.units, hasPicks)) + '</div>' +
-                    '<div class="hm-stat ' + statClass(stats.roi) + '" data-label="ROI">' + escapeHtml(formatPercent(stats.roi, hasPicks)) + '</div>' +
-                    '<div class="hm-stat ' + statClass((stats.winRate || 0) - 50) + '" data-label="Win %">' + escapeHtml(formatPercent(stats.winRate, hasPicks)) + '</div>' +
+                    '<div class="hm-stat ' + (hasGraded ? statClass(stats.roi) : 'is-neutral') + '" title="' + (hasGraded ? '' : 'Not enough graded picks yet') + '" data-label="ROI">' + escapeHtml(formatPercent(stats.roi, hasGraded)) + '</div>' +
+                    '<div class="hm-stat ' + (hasGraded ? statClass(stats.winRate == null ? null : Number(stats.winRate) - 50) : 'is-neutral') + '" title="' + (hasGraded ? '' : 'Not enough graded picks yet') + '" data-label="Win %">' + escapeHtml(formatPercent(stats.winRate, hasGraded)) + '</div>' +
                     '<div class="hm-stat" data-label="Total picks">' + Number(stats.totalPicks || 0) + '</div>' +
                     '<div class="hm-stat ' + statClass(stats.currentStreak) + '" data-label="Current streak">' + escapeHtml(formatStreak(stats.currentStreak)) + '</div>' +
                     '<div class="hm-sports" data-label="Primary sports">' + sports + '</div>' +
