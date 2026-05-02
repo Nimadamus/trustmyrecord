@@ -104,7 +104,7 @@
             </div>
 
             <div class="alert alert-success" id="contactAlertSuccess">
-                <strong>Sent.</strong> Your message was sent to the TrustMyRecord team. If you left an email, we'll follow up there if needed.
+                <strong>Received.</strong> Your message was received by TrustMyRecord. If you left an email, we'll follow up there if needed.
             </div>
             <div class="alert alert-error" id="contactAlertError">
                 <strong>Hmm, something went wrong.</strong> <span id="contactAlertErrorMsg">Please try again in a moment.</span>
@@ -174,7 +174,7 @@
             subject: (document.getElementById('contactSubject').value || '').trim(),
             message: message,
             username: (usernameInput.value || '').trim(),
-            email: (emailInput.value || '').trim(),
+            email: emailValue,
             pageUrl: (pageUrlInput.value || '').trim(),
             honeypot: form.elements['company'] ? form.elements['company'].value : ''
         };
