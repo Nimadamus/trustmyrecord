@@ -2,12 +2,1359 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/handicappers/">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting...</title>
-    <link rel="canonical" href="https://trustmyrecord.com/leaderboards/">
-    <meta name="robots" content="noindex, follow">
-    <meta http-equiv="refresh" content="0; url=/leaderboards/">
-    <script>window.location.replace('/leaderboards/' + window.location.search + window.location.hash);</script>
+    <title>Handicappers | TrustMyRecord</title>
+    <meta name="description" content="Discover TrustMyRecord handicappers, compare verified records, filter by sport, follow members, and open public profiles.">
+    <meta property="og:title" content="Handicappers | TrustMyRecord">
+    <meta property="og:description" content="Search members, compare records, units, ROI, win rate, streaks, primary sports, and recent activity.">
+    <meta property="og:url" content="https://trustmyrecord.com/handicappers/">
+    <meta property="og:type" content="website">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260502handicappers">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260502handicappers"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --page-bg: #07111f;
+            --surface: rgba(12, 21, 36, 0.92);
+            --surface-2: rgba(15, 26, 44, 0.92);
+            --line: rgba(148, 163, 184, 0.18);
+            --line-strong: rgba(45, 212, 191, 0.28);
+            --text: #eef6ff;
+            --muted: #93a4ba;
+            --teal: #2dd4bf;
+            --blue: #60a5fa;
+            --green: #22c55e;
+            --red: #ef4444;
+            --gold: #d4a72c;
+        }
+
+        * { box-sizing: border-box; }
+        html { background: var(--page-bg); }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            font-family: "Inter", system-ui, sans-serif;
+            background:
+                radial-gradient(900px 440px at 6% 0%, rgba(45, 212, 191, 0.11), transparent 58%),
+                radial-gradient(780px 420px at 92% 8%, rgba(212, 167, 44, 0.10), transparent 60%),
+                linear-gradient(180deg, #07111f 0%, #0b1424 100%);
+        }
+
+        a { color: inherit; text-decoration: none; }
+        button, input, select { font: inherit; }
+
+        .hm-page {
+            width: min(1460px, calc(100% - 36px));
+            margin: 0 auto;
+            padding: 28px 0 62px;
+        }
+
+        .hm-hero {
+            display: grid;
+            grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
+            gap: 22px;
+            align-items: stretch;
+            padding: 30px 0 18px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .hm-kicker {
+            margin: 0 0 10px;
+            color: var(--teal);
+            font-size: 0.76rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .hm-hero h1 {
+            margin: 0;
+            font-family: "Barlow", "Inter", sans-serif;
+            font-size: clamp(2.25rem, 5vw, 4.7rem);
+            line-height: 0.96;
+            letter-spacing: 0;
+            font-weight: 900;
+        }
+
+        .hm-hero p {
+            max-width: 850px;
+            margin: 12px 0 0;
+            color: #b8c5d7;
+            font-size: 1rem;
+            line-height: 1.65;
+        }
+
+        .hm-counts {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(132px, 1fr));
+            gap: 10px;
+            align-self: stretch;
+        }
+
+        .hm-count {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 14px 15px;
+            background:
+                radial-gradient(circle at top right, rgba(45, 212, 191, 0.08), transparent 48%),
+                rgba(15, 26, 44, 0.76);
+            min-height: 86px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .hm-count strong {
+            display: block;
+            color: var(--text);
+            font-size: 1.45rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .hm-count span {
+            display: block;
+            margin-top: 7px;
+            color: var(--muted);
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .hm-count small {
+            display: block;
+            margin-top: 6px;
+            color: #7f8da3;
+            font-size: 0.74rem;
+            font-weight: 800;
+            line-height: 1.25;
+        }
+
+        .hm-section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            gap: 16px;
+            margin: 18px 0 10px;
+        }
+
+        .hm-section-head h2 {
+            margin: 0;
+            font-family: "Barlow", "Inter", sans-serif;
+            font-size: clamp(1.35rem, 2.1vw, 2rem);
+            line-height: 1;
+            letter-spacing: 0;
+        }
+
+        .hm-section-head p {
+            margin: 5px 0 0;
+            color: var(--muted);
+            font-size: 0.86rem;
+            font-weight: 700;
+        }
+
+        .hm-featured {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .hm-leader-card {
+            min-height: 116px;
+            padding: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 13px;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012)),
+                rgba(9, 17, 31, 0.88);
+        }
+
+        .hm-leader-card b {
+            display: block;
+            color: #7f8da3;
+            font-size: 0.66rem;
+            font-weight: 900;
+            letter-spacing: 0.11em;
+            text-transform: uppercase;
+        }
+
+        .hm-leader-card strong {
+            display: block;
+            margin-top: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #f6fbff;
+            font-size: 1rem;
+            font-weight: 900;
+        }
+
+        .hm-leader-card span {
+            display: block;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 800;
+        }
+
+        .hm-controls {
+            display: grid;
+            grid-template-columns: minmax(260px, 1.25fr) minmax(160px, 0.65fr) minmax(210px, 0.85fr);
+            gap: 12px;
+            align-items: end;
+            margin: 18px 0 14px;
+            padding: 14px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: rgba(8, 15, 27, 0.78);
+        }
+
+        .hm-field {
+            display: grid;
+            gap: 7px;
+            min-width: 0;
+        }
+
+        .hm-field label {
+            color: var(--muted);
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .hm-input,
+        .hm-select {
+            width: 100%;
+            min-height: 44px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 9px;
+            outline: none;
+            background: #0b1526;
+            color: var(--text);
+            padding: 0 13px;
+            font-size: 0.94rem;
+            font-weight: 700;
+        }
+
+        .hm-input:focus,
+        .hm-select:focus {
+            border-color: var(--line-strong);
+            box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.10);
+        }
+
+        .hm-toolbar {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+            margin: 10px 0 10px;
+            color: var(--muted);
+            font-size: 0.86rem;
+            font-weight: 700;
+        }
+
+        .hm-trust-notes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 0 0 12px;
+        }
+
+        .hm-trust-note {
+            padding: 8px 11px;
+            border: 1px solid rgba(45, 212, 191, 0.18);
+            border-radius: 999px;
+            background: rgba(45, 212, 191, 0.08);
+            color: #c7f7ef;
+            font-size: 0.75rem;
+            font-weight: 900;
+        }
+
+        .hm-production-note {
+            color: #9fb0c6;
+            font-size: 0.76rem;
+            font-weight: 900;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .hm-table-wrap {
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: rgba(7, 13, 24, 0.72);
+            overflow: hidden;
+        }
+
+        .hm-table {
+            min-width: 1360px;
+        }
+
+        .hm-row {
+            display: grid;
+            grid-template-columns: minmax(250px, 1.2fr) 82px 86px 82px 92px 76px 88px 132px minmax(210px, 1fr) 116px 196px;
+            gap: 12px;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+        }
+
+        .hm-row:last-child { border-bottom: 0; }
+
+        .hm-head {
+            min-height: 46px;
+            background: rgba(15, 26, 44, 0.95);
+            color: #8798ae;
+            font-size: 0.68rem;
+            font-weight: 900;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            position: sticky;
+            top: 0;
+            z-index: 3;
+        }
+
+        .hm-member-row {
+            min-height: 74px;
+            background: rgba(10, 18, 32, 0.72);
+            transition: background 0.14s ease;
+        }
+
+        .hm-member-row:hover {
+            background: rgba(17, 30, 50, 0.94);
+        }
+
+        .hm-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .hm-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: #16233a;
+        }
+
+        .hm-name {
+            display: grid;
+            gap: 3px;
+            min-width: 0;
+        }
+
+        .hm-name strong {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #f7fbff;
+            font-size: 0.98rem;
+            font-weight: 900;
+        }
+
+        .hm-name span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .hm-stat {
+            color: #dbe7f5;
+            font-size: 0.9rem;
+            font-weight: 850;
+            white-space: nowrap;
+        }
+
+        .hm-stat.is-positive { color: #8ef3b2; }
+        .hm-stat.is-negative { color: #ff9b9b; }
+        .hm-stat.is-muted { color: var(--muted); }
+
+        .hm-sports {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            min-width: 0;
+        }
+
+        .hm-sport {
+            max-width: 84px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 4px 7px;
+            border: 1px solid rgba(96, 165, 250, 0.20);
+            border-radius: 999px;
+            background: rgba(96, 165, 250, 0.10);
+            color: #d8eaff;
+            font-size: 0.68rem;
+            font-weight: 900;
+        }
+
+        .hm-last-pick {
+            min-width: 0;
+            display: grid;
+            gap: 3px;
+        }
+
+        .hm-last-pick strong {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #dce8f5;
+            font-size: 0.82rem;
+            font-weight: 900;
+        }
+
+        .hm-last-pick span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--muted);
+            font-size: 0.74rem;
+            font-weight: 800;
+        }
+
+        .hm-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .hm-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+            padding: 0 12px;
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            color: #eef6ff;
+            font-size: 0.78rem;
+            font-weight: 900;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .hm-btn:hover {
+            border-color: rgba(45, 212, 191, 0.44);
+            background: rgba(45, 212, 191, 0.10);
+        }
+
+        .hm-btn--primary {
+            border-color: transparent;
+            background: linear-gradient(135deg, #2dd4bf, #78f8e8);
+            color: #06120f;
+        }
+
+        .hm-btn--following {
+            border-color: rgba(34, 197, 94, 0.42);
+            background: rgba(34, 197, 94, 0.12);
+            color: #b9ffd0;
+        }
+
+        .hm-empty,
+        .hm-error {
+            padding: 34px 18px;
+            text-align: center;
+            color: var(--muted);
+            font-weight: 800;
+        }
+
+        .hm-error strong,
+        .hm-empty strong {
+            display: block;
+            margin-bottom: 7px;
+            color: var(--text);
+            font-size: 1.05rem;
+        }
+
+        .hm-scroll-hint {
+            display: none;
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+
+        @media (max-width: 1120px) {
+            .hm-hero {
+                grid-template-columns: 1fr;
+                align-items: start;
+            }
+
+            .hm-counts {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .hm-featured {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .hm-controls {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .hm-controls .hm-field:first-child {
+                grid-column: 1 / -1;
+            }
+
+            .hm-table-wrap {
+                overflow-x: auto;
+            }
+
+            .hm-scroll-hint { display: inline; }
+        }
+
+        @media (max-width: 720px) {
+            .hm-page {
+                width: min(100% - 24px, 1460px);
+                padding-top: 18px;
+            }
+
+            .hm-counts,
+            .hm-controls,
+            .hm-featured {
+                grid-template-columns: 1fr;
+            }
+
+            .hm-hero h1 {
+                font-size: clamp(2rem, 13vw, 3.2rem);
+            }
+
+            .hm-toolbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .hm-table {
+                min-width: 0;
+            }
+
+            .hm-head {
+                display: none;
+            }
+
+            .hm-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 16px;
+            }
+
+            .hm-member-row {
+                min-height: 0;
+            }
+
+            .hm-stat::before {
+                content: attr(data-label);
+            }
+
+            .hm-stat::before,
+            .hm-last-pick::before,
+            .hm-sports::before {
+                content: attr(data-label);
+                display: block;
+                margin-bottom: 3px;
+                color: #7f8da3;
+                font-size: 0.66rem;
+                font-weight: 900;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+            }
+
+            .hm-last-pick::before,
+            .hm-sports::before {
+                width: 100%;
+            }
+
+            .hm-actions {
+                justify-content: flex-start;
+                flex-wrap: wrap;
+            }
+        }
+    </style>
 </head>
-<body><a href="/leaderboards/">Continue to Leaderboards</a></body>
+<body>
+    <main class="hm-page">
+        <section class="hm-hero">
+            <div>
+                <p class="hm-kicker">Member Discovery</p>
+                <h1>Handicappers</h1>
+                <p>Search every TrustMyRecord profile, compare verified performance, follow members, and open public pick histories without hiding new users who have not made picks yet.</p>
+                <p class="hm-production-note">Preview build: production-directory-filter-20260502</p>
+            </div>
+            <div class="hm-counts" aria-label="Directory summary">
+                <div class="hm-count"><strong id="hmTotalMembers">0</strong><span>Total Members</span><small>Production accounts only</small></div>
+                <div class="hm-count"><strong id="hmActiveMembers">0</strong><span>Active Pick Makers</span><small>Members with real picks</small></div>
+                <div class="hm-count"><strong id="hmTotalPicks">0</strong><span>Total Verified Picks</span><small>Stored pick rows</small></div>
+                <div class="hm-count"><strong id="hmBestRecord">N/A</strong><span>Best Current Record</span><small id="hmBestRecordUser">No graded picks yet</small></div>
+                <div class="hm-count"><strong id="hmTopUnits">N/A</strong><span>Top Units Leader</span><small id="hmTopUnitsUser">No graded picks yet</small></div>
+                <div class="hm-count"><strong id="hmRecentActivity">N/A</strong><span>Most Recent Pick Activity</span><small id="hmRecentActivityUser">No pick activity yet</small></div>
+            </div>
+        </section>
+
+        <section aria-label="Featured leaders">
+            <div class="hm-section-head">
+                <div>
+                    <h2>Top Performers</h2>
+                    <p>Leaders are calculated only from real production members and stored pick results.</p>
+                </div>
+                <span class="hm-production-note">Showing <strong id="hmVisibleMembers">0</strong> filtered members</span>
+            </div>
+            <div class="hm-featured" id="hmFeaturedLeaders">
+                <div class="hm-leader-card"><b>Loading</b><strong>N/A</strong><span>Waiting for member data</span></div>
+            </div>
+        </section>
+
+        <section class="hm-controls" aria-label="Search and filters">
+            <div class="hm-field">
+                <label for="hmSearch">Search by username</label>
+                <input class="hm-input" id="hmSearch" type="search" placeholder="Type a username..." autocomplete="off" autocapitalize="off" autocorrect="off">
+            </div>
+            <div class="hm-field">
+                <label for="hmSport">Filter by sport</label>
+                <select class="hm-select" id="hmSport">
+                    <option value="all">All sports</option>
+                </select>
+            </div>
+            <div class="hm-field">
+                <label for="hmSort">Sort by</label>
+                <select class="hm-select" id="hmSort">
+                    <option value="units">Units won</option>
+                    <option value="roi">ROI</option>
+                    <option value="winRate">Win percentage</option>
+                    <option value="totalPicks">Total picks</option>
+                    <option value="active">Recent activity</option>
+                    <option value="username">Username A to Z</option>
+                    <option value="streak">Current streak</option>
+                </select>
+            </div>
+        </section>
+
+        <div class="hm-toolbar">
+            <span id="hmStatus">Loading members...</span>
+            <span class="hm-production-note">Production directory: test accounts excluded</span>
+            <span class="hm-scroll-hint">Swipe horizontally for the full row.</span>
+        </div>
+
+        <div class="hm-trust-notes">
+            <span class="hm-trust-note">Only real production members are shown. Test accounts and generated QA users are excluded.</span>
+            <span class="hm-trust-note">Stats are based on graded picks only. Pending picks are not included until graded.</span>
+        </div>
+
+        <section class="hm-table-wrap" aria-live="polite">
+            <div class="hm-table">
+                <div class="hm-row hm-head" role="row">
+                    <div>Username</div>
+                    <div>Record</div>
+                    <div>Units</div>
+                    <div>ROI</div>
+                    <div>Win %</div>
+                    <div>Picks</div>
+                    <div>Streak</div>
+                    <div>Primary sports</div>
+                    <div>Last pick</div>
+                    <div>Last active</div>
+                    <div>Actions</div>
+                </div>
+                <div id="hmRows">
+                    <div class="hm-empty"><strong>Loading handicappers</strong>Pulling public profiles and performance stats.</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/js/config.js"></script>
+    <script src="/static/js/backend-api.js"></script>
+    <script src="/static/js/stats-engine.js"></script>
+    <script src="/static/js/social-system.js"></script>
+    <script>
+    (function() {
+        const els = {
+            rows: document.getElementById('hmRows'),
+            search: document.getElementById('hmSearch'),
+            sport: document.getElementById('hmSport'),
+            sort: document.getElementById('hmSort'),
+            status: document.getElementById('hmStatus'),
+            total: document.getElementById('hmTotalMembers'),
+            active: document.getElementById('hmActiveMembers'),
+            visible: document.getElementById('hmVisibleMembers'),
+            totalPicks: document.getElementById('hmTotalPicks'),
+            bestRecord: document.getElementById('hmBestRecord'),
+            bestRecordUser: document.getElementById('hmBestRecordUser'),
+            topUnits: document.getElementById('hmTopUnits'),
+            topUnitsUser: document.getElementById('hmTopUnitsUser'),
+            recentActivity: document.getElementById('hmRecentActivity'),
+            recentActivityUser: document.getElementById('hmRecentActivityUser'),
+            featured: document.getElementById('hmFeaturedLeaders')
+        };
+
+        let members = [];
+        let visibleMembers = [];
+        const social = window.socialSystem || (typeof SocialSystem !== 'undefined' ? new SocialSystem() : null);
+
+        function escapeHtml(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function getCurrentUser() {
+            const keys = ['trustmyrecord_session', 'tmr_current_user', 'currentUser', 'trustmyrecord_current_user'];
+            for (const key of keys) {
+                try {
+                    const raw = localStorage.getItem(key) || sessionStorage.getItem(key);
+                    if (!raw) continue;
+                    const parsed = JSON.parse(raw);
+                    const user = parsed && (parsed.user || parsed);
+                    if (user && (user.username || user.id)) return user;
+                } catch (error) {}
+            }
+            try {
+                if (window.api && window.api._cachedUser) return window.api._cachedUser;
+            } catch (error) {}
+            return null;
+        }
+
+        function normalizeUsername(user) {
+            return String(user.username || user.user_name || user.handle || user.display_name || user.email || '').trim();
+        }
+
+        function getAvatar(user) {
+            const src = user.avatar_url || user.avatarUrl || user.avatar || user.profile_image || user.image_url;
+            if (src) return src;
+            const seed = normalizeUsername(user) || 'U';
+            const colors = ['1d4ed8', '0f766e', 'b45309', '7c3aed', 'be123c', '047857'];
+            const color = colors[Math.abs(seed.split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0)) % colors.length];
+            const letter = encodeURIComponent((seed.charAt(0) || 'U').toUpperCase());
+            return 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2250%22 fill=%22%23' + color + '%22/><text x=%2250%22 y=%2262%22 font-size=%2244%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial,sans-serif%22 font-weight=%22700%22>' + letter + '</text></svg>';
+        }
+
+        function numberFrom(...values) {
+            for (const value of values) {
+                if (value == null || value === '') continue;
+                const num = Number(value);
+                if (Number.isFinite(num)) return num;
+            }
+            return null;
+        }
+
+        function parseRecord(value) {
+            if (!value || typeof value !== 'string') return null;
+            const match = value.match(/(\d+)\s*-\s*(\d+)(?:\s*-\s*(\d+))?/);
+            if (!match) return null;
+            return {
+                wins: Number(match[1]) || 0,
+                losses: Number(match[2]) || 0,
+                pushes: Number(match[3]) || 0
+            };
+        }
+
+        function defaultStats() {
+            return {
+                wins: 0,
+                losses: 0,
+                pushes: 0,
+                pending: 0,
+                totalPicks: 0,
+                units: 0,
+                roi: null,
+                winRate: null,
+                currentStreak: 0,
+                sports: [],
+                lastPick: null,
+                lastActivity: ''
+            };
+        }
+
+        function isProductionDirectoryUser(user) {
+            const username = normalizeUsername(user).toLowerCase();
+            const display = String(user.display_name || user.displayName || '').trim().toLowerCase();
+            if (!username) return false;
+
+            const testPatterns = [
+                /(?:^|[_-])(test|demo|mock|seed|fixture|dummy)(?:[_-]|\d|$)/,
+                /test\d*$/,
+                /^prod[a-z0-9]*[_-]?\d+$/,
+                /^pollnorm[_-]?\d*[_-]?\d+$/,
+                /^ttdiag\d*[_-]?\d+$/,
+                /^usrtest\d+$/,
+                /^tmr(?:pick|profile)[_-]?\d+$/,
+                /^claudetest\d+$/,
+                /^(?:errtest|multitest|loginprobe|uilogin|domlogin)[_-]?\d+$/,
+                /^remember(?:poll|flow)?(?:[_-]?\d+)+$/,
+                /^(?:diag|pickdiag|inspectopt|d404)\d*/
+            ];
+
+            return !testPatterns.some(pattern => pattern.test(username) || pattern.test(display));
+        }
+
+        function normalizeSportName(value) {
+            const raw = String(value || '').trim();
+            if (!raw) return '';
+            const lower = raw.toLowerCase();
+            const map = {
+                americanfootball_nfl: 'NFL',
+                americanfootball_ncaaf: 'NCAAF',
+                basketball_nba: 'NBA',
+                basketball_ncaab: 'NCAAB',
+                baseball_mlb: 'MLB',
+                icehockey_nhl: 'NHL',
+                soccer_epl: 'EPL'
+            };
+            if (map[lower]) return map[lower];
+            return raw
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, ch => ch.toUpperCase())
+                .replace(/\bMlb\b/g, 'MLB')
+                .replace(/\bNba\b/g, 'NBA')
+                .replace(/\bNfl\b/g, 'NFL')
+                .replace(/\bNhl\b/g, 'NHL');
+        }
+
+        function extractSports(user, stats) {
+            const sports = [];
+            const add = value => {
+                const sport = normalizeSportName(value);
+                if (sport && !sports.includes(sport)) sports.push(sport);
+            };
+            const rawSports = user.favorite_sports || user.primary_sports || user.sports || user.sport;
+            if (Array.isArray(rawSports)) rawSports.forEach(add);
+            else if (typeof rawSports === 'string') rawSports.split(/[,\|]/).forEach(add);
+
+            const breakdown = stats && (stats.sportBreakdown || stats.by_sport || stats.sports_breakdown);
+            if (breakdown && typeof breakdown === 'object' && !Array.isArray(breakdown)) {
+                Object.entries(breakdown)
+                    .sort((a, b) => Number(b[1]?.total || b[1]?.total_picks || 0) - Number(a[1]?.total || a[1]?.total_picks || 0))
+                    .slice(0, 3)
+                    .forEach(([sport]) => add(sport));
+            }
+            return sports.slice(0, 3);
+        }
+
+        function statsFromUser(user) {
+            const parsed = parseRecord(user.record || user.stats?.record || user.summary?.record);
+            const stats = user.stats || user.summary || user.metrics || {};
+            const wins = numberFrom(user.wins, stats.wins, user.total_wins, parsed?.wins) || 0;
+            const losses = numberFrom(user.losses, stats.losses, user.total_losses, parsed?.losses) || 0;
+            const pushes = numberFrom(user.pushes, stats.pushes, user.total_pushes, parsed?.pushes) || 0;
+            const pending = numberFrom(user.pending, stats.pending, stats.pending_picks) || 0;
+            const totalPicks = numberFrom(user.total_picks, user.totalPicks, stats.total_picks, stats.totalPicks, stats.total, wins + losses + pushes + pending) || 0;
+            const decisions = wins + losses;
+            return {
+                wins,
+                losses,
+                pushes,
+                pending,
+                totalPicks,
+                units: numberFrom(user.net_units, user.units, stats.net_units, stats.units, stats.totalUnits, stats.total_units) || 0,
+                roi: totalPicks > 0 ? numberFrom(user.roi, stats.roi) : null,
+                winRate: decisions > 0 ? numberFrom(user.win_rate, user.winRate, stats.win_rate, stats.winRate, (wins / decisions) * 100) : null,
+                currentStreak: numberFrom(user.current_streak, user.currentStreak, stats.current_streak, stats.currentStreak, stats.streaks?.current) || 0,
+                sports: extractSports(user, stats)
+            };
+        }
+
+        function pickPL(pick) {
+            if (pick.result_units != null && pick.result_units !== '' && !isNaN(Number(pick.result_units))) {
+                return Number(pick.result_units);
+            }
+            const units = Number(pick.units || pick.stake || 1);
+            const odds = Number(pick.odds_snapshot || pick.odds || pick.price || -110);
+            if (String(pick.status || '').toLowerCase() === 'won') return odds > 0 ? units * odds / 100 : units;
+            if (String(pick.status || '').toLowerCase() === 'lost') return odds < 0 ? -(units * Math.abs(odds) / 100) : -units;
+            return 0;
+        }
+
+        function statsFromPicks(user, picks) {
+            const rows = Array.isArray(picks) ? picks : [];
+            if (!rows.length) return null;
+
+            const normalized = rows.map(pick => ({
+                ...pick,
+                _status: String(pick.status || 'pending').toLowerCase() === 'pushed' ? 'push' : String(pick.status || 'pending').toLowerCase()
+            }));
+            const graded = normalized.filter(pick => ['won', 'lost', 'push'].includes(pick._status));
+            const decisions = graded.filter(pick => pick._status === 'won' || pick._status === 'lost');
+            const wins = graded.filter(pick => pick._status === 'won').length;
+            const losses = graded.filter(pick => pick._status === 'lost').length;
+            const pushes = graded.filter(pick => pick._status === 'push').length;
+            const pending = normalized.filter(pick => pick._status === 'pending' || !['won', 'lost', 'push'].includes(pick._status)).length;
+            const units = graded.reduce((total, pick) => total + pickPL(pick), 0);
+            const risk = graded.reduce((total, pick) => {
+                const stake = Number(pick.units || pick.stake || 1);
+                const odds = Number(pick.odds_snapshot || pick.odds || pick.price || -110);
+                return total + (odds < 0 ? stake * Math.abs(odds) / 100 : stake);
+            }, 0);
+
+            const sorted = decisions.slice().sort((a, b) =>
+                new Date(a.locked_at || a.created_at || 0).getTime() - new Date(b.locked_at || b.created_at || 0).getTime()
+            );
+            const latestPick = normalized.slice().sort((a, b) =>
+                new Date(b.locked_at || b.created_at || 0).getTime() - new Date(a.locked_at || a.created_at || 0).getTime()
+            )[0] || null;
+            let currentStreak = 0;
+            let streakType = '';
+            for (let i = sorted.length - 1; i >= 0; i--) {
+                const status = sorted[i]._status;
+                if (!streakType) {
+                    streakType = status;
+                    currentStreak = 1;
+                } else if (status === streakType) {
+                    currentStreak++;
+                } else {
+                    break;
+                }
+            }
+            if (streakType === 'lost') currentStreak = -currentStreak;
+
+            const sportCounts = {};
+            normalized.forEach(pick => {
+                const sport = normalizeSportName(pick.sport_display || pick.sport_key || pick.sport);
+                if (sport) sportCounts[sport] = (sportCounts[sport] || 0) + 1;
+            });
+            const sports = Object.entries(sportCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3)
+                .map(([sport]) => sport);
+
+            return {
+                wins,
+                losses,
+                pushes,
+                pending,
+                totalPicks: normalized.length,
+                units,
+                roi: risk > 0 ? (units / risk) * 100 : null,
+                winRate: decisions.length > 0 ? (wins / decisions.length) * 100 : null,
+                currentStreak,
+                sports: sports.length ? sports : extractSports(user, {}),
+                lastPick: latestPick,
+                lastActivity: latestPick ? (latestPick.locked_at || latestPick.created_at || '') : ''
+            };
+        }
+
+        async function fetchUserPicks(user, username) {
+            if (!window.api || typeof window.api.request !== 'function') return [];
+            const queries = [];
+            if (user.id || user.user_id) queries.push('/picks?limit=100&offset=0&userId=' + encodeURIComponent(user.id || user.user_id));
+            if (username) queries.push('/picks?limit=100&offset=0&username=' + encodeURIComponent(username));
+
+            for (const query of queries) {
+                try {
+                    const data = await window.api.request(query);
+                    const picks = Array.isArray(data) ? data : Array.isArray(data?.picks) ? data.picks : [];
+                    if (picks.length) return picks;
+                } catch (error) {}
+            }
+            return [];
+        }
+
+        async function hydrateStats(user) {
+            const username = normalizeUsername(user);
+            let base = {
+                ...defaultStats(),
+                sports: extractSports(user, {})
+            };
+
+            const pickStats = statsFromPicks(user, await fetchUserPicks(user, username));
+            if (pickStats) base = pickStats;
+
+            const needsMetrics =
+                username &&
+                base.totalPicks > 0 &&
+                (base.roi == null || base.winRate == null || !base.sports.length || (!user.stats && !user.summary && !user.metrics));
+
+            if (needsMetrics && window.api && typeof window.api.request === 'function') {
+                try {
+                    const metrics = await window.api.request('/users/' + encodeURIComponent(username) + '/metrics');
+                    const summary = metrics && metrics.summary ? metrics.summary : null;
+                    if (summary) {
+                        const wins = numberFrom(summary.wins) || 0;
+                        const losses = numberFrom(summary.losses) || 0;
+                        const pushes = numberFrom(summary.pushes) || 0;
+                        const pending = numberFrom(summary.pending_picks, summary.pending) || 0;
+                        const totalPicks = numberFrom(summary.total_picks, wins + losses + pushes + pending) || 0;
+                        const decisions = wins + losses;
+                        base = {
+                            wins,
+                            losses,
+                            pushes,
+                            pending,
+                            totalPicks,
+                            units: numberFrom(summary.net_units) || 0,
+                            roi: totalPicks > 0 && decisions > 0 ? numberFrom(summary.roi) : null,
+                            winRate: decisions > 0 ? numberFrom(summary.win_rate, (wins / decisions) * 100) : null,
+                            currentStreak: numberFrom(summary.current_streak, summary.streak) || base.currentStreak || 0,
+                            sports: extractSports(user, metrics)
+                        };
+                    }
+                } catch (error) {
+                    // Directory remains usable with real pick stats or backend aggregate fields.
+                }
+            }
+            if (!base.sports.length) base.sports = extractSports(user, base);
+            return base;
+        }
+
+        function normalizeMember(user, stats) {
+            const username = normalizeUsername(user);
+            const displayName = String(user.display_name || user.displayName || username || 'Member');
+            const createdAt = user.created_at || user.createdAt || user.joined_at || user.inserted_at || '';
+            const lastActive = stats.lastActivity || user.last_active || user.lastActive || user.updated_at || user.updatedAt || user.last_pick_at || user.lastPickAt || createdAt || '';
+            const currentUser = getCurrentUser();
+            const localFollowing = currentUser && social ? social.isFollowing(String(currentUser.username || ''), username) : false;
+            return {
+                id: user.id || user.user_id || username,
+                username,
+                displayName,
+                avatar: getAvatar(user),
+                createdAt,
+                lastActive,
+                stats,
+                isFollowing: !!(user.is_following || user.isFollowing || localFollowing),
+                isCurrentUser: currentUser && String(currentUser.username || '').toLowerCase() === username.toLowerCase()
+            };
+        }
+
+        function uniqUsers(users) {
+            const seen = new Set();
+            return (users || []).filter(user => {
+                const username = normalizeUsername(user).toLowerCase();
+                if (!username || seen.has(username)) return false;
+                seen.add(username);
+                return true;
+            });
+        }
+
+        async function fetchBackendUsers() {
+            if (!window.api || typeof window.api.request !== 'function') return [];
+            const responses = [];
+            try {
+                responses.push(await window.api.request('/users?limit=250&offset=0'));
+            } catch (error) {}
+            try {
+                responses.push(await window.api.searchUsers('', { limit: 250, offset: 0 }));
+            } catch (error) {}
+            try {
+                responses.push(await window.api.getLeaderboard({ sortBy: 'units', limit: 250 }));
+            } catch (error) {}
+            const users = [];
+            responses.forEach(data => {
+                if (Array.isArray(data)) users.push(...data);
+                else if (Array.isArray(data?.users)) users.push(...data.users);
+                else if (Array.isArray(data?.leaderboard)) users.push(...data.leaderboard);
+                else if (Array.isArray(data?.data)) users.push(...data.data);
+            });
+            return uniqUsers(users).filter(isProductionDirectoryUser);
+        }
+
+        async function mapWithConcurrency(items, limit, mapper) {
+            const results = new Array(items.length);
+            let index = 0;
+            async function worker() {
+                while (index < items.length) {
+                    const currentIndex = index++;
+                    results[currentIndex] = await mapper(items[currentIndex], currentIndex);
+                }
+            }
+            await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+            return results;
+        }
+
+        function formatUnits(value, hasPicks) {
+            const num = Number(value || 0);
+            if (!hasPicks) return '0.00';
+            return (num > 0 ? '+' : '') + num.toFixed(2);
+        }
+
+        function formatPercent(value, hasPicks) {
+            if (!hasPicks || value == null || !Number.isFinite(Number(value))) return 'N/A';
+            return Number(value).toFixed(1) + '%';
+        }
+
+        function formatRecord(stats) {
+            return (stats.wins || 0) + '-' + (stats.losses || 0) + ((stats.pushes || 0) ? '-' + stats.pushes : '');
+        }
+
+        function formatStreak(value) {
+            const streak = Number(value || 0);
+            if (!streak) return '0';
+            return streak > 0 ? 'W' + streak : 'L' + Math.abs(streak);
+        }
+
+        function formatLastActive(value) {
+            if (!value) return 'N/A';
+            const date = new Date(value);
+            if (!Number.isFinite(date.getTime())) return 'N/A';
+            const diff = Date.now() - date.getTime();
+            const day = 24 * 60 * 60 * 1000;
+            if (diff < day) return 'Today';
+            if (diff < day * 2) return 'Yesterday';
+            if (diff < day * 30) return Math.floor(diff / day) + 'd ago';
+            return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined });
+        }
+
+        function pickTimestamp(pick) {
+            if (!pick) return 0;
+            const time = new Date(pick.locked_at || pick.created_at || 0).getTime();
+            return Number.isFinite(time) ? time : 0;
+        }
+
+        function formatPickSummary(pick) {
+            if (!pick) {
+                return { title: 'No pick activity yet', meta: 'No stored picks' };
+            }
+            const selection = pick.selection || pick.pick || 'Tracked pick';
+            const sport = normalizeSportName(pick.sport_display || pick.sport_key || pick.sport);
+            const status = String(pick.status || 'pending').toLowerCase();
+            const result = status === 'won' ? 'Won' : status === 'lost' ? 'Lost' : status === 'push' || status === 'pushed' ? 'Push' : 'Pending';
+            const parts = [sport, result, formatLastActive(pick.locked_at || pick.created_at)].filter(Boolean);
+            return { title: selection, meta: parts.join(' · ') || 'Stored pick' };
+        }
+
+        function statClass(value) {
+            const num = Number(value || 0);
+            if (num > 0) return 'is-positive';
+            if (num < 0) return 'is-negative';
+            return 'is-muted';
+        }
+
+        function getTime(value) {
+            const time = new Date(value || 0).getTime();
+            return Number.isFinite(time) ? time : 0;
+        }
+
+        function getActivityTime(member) {
+            return Math.max(getTime(member.lastActive), pickTimestamp(member.stats?.lastPick));
+        }
+
+        function setText(el, value) {
+            if (el) el.textContent = value;
+        }
+
+        function leaderValue(value, formatter) {
+            return value ? formatter(value) : 'N/A';
+        }
+
+        function bestBy(list, predicate, score) {
+            return list
+                .filter(predicate)
+                .slice()
+                .sort((a, b) => score(b) - score(a))[0] || null;
+        }
+
+        function renderSummary() {
+            const pickedMembers = members.filter(member => Number(member.stats.totalPicks || 0) > 0);
+            const gradedMembers = members.filter(member => (member.stats.wins + member.stats.losses + member.stats.pushes) > 0);
+            const totalPicks = members.reduce((sum, member) => sum + Number(member.stats.totalPicks || 0), 0);
+            const bestRecord = bestBy(gradedMembers, member => (member.stats.wins + member.stats.losses) > 0, member => Number(member.stats.winRate || 0));
+            const topUnits = bestBy(pickedMembers, () => true, member => Number(member.stats.units || 0));
+            const recent = bestBy(pickedMembers, () => true, getActivityTime);
+
+            setText(els.total, String(members.length));
+            setText(els.active, String(pickedMembers.length));
+            setText(els.totalPicks, String(totalPicks));
+            setText(els.bestRecord, leaderValue(bestRecord, member => formatRecord(member.stats)));
+            setText(els.bestRecordUser, bestRecord ? '@' + bestRecord.username + ' · ' + formatPercent(bestRecord.stats.winRate, true) : 'No graded picks yet');
+            setText(els.topUnits, leaderValue(topUnits, member => formatUnits(member.stats.units, true)));
+            setText(els.topUnitsUser, topUnits ? '@' + topUnits.username : 'No graded picks yet');
+            setText(els.recentActivity, leaderValue(recent, member => formatLastActive(member.stats.lastActivity || member.lastActive)));
+            setText(els.recentActivityUser, recent ? '@' + recent.username : 'No pick activity yet');
+            renderFeaturedLeaders();
+        }
+
+        function renderFeaturedLeaders() {
+            const withPicks = members.filter(member => Number(member.stats.totalPicks || 0) > 0);
+            const graded = members.filter(member => (member.stats.wins + member.stats.losses) > 0);
+            const cards = [
+                ['Units Leader', bestBy(withPicks, () => true, member => Number(member.stats.units || 0)), member => formatUnits(member.stats.units, true)],
+                ['Best ROI', bestBy(graded, member => member.stats.roi != null, member => Number(member.stats.roi || 0)), member => formatPercent(member.stats.roi, true)],
+                ['Most Picks', bestBy(withPicks, () => true, member => Number(member.stats.totalPicks || 0)), member => member.stats.totalPicks + ' picks'],
+                ['Best Win Rate', bestBy(graded, member => member.stats.winRate != null, member => Number(member.stats.winRate || 0)), member => formatPercent(member.stats.winRate, true)],
+                ['Newest Active Capper', bestBy(withPicks, () => true, getActivityTime), member => formatLastActive(member.stats.lastActivity || member.lastActive)]
+            ];
+
+            els.featured.innerHTML = cards.map(([label, member, formatter]) => {
+                if (!member) {
+                    return '<div class="hm-leader-card"><b>' + escapeHtml(label) + '</b><strong>N/A</strong><span>No qualifying data yet</span></div>';
+                }
+                return '<div class="hm-leader-card">' +
+                    '<b>' + escapeHtml(label) + '</b>' +
+                    '<strong>' + escapeHtml(member.displayName) + '</strong>' +
+                    '<span>@' + escapeHtml(member.username) + ' · ' + escapeHtml(formatter(member)) + '</span>' +
+                '</div>';
+            }).join('');
+        }
+
+        function fillSports() {
+            const selected = els.sport.value || 'all';
+            const sports = Array.from(new Set(members.flatMap(member => member.stats.sports || []))).sort();
+            els.sport.innerHTML = '<option value="all">All sports</option>' + sports.map(sport => '<option value="' + escapeHtml(sport) + '">' + escapeHtml(sport) + '</option>').join('');
+            if (sports.includes(selected)) els.sport.value = selected;
+        }
+
+        function applyFilters() {
+            const q = (els.search.value || '').trim().toLowerCase();
+            const sport = els.sport.value || 'all';
+            const sort = els.sort.value || 'units';
+            visibleMembers = members.filter(member => {
+                const matchesSearch = !q ||
+                    member.username.toLowerCase().includes(q) ||
+                    member.displayName.toLowerCase().includes(q);
+                const matchesSport = sport === 'all' || (member.stats.sports || []).includes(sport);
+                return matchesSearch && matchesSport;
+            });
+
+            const byNumber = getter => (a, b) => getter(b) - getter(a);
+            const sorters = {
+                units: byNumber(m => Number(m.stats.units || 0)),
+                roi: byNumber(m => m.stats.roi == null ? -Infinity : Number(m.stats.roi)),
+                winRate: byNumber(m => m.stats.winRate == null ? -Infinity : Number(m.stats.winRate)),
+                totalPicks: byNumber(m => Number(m.stats.totalPicks || 0)),
+                active: byNumber(getActivityTime),
+                username: (a, b) => a.username.localeCompare(b.username),
+                streak: byNumber(m => Math.abs(Number(m.stats.currentStreak || 0)))
+            };
+            visibleMembers.sort(sorters[sort] || sorters.units);
+            renderRows();
+        }
+
+        function renderRows() {
+            els.visible.textContent = String(visibleMembers.length);
+            els.status.textContent = visibleMembers.length === members.length
+                ? 'Showing all ' + members.length + ' members.'
+                : 'Showing ' + visibleMembers.length + ' of ' + members.length + ' members.';
+
+            if (!visibleMembers.length) {
+                els.rows.innerHTML = '<div class="hm-empty"><strong>No members match these filters yet.</strong>Try a different username search, sport filter, or sort.</div>';
+                return;
+            }
+
+            els.rows.innerHTML = visibleMembers.map(member => {
+                const stats = member.stats || defaultStats();
+                const hasPicks = Number(stats.totalPicks || 0) > 0;
+                const profileHref = '/profile/?user=' + encodeURIComponent(member.username);
+                const sports = (stats.sports && stats.sports.length ? stats.sports : ['None yet'])
+                    .map(sport => '<span class="hm-sport">' + escapeHtml(sport) + '</span>')
+                    .join('');
+                const followLabel = member.isCurrentUser ? 'You' : (member.isFollowing ? 'Following' : 'Follow');
+                const followDisabled = member.isCurrentUser ? ' disabled aria-disabled="true"' : '';
+                const lastPick = formatPickSummary(stats.lastPick);
+                return '<div class="hm-row hm-member-row" data-username="' + escapeHtml(member.username) + '">' +
+                    '<div class="hm-user">' +
+                        '<img class="hm-avatar" src="' + escapeHtml(member.avatar) + '" alt="' + escapeHtml(member.displayName) + ' avatar">' +
+                        '<div class="hm-name"><strong data-tmr-username="' + escapeHtml(member.username) + '">' + escapeHtml(member.displayName) + '</strong><span>@' + escapeHtml(member.username) + '</span></div>' +
+                    '</div>' +
+                    '<div class="hm-stat" data-label="Record">' + escapeHtml(formatRecord(stats)) + '</div>' +
+                    '<div class="hm-stat ' + statClass(stats.units) + '" data-label="Units">' + escapeHtml(formatUnits(stats.units, hasPicks)) + '</div>' +
+                    '<div class="hm-stat ' + statClass(stats.roi) + '" data-label="ROI">' + escapeHtml(formatPercent(stats.roi, hasPicks)) + '</div>' +
+                    '<div class="hm-stat ' + statClass((stats.winRate || 0) - 50) + '" data-label="Win %">' + escapeHtml(formatPercent(stats.winRate, hasPicks)) + '</div>' +
+                    '<div class="hm-stat" data-label="Total picks">' + Number(stats.totalPicks || 0) + '</div>' +
+                    '<div class="hm-stat ' + statClass(stats.currentStreak) + '" data-label="Current streak">' + escapeHtml(formatStreak(stats.currentStreak)) + '</div>' +
+                    '<div class="hm-sports" data-label="Primary sports">' + sports + '</div>' +
+                    '<div class="hm-last-pick" data-label="Last pick"><strong>' + escapeHtml(lastPick.title) + '</strong><span>' + escapeHtml(lastPick.meta) + '</span></div>' +
+                    '<div class="hm-stat is-muted" data-label="Last active">' + escapeHtml(formatLastActive(member.lastActive)) + '</div>' +
+                    '<div class="hm-actions">' +
+                        '<a class="hm-btn" href="' + profileHref + '">View profile</a>' +
+                        '<button class="hm-btn hm-btn--primary ' + (member.isFollowing ? 'hm-btn--following' : '') + '" type="button" data-follow="' + escapeHtml(member.username) + '"' + followDisabled + '>' + escapeHtml(followLabel) + '</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+
+            if (window.TMR && typeof window.TMR.attachUserBadges === 'function') {
+                try {
+                    window.TMR.attachUserBadges('#hmRows');
+                } catch (error) {
+                    console.warn('[Handicappers] Team badges unavailable:', error);
+                }
+            }
+        }
+
+        async function toggleFollow(username) {
+            const member = members.find(item => item.username === username);
+            if (!member || member.isCurrentUser) return;
+            const button = els.rows.querySelector('[data-follow="' + CSS.escape(username) + '"]');
+            if (button) {
+                button.disabled = true;
+                button.textContent = member.isFollowing ? 'Unfollowing...' : 'Following...';
+            }
+
+            let success = false;
+            try {
+                if (window.api && typeof window.api.followUser === 'function' && typeof window.api.unfollowUser === 'function') {
+                    if (member.isFollowing) await window.api.unfollowUser(member.id || username);
+                    else await window.api.followUser(member.id || username);
+                    success = true;
+                }
+            } catch (error) {}
+
+            if (!success && social) {
+                const result = member.isFollowing ? social.unfollowUser(username) : social.followUser(username);
+                success = !!(result && result.success);
+            }
+
+            if (!success) {
+                window.location.href = '/login/?next=' + encodeURIComponent('/handicappers/');
+                return;
+            }
+            member.isFollowing = !member.isFollowing;
+            renderRows();
+        }
+
+        async function init() {
+            try {
+                const params = new URLSearchParams(window.location.search || '');
+                const initialQuery = (params.get('q') || params.get('search') || '').trim();
+                if (initialQuery) els.search.value = initialQuery;
+                const sourceUsers = await fetchBackendUsers();
+                members = await mapWithConcurrency(sourceUsers, 6, async user => {
+                    const stats = await hydrateStats(user);
+                    return normalizeMember(user, stats);
+                });
+                members = members.filter(member => member.username && isProductionDirectoryUser(member));
+                renderSummary();
+                fillSports();
+                applyFilters();
+            } catch (error) {
+                console.error('[Handicappers] Load failed:', error);
+                els.status.textContent = 'Unable to load members.';
+                els.rows.innerHTML = '<div class="hm-error"><strong>Member directory unavailable</strong>The page could not load profiles right now. Try refreshing in a moment.</div>';
+            }
+        }
+
+        els.search.addEventListener('input', applyFilters);
+        els.sport.addEventListener('change', applyFilters);
+        els.sort.addEventListener('change', applyFilters);
+        els.rows.addEventListener('click', event => {
+            const follow = event.target.closest('[data-follow]');
+            if (!follow) return;
+            event.preventDefault();
+            toggleFollow(follow.getAttribute('data-follow'));
+        });
+
+        init();
+    })();
+    </script>
+</body>
 </html>
