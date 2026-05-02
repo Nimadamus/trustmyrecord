@@ -1819,8 +1819,8 @@
     <section class="profile-tabs-section">
         <div class="container">
             <div class="profile-tabs" role="tablist" id="profileTabsBar">
-                <button type="button" class="profile-tab profile-tab--compat active" data-tab="record" id="profilePerformanceTab" role="tab" aria-selected="true">Overview</button>
-                <button type="button" class="profile-tab" data-tab="picks" role="tab">Picks</button>
+                <button type="button" class="profile-tab active" data-tab="picks" id="profilePerformanceTab" role="tab" aria-selected="true">Overview</button>
+                <button type="button" class="profile-tab" data-tab="record" role="tab">Picks</button>
                 <button type="button" class="profile-tab" data-tab="posts" role="tab">Posts</button>
                 <button type="button" class="profile-tab" data-tab="challenges" role="tab">Challenges</button>
                 <button type="button" class="profile-tab" data-tab="charts" role="tab">Charts</button>
@@ -1833,8 +1833,8 @@
         <div class="container profile-body-grid">
             <main class="profile-main">
 
-                <!-- TAB: PICKS (default) -->
-                <div class="profile-tab-panel" data-panel="picks">
+                <!-- TAB: OVERVIEW (default) -->
+                <div class="profile-tab-panel active" data-panel="picks">
                     <!-- ===== TMRX REDESIGN moved to default tab so the wide
                          layout is what every visitor sees first. Same data,
                          same fill function, just front-and-center. ===== -->
@@ -2224,7 +2224,7 @@
                 </div>
 
                 <!-- TAB: RECORD (existing analytics) -->
-                <div class="profile-tab-panel active" data-panel="record">
+                <div class="profile-tab-panel" data-panel="record">
                     <section class="summary-bar" id="summaryBar" style="display:none;">
                         <div class="summary-grid" id="summaryGrid"></div>
                     </section>
@@ -10208,22 +10208,23 @@
         order: 10 !important;
       }
       body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="record"].profile-flow-record {
-        display: block !important;
         order: 20 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="record"].profile-flow-record:not(.active) {
+        display: none !important;
+      }
+      body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="record"].profile-flow-record.active {
+        display: block !important;
       }
 
       body.profile-page.tmr-social-profile .tmrx-stats {
         gap: 24px !important;
       }
-      body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicks) {
-        display: none !important;
-      }
+      body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicks),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvancedTop),
-      body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvanced) {
-        display: none !important;
-      }
+      body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvanced),
       body.profile-page.tmr-social-profile .tmrx-section:has(.tmrx-filter-bar) {
-        display: none !important;
+        display: block !important;
       }
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxEquityShellTop),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxEquityShell) {

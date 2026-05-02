@@ -16,7 +16,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/social-home.css?v=20260430a">
-    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260502navspread1">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430navfix9">
     <script defer src="/static/js/tmr-sitewide.js?v=20260430navfix9"></script>
     <style>
         /* Trivia-aligned design tokens (override social-home.css) */
@@ -793,7 +793,7 @@
       gtag('config', 'G-V5MCVXS2HE');
     </script>
 </head>
-<body class="tmr-site-shell">
+<body>
     <div class="page-layout">
         <aside class="left-sidebar">
             <div class="sidebar-nav">
@@ -816,8 +816,8 @@
         <main class="main-feed">
             <section class="feed-hero">
                 <div class="feed-hero-eyebrow"><span class="pip"></span>Verified Community</div>
-                <h1>Your Feed</h1>
-                <p>Follow picks, hot takes, polls, trivia, and challenges from users with verified records.</p>
+                <h1>Sports Feed</h1>
+                <p>Follow verified picks, hot takes, polls, challenges, and forum activity from users building public records.</p>
                 <div class="feed-hero-actions">
                     <a href="/sportsbook/" class="btn btn-primary"><i class="fas fa-bolt"></i> Lock a Pick</a>
                     <a href="/forum/" class="btn btn-ghost"><i class="fas fa-comments"></i> Forums</a>
@@ -858,14 +858,25 @@
 
             <div class="feed-tabs">
                 <button class="feed-tab active" onclick="setFilter('all',this)"><i class="fas fa-stream"></i> For You</button>
+                <button class="feed-tab" onclick="setFilter('following',this)"><i class="fas fa-user-friends"></i> Following</button>
                 <button class="feed-tab" onclick="setFilter('picks',this)"><i class="fas fa-crosshairs"></i> Picks</button>
                 <button class="feed-tab" onclick="setFilter('hot-takes',this)"><i class="fas fa-fire"></i> Hot Takes</button>
                 <button class="feed-tab" onclick="setFilter('polls',this)"><i class="fas fa-poll"></i> Polls</button>
-                <button class="feed-tab" onclick="setFilter('following',this)"><i class="fas fa-user-friends"></i> Following</button>
+                <button class="feed-tab" onclick="setFilter('challenges',this)"><i class="fas fa-trophy"></i> Challenges</button>
             </div>
 
             <div class="feed-list" id="feedList">
-                <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading verified community posts...</p></div>
+                <div class="empty-state">
+                    <i class="fas fa-stream"></i>
+                    <h3>Your feed is quiet because you are early.</h3>
+                    <p>Start by following handicappers, locking your first pick, or starting a hot take.</p>
+                    <div class="empty-state-actions">
+                        <a class="is-primary" href="/handicappers/">Find Handicappers</a>
+                        <a href="/sportsbook/">Lock a Pick</a>
+                        <a href="/forum/">Start a Forum Thread</a>
+                        <a href="/polls/">Create Poll</a>
+                    </div>
+                </div>
             </div>
 
             <div class="load-more" id="loadMore" style="display:none;"><button class="load-more-btn" onclick="loadMorePosts()">Load More</button></div>
@@ -904,5 +915,40 @@
     <script src="/static/js/backend-api.js?v=20260423a"></script>
     <script src="/static/js/auth-persistent.js?v=20260424a"></script>
     <script src="/static/js/social-home.js?v=20260430a"></script>
+    <script>
+    (function feedSafetyNet() {
+        function showQuietFeedState() {
+            var list = document.getElementById('feedList');
+            if (!list) return;
+            var loading = list.querySelector('.tmr-loading-state, .fa-spinner');
+            if (!loading) return;
+            list.innerHTML =
+                '<div class="empty-state">' +
+                    '<i class="fas fa-stream"></i>' +
+                    '<h3>Your feed is quiet because you are early.</h3>' +
+                    '<p>Start by following handicappers, locking your first pick, or starting a hot take. TrustMyRecord does not fill the feed with fake posts.</p>' +
+                    '<div class="empty-state-actions">' +
+                        '<a class="is-primary" href="/handicappers/">Find Handicappers</a>' +
+                        '<a href="/sportsbook/">Lock a Pick</a>' +
+                        '<a href="/forum/">Start a Forum Thread</a>' +
+                        '<a href="/polls/">Create Poll</a>' +
+                    '</div>' +
+                '</div>';
+            var loadMore = document.getElementById('loadMore');
+            if (loadMore) loadMore.style.display = 'none';
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(showQuietFeedState, 6500);
+            ['trendingList','topCappersList','arenaWatchList','suggestedList'].forEach(function(id) {
+                setTimeout(function() {
+                    var el = document.getElementById(id);
+                    if (el && !el.textContent.trim()) {
+                        el.innerHTML = '<div class="rs-empty">Real activity will appear here as verified records grow.</div>';
+                    }
+                }, 7000);
+            });
+        });
+    })();
+    </script>
 </body>
 </html>
