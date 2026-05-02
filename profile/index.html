@@ -1869,7 +1869,7 @@
                           <div class="tmrx-cell"><div class="tmrx-label">ROI</div><div class="tmrx-value is-placeholder" id="tmrxRoiTop">&mdash;</div><div class="tmrx-sub">net / risked</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Avg Odds</div><div class="tmrx-value is-placeholder" id="tmrxAvgOddsTop">&mdash;</div><div class="tmrx-sub">avg implied &rarr; American</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Avg Units</div><div class="tmrx-value is-placeholder" id="tmrxAvgUnitsTop">&mdash;</div><div class="tmrx-sub">avg stake / pick</div></div>
-                          <div class="tmrx-cell"><div class="tmrx-label">Pending</div><div class="tmrx-value is-placeholder" id="tmrxPendingTop">&mdash;</div><div class="tmrx-sub">unresolved</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">eU (Effective Units)</div><div class="tmrx-value is-placeholder" id="tmrxEffectiveUnitsTop">&mdash;</div><div class="tmrx-sub">profit normalized to 3u/pick</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Graded</div><div class="tmrx-value is-placeholder" id="tmrxGradedTop">&mdash;</div><div class="tmrx-sub">settled picks</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Current Streak</div><div class="tmrx-value is-placeholder" id="tmrxStreakTop">&mdash;</div><div class="tmrx-sub">live W/L run</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Best Streak</div><div class="tmrx-value is-placeholder" id="tmrxBestStreakTop">&mdash;</div><div class="tmrx-sub">longest win run</div></div>
@@ -1892,6 +1892,25 @@
                           <div class="tmrx-period-cell" data-tmrx-period="180d"><div class="k">Last 180d</div><div class="v is-placeholder">&mdash;</div><div class="s"></div></div>
                           <div class="tmrx-period-cell" data-tmrx-period="365d"><div class="k">Last 365d</div><div class="v is-placeholder">&mdash;</div><div class="s"></div></div>
                           <div class="tmrx-period-cell" data-tmrx-period="all"><div class="k">All time</div><div class="v is-placeholder">&mdash;</div><div class="s"></div></div>
+                        </div>
+                      </div>
+
+                      <div class="tmrx-section">
+                        <div class="tmrx-section-head">
+                          <div>
+                            <div class="tmrx-section-title">Filters</div>
+                            <div class="tmrx-section-sub">Filters update breakdown tables and the pick history below. (Wire-up in progress.)</div>
+                          </div>
+                        </div>
+                        <div class="tmrx-filter-bar">
+                          <label><span>Sport</span><select data-tmrx-filter="sport"><option value="">All</option><option value="baseball_mlb">MLB</option><option value="basketball_nba">NBA</option><option value="icehockey_nhl">NHL</option><option value="americanfootball_nfl">NFL</option></select></label>
+                          <label><span>Market</span><select data-tmrx-filter="market"><option value="">All</option><option value="h2h">Moneyline</option><option value="spreads">Spread</option><option value="totals">Total</option><option value="team_totals">Team Total</option><option value="f5_h2h,f5_spreads,f5_totals">First Five</option></select></label>
+                          <label><span>Result</span><select data-tmrx-filter="result"><option value="">All</option><option value="won">Won</option><option value="lost">Lost</option><option value="push">Push</option><option value="pending">Pending</option></select></label>
+                          <label><span>Odds</span><select data-tmrx-filter="odds"><option value="">All</option><option value="heavy_favorite">Heavy Fav (-200+)</option><option value="favorite">Fav (-110 to -199)</option><option value="even">Even</option><option value="underdog">Dog (+101 to +200)</option><option value="big_underdog">Longshot (+201+)</option></select></label>
+                          <label><span>Unit Size</span><select data-tmrx-filter="unit_size"><option value="">All</option><option value="0.5_to_1u">0.5u-1u</option><option value="1.5_to_2u">1.5u-2u</option><option value="2.5_to_3u">2.5u-3u</option><option value="3u_plus">3u+</option></select></label>
+                          <label><span>Period</span><select data-tmrx-filter="period"><option value="">All Time</option><option value="7">Last 7d</option><option value="30">Last 30d</option><option value="90">Last 90d</option><option value="365">Last 365d</option></select></label>
+                          <label><span>Side</span><select data-tmrx-filter="side"><option value="">All</option><option value="favorite">Favorite</option><option value="underdog">Underdog</option></select></label>
+                          <label><span>Min Units</span><input type="number" min="0" step="0.5" placeholder="0.0" data-tmrx-filter="min_units" style="width:90px"></label>
                         </div>
                       </div>
 
@@ -5685,6 +5704,21 @@
         }
         if (st.best != null) setVal('tmrxBestStreak', Math.abs(Number(st.best)) + 'W', 1);
 
+        // eU ribbon cell (Picks tab default view) — replaces "Pending" so the
+        // first-row ribbon shows a real performance metric instead of an
+        // unresolved-count.
+        if (s.effective_units != null) {
+            const v = Number(s.effective_units);
+            const display = (v >= 0 ? '+' : '') + v.toFixed(2) + 'u';
+            const el = document.getElementById('tmrxEffectiveUnitsTop');
+            if (el) {
+                el.textContent = display;
+                el.classList.remove('is-placeholder');
+                el.classList.toggle('is-pos', v > 0);
+                el.classList.toggle('is-neg', v < 0);
+            }
+        }
+
         if (s.last_pick_at) {
             try {
                 const ageMs = Date.now() - new Date(s.last_pick_at).getTime();
@@ -5881,15 +5915,21 @@
         }
 
         // ---- Equity curve + drawdown strip ----
-        const eqShell = document.getElementById('tmrxEquityShell');
-        const eqSvg = document.getElementById('tmrxEquitySvg');
+        // Render directly into BOTH the Advanced-tab SVG (#tmrxEquitySvg) and
+        // the default Picks-tab SVG (#tmrxEquitySvgTop). Mirror-via-innerHTML
+        // can drop the SVG content silently because of namespace edge cases,
+        // so we just paint the same markup into both targets.
+        const eqShells = [document.getElementById('tmrxEquityShell'), document.getElementById('tmrxEquityShellTop')];
+        const eqSvgs = [document.getElementById('tmrxEquitySvg'), document.getElementById('tmrxEquitySvgTop')];
         const eq = Array.isArray(data.equity_curve) ? data.equity_curve : [];
+        const eqShell = eqShells.find(Boolean);
+        const eqSvg = eqSvgs.find(Boolean);
         if (eqShell && eqSvg) {
             if (eq.length < 2) {
-                eqShell.classList.add('tmrx-equity-shell--empty');
-                eqSvg.innerHTML = '';
+                eqShells.forEach(el => el && el.classList.add('tmrx-equity-shell--empty'));
+                eqSvgs.forEach(el => { if (el) el.innerHTML = ''; });
             } else {
-                eqShell.classList.remove('tmrx-equity-shell--empty');
+                eqShells.forEach(el => el && el.classList.remove('tmrx-equity-shell--empty'));
                 const W = 1440, H = 220, padX = 16, padY = 16;
                 const ys = eq.map(p => Number(p.units) || 0);
                 const yMax = Math.max(0, Math.max.apply(null, ys));
@@ -5906,7 +5946,7 @@
                 const fillPath = d + ' L' + sx(xRng).toFixed(2) + ' ' + zeroY + ' L' + sx(0).toFixed(2) + ' ' + zeroY + ' Z';
                 const guideY1 = (padY).toFixed(2);
                 const guideY2 = (H - padY).toFixed(2);
-                eqSvg.innerHTML =
+                const svgMarkup =
                     '<defs><linearGradient id="tmrxEqGrad" x1="0" y1="0" x2="0" y2="1">' +
                     '<stop offset="0" stop-color="' + (last >= 0 ? '#22D3EE' : '#fca5a5') + '" stop-opacity=".40"/>' +
                     '<stop offset="1" stop-color="' + (last >= 0 ? '#22D3EE' : '#fca5a5') + '" stop-opacity="0"/>' +
@@ -5916,6 +5956,7 @@
                     '<line x1="0" y1="' + guideY2 + '" x2="' + W + '" y2="' + guideY2 + '" stroke="#1F3350" stroke-dasharray="4 4"/>' +
                     '<path d="' + fillPath + '" fill="url(#tmrxEqGrad)" stroke="none"/>' +
                     '<path d="' + d + '" fill="none" stroke="' + stroke + '" stroke-width="2.4"/>';
+                eqSvgs.forEach(el => { if (el) el.innerHTML = svgMarkup; });
             }
         }
         const setDd = (id, text, signed) => {
@@ -5984,7 +6025,7 @@
         const TMRX_MIRROR_IDS = [
             'Record','WinRate','NetUnits','Roi','AvgOdds','AvgUnits',
             'Pending','Graded','Streak','BestStreak','LastGraded',
-            'DdPeak','DdMax','DdWorst','DdDays'
+            'DdPeak','DdMax','DdWorst','DdDays','EffectiveUnits'
         ];
         TMRX_MIRROR_IDS.forEach(k => {
             const src = document.getElementById('tmrx' + k);
@@ -9411,6 +9452,102 @@
       body.profile-page.tmr-social-profile #capperMetricsSection,
       body.profile-page.tmr-social-profile .capper-monitor {
         display: none !important;
+      }
+
+      /* Filter bar — clean horizontal row above breakdown tables. */
+      body.profile-page.tmr-social-profile .tmrx-filter-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: end;
+        padding: 14px 16px;
+        border: 1px solid rgba(31,51,80,.55);
+        border-radius: 12px;
+        background: #08111f;
+      }
+      body.profile-page.tmr-social-profile .tmrx-filter-bar label {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font: 800 10px/1 'Inter',sans-serif;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: #7a8499;
+      }
+      body.profile-page.tmr-social-profile .tmrx-filter-bar select,
+      body.profile-page.tmr-social-profile .tmrx-filter-bar input {
+        background: #111a2e !important;
+        border: 1px solid rgba(148,163,184,.18) !important;
+        color: #dbe5f4 !important;
+        padding: 8px 11px !important;
+        border-radius: 8px !important;
+        font: 600 13px/1 'Inter',sans-serif !important;
+        letter-spacing: 0 !important;
+        text-transform: none !important;
+        outline: none !important;
+        min-width: 130px !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-filter-bar select:focus,
+      body.profile-page.tmr-social-profile .tmrx-filter-bar input:focus {
+        border-color: rgba(34,211,238,.35) !important;
+        background: rgba(34,211,238,.05) !important;
+      }
+
+      /* Container width — match preview's clean 1320px feel. */
+      body.profile-page.tmr-social-profile .profile-header-section .container,
+      body.profile-page.tmr-social-profile .profile-tabs-section .container,
+      body.profile-page.tmr-social-profile .profile-body-grid,
+      body.profile-page .container {
+        max-width: 1320px !important;
+      }
+      body.profile-page.tmr-social-profile.tmrx-stats-fullwidth .profile-body-grid {
+        max-width: 1320px !important;
+      }
+
+      /* Kill the horizontal scroll caused by aggressive min-width
+         hardening. Tables inside the redesign should fit the container
+         on desktop and only scroll on real overflow. */
+      body.profile-page.tmr-social-profile .tmrx-table {
+        min-width: 0 !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-table-shell {
+        overflow-x: auto !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-stats .tmrx-section,
+      body.profile-page.tmr-social-profile .tmrx-stats {
+        min-width: 0 !important;
+      }
+      body.profile-page.tmr-social-profile .picks-table {
+        min-width: 0 !important;
+      }
+      body.profile-page.tmr-social-profile .capper-history-table {
+        min-width: 0 !important;
+      }
+
+      /* Bigger ribbon cells — no truncation, more breathing room. */
+      body.profile-page.tmr-social-profile .tmrx-ribbon {
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important;
+        gap: 12px !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-cell {
+        padding: 18px 18px !important;
+        min-height: 104px !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-value {
+        font-size: clamp(22px, 1.55vw, 26px) !important;
+        white-space: nowrap !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-period-cell {
+        padding: 14px 12px !important;
+        cursor: pointer;
+        transition: border-color .15s ease, background .15s ease;
+      }
+      body.profile-page.tmr-social-profile .tmrx-period-cell:hover {
+        border-color: rgba(34,211,238,.4) !important;
+        background: rgba(34,211,238,.06) !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-period-cell .v {
+        font-size: 16px !important;
       }
 
       /* Charts + Splits tabs: kill the 3-up card grid. Force every chart and
