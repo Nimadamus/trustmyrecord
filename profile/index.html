@@ -5771,6 +5771,7 @@
             return;
         }
         if (!data) return;
+        try { renderProfileAdvancedMetricsStrip(data); } catch (e) { console.warn('[Profile] advanced strip render failed:', e); }
         const set = (id, value, opts) => {
             const el = document.getElementById(id);
             if (!el || value == null) return;
@@ -5936,7 +5937,6 @@
 
         // ===== TMRX REDESIGN: populate the universal wide layout. Same data,
         // cleaner display. No new calculations — purely a render pass. =====
-        try { renderProfileAdvancedMetricsStrip(data); } catch (e) { console.warn('[Profile] advanced strip render failed:', e); }
         try { tmrxRenderRedesign(data); } catch (e) { console.warn('[tmrx] render failed:', e); }
         try { tmrxRenderPickHistory(username); } catch (e) { console.warn('[tmrx] pick history failed:', e); }
     }
@@ -6036,6 +6036,44 @@
             maxDd != null && Number.isFinite(maxDd) ? 'Peak-to-trough units' : 'Requires enough graded picks',
             maxDd != null && Number.isFinite(maxDd) && maxDd > 0 ? -1 : null
         );
+    }
+
+    async function bootstrapProfileAdvancedMetricsStrip() {
+        const section = document.getElementById('profileAdvancedMetricsSection');
+        if (!section || section.dataset.metricsBootstrapped === '1') return;
+        const params = new URLSearchParams(window.location.search || '');
+        const username = params.get('user') || params.get('username') || profileUsername;
+        if (!username) return;
+        section.dataset.metricsBootstrapped = '1';
+        let data = null;
+        const statusEl = document.getElementById('profileAdvancedMetricsStatus');
+        try {
+            for (let i = 0; i < 20; i++) {
+                if (window.api && typeof window.api.request === 'function') break;
+                await new Promise(resolve => setTimeout(resolve, 150));
+            }
+            if (window.api && typeof window.api.request === 'function') {
+                data = await window.api.request('/users/' + encodeURIComponent(username) + '/metrics');
+            }
+        } catch (err) {
+            console.warn('[Profile] independent metrics API unavailable:', err && err.message ? err.message : err);
+        }
+        if (!data) {
+            try {
+                const resp = await fetch('https://trustmyrecord-api.onrender.com/api/users/' + encodeURIComponent(username) + '/metrics', { cache: 'no-store' });
+                if (resp.ok) data = await resp.json();
+            } catch (err) {
+                console.warn('[Profile] direct metrics fetch unavailable:', err && err.message ? err.message : err);
+            }
+        }
+        if (data) renderProfileAdvancedMetricsStrip(data);
+        else if (statusEl) statusEl.textContent = 'Metrics unavailable';
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootstrapProfileAdvancedMetricsStrip);
+    } else {
+        bootstrapProfileAdvancedMetricsStrip();
     }
 
     // ============================================================
