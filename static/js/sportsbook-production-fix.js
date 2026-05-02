@@ -696,7 +696,7 @@
     }
 
     function prewarmCoreBoards() {
-        ['MLB', 'NHL', 'NBA', 'WNBA', 'NFL', 'NCAAB', 'NCAAF', 'Soccer', 'MLS', 'UCL', 'LaLiga', 'SerieA', 'Bundesliga', 'Ligue1', 'ATP', 'WTA'].forEach(function(sport, index) {
+        ['MLB', 'NHL', 'NBA', 'WNBA', 'NFL', 'NCAAB', 'NCAAF', 'Soccer', 'MLS', 'UCL', 'UEL', 'UECL', 'LaLiga', 'SerieA', 'Bundesliga', 'Ligue1', 'LigaMX', 'NWSL', 'CONCACAF', 'Championship', 'Eredivisie', 'Primeira', 'Scotland', 'Argentina', 'Brazil', 'ATP', 'WTA'].forEach(function(sport, index) {
             window.setTimeout(function() {
                 prefetchSportBoard(sport);
             }, 200 + (index * 120));
