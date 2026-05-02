@@ -7,7 +7,7 @@
         WNBA: 'basketball_wnba',
         MLB: 'baseball_mlb',
         NHL: 'icehockey_nhl',
-        Soccer: 'soccer_epl',
+        Soccer: 'soccer_usa_mls',
         MLS: 'soccer_usa_mls',
         UCL: 'soccer_uefa_champs_league',
         LaLiga: 'soccer_spain_la_liga',
@@ -27,8 +27,9 @@
         Brazil: 'soccer_brazil_serie_a',
         NCAAB: 'basketball_ncaab',
         NCAAF: 'americanfootball_ncaaf',
-        ATP: 'tennis_atp',
-        WTA: 'tennis_wta'
+        Tennis: 'tennis',
+        ATP: 'tennis',
+        WTA: 'tennis'
     };
 
     const STATUS_MAP = {
@@ -1032,6 +1033,13 @@
             '</div>';
     }
 
+    function getBoardEmptyCopy(sport, filter) {
+        const sportLabel = sport || 'sportsbook';
+        const marketLabel = filter ? getFilterLabel(filter, { sport_key: SPORT_KEY_MAP[sport] || '' }) : '';
+        if (marketLabel) return 'No ' + marketLabel + ' ' + sportLabel + ' odds available right now.';
+        return 'No ' + sportLabel + ' odds available right now.';
+    }
+
     function formatTimestamp(value) {
         if (!value) return 'Unavailable';
         const date = new Date(value);
@@ -1495,7 +1503,7 @@
         }
 
         if (!games || games.length === 0) {
-            container.innerHTML = html + '<div class="tmr-empty-state">No ' + (state.selectedSport || 'games') + ' games available right now.</div>';
+            container.innerHTML = html + '<div class="tmr-empty-state">' + escapeHtml(getBoardEmptyCopy(state.selectedSport)) + '</div>';
             return;
         }
 
@@ -1684,6 +1692,14 @@
         const staleBoard = cachedBoard ? null : getStaleCachedBoard(sportKey);
 
         if (title) title.textContent = sport + ' Markets';
+        if (!sportKey) {
+            if (container) {
+                container.innerHTML = '<div class="tmr-empty-state">No ' + escapeHtml(sport || 'sport') + ' odds available right now.</div>';
+            }
+            updateBoardBadge(badge, 0);
+            recordBoardEvent('board_unknown_sport', { sport: sport || '' });
+            return;
+        }
         if (container && !cachedBoard && !staleBoard) {
             renderBoardLoading(container, sport);
         }
