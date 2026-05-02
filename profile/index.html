@@ -1860,7 +1860,7 @@
                           <div class="tmrx-cell"><div class="tmrx-label">ROI</div><div class="tmrx-value is-placeholder" id="tmrxRoiTop">&mdash;</div><div class="tmrx-sub">net / risked</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Avg Odds</div><div class="tmrx-value is-placeholder" id="tmrxAvgOddsTop">&mdash;</div><div class="tmrx-sub">avg implied &rarr; American</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Avg Units</div><div class="tmrx-value is-placeholder" id="tmrxAvgUnitsTop">&mdash;</div><div class="tmrx-sub">avg stake / pick</div></div>
-                          <div class="tmrx-cell"><div class="tmrx-label">eU (Effective Units)</div><div class="tmrx-value is-placeholder" id="tmrxEffectiveUnitsTop">&mdash;</div><div class="tmrx-sub">profit normalized to 3u/pick</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">Effective Units</div><div class="tmrx-value is-placeholder" id="tmrxEffectiveUnitsTop">&mdash;</div><div class="tmrx-sub">profit normalized to 3u/pick</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Graded</div><div class="tmrx-value is-placeholder" id="tmrxGradedTop">&mdash;</div><div class="tmrx-sub">settled picks</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Current Streak</div><div class="tmrx-value is-placeholder" id="tmrxStreakTop">&mdash;</div><div class="tmrx-sub">live W/L run</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Best Streak</div><div class="tmrx-value is-placeholder" id="tmrxBestStreakTop">&mdash;</div><div class="tmrx-sub">longest win run</div></div>
@@ -2654,7 +2654,7 @@
                           <div class="tmrx-cell"><div class="tmrx-label">ROI</div><div class="tmrx-value is-placeholder" id="tmrxRoi">&mdash;</div><div class="tmrx-sub">net / risked</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Avg Odds</div><div class="tmrx-value is-placeholder" id="tmrxAvgOdds">&mdash;</div><div class="tmrx-sub">avg implied &rarr; American</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Avg Units</div><div class="tmrx-value is-placeholder" id="tmrxAvgUnits">&mdash;</div><div class="tmrx-sub">avg stake / pick</div></div>
-                          <div class="tmrx-cell"><div class="tmrx-label">Pending</div><div class="tmrx-value is-placeholder" id="tmrxPending">&mdash;</div><div class="tmrx-sub">unresolved</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">Effective Units</div><div class="tmrx-value is-placeholder" id="tmrxEffectiveUnits">&mdash;</div><div class="tmrx-sub">profit normalized to 3u/pick</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Graded</div><div class="tmrx-value is-placeholder" id="tmrxGraded">&mdash;</div><div class="tmrx-sub">settled picks</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Current Streak</div><div class="tmrx-value is-placeholder" id="tmrxStreak">&mdash;</div><div class="tmrx-sub">live W/L run</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Best Streak</div><div class="tmrx-value is-placeholder" id="tmrxBestStreak">&mdash;</div><div class="tmrx-sub">longest win run</div></div>
@@ -5902,13 +5902,14 @@
         if (s.effective_units != null) {
             const v = Number(s.effective_units);
             const display = (v >= 0 ? '+' : '') + v.toFixed(2) + 'u';
-            const el = document.getElementById('tmrxEffectiveUnitsTop');
-            if (el) {
+            ['tmrxEffectiveUnits', 'tmrxEffectiveUnitsTop'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (!el) return;
                 el.textContent = display;
                 el.classList.remove('is-placeholder');
                 el.classList.toggle('is-pos', v > 0);
                 el.classList.toggle('is-neg', v < 0);
-            }
+            });
         }
 
         if (s.last_pick_at) {
@@ -9494,21 +9495,21 @@
       .tmrx-stats .tmrx-section-sub { color: #7a8499; font-size: 12px; margin-top: 3px; }
       .tmrx-stats .tmrx-meta { font-size: 11.5px; color: #7a8499; font-weight: 800; letter-spacing: .04em; }
 
-      .tmrx-ribbon { display: grid; grid-template-columns: repeat(10, minmax(0,1fr)); gap: 10px; }
-      .tmrx-cell { padding: 14px; border: 1px solid rgba(31,51,80,.55); border-radius: 12px; background: #0a1322; min-height: 92px; display: flex; flex-direction: column; justify-content: center; }
-      .tmrx-label { font-size: 10.5px; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; color: #7a8499; }
-      .tmrx-value { font-size: 24px; font-weight: 900; color: #f1f5fb; margin-top: 6px; line-height: 1.05; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+      .tmrx-ribbon { display: grid; grid-template-columns: repeat(5, minmax(180px,1fr)); gap: 12px; }
+      .tmrx-cell { min-width: 0; padding: 18px 18px 16px; border: 1px solid rgba(68,91,126,.72); border-radius: 10px; background: linear-gradient(180deg,rgba(15,27,46,.98),rgba(8,17,31,.98)); min-height: 118px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 12px 28px rgba(0,0,0,.18); }
+      .tmrx-label { font-size: 10.5px; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; color: #a8b4c7; }
+      .tmrx-value { max-width: 100%; font-size: 28px; font-weight: 950; color: #f1f5fb; margin-top: 9px; line-height: 1.02; letter-spacing: 0; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: visible; text-overflow: clip; }
       .tmrx-value.is-pos { color: #86efac; }
-      .tmrx-value.is-neg { color: #fca5a5; }
+      .tmrx-value.is-neg { color: #ef4444; }
       .tmrx-value.is-placeholder { color: #94a3b8; font-weight: 800; }
-      .tmrx-sub { margin-top: 4px; font-size: 11.5px; color: #7f8ca3; font-weight: 700; }
+      .tmrx-sub { margin-top: 8px; font-size: 11.5px; color: #8391a7; font-weight: 700; line-height: 1.25; }
 
       .tmrx-period-strip { display: grid; grid-template-columns: repeat(8, minmax(0,1fr)); gap: 8px; }
       .tmrx-period-cell { padding: 10px; border: 1px solid rgba(31,51,80,.55); border-radius: 10px; background: rgba(2,6,23,.40); text-align: center; }
       .tmrx-period-cell .k { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; color: #7a8499; }
       .tmrx-period-cell .v { margin-top: 6px; font-size: 14px; font-weight: 900; color: #f1f5fb; font-variant-numeric: tabular-nums; }
       .tmrx-period-cell .v.is-pos { color: #86efac; }
-      .tmrx-period-cell .v.is-neg { color: #fca5a5; }
+      .tmrx-period-cell .v.is-neg { color: #ef4444; }
       .tmrx-period-cell .s { margin-top: 2px; font-size: 11px; color: #7f8ca3; font-weight: 700; }
 
       .tmrx-table-shell { border: 1px solid rgba(31,51,80,.55); border-radius: 12px; overflow: hidden; background: #0a1322; }
@@ -9537,20 +9538,23 @@
       .tmrx-dd-cell .k { font-size: 10.5px; font-weight: 900; text-transform: uppercase; letter-spacing: .10em; color: #7a8499; }
       .tmrx-dd-cell .v { margin-top: 4px; font-size: 18px; font-weight: 900; color: #f1f5fb; font-variant-numeric: tabular-nums; }
       .tmrx-dd-cell .v.is-pos { color: #86efac; }
-      .tmrx-dd-cell .v.is-neg { color: #fca5a5; }
+      .tmrx-dd-cell .v.is-neg { color: #ef4444; }
 
       .tmrx-unavail-note { margin-top: 14px; padding: 12px 14px; border: 1px dashed rgba(148,163,184,.28); border-radius: 10px; background: rgba(2,6,23,.40); color: #94a3b8; font-size: 12.5px; }
       .tmrx-unavail-note b { color: #cbd5e1; }
       .tmrx-unavail-note code { color: #cbd5e1; }
 
       @media (max-width: 1280px) {
-        .tmrx-stats .tmrx-ribbon { grid-template-columns: repeat(5, minmax(0,1fr)); }
+        .tmrx-stats .tmrx-ribbon { grid-template-columns: repeat(4, minmax(180px,1fr)); }
         .tmrx-stats .tmrx-period-strip { grid-template-columns: repeat(4, minmax(0,1fr)); }
       }
       @media (max-width: 1100px) { .tmrx-stats .tmrx-grid-2 { grid-template-columns: 1fr; } }
       @media (max-width: 720px) {
-        .tmrx-stats .tmrx-ribbon { grid-template-columns: repeat(2, minmax(0,1fr)); }
+        .tmrx-stats .tmrx-ribbon { grid-template-columns: repeat(2, minmax(160px,1fr)); }
         .tmrx-stats .tmrx-period-strip { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      }
+      @media (max-width: 420px) {
+        .tmrx-stats .tmrx-ribbon { grid-template-columns: 1fr; }
       }
 
       /* May 1 2026 readability hardening: never truncate primary stat
@@ -9638,7 +9642,8 @@
         min-width: 1500px !important;
       }
       .tmrx-ribbon {
-        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)) !important;
+        grid-template-columns: repeat(5, minmax(180px, 1fr)) !important;
+        gap: 12px !important;
       }
       .tmrx-cell {
         min-width: 0 !important;
@@ -9648,7 +9653,7 @@
         white-space: nowrap !important;
         overflow: visible !important;
         text-overflow: clip !important;
-        font-size: clamp(20px, 1.75vw, 26px) !important;
+        font-size: clamp(24px, 1.75vw, 30px) !important;
         letter-spacing: 0 !important;
       }
       .tmrx-table {
@@ -9666,6 +9671,9 @@
         gap: 20px !important;
       }
       @media (max-width: 760px) {
+        .tmrx-ribbon {
+          grid-template-columns: repeat(2, minmax(160px, 1fr)) !important;
+        }
         body.profile-page.tmr-social-profile .capper-main-row,
         body.profile-page.tmr-social-profile .capper-second-row {
           grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -9676,6 +9684,11 @@
         }
         body.profile-page.tmr-social-profile .capper-stat strong {
           font-size: 1.18rem !important;
+        }
+      }
+      @media (max-width: 420px) {
+        .tmrx-ribbon {
+          grid-template-columns: 1fr !important;
         }
       }
 
@@ -9848,20 +9861,34 @@
       body.profile-page.tmr-social-profile .tmrx-ribbon,
       body.profile-page.tmr-social-profile .tmrx-period-strip {
         display: grid !important;
-        gap: 0 !important;
+        gap: 12px !important;
         overflow-x: hidden !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-ribbon {
+        grid-template-columns: repeat(5, minmax(180px, 1fr)) !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-period-strip {
+        grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+        gap: 0 !important;
         background: linear-gradient(180deg,#101b30,#0a1322) !important;
         border: 1px solid rgba(31,51,80,.75) !important;
         border-radius: 12px !important;
         box-shadow: 0 14px 34px rgba(0,0,0,.20) !important;
       }
-      body.profile-page.tmr-social-profile .tmrx-ribbon {
-        grid-template-columns: repeat(10, minmax(0, 1fr)) !important;
+      body.profile-page.tmr-social-profile .tmrx-cell {
+        min-width: 0 !important;
+        min-height: 118px !important;
+        padding: 18px 18px 16px !important;
+        border: 1px solid rgba(68,91,126,.72) !important;
+        border-radius: 10px !important;
+        background: linear-gradient(180deg,rgba(15,27,46,.98),rgba(8,17,31,.98)) !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 12px 28px rgba(0,0,0,.18) !important;
+        align-items: flex-start !important;
       }
-      body.profile-page.tmr-social-profile .tmrx-period-strip {
-        grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
-      }
-      body.profile-page.tmr-social-profile .tmrx-cell,
       body.profile-page.tmr-social-profile .tmrx-period-cell {
         border: 0 !important;
         border-right: 1px solid rgba(31,51,80,.65) !important;
@@ -9870,14 +9897,22 @@
         box-shadow: none !important;
         min-height: 86px !important;
       }
-      body.profile-page.tmr-social-profile .tmrx-cell:last-child,
       body.profile-page.tmr-social-profile .tmrx-period-cell:last-child {
         border-right: 0 !important;
       }
-      body.profile-page.tmr-social-profile .tmrx-value,
+      body.profile-page.tmr-social-profile .tmrx-value {
+        white-space: nowrap !important;
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        font-variant-numeric: tabular-nums !important;
+        max-width: 100% !important;
+      }
       body.profile-page.tmr-social-profile .tmrx-period-cell .v {
-        white-space: normal !important;
-        overflow-wrap: anywhere !important;
+        white-space: nowrap !important;
+        overflow-wrap: normal !important;
+        word-break: normal !important;
         text-overflow: clip !important;
       }
       body.profile-page.tmr-social-profile .tmrx-table-shell {
@@ -10064,20 +10099,67 @@
       body.profile-page.tmr-social-profile .tmrx-table .zero {
         color: #9aa8bb !important;
       }
-      body.profile-page.tmr-social-profile .tmrx-ribbon,
+      body.profile-page.tmr-social-profile .tmrx-ribbon {
+        display: grid !important;
+        grid-template-columns: repeat(5, minmax(180px, 1fr)) !important;
+        gap: 12px !important;
+        overflow-x: hidden !important;
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+      }
       body.profile-page.tmr-social-profile .tmrx-period-strip {
         border-color: rgba(73, 96, 130, .75) !important;
       }
       body.profile-page.tmr-social-profile .tmrx-cell {
-        min-height: 98px !important;
-        padding: 18px 16px !important;
+        min-width: 0 !important;
+        min-height: 118px !important;
+        padding: 18px 18px 16px !important;
+        border: 1px solid rgba(68,91,126,.72) !important;
+        border-radius: 10px !important;
+        background: linear-gradient(180deg,rgba(15,27,46,.98),rgba(8,17,31,.98)) !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 12px 28px rgba(0,0,0,.18) !important;
+        align-items: flex-start !important;
       }
       body.profile-page.tmr-social-profile .tmrx-value {
         font-size: clamp(24px, 1.8vw, 30px) !important;
         font-weight: 950 !important;
+        white-space: nowrap !important;
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        font-variant-numeric: tabular-nums !important;
+        letter-spacing: 0 !important;
       }
       body.profile-page.tmr-social-profile .tmrx-label {
         color: #afbdd0 !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-value.is-neg,
+      body.profile-page.tmr-social-profile .tmrx-period-cell .v.is-neg,
+      body.profile-page.tmr-social-profile .tmrx-dd-cell .v.is-neg {
+        color: #ef4444 !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-value.is-pos,
+      body.profile-page.tmr-social-profile .tmrx-period-cell .v.is-pos,
+      body.profile-page.tmr-social-profile .tmrx-dd-cell .v.is-pos {
+        color: #22c55e !important;
+      }
+      @media (max-width: 1280px) {
+        body.profile-page.tmr-social-profile .tmrx-ribbon {
+          grid-template-columns: repeat(4, minmax(180px, 1fr)) !important;
+        }
+      }
+      @media (max-width: 760px) {
+        body.profile-page.tmr-social-profile .tmrx-ribbon {
+          grid-template-columns: repeat(2, minmax(160px, 1fr)) !important;
+        }
+      }
+      @media (max-width: 420px) {
+        body.profile-page.tmr-social-profile .tmrx-ribbon {
+          grid-template-columns: 1fr !important;
+        }
       }
 
       body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="record"].profile-flow-record .picks-section {
