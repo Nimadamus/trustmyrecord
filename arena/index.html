@@ -1468,13 +1468,16 @@ function updateNavUser() {
     const navUser = document.getElementById('navUser');
     const navLogin = document.getElementById('navLoginBtn');
     const navRegister = document.getElementById('navRegisterBtn');
+    if (!navUser || !navLogin) return;
     if (currentUser) {
         navUser.style.display = 'flex';
         navLogin.style.display = 'none';
         if (navRegister) navRegister.style.display = 'none';
-        document.getElementById('navUsername').textContent = currentUser.username || currentUser.displayName;
+        const navUsername = document.getElementById('navUsername');
+        const navAvatar = document.getElementById('navAvatar');
+        if (navUsername) navUsername.textContent = currentUser.username || currentUser.displayName;
         const avatar = currentUser.avatar_url || currentUser.avatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${currentUser.username}`;
-        document.getElementById('navAvatar').src = avatar;
+        if (navAvatar) navAvatar.src = avatar;
     } else {
         navLogin.style.display = 'inline-flex';
         if (navRegister) navRegister.style.display = 'inline-flex';
