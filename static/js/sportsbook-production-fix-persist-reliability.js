@@ -1670,7 +1670,7 @@
             const cardId = 'tmr-market-card-' + index;
             const boardNumber = 701 + (index * 2);
             const sourceClass = game.has_sportsbook_odds ? 'real' : 'fallback';
-            const sourceText = game.has_sportsbook_odds ? 'Board Live' : 'Manual Board';
+            const sourceText = game.has_sportsbook_odds ? 'Board Live' : 'Lines Pending';
             const accent = getSportAccent(game.sport_key);
             const orderedGroups = (game.market_groups || []).slice().sort(function(a, b) {
                 const order = { full_game: 1, spread: 2, total: 3, team_totals: 4, first_half: 5, second_half: 6, period_1: 7, first_5: 8, alt_spreads: 9, alt_totals: 10 };
@@ -1689,6 +1689,15 @@
             const groupsHtml = orderedGroups.map(function(group, groupIndex) {
                 return renderBoardGroup(group, groupIndex, game, index);
             }).join('');
+            const pendingHtml = game.lines_pending || game.odds_source_status === 'schedule_only'
+                ? '<div class="tmr-group" data-scope="full" data-category="game-lines">' +
+                    '<div class="tmr-group-header"><div class="tmr-group-title"><span>Lines pending</span><small class="tmr-group-subtitle">Matchup listed from the schedule source</small></div><div class="tmr-group-metahead">Unavailable</div><div class="tmr-group-count">0 prices</div></div>' +
+                    '<div class="tmr-option-grid">' +
+                    '<button class="tmr-option-btn tmr-option-btn--pending" type="button" disabled aria-disabled="true"><div class="tmr-option-main"><div class="tmr-option-topline"><span class="tmr-option-tag">Moneyline</span></div><div class="tmr-option-market">Lines pending</div><div class="tmr-option-detail">No verified sportsbook price yet</div></div><div class="tmr-option-odds-wrap"><span class="tmr-option-odds-label">Status</span><div class="tmr-option-odds">Pending</div></div></button>' +
+                    '<button class="tmr-option-btn tmr-option-btn--pending" type="button" disabled aria-disabled="true"><div class="tmr-option-main"><div class="tmr-option-topline"><span class="tmr-option-tag">Run Line</span></div><div class="tmr-option-market">Lines pending</div><div class="tmr-option-detail">No verified sportsbook price yet</div></div><div class="tmr-option-odds-wrap"><span class="tmr-option-odds-label">Status</span><div class="tmr-option-odds">Pending</div></div></button>' +
+                    '<button class="tmr-option-btn tmr-option-btn--pending" type="button" disabled aria-disabled="true"><div class="tmr-option-main"><div class="tmr-option-topline"><span class="tmr-option-tag">Total</span></div><div class="tmr-option-market">Lines pending</div><div class="tmr-option-detail">No verified sportsbook price yet</div></div><div class="tmr-option-odds-wrap"><span class="tmr-option-odds-label">Status</span><div class="tmr-option-odds">Pending</div></div></button>' +
+                    '</div></div>'
+                : '';
             const cardTabsHtml = cardTabFilters.length > 1
                 ? '<div class="tmr-card-filter-bar"><div class="tmr-card-filter-tabs">' +
                     cardTabFilters.map(function(filter) {
@@ -1698,7 +1707,7 @@
                   '</div></div>'
                 : '';
 
-            if (!groupsHtml) {
+            if (!groupsHtml && !pendingHtml) {
                 return '';
             }
 
@@ -1717,9 +1726,9 @@
                 '<span class="tmr-market-chip">Updated ' + escapeHtml(formatTimestamp(game.updated_at)) + '</span>' +
                 '</div>' +
                 '</div>' +
-                '<div class="tmr-market-summary"><div class="tmr-market-count">' + (game.market_groups || []).length + ' markets</div><div class="tmr-market-caret">⌄</div></div>' +
+                '<div class="tmr-market-summary"><div class="tmr-market-count">' + (game.lines_pending ? 'Lines pending' : ((game.market_groups || []).length + ' markets')) + '</div><div class="tmr-market-caret">⌄</div></div>' +
                 '</div>' +
-                '<div class="tmr-market-body">' + cardTabsHtml + groupsHtml + '</div>' +
+                '<div class="tmr-market-body">' + cardTabsHtml + (groupsHtml || pendingHtml) + '</div>' +
                 '</div>';
         }).join('');
 
