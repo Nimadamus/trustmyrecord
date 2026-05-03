@@ -63,7 +63,6 @@
     return `<div class="record-strip">
       <span><b>${wins}-${losses}-${pushes}</b> record</span>
       <span><b>${wr}%</b> win rate</span>
-      <span><b>${Number(item.total_public_graded || total)}</b> graded</span>
     </div>`;
   }
 
