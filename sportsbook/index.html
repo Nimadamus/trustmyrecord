@@ -9363,34 +9363,44 @@
                     <a class="pending-picks-rail__view" href="/my-pending-picks/">My Pending Picks <i class="fas fa-arrow-right"></i></a>
                 </div>
             </div>
-            <div class="pending-picks-rail__list" id="pendingPicksList"></div>
+            <div class="pending-picks-rail__list" id="pendingPicksList" role="table" aria-label="Locked pending picks"></div>
             <div class="pending-picks-rail__empty" id="pendingPicksEmpty" hidden>
                 <i class="fas fa-clock"></i> No pending picks right now. Lock one below and it will show up here until it grades.
             </div>
         </section>
         <style>
-            .pending-picks-rail{margin:14px 0 22px;padding:22px;background:linear-gradient(180deg,rgba(13,20,31,0.98),rgba(7,12,20,0.98));border:1px solid rgba(45,212,191,0.26);border-radius:18px;box-shadow:0 22px 54px rgba(0,0,0,0.24);}
-            .pending-picks-rail__head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:16px;}
-            .pending-picks-rail__title{margin:0 0 5px;font:900 22px/1.1 'Barlow','Inter',sans-serif;color:#f8fafc;letter-spacing:-0.02em;}
-            .pending-picks-rail__sub{margin:0;color:#a7b4c5;font-size:13px;line-height:1.5;max-width:680px;}
+            .pending-picks-rail{margin:12px 0 18px;padding:14px;background:linear-gradient(180deg,rgba(8,13,20,0.98),rgba(5,9,15,0.98));border:1px solid rgba(45,212,191,0.24);border-radius:14px;box-shadow:0 18px 42px rgba(0,0,0,0.22);}
+            .pending-picks-rail__head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:10px;}
+            .pending-picks-rail__title{margin:0 0 3px;font:900 18px/1.1 'Barlow','Inter',sans-serif;color:#f8fafc;letter-spacing:0;}
+            .pending-picks-rail__sub{margin:0;color:#94a3b8;font-size:12px;line-height:1.35;max-width:680px;}
             .pending-picks-rail__meta{display:flex;align-items:center;gap:10px;font-size:12px;color:#94a3b8;}
-            .pending-picks-rail__count{font:800 22px/1 'Barlow','Inter',sans-serif;color:#00ffff;}
-            .pending-picks-rail__count-label{text-transform:uppercase;letter-spacing:1.5px;font-weight:700;}
+            .pending-picks-rail__count{font:800 19px/1 'Barlow','Inter',sans-serif;color:#00ffff;}
+            .pending-picks-rail__count-label{text-transform:uppercase;letter-spacing:1px;font-weight:700;}
             .pending-picks-rail__view{margin-left:8px;color:#00ffff;text-decoration:none;font-weight:700;}
             .pending-picks-rail__view:hover{color:#fff;}
-            .pending-picks-rail__list{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;}
-            .pending-pick-card{background:rgba(11,17,24,0.86);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:9px;}
-            .pending-pick-card__top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
-            .pending-pick-card__sport{font:700 10px/1 'Inter',sans-serif;text-transform:uppercase;letter-spacing:1.5px;color:#00ffff;background:rgba(0,255,255,0.08);padding:5px 8px;border-radius:6px;}
-            .pending-pick-card__when{font-size:11px;color:#64748b;}
-            .pending-pick-card__pick{color:#f4f7fb;font:800 15px/1.35 'Inter',sans-serif;}
-            .pending-pick-card__game{color:#cbd5e1;font:700 12.5px/1.35 'Inter',sans-serif;}
-            .pending-pick-card__detail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 12px;font-size:11.5px;color:#94a3b8;}
-            .pending-pick-card__detail span{min-width:0;overflow-wrap:anywhere;}
-            .pending-pick-card__detail b{color:#cbd5e1;font-weight:700;}
-            .pending-pick-card__status{display:inline-flex;width:max-content;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:rgba(245,158,11,0.16);border:1px solid rgba(245,158,11,0.26);color:#fde68a;font-size:10px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;}
-            .pending-picks-rail__empty{padding:14px;color:#64748b;font-size:13px;text-align:center;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:10px;}
+            .pending-picks-rail__list{display:flex;flex-direction:column;gap:5px;max-height:430px;overflow:auto;padding-right:2px;}
+            .pending-picks-row{display:grid;grid-template-columns:64px minmax(180px,1.35fr) minmax(160px,1fr) 70px 74px 118px 74px;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;background:rgba(15,23,35,0.78);border:1px solid rgba(255,255,255,0.07);box-shadow:inset 0 1px 0 rgba(255,255,255,0.025);font:700 12px/1.25 'Inter',sans-serif;color:#cbd5e1;}
+            .pending-picks-row:hover{border-color:rgba(45,212,191,0.28);background:rgba(17,27,40,0.92);}
+            .pending-picks-row__league{display:inline-flex;align-items:center;justify-content:center;min-width:46px;padding:5px 7px;border-radius:6px;background:rgba(0,255,255,0.09);border:1px solid rgba(0,255,255,0.18);color:#67e8f9;font:900 10px/1 'Inter',sans-serif;letter-spacing:.08em;}
+            .pending-picks-row__game{color:#dbe5ef;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+            .pending-picks-row__pick{color:#f8fafc;font-weight:900;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+            .pending-picks-row__odds{color:#67e8f9;font-weight:900;text-align:right;}
+            .pending-picks-row__units{color:#e2e8f0;text-align:right;}
+            .pending-picks-row__time{color:#94a3b8;font-size:11px;white-space:nowrap;}
+            .pending-picks-row__status{justify-self:end;display:inline-flex;align-items:center;justify-content:center;padding:5px 7px;border-radius:999px;background:rgba(245,158,11,0.13);border:1px solid rgba(245,158,11,0.25);color:#fde68a;font:900 9px/1 'Inter',sans-serif;letter-spacing:.1em;text-transform:uppercase;}
+            .pending-picks-rail__empty{padding:12px;color:#64748b;font-size:12px;text-align:center;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:9px;}
             .pending-picks-rail__empty i{margin-right:8px;color:#94a3b8;}
+            @media (max-width: 820px){
+                .pending-picks-row{grid-template-columns:52px 1fr auto;gap:6px 8px;padding:8px;}
+                .pending-picks-row__league{grid-row:1 / span 2;}
+                .pending-picks-row__game{grid-column:2 / 4;font-size:11.5px;}
+                .pending-picks-row__pick{grid-column:2 / 4;font-size:12.5px;}
+                .pending-picks-row__odds,.pending-picks-row__units,.pending-picks-row__time,.pending-picks-row__status{font-size:10.5px;text-align:left;justify-self:start;}
+                .pending-picks-row__odds{grid-column:2;}
+                .pending-picks-row__units{grid-column:3;}
+                .pending-picks-row__time{grid-column:2;}
+                .pending-picks-row__status{grid-column:3;}
+            }
         </style>
         <script>
         (function() {
@@ -9426,6 +9436,42 @@
                 if (!raw) return '';
                 return raw.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
             }
+            function cleanLeagueLabel(p) {
+                const raw = String((p && (p.league || p.sport_title || p.tournament_name || p.sport_key || p.sport_display || p.sport)) || '').toLowerCase();
+                const map = [
+                    [/basketball.*nba|nba/, 'NBA'],
+                    [/baseball.*mlb|mlb/, 'MLB'],
+                    [/icehockey.*nhl|hockey.*nhl|nhl/, 'NHL'],
+                    [/americanfootball.*nfl|football.*nfl|nfl/, 'NFL'],
+                    [/americanfootball.*ncaaf|college.*football|ncaaf/, 'NCAAF'],
+                    [/basketball.*ncaab|college.*basketball|ncaab/, 'NCAAB'],
+                    [/basketball.*wnba|wnba/, 'WNBA'],
+                    [/soccer.*usa.*mls|mls/, 'MLS'],
+                    [/soccer.*epl|england.*premier|premier league|epl/, 'EPL'],
+                    [/tennis/, 'TENNIS'],
+                    [/soccer/, 'SOCCER']
+                ];
+                for (const item of map) if (item[0].test(raw)) return item[1];
+                const cleaned = raw.replace(/^(americanfootball|basketball|baseball|icehockey|soccer)_?/,'').replace(/_/g,' ').trim();
+                return cleaned ? cleaned.toUpperCase() : 'SPORT';
+            }
+            function formatGameTime(ts) {
+                if (!ts) return 'Time pending';
+                const d = new Date(ts);
+                if (isNaN(d.getTime())) return 'Time pending';
+                return d.toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+            }
+            function fallbackPickLabel(p, selection) {
+                const market = String(p.market_type || p.market || '').toLowerCase();
+                const isMoneyline = market === 'h2h' || market.indexOf('moneyline') !== -1 || market.indexOf('money_line') !== -1 || /(^|_)h2h$/.test(market);
+                let text = String(selection || 'Pick').trim().replace(/\b(\d+)\.(\d)0+\b/g, '$1.$2').replace(/\b(\d+)\.0+\b/g, '$1');
+                if (isMoneyline) return text.replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '').replace(/\s+\bML\b$/i, '').trim() + ' ML';
+                const n = Number(p.line_snapshot);
+                let line = Number.isFinite(n) ? String(n).replace(/\.0+$/, '') : (p.line_snapshot == null ? '' : String(p.line_snapshot));
+                if (line && /spread|run_line|puck_line/i.test(market) && n > 0) line = '+' + line;
+                if (line && text.indexOf(line) === -1) text = text.replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '') + ' ' + line;
+                return text;
+            }
             function getCurrentUser() {
                 try {
                     if (window.auth && typeof window.auth.getCurrentUser === 'function' && window.auth.isLoggedIn()) {
@@ -9450,8 +9496,8 @@
             }
             function normalizePendingPick(p) {
                 if (!p || String(p.status || 'pending').toLowerCase() !== 'pending') return null;
-                const sport = (p.sport_display || p.sport_title || p.sport_key || p.sport || '').toString().toUpperCase().replace(/_/g, ' ');
-                const league = String(p.league || p.sport_title || p.tournament_name || p.sport_key || '').trim().replace(/_/g, ' ');
+                const sport = cleanLeagueLabel(p);
+                const league = cleanLeagueLabel(p);
                 const selection = String(p.selection_label || p.selection || p.pick || p.side || '').trim();
                 const market = fmtMarket(p.market_type);
                 const odds = Number(p.odds_snapshot);
@@ -9464,13 +9510,10 @@
                 }
                 let pickText = (window.TMR && typeof window.TMR.formatPickDisplayLabel === 'function')
                     ? window.TMR.formatPickDisplayLabel(p)
-                    : (function () {
-                        var text = selection.replace(/\b(\d+)\.(\d)0+\b/g, '$1.$2').replace(/\b(\d+)\.0+\b/g, '$1');
-                        var n = Number(p.line_snapshot);
-                        var line = Number.isFinite(n) ? String(n).replace(/\.0+$/, '') : (p.line_snapshot == null ? '' : String(p.line_snapshot));
-                        if (line && /spread|run_line|puck_line/i.test(String(p.market_type || '')) && n > 0) line = '+' + line;
-                        return line && text.indexOf(line) === -1 ? text.replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '') + ' ' + line : text;
-                    })();
+                    : fallbackPickLabel(p, selection);
+                if (/^(.+?)\s+0(?:\.0)?$/i.test(pickText) && /moneyline|h2h/i.test(String(p.market_type || ''))) {
+                    pickText = fallbackPickLabel(p, pickText);
+                }
                 return {
                     sport,
                     league,
@@ -9509,23 +9552,16 @@
                 }
                 emptyMsg.hidden = true;
                 validPicks.sort((a, b) => new Date(b.lockedAt || 0) - new Date(a.lockedAt || 0));
-                list.innerHTML = validPicks.slice(0, 8).map(p => {
-                    const gameTimeText = p.gameTime ? new Date(p.gameTime).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }) : 'Time pending';
-                    return '<div class="pending-pick-card">'
-                        + '<div class="pending-pick-card__top">'
-                        + '<span class="pending-pick-card__sport">' + escapeHtml(p.sport) + '</span>'
-                        + '<span class="pending-pick-card__when">' + escapeHtml(p.when) + '</span>'
-                        + '</div>'
-                        + '<div class="pending-pick-card__game">' + escapeHtml(p.matchup || 'Matchup pending') + '</div>'
-                        + '<div class="pending-pick-card__pick">' + escapeHtml(p.pickText) + '</div>'
-                        + '<div class="pending-pick-card__detail">'
-                        + '<span>League: <b>' + escapeHtml(p.league || p.sport) + '</b></span>'
-                        + '<span>Market: <b>' + escapeHtml(p.market) + '</b></span>'
-                        + '<span>Odds: <b>' + escapeHtml(fmtOdds(p.odds)) + '</b></span>'
-                        + '<span>Units: <b>' + escapeHtml(p.units.toFixed(2) + 'u') + '</b></span>'
-                        + '<span>Game: <b>' + escapeHtml(gameTimeText) + '</b></span>'
-                        + '</div>'
-                        + '<span class="pending-pick-card__status">Locked · Awaiting Grading</span>'
+                list.innerHTML = validPicks.slice(0, 30).map(p => {
+                    const gameTimeText = formatGameTime(p.gameTime);
+                    return '<div class="pending-picks-row" role="row">'
+                        + '<span class="pending-picks-row__league" role="cell">' + escapeHtml(p.league || p.sport) + '</span>'
+                        + '<span class="pending-picks-row__game" role="cell" title="' + escapeHtml(p.matchup || 'Matchup pending') + '">' + escapeHtml(p.matchup || 'Matchup pending') + '</span>'
+                        + '<span class="pending-picks-row__pick" role="cell" title="' + escapeHtml(p.pickText) + '">' + escapeHtml(p.pickText) + '</span>'
+                        + '<span class="pending-picks-row__odds" role="cell">' + escapeHtml(fmtOdds(p.odds)) + '</span>'
+                        + '<span class="pending-picks-row__units" role="cell">' + escapeHtml(p.units.toFixed(2) + 'u') + '</span>'
+                        + '<span class="pending-picks-row__time" role="cell">' + escapeHtml(gameTimeText) + '</span>'
+                        + '<span class="pending-picks-row__status" role="cell">Locked</span>'
                         + '</div>';
                 }).join('');
             }
@@ -10440,7 +10476,37 @@ window.toggleSportFamily = function (family) {
         function fmtUnits(u) {
             var n = Number(u);
             if (!Number.isFinite(n)) return '';
-            return (Number.isInteger(n) ? String(n) : n.toFixed(1)) + 'u';
+            return n.toFixed(2) + 'u';
+        }
+        function cleanLeagueLabel(p) {
+            var raw = String((p && (p.league || p.sport_title || p.tournament_name || p.sport_key || p.sport_display || p.sport)) || '').toLowerCase();
+            var map = [
+                [/basketball.*nba|nba/, 'NBA'],
+                [/baseball.*mlb|mlb/, 'MLB'],
+                [/icehockey.*nhl|hockey.*nhl|nhl/, 'NHL'],
+                [/americanfootball.*nfl|football.*nfl|nfl/, 'NFL'],
+                [/americanfootball.*ncaaf|college.*football|ncaaf/, 'NCAAF'],
+                [/basketball.*ncaab|college.*basketball|ncaab/, 'NCAAB'],
+                [/basketball.*wnba|wnba/, 'WNBA'],
+                [/soccer.*usa.*mls|mls/, 'MLS'],
+                [/soccer.*epl|england.*premier|premier league|epl/, 'EPL'],
+                [/tennis/, 'TENNIS'],
+                [/soccer/, 'SOCCER']
+            ];
+            for (var i = 0; i < map.length; i++) if (map[i][0].test(raw)) return map[i][1];
+            var cleaned = raw.replace(/^(americanfootball|basketball|baseball|icehockey|soccer)_?/,'').replace(/_/g,' ').trim();
+            return cleaned ? cleaned.toUpperCase() : 'SPORT';
+        }
+        function fallbackPickLabel(p, selection) {
+            var market = String(p.market_type || p.market || '').toLowerCase();
+            var isMoneyline = market === 'h2h' || market.indexOf('moneyline') !== -1 || market.indexOf('money_line') !== -1 || /(^|_)h2h$/.test(market);
+            var text = String(selection || 'Pick').trim().replace(/\b(\d+)\.(\d)0+\b/g, '$1.$2').replace(/\b(\d+)\.0+\b/g, '$1');
+            if (isMoneyline) return text.replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '').replace(/\s+\bML\b$/i, '').trim() + ' ML';
+            var n = Number(p.line_snapshot);
+            var line = Number.isFinite(n) ? String(n).replace(/\.0+$/, '') : (p.line_snapshot == null ? '' : String(p.line_snapshot));
+            if (line && /spread|run_line|puck_line/i.test(market) && n > 0) line = '+' + line;
+            if (line && text.indexOf(line) === -1) text = text.replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '') + ' ' + line;
+            return text;
         }
         function getCurrentUser() {
             try {
@@ -10468,7 +10534,7 @@ window.toggleSportFamily = function (family) {
         }
         function normalizePendingPick(p) {
             if (!p || String(p.status || 'pending').toLowerCase() !== 'pending') return null;
-            var sport = String(p.sport_display || p.sport_key || p.sport || '').toUpperCase().replace(/_/g, ' ').trim();
+            var sport = cleanLeagueLabel(p);
             var selection = String(p.selection_label || p.selection || p.pick || '').trim();
             var market = fmtMarket(p.market_type);
             var odds = Number(p.odds_snapshot);
@@ -10479,13 +10545,10 @@ window.toggleSportFamily = function (family) {
             }
             selection = (window.TMR && typeof window.TMR.formatPickDisplayLabel === 'function')
                 ? window.TMR.formatPickDisplayLabel(p)
-                : (function () {
-                    var text = selection.replace(/\b(\d+)\.(\d)0+\b/g, '$1.$2').replace(/\b(\d+)\.0+\b/g, '$1');
-                    var n = Number(p.line_snapshot);
-                    var line = Number.isFinite(n) ? String(n).replace(/\.0+$/, '') : (p.line_snapshot == null ? '' : String(p.line_snapshot));
-                    if (line && /spread|run_line|puck_line/i.test(String(p.market_type || '')) && n > 0) line = '+' + line;
-                    return line && text.indexOf(line) === -1 ? text.replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '') + ' ' + line : text;
-                })();
+                : fallbackPickLabel(p, selection);
+            if (/^(.+?)\s+0(?:\.0)?$/i.test(selection) && /moneyline|h2h/i.test(String(p.market_type || ''))) {
+                selection = fallbackPickLabel(p, selection);
+            }
             var game = '';
             if (p.game && (p.game.home_team || p.game.away_team)) {
                 game = (p.game.away_team || '') + ' @ ' + (p.game.home_team || '');

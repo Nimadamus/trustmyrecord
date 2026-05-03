@@ -2520,7 +2520,7 @@
     }
 
     function isMoneylineMarket(market) {
-        return market === 'h2h' || market === 'moneyline' || market.indexOf('moneyline') !== -1 || /(^|_)h2h$/.test(market);
+        return market === 'h2h' || market === 'moneyline' || market === 'money_line' || market.indexOf('moneyline') !== -1 || market.indexOf('money_line') !== -1 || /(^|_)h2h$/.test(market);
     }
 
     function isSpreadMarket(market) {
@@ -2539,7 +2539,8 @@
         const base = rawSelection || 'Pick';
 
         if (isMoneylineMarket(market)) {
-            return hasTrailingMl(base) ? base : base + ' ML';
+            const team = stripTrailingLine(base);
+            return hasTrailingMl(team) ? team : team + ' ML';
         }
 
         if (isSpreadMarket(market)) {
