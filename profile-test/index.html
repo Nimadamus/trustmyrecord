@@ -4838,7 +4838,7 @@
         if (bucketKey == null || bucketKey === '') return '—';
         const k = String(bucketKey);
         if (splitKey === 'by_sport')        return k.toUpperCase().replace(/_/g, ' ');
-        if (splitKey === 'by_market')       return k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        if (splitKey === 'by_market')       return marketTypeLabel(k);
         if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',even:'Even (±110)',underdog:'Dog (+110 to +200)',big_underdog:'Big Dog (+200+)'})[k] || k;
         if (splitKey === 'by_fav_dog')      return ({favorite:'Favorite',underdog:'Underdog'})[k] || k;
         if (splitKey === 'by_unit_size')    return ({'0.5_to_1u':'0.5–1u','1.5_to_2u':'1.5–2u','2.5_to_3u':'2.5–3u','3u_plus':'3u+'})[k] || k;
@@ -4850,7 +4850,7 @@
         if (bucketKey == null || bucketKey === '') return '—';
         const k = String(bucketKey);
         if (splitKey === 'by_sport')        return k.toUpperCase().replace(/_/g, ' ');
-        if (splitKey === 'by_market')       return k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        if (splitKey === 'by_market')       return marketTypeLabel(k);
         if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',even:'Even (±110)',underdog:'Dog (+110 to +200)',big_underdog:'Big Dog (+200+)'})[k] || k;
         if (splitKey === 'by_fav_dog')      return ({favorite:'Favorite',underdog:'Underdog'})[k] || k;
         if (splitKey === 'by_unit_size')    return ({'0.5_to_1u':'0.5–1u','1.5_to_2u':'1.5–2u','2.5_to_3u':'2.5–3u','3u_plus':'3u+'})[k] || k;
@@ -5191,7 +5191,7 @@
         return String(s).toUpperCase().replace(/_/g, ' ');
     }
     function pmMarketLabel(m) {
-        return String(m || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        return marketTypeLabel(m);
     }
     function pmOddsBucket(odds) {
         const o = Number(odds);
@@ -6856,12 +6856,13 @@
     }
 
     function marketTypeLabel(value) {
+        const key = String(value || '').toLowerCase();
         return {
             h2h: 'Moneyline',
             moneyline: 'Moneyline',
             first5: 'First 5',
-            spreads: 'Spread',
-            spread: 'Spread',
+            spreads: 'Spreads',
+            spread: 'Spreads',
             totals: 'Totals',
             total: 'Totals',
             team_totals: 'Team Totals',
@@ -6883,7 +6884,7 @@
             period_1_totals: '1st Period Totals',
             alt_spreads: 'Alt Spreads',
             alt_totals: 'Alt Totals'
-        }[value] || value || 'Bet Type';
+        }[key] || String(value || 'Bet Type').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     }
 
     function oddsBucketLabel(value) {
