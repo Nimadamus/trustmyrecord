@@ -3851,11 +3851,20 @@ body.tmr-site-shell .friends-top-strip {
         grid-template-columns: minmax(0, 1fr) max-content !important;
         grid-template-areas:
             "brand actions"
-            "search search"
-            "links links" !important;
+            "links links"
+            "support support"
+            "search search" !important;
         row-gap: 8px !important;
         min-height: 82px !important;
         padding: 10px 0 !important;
+    }
+
+    body.tmr-site-shell .tmr-support-menu,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-support-menu {
+        grid-area: support !important;
+        justify-self: center !important;
+        display: inline-flex !important;
+        z-index: 100001 !important;
     }
 
     body.tmr-site-shell .tmr-member-search,
