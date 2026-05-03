@@ -5798,6 +5798,35 @@
     // Calls the new /api/users/:username/metrics aggregator and fills the
     // Advanced Metrics tab placeholders. Anything the aggregator returns
     // null for stays as the '—' placeholder per the no-fake-data rule.
+    async function hydrateActivePickDayMetrics(username, data) {
+        if (!username || !data || !data.summary || !api || typeof api.request !== 'function') return data;
+        const activeDays = new Set();
+        let total = 0;
+        let offset = 0;
+        const limit = 100;
+        for (let page = 0; page < 25; page++) {
+            const resp = await api.request('/picks?username=' + encodeURIComponent(username) + '&limit=' + limit + '&offset=' + offset);
+            const batch = Array.isArray(resp) ? resp : (Array.isArray(resp && resp.picks) ? resp.picks : []);
+            if (!batch.length) break;
+            batch.forEach(function(pick) {
+                const status = normalizeStatus(pick && pick.status);
+                if (!['won', 'lost', 'push', 'pushed'].includes(status)) return;
+                const rawDate = pick.locked_at || pick.created_at || pick.graded_at;
+                const t = rawDate ? new Date(rawDate).getTime() : NaN;
+                if (!Number.isFinite(t)) return;
+                activeDays.add(new Date(t).toISOString().slice(0, 10));
+                total += 1;
+            });
+            if (batch.length < limit) break;
+            offset += batch.length;
+        }
+        if (total > 0 && activeDays.size > 0) {
+            data.summary.avg_daily_picks = Number((total / activeDays.size).toFixed(2));
+            data.summary.active_pick_days = activeDays.size;
+        }
+        return data;
+    }
+
     async function loadAdvancedMetrics(username) {
         if (!username || !api || typeof api.request !== 'function') {
             const statusEl = document.getElementById('profileAdvancedMetricsStatus');
@@ -5814,6 +5843,7 @@
             return;
         }
         if (!data) return;
+        try { data = await hydrateActivePickDayMetrics(username, data); } catch (e) { console.warn('[Profile] active pick day metric failed:', e); }
         try { renderProfileAdvancedMetricsStrip(data); } catch (e) { console.warn('[Profile] advanced strip render failed:', e); }
         const set = (id, value, opts) => {
             const el = document.getElementById(id);
