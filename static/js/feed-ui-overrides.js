@@ -273,7 +273,12 @@ async function postComment(id, type) {
 
 async function initAuth() {
     if (typeof api !== 'undefined' && api.ready) {
-        try { await api.ready; } catch(e) {}
+        try {
+            await Promise.race([
+                api.ready,
+                new Promise(resolve => setTimeout(resolve, 2500))
+            ]);
+        } catch(e) {}
     }
     const user = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
     viewerUser = user;
