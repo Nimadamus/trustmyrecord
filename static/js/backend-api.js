@@ -486,6 +486,11 @@ class TrustMyRecordAPI {
         return picks;
     }
 
+    async getPendingPicks(options = {}) {
+        const { limit = 100, offset = 0 } = options || {};
+        return this.request(`/picks/pending?limit=${limit}&offset=${offset}`);
+    }
+
     async createPick(pickData) {
         return this.request('/picks', {
             method: 'POST',

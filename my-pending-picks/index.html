@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Pending Picks | TrustMyRecord</title>
+    <meta name="robots" content="noindex,nofollow">
+    <link rel="canonical" href="https://trustmyrecord.com/my-pending-picks/">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260501navspacing">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260501navspacing"></script>
+    <style>
+        :root {
+            --page-bg: #060b12;
+            --panel: #0b111b;
+            --panel-2: #101826;
+            --line: rgba(148, 163, 184, 0.16);
+            --text: #f8fafc;
+            --muted: #9aa8ba;
+            --teal: #2dd4bf;
+            --green: #22c55e;
+            --gold: #f4c95d;
+            --navy: #0f172a;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 14% 0%, rgba(45, 212, 191, 0.14), transparent 30%),
+                linear-gradient(180deg, #07111d 0%, var(--page-bg) 44%, #04070d 100%);
+            color: var(--text);
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        .pending-page {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 112px 0 56px;
+        }
+        .pending-head {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 22px;
+            margin-bottom: 22px;
+        }
+        .pending-kicker {
+            margin: 0 0 10px;
+            color: var(--gold);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+        h1 {
+            margin: 0;
+            font-family: Barlow, Inter, sans-serif;
+            font-size: clamp(36px, 5vw, 62px);
+            line-height: 0.95;
+            letter-spacing: 0;
+        }
+        .pending-subtitle {
+            margin: 12px 0 0;
+            max-width: 620px;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.55;
+        }
+        .pending-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 0 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(45, 212, 191, 0.28);
+            color: #dffcf8;
+            background: rgba(15, 23, 42, 0.72);
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 13px;
+        }
+        .btn-primary {
+            border-color: rgba(34, 197, 94, 0.7);
+            background: linear-gradient(135deg, var(--green), #16a34a);
+            color: #031109;
+        }
+        .summary-strip {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin: 0 0 18px;
+        }
+        .summary-item {
+            min-height: 104px;
+            padding: 18px;
+            border: 1px solid rgba(45, 212, 191, 0.2);
+            border-radius: 8px;
+            background: linear-gradient(180deg, rgba(16, 24, 38, 0.96), rgba(8, 13, 22, 0.96));
+        }
+        .summary-label {
+            margin: 0 0 8px;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.13em;
+            text-transform: uppercase;
+        }
+        .summary-value {
+            margin: 0;
+            color: var(--text);
+            font-family: Barlow, Inter, sans-serif;
+            font-size: 32px;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .summary-hint {
+            margin: 8px 0 0;
+            color: #6ee7d8;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .pending-panel {
+            overflow: hidden;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 8px;
+            background: rgba(6, 11, 18, 0.9);
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        th, td {
+            padding: 16px 14px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: rgba(15, 23, 42, 0.92);
+            color: #9fb0c4;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        td {
+            color: #e5edf7;
+            font-size: 13px;
+            line-height: 1.35;
+        }
+        tbody tr:nth-child(even) td { background: rgba(255, 255, 255, 0.018); }
+        tbody tr:hover td { background: rgba(45, 212, 191, 0.045); }
+        .pick-main { font-weight: 800; color: #ffffff; }
+        .pick-sub { display: block; margin-top: 4px; color: #8da0b6; font-size: 12px; }
+        .league-chip {
+            display: inline-flex;
+            padding: 5px 8px;
+            border-radius: 6px;
+            background: rgba(45, 212, 191, 0.1);
+            color: #80fff1;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            min-height: 30px;
+            padding: 0 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(244, 201, 93, 0.36);
+            background: rgba(244, 201, 93, 0.12);
+            color: #ffe7a6;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .mobile-cards { display: none; }
+        .empty-state, .auth-state {
+            padding: 42px 22px;
+            text-align: center;
+            border: 1px dashed rgba(148, 163, 184, 0.24);
+            border-radius: 8px;
+            background: rgba(15, 23, 42, 0.52);
+        }
+        .empty-state h2, .auth-state h2 {
+            margin: 0 0 8px;
+            font-family: Barlow, Inter, sans-serif;
+            font-size: 28px;
+        }
+        .empty-state p, .auth-state p {
+            margin: 0 auto 18px;
+            max-width: 520px;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+        [hidden] { display: none !important; }
+        @media (max-width: 820px) {
+            .pending-page { width: min(100% - 22px, 620px); padding-top: 92px; }
+            .pending-head { display: block; }
+            .pending-actions { justify-content: flex-start; margin-top: 18px; }
+            .summary-strip { grid-template-columns: 1fr; }
+            .table-wrap { display: none; }
+            .mobile-cards { display: grid; gap: 12px; padding: 12px; }
+            .pending-card {
+                border: 1px solid rgba(148, 163, 184, 0.16);
+                border-radius: 8px;
+                background: linear-gradient(180deg, rgba(16, 24, 38, 0.98), rgba(8, 13, 22, 0.98));
+                padding: 15px;
+            }
+            .pending-card-row {
+                display: grid;
+                grid-template-columns: 116px 1fr;
+                gap: 12px;
+                padding: 9px 0;
+                border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+            }
+            .pending-card-row:last-child { border-bottom: 0; }
+            .pending-card-label {
+                color: #8191a8;
+                font-size: 10px;
+                font-weight: 900;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+            }
+            .pending-card-value {
+                min-width: 0;
+                color: #eaf2fb;
+                font-size: 13px;
+                font-weight: 700;
+                overflow-wrap: anywhere;
+            }
+        }
+        @media print {
+            body { background: #07111d; }
+            .pending-page { padding-top: 24px; }
+            .pending-actions { display: none; }
+        }
+    </style>
+</head>
+<body class="tmr-site-shell" data-tmr-route="my-pending-picks">
+    <main class="pending-page">
+        <header class="pending-head">
+            <div>
+                <p class="pending-kicker">Private ledger</p>
+                <h1>My Pending Picks</h1>
+                <p class="pending-subtitle">Locked picks waiting for final grading.</p>
+            </div>
+            <nav class="pending-actions" aria-label="Pending picks actions">
+                <a class="btn" href="/profile/">Profile</a>
+                <a class="btn btn-primary" href="/sportsbook/">Make Picks</a>
+            </nav>
+        </header>
+
+        <section id="authState" class="auth-state" hidden>
+            <h2>Log in to view pending picks</h2>
+            <p>This page is private to your account and only loads picks tied to your authenticated session.</p>
+            <a class="btn btn-primary" href="/login/?next=/my-pending-picks/">Log In</a>
+        </section>
+
+        <section id="pendingContent" hidden>
+            <div class="summary-strip" aria-label="Pending picks summary">
+                <div class="summary-item">
+                    <p class="summary-label">Total Pending Picks</p>
+                    <p class="summary-value" id="summaryCount">0</p>
+                    <p class="summary-hint">Private to your account</p>
+                </div>
+                <div class="summary-item">
+                    <p class="summary-label">Total Pending Units</p>
+                    <p class="summary-value" id="summaryUnits">0u</p>
+                    <p class="summary-hint">Open exposure awaiting grade</p>
+                </div>
+                <div class="summary-item">
+                    <p class="summary-label">Earliest Upcoming Game</p>
+                    <p class="summary-value" id="summaryEarliest">None</p>
+                    <p class="summary-hint" id="summaryEarliestHint">No pending starts</p>
+                </div>
+            </div>
+
+            <div id="emptyState" class="empty-state" hidden>
+                <h2>No pending picks</h2>
+                <p>Locked picks will appear here after you submit them and before the grader settles the final result.</p>
+                <a class="btn btn-primary" href="/sportsbook/">Make a Pick</a>
+            </div>
+
+            <section id="pendingPanel" class="pending-panel" hidden aria-label="My pending pick details">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date of Game</th>
+                                <th>League</th>
+                                <th>Pick</th>
+                                <th>Line</th>
+                                <th>Odds</th>
+                                <th>Units</th>
+                                <th>Time Submitted</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pendingRows"></tbody>
+                    </table>
+                </div>
+                <div id="pendingCards" class="mobile-cards"></div>
+            </section>
+        </section>
+    </main>
+
+    <script src="/static/js/config.js?v=20260430a"></script>
+    <script src="/static/js/backend-api.js?v=20260503pending1"></script>
+    <script>
+    (function () {
+        var authState = document.getElementById('authState');
+        var content = document.getElementById('pendingContent');
+        var emptyState = document.getElementById('emptyState');
+        var panel = document.getElementById('pendingPanel');
+        var rows = document.getElementById('pendingRows');
+        var cards = document.getElementById('pendingCards');
+
+        function esc(value) {
+            return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+            });
+        }
+        function sportLabel(value) {
+            var raw = String(value || '').replace(/_/g, ' ').trim();
+            return raw ? raw.replace(/\b\w/g, function (c) { return c.toUpperCase(); }) : 'League';
+        }
+        function marketLabel(value) {
+            switch (String(value || '').toLowerCase()) {
+                case 'h2h': return 'Moneyline';
+                case 'spreads': return 'Spread';
+                case 'totals': return 'Total';
+                case 'team_totals': return 'Team Total';
+                case 'f5_h2h': return 'F5 Moneyline';
+                case 'f5_spreads': return 'F5 Spread';
+                case 'f5_totals': return 'F5 Total';
+                case 'period_1_h2h': return '1st Period Moneyline';
+                case 'period_1_totals': return '1st Period Total';
+                default: return sportLabel(value);
+            }
+        }
+        function fmtDate(value, opts) {
+            if (!value) return 'TBD';
+            var d = new Date(value);
+            if (isNaN(d.getTime())) return 'TBD';
+            return d.toLocaleString('en-US', opts || { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+        }
+        function fmtShortDate(value) {
+            if (!value) return 'None';
+            var d = new Date(value);
+            if (isNaN(d.getTime())) return 'None';
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+        function fmtOdds(value) {
+            var n = Number(value);
+            if (!Number.isFinite(n)) return '-';
+            return n > 0 ? '+' + n : String(n);
+        }
+        function fmtLine(value) {
+            if (value == null || value === '') return '-';
+            var n = Number(value);
+            if (!Number.isFinite(n)) return String(value);
+            if (n === 0) return '0';
+            return n > 0 ? '+' + n : String(n);
+        }
+        function fmtUnits(value) {
+            var n = Number(value);
+            if (!Number.isFinite(n)) return '-';
+            return (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')) + 'u';
+        }
+        function pickText(pick) {
+            var selection = String(pick.selection || 'Pick').trim();
+            return selection || 'Pick';
+        }
+        function matchup(pick) {
+            if (pick.away_team || pick.home_team) return [pick.away_team, pick.home_team].filter(Boolean).join(' @ ');
+            return 'Matchup pending';
+        }
+        function statusText(pick) {
+            var now = Date.now();
+            var start = pick.commence_time ? new Date(pick.commence_time).getTime() : NaN;
+            if (pick.game_completed) return 'Awaiting Final';
+            if (Number.isFinite(start) && start > now) return 'Game Not Started';
+            if (Number.isFinite(start) && start <= now) return 'In Progress';
+            return 'Awaiting Grade';
+        }
+        function rowHtml(pick) {
+            var pickLabel = pickText(pick);
+            return '<tr>'
+                + '<td>' + esc(fmtDate(pick.commence_time)) + '<span class="pick-sub">' + esc(matchup(pick)) + '</span></td>'
+                + '<td><span class="league-chip">' + esc(sportLabel(pick.sport_key)) + '</span></td>'
+                + '<td><span class="pick-main">' + esc(pickLabel) + '</span><span class="pick-sub">' + esc(marketLabel(pick.market_type)) + '</span></td>'
+                + '<td>' + esc(fmtLine(pick.line_snapshot)) + '</td>'
+                + '<td>' + esc(fmtOdds(pick.odds_snapshot)) + '</td>'
+                + '<td>' + esc(fmtUnits(pick.units)) + '</td>'
+                + '<td>' + esc(fmtDate(pick.locked_at || pick.created_at)) + '</td>'
+                + '<td><span class="status-pill">' + esc(statusText(pick)) + '</span></td>'
+                + '</tr>';
+        }
+        function cardRow(label, value) {
+            return '<div class="pending-card-row"><div class="pending-card-label">' + esc(label) + '</div><div class="pending-card-value">' + value + '</div></div>';
+        }
+        function cardHtml(pick) {
+            return '<article class="pending-card">'
+                + cardRow('Date of Game', esc(fmtDate(pick.commence_time)) + '<span class="pick-sub">' + esc(matchup(pick)) + '</span>')
+                + cardRow('League', '<span class="league-chip">' + esc(sportLabel(pick.sport_key)) + '</span>')
+                + cardRow('Pick', '<span class="pick-main">' + esc(pickText(pick)) + '</span><span class="pick-sub">' + esc(marketLabel(pick.market_type)) + '</span>')
+                + cardRow('Line', esc(fmtLine(pick.line_snapshot)))
+                + cardRow('Odds', esc(fmtOdds(pick.odds_snapshot)))
+                + cardRow('Units', esc(fmtUnits(pick.units)))
+                + cardRow('Time Submitted', esc(fmtDate(pick.locked_at || pick.created_at)))
+                + cardRow('Status', '<span class="status-pill">' + esc(statusText(pick)) + '</span>')
+                + '</article>';
+        }
+        function render(picks) {
+            var pending = (Array.isArray(picks) ? picks : []).filter(function (pick) {
+                return pick && String(pick.status || 'pending').toLowerCase() === 'pending';
+            });
+            var totalUnits = pending.reduce(function (sum, pick) { return sum + Number(pick.units || 0); }, 0);
+            var earliest = pending.map(function (pick) { return pick.commence_time; }).filter(Boolean).sort()[0] || null;
+
+            document.getElementById('summaryCount').textContent = String(pending.length);
+            document.getElementById('summaryUnits').textContent = fmtUnits(totalUnits);
+            document.getElementById('summaryEarliest').textContent = fmtShortDate(earliest);
+            document.getElementById('summaryEarliestHint').textContent = earliest ? fmtDate(earliest) : 'No pending starts';
+
+            content.hidden = false;
+            if (!pending.length) {
+                emptyState.hidden = false;
+                panel.hidden = true;
+                return;
+            }
+            emptyState.hidden = true;
+            panel.hidden = false;
+            rows.innerHTML = pending.map(rowHtml).join('');
+            cards.innerHTML = pending.map(cardHtml).join('');
+        }
+        async function boot() {
+            try {
+                if (!window.api || !window.api.isLoggedIn()) throw new Error('not authenticated');
+                await window.api.getCurrentUser();
+                var data = await window.api.getPendingPicks({ limit: 100 });
+                render(data && data.picks);
+            } catch (error) {
+                authState.hidden = false;
+                content.hidden = true;
+                if (!window.api || !window.api.isLoggedIn() || error.status === 401 || error.status === 403) {
+                    setTimeout(function () {
+                        window.location.href = '/login/?next=/my-pending-picks/';
+                    }, 900);
+                } else {
+                    authState.querySelector('h2').textContent = 'Could not load pending picks';
+                    authState.querySelector('p').textContent = 'Refresh in a moment. Your public record privacy filters were not changed.';
+                }
+            }
+        }
+        boot();
+    })();
+    </script>
+</body>
+</html>

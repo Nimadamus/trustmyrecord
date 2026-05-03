@@ -9331,7 +9331,7 @@
             </div>
         </div>
 
-        <!-- Pending picks rail: hydrated for signed-in users from /api/picks?username=...&status=pending. -->
+        <!-- Pending picks rail: hydrated for signed-in users from private /api/picks/pending. -->
         <section id="pendingPicksRail" class="pending-picks-rail" hidden aria-label="Your pending picks">
             <div class="pending-picks-rail__head">
                 <div>
@@ -9341,7 +9341,7 @@
                 <div class="pending-picks-rail__meta">
                     <span class="pending-picks-rail__count" id="pendingPicksCount">0</span>
                     <span class="pending-picks-rail__count-label">pending</span>
-                    <a class="pending-picks-rail__view" href="/profile/?tab=picks">View all on profile <i class="fas fa-arrow-right"></i></a>
+                    <a class="pending-picks-rail__view" href="/my-pending-picks/">My Pending Picks <i class="fas fa-arrow-right"></i></a>
                 </div>
             </div>
             <div class="pending-picks-rail__list" id="pendingPicksList"></div>
@@ -9464,16 +9464,11 @@
 
             async function loadPending() {
                 if (!isLoggedIn()) { rail.hidden = true; return; }
-                const user = getCurrentUser();
-                if (!user || !window.api || typeof window.api.request !== 'function') return;
-                const qs = user.id
-                    ? 'userId=' + encodeURIComponent(user.id)
-                    : 'username=' + encodeURIComponent(user.username || '');
-                if (!qs || /=$/.test(qs)) return;
+                if (!window.api || typeof window.api.request !== 'function') return;
 
                 let picks = [];
                 try {
-                    const data = await window.api.request('/picks?' + qs + '&status=pending&limit=100');
+                    const data = await window.api.request('/picks/pending?limit=100');
                     picks = (data && Array.isArray(data.picks)) ? data.picks : [];
                 } catch (err) {
                     console.warn('[Sportsbook] pending picks load failed:', err && err.message ? err.message : err);
@@ -9703,7 +9698,7 @@
                         <div class="tmr-pending-picks-list" id="tmrPendingPicksList">
                             <div class="tmr-pending-empty">Loading your pending picks…</div>
                         </div>
-                        <a href="/profile/?tab=picks" class="sportsbook-lobby-secondary-btn sportsbook-lobby-secondary-btn--wide" style="margin-top:10px;">Open Full Record</a>
+                        <a href="/my-pending-picks/" class="sportsbook-lobby-secondary-btn sportsbook-lobby-secondary-btn--wide" style="margin-top:10px;">Open My Pending Picks</a>
                     </div>
                 </aside>
             </div>
@@ -10367,7 +10362,7 @@ window.toggleSportFamily = function (family) {
     // PENDING PICKS PANEL (lobby aside)
     //
     // Pulls every pick the user has locked but not yet graded from
-    // /api/picks?status=pending and renders them under the Pick Slip aside.
+    // /api/picks/pending and renders them under the Pick Slip aside.
     // Refreshed on lobby load, on a custom 'tmr:pickLocked' event, and on
     // any successful lockInPick. Backend-only — never reads localStorage.
     // ====================================================================
@@ -10526,15 +10521,10 @@ window.toggleSportFamily = function (family) {
             try {
                 if (!isLoggedIn()) { render(null, { signedOut: true }); return; }
                 var token = getToken();
-                var user = getCurrentUser();
-                if (!user || (!user.id && !user.username)) { render(null, { signedOut: true }); return; }
                 var base = getApiBase().replace(/\/+$/, '');
                 var headers = { 'Accept': 'application/json' };
                 if (token) headers.Authorization = 'Bearer ' + token;
-                var qs = user.id
-                    ? 'userId=' + encodeURIComponent(user.id)
-                    : 'username=' + encodeURIComponent(user.username);
-                var res = await fetch(base + '/picks?' + qs + '&status=pending&limit=100', { headers: headers });
+                var res = await fetch(base + '/picks/pending?limit=100', { headers: headers });
                 if (!res || !res.ok) { render(null, { error: true }); return; }
                 var data = await res.json().catch(function () { return null; });
                 var picks = (data && (data.picks || data.results || data.rows)) || [];
