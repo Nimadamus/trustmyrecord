@@ -662,18 +662,59 @@
         }
 
         .hero-actions {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(4, 118px);
+            justify-content: start;
             max-width: 100%;
-            gap: 10px;
+            gap: 12px;
         }
 
         .hero-actions .btn {
-            min-height: 76px;
-            border-radius: 6px;
+            width: 118px;
+            min-width: 118px;
+            height: 118px;
+            min-height: 118px;
+            aspect-ratio: 1;
+            border-radius: 50% !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            justify-self: center;
             flex-direction: column;
+            gap: 8px;
+            padding: 13px 10px !important;
             text-transform: uppercase;
-            letter-spacing: .04em;
-            font-size: .8rem;
+            letter-spacing: .035em;
+            font-size: .76rem;
+            line-height: 1.05;
+            text-align: center;
+            white-space: normal;
+        }
+
+        .hero-actions .btn i {
+            display: block;
+            width: 1.15em;
+            height: 1.15em;
+            margin: 0 !important;
+            font-size: 1.15rem;
+            line-height: 1;
+            text-align: center;
+            flex: 0 0 auto;
+        }
+
+        .hero-action-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .hero-action-label span {
+            display: block;
+            width: 100%;
+            text-align: center;
         }
 
         .hero-stats {
@@ -878,7 +919,13 @@
         }
 
         @media (max-width: 1180px) {
-            .hero-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .hero-actions { grid-template-columns: repeat(4, 112px); justify-content: center; }
+            .hero-actions .btn {
+                width: 112px;
+                min-width: 112px;
+                height: 112px;
+                min-height: 112px;
+            }
             .arena-action-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         }
 
@@ -890,7 +937,8 @@
         }
 
         @media (max-width: 560px) {
-            .hero-actions, .hero-stats, .arena-action-grid, .game-logo-grid { grid-template-columns: 1fr; }
+            .hero-actions { grid-template-columns: repeat(2, 112px); justify-content: center; }
+            .hero-stats, .arena-action-grid, .game-logo-grid { grid-template-columns: 1fr; }
             .hero h1 { font-size: 3rem; }
             .arena-lane { grid-template-columns: 42px 1fr; }
             .arena-lane-code { display: none; }
@@ -909,10 +957,10 @@
             <h1>Challenge. Compete. Prove it.</h1>
             <p>Issue sports betting challenges, create polls and trivia, jump into online gaming matchups, and accept open challenges from the community.</p>
             <div class="hero-actions">
-                <button class="btn btn-gold" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button>
-                <a href="/trivia/" class="btn btn-outline"><i class="fas fa-question"></i> Create Trivia</a>
-                <a href="/polls/" class="btn btn-outline"><i class="fas fa-square-poll-vertical"></i> Start a Poll</a>
-                <button class="btn btn-primary" onclick="switchTab('gaming-room')"><i class="fas fa-gamepad"></i> Enter Gaming Room</button>
+                <button class="btn btn-gold" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i><span class="hero-action-label"><span>Issue a</span><span>Challenge</span></span></button>
+                <a href="/trivia/" class="btn btn-outline"><i class="fas fa-question"></i><span class="hero-action-label"><span>Create</span><span>Trivia</span></span></a>
+                <a href="/polls/" class="btn btn-outline"><i class="fas fa-square-poll-vertical"></i><span class="hero-action-label"><span>Start a</span><span>Poll</span></span></a>
+                <button class="btn btn-primary" onclick="switchTab('gaming-room')"><i class="fas fa-gamepad"></i><span class="hero-action-label"><span>Enter Gaming</span><span>Room</span></span></button>
             </div>
             <div class="hero-stats">
                 <div class="hero-stat"><div class="num" id="statOpenChallenges">0</div><div class="label">Open Challenges</div></div>
