@@ -47,6 +47,17 @@
     return esc(item.display_name || item.username || "User");
   }
 
+  function rawName(item) {
+    return String(item.username || item.display_name || "").trim();
+  }
+
+  function isProductionTestActivity(item) {
+    const name = rawName(item).toLowerCase();
+    const content = String(item.content || "").toLowerCase();
+    return /^(feedcheck|prodidem_|prodexact_|prodtt|usrtest|errtest|ttdiag|claudetest)/.test(name) ||
+      /\b(feed acceptance|acceptance status|acceptance link|test feed|synthetic activity)\b/.test(content);
+  }
+
   function profileBadge(item) {
     const teams = asArray(item.favorite_teams);
     if (!teams.length) return "";
@@ -155,18 +166,17 @@
     const user = displayName(item);
     const graded = item.post_type === "graded_pick_summary";
     const text = graded
-      ? `${user} had ${count} pick${count === 1 ? "" : "s"} graded today`
-      : `${user} submitted ${count === 1 ? "a pick" : count + " picks"}`;
+      ? `${user} had ${count} pick${count === 1 ? "" : "s"} graded`
+      : `${user} submitted ${count} locked pick${count === 1 ? "" : "s"}`;
     const detail = graded
-      ? `${Number(item.wins_count || 0)} won, ${Number(item.losses_count || 0)} lost, ${Number(item.pushes_count || 0)} push`
-      : "Pick details stay hidden until graded and public eligible.";
-    return `<article class="feed-item" data-id="${esc(item.item_id)}" data-type="pick_activity">
-      ${header(item, graded ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-lock"></i>')}
-      <div class="activity-line">${text}</div>
-      <div class="pick-embed privacy-safe">
-        <div class="pe-row">
-          <span class="pe-chip ${graded ? "is-won" : "is-sport"}">${graded ? "GRADED SUMMARY" : "PENDING DETAILS HIDDEN"}</span>
-          <span class="pe-chip">${esc(detail)}</span>
+      ? `${Number(item.wins_count || 0)} won, ${Number(item.losses_count || 0)} lost, ${Number(item.pushes_count || 0)} push${Number(item.pushes_count || 0) === 1 ? "" : "es"}`
+      : "Details hidden until graded";
+    return `<article class="feed-item activity-card ${graded ? "is-graded" : "is-pending"}" data-id="${esc(item.item_id)}" data-type="pick_activity">
+      <div class="activity-main">
+        ${header(item, graded ? '<i class="fas fa-check"></i>' : '<i class="fas fa-shield-alt"></i>')}
+        <div class="activity-line">${text}</div>
+        <div class="privacy-badge ${graded ? "is-graded" : ""}">
+          <i class="fas ${graded ? "fa-circle-check" : "fa-lock"}"></i>${esc(detail)}
         </div>
         ${recordSummary(item)}
       </div>
@@ -189,6 +199,7 @@
 
   function renderItem(item) {
     if (!item) return "";
+    if (isProductionTestActivity(item)) return "";
     if (item.item_type === "pick_activity" || item.post_type === "submitted_picks_summary" || item.post_type === "graded_pick_summary") {
       return renderPickActivity(item);
     }
@@ -313,6 +324,7 @@
       const filterParam = cleanupFilter === "hot-takes" ? "posts" : cleanupFilter;
       const data = await window.api.request(`/feed?limit=${LIMIT}&offset=${cleanupOffset}&filter=${encodeURIComponent(filterParam)}`);
       let items = Array.isArray(data.feed) ? data.feed : [];
+      items = items.filter(item => !isProductionTestActivity(item));
       if (cleanupFilter === "polls" || cleanupFilter === "all") {
         try {
           const pollData = await window.api.request("/polls/active?limit=5");
@@ -340,7 +352,8 @@
       if (!items.length) {
         list.innerHTML = '<div class="empty-state"><i class="fas fa-stream"></i><h3>Your feed is ready.</h3><p>Public posts and privacy-safe pick activity will appear here as users participate.</p></div>';
       } else {
-        list.innerHTML = items.map(renderItem).join("");
+        const html = items.map(renderItem).filter(Boolean).join("");
+        list.innerHTML = html || '<div class="empty-state"><i class="fas fa-stream"></i><h3>Your feed is ready.</h3><p>Public posts and privacy-safe pick activity will appear here as users participate.</p></div>';
       }
       const more = document.getElementById("loadMore");
       if (more) more.style.display = items.length >= LIMIT ? "block" : "none";
