@@ -15,28 +15,18 @@
         'WNBA': 'basketball_wnba',
         'NHL': 'icehockey_nhl',
         'MLB': 'baseball_mlb',
-        'Soccer': 'soccer_epl',
+        'Soccer': 'soccer_usa_mls',
         'MLS': 'soccer_usa_mls',
         'UCL': 'soccer_uefa_champs_league',
         'LaLiga': 'soccer_spain_la_liga',
         'SerieA': 'soccer_italy_serie_a',
         'Bundesliga': 'soccer_germany_bundesliga',
         'Ligue1': 'soccer_france_ligue_one',
-        'LigaMX': 'soccer_mexico_ligamx',
-        'NWSL': 'soccer_nwsl',
-        'UEL': 'soccer_uefa_europa_league',
-        'UECL': 'soccer_uefa_conference_league',
-        'CONCACAF': 'soccer_concacaf_champions',
-        'Championship': 'soccer_england_championship',
-        'Eredivisie': 'soccer_netherlands_eredivisie',
-        'Primeira': 'soccer_portugal_primeira_liga',
-        'Scotland': 'soccer_scotland_premiership',
-        'Argentina': 'soccer_argentina_liga_profesional',
-        'Brazil': 'soccer_brazil_serie_a',
         'NCAAF': 'americanfootball_ncaaf',
         'NCAAB': 'basketball_ncaab',
-        'ATP': 'tennis_atp',
-        'WTA': 'tennis_wta'
+        'Tennis': 'tennis',
+        'ATP': 'tennis',
+        'WTA': 'tennis'
     };
 
     // ESPN free API - map sport keys to ESPN URL paths
@@ -53,19 +43,9 @@
         'soccer_italy_serie_a': 'soccer/ita.1',
         'soccer_germany_bundesliga': 'soccer/ger.1',
         'soccer_france_ligue_one': 'soccer/fra.1',
-        'soccer_mexico_ligamx': 'soccer/mex.1',
-        'soccer_nwsl': 'soccer/usa.nwsl',
-        'soccer_uefa_europa_league': 'soccer/uefa.europa',
-        'soccer_uefa_conference_league': 'soccer/uefa.europa.conf',
-        'soccer_concacaf_champions': 'soccer/concacaf.champions',
-        'soccer_england_championship': 'soccer/eng.2',
-        'soccer_netherlands_eredivisie': 'soccer/ned.1',
-        'soccer_portugal_primeira_liga': 'soccer/por.1',
-        'soccer_scotland_premiership': 'soccer/sco.1',
-        'soccer_argentina_liga_profesional': 'soccer/arg.1',
-        'soccer_brazil_serie_a': 'soccer/bra.1',
         'americanfootball_ncaaf': 'football/college-football',
         'basketball_ncaab': 'basketball/mens-college-basketball',
+        'tennis': 'tennis',
         'tennis_atp': 'tennis/atp',
         'tennis_wta': 'tennis/wta'
     };
@@ -9230,7 +9210,7 @@
              through /login/ and /register/ via the global nav buttons. -->
         <div id="notificationsPanel" class="notifications-panel" hidden style="display:none !important"></div>
 
-        <div class="sportsbook-sports-nav" aria-label="Sportsbook navigation">
+        <div class="sportsbook-sports-nav" aria-label="Sportsbook navigation" hidden style="display:none !important">
             <button type="button" class="active" data-sportsbook-tab="sport" data-sport="NBA" onclick="window.TMR.setSport('NBA')">NBA</button>
             <button type="button" data-sportsbook-tab="sport" data-sport="NHL" onclick="window.TMR.setSport('NHL')">NHL</button>
             <button type="button" data-sportsbook-tab="sport" data-sport="NFL" onclick="window.TMR.setSport('NFL')">NFL</button>
@@ -9238,23 +9218,6 @@
             <button type="button" data-sportsbook-tab="sport" data-sport="NCAAB" onclick="window.TMR.setSport('NCAAB')">NCAAB</button>
             <button type="button" data-sportsbook-tab="sport" data-sport="NCAAF" onclick="window.TMR.setSport('NCAAF')">NCAAF</button>
             <button type="button" data-sportsbook-tab="sport" data-sport="Soccer" onclick="window.TMR.setSport('Soccer'); window.toggleSportFamily && window.toggleSportFamily('soccer');">Soccer</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="MLS" onclick="window.TMR.setSport('MLS')">MLS</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="UCL" onclick="window.TMR.setSport('UCL')">UCL</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="UEL" onclick="window.TMR.setSport('UEL')">UEL</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="UECL" onclick="window.TMR.setSport('UECL')">UECL</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="LaLiga" onclick="window.TMR.setSport('LaLiga')">La Liga</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="SerieA" onclick="window.TMR.setSport('SerieA')">Serie A</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="Bundesliga" onclick="window.TMR.setSport('Bundesliga')">Bundesliga</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="Ligue1" onclick="window.TMR.setSport('Ligue1')">Ligue 1</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="LigaMX" onclick="window.TMR.setSport('LigaMX')">Liga MX</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="NWSL" onclick="window.TMR.setSport('NWSL')">NWSL</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="Championship" onclick="window.TMR.setSport('Championship')">Championship</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="Eredivisie" onclick="window.TMR.setSport('Eredivisie')">Eredivisie</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="Primeira" onclick="window.TMR.setSport('Primeira')">Primeira</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="Scotland" onclick="window.TMR.setSport('Scotland')">Scotland</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="Argentina" onclick="window.TMR.setSport('Argentina')">Argentina</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="Brazil" onclick="window.TMR.setSport('Brazil')">Brazil</button>
-            <button type="button" data-sportsbook-tab="sport" data-sport="CONCACAF" onclick="window.TMR.setSport('CONCACAF')">CONCACAF</button>
             <button type="button" data-sportsbook-tab="sport" data-sport="Tennis" onclick="window.TMR.setSport('Tennis'); window.toggleSportFamily && window.toggleSportFamily('tennis');">Tennis</button>
             <button type="button" data-sportsbook-tab="consensus">Consensus</button>
         </div>
@@ -9368,12 +9331,12 @@
             </div>
         </div>
 
-        <!-- Pending picks rail: hydrated for signed-in users from /api/picks?username=...&result=pending. -->
+        <!-- Pending picks rail: hydrated for signed-in users from /api/picks?username=...&status=pending. -->
         <section id="pendingPicksRail" class="pending-picks-rail" hidden aria-label="Your pending picks">
             <div class="pending-picks-rail__head">
                 <div>
-                    <h3 class="pending-picks-rail__title">Locked &amp; waiting for the grader</h3>
-                    <p class="pending-picks-rail__sub">Picks below are part of your public record. The auto-grader runs every 15 minutes once the game is final.</p>
+                    <h3 class="pending-picks-rail__title">Locked Picks Awaiting Grading</h3>
+                    <p class="pending-picks-rail__sub">Submitted picks stay here until the game starts and the grader settles them into your public record.</p>
                 </div>
                 <div class="pending-picks-rail__meta">
                     <span class="pending-picks-rail__count" id="pendingPicksCount">0</span>
@@ -9387,23 +9350,26 @@
             </div>
         </section>
         <style>
-            .pending-picks-rail{margin:12px 0 18px;padding:18px 18px 14px;background:linear-gradient(135deg,rgba(0,255,255,0.05),rgba(255,0,255,0.04));border:1px solid rgba(0,255,255,0.18);border-radius:14px;}
-            .pending-picks-rail__head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:12px;}
-            .pending-picks-rail__title{margin:0 0 4px;font:800 16px/1.2 'Barlow','Inter',sans-serif;color:#f4f7fb;letter-spacing:-0.01em;}
-            .pending-picks-rail__sub{margin:0;color:#94a3b8;font-size:12.5px;line-height:1.5;max-width:560px;}
+            .pending-picks-rail{margin:14px 0 22px;padding:22px;background:linear-gradient(180deg,rgba(13,20,31,0.98),rgba(7,12,20,0.98));border:1px solid rgba(45,212,191,0.26);border-radius:18px;box-shadow:0 22px 54px rgba(0,0,0,0.24);}
+            .pending-picks-rail__head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:16px;}
+            .pending-picks-rail__title{margin:0 0 5px;font:900 22px/1.1 'Barlow','Inter',sans-serif;color:#f8fafc;letter-spacing:-0.02em;}
+            .pending-picks-rail__sub{margin:0;color:#a7b4c5;font-size:13px;line-height:1.5;max-width:680px;}
             .pending-picks-rail__meta{display:flex;align-items:center;gap:10px;font-size:12px;color:#94a3b8;}
             .pending-picks-rail__count{font:800 22px/1 'Barlow','Inter',sans-serif;color:#00ffff;}
             .pending-picks-rail__count-label{text-transform:uppercase;letter-spacing:1.5px;font-weight:700;}
             .pending-picks-rail__view{margin-left:8px;color:#00ffff;text-decoration:none;font-weight:700;}
             .pending-picks-rail__view:hover{color:#fff;}
-            .pending-picks-rail__list{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;}
-            .pending-pick-card{background:rgba(11,17,24,0.72);border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;}
+            .pending-picks-rail__list{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;}
+            .pending-pick-card{background:rgba(11,17,24,0.86);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:9px;}
             .pending-pick-card__top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
             .pending-pick-card__sport{font:700 10px/1 'Inter',sans-serif;text-transform:uppercase;letter-spacing:1.5px;color:#00ffff;background:rgba(0,255,255,0.08);padding:5px 8px;border-radius:6px;}
             .pending-pick-card__when{font-size:11px;color:#64748b;}
-            .pending-pick-card__pick{color:#f4f7fb;font:600 13.5px/1.4 'Inter',sans-serif;}
-            .pending-pick-card__detail{display:flex;justify-content:space-between;font-size:11.5px;color:#94a3b8;}
+            .pending-pick-card__pick{color:#f4f7fb;font:800 15px/1.35 'Inter',sans-serif;}
+            .pending-pick-card__game{color:#cbd5e1;font:700 12.5px/1.35 'Inter',sans-serif;}
+            .pending-pick-card__detail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 12px;font-size:11.5px;color:#94a3b8;}
+            .pending-pick-card__detail span{min-width:0;overflow-wrap:anywhere;}
             .pending-pick-card__detail b{color:#cbd5e1;font-weight:700;}
+            .pending-pick-card__status{display:inline-flex;width:max-content;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:rgba(245,158,11,0.16);border:1px solid rgba(245,158,11,0.26);color:#fde68a;font-size:10px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;}
             .pending-picks-rail__empty{padding:14px;color:#64748b;font-size:13px;text-align:center;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:10px;}
             .pending-picks-rail__empty i{margin-right:8px;color:#94a3b8;}
         </style>
@@ -9465,11 +9431,14 @@
             }
             function normalizePendingPick(p) {
                 if (!p || String(p.status || 'pending').toLowerCase() !== 'pending') return null;
-                const sport = (p.sport_display || p.sport_key || p.sport || '').toString().toUpperCase().replace(/_/g, ' ');
+                const sport = (p.sport_display || p.sport_title || p.sport_key || p.sport || '').toString().toUpperCase().replace(/_/g, ' ');
+                const league = String(p.league || p.sport_title || p.tournament_name || p.sport_key || '').trim().replace(/_/g, ' ');
                 const selection = String(p.selection_label || p.selection || p.pick || p.side || '').trim();
                 const market = fmtMarket(p.market_type);
                 const odds = Number(p.odds_snapshot);
                 const units = Number(p.units);
+                const matchup = String(p.matchup || ((p.away_team || '') + (p.home_team ? ' @ ' + p.home_team : '')) || '').trim();
+                const gameTime = p.commence_time || p.game_time || p.start_time || '';
                 if (!sport || !selection || /^pick$/i.test(selection) || !market || !Number.isFinite(odds) || !Number.isFinite(units)) {
                     console.warn('[Sportsbook] Skipping malformed pending pick', p);
                     return null;
@@ -9481,10 +9450,13 @@
                 if (line && pickText.indexOf(line) === -1) pickText += ' ' + line;
                 return {
                     sport,
+                    league,
+                    matchup,
                     pickText,
                     market,
                     odds,
                     units,
+                    gameTime,
                     when: fmtAgo(p.locked_at || p.created_at),
                     lockedAt: p.locked_at || p.created_at || ''
                 };
@@ -9520,13 +9492,22 @@
                 emptyMsg.hidden = true;
                 validPicks.sort((a, b) => new Date(b.lockedAt || 0) - new Date(a.lockedAt || 0));
                 list.innerHTML = validPicks.slice(0, 8).map(p => {
+                    const gameTimeText = p.gameTime ? new Date(p.gameTime).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }) : 'Time pending';
                     return '<div class="pending-pick-card">'
                         + '<div class="pending-pick-card__top">'
                         + '<span class="pending-pick-card__sport">' + escapeHtml(p.sport) + '</span>'
                         + '<span class="pending-pick-card__when">' + escapeHtml(p.when) + '</span>'
                         + '</div>'
+                        + '<div class="pending-pick-card__game">' + escapeHtml(p.matchup || 'Matchup pending') + '</div>'
                         + '<div class="pending-pick-card__pick">' + escapeHtml(p.pickText) + '</div>'
-                        + '<div class="pending-pick-card__detail"><span>' + escapeHtml(p.market) + '</span><span><b>' + escapeHtml(fmtOdds(p.odds)) + '</b> · ' + escapeHtml(p.units.toFixed(2) + 'u') + '</span></div>'
+                        + '<div class="pending-pick-card__detail">'
+                        + '<span>League: <b>' + escapeHtml(p.league || p.sport) + '</b></span>'
+                        + '<span>Market: <b>' + escapeHtml(p.market) + '</b></span>'
+                        + '<span>Odds: <b>' + escapeHtml(fmtOdds(p.odds)) + '</b></span>'
+                        + '<span>Units: <b>' + escapeHtml(p.units.toFixed(2) + 'u') + '</b></span>'
+                        + '<span>Game: <b>' + escapeHtml(gameTimeText) + '</b></span>'
+                        + '</div>'
+                        + '<span class="pending-pick-card__status">Locked · Awaiting Grading</span>'
                         + '</div>';
                 }).join('');
             }
@@ -9547,7 +9528,7 @@
                     <p class="make-picks-sub">Choose a sport, select a game, pick a market, and lock your play to your permanent public record.</p>
                 </div>
             </div>
-            <div class="sportsbook-sport-tabs" aria-label="Sportsbook tabs">
+            <div class="sportsbook-sport-tabs" aria-label="Sportsbook tabs" hidden style="display:none !important">
                 <button type="button" class="sportsbook-sport-tab" onclick="window.selectSportAndShowGames('MLB')">MLB</button>
                 <button type="button" class="sportsbook-sport-tab is-active" onclick="window.selectSportAndShowGames('NBA')">NBA</button>
                 <button type="button" class="sportsbook-sport-tab" onclick="window.selectSportAndShowGames('NFL')">NFL</button>
@@ -10614,7 +10595,7 @@ window.toggleSportFamily = function (family) {
 
     // Sports the backend's market_groups feed supports for team_totals.
     // (Soccer/Tennis don't carry per-team totals on our feed.)
-    var TT_SUPPORTED_SPORTS = { NBA: 1, NCAAB: 1, NFL: 1, NCAAF: 1, NHL: 1, MLB: 1 };
+    var TT_SUPPORTED_SPORTS = { NBA: 1, NCAAB: 1, NFL: 1, NCAAF: 1, NHL: 1, MLB: 1, Soccer: 1, Tennis: 1, MLS: 1, UCL: 1, LaLiga: 1, SerieA: 1, Bundesliga: 1, Ligue1: 1, ATP: 1, WTA: 1 };
 
     function _ttApiBase() {
         if (window.api && window.api.baseUrl) return window.api.baseUrl;
@@ -11217,8 +11198,8 @@ window.toggleSportFamily = function (family) {
         setActiveTabs(sport);
         renderPeriodBar(sport);
 
-        if (sport === 'Soccer' || sport === 'Tennis' || sport === 'Consensus') {
-            rows.innerHTML = emptyState(sport, sport + ' boards open from the rail.', 'group');
+        if (sport === 'Consensus') {
+            rows.innerHTML = emptyState(sport, 'Consensus Coming Soon', 'group');
             return;
         }
 
