@@ -169,6 +169,12 @@
             return;
         }
 
+        var emailValue = (emailInput.value || '').trim();
+        if (emailValue && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
+            showError('Please enter a valid reply-to email address or leave it blank.');
+            emailInput.focus();
+            return;
+        }
         var payload = {
             topic: document.getElementById('contactTopic').value || 'general',
             subject: (document.getElementById('contactSubject').value || '').trim(),
