@@ -21,16 +21,16 @@
     <style>
         /* Trivia-aligned design tokens (override social-home.css) */
         :root {
-            --neon-cyan: #00ffff;
-            --neon-purple: #ff00ff;
-            --neon-green: #39ff14;
+            --neon-cyan: #22d3ee;
+            --neon-purple: #64748b;
+            --neon-green: #22c55e;
             --neon-gold: #ffd700;
             --neon-red: #ff073a;
-            --dark-bg: #0a0a0f;
-            --darker-bg: #050508;
-            --card-bg: rgba(20, 20, 35, 0.8);
-            --card-bg-solid: rgba(20, 20, 35, 0.95);
-            --glass-border: rgba(0, 255, 255, 0.2);
+            --dark-bg: #060a12;
+            --darker-bg: #03060b;
+            --card-bg: rgba(13, 20, 31, 0.86);
+            --card-bg-solid: rgba(13, 20, 31, 0.96);
+            --glass-border: rgba(100, 116, 139, 0.22);
             --text-primary: #ffffff;
             --text-secondary: #b0b0c0;
             --text-muted: #808090;
@@ -42,8 +42,8 @@
             --bg-secondary: rgba(20, 20, 35, 0.6);
             --bg-card: rgba(20, 20, 35, 0.8);
             --bg-card-hover: rgba(28, 28, 50, 0.92);
-            --border-color: rgba(0, 255, 255, 0.18);
-            --border-light: rgba(0, 255, 255, 0.32);
+            --border-color: rgba(100, 116, 139, 0.22);
+            --border-light: rgba(34, 211, 238, 0.24);
             --accent-blue-bg: rgba(56, 189, 248, 0.14);
             --accent-green-bg: rgba(57, 255, 20, 0.12);
             --accent-red-bg: rgba(255, 7, 58, 0.14);
@@ -584,16 +584,16 @@
             background: var(--card-bg);
             backdrop-filter: blur(10px);
             border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 12px;
-            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+            border-radius: 12px;
+            padding: 13px 14px;
+            margin-bottom: 9px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
             transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
         }
         .feed-item:hover {
-            transform: translateY(-2px);
-            border-color: rgba(0, 255, 255, 0.35);
-            box-shadow: 0 20px 44px rgba(0, 0, 0, 0.4);
+            transform: translateY(-1px);
+            border-color: rgba(34, 211, 238, 0.26);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.32);
         }
         .fi-header {
             display: flex;
@@ -602,10 +602,10 @@
             margin-bottom: 10px;
         }
         .fi-avatar {
-            width: 44px; height: 44px;
+            width: 38px; height: 38px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent-blue), var(--neon-purple));
-            color: #fff;
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.20), rgba(34, 197, 94, 0.12));
+            color: #dff7ff;
             font-family: 'Barlow', sans-serif;
             font-weight: 800;
             display: flex;
@@ -614,7 +614,7 @@
             font-size: 1rem;
             flex-shrink: 0;
             overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.14);
+            border: 1px solid rgba(148, 163, 184, 0.22);
         }
         .fi-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .fi-meta { flex: 1; min-width: 0; }
@@ -667,7 +667,7 @@
             color: var(--text-primary);
             font-size: 0.95rem;
             line-height: 1.55;
-            margin: 0 0 12px 56px;
+            margin: 0 0 10px 50px;
             white-space: pre-wrap;
             word-break: break-word;
         }
@@ -681,7 +681,7 @@
             border-radius: 12px;
             padding: 14px;
             margin-bottom: 12px;
-            margin-left: 56px;
+            margin-left: 50px;
         }
         .pick-embed.is-private {
             border-style: dashed;
@@ -736,18 +736,18 @@
         .fi-actions {
             display: flex;
             gap: 4px;
-            border-top: 1px solid var(--glass-border);
-            padding-top: 10px;
-            margin-left: 56px;
+            border-top: 1px solid rgba(100, 116, 139, 0.14);
+            padding-top: 8px;
+            margin-left: 50px;
             flex-wrap: wrap;
         }
         .fi-action {
             background: transparent;
             border: 0;
             color: var(--text-muted);
-            padding: 6px 12px;
-            border-radius: 9px;
-            font-size: 0.85rem;
+            padding: 5px 9px;
+            border-radius: 8px;
+            font-size: 0.8rem;
             font-weight: 600;
             cursor: pointer;
             display: inline-flex;
@@ -756,16 +756,25 @@
             transition: color 0.15s, background 0.15s;
         }
         .fi-action:hover {
-            color: var(--neon-cyan);
-            background: rgba(0, 255, 255, 0.06);
+            color: #a5f3fc;
+            background: rgba(34, 211, 238, 0.07);
         }
         .fi-action.is-liked { color: var(--accent-red); }
         .fi-badge-row { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
         .profile-badge { display:inline-flex; align-items:center; gap:6px; width:fit-content; padding:3px 8px; border-radius:999px; border:1px solid rgba(125,211,252,0.32); background:rgba(125,211,252,0.08); color:#bae6fd; font-size:0.72rem; font-weight:700; }
-        .activity-line { color:var(--text-secondary); font-size:0.92rem; font-weight:700; margin:0 0 10px; }
+        .activity-card { display:flex; flex-direction:column; gap:8px; }
+        .activity-card .fi-header { margin-bottom:0; }
+        .activity-card .fi-avatar { background:rgba(15,23,42,0.92); color:#67e8f9; }
+        .activity-card.is-graded .fi-avatar { color:#86efac; }
+        .activity-main { min-width:0; }
+        .activity-line { color:#eef6ff; font-size:0.9rem; font-weight:800; margin:-16px 0 7px 50px; }
+        .privacy-badge { display:inline-flex; align-items:center; gap:6px; margin-left:50px; padding:4px 8px; border-radius:999px; border:1px solid rgba(100,116,139,0.22); background:rgba(15,23,42,0.64); color:#9aa8ba; font-size:0.74rem; font-weight:700; line-height:1.2; }
+        .privacy-badge i { color:#67e8f9; font-size:0.72rem; }
+        .privacy-badge.is-graded { color:#bbf7d0; border-color:rgba(34,197,94,0.24); background:rgba(34,197,94,0.07); }
+        .privacy-badge.is-graded i { color:#22c55e; }
         .privacy-safe { border-color:rgba(125,211,252,0.24); background:rgba(2,8,18,0.34); }
-        .record-strip { display:flex; gap:8px; flex-wrap:wrap; color:var(--text-secondary); font-size:0.8rem; }
-        .record-strip span { display:inline-flex; gap:4px; padding:5px 8px; border-radius:8px; background:rgba(255,255,255,0.04); border:1px solid rgba(148,163,184,0.13); }
+        .record-strip { display:flex; gap:7px; flex-wrap:wrap; color:var(--text-secondary); font-size:0.76rem; margin:8px 0 0 50px; }
+        .record-strip span { display:inline-flex; gap:4px; padding:4px 7px; border-radius:7px; background:rgba(255,255,255,0.035); border:1px solid rgba(148,163,184,0.12); }
         .link-preview { display:inline-flex; align-items:center; gap:8px; max-width:100%; margin-bottom:12px; padding:9px 11px; border-radius:10px; border:1px solid var(--glass-border); color:#7dd3fc; background:rgba(125,211,252,0.06); text-decoration:none; font-size:0.84rem; word-break:break-all; }
         .reply-link { border:0; background:transparent; color:#7dd3fc; font:inherit; font-weight:700; cursor:pointer; }
         .reply-list { margin-top:8px; padding-left:10px; border-left:1px solid var(--glass-border); }
@@ -1069,6 +1078,9 @@
             .fi-content,
             .pick-embed,
             .fi-actions,
+            .activity-line,
+            .privacy-badge,
+            .record-strip,
             .comments-section { margin-left: 0; }
             .btn-post { width: 100%; }
         }
@@ -1170,39 +1182,7 @@
             </div>
 
             <div class="feed-list" id="feedList">
-                <div class="feed-item" data-id="betlegend-graded-2026-05-03" data-type="pick">
-                    <div class="fi-header">
-                        <div class="fi-avatar"><img src="/static/media/TMR-avatar-256.jpg" alt="BetLegend avatar" loading="lazy"></div>
-                        <div class="fi-meta">
-                            <div class="fi-top-row">
-                                <span class="fi-name"><a href="/profile/?user=BetLegend">BetLegend</a></span>
-                                <span class="fi-handle">@BetLegend</span>
-                                <span class="fi-dot">&bull;</span>
-                                <span class="fi-time">May 3</span>
-                            </div>
-                            <div class="fi-user-subline">
-                                <span class="fi-record">Record: 4-2, +6.20u, 66.7%</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="fi-action-label"><i class="fas fa-clipboard-check"></i> BetLegend had 3 picks graded today</div>
-                    <div class="pick-embed">
-                        <div class="pe-row">
-                            <span class="pe-chip is-sport">Verified record update</span>
-                            <span class="pe-chip is-won">3 picks graded today</span>
-                        </div>
-                        <div class="pe-team">Verified record updated.</div>
-                        <div style="margin-top:5px;color:var(--text-muted);font-size:0.86rem;">Current record: 4-2, +6.20u</div>
-                        <div style="margin-top:8px;color:var(--text-secondary);font-size:0.82rem;">Pick details hidden until eligible for public record.</div>
-                    </div>
-                    <div class="fi-actions">
-                        <button class="fi-action"><i class="fas fa-heart"></i> Like <span>0</span></button>
-                        <button class="fi-action"><i class="fas fa-comment"></i> Comment <span>0</span></button>
-                        <button class="fi-action"><i class="fas fa-reply"></i> Reply</button>
-                        <button class="fi-action"><i class="fas fa-share"></i> Share</button>
-                    </div>
-                    <div class="comments-section"></div>
-                </div>
+                <div class="tmr-loading-state"><div class="tmr-spinner"></div><p>Loading feed...</p></div>
             </div>
 
             <div class="load-more" id="loadMore" style="display:none;"><button class="load-more-btn" onclick="loadMorePosts()">Load More</button></div>
@@ -1219,20 +1199,15 @@
             </div>
             <div class="rs-card">
                 <div class="rs-title"><i class="fas fa-fire" style="color:var(--accent-red);"></i>Record Activity</div>
-                <div id="trendingList"><div class="rs-item"><span class="rs-rank"><i class="fas fa-clipboard-check"></i></span><span class="rs-text">BetLegend had picks graded <span class="rs-count">Verified record updated; pending pick details remain hidden.</span></span></div></div>
+                <div id="trendingList"></div>
             </div>
             <div class="rs-card">
                 <div class="rs-title"><i class="fas fa-chart-line" style="color:var(--accent-green);"></i>Top Cappers</div>
-                <div id="topCappersList">
-                    <div class="rs-user">
-                        <div class="rs-user-avatar"><img src="/static/media/TMR-avatar-256.jpg" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
-                        <div class="rs-user-info"><div class="rs-user-name"><a href="/profile/?user=BetLegend">BetLegend</a></div><div class="rs-user-detail">4-2 - <span style="color:var(--accent-green);font-weight:700;">+6.20u</span> - 66.7%</div></div>
-                    </div>
-                </div>
+                <div id="topCappersList"></div>
             </div>
             <div class="rs-card">
                 <div class="rs-title"><i class="fas fa-bolt" style="color:var(--accent-gold);"></i>Community Queue</div>
-                <div id="arenaWatchList"><div class="rs-item"><span class="rs-rank"><i class="fas fa-circle-check"></i></span><span class="rs-text">BetLegend verified record updated <span class="rs-count">4-2, +6.20u after grading</span></span></div></div>
+                <div id="arenaWatchList"></div>
             </div>
             <div class="rs-card">
                 <div class="rs-title"><i class="fas fa-user-plus" style="color:var(--accent-blue);"></i>Who to Follow</div>
