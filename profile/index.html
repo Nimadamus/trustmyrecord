@@ -1641,7 +1641,7 @@
                     <article class="profile-advanced-metric" data-advanced-metric-card="avg_daily_picks">
                         <span class="profile-advanced-metric__label">Picks Per Day</span>
                         <strong class="profile-advanced-metric__value is-empty" id="profileAdvAvgDailyPicks">Not enough data yet</strong>
-                        <span class="profile-advanced-metric__sub" id="profileAdvAvgDailyPicksSub">Total picks over active days</span>
+                        <span class="profile-advanced-metric__sub" id="profileAdvAvgDailyPicksSub">Graded public picks over active dates</span>
                     </article>
                     <article class="profile-advanced-metric" data-advanced-metric-card="clv" hidden>
                         <span class="profile-advanced-metric__label">CLV</span>
@@ -2153,7 +2153,7 @@
                               <tr data-tmrx-adv-top="z_score"><td class="name">Z-Score</td><td class="num zero">&mdash;</td><td>Skill-vs-luck signal. Hidden until 5+ decisions.</td></tr>
                               <tr data-tmrx-adv-top="avg_odds"><td class="name">AOP (Avg Odds per Pick)</td><td class="num zero">&mdash;</td><td>Average implied probability converted back to American.</td></tr>
                               <tr data-tmrx-adv-top="avg_units"><td class="name">AUR (Avg Units Risked)</td><td class="num zero">&mdash;</td><td>Mean stake across settled picks.</td></tr>
-                              <tr data-tmrx-adv-top="avg_daily_picks"><td class="name">ADP (Avg Daily Picks)</td><td class="num zero">&mdash;</td><td>Total picks / days active.</td></tr>
+                              <tr data-tmrx-adv-top="avg_daily_picks"><td class="name">Picks Per Day</td><td class="num zero">&mdash;</td><td>Graded public picks / active pick dates.</td></tr>
                               <tr data-tmrx-adv-top="push_rate"><td class="name">Push Rate</td><td class="num zero">&mdash;</td><td>Pushes / total settled.</td></tr>
                               <tr data-tmrx-adv-top="consistency"><td class="name">Consistency Score</td><td class="num zero">&mdash;</td><td>Inverse-stddev of monthly net units. Hidden until 3+ active months.</td></tr>
                               <tr data-tmrx-adv-top="capper_rating"><td class="name">Capper Rating</td><td class="num zero">&mdash;</td><td>Composite. Hidden until 25+ decisions.</td></tr>
@@ -2656,7 +2656,7 @@
                             <tr><td class="stats-metric-label">eWP (Effective Win %)</td><td class="stats-metric-context">The win-rate equivalent of the profile's ROI if every pick were priced at -110.</td></tr>
                             <tr><td class="stats-metric-label">AOP (Avg Odds per Pick)</td><td class="stats-metric-context">Average implied probability converted back to American odds.</td></tr>
                             <tr><td class="stats-metric-label">AUR (Avg Units Risked)</td><td class="stats-metric-context">Average stake size across settled picks.</td></tr>
-                            <tr><td class="stats-metric-label">ADP (Avg Daily Picks)</td><td class="stats-metric-context">Total picks divided by active ledger days.</td></tr>
+                            <tr><td class="stats-metric-label">Picks Per Day</td><td class="stats-metric-context">Graded public picks divided by active pick dates.</td></tr>
                             <tr><td class="stats-metric-label">Max Drawdown</td><td class="stats-metric-context">Largest peak-to-trough unit decline in the equity curve.</td></tr>
                             <tr><td class="stats-metric-label">CLV (Closing Line Value)</td><td class="stats-metric-context">Unavailable until closing-line tracking is enabled on stored picks. No estimates are displayed.</td></tr>
                         </tbody>
@@ -2928,7 +2928,7 @@
                               <tr data-tmrx-adv="z_score"><td class="name">Z-Score</td><td class="num zero">&mdash;</td><td>Standardized skill-vs-luck signal at avg-implied-prob baseline. Hidden until 5+ decisions.</td></tr>
                               <tr data-tmrx-adv="avg_odds"><td class="name">AOP (Avg Odds per Pick)</td><td class="num zero">&mdash;</td><td>Average implied probability converted back to American.</td></tr>
                               <tr data-tmrx-adv="avg_units"><td class="name">AUR (Avg Units Risked)</td><td class="num zero">&mdash;</td><td>Mean stake across settled picks.</td></tr>
-                              <tr data-tmrx-adv="avg_daily_picks"><td class="name">ADP (Avg Daily Picks)</td><td class="num zero">&mdash;</td><td>Total picks / days active. Hidden until first/last pick exist.</td></tr>
+                              <tr data-tmrx-adv="avg_daily_picks"><td class="name">Picks Per Day</td><td class="num zero">&mdash;</td><td>Graded public picks / active pick dates.</td></tr>
                               <tr data-tmrx-adv="push_rate"><td class="name">Push Rate</td><td class="num zero">&mdash;</td><td>Pushes / total settled.</td></tr>
                               <tr data-tmrx-adv="consistency"><td class="name">Consistency Score</td><td class="num zero">&mdash;</td><td>Inverse-stddev of monthly net units. Hidden until 3+ active months.</td></tr>
                               <tr data-tmrx-adv="capper_rating"><td class="name">Capper Rating</td><td class="num zero">&mdash;</td><td>Composite (ROI &middot; sample &middot; eWP &middot; Z &middot; drawdown &middot; consistency). Hidden until 25+ decisions.</td></tr>
@@ -2989,7 +2989,7 @@
                                 <div class="tmr-cap-metric" title="Z-Score: standardized skill-vs-luck signal. Z = (W − n·p) / √(n·p·(1−p)) where p is the breakeven hit rate at your average odds (AOP). Higher absolute Z = more likely skill than variance."><span class="tmr-cap-metric__label">Z-Score</span><span class="tmr-cap-metric__value is-placeholder" id="advZScore">—</span><span class="tmr-cap-metric__sub">Skill-vs-luck signal</span></div>
                                 <div class="tmr-cap-metric" title="Average Odds per Pick (AOP). Computed as the average implied probability across picks, then converted back to American — never an arithmetic mean of moneylines."><span class="tmr-cap-metric__label">AOP (Avg odds)</span><span class="tmr-cap-metric__value is-placeholder" id="advAop">—</span><span class="tmr-cap-metric__sub">Avg price per pick</span></div>
                                 <div class="tmr-cap-metric" title="Average Units Risked per Pick (AUR). Mean stake across all settled picks."><span class="tmr-cap-metric__label">AUR (Avg risk)</span><span class="tmr-cap-metric__value is-placeholder" id="advAur">—</span><span class="tmr-cap-metric__sub">Avg stake per pick</span></div>
-                                <div class="tmr-cap-metric" title="Average Daily Picks (ADP). total_picks / days active (first → last locked pick)."><span class="tmr-cap-metric__label">ADP (Picks/day)</span><span class="tmr-cap-metric__value is-placeholder" id="advAdp">—</span><span class="tmr-cap-metric__sub">Volume per day</span></div>
+                                <div class="tmr-cap-metric" title="Picks Per Day: graded public picks divided by active pick dates. Zero-pick dates do not count."><span class="tmr-cap-metric__label">Picks Per Day</span><span class="tmr-cap-metric__value is-placeholder" id="advAdp">—</span><span class="tmr-cap-metric__sub">Active pick dates only</span></div>
                             </div>
                         </div>
 
@@ -6068,7 +6068,9 @@
         setCard(
             'profileAdvAvgDailyPicks',
             s.avg_daily_picks != null ? Number(s.avg_daily_picks).toFixed(2) : null,
-            s.avg_daily_picks != null ? 'Active ledger days' : 'Coming once enough graded data is available',
+            s.avg_daily_picks != null
+                ? (Number(s.active_pick_days || 0) > 0 ? Number(s.active_pick_days) + ' active pick dates' : 'Active pick dates only')
+                : 'Coming once enough graded data is available',
             null
         );
         const clv = scores.clv != null ? Number(scores.clv) : null;
