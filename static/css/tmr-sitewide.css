@@ -448,6 +448,94 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
     background: rgba(255, 255, 255, 0.04);
 }
 
+.tmr-support-menu {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.tmr-support-menu__trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 7px 12px;
+    border: 1px solid rgba(45, 212, 191, 0.28);
+    border-radius: 999px;
+    background: rgba(45, 212, 191, 0.10);
+    color: #d7fffb;
+    font: 900 0.74rem/1 var(--tmr-display);
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.tmr-support-menu__trigger::after {
+    content: "";
+    width: 0;
+    height: 0;
+    margin-left: 7px;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid currentColor;
+    opacity: 0.82;
+}
+
+.tmr-support-menu__trigger:hover,
+.tmr-support-menu.is-open .tmr-support-menu__trigger {
+    color: #ffffff;
+    border-color: rgba(45, 212, 191, 0.55);
+    background: rgba(45, 212, 191, 0.18);
+}
+
+.tmr-support-menu__panel {
+    position: absolute;
+    top: calc(100% + 9px);
+    right: 0;
+    z-index: 1200;
+    min-width: 168px;
+    padding: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 14px;
+    background: rgba(8, 14, 26, 0.98);
+    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.34);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease;
+}
+
+.tmr-support-menu.is-open .tmr-support-menu__panel,
+.tmr-support-menu:focus-within .tmr-support-menu__panel,
+.tmr-support-menu:hover .tmr-support-menu__panel {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.tmr-support-menu__panel a {
+    display: flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 8px 10px;
+    border-radius: 9px;
+    color: #dce8f5;
+    text-decoration: none;
+    font: 800 0.82rem/1.15 var(--tmr-font);
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.tmr-support-menu__panel a:hover {
+    color: var(--tmr-teal);
+    background: rgba(255, 255, 255, 0.06);
+}
+
 .tmr-global-nav__actions {
     display: inline-flex;
     align-items: center;
@@ -455,6 +543,55 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
     gap: 8px;
     flex-wrap: nowrap;
     min-width: 0;
+}
+
+.tmr-member-search {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 210px;
+    max-width: 280px;
+    height: 38px;
+    padding: 4px;
+    border: 1px solid rgba(148, 163, 184, 0.20);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.tmr-member-search input {
+    min-width: 0;
+    flex: 1;
+    height: 28px;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--tmr-text);
+    font: 800 0.76rem/1 var(--tmr-font);
+    padding: 0 4px 0 9px;
+}
+
+.tmr-member-search input::placeholder {
+    color: rgba(220, 232, 245, 0.62);
+}
+
+.tmr-member-search button {
+    height: 28px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(45, 212, 191, 0.16);
+    color: #d7fffb;
+    padding: 0 10px;
+    font: 900 0.68rem/1 var(--tmr-font);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.tmr-member-search:focus-within {
+    border-color: var(--tmr-line-strong);
+    box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.10);
 }
 
 .tmr-global-nav__button {
@@ -530,7 +667,8 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
         grid-template-columns: minmax(0, 1fr) auto;
         grid-template-areas:
             "brand actions"
-            "links links";
+            "links links"
+            "support search";
         row-gap: 10px;
         align-items: center;
         padding: 12px 0;
@@ -547,10 +685,21 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
         padding-bottom: 2px;
     }
 
+    .tmr-support-menu {
+        grid-area: support;
+        justify-content: flex-start;
+    }
+
     .tmr-global-nav__actions {
         grid-area: actions;
         flex-wrap: wrap;
         justify-content: flex-end;
+    }
+
+    .tmr-member-search {
+        grid-area: search;
+        max-width: 250px;
+        justify-self: end;
     }
 }
 
@@ -718,6 +867,33 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
     gap: 18px;
     padding: 18px 32px 24px;
     border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.tmr-global-footer__support {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 16px 32px;
+    border-top: 1px solid rgba(148, 163, 184, 0.12);
+    color: var(--tmr-muted);
+}
+
+.tmr-global-footer__support strong {
+    color: var(--tmr-teal);
+    font: 900 0.78rem/1 var(--tmr-font);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.tmr-global-footer__support a {
+    color: #dce8f5;
+    text-decoration: none;
+    font: 800 0.92rem/1.2 var(--tmr-font);
+}
+
+.tmr-global-footer__support a:hover {
+    color: var(--tmr-teal);
 }
 
 .tmr-site-shell .page-card,
@@ -1822,6 +1998,12 @@ html body.tmr-site-shell {
 @media (max-width: 860px) {
     .tmr-global-nav__inner {
         grid-template-columns: 1fr;
+        grid-template-areas:
+            "brand"
+            "actions"
+            "links"
+            "support"
+            "search";
         gap: 12px;
         padding: 14px 0;
     }
@@ -1841,6 +2023,35 @@ html body.tmr-site-shell {
     .tmr-global-nav__actions {
         justify-content: flex-start;
         flex-wrap: wrap;
+    }
+
+    .tmr-support-menu {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .tmr-support-menu__panel {
+        position: static;
+        display: none;
+        width: 100%;
+        margin-top: 8px;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        pointer-events: auto;
+    }
+
+    .tmr-support-menu.is-open .tmr-support-menu__panel,
+    .tmr-support-menu:focus-within .tmr-support-menu__panel {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .tmr-member-search {
+        width: 100%;
+        max-width: none;
+        justify-self: stretch;
     }
 
     .tmr-site-shell .page-layout,
@@ -2179,6 +2390,12 @@ html body.tmr-site-shell {
         min-height: 34px !important;
         padding: 8px 12px !important;
         font-size: 0.72rem !important;
+    }
+
+    .tmr-member-search {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
     }
 
     .tmr-global-nav__actions {
@@ -3559,11 +3776,11 @@ body.tmr-site-shell .friends-top-strip {
    width from the nav row on normal desktop/laptop viewports. */
 @media (min-width: 641px) {
     body.tmr-site-shell .tmr-global-nav__inner {
-        width: min(1760px, calc(100% - 20px)) !important;
-        grid-template-columns: minmax(205px, max-content) minmax(0, 1fr) max-content !important;
-        grid-template-areas: "brand links actions" !important;
+        width: min(1480px, calc(100% - 32px)) !important;
+        grid-template-columns: minmax(205px, max-content) minmax(0, 1fr) max-content minmax(190px, 240px) max-content !important;
+        grid-template-areas: "brand links support search actions" !important;
         align-items: center !important;
-        column-gap: clamp(16px, 1.8vw, 34px) !important;
+        column-gap: clamp(10px, 1vw, 18px) !important;
     }
 
     body.tmr-site-shell .tmr-global-nav__brand {
@@ -3594,8 +3811,19 @@ body.tmr-site-shell .friends-top-strip {
         text-overflow: clip !important;
         white-space: nowrap !important;
         min-height: 34px !important;
-        padding: 7px clamp(9px, 0.72vw, 13px) !important;
+        padding: 7px clamp(7px, 0.52vw, 10px) !important;
         letter-spacing: 0.045em !important;
+    }
+
+    body.tmr-site-shell .tmr-support-menu {
+        grid-area: support !important;
+    }
+
+    body.tmr-site-shell .tmr-member-search {
+        grid-area: search !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
     }
 
     body.tmr-site-shell .tmr-global-nav__actions {
@@ -3623,10 +3851,17 @@ body.tmr-site-shell .friends-top-strip {
         grid-template-columns: minmax(0, 1fr) max-content !important;
         grid-template-areas:
             "brand actions"
+            "search search"
             "links links" !important;
         row-gap: 8px !important;
         min-height: 82px !important;
         padding: 10px 0 !important;
+    }
+
+    body.tmr-site-shell .tmr-member-search,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-member-search {
+        width: min(100%, 420px) !important;
+        justify-self: center !important;
     }
 
     body.tmr-site-shell .tmr-global-nav__links,

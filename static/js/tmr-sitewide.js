@@ -44,8 +44,7 @@
         "privacy.html": ["Privacy", "How TrustMyRecord handles account, profile, and platform data."],
         "reset-password.html": ["Reset Password", "Recover account access without leaving the product shell."],
         "verify-email.html": ["Verify Email", "Confirm account ownership before using record and social features."],
-        "report-bug.html": ["Report a Bug", "Spot something broken on TrustMyRecord? Send it straight to the team."],
-        "contact.html": ["Contact Us", "Send a private message to the TrustMyRecord team without exposing an email address."]
+        "report-bug.html": ["Report a Bug", "Spot something broken on TrustMyRecord? Send it straight to the team."]
     };
 
     // Derive the current "file" key for routeMeta. After the directory
@@ -294,6 +293,19 @@
                         return `<a href="${href}"${active ? ' aria-current="page"' : ""}>${label}</a>`;
                     }).join("")}
                 </div>
+                <div class="tmr-support-menu">
+                    <button class="tmr-support-menu__trigger" type="button" aria-expanded="false" aria-haspopup="true">
+                        Support
+                    </button>
+                    <div class="tmr-support-menu__panel" role="menu" aria-label="Support links">
+                        <a href="/contact/" role="menuitem">Contact Us</a>
+                        <a href="/report-bug/" role="menuitem">Report a Bug</a>
+                    </div>
+                </div>
+                <form class="tmr-member-search" role="search" aria-label="Search members">
+                    <input type="search" name="member" placeholder="Search members" autocomplete="off" autocapitalize="off" autocorrect="off">
+                    <button type="submit">View</button>
+                </form>
                 <div class="tmr-global-nav__actions"></div>
             </div>
         </div>
@@ -302,6 +314,9 @@
 
     const actions = nav.querySelector(".tmr-global-nav__actions");
     const toggleButton = nav.querySelector(".tmr-global-nav__toggle");
+    const memberSearch = nav.querySelector(".tmr-member-search");
+    const supportMenu = nav.querySelector(".tmr-support-menu");
+    const supportTrigger = nav.querySelector(".tmr-support-menu__trigger");
 
     function setNavOpen(isOpen) {
         if (!toggleButton) return;
@@ -412,6 +427,13 @@
             setNavOpen(!nav.classList.contains("is-open"));
             return;
         }
+        const supportToggle = event.target.closest(".tmr-support-menu__trigger");
+        if (supportToggle) {
+            event.preventDefault();
+            const isOpen = supportMenu && supportMenu.classList.toggle("is-open");
+            supportToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            return;
+        }
         const logoutButton = event.target.closest("[data-tmr-logout]");
         if (logoutButton) {
             event.preventDefault();
@@ -424,11 +446,56 @@
             openSearchOverlay();
             return;
         }
-        const navLink = event.target.closest(".tmr-global-nav__links a, .tmr-global-nav__actions a");
+        const navLink = event.target.closest(".tmr-global-nav__links a, .tmr-global-nav__actions a, .tmr-support-menu__panel a");
         if (navLink) {
             setNavOpen(false);
+            if (supportMenu && supportTrigger) {
+                supportMenu.classList.remove("is-open");
+                supportTrigger.setAttribute("aria-expanded", "false");
+            }
         }
     });
+
+    document.addEventListener("click", (event) => {
+        if (!supportMenu || !supportTrigger) return;
+        if (supportMenu.contains(event.target)) return;
+        supportMenu.classList.remove("is-open");
+        supportTrigger.setAttribute("aria-expanded", "false");
+    });
+
+    if (memberSearch) {
+        memberSearch.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const input = memberSearch.querySelector('input[name="member"]');
+            const query = String(input && input.value || "").trim();
+            if (!query) {
+                window.location.href = "/handicappers/";
+                return;
+            }
+
+            const goToProfile = (username) => {
+                window.location.href = "/profile/?user=" + encodeURIComponent(username);
+            };
+
+            try {
+                const baseUrl = (window.api && window.api.baseUrl) || "https://trustmyrecord-api.onrender.com/api";
+                const response = await fetch(`${baseUrl}/users?query=${encodeURIComponent(query)}&limit=1`);
+                if (response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    const user = Array.isArray(data.users) ? data.users[0] : Array.isArray(data) ? data[0] : null;
+                    const username = user && (user.username || user.user_name || user.display_name);
+                    if (username) {
+                        goToProfile(username);
+                        return;
+                    }
+                }
+            } catch (error) {
+                // Fall through to direct username navigation.
+            }
+
+            goToProfile(query.replace(/^@+/, ""));
+        });
+    }
 
     // Lightweight sitewide search overlay (Cmd+K / Ctrl+K to open)
     function openSearchOverlay() {
@@ -449,7 +516,7 @@
                             <div class="tmr-search-grid">
                                 <a href="/sportsbook/"><strong>Make Picks</strong><span>Lock picks before games start</span></a>
                                 <a href="/feed/"><strong>Feed</strong><span>Posts, takes, locked picks</span></a>
-                                <a href="/leaderboards/"><strong>Leaderboards</strong><span>Records, trivia, polls, challenges</span></a>
+                                <a href="/handicappers/"><strong>Handicappers</strong><span>Find members and compare records</span></a>
                                 <a href="/arena/"><strong>Arena</strong><span>Head-to-head challenges</span></a>
                                 <a href="/polls/"><strong>Polls</strong><span>Sports debates, predictions</span></a>
                                 <a href="/trivia/"><strong>Trivia</strong><span>Sports knowledge games</span></a>
@@ -523,12 +590,12 @@
                     const units = (u.net_units != null && u.net_units !== 0)
                         ? `${u.net_units > 0 ? "+" : ""}${Number(u.net_units).toFixed(2)}u`
                         : "";
-                    const meta = [picks, units].filter(Boolean).join(" Â· ") || "@" + username;
+                    const meta = [picks, units].filter(Boolean).join(" · ") || "@" + username;
                     return `<a class="tmr-search-result tmr-search-result--user" href="/profile/?user=${encodeURIComponent(username)}">
                         <img class="tmr-search-result__avatar" src="${avatar}" alt="">
                         <span class="tmr-search-result__copy">
                             <strong>${escapeHtml(display)}</strong>
-                            <span>@${escapeHtml(username)} Â· ${escapeHtml(meta)}</span>
+                            <span>@${escapeHtml(username)} · ${escapeHtml(meta)}</span>
                         </span>
                     </a>`;
                 }).join("")
@@ -617,9 +684,14 @@
                         <a href="/terms/">Terms</a>
                         <a href="/privacy/">Privacy</a>
                         <a href="/contact/">Contact Us</a>
-                            <a href="/report-bug/">Report a Bug</a>
+                        <a href="/report-bug/">Report a Bug</a>
                     </div>
                 </div>
+            </div>
+            <div class="tmr-global-footer__support" aria-label="Support links">
+                <strong>Support</strong>
+                <a href="/contact/">Contact Us</a>
+                <a href="/report-bug/">Report a Bug</a>
             </div>
             <div class="tmr-global-footer__bottom">
                 <p>&copy; 2026 TrustMyRecord.com. Transparent sports records, community competition, and locked receipts.</p>
