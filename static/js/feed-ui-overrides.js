@@ -466,6 +466,23 @@ async function loadFeed() {
     if (lm) lm.style.display = items.length >= FEED_LIMIT ? 'block' : 'none';
 }
 
+function updateHeroCounts(visibleCount) {
+    const activityEl = document.getElementById('heroActivityCount');
+    const visibleEl = document.getElementById('heroVisibleCount');
+    const filterEl = document.getElementById('heroFilterLabel');
+    const labels = {
+        all: 'For You',
+        picks: 'Picks',
+        'hot-takes': 'Hot Takes',
+        polls: 'Polls',
+        following: 'Following'
+    };
+
+    if (activityEl) activityEl.textContent = visibleCount > 0 ? String(visibleCount) : 'Live';
+    if (visibleEl) visibleEl.textContent = String(visibleCount || 0);
+    if (filterEl) filterEl.textContent = labels[currentFilter] || 'For You';
+}
+
 function compactPickLabel(p) {
     const status = String(p.status || p.pick_status || '').toLowerCase();
     return status === 'pending' || status === 'locked' ? 'Locked picks submitted' : 'Picks graded';
@@ -490,7 +507,7 @@ async function loadTrending() {
             return;
         }
     } catch(e) {}
-    el.innerHTML = '<div class="rs-empty">No public graded picks are trending yet.</div>';
+    el.innerHTML = '<div class="rs-empty">Public graded picks will surface here as real records update. Pending pick details stay private.</div>';
 }
 
 async function loadTopCappers() {
@@ -511,7 +528,7 @@ async function loadTopCappers() {
             return;
         }
     } catch(e) {}
-    el.innerHTML = '<div class="rs-empty">Top cappers will appear once public records are available.</div>';
+    el.innerHTML = '<div class="rs-empty">Top cappers will appear once verified public records have enough graded picks.</div>';
 }
 
 async function loadArenaWatch() {
@@ -532,7 +549,7 @@ async function loadArenaWatch() {
             return;
         }
     } catch(e) {}
-    el.innerHTML = '<div class="rs-empty">Recent graded public activity will appear here.</div>';
+    el.innerHTML = '<div class="rs-empty">Arena challenges, forum momentum, polls, trivia, and graded record updates will appear here as real activity builds.</div>';
 }
 
 function toggleType(type) {
