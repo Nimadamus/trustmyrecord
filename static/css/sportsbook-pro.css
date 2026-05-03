@@ -1399,6 +1399,77 @@ section.hero { background: var(--sb-bg-deep); }
     #picks .sb-odds-price { font-size: 14.5px !important; }
 }
 
+/* Sportsbook header fit fix: keep links, Support, and account actions in
+   separate grid tracks so Support cannot cover Sell Picks. */
+@media (min-width: 901px) {
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__inner {
+        display: grid !important;
+        grid-template-columns: max-content minmax(0, 1fr) max-content max-content !important;
+        grid-template-areas: "brand links support actions" !important;
+        align-items: center !important;
+        column-gap: clamp(12px, 1.1vw, 24px) !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__brand {
+        grid-area: brand !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__panel {
+        display: contents !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links {
+        grid-area: links !important;
+        justify-content: center !important;
+        gap: clamp(6px, 0.7vw, 14px) !important;
+        padding: 0 !important;
+        min-width: 0 !important;
+        overflow: visible !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links a {
+        min-width: max-content !important;
+        padding-left: clamp(9px, 0.72vw, 14px) !important;
+        padding-right: clamp(9px, 0.72vw, 14px) !important;
+        white-space: nowrap !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-support-menu {
+        grid-area: support !important;
+        justify-self: end !important;
+        min-width: max-content !important;
+        z-index: 100001 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions {
+        grid-area: actions !important;
+        justify-self: end !important;
+        justify-content: flex-end !important;
+        min-width: max-content !important;
+        max-width: max-content !important;
+        overflow: visible !important;
+        flex-wrap: nowrap !important;
+    }
+}
+
+@media (min-width: 901px) and (max-width: 1560px) {
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__inner {
+        grid-template-columns: minmax(0, 1fr) max-content max-content !important;
+        grid-template-areas:
+            "brand support actions"
+            "links links links" !important;
+        row-gap: 8px !important;
+        min-height: 82px !important;
+        padding: 10px 0 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links {
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+        row-gap: 6px !important;
+    }
+}
+
 @media (max-width: 900px) and (min-width: 641px) {
     body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__inner {
         display: grid !important;
