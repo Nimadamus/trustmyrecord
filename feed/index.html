@@ -16,8 +16,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/social-home.css?v=20260430a">
-    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260430navfix9">
-    <script defer src="/static/js/tmr-sitewide.js?v=20260430navfix9"></script>
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260503feednav1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260503feednav1"></script>
     <style>
         /* Trivia-aligned design tokens (override social-home.css) */
         :root {
@@ -75,11 +75,11 @@
         /* ===== PAGE LAYOUT ===== */
         .page-layout {
             display: grid;
-            grid-template-columns: 198px minmax(0, 1fr) 280px;
-            gap: 18px;
-            max-width: 1280px;
+            grid-template-columns: 188px minmax(520px, 1fr) 300px;
+            gap: 16px;
+            max-width: 1320px;
             margin: 0 auto;
-            padding: 18px 20px 56px;
+            padding: 16px 18px 56px;
             position: relative;
             z-index: 1;
         }
@@ -89,11 +89,11 @@
         }
 
         body.tmr-site-shell[data-tmr-route="feed"] .page-layout {
-            width: min(1280px, calc(100% - 32px)) !important;
-            max-width: 1280px !important;
-            grid-template-columns: 198px minmax(0, 1fr) 280px !important;
-            gap: 18px !important;
-            padding: 18px 0 56px !important;
+            width: min(1320px, calc(100% - 28px)) !important;
+            max-width: 1320px !important;
+            grid-template-columns: 188px minmax(520px, 1fr) 300px !important;
+            gap: 16px !important;
+            padding: 16px 0 56px !important;
         }
 
         body.tmr-site-shell[data-tmr-route="feed"] .sidebar-link.active {
@@ -280,6 +280,45 @@
             margin-bottom: 12px;
             box-shadow: 0 12px 28px rgba(2, 8, 18, 0.22) !important;
         }
+        .composer-login-state {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            background:
+                linear-gradient(135deg, rgba(45, 212, 191, 0.08), rgba(56, 189, 248, 0.04)),
+                rgba(9, 18, 32, 0.88);
+            border: 1px solid rgba(45, 212, 191, 0.20);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+        }
+        .composer-login-state strong {
+            display: block;
+            color: var(--text-primary);
+            font-size: 0.94rem;
+            margin-bottom: 2px;
+        }
+        .composer-login-state span {
+            display: block;
+            font-size: 0.82rem;
+            line-height: 1.4;
+        }
+        .composer-login-state a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+            padding: 7px 12px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, #7dd3fc, #2dd4bf);
+            color: #03110d;
+            font-weight: 800;
+            font-size: 0.82rem;
+            text-decoration: none;
+            white-space: nowrap;
+        }
         .composer-top {
             display: flex;
             gap: 12px;
@@ -345,7 +384,9 @@
             color: var(--neon-cyan);
             border-color: rgba(0, 255, 255, 0.4);
         }
-        .composer-action.is-active {
+        .composer-action.is-active,
+        .composer-action.active-take,
+        .composer-action.active-poll {
             background: rgba(0, 255, 255, 0.12);
             border-color: var(--neon-cyan);
             color: var(--neon-cyan);
@@ -358,8 +399,9 @@
             border-radius: 9px;
             font-size: 0.82rem;
         }
-        .poll-builder { display: none; margin-top: 10px; }
-        .poll-builder.is-shown { display: block; }
+        .poll-builder { display: none; margin-top: 10px; padding-left: 52px; }
+        .poll-builder.is-shown,
+        .poll-builder.show { display: block; }
         .poll-row {
             display: flex; gap: 6px; margin-bottom: 6px;
         }
@@ -461,12 +503,12 @@
         .fi-header {
             display: flex;
             gap: 12px;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 10px;
         }
         .fi-avatar {
-            width: 42px; height: 42px;
-            border-radius: 12px;
+            width: 44px; height: 44px;
+            border-radius: 50%;
             background: linear-gradient(135deg, var(--accent-blue), var(--neon-purple));
             color: #fff;
             font-family: 'Barlow', sans-serif;
@@ -476,8 +518,18 @@
             justify-content: center;
             font-size: 1rem;
             flex-shrink: 0;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.14);
         }
+        .fi-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .fi-meta { flex: 1; min-width: 0; }
+        .fi-top-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+            flex-wrap: wrap;
+        }
         .fi-name {
             font-weight: 700;
             color: var(--text-primary);
@@ -489,11 +541,38 @@
             color: var(--text-muted);
             font-size: 0.82rem;
         }
+        .fi-user-subline {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+            color: #97a6ba;
+            font-size: 0.78rem;
+        }
+        .fi-record {
+            color: #d6e2f0;
+            font-weight: 700;
+        }
+        .fi-sport {
+            color: #7dd3fc;
+            font-weight: 700;
+        }
+        .fi-action-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin: 2px 0 10px 56px;
+            color: #dff7ff;
+            font-size: 0.86rem;
+            font-weight: 800;
+        }
+        .fi-action-label i { color: #2dd4bf; }
         .fi-content {
             color: var(--text-primary);
             font-size: 0.95rem;
             line-height: 1.55;
-            margin-bottom: 12px;
+            margin: 0 0 12px 56px;
             white-space: pre-wrap;
             word-break: break-word;
         }
@@ -507,6 +586,11 @@
             border-radius: 12px;
             padding: 14px;
             margin-bottom: 12px;
+            margin-left: 56px;
+        }
+        .pick-embed.is-private {
+            border-style: dashed;
+            color: #a7b4c5;
         }
         .pe-row {
             display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
@@ -534,12 +618,33 @@
         .pe-chip.is-units { color: var(--accent-gold); border-color: rgba(255, 215, 0, 0.3); }
         .pe-chip.is-won { color: var(--accent-green); border-color: rgba(57, 255, 20, 0.3); background: rgba(57, 255, 20, 0.06); }
         .pe-chip.is-lost { color: var(--accent-red); border-color: rgba(255, 7, 58, 0.3); background: rgba(255, 7, 58, 0.06); }
+        .poll-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            width: 100%;
+            min-height: 38px !important;
+            padding: 8px 10px;
+            border-radius: 10px !important;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            background: rgba(15, 23, 42, 0.62);
+            color: #dbeafe;
+            text-align: left;
+            cursor: pointer;
+        }
+        .poll-option strong {
+            color: #7dd3fc;
+            font-size: 0.82rem;
+        }
 
         .fi-actions {
             display: flex;
             gap: 4px;
             border-top: 1px solid var(--glass-border);
             padding-top: 10px;
+            margin-left: 56px;
+            flex-wrap: wrap;
         }
         .fi-action {
             background: transparent;
@@ -560,6 +665,54 @@
             background: rgba(0, 255, 255, 0.06);
         }
         .fi-action.is-liked { color: var(--accent-red); }
+        .comments-section {
+            display: none;
+            margin: 12px 0 0 56px;
+            border-top: 1px solid rgba(148, 163, 184, 0.12);
+            padding-top: 12px;
+        }
+        .comments-section.show { display: block; }
+        .cmt-input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .cmt-input {
+            min-height: 38px !important;
+            border-radius: 10px !important;
+            background: rgba(2, 8, 18, 0.58) !important;
+        }
+        .cmt-submit {
+            width: auto !important;
+            min-height: 38px !important;
+            padding: 7px 12px !important;
+            border: 0;
+            border-radius: 10px !important;
+            background: rgba(45, 212, 191, 0.18);
+            color: #9ffbed;
+            cursor: pointer;
+        }
+        .cmt-item {
+            display: flex;
+            gap: 9px;
+            padding: 9px 0;
+        }
+        .cmt-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(56, 189, 248, 0.18);
+            color: #bae6fd;
+            font-weight: 800;
+            font-size: 0.76rem;
+            flex-shrink: 0;
+        }
+        .cmt-author a { color: #e6f2ff; text-decoration: none; font-weight: 800; font-size: 0.82rem; }
+        .cmt-text { color: #cbd5e1; font-size: 0.86rem; line-height: 1.45; }
+        .cmt-time { color: #64748b; font-size: 0.72rem; margin-top: 2px; }
 
         /* ===== EMPTY STATE ===== */
         .empty-state {
@@ -781,6 +934,13 @@
             .feed-tabs { padding: 3px; }
             .feed-tab { padding: 8px 10px; font-size: 0.78rem; }
             .composer-bottom { flex-direction: column; align-items: stretch; padding-left: 0; }
+            .composer-login-state { align-items: stretch; flex-direction: column; }
+            .poll-builder { padding-left: 0; }
+            .fi-action-label,
+            .fi-content,
+            .pick-embed,
+            .fi-actions,
+            .comments-section { margin-left: 0; }
             .btn-post { width: 100%; }
         }
     </style>
@@ -793,7 +953,7 @@
       gtag('config', 'G-V5MCVXS2HE');
     </script>
 </head>
-<body>
+<body class="tmr-site-shell">
     <div class="page-layout">
         <aside class="left-sidebar">
             <div class="sidebar-nav">
@@ -816,8 +976,8 @@
         <main class="main-feed">
             <section class="feed-hero">
                 <div class="feed-hero-eyebrow"><span class="pip"></span>Verified Community</div>
-                <h1>Sports Feed</h1>
-                <p>Follow verified picks, hot takes, polls, challenges, and forum activity from users building public records.</p>
+                <h1>Your Feed</h1>
+                <p>Follow picks, hot takes, polls, trivia, and challenges from users with verified records.</p>
                 <div class="feed-hero-actions">
                     <a href="/sportsbook/" class="btn btn-primary"><i class="fas fa-bolt"></i> Lock a Pick</a>
                     <a href="/forum/" class="btn btn-ghost"><i class="fas fa-comments"></i> Forums</a>
@@ -855,28 +1015,24 @@
                     <button class="btn-post" id="postBtn" onclick="submitPost()" disabled>Post</button>
                 </div>
             </div>
+            <div class="composer-login-state" id="loginBanner">
+                <div>
+                    <strong>Sign in to post to the feed.</strong>
+                    <span>Logged-out visitors can read real public activity. Posting hot takes, polls, likes, and comments requires an account.</span>
+                </div>
+                <a href="/login/">Log In</a>
+            </div>
 
             <div class="feed-tabs">
                 <button class="feed-tab active" onclick="setFilter('all',this)"><i class="fas fa-stream"></i> For You</button>
-                <button class="feed-tab" onclick="setFilter('following',this)"><i class="fas fa-user-friends"></i> Following</button>
                 <button class="feed-tab" onclick="setFilter('picks',this)"><i class="fas fa-crosshairs"></i> Picks</button>
                 <button class="feed-tab" onclick="setFilter('hot-takes',this)"><i class="fas fa-fire"></i> Hot Takes</button>
                 <button class="feed-tab" onclick="setFilter('polls',this)"><i class="fas fa-poll"></i> Polls</button>
-                <button class="feed-tab" onclick="setFilter('challenges',this)"><i class="fas fa-trophy"></i> Challenges</button>
+                <button class="feed-tab" onclick="setFilter('following',this)"><i class="fas fa-user-friends"></i> Following</button>
             </div>
 
             <div class="feed-list" id="feedList">
-                <div class="empty-state">
-                    <i class="fas fa-stream"></i>
-                    <h3>Your feed is quiet because you are early.</h3>
-                    <p>Start by following handicappers, locking your first pick, or starting a hot take.</p>
-                    <div class="empty-state-actions">
-                        <a class="is-primary" href="/handicappers/">Find Handicappers</a>
-                        <a href="/sportsbook/">Lock a Pick</a>
-                        <a href="/forum/">Start a Forum Thread</a>
-                        <a href="/polls/">Create Poll</a>
-                    </div>
-                </div>
+                <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading verified community posts...</p></div>
             </div>
 
             <div class="load-more" id="loadMore" style="display:none;"><button class="load-more-btn" onclick="loadMorePosts()">Load More</button></div>
@@ -914,41 +1070,7 @@
     <script src="/static/js/analytics.js?v=20260405"></script>
     <script src="/static/js/backend-api.js?v=20260423a"></script>
     <script src="/static/js/auth-persistent.js?v=20260424a"></script>
-    <script src="/static/js/social-home.js?v=20260430a"></script>
-    <script>
-    (function feedSafetyNet() {
-        function showQuietFeedState() {
-            var list = document.getElementById('feedList');
-            if (!list) return;
-            var loading = list.querySelector('.tmr-loading-state, .fa-spinner');
-            if (!loading) return;
-            list.innerHTML =
-                '<div class="empty-state">' +
-                    '<i class="fas fa-stream"></i>' +
-                    '<h3>Your feed is quiet because you are early.</h3>' +
-                    '<p>Start by following handicappers, locking your first pick, or starting a hot take. TrustMyRecord does not fill the feed with fake posts.</p>' +
-                    '<div class="empty-state-actions">' +
-                        '<a class="is-primary" href="/handicappers/">Find Handicappers</a>' +
-                        '<a href="/sportsbook/">Lock a Pick</a>' +
-                        '<a href="/forum/">Start a Forum Thread</a>' +
-                        '<a href="/polls/">Create Poll</a>' +
-                    '</div>' +
-                '</div>';
-            var loadMore = document.getElementById('loadMore');
-            if (loadMore) loadMore.style.display = 'none';
-        }
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(showQuietFeedState, 6500);
-            ['trendingList','topCappersList','arenaWatchList','suggestedList'].forEach(function(id) {
-                setTimeout(function() {
-                    var el = document.getElementById(id);
-                    if (el && !el.textContent.trim()) {
-                        el.innerHTML = '<div class="rs-empty">Real activity will appear here as verified records grow.</div>';
-                    }
-                }, 7000);
-            });
-        });
-    })();
-    </script>
+    <script src="/static/js/social-home.js?v=20260503feed1"></script>
+    <script src="/static/js/feed-ui-overrides.js?v=20260503feed1"></script>
 </body>
 </html>
