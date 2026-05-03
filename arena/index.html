@@ -14,7 +14,7 @@
       gtag('config', 'G-V5MCVXS2HE');
     </script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260501navspacing">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260502navspread1">
 <script defer src="/static/js/tmr-sitewide.js?v=20260501navspacing"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -216,11 +216,6 @@
         .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); max-width: 760px; margin: 0 auto; }
         .empty-state i { font-size: 48px; margin-bottom: 16px; display: block; color: var(--border); }
         .empty-state h3 { color: var(--text-dim); margin-bottom: 8px; }
-        .challenges-grid > .empty-state,
-        .challenges-grid > .loading {
-            grid-column: 1 / -1;
-            width: 100%;
-        }
 
         /* RESPONSIVE */
         @media (max-width: 768px) {
@@ -1438,6 +1433,7 @@ let currentGameFilter = 'all';
 let currentLbGameFilter = 'all';
 let currentUser = null;
 let allChallenges = [];
+let challengesLoadController = null;
 
 function analyticsTrack(eventName, params) {
     if (typeof window.TMRAnalytics !== 'undefined' && typeof window.TMRAnalytics.track === 'function') {
@@ -1528,77 +1524,53 @@ function updateArenaSummaryStats() {
 // ============================================
 // CHALLENGES
 // ============================================
-const OPEN_CHALLENGES_TIMEOUT_MS = 12000;
-
-async function requestOpenChallenges() {
-    if (typeof api === 'undefined' || !api || typeof api.request !== 'function') {
-        throw new Error('Arena API client unavailable');
-    }
-
-    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    const timer = setTimeout(() => {
-        if (controller) controller.abort();
-    }, OPEN_CHALLENGES_TIMEOUT_MS);
-
-    try {
-        return await api.request('/gaming/challenges?limit=50', controller ? { signal: controller.signal } : {});
-    } catch (error) {
-        if (error && error.name === 'AbortError') {
-            throw new Error('Open challenges request timed out');
-        }
-        throw error;
-    } finally {
-        clearTimeout(timer);
-    }
-}
-
-function renderOpenChallengesEmptyState(filtered) {
-    const container = document.getElementById('challengesList');
-    if (!container) return;
-
-    if (filtered) {
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No challenges in this game yet</h3><p>Switch filters above or issue the first challenge in this category.</p><button class="btn btn-outline" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button></div>';
-        return;
-    }
-
-    container.innerHTML = '<div class="empty-state"><i class="fas fa-bolt"></i><h3>No open challenges yet.</h3><p>Be the first to issue one.</p><button class="btn btn-gold" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button></div>';
-}
-
-function renderOpenChallengesErrorState() {
-    const container = document.getElementById('challengesList');
-    if (!container) return;
-    container.innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><h3>Could not load open challenges.</h3><p>Try again.</p><button class="btn btn-outline" style="margin-top:12px;" onclick="loadChallenges()"><i class="fas fa-rotate-right"></i> Retry</button></div>';
-}
-
 async function loadChallenges() {
     const container = document.getElementById('challengesList');
-    if (container) {
-        container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+    if (!container) return;
+
+    if (challengesLoadController) {
+        challengesLoadController.abort();
     }
+    challengesLoadController = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+        if (challengesLoadController) challengesLoadController.abort();
+    }, 12000);
+    container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
 
     try {
-        const data = await requestOpenChallenges();
-        if (!data || !data.challenges) data = { challenges: [] };
-        allChallenges = data.challenges;
-        renderChallenges(allChallenges);
-        const openCount = allChallenges.filter(c => c.status === 'pending' && !c.challenged_id).length;
+        let data;
+        if (api && typeof api.request === 'function') {
+            data = await api.request('/gaming/challenges?limit=50', {
+                signal: challengesLoadController.signal
+            });
+        } else {
+            throw new Error('Challenge API client is not ready');
+        }
+        const challenges = Array.isArray(data) ? data : (Array.isArray(data && data.challenges) ? data.challenges : []);
+        allChallenges = challenges;
+        renderOpenChallengesForCurrentFilter();
+        const openCount = getOpenChallenges().length;
         const activeCount = allChallenges.filter(c => ['pending','accepted','in_progress'].includes(c.status)).length;
         const openStat = document.getElementById('statOpenChallenges');
         if (openStat) openStat.textContent = openCount || activeCount;
         if (currentTab === 'my-challenges') renderMyChallenges();
     } catch (e) {
+        if (e && e.name === 'AbortError') {
+            e = new Error('Challenge feed timed out');
+        }
         console.error('Failed to load challenges:', e);
-        allChallenges = [];
-        const openStat = document.getElementById('statOpenChallenges');
-        if (openStat) openStat.textContent = '0';
-        renderOpenChallengesErrorState();
+        renderChallengeErrorState(e);
+    } finally {
+        window.clearTimeout(timeoutId);
+        challengesLoadController = null;
     }
 }
 
 function filterByGame(game) {
     currentGameFilter = game;
     document.querySelectorAll('#gameFilters .game-pill').forEach(p => p.classList.toggle('active', p.dataset.game === game));
-    const filtered = game === 'all' ? allChallenges : allChallenges.filter(c => c.game_slug === game);
+    const openChallenges = getOpenChallenges();
+    const filtered = game === 'all' ? openChallenges : openChallenges.filter(c => c.game_slug === game);
     analyticsTrack('arena_game_filter_applied', {
         filter_name: game,
         visible_challenges: filtered.length
@@ -1606,11 +1578,40 @@ function filterByGame(game) {
     renderChallenges(filtered);
 }
 
+function getOpenChallenges() {
+    return (allChallenges || []).filter(ch => ch && ch.status === 'pending' && !ch.challenged_id);
+}
+
+function renderOpenChallengesForCurrentFilter() {
+    const openChallenges = getOpenChallenges();
+    const filtered = currentGameFilter === 'all'
+        ? openChallenges
+        : openChallenges.filter(ch => ch.game_slug === currentGameFilter);
+    renderChallenges(filtered);
+}
+
+function renderChallengeErrorState(error) {
+    const container = document.getElementById('challengesList');
+    if (!container) return;
+    const message = error && error.status
+        ? `The challenge feed returned HTTP ${error.status}.`
+        : 'The challenge feed did not respond in time.';
+    container.innerHTML = `<div class="empty-state">
+        <i class="fas fa-triangle-exclamation"></i>
+        <h3>Open challenges could not load</h3>
+        <p>${message} Please try again in a moment.</p>
+        <button class="btn btn-gold" style="margin-top:12px;" onclick="loadChallenges()"><i class="fas fa-rotate-right"></i> Retry</button>
+    </div>`;
+}
+
 function renderChallenges(challenges) {
     const container = document.getElementById('challengesList');
+    if (!container) return;
     if (challenges.length === 0) {
-        const noneAtAll = !allChallenges || allChallenges.length === 0;
-        renderOpenChallengesEmptyState(!noneAtAll);
+        const noneAtAll = getOpenChallenges().length === 0;
+        container.innerHTML = noneAtAll
+            ? '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No open challenges yet. Be the first to post one.</h3><p>Issue a challenge to another member or leave the opponent blank to make it open.</p><button class="btn btn-gold" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button></div>'
+            : '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No challenges in this game yet</h3><p>Switch filters above or issue the first challenge in this category.</p><button class="btn btn-outline" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button></div>';
         return;
     }
     container.innerHTML = challenges.map(ch => {
