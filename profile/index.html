@@ -1643,7 +1643,7 @@
                         <strong class="profile-advanced-metric__value is-empty" id="profileAdvAvgDailyPicks">Not enough data yet</strong>
                         <span class="profile-advanced-metric__sub" id="profileAdvAvgDailyPicksSub">Total picks over active days</span>
                     </article>
-                    <article class="profile-advanced-metric" data-advanced-metric-card="clv">
+                    <article class="profile-advanced-metric" data-advanced-metric-card="clv" hidden>
                         <span class="profile-advanced-metric__label">CLV</span>
                         <strong class="profile-advanced-metric__value is-empty" id="profileAdvClv">Coming once enough graded data is available</strong>
                         <span class="profile-advanced-metric__sub" id="profileAdvClvSub">Closing-line value</span>
@@ -6031,7 +6031,10 @@
         const clv = scores.clv != null ? Number(scores.clv) : null;
         const clvAvailable = clv != null && Number.isFinite(clv);
         const clvCard = document.querySelector('[data-advanced-metric-card="clv"]');
-        if (clvCard) clvCard.hidden = !clvAvailable;
+        if (clvCard) {
+            clvCard.hidden = !clvAvailable;
+            clvCard.toggleAttribute('hidden', !clvAvailable);
+        }
         if (clvAvailable) {
             setCard(
                 'profileAdvClv',
