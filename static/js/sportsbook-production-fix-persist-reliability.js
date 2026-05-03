@@ -1607,6 +1607,69 @@
             '</div>';
     }
 
+    function rawMarketHasPricedOutcomes(game, marketKey) {
+        const bookmakers = Array.isArray(game && game.bookmakers) ? game.bookmakers : [];
+        return bookmakers.some(function(bookmaker) {
+            return (bookmaker.markets || []).some(function(market) {
+                if (!market || market.key !== marketKey || !Array.isArray(market.outcomes)) return false;
+                return market.outcomes.some(function(outcome) {
+                    return outcome && outcome.price != null && !Number.isNaN(Number(outcome.price));
+                });
+            });
+        });
+    }
+
+    function renderedMarketHasSportsbookPrice(groups, marketType) {
+        return (groups || []).some(function(group) {
+            return (group.items || []).some(function(item) {
+                return item
+                    && item.market_type === marketType
+                    && item.source === 'sportsbook'
+                    && item.odds != null
+                    && !Number.isNaN(Number(item.odds));
+            });
+        });
+    }
+
+    function renderPendingCoreMarketButton(label) {
+        return '<button class="tmr-option-btn tmr-option-btn--pending" type="button" disabled aria-disabled="true">' +
+            '<div class="tmr-option-main">' +
+            '<div class="tmr-option-topline"><span class="tmr-option-tag">' + escapeHtml(label) + '</span></div>' +
+            '<div class="tmr-option-market">Lines pending</div>' +
+            '<div class="tmr-option-detail">No verified sportsbook price yet</div>' +
+            '</div>' +
+            '<div class="tmr-option-odds-wrap"><span class="tmr-option-odds-label">Status</span><div class="tmr-option-odds">Unavailable</div></div>' +
+            '</button>';
+    }
+
+    function renderMissingCoreMarkets(game, groups) {
+        if (!game || game.lines_pending || game.odds_source_status === 'schedule_only') return '';
+
+        const missing = [];
+        const spreadLabel = String(game.sport_key || '').indexOf('icehockey_nhl') !== -1
+            ? 'Puck Line'
+            : (String(game.sport_key || '').indexOf('baseball_mlb') !== -1 ? 'Run Line' : 'Spread');
+
+        [
+            { label: 'Moneyline', marketKey: 'h2h', marketType: 'h2h' },
+            { label: spreadLabel, marketKey: 'spreads', marketType: 'spreads' },
+            { label: 'Game Total', marketKey: 'totals', marketType: 'totals' }
+        ].forEach(function(spec) {
+            const providerHasMarket = rawMarketHasPricedOutcomes(game, spec.marketKey);
+            const renderedHasMarket = renderedMarketHasSportsbookPrice(groups, spec.marketType);
+            if (!providerHasMarket && !renderedHasMarket) {
+                missing.push(spec.label);
+            }
+        });
+
+        if (!missing.length) return '';
+
+        return '<div class="tmr-group tmr-group--pending-core" data-scope="full" data-category="game-lines">' +
+            '<div class="tmr-group-header"><div class="tmr-group-title"><span>Unavailable lines</span><small class="tmr-group-subtitle">Provider has not returned these full-game prices</small></div><div class="tmr-group-metahead">Unavailable</div><div class="tmr-group-count">' + missing.length + ' pending</div></div>' +
+            '<div class="tmr-option-grid">' + missing.map(renderPendingCoreMarketButton).join('') + '</div>' +
+            '</div>';
+    }
+
     function setBoardFilter(filter) {
         state.activeBoardFilter = filter || null;
         renderBoard(state.currentBoardSummary || null, state.currentBoard || []);
@@ -1689,6 +1752,7 @@
             const groupsHtml = orderedGroups.map(function(group, groupIndex) {
                 return renderBoardGroup(group, groupIndex, game, index);
             }).join('');
+            const missingCoreHtml = renderMissingCoreMarkets(game, orderedGroups);
             const pendingHtml = game.lines_pending || game.odds_source_status === 'schedule_only'
                 ? '<div class="tmr-group" data-scope="full" data-category="game-lines">' +
                     '<div class="tmr-group-header"><div class="tmr-group-title"><span>Lines pending</span><small class="tmr-group-subtitle">Matchup listed from the schedule source</small></div><div class="tmr-group-metahead">Unavailable</div><div class="tmr-group-count">0 prices</div></div>' +
@@ -1728,7 +1792,7 @@
                 '</div>' +
                 '<div class="tmr-market-summary"><div class="tmr-market-count">' + (game.lines_pending ? 'Lines pending' : ((game.market_groups || []).length + ' markets')) + '</div><div class="tmr-market-caret">⌄</div></div>' +
                 '</div>' +
-                '<div class="tmr-market-body">' + cardTabsHtml + (groupsHtml || pendingHtml) + '</div>' +
+                '<div class="tmr-market-body">' + cardTabsHtml + missingCoreHtml + (groupsHtml || pendingHtml) + '</div>' +
                 '</div>';
         }).join('');
 
