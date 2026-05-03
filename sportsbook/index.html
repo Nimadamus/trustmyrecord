@@ -617,9 +617,29 @@
                 + '</div>';
             games.forEach(function(game, index) {
                 var items = collectItems(game);
-                if (!items.length) return;
                 anyContent = true;
                 var gameTime = new Date(game.commence_time).toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'});
+                if (!items.length) {
+                    html += '<div class="game-row game-row--with-more">'
+                        + '<div class="game-time-header"><span class="game-time">' + gameTime + '</span>'
+                        + '<span style="margin-left:10px;color:#8ea0bc;font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:700;">' + escHtml(game.away_team) + ' @ ' + escHtml(game.home_team) + ' · Team Totals</span>'
+                        + '</div>'
+                        + '<div class="team-row">'
+                        + '<div class="team-info" data-mkt="matchup"><div class="team-details"><div class="team-name">' + escHtml(game.away_team) + '</div></div></div>'
+                        + '<div class="odds-btn no-odds-btn" data-mkt="spread"><span class="odds-line">Over</span><span class="odds-value">Unavailable</span></div>'
+                        + '<div class="odds-btn no-odds-btn" data-mkt="total"><span class="odds-line">Under</span><span class="odds-value">Unavailable</span></div>'
+                        + '<div class="odds-btn no-odds-btn" data-mkt="ml" style="background:transparent;border:0;cursor:default;"><span class="odds-line" style="opacity:0.5;">—</span></div>'
+                        + '<button class="odds-btn odds-more-btn" data-mkt="more" onclick="window.TMR.setMarket(\'game\'); var st=document.getElementById(\'marketSubtabs\'); if(st){window.scrollTo({top: st.offsetTop - 80, behavior: \'smooth\'});}"><span class="odds-line">Game Lines</span><span class="odds-value">More &rsaquo;</span></button>'
+                        + '</div>'
+                        + '<div class="team-row">'
+                        + '<div class="team-info" data-mkt="matchup"><div class="team-details"><div class="team-name">' + escHtml(game.home_team) + '</div></div></div>'
+                        + '<div class="odds-btn no-odds-btn" data-mkt="spread"><span class="odds-line">Over</span><span class="odds-value">Unavailable</span></div>'
+                        + '<div class="odds-btn no-odds-btn" data-mkt="total"><span class="odds-line">Under</span><span class="odds-value">Unavailable</span></div>'
+                        + '<div class="odds-btn no-odds-btn" data-mkt="ml" style="background:transparent;border:0;cursor:default;"><span class="odds-line" style="opacity:0.5;">—</span></div>'
+                        + '<div class="odds-more-spacer" data-mkt="more" aria-hidden="true"></div>'
+                        + '</div></div>';
+                    return;
+                }
                 // Group items by team. Accept selection_team / team / fallback to selection.
                 var byTeam = {};
                 items.forEach(function(it) {
@@ -693,7 +713,6 @@
                 + '</div>';
             games.forEach(function(game, index) {
                 var items = collectItems(game);
-                if (!items.length) return;
                 anyContent = true;
                 var gameTime = new Date(game.commence_time).toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'});
                 var awaySpread = null, homeSpread = null;
@@ -11217,7 +11236,7 @@ window.toggleSportFamily = function (family) {
         // the first call succeeded). Cache key bumped to v2 (Apr 30 2026) to
         // invalidate dead-button HTML from before the click-wiring fix.
         window.TMR._fullBoardCache = window.TMR._fullBoardCache || {};
-        var cacheKey = sport + ':v2';
+        var cacheKey = sport + ':v3';
         var cached = window.TMR._fullBoardCache[cacheKey];
         if (cached) {
             rows.innerHTML = cached;
@@ -11247,14 +11266,14 @@ window.toggleSportFamily = function (family) {
             // Surface to selectGameBet (it indexes via window.TMR.currentGames).
             window.TMR.currentGames = games;
             var html = '';
-            for (var i = 0; i < Math.min(games.length, 8); i++) {
+            for (var i = 0; i < games.length; i++) {
                 html += renderRow(games[i], i);
             }
             rows.innerHTML = html;
             if (window.TMR && window.TMR._fullBoardCache) {
                 window.TMR._fullBoardCache[cacheKey] = html;
             }
-            console.log('[TMR][lobby] ' + sport + ' rendered ' + Math.min(games.length, 8) + ' games. Source: ' + sourceLabel);
+            console.log('[TMR][lobby] ' + sport + ' rendered ' + games.length + ' games. Source: ' + sourceLabel);
         };
 
         var espnFallback = function () {
