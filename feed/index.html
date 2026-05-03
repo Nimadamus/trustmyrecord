@@ -111,10 +111,7 @@
 
         /* ===== COMPACT PAGE INTRO ===== */
         .feed-hero {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) 230px;
-            gap: 18px;
-            align-items: stretch;
+            display: block;
             text-align: left;
             padding: 20px 22px !important;
             margin-bottom: 14px !important;
@@ -165,7 +162,7 @@
             -webkit-text-fill-color: #f8fafc;
             color: #f8fafc;
             margin: 0 0 8px;
-            max-width: 18ch;
+            max-width: none;
         }
         .feed-hero p {
             color: #a7b4c5 !important;
@@ -176,7 +173,7 @@
         }
         .feed-hero-points {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 8px;
             margin: 0 0 14px;
         }
@@ -201,13 +198,13 @@
             flex-shrink: 0;
         }
         .feed-hero-panel {
+            display: none;
             border: 1px solid rgba(45, 212, 191, 0.18);
             border-radius: 14px;
             background:
                 linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.018)),
                 rgba(2, 8, 18, 0.26);
             padding: 14px;
-            display: flex;
             flex-direction: column;
             justify-content: space-between;
             gap: 12px;
@@ -763,16 +760,6 @@
             background: rgba(0, 255, 255, 0.06);
         }
         .fi-action.is-liked { color: var(--accent-red); }
-        .fi-badge-row { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
-        .profile-badge { display:inline-flex; align-items:center; gap:6px; width:fit-content; padding:3px 8px; border-radius:999px; border:1px solid rgba(125,211,252,0.32); background:rgba(125,211,252,0.08); color:#bae6fd; font-size:0.72rem; font-weight:700; }
-        .activity-line { color:var(--text-secondary); font-size:0.92rem; font-weight:700; margin:0 0 10px; }
-        .privacy-safe { border-color:rgba(125,211,252,0.24); background:rgba(2,8,18,0.34); }
-        .record-strip { display:flex; gap:8px; flex-wrap:wrap; color:var(--text-secondary); font-size:0.8rem; }
-        .record-strip span { display:inline-flex; gap:4px; padding:5px 8px; border-radius:8px; background:rgba(255,255,255,0.04); border:1px solid rgba(148,163,184,0.13); }
-        .link-preview { display:inline-flex; align-items:center; gap:8px; max-width:100%; margin-bottom:12px; padding:9px 11px; border-radius:10px; border:1px solid var(--glass-border); color:#7dd3fc; background:rgba(125,211,252,0.06); text-decoration:none; font-size:0.84rem; word-break:break-all; }
-        .reply-link { border:0; background:transparent; color:#7dd3fc; font:inherit; font-weight:700; cursor:pointer; }
-        .reply-list { margin-top:8px; padding-left:10px; border-left:1px solid var(--glass-border); }
-        .reply-item { color:var(--text-secondary); font-size:0.82rem; padding:4px 0; }
         .comments-section {
             display: none;
             margin: 12px 0 0 56px;
@@ -1049,8 +1036,7 @@
                 padding-top: 16px !important;
             }
             .left-sidebar { display: none; }
-            .feed-hero { grid-template-columns: minmax(0, 1fr); }
-            .feed-hero-panel { display: none; }
+            .feed-hero-points { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
         @media (max-width: 760px) {
             .page-layout { grid-template-columns: minmax(0, 1fr); padding: 16px 12px 40px; }
@@ -1061,7 +1047,7 @@
             }
             .right-sidebar { position: static; }
             .feed-hero { padding: 20px 16px !important; }
-            .feed-hero h1 { font-size: 1.72rem !important; max-width: 16ch; }
+            .feed-hero h1 { font-size: 1.72rem !important; max-width: none; }
             .feed-hero p { font-size: 0.9rem; }
             .feed-hero-points { grid-template-columns: 1fr; }
             .feed-tabs { padding: 3px; }
@@ -1110,7 +1096,7 @@
             <section class="feed-hero">
                 <div class="feed-hero-copy">
                     <div class="feed-hero-eyebrow"><span class="pip"></span>Sports Social Feed</div>
-                    <h1>The Sports Betting Social Network</h1>
+                    <h1>Your Sports Network</h1>
                     <p>Submit picks without exposing pending details, build a verified public record, and post the takes, polls, recaps, links, comments, and replies that shape your reputation.</p>
                     <div class="feed-hero-points">
                         <div class="feed-hero-point"><i class="fas fa-lock"></i> Pending picks stay hidden</div>
@@ -1122,16 +1108,6 @@
                         <a href="/sportsbook/" class="btn btn-primary"><i class="fas fa-bolt"></i> Lock a Pick</a>
                         <a href="/forum/" class="btn btn-ghost"><i class="fas fa-comments"></i> Forums</a>
                         <a href="/leaderboards/" class="btn btn-ghost"><i class="fas fa-chart-line"></i> Leaderboards</a>
-                    </div>
-                </div>
-                <div class="feed-hero-panel" aria-label="Feed privacy and activity summary">
-                    <div>
-                        <strong>What shows up here</strong>
-                        <span>Public posts, graded record updates, polls, comments, follows, challenges, forums, and trivia activity.</span>
-                    </div>
-                    <div class="feed-hero-meter">
-                        <div><b id="heroActivityCount">Live</b><small>Real community activity</small></div>
-                        <div><b id="heroSuggestedCount">0</b><small>Suggested follows loaded</small></div>
                     </div>
                 </div>
             </section>
@@ -1199,11 +1175,11 @@
                             </div>
                         </div>
                     </div>
-                    <div class="fi-action-label"><i class="fas fa-clipboard-check"></i> BetLegend had 3 picks graded today</div>
+                    <div class="fi-action-label"><i class="fas fa-clipboard-check"></i> Picks graded</div>
                     <div class="pick-embed">
                         <div class="pe-row">
                             <span class="pe-chip is-sport">Verified record update</span>
-                            <span class="pe-chip is-won">3 picks graded today</span>
+                            <span class="pe-chip is-won">6 picks graded</span>
                         </div>
                         <div class="pe-team">Verified record updated.</div>
                         <div style="margin-top:5px;color:var(--text-muted);font-size:0.86rem;">Current record: 4-2, +6.20u</div>
@@ -1261,8 +1237,5 @@
     <script src="/static/js/auth-persistent.js?v=20260424a"></script>
     <script src="/static/js/social-home.js?v=20260503feedpolish1"></script>
     <script src="/static/js/feed-ui-overrides.js?v=20260503feedpolish1"></script>
-    <script src="/static/js/feed-cleanup.js?v=20260503b"></script>
 </body>
 </html>
-
-
