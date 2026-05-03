@@ -1670,10 +1670,8 @@
                     </select>
                     <select id="filterOdds" onchange="applyFilters()" class="filter-control">
                         <option value="">All Odds</option>
-                        <option value="heavy-fav">Heavy Fav (-200+)</option>
                         <option value="fav">Favorite (-110 to -200)</option>
                         <option value="dog">Dog (+100 to +200)</option>
-                        <option value="longshot">Longshot (+201+)</option>
                     </select>
                     <select id="filterUnits" onchange="applyFilters()" class="filter-control">
                         <option value="">All Unit Sizes</option>
@@ -4838,7 +4836,7 @@
         const k = String(bucketKey);
         if (splitKey === 'by_sport')        return k.toUpperCase().replace(/_/g, ' ');
         if (splitKey === 'by_market')       return marketTypeLabel(k);
-        if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',underdog:'Dog (+100 to +200)',big_underdog:'Big Dog (+200+)'})[k] || k;
+        if (splitKey === 'by_odds_bucket')  return ({favorite:'Favorite (-110 to -200)',underdog:'Dog (+100 to +200)'})[k] || k;
         if (splitKey === 'by_fav_dog')      return ({favorite:'Favorite',underdog:'Underdog'})[k] || k;
         if (splitKey === 'by_unit_size')    return ({'0.5_to_1u':'0.5–1u','1.5_to_2u':'1.5–2u','2.5_to_3u':'2.5–3u','3u_plus':'3u+'})[k] || k;
         if (splitKey === 'by_day_of_week')  return ({sun:'Sunday',mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday'})[k] || k;
@@ -4850,7 +4848,7 @@
         const k = String(bucketKey);
         if (splitKey === 'by_sport')        return k.toUpperCase().replace(/_/g, ' ');
         if (splitKey === 'by_market')       return marketTypeLabel(k);
-        if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',underdog:'Dog (+100 to +200)',big_underdog:'Big Dog (+200+)'})[k] || k;
+        if (splitKey === 'by_odds_bucket')  return ({favorite:'Favorite (-110 to -200)',underdog:'Dog (+100 to +200)'})[k] || k;
         if (splitKey === 'by_fav_dog')      return ({favorite:'Favorite',underdog:'Underdog'})[k] || k;
         if (splitKey === 'by_unit_size')    return ({'0.5_to_1u':'0.5–1u','1.5_to_2u':'1.5–2u','2.5_to_3u':'2.5–3u','3u_plus':'3u+'})[k] || k;
         if (splitKey === 'by_day_of_week')  return ({sun:'Sunday',mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday'})[k] || k;
@@ -5195,10 +5193,7 @@
     function pmOddsBucket(odds) {
         const o = Number(odds);
         if (!Number.isFinite(o)) return null;
-        if (o < -200) return 'heavy_favorite';
-        if (o < 0) return 'favorite';
-        if (o <= 200) return 'underdog';
-        return 'big_underdog';
+        return o < 0 ? 'favorite' : 'underdog';
     }
     function pmResultClass(p) {
         const r = String(p.result || p.status || '').toLowerCase();
@@ -5463,10 +5458,8 @@
         ]);
         renderCapBreakdown('capTableUnits', rows, [1,2,3,4,5].map(n => [n + 'u Picks', p => Math.round(capUnits(p)) === n]));
         renderCapBreakdown('capTableOdds', rows, [
-            ['Heavy Favorite', p => capOdds(p) < -200],
-            ['Favorite (-110 to -200)', p => capOdds(p) >= -200 && capOdds(p) < 0],
-            ['Dog (+100 to +200)', p => capOdds(p) >= 100 && capOdds(p) <= 200],
-            ['Big Underdog', p => capOdds(p) > 200]
+            ['Favorite (-110 to -200)', p => capOdds(p) < 0],
+            ['Dog (+100 to +200)', p => capOdds(p) >= 100]
         ]);
         renderCapBreakdown('capTableFavDog', rows, [
             ['Favorites', p => capOdds(p) < 0],
@@ -6398,10 +6391,8 @@
             return s === 'won' || s === 'lost';
         });
         const ranges = [
-            { label: 'Heavy Fav (-200+)', test: o => o <= -200 },
-            { label: 'Favorite (-110 to -200)', test: o => o <= -110 && o >= -200 },
-            { label: 'Dog (+100 to +200)', test: o => o >= 100 && o <= 200 },
-            { label: 'Longshot (+201+)', test: o => o >= 201 }
+            { label: 'Favorite (-110 to -200)', test: o => o < 0 },
+            { label: 'Dog (+100 to +200)', test: o => o >= 100 }
         ];
         const rows = [];
         for (const range of ranges) {
@@ -6827,10 +6818,8 @@
 
     function getAdvancedStatsFilters() {
         const oddsMap = {
-            'heavy-fav': 'heavy_favorite',
             'fav': 'favorite',
-            'dog': 'underdog',
-            'longshot': 'big_underdog'
+            'dog': 'underdog'
         };
         return {
             sport: document.getElementById('filterSport').value || '',
@@ -6884,10 +6873,8 @@
 
     function oddsBucketLabel(value) {
         return {
-            heavy_favorite: 'Heavy Fav (-200+)',
             favorite: 'Favorite (-110 to -200)',
-            underdog: 'Dog (+100 to +200)',
-            big_underdog: 'Longshot (+201+)'
+            underdog: 'Dog (+100 to +200)'
         }[value] || value || 'Odds Range';
     }
 
@@ -7046,10 +7033,8 @@
         if (odds) {
             filtered = filtered.filter(p => {
                 const o = p.odds_snapshot || p.odds || -110;
-                if (odds === 'heavy-fav') return o <= -200;
-                if (odds === 'fav') return o < 0 && o >= -200;
-                if (odds === 'dog') return o >= 100 && o <= 200;
-                if (odds === 'longshot') return o >= 201;
+                if (odds === 'fav') return o < 0;
+                if (odds === 'dog') return o >= 100;
                 return true;
             });
         }
@@ -7154,7 +7139,7 @@
             }
             if (result) parts.push(result.charAt(0).toUpperCase() + result.slice(1));
             if (odds) {
-                const oddsLabels = { 'heavy-fav': 'Heavy Favorites', 'fav': 'Favorites', 'dog': 'Dogs', 'longshot': 'Longshots' };
+                const oddsLabels = { 'fav': 'Favorites', 'dog': 'Dogs' };
                 parts.push(oddsLabels[odds] || odds);
             }
             if (units) {
