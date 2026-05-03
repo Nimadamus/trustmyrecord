@@ -925,7 +925,7 @@
             const wins = graded.filter(pick => pick._status === 'won').length;
             const losses = graded.filter(pick => pick._status === 'lost').length;
             const pushes = graded.filter(pick => pick._status === 'push').length;
-            const pending = normalized.filter(pick => pick._status === 'pending' || !['won', 'lost', 'push'].includes(pick._status)).length;
+            const pending = 0;
             const units = graded.reduce((total, pick) => total + pickPL(pick), 0);
             const risk = graded.reduce((total, pick) => {
                 const stake = Number(pick.units || pick.stake || 1);
@@ -933,12 +933,9 @@
                 return total + (odds < 0 ? stake * Math.abs(odds) / 100 : stake);
             }, 0);
 
-            const sorted = decisions.slice().sort((a, b) =>
-                new Date(a.locked_at || a.created_at || 0).getTime() - new Date(b.locked_at || b.created_at || 0).getTime()
-            );
-            const latestPick = normalized.slice().sort((a, b) =>
-                new Date(b.locked_at || b.created_at || 0).getTime() - new Date(a.locked_at || a.created_at || 0).getTime()
-            )[0] || null;
+            const activityTime = pick => new Date(pick.graded_at || pick.locked_at || pick.created_at || 0).getTime();
+            const sorted = decisions.slice().sort((a, b) => activityTime(a) - activityTime(b));
+            const latestPick = graded.slice().sort((a, b) => activityTime(b) - activityTime(a))[0] || null;
             let currentStreak = 0;
             let streakType = '';
             for (let i = sorted.length - 1; i >= 0; i--) {
@@ -970,14 +967,14 @@
                 pushes,
                 gradedPicks: graded.length,
                 pending,
-                totalPicks: normalized.length,
+                totalPicks: graded.length,
                 units,
                 roi: risk > 0 ? (units / risk) * 100 : null,
                 winRate: decisions.length > 0 ? (wins / decisions.length) * 100 : null,
                 currentStreak,
                 sports: sports.length ? sports : extractSports(user, {}),
                 lastPick: latestPick,
-                lastActivity: latestPick ? (latestPick.locked_at || latestPick.created_at || '') : ''
+                lastActivity: latestPick ? (latestPick.graded_at || latestPick.locked_at || latestPick.created_at || '') : ''
             };
         }
 
@@ -1016,6 +1013,8 @@
                 try {
                     const metrics = await window.api.request('/users/' + encodeURIComponent(username) + '/metrics');
                     const summary = metrics && metrics.summary ? metrics.summary : null;
+                    const previousLastPick = base.lastPick || null;
+                    const previousLastActivity = base.lastActivity || '';
                     if (summary) {
                         const wins = numberFrom(summary.wins) || 0;
                         const losses = numberFrom(summary.losses) || 0;
@@ -1034,7 +1033,9 @@
                             roi: totalPicks > 0 && decisions > 0 ? numberFrom(summary.roi) : null,
                             winRate: decisions > 0 ? numberFrom(summary.win_rate, (wins / decisions) * 100) : null,
                             currentStreak: numberFrom(summary.current_streak, summary.streak) || base.currentStreak || 0,
-                            sports: extractSports(user, metrics)
+                            sports: extractSports(user, metrics),
+                            lastPick: previousLastPick,
+                            lastActivity: previousLastActivity
                         };
                     }
                 } catch (error) {
