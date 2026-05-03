@@ -1699,6 +1699,7 @@
         .profile-advanced-metric{min-width:0;min-height:126px;padding:13px 12px;border:1px solid rgba(68,91,126,.72);border-radius:10px;background:linear-gradient(180deg,rgba(15,27,46,.98),rgba(8,17,31,.98));box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 12px 28px rgba(0,0,0,.18);display:flex;flex-direction:column;justify-content:flex-start;gap:7px;}
         .profile-advanced-metric__label{color:#afbdd0;font-size:10px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;line-height:1.15;}
         .profile-advanced-metric__value{color:#f8fbff;font-size:clamp(17px,1.18vw,22px);font-weight:950;line-height:1.05;letter-spacing:0;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;}
+        [data-advanced-metric-card="avg_daily_picks"] .profile-advanced-metric__value{white-space:nowrap;overflow-wrap:normal;word-break:keep-all;}
         .profile-advanced-metric__value.is-empty{color:#a6b2c4;font-size:13px;font-weight:850;line-height:1.18;}
         .profile-advanced-metric__value.is-pos{color:#22c55e;}
         .profile-advanced-metric__value.is-neg{color:#ef4444;}
@@ -5828,7 +5829,7 @@
                 set('advZScore', (z >= 0 ? '+' : '') + z.toFixed(2), { signed: z });
             }
             if (s.avg_daily_picks != null) {
-                set('advAdp', Number(s.avg_daily_picks).toFixed(2) + ' /day');
+                set('advAdp', Number(s.avg_daily_picks).toFixed(2) + '/day');
             }
             // Sample size lives next to scores cards too.
             if (s.total_picks != null) set('advSampleSize', String(s.total_picks));
@@ -6024,7 +6025,7 @@
         );
         setCard(
             'profileAdvAvgDailyPicks',
-            s.avg_daily_picks != null ? Number(s.avg_daily_picks).toFixed(2) + ' /day' : null,
+            s.avg_daily_picks != null ? Number(s.avg_daily_picks).toFixed(2) + '/day' : null,
             s.avg_daily_picks != null ? 'Active ledger days' : 'Coming once enough graded data is available',
             null
         );
@@ -6370,7 +6371,7 @@
         }
         if (s.avg_odds != null) setAdv('avg_odds', fmtAmericanOdds(s.avg_odds));
         if (s.avg_units != null) setAdv('avg_units', Number(s.avg_units).toFixed(2) + 'u');
-        if (s.avg_daily_picks != null) setAdv('avg_daily_picks', Number(s.avg_daily_picks).toFixed(2) + ' /day');
+        if (s.avg_daily_picks != null) setAdv('avg_daily_picks', Number(s.avg_daily_picks).toFixed(2) + '/day');
         if (sc.push_rate != null) setAdv('push_rate', Number(sc.push_rate).toFixed(2) + '%');
         if (sc.consistency != null) {
             const v = Number(sc.consistency);
@@ -11118,6 +11119,11 @@
         letter-spacing: 0 !important;
         font-variant-numeric: tabular-nums !important;
         overflow-wrap: anywhere !important;
+      }
+      body.profile-page.tmr-social-profile [data-advanced-metric-card="avg_daily_picks"] .profile-advanced-metric__value {
+        white-space: nowrap !important;
+        overflow-wrap: normal !important;
+        word-break: keep-all !important;
       }
       body.profile-page.tmr-social-profile .profile-advanced-metric__value.is-empty {
         color: #aab8cc !important;
