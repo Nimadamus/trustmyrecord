@@ -448,6 +448,98 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
     background: rgba(255, 255, 255, 0.04);
 }
 
+.tmr-support-menu {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.tmr-support-menu__trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 7px 12px;
+    border: 1px solid rgba(45, 212, 191, 0.28);
+    border-radius: 999px;
+    background: rgba(45, 212, 191, 0.10);
+    color: #d7fffb;
+    font: 900 0.74rem/1 var(--tmr-display);
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.tmr-support-menu__trigger::after {
+    content: "";
+    width: 0;
+    height: 0;
+    margin-left: 7px;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid currentColor;
+    opacity: 0.82;
+}
+
+.tmr-support-menu__trigger:hover,
+.tmr-support-menu.is-open .tmr-support-menu__trigger {
+    color: #ffffff;
+    border-color: rgba(45, 212, 191, 0.55);
+    background: rgba(45, 212, 191, 0.18);
+}
+
+.tmr-support-menu__panel {
+    position: absolute;
+    top: calc(100% + 9px);
+    right: 0;
+    z-index: 1200;
+    min-width: 168px;
+    padding: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 14px;
+    background: rgba(8, 14, 26, 0.98);
+    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.34);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease;
+}
+
+.tmr-support-menu.is-open .tmr-support-menu__panel,
+.tmr-support-menu:focus-within .tmr-support-menu__panel,
+.tmr-support-menu:hover .tmr-support-menu__panel {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.tmr-support-menu__panel a {
+    display: flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 8px 10px;
+    border-radius: 9px;
+    color: #dce8f5;
+    text-decoration: none;
+    font: 800 0.82rem/1.15 var(--tmr-font);
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.tmr-support-menu__panel a:hover {
+    color: var(--tmr-teal);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.tmr-member-search {
+    display: none !important;
+}
+
 .tmr-global-nav__actions {
     display: inline-flex;
     align-items: center;
@@ -3560,8 +3652,8 @@ body.tmr-site-shell .friends-top-strip {
 @media (min-width: 641px) {
     body.tmr-site-shell .tmr-global-nav__inner {
         width: min(1760px, calc(100% - 20px)) !important;
-        grid-template-columns: minmax(205px, max-content) minmax(0, 1fr) max-content !important;
-        grid-template-areas: "brand links actions" !important;
+        grid-template-columns: minmax(205px, max-content) minmax(0, 1fr) max-content max-content !important;
+        grid-template-areas: "brand links support actions" !important;
         align-items: center !important;
         column-gap: clamp(16px, 1.8vw, 34px) !important;
     }
@@ -3598,6 +3690,10 @@ body.tmr-site-shell .friends-top-strip {
         letter-spacing: 0.045em !important;
     }
 
+    body.tmr-site-shell .tmr-support-menu {
+        grid-area: support !important;
+    }
+
     body.tmr-site-shell .tmr-global-nav__actions {
         grid-area: actions !important;
         min-width: max-content !important;
@@ -3623,10 +3719,18 @@ body.tmr-site-shell .friends-top-strip {
         grid-template-columns: minmax(0, 1fr) max-content !important;
         grid-template-areas:
             "brand actions"
-            "links links" !important;
+            "links support" !important;
         row-gap: 8px !important;
         min-height: 82px !important;
         padding: 10px 0 !important;
+    }
+
+    body.tmr-site-shell .tmr-support-menu,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-support-menu {
+        grid-area: support !important;
+        justify-self: end !important;
+        display: inline-flex !important;
+        z-index: 100001 !important;
     }
 
     body.tmr-site-shell .tmr-global-nav__links,
