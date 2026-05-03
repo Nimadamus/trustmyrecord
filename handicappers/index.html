@@ -1150,11 +1150,99 @@
             return Number.isFinite(time) ? time : 0;
         }
 
+        function cleanPickText(value) {
+            return String(value == null ? '' : value).trim().replace(/\s+/g, ' ');
+        }
+
+        function escapePickRegex(value) {
+            return String(value).replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+        }
+
+        function formatLineValue(value, options = {}) {
+            if (value == null || value === '') return '';
+            const num = Number(value);
+            if (!Number.isFinite(num)) return cleanPickText(value);
+            let text = String(num);
+            if (text.indexOf('.') !== -1) text = text.replace(/0+$/, '').replace(/\.$/, '');
+            return options.signed && num > 0 ? '+' + text : text;
+        }
+
+        function getPickLine(pick) {
+            return formatLineValue(
+                pick.line_snapshot ?? pick.lineSnapshot ?? pick.line ?? pick.point ?? pick.points ?? pick.handicap
+            );
+        }
+
+        function getLineFromSelection(selection, side) {
+            const pattern = side
+                ? new RegExp('\\b' + escapePickRegex(side) + '\\b\\s+([-+]?\\d+(?:\\.\\d+)?)', 'i')
+                : /(?:^|\s)([-+]\d+(?:\.\d+)?)\s*$/;
+            const match = cleanPickText(selection).match(pattern);
+            return match ? formatLineValue(match[1]) : '';
+        }
+
+        function stripTrailingLine(selection, line) {
+            let text = cleanPickText(selection);
+            if (line) {
+                text = text.replace(new RegExp('\\s+' + escapePickRegex(line) + '\\s*$', 'i'), '');
+            }
+            return text;
+        }
+
+        function getPickTeam(pick, selection, side) {
+            const direct = cleanPickText(
+                pick.team_name || pick.teamName || pick.team || pick.selection_team || pick.selectionTeam || pick.outcome_name || pick.outcomeName
+            );
+            if (direct && !/^(over|under)$/i.test(direct)) return direct;
+            let stripped = cleanPickText(selection);
+            if (side) stripped = stripped.replace(new RegExp('\\s+\\b' + escapePickRegex(side) + '\\b(?:\\s+[-+]?\\d+(?:\\.\\d+)?)?\\s*$', 'i'), '');
+            stripped = stripped.replace(/\s+\b(?:moneyline|ml)\b\s*$/i, '').trim();
+            return /^(over|under)?$/i.test(stripped) ? '' : stripped;
+        }
+
+        function formatPickTitle(pick) {
+            const market = String(pick.market_type || pick.marketType || pick.market || '').toLowerCase();
+            const selection = cleanPickText(pick.selection_label || pick.selectionLabel || pick.selection || pick.pick);
+            const sideMatch = selection.match(/\b(over|under)\b/i);
+            const side = sideMatch ? (sideMatch[1].charAt(0).toUpperCase() + sideMatch[1].slice(1).toLowerCase()) : '';
+            const line = getPickLine(pick) || getLineFromSelection(selection, side);
+
+            if ((market === 'totals' || market === 'total' || market === 'alt_totals' || market === 'f5_totals') && side) {
+                return line && !new RegExp('\\b' + escapePickRegex(line) + '\\b').test(selection)
+                    ? side + ' ' + line
+                    : selection || side;
+            }
+
+            if ((market === 'team_totals' || market === 'team_total') && side) {
+                const team = getPickTeam(pick, selection, side);
+                const label = [team, side, line].filter(Boolean).join(' ');
+                return label || selection || (side + (line ? ' ' + line : ''));
+            }
+
+            if (market === 'spreads' || market === 'spread' || market === 'alt_spreads' || market === 'f5_spreads') {
+                const spread = formatLineValue(
+                    pick.line_snapshot ?? pick.lineSnapshot ?? pick.line ?? pick.point ?? pick.points ?? pick.handicap,
+                    { signed: true }
+                ) || getLineFromSelection(selection, '');
+                const team = stripTrailingLine(getPickTeam(pick, selection, ''), spread);
+                const label = [team || selection, spread].filter(Boolean).join(' ');
+                return label || selection || 'Spread pick';
+            }
+
+            if (market === 'h2h' || market === 'moneyline' || market === 'ml' || market === 'f5_h2h') {
+                const team = getPickTeam(pick, selection, '') || selection;
+                if (!team) return 'Moneyline pick';
+                return /\b(?:moneyline|ml)\b/i.test(team) ? team.replace(/\bML\b/i, 'Moneyline') : team + ' Moneyline';
+            }
+
+            return selection || 'Tracked pick';
+        }
+
         function formatPickSummary(pick) {
             if (!pick) {
                 return { title: 'No pick activity yet', meta: 'No stored picks' };
             }
-            const selection = pick.selection || pick.pick || 'Tracked pick';
+            const selection = formatPickTitle(pick);
             const sport = normalizeSportName(pick.sport_display || pick.sport_key || pick.sport);
             const status = String(pick.status || 'pending').toLowerCase();
             const result = status === 'won' ? 'Won' : status === 'lost' ? 'Lost' : status === 'push' || status === 'pushed' ? 'Push' : 'Pending';
