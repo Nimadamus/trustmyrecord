@@ -5871,7 +5871,7 @@
                 set('advZScore', (z >= 0 ? '+' : '') + z.toFixed(2), { signed: z });
             }
             if (s.avg_daily_picks != null) {
-                set('advAdp', Number(s.avg_daily_picks).toFixed(2) + '/day');
+                set('advAdp', Number(s.avg_daily_picks).toFixed(2));
             }
             // Sample size lives next to scores cards too.
             if (s.total_picks != null) set('advSampleSize', String(s.total_picks));
@@ -6067,7 +6067,7 @@
         );
         setCard(
             'profileAdvAvgDailyPicks',
-            s.avg_daily_picks != null ? Number(s.avg_daily_picks).toFixed(2) + '/day' : null,
+            s.avg_daily_picks != null ? Number(s.avg_daily_picks).toFixed(2) : null,
             s.avg_daily_picks != null ? 'Active ledger days' : 'Coming once enough graded data is available',
             null
         );
@@ -6413,7 +6413,7 @@
         }
         if (s.avg_odds != null) setAdv('avg_odds', fmtAmericanOdds(s.avg_odds));
         if (s.avg_units != null) setAdv('avg_units', Number(s.avg_units).toFixed(2) + 'u');
-        if (s.avg_daily_picks != null) setAdv('avg_daily_picks', Number(s.avg_daily_picks).toFixed(2) + '/day');
+        if (s.avg_daily_picks != null) setAdv('avg_daily_picks', Number(s.avg_daily_picks).toFixed(2));
         if (sc.push_rate != null) setAdv('push_rate', Number(sc.push_rate).toFixed(2) + '%');
         if (sc.consistency != null) {
             const v = Number(sc.consistency);
