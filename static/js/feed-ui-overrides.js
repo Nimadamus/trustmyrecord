@@ -41,10 +41,8 @@ function getRecordText(item) {
 }
 
 function getSportOrTeam(item) {
-    const team = item.primary_team || item.team || item.favorite_team;
     const sport = formatSport(item.sport || item.sport_key || item.league || item.primary_sport);
-    if (team && sport) return esc(team) + ' - ' + esc(sport);
-    return esc(team || sport || 'Sports');
+    return esc(sport || 'Verified record');
 }
 
 function renderFeedHeader(item, actionHtml) {
@@ -91,42 +89,25 @@ function renderPickCard(item) {
     const id = item.pick_id || item.id || item.item_id;
     const status = normalizePickStatus(item);
     const isPending = status === 'pending' || status === 'locked';
-    const action = status === 'won' || status === 'win'
-        ? '<i class="fas fa-circle-check"></i> won a pick'
-        : status === 'lost' || status === 'loss'
-            ? '<i class="fas fa-circle-xmark"></i> lost a pick'
-            : status === 'push'
-                ? '<i class="fas fa-minus-circle"></i> pushed a pick'
-                : isPending
-                    ? '<i class="fas fa-lock"></i> locked a pick'
-                    : '<i class="fas fa-clipboard-check"></i> pick was graded';
-    const market = formatMarketLabel(item.market_type || item.pick_market_type || item.market || item.pick_type);
-    const line = item.line_snapshot ?? item.pick_line ?? item.line ?? item.spread ?? '';
-    const odds = item.odds_snapshot ?? item.pick_odds ?? item.odds ?? '';
-    const units = item.result_units ?? item.units_result ?? item.units_profit;
-    const resultUnits = units ?? item.pick_result_units;
-    const selection = item.selection || item.pick_selection || item.pick || item.team || '';
-    const details = item.grade_verification_details || {};
-    const awayTeam = item.away_team || item.pick_away_team || details.away_team;
-    const homeTeam = item.home_team || item.pick_home_team || details.home_team;
-    const matchup = item.matchup || [awayTeam, homeTeam].filter(Boolean).join(' @ ');
-    const sport = formatSport(item.sport_key || item.pick_sport_key || item.sport || item.league);
-    const resultClass = status.indexOf('win') >= 0 || status === 'won' ? 'is-won' : (status.indexOf('loss') >= 0 || status === 'lost' ? 'is-lost' : '');
-
-    let body = '';
+    const count = Number(item.pick_count || item.count || 1);
+    const action = isPending
+        ? '<i class="fas fa-lock"></i> Submitted locked picks'
+        : '<i class="fas fa-clipboard-check"></i> Picks graded';
+    let body;
     if (isPending) {
-        body = '<div class="pick-embed is-private"><div class="pe-row"><span class="pe-chip is-sport"><i class="fas fa-lock"></i> Pending pick</span></div><div style="font-size:0.9rem;color:var(--text-secondary);line-height:1.5;">Details stay private until they are allowed publicly or the pick is graded.</div></div>';
+        body = '<div class="pick-embed is-private">' +
+            '<div class="pe-row"><span class="pe-chip is-sport"><i class="fas fa-lock"></i> Status: Awaiting grade</span><span class="pe-chip">' + count + ' locked pick' + (count === 1 ? '' : 's') + '</span></div>' +
+            '<div class="pe-team">Pick details hidden until eligible for public record.</div>' +
+        '</div>';
     } else {
         body = '<div class="pick-embed">' +
             '<div class="pe-row">' +
-                (sport ? '<span class="pe-chip is-sport">' + esc(sport) + '</span>' : '') +
-                '<span class="pe-chip">' + esc(market) + '</span>' +
-                (resultClass ? '<span class="pe-chip ' + resultClass + '">' + esc(status.toUpperCase()) + '</span>' : '') +
-                (resultUnits != null ? '<span class="pe-chip is-units">' + (Number(resultUnits) >= 0 ? '+' : '') + esc(Number(resultUnits).toFixed(2)) + 'u</span>' : '') +
+                '<span class="pe-chip is-sport">Verified record update</span>' +
+                '<span class="pe-chip is-won">' + count + ' pick' + (count === 1 ? '' : 's') + ' graded</span>' +
             '</div>' +
-            '<div class="pe-team">' + esc(selection + (line !== '' && line != null ? ' ' + line : '')) + '</div>' +
-            (matchup ? '<div style="margin-top:5px;color:var(--text-muted);font-size:0.86rem;">' + esc(matchup) + '</div>' : '') +
-            (odds !== '' && odds != null ? '<div style="margin-top:8px;color:var(--text-secondary);font-size:0.82rem;">Odds: ' + (Number(odds) > 0 ? '+' : '') + esc(odds) + '</div>' : '') +
+            '<div class="pe-team">Verified record updated.</div>' +
+            '<div style="margin-top:5px;color:var(--text-muted);font-size:0.86rem;">Current record: ' + esc(getRecordText(item)) + '</div>' +
+            '<div style="margin-top:8px;color:var(--text-secondary);font-size:0.82rem;">Pick details hidden until eligible for public record.</div>' +
         '</div>';
     }
 
@@ -316,22 +297,20 @@ async function initAuth() {
 }
 
 function normalizePublicPick(item) {
-    const details = item.grade_verification_details || {};
     return {
-        ...item,
         item_id: item.item_id || item.id || item.pick_id,
         item_type: 'pick',
         post_type: 'pick',
         pick_id: item.pick_id || item.id || item.item_id,
-        selection: item.selection || item.pick_selection,
-        market_type: item.market_type || item.pick_market_type,
-        line_snapshot: item.line_snapshot ?? item.pick_line,
-        odds_snapshot: item.odds_snapshot ?? item.pick_odds,
         status: item.status || item.pick_status,
-        result_units: item.result_units ?? item.pick_result_units,
-        sport_key: item.sport_key || item.pick_sport_key || item.sport,
-        away_team: item.away_team || item.pick_away_team || details.away_team,
-        home_team: item.home_team || item.pick_home_team || details.home_team,
+        sport: item.sport || item.pick_sport_key || item.sport_key,
+        username: item.username,
+        display_name: item.display_name,
+        avatar_url: item.avatar_url,
+        user_id: item.user_id,
+        likes_count: item.likes_count,
+        comments_count: item.comments_count,
+        liked_by_user: item.liked_by_user,
         graded_at: item.graded_at || item.grade_verified_at,
         created_at: item.graded_at || item.grade_verified_at || item.created_at || item.locked_at
     };
@@ -354,7 +333,6 @@ function attachUserRecord(item, user) {
     return {
         ...item,
         avatar_url: item.avatar_url || user.avatar_url,
-        primary_team: item.primary_team || (Array.isArray(user.favorite_teams) ? user.favorite_teams[0] : null),
         primary_sport: item.primary_sport || (Array.isArray(user.favorite_sports) ? user.favorite_sports[0] : null),
         wins: user.wins,
         losses: user.losses,
@@ -362,6 +340,47 @@ function attachUserRecord(item, user) {
         net_units: user.net_units,
         win_rate: user.win_rate
     };
+}
+
+function pickActivityBucket(item) {
+    const status = normalizePickStatus(item);
+    if (status === 'pending' || status === 'locked') return 'locked';
+    return 'graded';
+}
+
+function aggregateFeedItems(items) {
+    const nonPicks = [];
+    const pickGroups = new Map();
+    items.forEach(item => {
+        const isPick = item.item_type === 'pick' || item.post_type === 'pick' || item.post_type === 'pick_share';
+        if (!isPick) {
+            nonPicks.push(item);
+            return;
+        }
+        const username = getUsername(item) || String(item.user_id || 'user');
+        const day = new Date(item.graded_at || item.created_at || item.locked_at || Date.now()).toISOString().slice(0, 10);
+        const bucket = pickActivityBucket(item);
+        const key = username + '|' + bucket + '|' + day;
+        const existing = pickGroups.get(key);
+        if (!existing) {
+            pickGroups.set(key, {
+                ...item,
+                item_id: 'pick_group_' + feedId(key),
+                pick_id: 'pick_group_' + feedId(key),
+                pick_count: 1,
+                status: bucket === 'locked' ? 'pending' : 'graded'
+            });
+            return;
+        }
+        existing.pick_count += 1;
+        const existingTime = new Date(existing.graded_at || existing.created_at || 0).getTime();
+        const itemTime = new Date(item.graded_at || item.created_at || 0).getTime();
+        if (itemTime > existingTime) {
+            existing.created_at = item.created_at;
+            existing.graded_at = item.graded_at;
+        }
+    });
+    return [...pickGroups.values(), ...nonPicks];
 }
 
 async function loadFeed() {
@@ -423,6 +442,7 @@ async function loadFeed() {
 
             const userMap = await fetchPublicUsersByName(items.map(i => getUsername(i)));
             items = items.map(i => attachUserRecord(i, userMap[getUsername(i)]));
+            items = aggregateFeedItems(items);
             items.sort((a, b) => new Date(b.graded_at || b.created_at || b.locked_at || 0) - new Date(a.graded_at || a.created_at || a.locked_at || 0));
             if (currentFilter === 'hot-takes') items = items.filter(i => i.post_type === 'hot_take');
             if (currentFilter === 'picks') items = items.filter(i => i.item_type === 'pick' || i.post_type === 'pick' || i.post_type === 'pick_share');
@@ -447,9 +467,8 @@ async function loadFeed() {
 }
 
 function compactPickLabel(p) {
-    const selection = p.selection || p.pick_selection || 'Pick';
-    const line = p.line_snapshot ?? p.pick_line ?? '';
-    return selection + (line !== '' && line != null && !String(selection).includes(String(line)) ? ' ' + line : '');
+    const status = String(p.status || p.pick_status || '').toLowerCase();
+    return status === 'pending' || status === 'locked' ? 'Locked picks submitted' : 'Picks graded';
 }
 
 async function loadTrending() {
@@ -459,9 +478,14 @@ async function loadTrending() {
         const data = await api.request('/social/discover?limit=5');
         const picks = (data.picks || []).filter(p => p.is_public !== false && !p.is_private && !['pending', 'locked'].includes(String(p.status || '').toLowerCase()));
         if (picks.length) {
-            el.innerHTML = picks.slice(0, 3).map((p, i) => {
-                const status = String(p.status || '').toUpperCase();
-                return '<div class="rs-item"><span class="rs-rank">' + (i + 1) + '</span><span class="rs-text">' + esc(compactPickLabel(p)) + '<span class="rs-count">' + esc(formatSport(p.sport_key)) + ' - ' + esc(formatMarketLabel(p.market_type)) + ' - ' + esc(status) + '</span></span></div>';
+            const grouped = {};
+            picks.forEach(p => {
+                const username = p.username || p.display_name || 'User';
+                grouped[username] = (grouped[username] || 0) + 1;
+            });
+            el.innerHTML = Object.keys(grouped).slice(0, 3).map((username, i) => {
+                const count = grouped[username];
+                return '<div class="rs-item"><span class="rs-rank">' + (i + 1) + '</span><span class="rs-text">' + esc(username) + ' had picks graded<span class="rs-count">' + count + ' record update' + (count === 1 ? '' : 's') + '</span></span></div>';
             }).join('');
             return;
         }
@@ -497,10 +521,13 @@ async function loadArenaWatch() {
         const data = await api.request('/social/discover?limit=3');
         const picks = (data.picks || []).filter(p => p.is_public !== false && !p.is_private && !['pending', 'locked'].includes(String(p.status || '').toLowerCase()));
         if (picks.length) {
-            el.innerHTML = picks.map(p => {
-                const units = Number(p.result_units || 0);
-                const sign = units >= 0 ? '+' : '';
-                return '<div class="rs-item"><span class="rs-rank"><i class="fas fa-circle-check"></i></span><span class="rs-text">' + esc(p.display_name || p.username || 'User') + ' ' + esc(String(p.status || 'graded')) + ' ' + esc(compactPickLabel(p)) + '<span class="rs-count">' + sign + units.toFixed(2) + 'u</span></span></div>';
+            const grouped = {};
+            picks.forEach(p => {
+                const username = p.display_name || p.username || 'User';
+                grouped[username] = (grouped[username] || 0) + 1;
+            });
+            el.innerHTML = Object.keys(grouped).slice(0, 3).map(username => {
+                return '<div class="rs-item"><span class="rs-rank"><i class="fas fa-circle-check"></i></span><span class="rs-text">' + esc(username) + ' had picks graded<span class="rs-count">Verified record updated</span></span></div>';
             }).join('');
             return;
         }
