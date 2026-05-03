@@ -9462,11 +9462,15 @@
                     console.warn('[Sportsbook] Skipping malformed pending pick', p);
                     return null;
                 }
-                const line = (window.TMR && typeof window.TMR.formatLine === 'function')
-                    ? window.TMR.formatLine(p.line_snapshot)
-                    : (p.line_snapshot == null ? '' : String(p.line_snapshot));
-                let pickText = selection.replace(/\b(\d+)\.(\d)0+\b/g, '$1.$2').replace(/\b(\d+)\.0+\b/g, '$1');
-                if (line && pickText.indexOf(line) === -1) pickText += ' ' + line;
+                let pickText = (window.TMR && typeof window.TMR.formatPickDisplayLabel === 'function')
+                    ? window.TMR.formatPickDisplayLabel(p)
+                    : (function () {
+                        var text = selection.replace(/\b(\d+)\.(\d)0+\b/g, '$1.$2').replace(/\b(\d+)\.0+\b/g, '$1');
+                        var n = Number(p.line_snapshot);
+                        var line = Number.isFinite(n) ? String(n).replace(/\.0+$/, '') : (p.line_snapshot == null ? '' : String(p.line_snapshot));
+                        if (line && /spread|run_line|puck_line/i.test(String(p.market_type || '')) && n > 0) line = '+' + line;
+                        return line && text.indexOf(line) === -1 ? text.replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '') + ' ' + line : text;
+                    })();
                 return {
                     sport,
                     league,
@@ -10473,11 +10477,15 @@ window.toggleSportFamily = function (family) {
                 console.warn('[TMR] Skipping malformed awaiting-grade pick', p);
                 return null;
             }
-            var formattedLine = (window.TMR && typeof window.TMR.formatLine === 'function')
-                ? window.TMR.formatLine(p.line_snapshot)
-                : (p.line_snapshot == null ? '' : String(p.line_snapshot));
-            selection = selection.replace(/\b(\d+)\.(\d)0+\b/g, '$1.$2').replace(/\b(\d+)\.0+\b/g, '$1');
-            if (formattedLine && selection.indexOf(formattedLine) === -1) selection += ' ' + formattedLine;
+            selection = (window.TMR && typeof window.TMR.formatPickDisplayLabel === 'function')
+                ? window.TMR.formatPickDisplayLabel(p)
+                : (function () {
+                    var text = selection.replace(/\b(\d+)\.(\d)0+\b/g, '$1.$2').replace(/\b(\d+)\.0+\b/g, '$1');
+                    var n = Number(p.line_snapshot);
+                    var line = Number.isFinite(n) ? String(n).replace(/\.0+$/, '') : (p.line_snapshot == null ? '' : String(p.line_snapshot));
+                    if (line && /spread|run_line|puck_line/i.test(String(p.market_type || '')) && n > 0) line = '+' + line;
+                    return line && text.indexOf(line) === -1 ? text.replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '') + ' ' + line : text;
+                })();
             var game = '';
             if (p.game && (p.game.home_team || p.game.away_team)) {
                 game = (p.game.away_team || '') + ' @ ' + (p.game.home_team || '');

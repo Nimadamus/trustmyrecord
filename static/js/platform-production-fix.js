@@ -272,14 +272,28 @@
     }
 
     function buildPickDisplay(pick) {
-        const selection = pick.selection || pick.side || pick.team || 'Selection';
+        if (window.TMR && typeof window.TMR.formatPickDisplayLabel === 'function') {
+            return window.TMR.formatPickDisplayLabel(pick);
+        }
+        const selection = String(pick.selection_label || pick.selection || pick.team || 'Selection').trim();
+        const market = String(pick.market_type || pick.market || '').toLowerCase();
         const line = pick.line_snapshot ?? pick.line;
+        if (market === 'h2h' || market.indexOf('moneyline') !== -1) {
+            return /\bML\b$/i.test(selection) ? selection : selection + ' ML';
+        }
         if (line == null || line === '') return selection;
         // Trim trailing zeros so totals never display 5.50/4.50/9.00.
         const n = Number(line);
-        let s = Number.isFinite(n) ? String(n) : String(line);
+        let s = Number.isFinite(n) ? String(n) : String(line).trim();
         if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
-        return selection + ' ' + s;
+        const signed = market.indexOf('spread') !== -1 || market.indexOf('run_line') !== -1 || market.indexOf('puck_line') !== -1;
+        if (signed && Number.isFinite(n) && n > 0) s = '+' + s;
+        const escaped = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (new RegExp('(?:^|\\s)' + escaped + '$').test(selection)) return selection;
+        const totalSide = market.indexOf('total') !== -1 && !/\b(over|under)\b/i.test(selection)
+            ? (/\bover\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Over' : (/\bunder\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Under' : ''))
+            : '';
+        return selection.replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '').trim() + totalSide + ' ' + s;
     }
 
     function formatOdds(odds) {

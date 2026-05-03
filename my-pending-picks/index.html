@@ -384,8 +384,28 @@
             return (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')) + 'u';
         }
         function pickText(pick) {
-            var selection = String(pick.selection || 'Pick').trim();
-            return selection || 'Pick';
+            if (window.TMR && typeof window.TMR.formatPickDisplayLabel === 'function') {
+                return window.TMR.formatPickDisplayLabel(pick);
+            }
+            var selection = String(pick.selection_label || pick.selection || 'Pick').trim();
+            var market = String(pick.market_type || pick.market || '').toLowerCase();
+            var line = pick.line_snapshot != null ? pick.line_snapshot : pick.line;
+            if (market === 'h2h' || market.indexOf('moneyline') !== -1) {
+                return /\bML\b$/i.test(selection) ? selection : selection + ' ML';
+            }
+            if (line == null || line === '') return selection || 'Pick';
+            var n = Number(line);
+            var s = Number.isFinite(n) ? String(n) : String(line).trim();
+            if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
+            if ((market.indexOf('spread') !== -1 || market.indexOf('run_line') !== -1 || market.indexOf('puck_line') !== -1) && Number.isFinite(n) && n > 0) {
+                s = '+' + s;
+            }
+            var escaped = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            if (new RegExp('(?:^|\\s)' + escaped + '$').test(selection)) return selection;
+            var totalSide = market.indexOf('total') !== -1 && !/\b(over|under)\b/i.test(selection)
+                ? (/\bover\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Over' : (/\bunder\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Under' : ''))
+                : '';
+            return (selection || 'Pick').replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '').trim() + totalSide + ' ' + s;
         }
         function matchup(pick) {
             if (pick.away_team || pick.home_team) return [pick.away_team, pick.home_team].filter(Boolean).join(' @ ');

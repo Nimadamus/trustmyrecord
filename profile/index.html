@@ -5389,6 +5389,31 @@
         return num > 0 ? '+' + s : s;
     }
 
+    function formatPickDisplayValue(pick) {
+        if (window.TMR && typeof window.TMR.formatPickDisplayLabel === 'function') {
+            return window.TMR.formatPickDisplayLabel(pick);
+        }
+        const selection = String((pick && (pick.selection_label || pick.selection || pick.team)) || 'Pick').trim();
+        const market = String((pick && (pick.market_type || pick.market)) || '').toLowerCase();
+        const line = pick ? (pick.line_snapshot != null ? pick.line_snapshot : pick.line) : null;
+        if (market === 'h2h' || market.indexOf('moneyline') !== -1) {
+            return /\bML\b$/i.test(selection) ? selection : selection + ' ML';
+        }
+        if (line == null || line === '') return selection || 'Pick';
+        const num = Number(line);
+        let s = Number.isFinite(num) ? String(num) : String(line).trim();
+        if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
+        if ((market.indexOf('spread') !== -1 || market.indexOf('run_line') !== -1 || market.indexOf('puck_line') !== -1) && Number.isFinite(num) && num > 0) {
+            s = '+' + s;
+        }
+        const escaped = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (new RegExp('(?:^|\\s)' + escaped + '$').test(selection)) return selection;
+        const totalSide = market.indexOf('total') !== -1 && !/\b(over|under)\b/i.test(selection)
+            ? (/\bover\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Over' : (/\bunder\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Under' : ''))
+            : '';
+        return (selection || 'Pick').replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '').trim() + totalSide + ' ' + s;
+    }
+
     function formatUnitsValue(value) {
         if (value == null || value === '' || isNaN(Number(value))) return '--';
         return Number(value).toFixed(Number(value) % 1 === 0 ? 0 : 2) + 'u';
@@ -7957,7 +7982,7 @@
         const sc = sport.toLowerCase().replace(/\s/g, '');
         const odds = formatOddsValue(p.odds_snapshot != null ? p.odds_snapshot : p.odds);
         const line = formatLineValue(p.line_snapshot);
-        const sel = p.selection || '';
+        const sel = formatPickDisplayValue(p);
         const matchup = (p.away_team && p.home_team) ? p.away_team + ' @ ' + p.home_team : (p.event_name || '--');
         const units = formatUnitsValue(p.units);
         const status = normalizeStatus(p.status);

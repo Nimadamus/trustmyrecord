@@ -2488,6 +2488,80 @@
         };
     }
 
+    function trimPickLineValue(value) {
+        if (value == null || value === '') return '';
+        const n = Number(value);
+        let text = Number.isFinite(n) ? String(n) : String(value).trim();
+        if (text.indexOf('.') !== -1) text = text.replace(/0+$/, '').replace(/\.$/, '');
+        return text;
+    }
+
+    function formatPickLineValue(value, signed) {
+        const text = trimPickLineValue(value);
+        if (!text) return '';
+        const n = Number(text);
+        if (signed && Number.isFinite(n) && n > 0) return '+' + text;
+        return text;
+    }
+
+    function stripTrailingLine(text) {
+        return String(text || '').trim().replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '').trim();
+    }
+
+    function hasTrailingMl(text) {
+        return /\bML\b$/i.test(String(text || '').trim());
+    }
+
+    function lineAlreadyDisplayed(text, line, signed) {
+        const formatted = formatPickLineValue(line, signed);
+        if (!formatted) return true;
+        const escaped = formatted.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return new RegExp('(?:^|\\s)' + escaped + '$').test(String(text || '').trim());
+    }
+
+    function isMoneylineMarket(market) {
+        return market === 'h2h' || market === 'moneyline' || market.indexOf('moneyline') !== -1 || /(^|_)h2h$/.test(market);
+    }
+
+    function isSpreadMarket(market) {
+        return market.indexOf('spread') !== -1 || market.indexOf('run_line') !== -1 || market.indexOf('puck_line') !== -1 || market.indexOf('runline') !== -1 || market.indexOf('puckline') !== -1;
+    }
+
+    function isTotalMarket(market) {
+        return market.indexOf('total') !== -1 || market.indexOf('over_under') !== -1;
+    }
+
+    function formatPickDisplayLabel(pick) {
+        pick = pick || {};
+        const market = String(pick.market_type || pick.market || pick.bet_type || pick.betType || '').toLowerCase();
+        const rawSelection = String(pick.selection_label || pick.selection || pick.pick || pick.team || 'Pick').trim();
+        const line = pick.line_snapshot != null ? pick.line_snapshot : (pick.line != null ? pick.line : pick.point);
+        const base = rawSelection || 'Pick';
+
+        if (isMoneylineMarket(market)) {
+            return hasTrailingMl(base) ? base : base + ' ML';
+        }
+
+        if (isSpreadMarket(market)) {
+            if (lineAlreadyDisplayed(base, line, true)) return base;
+            return stripTrailingLine(base) + ' ' + formatPickLineValue(line, true);
+        }
+
+        if (isTotalMarket(market)) {
+            const totalSide = /\bover\b/i.test(base) ? '' : (/\bunder\b/i.test(base) ? '' : (/\bover\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Over' : (/\bunder\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Under' : '')));
+            if (lineAlreadyDisplayed(base, line, false)) return base;
+            const lineText = formatPickLineValue(line, false);
+            return lineText ? stripTrailingLine(base) + totalSide + ' ' + lineText : base + totalSide;
+        }
+
+        if (line == null || line === '' || lineAlreadyDisplayed(base, line, false)) return base;
+        return stripTrailingLine(base) + ' ' + formatPickLineValue(line, false);
+    }
+
+    window.TMR = window.TMR || {};
+    window.TMR.formatPickDisplayLabel = formatPickDisplayLabel;
+    window.TMR.formatPickLabel = formatPickDisplayLabel;
+
     // Clear inline error whenever the user picks a new market.
     document.addEventListener('click', function (ev) {
         const btn = ev.target && ev.target.closest && ev.target.closest('.odds-btn, .market-card, [data-tt-direct-click], [data-bet-type]');
@@ -2497,7 +2571,7 @@
     function renderPickCard(pick) {
         const status = normalizeStatus(pick.status, pick.result);
         const statusColor = status === 'won' ? '#00c853' : status === 'lost' ? '#ff5252' : status === 'push' ? '#94a3b8' : '#f59e0b';
-        const recordText = pick.selection + (pick.line_snapshot != null ? ' ' + (function(l){if(l==null||l==='')return '';var n=Number(l);if(!Number.isFinite(n))return '';var s=String(n);if(s.indexOf('.')!==-1)s=s.replace(/0+$/,'').replace(/\.$/,'');return s;})(pick.line_snapshot) : '');
+        const recordText = formatPickDisplayLabel(pick);
         const marketText = getMarketLabel(pick.market_type);
         const dateText = new Date(pick.locked_at || pick.created_at || Date.now()).toLocaleString('en-US', {
             month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
@@ -2652,7 +2726,7 @@
                 losses: 0,
                 pushes: 0,
                 units: 0,
-                label: pick.selection + (pick.line_snapshot != null ? ' ' + (function(l){if(l==null||l==='')return '';var n=Number(l);if(!Number.isFinite(n))return '';var s=String(n);if(s.indexOf('.')!==-1)s=s.replace(/0+$/,'').replace(/\.$/,'');return s;})(pick.line_snapshot) : ''),
+                label: formatPickDisplayLabel(pick),
                 matchup: (pick.away_team || '') + ' @ ' + (pick.home_team || ''),
                 market: getMarketLabel(pick.market_type)
             };
