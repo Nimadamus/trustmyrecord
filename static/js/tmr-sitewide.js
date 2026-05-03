@@ -302,10 +302,6 @@
                         <a href="/report-bug/" role="menuitem">Report a Bug</a>
                     </div>
                 </div>
-                <form class="tmr-member-search" role="search" aria-label="Search members">
-                    <input type="search" name="member" placeholder="Search members" autocomplete="off" autocapitalize="off" autocorrect="off">
-                    <button type="submit">View</button>
-                </form>
                 <div class="tmr-global-nav__actions"></div>
             </div>
         </div>
@@ -314,7 +310,6 @@
 
     const actions = nav.querySelector(".tmr-global-nav__actions");
     const toggleButton = nav.querySelector(".tmr-global-nav__toggle");
-    const memberSearch = nav.querySelector(".tmr-member-search");
     const supportMenu = nav.querySelector(".tmr-support-menu");
     const supportTrigger = nav.querySelector(".tmr-support-menu__trigger");
 
@@ -462,40 +457,6 @@
         supportMenu.classList.remove("is-open");
         supportTrigger.setAttribute("aria-expanded", "false");
     });
-
-    if (memberSearch) {
-        memberSearch.addEventListener("submit", async (event) => {
-            event.preventDefault();
-            const input = memberSearch.querySelector('input[name="member"]');
-            const query = String(input && input.value || "").trim();
-            if (!query) {
-                window.location.href = "/handicappers/";
-                return;
-            }
-
-            const goToProfile = (username) => {
-                window.location.href = "/profile/?user=" + encodeURIComponent(username);
-            };
-
-            try {
-                const baseUrl = (window.api && window.api.baseUrl) || "https://trustmyrecord-api.onrender.com/api";
-                const response = await fetch(`${baseUrl}/users?query=${encodeURIComponent(query)}&limit=1`);
-                if (response.ok) {
-                    const data = await response.json().catch(() => ({}));
-                    const user = Array.isArray(data.users) ? data.users[0] : Array.isArray(data) ? data[0] : null;
-                    const username = user && (user.username || user.user_name || user.display_name);
-                    if (username) {
-                        goToProfile(username);
-                        return;
-                    }
-                }
-            } catch (error) {
-                // Fall through to direct username navigation.
-            }
-
-            goToProfile(query.replace(/^@+/, ""));
-        });
-    }
 
     // Lightweight sitewide search overlay (Cmd+K / Ctrl+K to open)
     function openSearchOverlay() {
