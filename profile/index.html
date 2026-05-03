@@ -1995,7 +1995,7 @@
                           <label><span>Sport</span><select data-tmrx-filter="sport"><option value="">All</option><option value="baseball_mlb">MLB</option><option value="basketball_nba">NBA</option><option value="icehockey_nhl">NHL</option><option value="americanfootball_nfl">NFL</option></select></label>
                           <label><span>Market</span><select data-tmrx-filter="market"><option value="">All</option><option value="h2h">Moneyline</option><option value="spreads">Spread</option><option value="totals">Total</option><option value="team_totals">Team Total</option><option value="f5_h2h,f5_spreads,f5_totals">First Five</option></select></label>
                           <label><span>Result</span><select data-tmrx-filter="result"><option value="">All</option><option value="won">Won</option><option value="lost">Lost</option><option value="push">Push</option><option value="pending">Pending</option></select></label>
-                          <label><span>Odds</span><select data-tmrx-filter="odds"><option value="">All</option><option value="heavy_favorite">Heavy Fav (-200+)</option><option value="favorite">Fav (-110 to -199)</option><option value="even">Even</option><option value="underdog">Dog (+101 to +200)</option><option value="big_underdog">Longshot (+201+)</option></select></label>
+                          <label><span>Odds</span><select data-tmrx-filter="odds"><option value="">All</option><option value="heavy_favorite">Heavy Fav (-200+)</option><option value="favorite">Favorite (-110 to -200)</option><option value="underdog">Dog (+100 to +200)</option><option value="big_underdog">Longshot (+201+)</option></select></label>
                           <label><span>Unit Size</span><select data-tmrx-filter="unit_size"><option value="">All</option><option value="0.5_to_1u">0.5u-1u</option><option value="1.5_to_2u">1.5u-2u</option><option value="2.5_to_3u">2.5u-3u</option><option value="3u_plus">3u+</option></select></label>
                           <label><span>Period</span><select data-tmrx-filter="period"><option value="">All Time</option><option value="7">Last 7d</option><option value="30">Last 30d</option><option value="90">Last 90d</option><option value="365">Last 365d</option></select></label>
                           <label><span>Side</span><select data-tmrx-filter="side"><option value="">All</option><option value="favorite">Favorite</option><option value="underdog">Underdog</option></select></label>
@@ -2384,9 +2384,8 @@
                     <select id="filterOdds" onchange="applyFilters()" class="filter-control">
                         <option value="">All Odds</option>
                         <option value="heavy-fav">Heavy Fav (-200+)</option>
-                        <option value="fav">Favorite (-110 to -199)</option>
-                        <option value="even">Even (+100 to -109)</option>
-                        <option value="dog">Underdog (+101 to +200)</option>
+                        <option value="fav">Favorite (-110 to -200)</option>
+                        <option value="dog">Dog (+100 to +200)</option>
                         <option value="longshot">Longshot (+201+)</option>
                     </select>
                     <select id="filterUnits" onchange="applyFilters()" class="filter-control">
@@ -2540,7 +2539,7 @@
                 <div class="support-module">
                     <div class="support-module-head">
                         <div class="section-title">Performance by Odds Range</div>
-                        <div class="support-module-note">Favorites, even money, and dogs</div>
+                        <div class="support-module-note">Favorites and dogs</div>
                     </div>
                     <div class="breakdown-grid" id="oddsRangeGrid"></div>
                 </div>
@@ -3279,7 +3278,7 @@
                                 <div class="tmr-cap-card__metrics" data-split-body><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Favorite</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Underdog</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div>
                             </div>
                             <div class="tmr-cap-card" data-split="by_odds_bucket">
-                                <div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">$</div><div class="tmr-cap-card__name"><strong>By odds range</strong><span>Heavy fav / fav / even / dog / longshot</span></div></div>
+                                <div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">$</div><div class="tmr-cap-card__name"><strong>By odds range</strong><span>Heavy fav / fav / dog / longshot</span></div></div>
                                 <div class="tmr-cap-card__metrics" data-split-body><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best bucket</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst bucket</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div>
                             </div>
                             <div class="tmr-cap-card" data-split="by_unit_size">
@@ -5798,35 +5797,6 @@
     // Calls the new /api/users/:username/metrics aggregator and fills the
     // Advanced Metrics tab placeholders. Anything the aggregator returns
     // null for stays as the '—' placeholder per the no-fake-data rule.
-    async function hydrateActivePickDayMetrics(username, data) {
-        if (!username || !data || !data.summary || !api || typeof api.request !== 'function') return data;
-        const activeDays = new Set();
-        let total = 0;
-        let offset = 0;
-        const limit = 100;
-        for (let page = 0; page < 25; page++) {
-            const resp = await api.request('/picks?username=' + encodeURIComponent(username) + '&limit=' + limit + '&offset=' + offset);
-            const batch = Array.isArray(resp) ? resp : (Array.isArray(resp && resp.picks) ? resp.picks : []);
-            if (!batch.length) break;
-            batch.forEach(function(pick) {
-                const status = normalizeStatus(pick && pick.status);
-                if (!['won', 'lost', 'push', 'pushed'].includes(status)) return;
-                const rawDate = pick.locked_at || pick.created_at || pick.graded_at;
-                const t = rawDate ? new Date(rawDate).getTime() : NaN;
-                if (!Number.isFinite(t)) return;
-                activeDays.add(new Date(t).toISOString().slice(0, 10));
-                total += 1;
-            });
-            if (batch.length < limit) break;
-            offset += batch.length;
-        }
-        if (total > 0 && activeDays.size > 0) {
-            data.summary.avg_daily_picks = Number((total / activeDays.size).toFixed(2));
-            data.summary.active_pick_days = activeDays.size;
-        }
-        return data;
-    }
-
     async function loadAdvancedMetrics(username) {
         if (!username || !api || typeof api.request !== 'function') {
             const statusEl = document.getElementById('profileAdvancedMetricsStatus');
@@ -5843,7 +5813,6 @@
             return;
         }
         if (!data) return;
-        try { data = await hydrateActivePickDayMetrics(username, data); } catch (e) { console.warn('[Profile] active pick day metric failed:', e); }
         try { renderProfileAdvancedMetricsStrip(data); } catch (e) { console.warn('[Profile] advanced strip render failed:', e); }
         const set = (id, value, opts) => {
             const el = document.getElementById(id);
@@ -6295,8 +6264,8 @@
             period_1_h2h: 'P1 ML', period_1_spreads: 'P1 Spread', period_1_totals: 'P1 Total',
             alt_spreads: 'Alt Spread', alt_totals: 'Alt Total',
             // odds buckets
-            heavy_favorite: 'Heavy Fav (-200+)', favorite: 'Favorite (-110 to -199)',
-            even: 'Even (+100 / -109)', underdog: 'Underdog (+101 to +200)',
+            heavy_favorite: 'Heavy Fav (-200+)', favorite: 'Favorite (-110 to -200)',
+            underdog: 'Dog (+100 to +200)',
             big_underdog: 'Longshot (+201+)',
             // unit buckets
             '0.5_to_1u': '0.5u – 1u', '1.5_to_2u': '1.5u – 2u',
@@ -6711,7 +6680,7 @@
         if (!table) return;
         const tbody = table.querySelector('tbody');
         if (!tbody) return;
-        const rows = (Array.isArray(splitArr) ? splitArr : []).filter(b => Number(b.total) >= 3);
+        const rows = (Array.isArray(splitArr) ? splitArr : []).filter(b => Number(b.total) >= 3 && !(splitKey === 'by_odds_bucket' && String(b.key || '').toLowerCase() === 'even'));
         if (!rows.length) return; // keep the empty-state row
         const labelOf = (typeof window.formatBucketLabel === 'function') ? (k, v) => window.formatBucketLabel(k, v) : (k, v) => String(v || '—');
         // Per PickMonitor: rows sorted by net units desc (best at top).
@@ -6754,7 +6723,7 @@
         const k = String(bucketKey);
         if (splitKey === 'by_sport')        return k.toUpperCase().replace(/_/g, ' ');
         if (splitKey === 'by_market')       return marketTypeLabel(k);
-        if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',even:'Even (±110)',underdog:'Dog (+110 to +200)',big_underdog:'Big Dog (+200+)'})[k] || k;
+        if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',underdog:'Dog (+100 to +200)',big_underdog:'Big Dog (+200+)'})[k] || k;
         if (splitKey === 'by_fav_dog')      return ({favorite:'Favorite',underdog:'Underdog'})[k] || k;
         if (splitKey === 'by_unit_size')    return ({'0.5_to_1u':'0.5–1u','1.5_to_2u':'1.5–2u','2.5_to_3u':'2.5–3u','3u_plus':'3u+'})[k] || k;
         if (splitKey === 'by_day_of_week')  return ({sun:'Sunday',mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday'})[k] || k;
@@ -6766,7 +6735,7 @@
         const k = String(bucketKey);
         if (splitKey === 'by_sport')        return k.toUpperCase().replace(/_/g, ' ');
         if (splitKey === 'by_market')       return marketTypeLabel(k);
-        if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',even:'Even (±110)',underdog:'Dog (+110 to +200)',big_underdog:'Big Dog (+200+)'})[k] || k;
+        if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',underdog:'Dog (+100 to +200)',big_underdog:'Big Dog (+200+)'})[k] || k;
         if (splitKey === 'by_fav_dog')      return ({favorite:'Favorite',underdog:'Underdog'})[k] || k;
         if (splitKey === 'by_unit_size')    return ({'0.5_to_1u':'0.5–1u','1.5_to_2u':'1.5–2u','2.5_to_3u':'2.5–3u','3u_plus':'3u+'})[k] || k;
         if (splitKey === 'by_day_of_week')  return ({sun:'Sunday',mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday'})[k] || k;
@@ -7113,8 +7082,7 @@
         const o = Number(odds);
         if (!Number.isFinite(o)) return null;
         if (o < -200) return 'heavy_favorite';
-        if (o < -110) return 'favorite';
-        if (o <= 110) return 'even';
+        if (o < 0) return 'favorite';
         if (o <= 200) return 'underdog';
         return 'big_underdog';
     }
@@ -7382,9 +7350,8 @@
         renderCapBreakdown('capTableUnits', rows, [1,2,3,4,5].map(n => [n + 'u Picks', p => Math.round(capUnits(p)) === n]));
         renderCapBreakdown('capTableOdds', rows, [
             ['Heavy Favorite', p => capOdds(p) < -200],
-            ['Favorite', p => capOdds(p) >= -200 && capOdds(p) < -110],
-            ['Even', p => capOdds(p) >= -110 && capOdds(p) <= 110],
-            ['Underdog', p => capOdds(p) > 110 && capOdds(p) <= 200],
+            ['Favorite (-110 to -200)', p => capOdds(p) >= -200 && capOdds(p) < 0],
+            ['Dog (+100 to +200)', p => capOdds(p) >= 100 && capOdds(p) <= 200],
             ['Big Underdog', p => capOdds(p) > 200]
         ]);
         renderCapBreakdown('capTableFavDog', rows, [
@@ -8408,9 +8375,8 @@
         });
         const ranges = [
             { label: 'Heavy Fav (-200+)', test: o => o <= -200 },
-            { label: 'Favorite (-110 to -199)', test: o => o >= -199 && o <= -110 },
-            { label: 'Pick/Even (-109 to +100)', test: o => o >= -109 && o <= 100 },
-            { label: 'Underdog (+101 to +200)', test: o => o >= 101 && o <= 200 },
+            { label: 'Favorite (-110 to -200)', test: o => o <= -110 && o >= -200 },
+            { label: 'Dog (+100 to +200)', test: o => o >= 100 && o <= 200 },
             { label: 'Longshot (+201+)', test: o => o >= 201 }
         ];
         const rows = [];
@@ -8839,7 +8805,6 @@
         const oddsMap = {
             'heavy-fav': 'heavy_favorite',
             'fav': 'favorite',
-            'even': 'even',
             'dog': 'underdog',
             'longshot': 'big_underdog'
         };
@@ -8896,9 +8861,8 @@
     function oddsBucketLabel(value) {
         return {
             heavy_favorite: 'Heavy Fav (-200+)',
-            favorite: 'Favorite (-110 to -199)',
-            even: 'Even / Pickem (-109 to +110)',
-            underdog: 'Underdog (+111 to +200)',
+            favorite: 'Favorite (-110 to -200)',
+            underdog: 'Dog (+100 to +200)',
             big_underdog: 'Longshot (+201+)'
         }[value] || value || 'Odds Range';
     }
@@ -9059,9 +9023,8 @@
             filtered = filtered.filter(p => {
                 const o = p.odds_snapshot || p.odds || -110;
                 if (odds === 'heavy-fav') return o <= -200;
-                if (odds === 'fav') return o >= -199 && o <= -110;
-                if (odds === 'even') return o >= -109 && o <= 100;
-                if (odds === 'dog') return o >= 101 && o <= 200;
+                if (odds === 'fav') return o < 0 && o >= -200;
+                if (odds === 'dog') return o >= 100 && o <= 200;
                 if (odds === 'longshot') return o >= 201;
                 return true;
             });
@@ -9167,7 +9130,7 @@
             }
             if (result) parts.push(result.charAt(0).toUpperCase() + result.slice(1));
             if (odds) {
-                const oddsLabels = { 'heavy-fav': 'Heavy Favorites', 'fav': 'Favorites', 'even': 'Even Money', 'dog': 'Underdogs', 'longshot': 'Longshots' };
+                const oddsLabels = { 'heavy-fav': 'Heavy Favorites', 'fav': 'Favorites', 'dog': 'Dogs', 'longshot': 'Longshots' };
                 parts.push(oddsLabels[odds] || odds);
             }
             if (units) {
