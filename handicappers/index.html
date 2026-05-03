@@ -842,19 +842,29 @@
                 americanfootball_nfl: 'NFL',
                 americanfootball_ncaaf: 'NCAAF',
                 basketball_nba: 'NBA',
+                basketball_wnba: 'WNBA',
                 basketball_ncaab: 'NCAAB',
                 baseball_mlb: 'MLB',
                 icehockey_nhl: 'NHL',
-                soccer_epl: 'EPL'
+                soccer_epl: 'EPL',
+                soccer_england_premier_league: 'EPL',
+                soccer_usa_mls: 'MLS',
+                soccer_mls: 'MLS',
+                mlb: 'MLB',
+                nba: 'NBA',
+                nhl: 'NHL',
+                nfl: 'NFL',
+                ncaaf: 'NCAAF',
+                ncaab: 'NCAAB',
+                wnba: 'WNBA',
+                mls: 'MLS',
+                epl: 'EPL',
+                tennis: 'Tennis',
+                soccer: 'Soccer'
             };
             if (map[lower]) return map[lower];
-            return raw
-                .replace(/_/g, ' ')
-                .replace(/\b\w/g, ch => ch.toUpperCase())
-                .replace(/\bMlb\b/g, 'MLB')
-                .replace(/\bNba\b/g, 'NBA')
-                .replace(/\bNfl\b/g, 'NFL')
-                .replace(/\bNhl\b/g, 'NHL');
+            if (lower.startsWith('soccer_')) return 'Soccer';
+            return '';
         }
 
         function extractSports(user, stats) {
@@ -863,18 +873,20 @@
                 const sport = normalizeSportName(value);
                 if (sport && !sports.includes(sport)) sports.push(sport);
             };
-            const rawSports = user.favorite_sports || user.primary_sports || user.sports || user.sport;
-            if (Array.isArray(rawSports)) rawSports.forEach(add);
-            else if (typeof rawSports === 'string') rawSports.split(/[,\|]/).forEach(add);
+            const rawSportsGroups = [user.primary_sports, user.sports, user.favorite_sports, user.sport];
+            rawSportsGroups.forEach(rawSports => {
+                if (Array.isArray(rawSports)) rawSports.forEach(add);
+                else if (typeof rawSports === 'string') rawSports.split(/[,\|]/).forEach(add);
+            });
 
             const breakdown = stats && (stats.sportBreakdown || stats.by_sport || stats.sports_breakdown);
             if (breakdown && typeof breakdown === 'object' && !Array.isArray(breakdown)) {
                 Object.entries(breakdown)
                     .sort((a, b) => Number(b[1]?.total || b[1]?.total_picks || 0) - Number(a[1]?.total || a[1]?.total_picks || 0))
-                    .slice(0, 3)
+                    .slice(0, 2)
                     .forEach(([sport]) => add(sport));
             }
-            return sports.slice(0, 3);
+            return sports.slice(0, 2);
         }
 
         function statsFromUser(user) {
@@ -959,7 +971,7 @@
             });
             const sports = Object.entries(sportCounts)
                 .sort((a, b) => b[1] - a[1])
-                .slice(0, 3)
+                .slice(0, 2)
                 .map(([sport]) => sport);
 
             return {
@@ -1401,7 +1413,7 @@
                 const hasPicks = Number(stats.totalPicks || 0) > 0;
                 const hasGraded = gradedCount(member) > 0;
                 const profileHref = '/profile/?user=' + encodeURIComponent(member.username);
-                const sports = (stats.sports && stats.sports.length ? stats.sports : ['None yet'])
+                const sports = (stats.sports && stats.sports.length ? stats.sports.slice(0, 2) : ['None yet'])
                     .map(sport => '<span class="hm-sport">' + escapeHtml(sport) + '</span>')
                     .join('');
                 const followLabel = member.isCurrentUser ? 'You' : (member.isFollowing ? 'Following' : 'Follow');
