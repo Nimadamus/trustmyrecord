@@ -935,7 +935,8 @@
 
             const activityTime = pick => new Date(pick.graded_at || pick.locked_at || pick.created_at || 0).getTime();
             const sorted = decisions.slice().sort((a, b) => activityTime(a) - activityTime(b));
-            const latestPick = graded.slice().sort((a, b) => activityTime(b) - activityTime(a))[0] || null;
+            const publicGraded = graded.filter(pick => pick.is_public !== false && pick.is_private !== true && !pick.deleted_at);
+            const latestPick = publicGraded.slice().sort((a, b) => activityTime(b) - activityTime(a))[0] || null;
             let currentStreak = 0;
             let streakType = '';
             for (let i = sorted.length - 1; i >= 0; i--) {
@@ -1189,6 +1190,17 @@
             return text;
         }
 
+        function getPickGameName(pick) {
+            const direct = cleanPickText(
+                pick.game_name || pick.gameName || pick.matchup || pick.event_name || pick.eventName || pick.game
+            );
+            if (direct) return direct;
+            const details = pick.grade_verification_details || pick.verification_details || {};
+            const away = cleanPickText(pick.away_team || pick.awayTeam || details.away_team || details.awayTeam);
+            const home = cleanPickText(pick.home_team || pick.homeTeam || details.home_team || details.homeTeam);
+            return away && home ? away + ' vs ' + home : '';
+        }
+
         function getPickTeam(pick, selection, side) {
             const direct = cleanPickText(
                 pick.team_name || pick.teamName || pick.team || pick.selection_team || pick.selectionTeam || pick.outcome_name || pick.outcomeName
@@ -1196,7 +1208,7 @@
             if (direct && !/^(over|under)$/i.test(direct)) return direct;
             let stripped = cleanPickText(selection);
             if (side) stripped = stripped.replace(new RegExp('\\s+\\b' + escapePickRegex(side) + '\\b(?:\\s+[-+]?\\d+(?:\\.\\d+)?)?\\s*$', 'i'), '');
-            stripped = stripped.replace(/\s+\b(?:moneyline|ml)\b\s*$/i, '').trim();
+            stripped = stripped.replace(/\s+\b(?:team\s+total|moneyline|ml)\b\s*$/i, '').trim();
             return /^(over|under)?$/i.test(stripped) ? '' : stripped;
         }
 
@@ -1208,15 +1220,16 @@
             const line = getPickLine(pick) || getLineFromSelection(selection, side);
 
             if ((market === 'totals' || market === 'total' || market === 'alt_totals' || market === 'f5_totals') && side) {
-                return line && !new RegExp('\\b' + escapePickRegex(line) + '\\b').test(selection)
-                    ? side + ' ' + line
-                    : selection || side;
+                const selectionGame = selection.replace(/\s+\b(?:over|under)\b(?:\s+[-+]?\d+(?:\.\d+)?)?\s*$/i, '').trim();
+                const gameName = getPickGameName(pick) || (/^(over|under)?$/i.test(selectionGame) ? '' : selectionGame);
+                const totalLabel = side + (line ? ' ' + line : '');
+                return [gameName, totalLabel].filter(Boolean).join(' ') || selection || side;
             }
 
             if ((market === 'team_totals' || market === 'team_total') && side) {
                 const team = getPickTeam(pick, selection, side);
-                const label = [team, side, line].filter(Boolean).join(' ');
-                return label || selection || (side + (line ? ' ' + line : ''));
+                const totalLabel = 'Team Total ' + side + (line ? ' ' + line : '');
+                return [team, totalLabel].filter(Boolean).join(' ') || selection || totalLabel;
             }
 
             if (market === 'spreads' || market === 'spread' || market === 'alt_spreads' || market === 'f5_spreads') {
