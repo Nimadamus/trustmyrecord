@@ -31,10 +31,11 @@ function getRecordText(item) {
     const losses = item.losses ?? item.user_losses;
     const pushes = item.pushes ?? item.user_pushes;
     const units = item.net_units ?? item.user_net_units ?? item.units_profit;
+    const winRate = item.win_rate ?? item.user_win_rate;
     if (wins != null || losses != null || pushes != null) {
-        const record = [wins || 0, losses || 0, pushes || 0].join('-');
+        const record = pushes != null && Number(pushes) > 0 ? [wins || 0, losses || 0, pushes || 0].join('-') : [wins || 0, losses || 0].join('-');
         const unitsNum = Number(units || 0);
-        return record + ', ' + (unitsNum >= 0 ? '+' : '') + unitsNum.toFixed(2) + 'u';
+        return record + ', ' + (unitsNum >= 0 ? '+' : '') + unitsNum.toFixed(2) + 'u' + (winRate != null ? ', ' + Number(winRate).toFixed(1) + '%' : '');
     }
     return 'public record pending';
 }
@@ -99,13 +100,17 @@ function renderPickCard(item) {
                 : isPending
                     ? '<i class="fas fa-lock"></i> locked a pick'
                     : '<i class="fas fa-clipboard-check"></i> pick was graded';
-    const market = formatMarketLabel(item.market_type || item.market || item.pick_type);
-    const line = item.line_snapshot ?? item.line ?? item.spread ?? '';
-    const odds = item.odds_snapshot ?? item.odds ?? '';
+    const market = formatMarketLabel(item.market_type || item.pick_market_type || item.market || item.pick_type);
+    const line = item.line_snapshot ?? item.pick_line ?? item.line ?? item.spread ?? '';
+    const odds = item.odds_snapshot ?? item.pick_odds ?? item.odds ?? '';
     const units = item.result_units ?? item.units_result ?? item.units_profit;
-    const selection = item.selection || item.pick || item.team || '';
-    const matchup = item.matchup || [item.away_team, item.home_team].filter(Boolean).join(' @ ');
-    const sport = formatSport(item.sport_key || item.sport || item.league);
+    const resultUnits = units ?? item.pick_result_units;
+    const selection = item.selection || item.pick_selection || item.pick || item.team || '';
+    const details = item.grade_verification_details || {};
+    const awayTeam = item.away_team || item.pick_away_team || details.away_team;
+    const homeTeam = item.home_team || item.pick_home_team || details.home_team;
+    const matchup = item.matchup || [awayTeam, homeTeam].filter(Boolean).join(' @ ');
+    const sport = formatSport(item.sport_key || item.pick_sport_key || item.sport || item.league);
     const resultClass = status.indexOf('win') >= 0 || status === 'won' ? 'is-won' : (status.indexOf('loss') >= 0 || status === 'lost' ? 'is-lost' : '');
 
     let body = '';
@@ -117,7 +122,7 @@ function renderPickCard(item) {
                 (sport ? '<span class="pe-chip is-sport">' + esc(sport) + '</span>' : '') +
                 '<span class="pe-chip">' + esc(market) + '</span>' +
                 (resultClass ? '<span class="pe-chip ' + resultClass + '">' + esc(status.toUpperCase()) + '</span>' : '') +
-                (units != null ? '<span class="pe-chip is-units">' + (Number(units) >= 0 ? '+' : '') + esc(Number(units).toFixed(2)) + 'u</span>' : '') +
+                (resultUnits != null ? '<span class="pe-chip is-units">' + (Number(resultUnits) >= 0 ? '+' : '') + esc(Number(resultUnits).toFixed(2)) + 'u</span>' : '') +
             '</div>' +
             '<div class="pe-team">' + esc(selection + (line !== '' && line != null ? ' ' + line : '')) + '</div>' +
             (matchup ? '<div style="margin-top:5px;color:var(--text-muted);font-size:0.86rem;">' + esc(matchup) + '</div>' : '') +
@@ -308,4 +313,222 @@ async function initAuth() {
             postBtn.disabled = e.target.value.trim().length === 0;
         });
     }
+}
+
+function normalizePublicPick(item) {
+    const details = item.grade_verification_details || {};
+    return {
+        ...item,
+        item_id: item.item_id || item.id || item.pick_id,
+        item_type: 'pick',
+        post_type: 'pick',
+        pick_id: item.pick_id || item.id || item.item_id,
+        selection: item.selection || item.pick_selection,
+        market_type: item.market_type || item.pick_market_type,
+        line_snapshot: item.line_snapshot ?? item.pick_line,
+        odds_snapshot: item.odds_snapshot ?? item.pick_odds,
+        status: item.status || item.pick_status,
+        result_units: item.result_units ?? item.pick_result_units,
+        sport_key: item.sport_key || item.pick_sport_key || item.sport,
+        away_team: item.away_team || item.pick_away_team || details.away_team,
+        home_team: item.home_team || item.pick_home_team || details.home_team,
+        graded_at: item.graded_at || item.grade_verified_at,
+        created_at: item.graded_at || item.grade_verified_at || item.created_at || item.locked_at
+    };
+}
+
+async function fetchPublicUsersByName(names) {
+    const out = {};
+    const unique = Array.from(new Set((names || []).filter(Boolean)));
+    await Promise.all(unique.map(async username => {
+        try {
+            const data = await api.request('/users/' + encodeURIComponent(username));
+            if (data && data.user) out[username] = data.user;
+        } catch(e) {}
+    }));
+    return out;
+}
+
+function attachUserRecord(item, user) {
+    if (!user) return item;
+    return {
+        ...item,
+        avatar_url: item.avatar_url || user.avatar_url,
+        primary_team: item.primary_team || (Array.isArray(user.favorite_teams) ? user.favorite_teams[0] : null),
+        primary_sport: item.primary_sport || (Array.isArray(user.favorite_sports) ? user.favorite_sports[0] : null),
+        wins: user.wins,
+        losses: user.losses,
+        pushes: user.pushes,
+        net_units: user.net_units,
+        win_rate: user.win_rate
+    };
+}
+
+async function loadFeed() {
+    const c = document.getElementById('feedList');
+    if (!c) return;
+
+    let items = [];
+    try {
+        if (api && typeof api.request === 'function') {
+            const filterParam = currentFilter === 'hot-takes' ? 'posts' : currentFilter;
+            const data = await api.request('/feed?limit=' + FEED_LIMIT + '&offset=' + feedOffset + '&filter=' + encodeURIComponent(filterParam));
+            items = (data.feed || []).map(item => {
+                if (item.item_type === 'pick' || item.post_type === 'pick' || item.post_type === 'pick_share') return normalizePublicPick(item);
+                return item;
+            });
+
+            if (currentFilter === 'all' || currentFilter === 'picks') {
+                try {
+                    const discover = await api.request('/social/discover?limit=12');
+                    const picks = (discover.picks || [])
+                        .filter(p => p && p.is_public !== false && !p.is_private && !['pending', 'locked'].includes(String(p.status || '').toLowerCase()))
+                        .map(normalizePublicPick);
+                    const seen = new Map(items.map((i, idx) => [String(i.pick_id || i.item_id || i.id), idx]));
+                    picks.forEach(p => {
+                        const key = String(p.pick_id || p.item_id || p.id);
+                        if (seen.has(key)) {
+                            items[seen.get(key)] = { ...items[seen.get(key)], ...p };
+                        } else {
+                            seen.set(key, items.length);
+                            items.push(p);
+                        }
+                    });
+                } catch(e) {}
+            }
+
+            if (currentFilter === 'all' || currentFilter === 'polls') {
+                try {
+                    const pollData = await api.request('/polls/active?limit=5');
+                    (pollData.polls || []).forEach(p => items.push({
+                        item_type: 'poll',
+                        post_type: 'poll',
+                        item_id: 'poll_' + p.id,
+                        poll_id: p.id,
+                        content: p.title,
+                        description: p.description,
+                        username: p.creator_username || p.username,
+                        display_name: p.creator_display_name || p.display_name || p.username,
+                        avatar_url: p.avatar_url,
+                        sport: p.sport,
+                        created_at: p.created_at,
+                        options: p.options || [],
+                        total_votes: parseInt(p.total_votes) || 0,
+                        status: p.status,
+                        likes_count: 0,
+                        comments_count: 0
+                    }));
+                } catch(e) {}
+            }
+
+            const userMap = await fetchPublicUsersByName(items.map(i => getUsername(i)));
+            items = items.map(i => attachUserRecord(i, userMap[getUsername(i)]));
+            items.sort((a, b) => new Date(b.graded_at || b.created_at || b.locked_at || 0) - new Date(a.graded_at || a.created_at || a.locked_at || 0));
+            if (currentFilter === 'hot-takes') items = items.filter(i => i.post_type === 'hot_take');
+            if (currentFilter === 'picks') items = items.filter(i => i.item_type === 'pick' || i.post_type === 'pick' || i.post_type === 'pick_share');
+            if (currentFilter === 'polls') items = items.filter(i => i.item_type === 'poll' || i.post_type === 'poll');
+        }
+    } catch(e) {
+        renderFeedUnavailable('Live feed data is temporarily unavailable. TrustMyRecord does not substitute fake feed posts when the backend is unavailable.');
+        return;
+    }
+
+    updateHeroCounts(items.length);
+    if (!items.length) {
+        c.innerHTML = '<div class="empty-state"><i class="fas fa-stream"></i><h3>No public activity in this filter yet.</h3><p>Real graded picks, posts, polls, challenges, and trivia will appear here once available.</p></div>';
+        const lm = document.getElementById('loadMore');
+        if (lm) lm.style.display = 'none';
+        return;
+    }
+
+    c.innerHTML = items.map(renderFeedItem).join('');
+    const lm = document.getElementById('loadMore');
+    if (lm) lm.style.display = items.length >= FEED_LIMIT ? 'block' : 'none';
+}
+
+function compactPickLabel(p) {
+    const selection = p.selection || p.pick_selection || 'Pick';
+    const line = p.line_snapshot ?? p.pick_line ?? '';
+    return selection + (line !== '' && line != null && !String(selection).includes(String(line)) ? ' ' + line : '');
+}
+
+async function loadTrending() {
+    const el = document.getElementById('trendingList');
+    if (!el) return;
+    try {
+        const data = await api.request('/social/discover?limit=5');
+        const picks = (data.picks || []).filter(p => p.is_public !== false && !p.is_private && !['pending', 'locked'].includes(String(p.status || '').toLowerCase()));
+        if (picks.length) {
+            el.innerHTML = picks.slice(0, 3).map((p, i) => {
+                const status = String(p.status || '').toUpperCase();
+                return '<div class="rs-item"><span class="rs-rank">' + (i + 1) + '</span><span class="rs-text">' + esc(compactPickLabel(p)) + '<span class="rs-count">' + esc(formatSport(p.sport_key)) + ' - ' + esc(formatMarketLabel(p.market_type)) + ' - ' + esc(status) + '</span></span></div>';
+            }).join('');
+            return;
+        }
+    } catch(e) {}
+    el.innerHTML = '<div class="rs-empty">No public graded picks are trending yet.</div>';
+}
+
+async function loadTopCappers() {
+    const el = document.getElementById('topCappersList');
+    if (!el) return;
+    try {
+        const data = await api.request('/users?limit=10');
+        const users = (data.users || []).filter(u => Number(u.total_picks || 0) > 0);
+        if (users.length) {
+            users.sort((a, b) => Number(b.net_units || 0) - Number(a.net_units || 0));
+            el.innerHTML = users.slice(0, 3).map(u => {
+                const units = Number(u.net_units || 0);
+                const sign = units >= 0 ? '+' : '';
+                const display = u.display_name || u.username || 'User';
+                const avatar = u.avatar_url ? '<img src="' + esc(u.avatar_url) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' : esc(display[0] || '?');
+                return '<div class="rs-user"><div class="rs-user-avatar">' + avatar + '</div><div class="rs-user-info"><div class="rs-user-name"><a href="/profile/?user=' + encodeURIComponent(u.username || '') + '">' + esc(display) + '</a></div><div class="rs-user-detail">' + esc(String(u.total_picks || 0)) + ' picks - <span style="color:' + (units >= 0 ? 'var(--accent-green)' : 'var(--accent-red)') + ';font-weight:700;">' + sign + units.toFixed(2) + 'u</span>' + (u.roi != null ? ' - ' + Number(u.roi).toFixed(1) + '% ROI' : '') + '</div></div></div>';
+            }).join('');
+            return;
+        }
+    } catch(e) {}
+    el.innerHTML = '<div class="rs-empty">Top cappers will appear once public records are available.</div>';
+}
+
+async function loadArenaWatch() {
+    const el = document.getElementById('arenaWatchList');
+    if (!el) return;
+    try {
+        const data = await api.request('/social/discover?limit=3');
+        const picks = (data.picks || []).filter(p => p.is_public !== false && !p.is_private && !['pending', 'locked'].includes(String(p.status || '').toLowerCase()));
+        if (picks.length) {
+            el.innerHTML = picks.map(p => {
+                const units = Number(p.result_units || 0);
+                const sign = units >= 0 ? '+' : '';
+                return '<div class="rs-item"><span class="rs-rank"><i class="fas fa-circle-check"></i></span><span class="rs-text">' + esc(p.display_name || p.username || 'User') + ' ' + esc(String(p.status || 'graded')) + ' ' + esc(compactPickLabel(p)) + '<span class="rs-count">' + sign + units.toFixed(2) + 'u</span></span></div>';
+            }).join('');
+            return;
+        }
+    } catch(e) {}
+    el.innerHTML = '<div class="rs-empty">Recent graded public activity will appear here.</div>';
+}
+
+function toggleType(type) {
+    const takeBtn = document.getElementById('takeBtn');
+    const pollBtnEl = document.getElementById('pollBtn');
+    const recapBtn = document.getElementById('recapBtn');
+    const pb = document.getElementById('pollBuilder');
+    [takeBtn, pollBtnEl, recapBtn].forEach(btn => {
+        if (btn) btn.classList.remove('active-take', 'active-poll', 'active-recap');
+    });
+    if (pb) pb.classList.remove('show');
+
+    if (postType === type) {
+        postType = 'post';
+    } else {
+        postType = type;
+        if (type === 'hot-take' && takeBtn) takeBtn.classList.add('active-take');
+        if (type === 'poll') {
+            if (pollBtnEl) pollBtnEl.classList.add('active-poll');
+            if (pb) pb.classList.add('show');
+        }
+        if (type === 'pick-recap' && recapBtn) recapBtn.classList.add('active-recap');
+    }
+    const input = document.getElementById('compInput');
+    if (input) input.placeholder = postType === 'hot-take' ? 'What is your hottest take?' : postType === 'poll' ? 'Ask the community a sports question...' : postType === 'pick-recap' ? 'Recap a graded pick or angle...' : 'What is your take?';
 }
