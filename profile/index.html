@@ -5718,13 +5718,17 @@
 
     // ======================== LOAD PROFILE ========================
     async function loadProfile() {
+        const profileEndpoint = '/users/' + encodeURIComponent(profileUsername || '');
         try {
-            if (!api || typeof api.getUserProfile !== 'function') {
+            if (!api || typeof api.request !== 'function') {
                 throw new Error('Profile service is unavailable.');
             }
 
-            const data = await api.getUserProfile(profileUsername);
+            const data = await api.request(profileEndpoint);
             profileData = data.user || data;
+            if (!profileData || !profileData.id) {
+                throw new Error('Profile response was empty.');
+            }
             // Expose globally so inline onclick handlers (affiliation CTA, etc)
             // can read the username for per-user localStorage keys.
             window.profileData = profileData;
@@ -5761,15 +5765,28 @@
             }
         } catch (error) {
             console.error('[Profile] Profile load failed:', error);
+            console.error('[Profile] Failed profile endpoint:', (api && api.baseUrl ? api.baseUrl : '') + profileEndpoint, 'status:', error && error.status ? error.status : 'unknown');
             document.querySelectorAll('.summary-bar, .picks-section, .analytics-section').forEach(el => el.style.display = 'none');
-            document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>User Not Found</h3><p>User "' + profileUsername + '" not found or could not be loaded.</p><a href="/" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
+            document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>Profile could not be loaded.</h3><p>Please refresh or try again.</p></div>';
             return;
         }
 
-        await refreshLeaderboardRank();
-        await loadAllPicks();
         renderProfileHeader(profileData);
         loadAdvancedMetrics(profileData.username || profileUsername || '');
+
+        try {
+            await refreshLeaderboardRank();
+            renderProfileHeader(profileData);
+        } catch (error) {
+            console.warn('[Profile] Leaderboard rank load failed:', error);
+        }
+
+        try {
+            await loadAllPicks();
+        } catch (error) {
+            console.warn('[Profile] Pick history load failed:', error);
+        }
+
         analyticsTrackPickHistoryView({
             view_type: isOwnProfile ? 'own' : 'public',
             username: profileData.username || profileUsername || '',
