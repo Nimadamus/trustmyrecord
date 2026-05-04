@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="canonical" href="https://trustmyrecord.com/mlb-simulator/">
+    <title>MLB Simulator | TrustMyRecord</title>
+    <meta name="description" content="Select an MLB matchup and inspect sportsbook market context for a future TrustMyRecord projection engine.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-page-polish.css">
+    <link rel="stylesheet" href="/static/css/mlb-simulator.css">
+    <script src="/static/js/config.js"></script>
+    <script src="/static/js/backend-api.js"></script>
+</head>
+<body class="tmr-polished-page mlb-simulator-page">
+    <header class="sim-topbar" aria-label="TrustMyRecord navigation">
+        <a class="sim-brand" href="/">TrustMyRecord</a>
+        <nav class="sim-nav" aria-label="Primary">
+            <a href="/sportsbook/">Sportsbook</a>
+            <a href="/handicappers/">Handicappers</a>
+            <a href="/leaderboard/">Leaderboard</a>
+            <a href="/mlb-simulator/" aria-current="page">MLB Simulator</a>
+        </nav>
+    </header>
+
+    <main class="sim-shell">
+        <section class="sim-hero">
+            <div>
+                <p class="sim-kicker">TrustMyRecord Tools</p>
+                <h1>MLB Simulator</h1>
+                <p class="sim-subtitle">Load the current MLB board, select a matchup, and review available betting market context. The projection engine is intentionally not showing numbers until a real model is connected.</p>
+            </div>
+            <div class="sim-status-card" aria-live="polite">
+                <span class="sim-status-dot" aria-hidden="true"></span>
+                <div>
+                    <strong id="simDataSourceTitle">MLB board</strong>
+                    <span id="simDataSourceDetail">Waiting for board data...</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="sim-grid" aria-label="MLB simulator workspace">
+            <aside class="sim-panel sim-selector-panel">
+                <div class="sim-panel-heading">
+                    <p class="sim-label">Matchup</p>
+                    <h2>Select Game</h2>
+                </div>
+                <label class="sim-field">
+                    <span>MLB slate</span>
+                    <select id="mlbMatchupSelect" class="sim-select" disabled>
+                        <option value="">Loading MLB games...</option>
+                    </select>
+                </label>
+                <button id="refreshMlbBoard" class="sim-button" type="button">Refresh Board</button>
+                <div id="simBoardMessage" class="sim-message" role="status">Loading sportsbook board...</div>
+            </aside>
+
+            <section class="sim-panel sim-matchup-card" aria-label="Selected matchup">
+                <div class="sim-panel-heading">
+                    <p class="sim-label">Teams</p>
+                    <h2 id="selectedMatchupTitle">No matchup selected</h2>
+                </div>
+                <div class="team-scoreboard">
+                    <article>
+                        <span>Away</span>
+                        <strong id="awayTeamName">--</strong>
+                    </article>
+                    <div class="versus">at</div>
+                    <article>
+                        <span>Home</span>
+                        <strong id="homeTeamName">--</strong>
+                    </article>
+                </div>
+                <div class="sim-meta-row">
+                    <span id="gameTimeLabel">Game time unavailable</span>
+                    <span id="marketCountLabel">0 market groups</span>
+                </div>
+            </section>
+
+            <section class="sim-panel sim-projection-panel" aria-label="Projection output">
+                <div class="sim-panel-heading">
+                    <p class="sim-label">Projection</p>
+                    <h2>Engine Status</h2>
+                </div>
+                <div class="projection-shell" data-projection-state="not-connected">
+                    <div>
+                        <span class="projection-value muted">--</span>
+                        <small>Projected Score</small>
+                    </div>
+                    <div>
+                        <span class="projection-value muted">--</span>
+                        <small>Win Probability</small>
+                    </div>
+                    <div>
+                        <span class="projection-value muted">--</span>
+                        <small>Confidence / Edge</small>
+                    </div>
+                </div>
+                <p id="projectionNotice" class="sim-notice">Projection engine not connected yet. This page does not invent projected scores, win probabilities, injuries, odds, or model edges.</p>
+            </section>
+
+            <section class="sim-panel sim-markets-panel" aria-label="Available market context">
+                <div class="sim-panel-heading">
+                    <p class="sim-label">Market Context</p>
+                    <h2>Available Lines</h2>
+                </div>
+                <div id="marketGroups" class="market-groups">
+                    <div class="sim-empty">Select a matchup to view moneyline, run line, total, team total, and F5 availability.</div>
+                </div>
+            </section>
+
+            <section class="sim-panel sim-reasoning-panel" aria-label="Key inputs">
+                <div class="sim-panel-heading">
+                    <p class="sim-label">Inputs</p>
+                    <h2>Connected Data</h2>
+                </div>
+                <div id="inputSummary" class="input-summary">
+                    <div><strong>Offense</strong><span>Not connected</span></div>
+                    <div><strong>Pitching</strong><span>Not connected</span></div>
+                    <div><strong>Bullpen</strong><span>Not connected</span></div>
+                    <div><strong>Recent form</strong><span>Not connected</span></div>
+                    <div><strong>Park/weather</strong><span>Not connected</span></div>
+                    <div><strong>Sportsbook board</strong><span id="boardInputStatus">Loading</span></div>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <script src="/static/js/mlb-simulator.js"></script>
+</body>
+</html>
