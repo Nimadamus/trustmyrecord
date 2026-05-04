@@ -61,7 +61,7 @@
   function profileBadge(item) {
     const sport = item.sport || item.sport_key || item.primary_sport || item.league;
     const teams = asArray(item.favorite_teams);
-    const label = sport ? formatSportSafe(sport) : teams[0];
+    const label = sport ? formatSportSafe(sport) : (isPendingPick(item) ? "" : teams[0]);
     if (!label) return "";
     return `<span class="profile-badge"><i class="fas fa-shield-alt"></i>${esc(label)}</span>`;
   }
@@ -206,6 +206,7 @@
     return `<article class="feed-item activity-card ${graded ? "is-graded" : "is-pending"}" data-id="${esc(item.item_id)}" data-type="pick_activity">
       <div class="activity-main">
         ${header(item)}
+        ${graded ? `<div class="activity-result-label"><i class="fas fa-circle-check"></i>Graded Result</div>` : ""}
         ${activityTitle(graded ? "fa-circle-check" : "fa-lock", text)}
         <div class="privacy-badge ${graded ? "is-graded" : ""}">
           <i class="fas ${graded ? "fa-circle-check" : "fa-lock"}"></i>${esc(detail)}
@@ -479,15 +480,16 @@
       if (!items.length) {
         list.innerHTML = emptyFeedState();
       } else {
-        const html = items.map(renderItem).filter(Boolean).join("");
-        list.innerHTML = html || emptyFeedState();
+        const rendered = items.map(renderItem).filter(Boolean);
+        list.innerHTML = rendered.join("") || emptyFeedState();
+        markFeaturedCard(list);
       }
-      updateRightRail(items);
+      await updateFeedChrome(items);
       const more = document.getElementById("loadMore");
       if (more) more.style.display = items.length >= LIMIT ? "block" : "none";
     } catch (error) {
       list.innerHTML = `<div class="empty-state"><i class="fas fa-database"></i><h3>Feed unavailable</h3><p>${esc(error.message || "Live feed data is not available right now.")}</p></div>`;
-      updateRightRail([]);
+      await updateFeedChrome([]);
     }
   };
 
@@ -516,13 +518,51 @@
     return item.created_at || item.graded_at || item.locked_at || item.updated_at;
   }
 
-  function updateRightRail(items) {
-    const liveCard = document.getElementById("liveActivityCard");
-    const liveList = document.getElementById("liveActivityList");
-    const sportsCard = document.getElementById("trendingSportsCard");
-    const sportsList = document.getElementById("trendingSportsList");
-    const todayItems = (items || []).filter(i => sameLocalDay(itemTime(i)));
+  function weekAgoMs() {
+    return Date.now() - (7 * 24 * 60 * 60 * 1000);
+  }
 
+  function dateMs(value) {
+    const ms = new Date(value || 0).getTime();
+    return Number.isNaN(ms) ? 0 : ms;
+  }
+
+  function normalizeThreads(data) {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data.threads)) return data.threads;
+    if (data.data && Array.isArray(data.data.threads)) return data.data.threads;
+    if (Array.isArray(data.results)) return data.results;
+    return [];
+  }
+
+  function normalizeUsers(data) {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data.users)) return data.users;
+    if (data.data && Array.isArray(data.data.users)) return data.data.users;
+    if (Array.isArray(data.results)) return data.results;
+    return [];
+  }
+
+  async function fetchFeedExtras() {
+    const extras = { threads: [], users: [] };
+    if (!apiReady()) return extras;
+    try {
+      const data = typeof window.api.getForumThreads === "function"
+        ? await window.api.getForumThreads({ page: 1, limit: 6 })
+        : await window.api.request("/forum/threads?page=1&limit=6");
+      extras.threads = normalizeThreads(data).filter(Boolean);
+    } catch (_) {}
+    try {
+      const data = await window.api.request("/users?limit=60");
+      extras.users = normalizeUsers(data).filter(Boolean);
+    } catch (_) {}
+    return extras;
+  }
+
+  function feedCounts(items, extras) {
+    const todayItems = (items || []).filter(i => sameLocalDay(itemTime(i)));
     const locked = todayItems
       .filter(i => i && i.item_type === "pick_activity" && i.post_type === "submitted_picks_summary")
       .reduce((sum, i) => sum + Number(i.activity_count || 1), 0);
@@ -533,16 +573,101 @@
       const t = String(i.post_type || i.item_type || i.notif_type || i.activity_type || "").toLowerCase();
       return ["text", "status", "hot_take", "poll", "forum_reply", "reply_created", "forum_post", "thread_created"].includes(t);
     }).length;
-    const joined = todayItems.filter(i => {
+    const joinedFromFeed = todayItems.filter(i => {
       const t = String(i.post_type || i.item_type || i.notif_type || i.activity_type || i.type || "").toLowerCase();
       return ["joined", "user_joined", "signup"].includes(t);
     }).length;
+    const weekStart = weekAgoMs();
+    const joinedWeek = (extras.users || []).filter(u => {
+      const stamp = u.created_at || u.createdAt || u.joined_at || u.registered_at;
+      return dateMs(stamp) >= weekStart;
+    }).length;
+    const publicRecords = (extras.users || []).filter(u => {
+      const wins = Number(u.wins || u.record_wins || 0);
+      const losses = Number(u.losses || u.record_losses || 0);
+      const pushes = Number(u.pushes || u.record_pushes || 0);
+      return Number(u.total_picks || 0) > 0 || wins + losses + pushes > 0 || Number(u.net_units || 0) !== 0;
+    }).length;
+    return {
+      locked,
+      graded,
+      discussions,
+      joinedToday: joinedFromFeed,
+      joinedWeek,
+      publicRecords,
+      activeThreads: (extras.threads || []).length
+    };
+  }
+
+  function updateSummaryStrip(items, extras) {
+    const el = document.getElementById("feedSummaryStrip");
+    if (!el) return;
+    const counts = feedCounts(items, extras);
+    const rows = [
+      counts.locked > 0 ? ["fa-lock", counts.locked, "Locked picks today"] : null,
+      counts.graded > 0 ? ["fa-circle-check", counts.graded, "Picks graded today"] : null,
+      counts.activeThreads > 0 ? ["fa-comments", counts.activeThreads, "Active forum threads"] : null,
+      counts.joinedWeek > 0 ? ["fa-user-plus", counts.joinedWeek, "Members joined this week"] : null,
+      counts.publicRecords > 0 ? ["fa-chart-line", counts.publicRecords, "Profiles with public records"] : null
+    ].filter(Boolean);
+    el.classList.toggle("is-shown", rows.length > 0);
+    el.innerHTML = rows.map(row => `<div class="feed-summary-item"><i class="fas ${row[0]}"></i><div><b>${row[1]}</b><span>${esc(row[2])}</span></div></div>`).join("");
+  }
+
+  function nextActionCards() {
+    return `<div class="feed-next-actions">
+      <a class="feed-next-card" href="/sportsbook/"><i class="fas fa-plus"></i><span>Make your first pick</span></a>
+      <a class="feed-next-card" href="/forum/"><i class="fas fa-comments"></i><span>Start a forum discussion</span></a>
+      <a class="feed-next-card" href="/handicappers/"><i class="fas fa-user-check"></i><span>Find handicappers to follow</span></a>
+      <a class="feed-next-card" href="/profile/"><i class="fas fa-id-card"></i><span>Complete your profile</span></a>
+    </div>`;
+  }
+
+  function updateLowActivityModules(items) {
+    const el = document.getElementById("feedLowActivity");
+    if (!el) return;
+    const thin = (items || []).length < 4;
+    el.classList.toggle("is-shown", thin);
+    el.innerHTML = thin ? `<div class="feed-explain-card">
+      This feed grows as members make picks, post takes, create polls, and get results graded. Locked picks stay private until grading.
+      ${nextActionCards()}
+    </div>` : "";
+    const list = document.getElementById("feedList");
+    if (list && thin && (items || []).length > 0 && !list.querySelector(".feed-more-placeholder")) {
+      list.insertAdjacentHTML("beforeend", `<div class="feed-more-placeholder"><strong>No more activity yet.</strong><span>Follow handicappers, post a take, or submit picks to bring the feed to life.</span>${nextActionCards()}</div>`);
+    }
+  }
+
+  function markFeaturedCard(list) {
+    const firstGraded = list.querySelector(".feed-item.is-graded");
+    const first = firstGraded || list.querySelector(".feed-item");
+    if (first) first.classList.add("is-featured-card");
+  }
+
+  async function updateFeedChrome(items) {
+    const extras = await fetchFeedExtras();
+    updateSummaryStrip(items, extras);
+    updateLowActivityModules(items);
+    updateRightRail(items, extras);
+  }
+
+  function updateRightRail(items, extras = { threads: [], users: [] }) {
+    const liveCard = document.getElementById("liveActivityCard");
+    const liveList = document.getElementById("liveActivityList");
+    const sportsCard = document.getElementById("trendingSportsCard");
+    const sportsList = document.getElementById("trendingSportsList");
+    const forumsCard = document.getElementById("recentForumsCard");
+    const forumsList = document.getElementById("recentForumsList");
+    const membersCard = document.getElementById("newMembersCard");
+    const membersList = document.getElementById("newMembersList");
+    const rulesCard = document.getElementById("feedRulesCard");
+    const counts = feedCounts(items, extras);
 
     const rows = [
-      locked > 0 ? ["fa-lock", "Locked picks today", locked] : null,
-      graded > 0 ? ["fa-circle-check", "Graded results today", graded] : null,
-      discussions > 0 ? ["fa-comments", "Active discussions", discussions] : null,
-      joined > 0 ? ["fa-user-plus", "New members today", joined] : null
+      counts.locked > 0 ? ["fa-lock", "Locked picks today", counts.locked] : null,
+      counts.graded > 0 ? ["fa-circle-check", "Graded results today", counts.graded] : null,
+      counts.discussions > 0 ? ["fa-comments", "Active discussions", counts.discussions] : null,
+      counts.joinedToday > 0 ? ["fa-user-plus", "New members today", counts.joinedToday] : null
     ].filter(Boolean);
 
     if (liveCard && liveList) {
@@ -560,6 +685,38 @@
       sportsCard.style.display = sportRows.length ? "" : "none";
       sportsList.innerHTML = sportRows.map(([sport, count]) => `<div class="rs-live-row"><i class="fas fa-fire"></i><span>${esc(sport)}</span><b>${count}</b></div>`).join("");
     }
+
+    const threads = (extras.threads || []).slice(0, 4);
+    if (forumsCard && forumsList) {
+      forumsCard.style.display = threads.length ? "" : "none";
+      forumsList.innerHTML = threads.map(t => {
+        const title = t.title || t.name || "Forum thread";
+        const id = t.id || t.thread_id || "";
+        const href = id ? `/forum/?thread=${encodeURIComponent(id)}` : "/forum/";
+        const replies = Number(t.reply_count || t.replies_count || t.posts_count || 0);
+        const meta = replies > 0 ? `${replies} repl${replies === 1 ? "y" : "ies"}` : timeAgo(t.updated_at || t.created_at);
+        return `<a class="rs-thread-row" href="${href}"><i class="fas fa-comments"></i><div><div class="rs-thread-title">${esc(title)}</div><div class="rs-thread-meta">${esc(meta)}</div></div></a>`;
+      }).join("");
+    }
+
+    const weekStart = weekAgoMs();
+    const members = (extras.users || [])
+      .filter(u => dateMs(u.created_at || u.createdAt || u.joined_at || u.registered_at) >= weekStart)
+      .slice(0, 4);
+    if (membersCard && membersList) {
+      membersCard.style.display = members.length ? "" : "none";
+      membersList.innerHTML = members.map(u => {
+        const username = u.username || "";
+        const name = u.display_name || u.displayName || username || "Member";
+        const src = u.avatar_url || u.profile_image_url || u.profile_image || u.avatar;
+        const av = src ? `<span class="rs-member-avatar"><img src="${esc(src)}" alt="${esc(name)} avatar" loading="lazy"></span>` : `<span class="rs-member-avatar">${esc(String(name).slice(0, 1).toUpperCase())}</span>`;
+        const href = username ? `/profile/?user=${encodeURIComponent(username)}` : "/handicappers/";
+        return `<a class="rs-member-row" href="${href}">${av}<div><div class="rs-member-name">${esc(name)}</div><div class="rs-member-meta">Joined this week</div></div></a>`;
+      }).join("");
+    }
+
+    const hasRealRail = rows.length || sportRows.length || threads.length || members.length;
+    if (rulesCard) rulesCard.style.display = hasRealRail ? "none" : "";
   }
 
   window.setFilter = function setFilter(filter, btn) {
