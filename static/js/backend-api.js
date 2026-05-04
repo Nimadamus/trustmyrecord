@@ -439,9 +439,11 @@ class TrustMyRecordAPI {
         const normalizedOptions = typeof options === 'string'
             ? { ...legacyOptions, sortBy: options }
             : (options || {});
-        const { sport, sortBy = 'roi', limit = 50 } = normalizedOptions;
+        const { sport, sortBy = 'roi', limit = 50, minPicks, min_picks } = normalizedOptions;
         let url = `/users/leaderboard?sortBy=${sortBy}&limit=${limit}`;
         if (sport) url += `&sport=${sport}`;
+        const minimumPicks = minPicks != null ? minPicks : min_picks;
+        if (minimumPicks != null) url += `&minPicks=${encodeURIComponent(minimumPicks)}`;
         return this.request(url);
     }
 
