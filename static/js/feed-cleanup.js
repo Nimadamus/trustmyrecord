@@ -168,8 +168,11 @@
     const text = graded
       ? `${user} had ${count} pick${count === 1 ? "" : "s"} graded`
       : `${user} submitted ${count} locked pick${count === 1 ? "" : "s"}`;
+    const wins = Number(item.wins_count || 0);
+    const losses = Number(item.losses_count || 0);
+    const pushes = Number(item.pushes_count || 0);
     const detail = graded
-      ? `${Number(item.wins_count || 0)} won, ${Number(item.losses_count || 0)} lost, ${Number(item.pushes_count || 0)} push${Number(item.pushes_count || 0) === 1 ? "" : "es"}`
+      ? (wins + losses + pushes > 0 ? `${wins} won, ${losses} lost, ${pushes} push${pushes === 1 ? "" : "es"}` : "Verified record updated")
       : "Details hidden until graded";
     return `<article class="feed-item activity-card ${graded ? "is-graded" : "is-pending"}" data-id="${esc(item.item_id)}" data-type="pick_activity">
       <div class="activity-main">
@@ -205,13 +208,7 @@
     }
     if (item.item_type === "poll" || item.post_type === "poll") return renderPoll(item);
     if (item.item_type === "pick" || item.post_type === "pick" || item.post_type === "pick_share") {
-      const safe = { ...item, item_type: "pick_activity", post_type: item.pick_status === "pending" ? "submitted_picks_summary" : "graded_pick_summary", activity_count: 1 };
-      delete safe.pick_selection;
-      delete safe.pick_market_type;
-      delete safe.pick_odds;
-      delete safe.pick_line;
-      delete safe.pick_home_team;
-      delete safe.pick_away_team;
+      const safe = scrubPendingPickFields({ ...item, item_type: "pick_activity", post_type: item.pick_status === "pending" ? "submitted_picks_summary" : "graded_pick_summary", activity_count: 1 });
       return renderPickActivity(safe);
     }
     return renderTextPost(item);
@@ -306,10 +303,7 @@
     actions.innerHTML = `
       <button class="composer-action is-active" data-post-type="status" onclick="toggleType('status')"><i class="fas fa-comment-dots"></i> Status</button>
       <button class="composer-action" data-post-type="hot_take" onclick="toggleType('hot_take')"><i class="fas fa-fire"></i> Hot Take</button>
-      <button class="composer-action" data-post-type="article" onclick="toggleType('article')"><i class="fas fa-newspaper"></i> Article</button>
-      <button class="composer-action" data-post-type="link" onclick="toggleType('link')"><i class="fas fa-link"></i> Link</button>
       <button class="composer-action" data-post-type="poll" onclick="toggleType('poll')"><i class="fas fa-poll"></i> Poll</button>
-      <button class="composer-action" data-post-type="pick_recap" onclick="toggleType('pick_recap')"><i class="fas fa-clipboard-check"></i> Recap</button>
       <select class="composer-sport" id="sportPick">
         <option value="">Sport</option><option value="NFL">NFL</option><option value="NBA">NBA</option><option value="MLB">MLB</option><option value="NHL">NHL</option><option value="NCAAB">NCAAB</option><option value="NCAAF">NCAAF</option><option value="Soccer">Soccer</option>
       </select>`;
