@@ -367,10 +367,40 @@
             background: #16233a;
         }
 
+        .hm-avatar-link {
+            display: inline-flex;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .hm-avatar-link:focus-visible,
+        .hm-profile-name:focus-visible {
+            outline: 2px solid var(--teal);
+            outline-offset: 3px;
+        }
+
         .hm-name {
             display: grid;
             gap: 3px;
             min-width: 0;
+        }
+
+        .hm-profile-name {
+            min-width: 0;
+            color: inherit;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .hm-profile-name:hover strong,
+        .hm-profile-name:focus-visible strong {
+            color: #9ffcf0;
+            text-decoration: underline;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 3px;
         }
 
         .hm-name strong {
@@ -1413,6 +1443,7 @@
                 const hasPicks = Number(stats.totalPicks || 0) > 0;
                 const hasGraded = gradedCount(member) > 0;
                 const profileHref = '/profile/?user=' + encodeURIComponent(member.username);
+                const profileLabel = 'View ' + member.username + ' profile';
                 const sports = (stats.sports && stats.sports.length ? stats.sports.slice(0, 2) : ['None yet'])
                     .map(sport => '<span class="hm-sport">' + escapeHtml(sport) + '</span>')
                     .join('');
@@ -1421,8 +1452,10 @@
                 const lastPick = formatPickSummary(stats.lastPick);
                 return '<div class="hm-row hm-member-row" data-username="' + escapeHtml(member.username) + '">' +
                     '<div class="hm-user">' +
-                        '<img class="hm-avatar" src="' + escapeHtml(member.avatar) + '" alt="' + escapeHtml(member.displayName) + ' avatar">' +
-                        '<div class="hm-name"><strong data-tmr-username="' + escapeHtml(member.username) + '">' + escapeHtml(member.displayName) + '</strong><span>@' + escapeHtml(member.username) + '</span></div>' +
+                        '<a class="hm-avatar-link" href="' + profileHref + '" aria-label="' + escapeHtml(profileLabel) + '" title="' + escapeHtml(profileLabel) + '">' +
+                            '<img class="hm-avatar" src="' + escapeHtml(member.avatar) + '" alt="' + escapeHtml(member.displayName) + ' avatar">' +
+                        '</a>' +
+                        '<div class="hm-name"><a class="hm-profile-name" href="' + profileHref + '" aria-label="' + escapeHtml(profileLabel) + '" title="' + escapeHtml(profileLabel) + '"><strong data-tmr-username="' + escapeHtml(member.username) + '">' + escapeHtml(member.displayName) + '</strong></a><span>@' + escapeHtml(member.username) + '</span></div>' +
                     '</div>' +
                     '<div class="hm-stat" data-label="Record">' + escapeHtml(formatRecord(stats)) + '</div>' +
                     '<div class="hm-stat ' + statClass(stats.units) + '" data-label="Units">' + escapeHtml(formatUnits(stats.units, hasPicks)) + '</div>' +
