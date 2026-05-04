@@ -18,15 +18,29 @@
     // CONFIGURATION
     // =========================================================================
 
+    const DEFAULT_MEASUREMENT_ID = 'G-V5MCVXS2HE';
+
+    function analyticsDebugEnabled() {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('tmr_debug_analytics')) {
+                localStorage.setItem('tmr_debug_analytics', params.get('tmr_debug_analytics') === '0' ? '0' : '1');
+            }
+            return localStorage.getItem('tmr_debug_analytics') === '1';
+        } catch (e) {
+            return false;
+        }
+    }
+
     const ANALYTICS_CONFIG = {
         get measurementId() {
-            return (typeof CONFIG !== 'undefined' && CONFIG.analytics?.measurementId) || '';
+            return (typeof CONFIG !== 'undefined' && CONFIG.analytics?.measurementId) || DEFAULT_MEASUREMENT_ID;
         },
         get gtmId() {
             return (typeof CONFIG !== 'undefined' && CONFIG.analytics?.gtmId) || '';
         },
         get debug() {
-            return (typeof CONFIG !== 'undefined' && CONFIG.analytics?.debug) || false;
+            return analyticsDebugEnabled() || (typeof CONFIG !== 'undefined' && CONFIG.analytics?.debug) || false;
         },
         get enabled() {
             if (typeof CONFIG !== 'undefined' && CONFIG.analytics?.enabled === false) return false;
@@ -43,7 +57,28 @@
     function initGA4() {
         if (!ANALYTICS_CONFIG.enabled) return;
 
-        // gtag should already be defined by the inline snippet in <head>
+        const measurementId = ANALYTICS_CONFIG.measurementId;
+        if (!measurementId) return;
+
+        window.dataLayer = window.dataLayer || [];
+
+        if (typeof window.gtag !== 'function') {
+            window.gtag = function () { window.dataLayer.push(arguments); };
+            window.gtag('js', new Date());
+            window.gtag('config', measurementId, {
+                debug_mode: ANALYTICS_CONFIG.debug
+            });
+
+            const existing = document.querySelector('script[src*="googletagmanager.com/gtag/js"]');
+            if (!existing) {
+                const script = document.createElement('script');
+                script.async = true;
+                script.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(measurementId);
+                (document.head || document.documentElement).appendChild(script);
+            }
+            window.__tmrGa4Bootstrapped = true;
+        }
+
         if (typeof window.gtag !== 'function') {
             console.warn('[TMR Analytics] gtag not found. Make sure the GA4 snippet is in <head>.');
             return;
@@ -54,7 +89,7 @@
             window.gtag('set', { debug_mode: true });
         }
 
-        console.log('[TMR Analytics] GA4 connected:', ANALYTICS_CONFIG.measurementId);
+        console.log('[TMR Analytics] GA4 connected:', measurementId);
     }
 
     // =========================================================================
@@ -101,15 +136,42 @@
      * @param {string} eventName - GA4 event name (snake_case)
      * @param {Object} params - Event parameters
      */
+    function getPagePath() {
+        return window.location.pathname + window.location.search + window.location.hash;
+    }
+
+    function sanitizeParams(params) {
+        const clean = {};
+        Object.keys(params || {}).forEach(function (key) {
+            const value = params[key];
+            if (value === undefined || value === null || typeof value === 'function') return;
+            clean[key] = value;
+        });
+        return clean;
+    }
+
+    function rememberDebugEvent(type, name, params) {
+        window.__tmrAnalyticsEvents = window.__tmrAnalyticsEvents || [];
+        window.__tmrAnalyticsEvents.push({
+            type: type,
+            name: name,
+            params: params,
+            at: new Date().toISOString()
+        });
+        if (window.__tmrAnalyticsEvents.length > 100) {
+            window.__tmrAnalyticsEvents.shift();
+        }
+    }
+
     function trackEvent(eventName, params) {
         if (!ANALYTICS_CONFIG.enabled) return;
 
-        const eventParams = {
-            page_path: window.location.pathname + window.location.hash,
+        const eventParams = sanitizeParams({
+            page_path: getPagePath(),
             page_title: document.title,
             timestamp: new Date().toISOString(),
             ...params
-        };
+        });
 
         // Add user context if logged in
         const user = getCurrentUser();
@@ -130,6 +192,8 @@
             ...eventParams
         });
 
+        rememberDebugEvent('event', eventName, eventParams);
+
         if (ANALYTICS_CONFIG.debug) {
             console.log('[TMR Analytics] Event:', eventName, eventParams);
         }
@@ -140,11 +204,49 @@
      * @param {string} pagePath - The page path
      * @param {string} pageTitle - The page title
      */
+    function routeNameFromPath(pagePath) {
+        const path = String(pagePath || window.location.pathname || '/').split('?')[0].split('#')[0];
+        const parts = path.split('/').filter(Boolean);
+        return parts[0] || 'home';
+    }
+
+    const lastRouteEvents = {};
+
+    function trackRouteEvent(eventName, params) {
+        const key = eventName + '|' + (params && params.page_path ? params.page_path : '');
+        const now = Date.now();
+        if (lastRouteEvents[key] && now - lastRouteEvents[key] < 1000) return;
+        lastRouteEvents[key] = now;
+        trackEvent(eventName, params);
+    }
+
+    function trackRouteViewed(pagePath) {
+        const route = routeNameFromPath(pagePath);
+        const params = {
+            route: route,
+            page_path: pagePath || getPagePath()
+        };
+
+        if (route === 'picks' || route === 'make-picks' || route === 'submit-pick' || route === 'sportsbook') {
+            trackRouteEvent('picks_page_viewed', params);
+        } else if (route === 'forum' || route === 'forums') {
+            trackRouteEvent('forum_viewed', params);
+        } else if (route === 'handicappers' || route === 'cappers' || route === 'directory') {
+            trackRouteEvent('handicappers_page_viewed', params);
+        } else if (route === 'profile' || route === 'account' || route === 'my-record') {
+            trackRouteEvent('profile_viewed', params);
+        } else if (route === 'arena' || route === 'challenges' || route === 'polls' || route === 'trivia') {
+            trackRouteEvent('arena_viewed', params);
+        } else if (route === 'simulator' || route.indexOf('simulator') !== -1 || route === 'tool' || route === 'tools' || route.indexOf('tool') !== -1 || route === 'model-builder') {
+            trackRouteEvent('simulator_tool_page_viewed', params);
+        }
+    }
+
     function trackPageView(pagePath, pageTitle) {
         if (!ANALYTICS_CONFIG.enabled) return;
 
         const params = {
-            page_path: pagePath || window.location.pathname + window.location.hash,
+            page_path: pagePath || getPagePath(),
             page_title: pageTitle || document.title,
             page_location: window.location.href
         };
@@ -158,6 +260,9 @@
             event: 'page_view',
             ...params
         });
+
+        rememberDebugEvent('page_view', 'page_view', params);
+        trackRouteViewed(params.page_path);
 
         if (ANALYTICS_CONFIG.debug) {
             console.log('[TMR Analytics] Page View:', params);
@@ -199,8 +304,7 @@
         init: function () {
             initGA4();
             initGTM();
-            // Initial page_view is sent automatically by the inline gtag config in <head>.
-            // We only send manual page_views for SPA route changes (see bindSPANavigation).
+            trackRouteViewed(getPagePath());
             this.bindAutoTracking();
             this.setUserContext();
             console.log('[TMR Analytics] Module ready');
@@ -227,6 +331,11 @@
         // --- AUTH EVENTS ---
 
         signUpStarted: function (params) {
+            trackEvent('account_creation_started', {
+                button_location: params?.button_location || 'unknown',
+                method: 'email',
+                ...params
+            });
             trackEvent('sign_up_started', {
                 button_location: params?.button_location || 'unknown',
                 ...params
@@ -234,6 +343,10 @@
         },
 
         signUpCompleted: function (params) {
+            trackEvent('signup_completed', {
+                method: 'email',
+                ...params
+            });
             trackEvent('sign_up_completed', {
                 method: 'email',
                 ...params
@@ -313,6 +426,12 @@
         },
 
         forumThreadCreated: function (params) {
+            trackEvent('forum_post_created', {
+                sport: params?.sport,
+                post_type: params?.post_type || 'post',
+                post_id: params?.thread_id || params?.post_id,
+                ...params
+            });
             trackEvent('forum_thread_created', {
                 sport: params?.sport,
                 thread_id: params?.thread_id,
@@ -486,6 +605,18 @@
         track: trackEvent,
         pageView: trackPageView,
         setUser: setUserProperties,
+        debugStatus: function () {
+            const status = {
+                enabled: ANALYTICS_CONFIG.enabled,
+                debug: ANALYTICS_CONFIG.debug,
+                measurementId: ANALYTICS_CONFIG.measurementId,
+                gtagAvailable: typeof window.gtag === 'function',
+                bootstrappedByAnalyticsModule: !!window.__tmrGa4Bootstrapped,
+                queuedEvents: (window.__tmrAnalyticsEvents || []).slice()
+            };
+            console.table ? console.table(status.queuedEvents) : console.log(status.queuedEvents);
+            return status;
+        },
 
         // =====================================================================
         // AUTO-TRACKING BINDINGS
@@ -499,31 +630,56 @@
             this.bindPremiumPage();
             this.bindProfileEditButton();
             this.bindPickHistoryView();
+            this.bindImportantActions();
+            this.bindApiSuccessTracking();
         },
 
         /**
          * Track SPA navigation - fires on hash change and popstate
          */
         bindSPANavigation: function () {
-            const self = this;
+            let lastTrackedPath = getPagePath();
+
+            function trackIfChanged(label) {
+                setTimeout(function () {
+                    const currentPath = getPagePath();
+                    if (currentPath === lastTrackedPath && label !== 'showSection') return;
+                    lastTrackedPath = currentPath;
+                    trackPageView(currentPath, document.title);
+                }, 0);
+            }
+
+            ['pushState', 'replaceState'].forEach(function (method) {
+                const original = history[method];
+                if (typeof original !== 'function' || original.__tmrAnalyticsWrapped) return;
+                const wrapped = function () {
+                    const result = original.apply(this, arguments);
+                    trackIfChanged(method);
+                    return result;
+                };
+                wrapped.__tmrAnalyticsWrapped = true;
+                history[method] = wrapped;
+            });
 
             // Intercept showSection calls for SPA navigation
             const originalShowSection = window.showSection;
-            if (typeof originalShowSection === 'function') {
+            if (typeof originalShowSection === 'function' && !originalShowSection.__tmrAnalyticsWrapped) {
                 window.showSection = function (section) {
-                    originalShowSection.apply(this, arguments);
-                    trackPageView('/' + section, section + ' - Trust My Record');
+                    const result = originalShowSection.apply(this, arguments);
+                    trackPageView('/' + section, section + ' - TrustMyRecord');
+                    return result;
                 };
+                window.showSection.__tmrAnalyticsWrapped = true;
             }
 
             // Also track hash changes
             window.addEventListener('hashchange', function () {
-                trackPageView();
+                trackIfChanged('hashchange');
             });
 
             // And popstate for back/forward
             window.addEventListener('popstate', function () {
-                trackPageView();
+                trackIfChanged('popstate');
             });
         },
 
@@ -653,6 +809,100 @@
                     setTimeout(function () { historyObserved = false; }, 5000);
                 }
             });
+        },
+
+        bindImportantActions: function () {
+            const self = this;
+            document.addEventListener('submit', function (e) {
+                const form = e.target;
+                if (!form || !form.matches) return;
+
+                if (form.matches('#signupForm, #signup-form, form[action*="register"], form[action*="signup"]')) {
+                    self.signUpStarted({ button_location: 'signup_form_submit' });
+                }
+
+                if (form.matches('#loginForm, #login-form, form[action*="login"]')) {
+                    self.loginStarted({ button_location: 'login_form_submit' });
+                }
+
+                if (form.matches('#pick-form, #pickForm, form[data-pick-form]')) {
+                    self.makePickStarted({ button_location: 'pick_form_submit' });
+                }
+
+                if (form.matches('#forumPostForm, #threadForm, form[data-forum-post-form]')) {
+                    self.forumThreadStarted({ button_location: 'forum_form_submit' });
+                }
+            }, true);
+
+            document.addEventListener('click', function (e) {
+                const target = e.target.closest && e.target.closest('#ttSlipSubmit,#submitPickBtn,button.submit-pick-btn,button.lock-pick-btn,[data-lock-pick-btn]');
+                if (target) {
+                    self.makePickStarted({
+                        button_location: target.id || target.dataset.analyticsLocation || 'pick_submit_button'
+                    });
+                }
+            }, true);
+        },
+
+        bindApiSuccessTracking: function () {
+            const self = this;
+            if (typeof window.fetch !== 'function' || window.fetch.__tmrAnalyticsWrapped) return;
+
+            function parseBody(init) {
+                if (!init || init.body == null) return {};
+                if (typeof init.body === 'string') {
+                    try { return JSON.parse(init.body); } catch (e) { return {}; }
+                }
+                if (typeof init.body === 'object' && !(init.body instanceof FormData)) {
+                    return init.body;
+                }
+                return {};
+            }
+
+            function requestInfo(input, init) {
+                const url = typeof input === 'string' ? input : (input && input.url) || '';
+                const method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+                return { url: url, method: method };
+            }
+
+            const originalFetch = window.fetch;
+            const wrappedFetch = function (input, init) {
+                const info = requestInfo(input, init);
+                const body = parseBody(init);
+                return originalFetch.apply(this, arguments).then(function (response) {
+                    try {
+                        if (response && response.ok && info.method === 'POST') {
+                            if (/\/picks(?:\?|$|\/)/.test(info.url)) {
+                                self.pickSubmitted({
+                                    sport: body.sport_key || body.sport || body.league,
+                                    league: body.league,
+                                    pick_type: body.market_type || body.pick_type,
+                                    odds: body.odds_snapshot || body.odds,
+                                    units: body.units,
+                                    source: 'api_success'
+                                });
+                            } else if (/\/feed(?:\?|$|\/)|\/posts(?:\?|$|\/)|\/forum(?:\?|$|\/)|\/forums(?:\?|$|\/)|\/threads(?:\?|$|\/)|\/polls(?:\?|$|\/)/.test(info.url)) {
+                                const route = routeNameFromPath(window.location.pathname);
+                                const params = {
+                                    post_type: body.post_type || body.type || (body.options ? 'poll' : 'post'),
+                                    sport: body.sport,
+                                    source: 'api_success'
+                                };
+                                self.postCreated(params);
+                                if (route === 'forum' || route === 'forums') {
+                                    self.forumThreadCreated(params);
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        if (ANALYTICS_CONFIG.debug) console.warn('[TMR Analytics] API success tracking failed:', e);
+                    }
+                    return response;
+                });
+            };
+
+            wrappedFetch.__tmrAnalyticsWrapped = true;
+            window.fetch = wrappedFetch;
         }
     };
 
