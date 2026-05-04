@@ -1046,7 +1046,7 @@
     </main>
 
 <script src="/static/js/config.js?v=20260330"></script>
-    <script src="/static/js/backend-api.js?v=20260423a"></script>
+    <script src="/static/js/backend-api.js?v=20260504leaderboard1"></script>
 <script src="/static/js/auth-persistent.js?v=20260424a"></script>
 <script src="/static/js/analytics.js?v=20260417"></script>
     <script>
@@ -1445,10 +1445,29 @@
             applyHandicapperFilters();
         }
 
+        async function fetchHandicapperLeaderboard() {
+            const endpoint = '/users/leaderboard?sortBy=roi&limit=100&minPicks=1';
+            if (window.api && typeof window.api.request === 'function') {
+                return window.api.request(endpoint);
+            }
+
+            const baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.api && CONFIG.api.baseUrl)
+                ? CONFIG.api.baseUrl
+                : 'https://trustmyrecord-api.onrender.com/api';
+            const response = await fetch(baseUrl + endpoint, {
+                headers: { 'Accept': 'application/json' },
+                cache: 'no-store'
+            });
+            if (!response.ok) {
+                throw new Error('Leaderboard request failed: HTTP ' + response.status);
+            }
+            return response.json();
+        }
+
         async function loadHandicappers() {
             const state = document.getElementById('leaderboardState');
             try {
-                const data = await window.api.getLeaderboard({ sortBy: 'roi', limit: 100, minPicks: 1 });
+                const data = await fetchHandicapperLeaderboard();
                 const rawEntries = Array.isArray(data) ? data
                     : Array.isArray(data && data.leaderboard) ? data.leaderboard
                     : Array.isArray(data && data.users) ? data.users
