@@ -5035,7 +5035,7 @@
     </script>
     <script src="/static/js/config.js?v=20260330"></script>
     <script src="/static/js/analytics.js?v=20260405"></script>
-    <script src="/static/js/backend-api.js?v=20260423a"></script>
+    <script src="/static/js/backend-api.js?v=20260503profilefix"></script>
     <script src="/static/js/nav-badges.js"></script>
     <script src="/static/js/auth-persistent.js?v=20260424a"></script>
     <script src="/static/js/auto-grader-fixed.js?v=20260405b"></script>
@@ -5713,6 +5713,71 @@
         }
     }
 
+    function withProfileTimeout(promise, label, timeoutMs) {
+        let timer;
+        const timeout = new Promise((_, reject) => {
+            timer = setTimeout(() => reject(new Error((label || 'Request') + ' timed out')), timeoutMs || 10000);
+        });
+        return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+    }
+
+    function normalizeProfilePayload(data) {
+        const user = data && (data.user || data);
+        if (!user || typeof user !== 'object') return null;
+        const username = String(user.username || profileUsername || '').trim();
+        if (!username) return null;
+        return {
+            ...user,
+            username,
+            display_name: user.display_name || user.displayName || username,
+            bio: user.bio || '',
+            avatar_url: user.avatar_url || user.avatarUrl || '',
+            favorite_teams: Array.isArray(user.favorite_teams) ? user.favorite_teams : [],
+            favorite_sports: Array.isArray(user.favorite_sports) ? user.favorite_sports : []
+        };
+    }
+
+    async function hydrateOptionalProfileFields() {
+        if (!profileData || !profileData.username || !api || typeof api.request !== 'function') return false;
+        let changed = false;
+
+        try {
+            const teamsData = await withProfileTimeout(
+                api.request('/gaming/teams/' + encodeURIComponent(profileData.username)),
+                'Favorite teams',
+                6000
+            );
+            if (teamsData && Array.isArray(teamsData.favorite_teams)) {
+                const teamRows = teamsData.favorite_teams.filter(t => t && t.team_name);
+                profileData._fav_teams = {};
+                teamRows.forEach(t => {
+                    if (t.sport) profileData._fav_teams[t.sport] = t.team_name;
+                });
+                profileData.favorite_teams = teamRows.map(t => t.team_name).filter(Boolean);
+                if (!Array.isArray(profileData.favorite_sports) || profileData.favorite_sports.length === 0) {
+                    profileData.favorite_sports = Array.from(new Set(teamRows.map(t => t.sport).filter(Boolean)));
+                }
+                changed = true;
+            }
+        } catch(e) {
+            profileData._fav_teams = profileData._fav_teams || {};
+        }
+
+        try {
+            const gamerData = await withProfileTimeout(
+                api.request('/gaming/profile/' + encodeURIComponent(profileData.username)),
+                'Gamer profile',
+                6000
+            );
+            profileData._gamer = (gamerData && gamerData.gamer_profile) ? gamerData.gamer_profile : {};
+            changed = true;
+        } catch(e) {
+            profileData._gamer = profileData._gamer || {};
+        }
+
+        return changed;
+    }
+
     // ======================== LOAD PROFILE ========================
     async function loadProfile() {
         const profileEndpoint = '/users/' + encodeURIComponent(profileUsername || '');
@@ -5721,13 +5786,11 @@
                 throw new Error('Profile service is unavailable.');
             }
 
-            const data = await api.request(profileEndpoint);
-            profileData = data.user || data;
+            const data = await withProfileTimeout(api.request(profileEndpoint), 'Profile lookup', 10000);
+            profileData = normalizeProfilePayload(data);
             if (!profileData || !profileData.id) {
                 throw new Error('Profile response was empty.');
             }
-            // Expose globally so inline onclick handlers (affiliation CTA, etc)
-            // can read the username for per-user localStorage keys.
             window.profileData = profileData;
             profileUserId = profileData.id;
 
@@ -5735,31 +5798,7 @@
                 isFollowingProfile = !!profileData.is_following;
             }
 
-            // Load favorite teams and gamer profile from backend
-            try {
-                const teamsData = await api.request('/gaming/teams/' + profileUsername);
-                if (teamsData && Array.isArray(teamsData.favorite_teams)) {
-                    const teamRows = teamsData.favorite_teams.filter(t => t && t.team_name);
-                    profileData._fav_teams = {};
-                    teamRows.forEach(t => {
-                        if (t.sport) profileData._fav_teams[t.sport] = t.team_name;
-                    });
-                    profileData.favorite_teams = teamRows.map(t => t.team_name).filter(Boolean);
-                    if (!Array.isArray(profileData.favorite_sports) || profileData.favorite_sports.length === 0) {
-                        profileData.favorite_sports = Array.from(new Set(teamRows.map(t => t.sport).filter(Boolean)));
-                    }
-                }
-            } catch(e) { profileData._fav_teams = {}; }
-
-            try {
-                const gamerData = await api.request('/gaming/profile/' + profileUsername);
-                if (gamerData && gamerData.gamer_profile) profileData._gamer = gamerData.gamer_profile;
-                else profileData._gamer = {};
-            } catch(e) { profileData._gamer = {}; }
-
-            if (!profileData) {
-                throw new Error('User not found.');
-            }
+            renderProfileHeader(profileData);
         } catch (error) {
             console.error('[Profile] Profile load failed:', error);
             console.error('[Profile] Failed profile endpoint:', (api && api.baseUrl ? api.baseUrl : '') + profileEndpoint, 'status:', error && error.status ? error.status : 'unknown');
@@ -5768,21 +5807,27 @@
             return;
         }
 
-        renderProfileHeader(profileData);
         loadAdvancedMetrics(profileData.username || profileUsername || '');
 
-        try {
-            await refreshLeaderboardRank();
-            renderProfileHeader(profileData);
-        } catch (error) {
-            console.warn('[Profile] Leaderboard rank load failed:', error);
-        }
+        (async function finishProfileHeaderEnhancements() {
+            try {
+                const optionalChanged = await hydrateOptionalProfileFields();
+                await refreshLeaderboardRank();
+                if (optionalChanged || currentLeaderboardRank != null) renderProfileHeader(profileData);
+            } catch (error) {
+                console.warn('[Profile] Optional header enhancements unavailable:', error);
+            }
+        })();
 
-        try {
-            await loadAllPicks();
-        } catch (error) {
-            console.warn('[Profile] Pick history load failed:', error);
-        }
+        (async function loadProfileLedger() {
+            try {
+                await loadAllPicks();
+            } catch (error) {
+                console.warn('[Profile] Pick history load failed:', error);
+                allLoadedPicks = [];
+                try { renderPicksTable([]); } catch (_) {}
+            }
+        })();
 
         analyticsTrackPickHistoryView({
             view_type: isOwnProfile ? 'own' : 'public',
