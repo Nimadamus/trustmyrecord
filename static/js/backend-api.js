@@ -1,4 +1,4 @@
-﻿/**
+/**
  * TrustMyRecord Backend API Client
  * Connects frontend to Node.js/Express backend
  */
@@ -420,7 +420,7 @@ class TrustMyRecordAPI {
     // ==================== USER ROUTES ====================
 
     async getUserProfile(username) {
-        return this.request(`/users/${username}`);
+        return this.request(`/users/${encodeURIComponent(username)}`);
     }
 
     async updateProfile(updates) {
