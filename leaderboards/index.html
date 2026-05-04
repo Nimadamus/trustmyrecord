@@ -1431,6 +1431,11 @@
             if (belowSampleCount > 0) {
                 document.getElementById('resultCount').textContent += ' · ' + belowSampleCount + ' below ' + minSample + '-pick minimum';
             }
+            console.info('[TMR Leaderboards] rendered handicappers', {
+                minSample: minSample,
+                visible: filteredLeaderboard.map(function(entry) { return entry.username; }),
+                belowSampleCount: belowSampleCount
+            });
             trackHub('handicapper_filters_applied', {
                 search_query: search || '', sport: sport, sort_by: sort,
                 min_sample: minSample, visible_count: filteredLeaderboard.length
@@ -1447,21 +1452,23 @@
 
         async function fetchHandicapperLeaderboard() {
             const endpoint = '/users/leaderboard?sortBy=roi&limit=100&minPicks=1';
-            if (window.api && typeof window.api.request === 'function') {
-                return window.api.request(endpoint);
-            }
-
             const baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.api && CONFIG.api.baseUrl)
                 ? CONFIG.api.baseUrl
                 : 'https://trustmyrecord-api.onrender.com/api';
-            const response = await fetch(baseUrl + endpoint, {
+            const url = baseUrl + endpoint;
+            const response = await fetch(url, {
                 headers: { 'Accept': 'application/json' },
                 cache: 'no-store'
             });
             if (!response.ok) {
                 throw new Error('Leaderboard request failed: HTTP ' + response.status);
             }
-            return response.json();
+            const data = await response.json();
+            console.info('[TMR Leaderboards] fetched handicappers', {
+                url: url,
+                usernames: (data && data.leaderboard || []).map(function(entry) { return entry.username; })
+            });
+            return data;
         }
 
         async function loadHandicappers() {
@@ -1476,6 +1483,9 @@
                 fullLeaderboard = rawEntries.map(normalizeEntry).filter(function(entry) {
                     return entry.username && entry.totalPicks >= 1;
                 });
+                console.info('[TMR Leaderboards] normalized handicappers', fullLeaderboard.map(function(entry) {
+                    return { username: entry.username, totalPicks: entry.totalPicks, roi: entry.roi };
+                }));
 
                 setQuickStats(fullLeaderboard);
                 renderStreakRail(fullLeaderboard
