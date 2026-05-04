@@ -217,6 +217,83 @@
     return renderTextPost(item);
   }
 
+  function pickStatus(item) {
+    return String(item.status || item.result || item.pick_status || "").toLowerCase();
+  }
+
+  function isPickLike(item) {
+    return item && (
+      item.item_type === "pick" ||
+      item.post_type === "pick" ||
+      item.post_type === "pick_share" ||
+      item.post_type === "submitted_picks_summary" ||
+      item.post_type === "graded_pick_summary"
+    );
+  }
+
+  function isPendingPick(item) {
+    const status = pickStatus(item);
+    return status === "pending" || status === "locked" || item.post_type === "submitted_picks_summary";
+  }
+
+  function pickGroupKey(item) {
+    const name = rawName(item) || String(item.user_id || "user");
+    const stamp = item.graded_at || item.created_at || item.locked_at || new Date().toISOString();
+    const day = new Date(stamp).toISOString().slice(0, 10);
+    return `${name}|${isPendingPick(item) ? "pending" : "graded"}|${day}`;
+  }
+
+  function scrubPendingPickFields(item) {
+    const safe = { ...item };
+    [
+      "pick_selection", "selection", "selection_label", "pick_side", "side",
+      "pick_market_type", "market_type", "market", "pick_odds", "odds",
+      "price", "american_odds", "pick_line", "line", "spread", "total",
+      "pick_units", "units", "stake", "risk", "pick_home_team",
+      "home_team", "pick_away_team", "away_team", "game", "game_label",
+      "event_name", "matchup", "opponent"
+    ].forEach(key => { delete safe[key]; });
+    return safe;
+  }
+
+  function aggregatePickActivity(items) {
+    const groups = new Map();
+    const rest = [];
+    for (const item of items) {
+      if (!isPickLike(item)) {
+        rest.push(item);
+        continue;
+      }
+      const pending = isPendingPick(item);
+      const key = pickGroupKey(item);
+      const count = Number(item.activity_count || item.pick_count || item.count || 1) || 1;
+      const source = pending ? scrubPendingPickFields(item) : { ...item };
+      const existing = groups.get(key);
+      if (!existing) {
+        groups.set(key, {
+          ...source,
+          item_type: "pick_activity",
+          post_type: pending ? "submitted_picks_summary" : "graded_pick_summary",
+          item_id: `pick_activity_${key.replace(/[^a-zA-Z0-9_-]/g, "_")}`,
+          activity_count: count,
+          wins_count: Number(item.wins_count || (pickStatus(item) === "win" ? 1 : 0)),
+          losses_count: Number(item.losses_count || (pickStatus(item) === "loss" ? 1 : 0)),
+          pushes_count: Number(item.pushes_count || (pickStatus(item) === "push" ? 1 : 0)),
+          created_at: item.graded_at || item.created_at || item.locked_at
+        });
+        continue;
+      }
+      existing.activity_count += count;
+      existing.wins_count += Number(item.wins_count || (pickStatus(item) === "win" ? 1 : 0));
+      existing.losses_count += Number(item.losses_count || (pickStatus(item) === "loss" ? 1 : 0));
+      existing.pushes_count += Number(item.pushes_count || (pickStatus(item) === "push" ? 1 : 0));
+      const existingTime = new Date(existing.created_at || 0).getTime();
+      const itemTime = new Date(item.graded_at || item.created_at || item.locked_at || 0).getTime();
+      if (itemTime > existingTime) existing.created_at = item.graded_at || item.created_at || item.locked_at;
+    }
+    return [...groups.values(), ...rest];
+  }
+
   function findFirstUrl(text) {
     const match = String(text || "").match(/https?:\/\/[^\s]+/i);
     return match ? match[0] : "";
@@ -347,7 +424,9 @@
           polls.forEach(p => { if (!seen.has(String(p.item_id))) items.push(p); });
         } catch (_) {}
       }
+      items = aggregatePickActivity(items);
       if (cleanupFilter === "hot-takes") items = items.filter(i => i.post_type === "hot_take");
+      if (cleanupFilter === "picks") items = items.filter(i => i.item_type === "pick_activity" || isPickLike(i));
       items.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
       if (!items.length) {
         list.innerHTML = '<div class="empty-state"><i class="fas fa-stream"></i><h3>Your feed is ready.</h3><p>Public posts and privacy-safe pick activity will appear here as users participate.</p></div>';
