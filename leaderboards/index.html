@@ -809,7 +809,7 @@
                                 <label for="sampleFilter">Minimum picks</label>
                                 <select id="sampleFilter">
                                     <option value="1">1 pick</option>
-                                    <option value="5">5 picks</option>
+                                    <option value="5" selected>5 picks</option>
                                     <option value="10">10 picks</option>
                                     <option value="25">25 picks</option>
                                     <option value="50">50 picks</option>
@@ -1175,7 +1175,7 @@
             const totalPicks = num(entry.total_picks != null ? entry.total_picks : entry.totalPicks != null ? entry.totalPicks : wins + losses + pushes);
             const roi = pct(entry.roi);
             const units = num(entry.net_units != null ? entry.net_units : entry.units);
-            const winRate = pct(entry.win_percentage != null ? entry.win_percentage : entry.winRate);
+            const winRate = pct(entry.win_percentage != null ? entry.win_percentage : entry.win_rate != null ? entry.win_rate : entry.winRate);
             const streak = num(entry.current_streak != null ? entry.current_streak : entry.currentStreak);
             const sports = Array.isArray(entry.primary_sports) ? entry.primary_sports
                 : Array.isArray(entry.sports) ? entry.sports
