@@ -15,9 +15,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/css/social-home.css?v=20260504feedclean1">
-    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260504feedclean1">
-    <script defer src="/static/js/tmr-sitewide.js?v=20260504feedclean1"></script>
+    <link rel="stylesheet" href="/static/css/social-home.css?v=20260504feedreadable1">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260504feedreadable1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260504feedreadable1"></script>
     <style>
         /* Trivia-aligned design tokens (override social-home.css) */
         :root {
@@ -1083,6 +1083,207 @@
         }
         .load-more-btn:hover { border-color: var(--neon-cyan); color: var(--neon-cyan); transform: translateY(-1px); }
 
+        /* ===== READABILITY PASS ===== */
+        body.tmr-site-shell[data-tmr-route="feed"] .page-layout {
+            width: min(1500px, calc(100% - 48px)) !important;
+            max-width: 1500px !important;
+            grid-template-columns: 176px minmax(760px, 1fr) 250px !important;
+            gap: 24px !important;
+            padding-top: 16px !important;
+        }
+        .feed-hero {
+            padding: 16px 18px !important;
+            margin-bottom: 14px !important;
+        }
+        .feed-hero-eyebrow {
+            font-size: 0.76rem !important;
+            letter-spacing: 0.08em !important;
+            margin-bottom: 4px !important;
+        }
+        .feed-hero h1 {
+            font-size: clamp(1.85rem, 1.9vw, 2.35rem) !important;
+            line-height: 1.05 !important;
+            margin-bottom: 4px !important;
+        }
+        .feed-hero p {
+            font-size: 1rem !important;
+            line-height: 1.5 !important;
+            margin-bottom: 12px !important;
+            color: #c5d4e6 !important;
+        }
+        .feed-hero-point {
+            min-height: 38px !important;
+            padding: 9px 12px !important;
+            font-size: 0.94rem !important;
+            line-height: 1.25 !important;
+            color: #eef7ff !important;
+        }
+        .sidebar-link {
+            min-height: 42px !important;
+            padding: 10px 9px !important;
+            font-size: 0.86rem !important;
+            letter-spacing: 0.01em !important;
+            text-transform: none !important;
+            line-height: 1.2 !important;
+        }
+        .sidebar-link i {
+            font-size: 1rem !important;
+        }
+        .composer-card {
+            padding: 14px !important;
+            margin-bottom: 14px !important;
+            border-radius: 14px !important;
+        }
+        .composer-avatar {
+            width: 40px !important;
+            height: 40px !important;
+            font-size: 1.05rem !important;
+        }
+        .composer-textarea {
+            min-height: 50px !important;
+            font-size: 1rem !important;
+            line-height: 1.45 !important;
+            padding: 11px 12px !important;
+        }
+        .composer-bottom {
+            padding-left: 52px !important;
+            margin-top: 10px !important;
+        }
+        .composer-actions {
+            gap: 8px !important;
+        }
+        .composer-action,
+        .composer-sport,
+        .btn-post {
+            min-height: 36px !important;
+            font-size: 0.92rem !important;
+            border-radius: 10px !important;
+        }
+        .composer-action,
+        .composer-sport {
+            padding: 8px 12px !important;
+        }
+        .btn-post {
+            padding: 8px 20px !important;
+        }
+        .feed-tabs {
+            padding: 5px !important;
+            margin-bottom: 14px !important;
+            border-radius: 14px !important;
+            background: rgba(8, 15, 26, 0.78) !important;
+        }
+        .feed-tab {
+            padding: 10px 14px !important;
+            font-size: 0.96rem !important;
+            font-weight: 800 !important;
+            border-radius: 11px !important;
+            color: #b9c8da !important;
+        }
+        .feed-item {
+            padding: 18px 20px !important;
+            margin-bottom: 14px !important;
+            border-radius: 16px !important;
+            background: rgba(12, 20, 33, 0.92) !important;
+        }
+        .fi-header {
+            gap: 13px !important;
+            margin-bottom: 12px !important;
+        }
+        .fi-avatar {
+            width: 48px !important;
+            height: 48px !important;
+            font-size: 1.12rem !important;
+        }
+        .fi-name {
+            font-size: 1.05rem !important;
+            font-weight: 800 !important;
+        }
+        .fi-handle,
+        .fi-time,
+        .fi-dot,
+        .fi-user-subline {
+            font-size: 0.9rem !important;
+            line-height: 1.35 !important;
+            color: #aab8ca !important;
+        }
+        .fi-action-label,
+        .activity-line,
+        .fi-content,
+        .pick-embed,
+        .fi-actions,
+        .privacy-badge,
+        .record-strip,
+        .comments-section {
+            margin-left: 61px !important;
+        }
+        .activity-line {
+            margin-top: 0 !important;
+            margin-bottom: 10px !important;
+            font-size: 1.12rem !important;
+            line-height: 1.35 !important;
+            color: #f4f9ff !important;
+        }
+        .privacy-badge {
+            padding: 8px 12px !important;
+            font-size: 0.94rem !important;
+            line-height: 1.35 !important;
+            color: #c5d4e6 !important;
+        }
+        .privacy-badge.is-graded {
+            color: #d8ffe6 !important;
+        }
+        .record-strip {
+            gap: 8px !important;
+            font-size: 0.92rem !important;
+            margin-top: 10px !important;
+        }
+        .record-strip span {
+            padding: 7px 10px !important;
+            border-radius: 10px !important;
+        }
+        .fi-actions {
+            gap: 8px !important;
+            padding-top: 12px !important;
+            margin-top: 14px !important;
+        }
+        .fi-action {
+            font-size: 0.94rem !important;
+            padding: 8px 11px !important;
+            color: #aebccd !important;
+        }
+        .right-sidebar {
+            gap: 12px !important;
+        }
+        .rs-card {
+            padding: 16px !important;
+            border-radius: 14px !important;
+        }
+        .rs-title {
+            font-size: 0.96rem !important;
+            letter-spacing: 0.04em !important;
+            margin-bottom: 12px !important;
+        }
+        .rs-getting-started-list,
+        .rs-soon-panel {
+            gap: 8px !important;
+        }
+        .rs-getting-started-list li,
+        .rs-soon-row {
+            font-size: 0.95rem !important;
+            line-height: 1.45 !important;
+        }
+        .rs-soon-row {
+            padding: 10px 0 !important;
+        }
+        .rs-soon-row strong {
+            font-size: 0.98rem !important;
+        }
+        .rs-soon-row span {
+            font-size: 0.9rem !important;
+            line-height: 1.4 !important;
+            color: #aab8ca !important;
+        }
+
         /* ===== MOBILE ===== */
         @media (max-width: 1080px) {
             .page-layout { grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; }
@@ -1181,7 +1382,6 @@
                     <div class="composer-actions">
                         <button class="composer-action" id="takeBtn" onclick="toggleType('hot-take')"><i class="fas fa-fire"></i> Hot Take</button>
                         <button class="composer-action" id="pollBtn" onclick="toggleType('poll')"><i class="fas fa-poll"></i> Poll</button>
-                        <button class="composer-action" id="recapBtn" onclick="toggleType('pick-recap')"><i class="fas fa-receipt"></i> Pick Recap</button>
                         <select class="composer-sport" id="sportPick">
                             <option value="">Sport</option>
                             <option value="NFL">NFL</option>
@@ -1220,21 +1420,13 @@
         </main>
 
         <aside class="right-sidebar">
-            <div class="rs-card is-getting-started">
-                <div class="rs-title"><i class="fas fa-rocket" style="color:var(--neon-gold);"></i>Start Building</div>
-                <ul class="rs-getting-started-list">
-                    <li><i class="fas fa-lock"></i><span>Submit picks now; pending details stay private.</span></li>
-                    <li><i class="fas fa-circle-check"></i><span>Graded outcomes build your verified public record.</span></li>
-                    <li><i class="fas fa-pen-nib"></i><span>Add hot takes, blogs, links, polls, recaps, and replies.</span></li>
-                </ul>
-            </div>
             <div class="rs-card">
-                <div class="rs-title"><i class="fas fa-signal" style="color:var(--accent-blue);"></i>Coming Soon</div>
+                <div class="rs-title"><i class="fas fa-shield-alt" style="color:var(--accent-blue);"></i>Feed Rules</div>
                 <div class="rs-soon-panel">
-                    <div class="rs-soon-row" id="trendingList"><i class="fas fa-fire"></i><div><strong>Record Activity</strong><span>Real graded record movement will appear here.</span></div></div>
-                    <div class="rs-soon-row" id="topCappersList"><i class="fas fa-chart-line"></i><div><strong>Top Cappers</strong><span>Shown only when verified public records have enough data.</span></div></div>
-                    <div class="rs-soon-row" id="arenaWatchList"><i class="fas fa-bolt"></i><div><strong>Community Queue</strong><span>Forum, arena, trivia, and poll activity will surface from real usage.</span></div></div>
-                    <div class="rs-soon-row" id="suggestedList"><i class="fas fa-user-plus"></i><div><strong>Who to Follow</strong><span>No fake users or synthetic records are shown.</span></div></div>
+                    <div class="rs-soon-row" id="trendingList"><i class="fas fa-lock"></i><div><strong>Locked stays locked</strong><span>Pending pick details are hidden.</span></div></div>
+                    <div class="rs-soon-row" id="topCappersList"><i class="fas fa-circle-check"></i><div><strong>Records update after grading</strong><span>Only graded outcomes affect public records.</span></div></div>
+                    <div class="rs-soon-row" id="arenaWatchList"><i class="fas fa-users"></i><div><strong>Real activity only</strong><span>No fake users or synthetic records.</span></div></div>
+                    <div id="suggestedList" style="display:none;"></div>
                 </div>
             </div>
         </aside>
@@ -1244,9 +1436,9 @@
     <script src="/static/js/analytics.js?v=20260405"></script>
     <script src="/static/js/backend-api.js?v=20260423a"></script>
     <script src="/static/js/auth-persistent.js?v=20260424a"></script>
-    <script src="/static/js/social-home.js?v=20260504feedclean1"></script>
-    <script src="/static/js/feed-ui-overrides.js?v=20260504feedclean1"></script>
-    <script src="/static/js/feed-cleanup.js?v=20260504feedclean1"></script>
+    <script src="/static/js/social-home.js?v=20260504feedreadable1"></script>
+    <script src="/static/js/feed-ui-overrides.js?v=20260504feedreadable1"></script>
+    <script src="/static/js/feed-cleanup.js?v=20260504feedreadable1"></script>
 </body>
 </html>
 
