@@ -772,7 +772,7 @@
                         <div class="card-head">
                             <div>
                                 <h2>Board filters</h2>
-                                <p>Refine the leaderboard by sport, sorting logic, and minimum proof threshold.</p>
+                                <p>Refine the leaderboard by sport, search, and sorting logic.</p>
                             </div>
                             <button type="button" class="mini-link" data-action="reset-filters">Reset</button>
                         </div>
@@ -803,18 +803,6 @@
                                     <option value="winRate">Win rate</option>
                                     <option value="totalPicks">Pick count</option>
                                     <option value="streak">Current streak</option>
-                                </select>
-                            </div>
-                            <div class="field">
-                                <label for="sampleFilter">Record floor</label>
-                                <select id="sampleFilter">
-                                    <option value="1" selected>1+ picks</option>
-                                    <option value="5">5+ picks</option>
-                                    <option value="10">10 picks</option>
-                                    <option value="25">25 picks</option>
-                                    <option value="50">50 picks</option>
-                                    <option value="100">100 picks</option>
-                                    <option value="250">250 picks</option>
                                 </select>
                             </div>
                         </div>
@@ -1402,14 +1390,13 @@
             const search = String(document.getElementById('capperSearch').value || '').trim().toLowerCase();
             const sport = document.getElementById('sportFilter').value;
             const sort = document.getElementById('sortFilter').value;
-            const minSample = num(document.getElementById('sampleFilter').value);
 
             filteredLeaderboard = fullLeaderboard.filter(function(entry) {
                 const matchesSearch = !search || entry.username.toLowerCase().indexOf(search) !== -1 || entry.displayName.toLowerCase().indexOf(search) !== -1;
                 const matchesSport = sport === 'all' || (entry.sports || []).some(function(item) {
                     return String(item || '').toLowerCase() === String(sport).toLowerCase();
                 });
-                return matchesSearch && matchesSport && entry.totalPicks >= minSample;
+                return matchesSearch && matchesSport;
             });
 
             filteredLeaderboard.sort(function(a, b) {
@@ -1423,7 +1410,7 @@
             renderLeaderboard(filteredLeaderboard);
             trackHub('handicapper_filters_applied', {
                 search_query: search || '', sport: sport, sort_by: sort,
-                min_sample: minSample, visible_count: filteredLeaderboard.length
+                min_picks: 1, visible_count: filteredLeaderboard.length
             });
         }
 
@@ -1431,7 +1418,6 @@
             document.getElementById('capperSearch').value = '';
             document.getElementById('sportFilter').value = 'all';
             document.getElementById('sortFilter').value = 'roi';
-            document.getElementById('sampleFilter').value = '1';
             applyHandicapperFilters();
         }
 
@@ -1881,7 +1867,7 @@
         }
 
         function bindHandicapperFilters() {
-            ['capperSearch', 'sportFilter', 'sortFilter', 'sampleFilter'].forEach(function(id) {
+            ['capperSearch', 'sportFilter', 'sortFilter'].forEach(function(id) {
                 const el = document.getElementById(id);
                 if (!el) return;
                 el.addEventListener(id === 'capperSearch' ? 'input' : 'change', applyHandicapperFilters);
