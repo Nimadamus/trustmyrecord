@@ -15,9 +15,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/css/social-home.css?v=20260504feedsocial1">
-    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260504feedsocial1">
-    <script defer src="/static/js/tmr-sitewide.js?v=20260504feedsocial1"></script>
+    <link rel="stylesheet" href="/static/css/social-home.css?v=20260504feedenergy1">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260504feedenergy1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260504feedenergy1"></script>
     <style>
         /* Trivia-aligned design tokens (override social-home.css) */
         :root {
@@ -1179,11 +1179,147 @@
             border-radius: 11px !important;
             color: #b9c8da !important;
         }
+        .feed-summary-strip {
+            display: none;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 0 0 12px;
+        }
+        .feed-summary-strip.is-shown { display: grid; }
+        .feed-summary-item {
+            display: grid;
+            grid-template-columns: 32px minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+            min-height: 58px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            background: rgba(10, 18, 31, 0.78);
+        }
+        .feed-summary-item i {
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: rgba(125, 211, 252, 0.10);
+            color: #7dd3fc;
+            font-size: 0.9rem;
+        }
+        .feed-summary-item b {
+            display: block;
+            color: #f8fafc;
+            font-family: 'Barlow', sans-serif;
+            font-size: 1.28rem;
+            line-height: 1;
+        }
+        .feed-summary-item span {
+            display: block;
+            margin-top: 4px;
+            color: #b7c6d8;
+            font-size: 0.9rem;
+            line-height: 1.25;
+            font-weight: 700;
+        }
+        .feed-low-activity {
+            display: none;
+            margin: 0 0 12px;
+        }
+        .feed-low-activity.is-shown { display: block; }
+        .feed-explain-card,
+        .feed-more-placeholder {
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 16px;
+            background:
+                linear-gradient(135deg, rgba(45, 212, 191, 0.055), rgba(125, 211, 252, 0.025)),
+                rgba(10, 18, 31, 0.84);
+            padding: 14px 16px;
+            color: #c7d6e8;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        .feed-next-actions {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .feed-next-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 54px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            background: rgba(2, 8, 18, 0.24);
+            color: #eef7ff;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 0.94rem;
+            line-height: 1.25;
+        }
+        .feed-next-card:hover {
+            border-color: rgba(125, 211, 252, 0.30);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+        .feed-next-card i {
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            background: rgba(125, 211, 252, 0.12);
+            color: #7dd3fc;
+            flex-shrink: 0;
+        }
         .feed-item {
             padding: 18px 20px !important;
             margin-bottom: 14px !important;
             border-radius: 16px !important;
             background: rgba(12, 20, 33, 0.92) !important;
+        }
+        .feed-item.is-featured-card {
+            padding: 20px 22px !important;
+            border-color: rgba(125, 211, 252, 0.22) !important;
+            background:
+                linear-gradient(180deg, rgba(125, 211, 252, 0.045), rgba(45, 212, 191, 0.015)),
+                rgba(12, 20, 33, 0.96) !important;
+        }
+        .feed-item.is-featured-card .fi-avatar {
+            width: 58px !important;
+            height: 58px !important;
+            font-size: 1.32rem !important;
+        }
+        .feed-item.is-featured-card .fi-action-label,
+        .feed-item.is-featured-card .activity-line,
+        .feed-item.is-featured-card .fi-content,
+        .feed-item.is-featured-card .pick-embed,
+        .feed-item.is-featured-card .fi-actions,
+        .feed-item.is-featured-card .privacy-badge,
+        .feed-item.is-featured-card .record-strip,
+        .feed-item.is-featured-card .comments-section,
+        .feed-item.is-featured-card .activity-result-label {
+            margin-left: 71px !important;
+        }
+        .activity-result-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 8px !important;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(45, 212, 191, 0.10);
+            border: 1px solid rgba(45, 212, 191, 0.18);
+            color: #bfffe1;
+            font-size: 0.82rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
         .fi-header {
             gap: 13px !important;
@@ -1356,6 +1492,65 @@
             text-align: center;
             font-size: 0.82rem;
         }
+        .rs-thread-row,
+        .rs-member-row {
+            display: grid;
+            grid-template-columns: 28px minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+            min-height: 42px;
+            padding: 9px 0;
+            border-top: 1px solid rgba(148, 163, 184, 0.08);
+            text-decoration: none;
+        }
+        .rs-thread-row:first-child,
+        .rs-member-row:first-child { border-top: 0; padding-top: 0; }
+        .rs-thread-row i,
+        .rs-member-avatar {
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            background: rgba(45, 212, 191, 0.10);
+            color: #7dd3fc;
+            font-size: 0.82rem;
+            font-weight: 800;
+            overflow: hidden;
+        }
+        .rs-member-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .rs-thread-title,
+        .rs-member-name {
+            color: #eef7ff;
+            font-size: 0.94rem;
+            font-weight: 800;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .rs-thread-meta,
+        .rs-member-meta {
+            color: #9fb0c4;
+            font-size: 0.82rem;
+            line-height: 1.35;
+            margin-top: 2px;
+        }
+        .feed-more-placeholder {
+            margin: 4px 0 14px;
+            text-align: left;
+        }
+        .feed-more-placeholder strong {
+            display: block;
+            color: #f8fafc;
+            font-size: 1.05rem;
+            margin-bottom: 4px;
+        }
 
         /* ===== MOBILE ===== */
         @media (max-width: 1080px) {
@@ -1380,6 +1575,7 @@
             .feed-hero h1 { font-size: 1.52rem !important; max-width: none; }
             .feed-hero p { font-size: 0.84rem; }
             .feed-hero-points { grid-template-columns: 1fr; }
+            .feed-next-actions { grid-template-columns: 1fr; }
             .feed-tabs { padding: 3px; }
             .feed-tab { padding: 8px 10px; font-size: 0.78rem; }
             .composer-bottom { flex-direction: column; align-items: stretch; padding-left: 0; }
@@ -1477,6 +1673,9 @@
                 <a href="/login/">Log In</a>
             </div>
 
+            <div class="feed-summary-strip" id="feedSummaryStrip"></div>
+            <div class="feed-low-activity" id="feedLowActivity"></div>
+
             <div class="feed-tabs">
                 <button class="feed-tab active" onclick="setFilter('all',this)"><i class="fas fa-stream"></i> For You</button>
                 <button class="feed-tab" onclick="setFilter('picks',this)"><i class="fas fa-crosshairs"></i> Picks</button>
@@ -1493,7 +1692,7 @@
         </main>
 
         <aside class="right-sidebar">
-            <div class="rs-card">
+            <div class="rs-card" id="feedRulesCard">
                 <div class="rs-title"><i class="fas fa-shield-alt" style="color:var(--accent-blue);"></i>Feed Rules</div>
                 <div class="rs-soon-panel">
                     <div class="rs-soon-row" id="trendingList"><i class="fas fa-lock"></i><div><strong>Locked stays locked</strong><span>Pending pick details are hidden.</span></div></div>
@@ -1510,6 +1709,14 @@
                 <div class="rs-title"><i class="fas fa-fire"></i>Trending Sports</div>
                 <div class="rs-live-list" id="trendingSportsList"></div>
             </div>
+            <div class="rs-card" id="recentForumsCard" style="display:none;">
+                <div class="rs-title"><i class="fas fa-comments"></i>Recent Forums</div>
+                <div class="rs-live-list" id="recentForumsList"></div>
+            </div>
+            <div class="rs-card" id="newMembersCard" style="display:none;">
+                <div class="rs-title"><i class="fas fa-user-plus"></i>New Members</div>
+                <div class="rs-live-list" id="newMembersList"></div>
+            </div>
         </aside>
     </div>
 
@@ -1517,9 +1724,9 @@
     <script src="/static/js/analytics.js?v=20260405"></script>
     <script src="/static/js/backend-api.js?v=20260423a"></script>
     <script src="/static/js/auth-persistent.js?v=20260424a"></script>
-    <script src="/static/js/social-home.js?v=20260504feedsocial1"></script>
-    <script src="/static/js/feed-ui-overrides.js?v=20260504feedsocial1"></script>
-    <script src="/static/js/feed-cleanup.js?v=20260504feedsocial1"></script>
+    <script src="/static/js/social-home.js?v=20260504feedenergy1"></script>
+    <script src="/static/js/feed-ui-overrides.js?v=20260504feedenergy1"></script>
+    <script src="/static/js/feed-cleanup.js?v=20260504feedenergy1"></script>
 </body>
 </html>
 
