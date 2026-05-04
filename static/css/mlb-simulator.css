@@ -145,45 +145,6 @@
     gap: 16px;
 }
 
-.preview-summary {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-    margin-bottom: 16px;
-}
-
-.preview-list {
-    display: grid;
-    gap: 8px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.preview-list li {
-    position: relative;
-    min-height: 28px;
-    padding: 7px 10px 7px 30px;
-    border: 1px solid rgba(148, 163, 184, 0.12);
-    border-radius: 8px;
-    background: rgba(3, 7, 14, 0.34);
-    color: #dbeafe;
-    font-size: 13px;
-    line-height: 1.35;
-}
-
-.preview-list li::before {
-    content: "";
-    position: absolute;
-    left: 12px;
-    top: 15px;
-    width: 7px;
-    height: 7px;
-    border-radius: 999px;
-    background: var(--sim-cyan);
-    box-shadow: 0 0 12px rgba(45, 212, 191, 0.55);
-}
-
 .sim-panel {
     padding: 18px;
 }
@@ -333,10 +294,9 @@
     align-content: center;
     gap: 7px;
     padding: 14px;
-    border: 1px solid rgba(244, 201, 93, 0.24);
+    border: 1px dashed rgba(45, 212, 191, 0.24);
     border-radius: 8px;
-    background:
-        linear-gradient(180deg, rgba(244, 201, 93, 0.08), rgba(45, 212, 191, 0.03));
+    background: rgba(45, 212, 191, 0.04);
 }
 
 .projection-value {
@@ -348,8 +308,30 @@
 }
 
 .projection-value.muted {
-    color: var(--sim-gold);
-    font-size: 24px;
+    color: rgba(248, 250, 252, 0.42);
+}
+
+.projection-shell[data-projection-state="loading"] > div {
+    border-style: solid;
+    border-color: rgba(244, 201, 93, 0.34);
+    background: rgba(244, 201, 93, 0.05);
+}
+
+.projection-shell[data-projection-state="insufficient-data"] > div,
+.projection-shell[data-projection-state="error"] > div {
+    border-color: rgba(248, 113, 113, 0.26);
+    background: rgba(127, 29, 29, 0.12);
+}
+
+.projection-shell[data-projection-state="projected"] > div {
+    border-style: solid;
+    border-color: rgba(45, 212, 191, 0.42);
+    background: rgba(45, 212, 191, 0.08);
+}
+
+.projection-shell[data-projection-state="projected"] .projection-value {
+    font-size: clamp(18px, 2.3vw, 24px);
+    line-height: 1.15;
 }
 
 .market-groups {
@@ -425,8 +407,7 @@
 
 @media (max-width: 860px) {
     .sim-hero,
-    .sim-grid,
-    .preview-summary {
+    .sim-grid {
         grid-template-columns: 1fr;
     }
 
