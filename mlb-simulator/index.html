@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="canonical" href="https://trustmyrecord.com/mlb-simulator/">
-    <title>MLB Simulator Coming Soon | TrustMyRecord</title>
-    <meta name="description" content="Preview the TrustMyRecord MLB Simulator market foundation while the real projection engine is being built.">
+    <title>MLB Simulator | TrustMyRecord</title>
+    <meta name="description" content="Select an MLB matchup and inspect sportsbook market context for a future TrustMyRecord projection engine.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -28,48 +28,24 @@
     <main class="sim-shell">
         <section class="sim-hero">
             <div>
-                <p class="sim-kicker">TrustMyRecord Preview</p>
-                <h1>MLB Simulator Coming Soon</h1>
-                <p class="sim-subtitle">We are building a real MLB simulation tool that will combine live market context, matchup data, projected scoring, win probability, confidence, and edge detection. The current preview shows the market board foundation while the projection engine is being built.</p>
+                <p class="sim-kicker">TrustMyRecord Tools</p>
+                <h1>MLB Simulator</h1>
+                <p class="sim-subtitle">Load the current MLB board, select a matchup, and review available betting market context. The projection engine is intentionally not showing numbers until a real model is connected.</p>
             </div>
             <div class="sim-status-card" aria-live="polite">
                 <span class="sim-status-dot" aria-hidden="true"></span>
                 <div>
-                    <strong id="simDataSourceTitle">Live Market Context</strong>
+                    <strong id="simDataSourceTitle">MLB board</strong>
                     <span id="simDataSourceDetail">Waiting for board data...</span>
                 </div>
             </div>
         </section>
 
-        <section class="preview-summary" aria-label="MLB Simulator preview status">
-            <article class="sim-panel">
-                <p class="sim-label">Current Preview Includes</p>
-                <ul class="preview-list">
-                    <li>MLB slate loading</li>
-                    <li>Matchup selector</li>
-                    <li>Market context</li>
-                    <li>Moneyline, run line, totals, team totals, and F5 markets when available</li>
-                </ul>
-            </article>
-            <article class="sim-panel">
-                <p class="sim-label">What's Coming</p>
-                <ul class="preview-list">
-                    <li>Projected score</li>
-                    <li>Win probability</li>
-                    <li>Confidence rating</li>
-                    <li>Model edge</li>
-                    <li>Matchup inputs</li>
-                    <li>Pitcher, offense, and bullpen context</li>
-                    <li>Weather and park factors if available</li>
-                </ul>
-            </article>
-        </section>
-
         <section class="sim-grid" aria-label="MLB simulator workspace">
             <aside class="sim-panel sim-selector-panel">
                 <div class="sim-panel-heading">
-                    <p class="sim-label">Market Preview</p>
-                    <h2>Select Matchup</h2>
+                    <p class="sim-label">Matchup</p>
+                    <h2>Select Game</h2>
                 </div>
                 <label class="sim-field">
                     <span>MLB slate</span>
@@ -105,30 +81,30 @@
 
             <section class="sim-panel sim-projection-panel" aria-label="Projection output">
                 <div class="sim-panel-heading">
-                    <p class="sim-label">Coming Soon</p>
-                    <h2>Projection Engine</h2>
+                    <p class="sim-label">Projection</p>
+                    <h2>Engine Status</h2>
                 </div>
-                <div class="projection-shell" data-projection-state="not-connected">
+                <div id="projectionShell" class="projection-shell" data-projection-state="not-connected">
                     <div>
-                        <span class="projection-value muted">Soon</span>
+                        <span id="projectedScoreValue" class="projection-value muted">--</span>
                         <small>Projected Score</small>
                     </div>
                     <div>
-                        <span class="projection-value muted">Soon</span>
+                        <span id="winProbabilityValue" class="projection-value muted">--</span>
                         <small>Win Probability</small>
                     </div>
                     <div>
-                        <span class="projection-value muted">Soon</span>
+                        <span id="confidenceEdgeValue" class="projection-value muted">--</span>
                         <small>Confidence / Edge</small>
                     </div>
                 </div>
-                <p id="projectionNotice" class="sim-notice">Projection engine not connected yet. Real projected score, win probability, confidence, and edge model are coming soon.</p>
+                <p id="projectionNotice" class="sim-notice">Projection engine not connected yet. This page does not invent projected scores, win probabilities, injuries, odds, or model edges.</p>
             </section>
 
             <section class="sim-panel sim-markets-panel" aria-label="Available market context">
                 <div class="sim-panel-heading">
-                    <p class="sim-label">Live Market Context</p>
-                    <h2>Market Preview</h2>
+                    <p class="sim-label">Market Context</p>
+                    <h2>Available Lines</h2>
                 </div>
                 <div id="marketGroups" class="market-groups">
                     <div class="sim-empty">Select a matchup to view moneyline, run line, total, team total, and F5 availability.</div>
@@ -153,6 +129,5 @@
     </main>
 
     <script src="/static/js/mlb-simulator.js"></script>
-<script src="/static/js/analytics.js?v=20260504a"></script>
 </body>
 </html>
