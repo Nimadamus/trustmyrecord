@@ -808,6 +808,7 @@
                             <div class="field">
                                 <label for="sampleFilter">Minimum picks</label>
                                 <select id="sampleFilter">
+                                    <option value="1">1 pick</option>
                                     <option value="5">5 picks</option>
                                     <option value="10">10 picks</option>
                                     <option value="25">25 picks</option>
@@ -1176,12 +1177,16 @@
             const units = num(entry.net_units != null ? entry.net_units : entry.units);
             const winRate = pct(entry.win_percentage != null ? entry.win_percentage : entry.winRate);
             const streak = num(entry.current_streak != null ? entry.current_streak : entry.currentStreak);
+            const sports = Array.isArray(entry.primary_sports) ? entry.primary_sports
+                : Array.isArray(entry.sports) ? entry.sports
+                : entry.sport || entry.primary_sport ? [entry.sport || entry.primary_sport] : [];
             return {
                 raw: entry,
                 username: username,
                 displayName: entry.display_name || entry.displayName || username,
                 avatarUrl: entry.avatar_url || entry.avatarUrl || '',
-                sport: entry.sport || entry.primary_sport || 'All',
+                sport: sports.length ? sports.join(', ') : 'All',
+                sports: sports,
                 wins: wins, losses: losses, pushes: pushes,
                 totalPicks: totalPicks,
                 roi: roi, units: units, winRate: winRate, streak: streak
@@ -1401,7 +1406,9 @@
 
             filteredLeaderboard = fullLeaderboard.filter(function(entry) {
                 const matchesSearch = !search || entry.username.toLowerCase().indexOf(search) !== -1 || entry.displayName.toLowerCase().indexOf(search) !== -1;
-                const matchesSport = sport === 'all' || String(entry.sport || '').toLowerCase() === String(sport).toLowerCase();
+                const matchesSport = sport === 'all' || (entry.sports || []).some(function(item) {
+                    return String(item || '').toLowerCase() === String(sport).toLowerCase();
+                });
                 return matchesSearch && matchesSport && entry.totalPicks >= minSample;
             });
 
@@ -1414,6 +1421,16 @@
             });
 
             renderLeaderboard(filteredLeaderboard);
+            const belowSampleCount = fullLeaderboard.filter(function(entry) {
+                const matchesSearch = !search || entry.username.toLowerCase().indexOf(search) !== -1 || entry.displayName.toLowerCase().indexOf(search) !== -1;
+                const matchesSport = sport === 'all' || (entry.sports || []).some(function(item) {
+                    return String(item || '').toLowerCase() === String(sport).toLowerCase();
+                });
+                return matchesSearch && matchesSport && entry.totalPicks > 0 && entry.totalPicks < minSample;
+            }).length;
+            if (belowSampleCount > 0) {
+                document.getElementById('resultCount').textContent += ' · ' + belowSampleCount + ' below ' + minSample + '-pick minimum';
+            }
             trackHub('handicapper_filters_applied', {
                 search_query: search || '', sport: sport, sort_by: sort,
                 min_sample: minSample, visible_count: filteredLeaderboard.length
@@ -1431,7 +1448,7 @@
         async function loadHandicappers() {
             const state = document.getElementById('leaderboardState');
             try {
-                const data = await window.api.getLeaderboard({ sortBy: 'roi', limit: 100 });
+                const data = await window.api.getLeaderboard({ sortBy: 'roi', limit: 100, minPicks: 1 });
                 const rawEntries = Array.isArray(data) ? data
                     : Array.isArray(data && data.leaderboard) ? data.leaderboard
                     : Array.isArray(data && data.users) ? data.users
