@@ -580,7 +580,10 @@
             const type = String(notification.type || '').toLowerCase();
             const resourceType = String(notification.resource_type || notification.resourceType || notification.entity_type || notification.entityType || '').toLowerCase();
             const username = notification.username || notification.actor_username || notification.from_username || notification.target_username;
-            const threadId = notification.thread_id || notification.threadId || notification.resource_id || notification.resourceId;
+            const relatedThreadId = notification.related_thread_id || notification.relatedThreadId;
+            const relatedPostId = notification.related_post_id || notification.relatedPostId;
+            const threadId = notification.thread_id || notification.threadId || relatedThreadId || (resourceType === 'forum_thread' ? notification.resource_id || notification.resourceId : null);
+            const postId = notification.post_id || notification.postId || relatedPostId || (resourceType === 'forum_post' ? notification.resource_id || notification.resourceId : null);
             const pickId = notification.pick_id || notification.pickId || notification.bet_id || notification.betId;
             const pollId = notification.poll_id || notification.pollId;
             const conversationUser = notification.sender_username || notification.from_username || notification.username;
@@ -595,7 +598,10 @@
                     return { href: conversationUser ? '/messages/?to=' + encodeURIComponent(conversationUser) : '/messages/', label: 'Open messages' };
             }
             if (type.indexOf('forum') !== -1 || ['thread', 'reply'].includes(resourceType)) {
-                    return { href: threadId ? '/forum/?thread=' + encodeURIComponent(threadId) : '/forum/', label: 'Open forum' };
+                    const href = threadId
+                        ? '/forum/?thread=' + encodeURIComponent(threadId) + (postId ? '#post-' + encodeURIComponent(postId) : '')
+                        : '/forum/';
+                    return { href: href, label: 'Open forum' };
             }
             if (type.indexOf('poll') !== -1 || pollId) {
                     return { href: '/hangout/', label: 'Open polls' };
@@ -655,6 +661,10 @@
                 pick_graded: { label: 'P', bg: 'rgba(59,130,246,0.15)', fg: '#60a5fa' },
                 forum_thread_created: { label: 'Q', bg: 'rgba(139,92,246,0.15)', fg: '#8b5cf6' },
                 forum_reply_created: { label: 'R', bg: 'rgba(99,102,241,0.15)', fg: '#6366f1' },
+                forum_thread_reply: { label: 'R', bg: 'rgba(99,102,241,0.15)', fg: '#6366f1' },
+                forum_post_reply: { label: 'R', bg: 'rgba(99,102,241,0.15)', fg: '#6366f1' },
+                forum_mention: { label: '@', bg: 'rgba(31,122,224,0.15)', fg: '#1f7ae0' },
+                forum_post_like: { label: 'L', bg: 'rgba(239,68,68,0.15)', fg: '#f87171' },
                 new_message: { label: 'M', bg: 'rgba(45,212,191,0.15)', fg: '#14b8a6' },
                 message: { label: 'M', bg: 'rgba(45,212,191,0.15)', fg: '#14b8a6' }
             };

@@ -312,7 +312,7 @@ function renderNotificationsList(notifications) {
         const timeStr = timeAgo(n.created_at);
 
         return `
-            <div class="notification-item ${isRead ? '' : 'unread'}" data-type="${getLegacyFilterType(n.type)}" onclick="handleNotifClick('${n.id}', '${n.type}')">
+            <div class="notification-item ${isRead ? '' : 'unread'}" data-type="${getLegacyFilterType(n.type)}" onclick="handleNotifClick('${n.id}')">
                 <div class="notification-icon ${iconClass}">
                     <i class="fas ${iconChar}"></i>
                 </div>
@@ -328,6 +328,7 @@ function renderNotificationsList(notifications) {
 
 function getLegacyFilterType(type) {
     const normalized = String(type || '').toLowerCase();
+    if (normalized.indexOf('forum') !== -1) return 'alerts';
     if (['friend_request', 'friend_accept', 'follow', 'mention', 'like', 'comment'].includes(normalized)) return 'social';
     if (['challenge_invite', 'challenge_result', 'challenge', 'system'].includes(normalized)) return 'alerts';
     if (['pick_won', 'pick_lost', 'bet_won', 'bet_lost', 'pick_graded'].includes(normalized)) return 'picks';
@@ -338,6 +339,8 @@ function getNotifIconClass(type) {
     const map = {
         friend_request: 'friend', friend_accept: 'friend',
         new_message: 'message', message: 'message',
+        forum_thread_reply: 'message', forum_post_reply: 'message',
+        forum_mention: 'message', forum_post_like: 'friend',
         challenge_invite: 'challenge', challenge_result: 'challenge', challenge: 'challenge',
         pick_won: 'bet', pick_lost: 'bet', bet_won: 'bet', bet_lost: 'bet',
         premium_upgrade: 'premium', premium_expired: 'premium',
@@ -350,6 +353,8 @@ function getNotifIconChar(type) {
     const map = {
         friend_request: 'fa-user-plus', friend_accept: 'fa-user-check',
         new_message: 'fa-comment', message: 'fa-comment',
+        forum_thread_reply: 'fa-comments', forum_post_reply: 'fa-reply',
+        forum_mention: 'fa-at', forum_post_like: 'fa-thumbs-up',
         challenge_invite: 'fa-trophy', challenge_result: 'fa-trophy', challenge: 'fa-trophy',
         pick_won: 'fa-chart-line', pick_lost: 'fa-chart-line',
         bet_won: 'fa-chart-line', bet_lost: 'fa-chart-line',
@@ -359,15 +364,37 @@ function getNotifIconChar(type) {
     return map[type] || 'fa-bell';
 }
 
-async function handleNotifClick(notifId, type) {
+function getNotificationDestination(notification) {
+    const type = String(notification?.type || '').toLowerCase();
+    const resourceType = String(notification?.resource_type || notification?.resourceType || '').toLowerCase();
+    const relatedThreadId = notification?.related_thread_id || notification?.relatedThreadId;
+    const relatedPostId = notification?.related_post_id || notification?.relatedPostId;
+    const threadId = notification?.thread_id || notification?.threadId || relatedThreadId || (resourceType === 'forum_thread' ? notification?.resource_id || notification?.resourceId : null);
+    const postId = notification?.post_id || notification?.postId || relatedPostId || (resourceType === 'forum_post' ? notification?.resource_id || notification?.resourceId : null);
+
+    if (type === 'friend_request' || type === 'friend_accept') return '/friends/';
+    if (type === 'new_message' || type === 'message') return '/messages/';
+    if (type === 'challenge_invite' || type === 'challenge_result' || type === 'challenge') return '/challenges/';
+    if (type === 'premium_upgrade' || type === 'premium_expired') return '/premium/';
+    if (type.indexOf('forum') !== -1 || resourceType === 'forum_thread' || resourceType === 'forum_post') {
+        return threadId ? '/forum/?thread=' + encodeURIComponent(threadId) + (postId ? '#post-' + encodeURIComponent(postId) : '') : '/forum/';
+    }
+
+    return null;
+}
+
+async function handleNotifClick(notifId) {
+    const notification = _notifCache.notifications.find(x => String(x.id) === String(notifId));
+
     // Mark as read via backend
     if (window.api && api.isLoggedIn()) {
         try {
             await api.markNotificationRead(notifId);
             // Update cache
-            const n = _notifCache.notifications.find(x => String(x.id) === String(notifId));
-            if (n) n.is_read = true;
-            _notifCache.unreadCount = Math.max(0, _notifCache.unreadCount - 1);
+            if (notification && !notification.is_read) {
+                notification.is_read = true;
+                _notifCache.unreadCount = Math.max(0, _notifCache.unreadCount - 1);
+            }
             updateNotifBadge(_notifCache.unreadCount);
             renderNotificationsList(_notifCache.notifications);
         } catch (err) {
@@ -375,28 +402,9 @@ async function handleNotifClick(notifId, type) {
         }
     }
 
-    // Navigate based on type
-    switch (type) {
-        case 'friend_request':
-        case 'friend_accept':
-            window.location.href = 'friends/';
-            break;
-        case 'new_message':
-        case 'message':
-            window.location.href = 'messages/';
-            break;
-        case 'challenge_invite':
-        case 'challenge_result':
-        case 'challenge':
-            window.location.href = 'challenges/';
-            break;
-        case 'premium_upgrade':
-        case 'premium_expired':
-            window.location.href = 'premium/';
-            break;
-        default:
-            // Just mark as read, stay on page
-            break;
+    const destination = getNotificationDestination(notification);
+    if (destination) {
+        window.location.href = destination;
     }
 }
 
