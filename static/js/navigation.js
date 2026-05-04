@@ -8,6 +8,7 @@ const legacyRouteTargets = {
     consensus: 'consensus/',
     leaderboards: 'handicappers/',
     live: 'live/',
+    'mlb-simulator': 'mlb-simulator/',
     marketplace: 'marketplace/',
     groups: 'groups/',
     messages: 'messages/',
@@ -197,7 +198,7 @@ function showSection(sectionId, updateHistory = true) {
 }
 
 // Valid section IDs for routing
-const validSections = ['home', 'picks', 'mypicks', 'my-record', 'promos', 'consensus', 'leaderboards', 'live', 'marketplace', 'groups', 'messages', 'profile', 'premium', 'forums', 'notifications', 'polls-trivia', 'login', 'signup', 'register'];
+const validSections = ['home', 'picks', 'mypicks', 'my-record', 'promos', 'consensus', 'leaderboards', 'live', 'mlb-simulator', 'marketplace', 'groups', 'messages', 'profile', 'premium', 'forums', 'notifications', 'polls-trivia', 'login', 'signup', 'register'];
 
 /**
  * Handle URL-based routing for SPA
