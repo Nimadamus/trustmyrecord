@@ -18,11 +18,17 @@ const script = fs.readFileSync(scriptPath, 'utf8');
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
 assert(/\/static\/js\/backend-api\.js/.test(html), 'page loads shared API client');
 assert(/\/static\/js\/mlb-simulator\.js/.test(html), 'page loads simulator script');
+assert(/MLB Simulator Coming Soon/.test(html), 'page headline clearly labels Coming Soon');
+assert(/current preview shows the market board foundation/i.test(html), 'page explains preview market foundation');
+assert(/Current Preview Includes/.test(html), 'page lists current preview scope');
+assert(/What's Coming/.test(html), 'page lists coming simulator features');
 assert(/Projection engine not connected yet/.test(html), 'page clearly labels unconnected projection engine');
+assert(/Real projected score, win probability, confidence, and edge model are coming soon/.test(html), 'projection section has intentional coming-soon copy');
 assert(!/pending picks/i.test(html), 'page does not expose pending picks language');
 assert(!/lock pick|locked pick|submit pick/i.test(html), 'page does not expose sportsbook submission actions');
 assert(!/\b\d+\s*-\s*\d+\b/.test(html.replace(/2026|404/g, '')), 'page does not hard-code projected scores');
 assert(!/\b\d+(\.\d+)?%/.test(html), 'page does not hard-code win probability percentages');
+assert(!/projection-value muted">--</.test(html), 'projection section does not render blank broken boxes');
 
 function makeElement(id) {
   return {
