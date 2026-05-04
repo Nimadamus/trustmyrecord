@@ -59,9 +59,11 @@
   }
 
   function profileBadge(item) {
+    const sport = item.sport || item.sport_key || item.primary_sport || item.league;
     const teams = asArray(item.favorite_teams);
-    if (!teams.length) return "";
-    return `<span class="profile-badge"><i class="fas fa-shield-alt"></i>${esc(teams[0])}</span>`;
+    const label = sport ? formatSportSafe(sport) : teams[0];
+    if (!label) return "";
+    return `<span class="profile-badge"><i class="fas fa-shield-alt"></i>${esc(label)}</span>`;
   }
 
   function recordSummary(item) {
@@ -97,10 +99,12 @@
   function localActions(item) {
     const id = String(item.item_id);
     const state = localState(id);
+    const username = item.username || "";
     return `<div class="fi-actions">
       <button class="fi-action ${state.liked ? "is-liked" : ""}" onclick="likeLocalFeedItem('${esc(id)}', this)"><i class="fas fa-heart"></i><span>${state.likes}</span></button>
-      <button class="fi-action" onclick="toggleLocalComments('${esc(id)}')"><i class="fas fa-comment"></i><span>${state.comments.length}</span></button>
+      <button class="fi-action" onclick="toggleLocalComments('${esc(id)}')"><i class="fas fa-reply"></i>Reply <span>${state.comments.length}</span></button>
       <button class="fi-action" onclick="sharePost('${esc(id)}', event)"><i class="fas fa-share"></i>Share</button>
+      ${username ? `<a class="fi-action fi-profile-link" href="/profile/?user=${encodeURIComponent(username)}"><i class="fas fa-user"></i>View profile</a>` : ""}
     </div>
     <div class="comments-section" id="local-comments-${esc(id)}"></div>`;
   }
@@ -110,18 +114,29 @@
     const liked = item.liked_by_user ? "is-liked" : "";
     const likeFn = kind === "feed_post" ? `likeFeedPost('${esc(id)}', this)` : `likeLocalFeedItem('${esc(id)}', this)`;
     const commentsFn = kind === "feed_post" ? `toggleComments('${esc(id)}','feed_post')` : `toggleLocalComments('${esc(id)}')`;
+    const username = item.username || "";
     return `<div class="fi-actions">
       <button class="fi-action ${liked}" onclick="${likeFn}"><i class="fas fa-heart"></i><span>${Number(item.likes_count || 0)}</span></button>
-      <button class="fi-action" onclick="${commentsFn}"><i class="fas fa-comment"></i><span>${Number(item.comments_count || 0)}</span></button>
+      <button class="fi-action" onclick="${commentsFn}"><i class="fas fa-reply"></i>Reply <span>${Number(item.comments_count || 0)}</span></button>
       <button class="fi-action" onclick="sharePost('${esc(id)}', event)"><i class="fas fa-share"></i>Share</button>
+      ${username ? `<a class="fi-action fi-profile-link" href="/profile/?user=${encodeURIComponent(username)}"><i class="fas fa-user"></i>View profile</a>` : ""}
     </div>
     <div class="comments-section" id="${kind === "feed_post" ? "cs-fp-" : "local-comments-"}${esc(id)}"></div>`;
   }
 
-  function header(item, iconHtml) {
+  function avatarHtml(item) {
+    const src = item.avatar_url || item.avatar || item.profile_image || item.profile_image_url || item.user_avatar_url;
+    const name = item.display_name || item.username || "User";
+    if (src) {
+      return `<div class="fi-avatar"><img src="${esc(src)}" alt="${esc(name)} avatar" loading="lazy"></div>`;
+    }
+    return `<div class="fi-avatar fi-avatar-initials">${esc(initials(item))}</div>`;
+  }
+
+  function header(item) {
     const username = item.username || "";
     return `<div class="fi-header">
-      <div class="fi-avatar">${iconHtml || initials(item)}</div>
+      ${avatarHtml(item)}
       <div class="fi-meta">
         <div class="fi-top-row">
           <span class="fi-name"><a href="/profile/?user=${encodeURIComponent(username)}">${displayName(item)}</a></span>
@@ -132,6 +147,19 @@
         <div class="fi-badge-row">${profileBadge(item)}</div>
       </div>
     </div>`;
+  }
+
+  function activityTitle(icon, text) {
+    return `<div class="activity-line"><span class="activity-type-icon"><i class="fas ${icon}"></i></span><span>${text}</span></div>`;
+  }
+
+  function formatSportSafe(key) {
+    const map = {
+      basketball_nba: "NBA", icehockey_nhl: "NHL", baseball_mlb: "MLB",
+      americanfootball_nfl: "NFL", basketball_ncaab: "NCAAB", americanfootball_ncaaf: "NCAAF",
+      NFL: "NFL", NBA: "NBA", MLB: "MLB", NHL: "NHL", NCAAB: "NCAAB", NCAAF: "NCAAF", Soccer: "Soccer"
+    };
+    return map[key] || String(key || "").split("_").pop()?.toUpperCase() || "";
   }
 
   function renderTextPost(item) {
@@ -152,9 +180,10 @@
     }[type] || initials(item);
     const label = labels[type] || "Status";
     const link = type === "link" ? findFirstUrl(item.content) : null;
+    const iconClass = type === "hot_take" ? "fa-fire" : type === "poll" ? "fa-poll" : type === "article" ? "fa-newspaper" : "fa-comment-dots";
     return `<article class="feed-item" data-id="${esc(item.item_id)}" data-type="feed_post">
-      ${header(item, icon)}
-      <div class="activity-line">${displayName(item)} posted a ${esc(label.toLowerCase())}</div>
+      ${header(item)}
+      ${activityTitle(iconClass, `${displayName(item)} posted a ${esc(label.toLowerCase())}`)}
       <div class="fi-content">${esc(item.content || "")}</div>
       ${link ? `<a class="link-preview" href="${esc(link)}" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i>${esc(link)}</a>` : ""}
       ${postActions(item, "feed_post")}
@@ -176,8 +205,8 @@
       : "Details hidden until graded";
     return `<article class="feed-item activity-card ${graded ? "is-graded" : "is-pending"}" data-id="${esc(item.item_id)}" data-type="pick_activity">
       <div class="activity-main">
-        ${header(item, graded ? '<i class="fas fa-check"></i>' : '<i class="fas fa-shield-alt"></i>')}
-        <div class="activity-line">${text}</div>
+        ${header(item)}
+        ${activityTitle(graded ? "fa-circle-check" : "fa-lock", text)}
         <div class="privacy-badge ${graded ? "is-graded" : ""}">
           <i class="fas ${graded ? "fa-circle-check" : "fa-lock"}"></i>${esc(detail)}
         </div>
@@ -190,13 +219,37 @@
   function renderPoll(item) {
     const opts = Array.isArray(item.options) ? item.options : [];
     return `<article class="feed-item" data-id="${esc(item.item_id || item.poll_id)}" data-type="poll">
-      ${header(item, '<i class="fas fa-poll"></i>')}
-      <div class="activity-line">${displayName(item)} created a poll</div>
+      ${header(item)}
+      ${activityTitle("fa-square-poll-vertical", `${displayName(item)} created a poll`)}
       <div class="fi-content">${esc(item.content || item.title || "Poll")}</div>
       <div class="poll-options">
         ${opts.map(o => `<button class="poll-option" onclick="votePoll('${esc(item.poll_id || item.item_id)}','${esc(o.id)}')">${esc(o.text || o.option_text || "")}</button>`).join("")}
       </div>
       ${postActions(item, "poll")}
+    </article>`;
+  }
+
+  function renderActivityEvent(item) {
+    const type = String(item.notif_type || item.activity_type || item.type || item.post_type || item.item_type || "activity").toLowerCase();
+    const labels = {
+      forum_reply: ["fa-reply", "replied in the forum"],
+      reply_created: ["fa-reply", "replied in the forum"],
+      forum_post: ["fa-comments", "started a forum discussion"],
+      thread_created: ["fa-comments", "started a forum discussion"],
+      record_improved: ["fa-chart-line", "improved their record"],
+      pick_graded: ["fa-circle-check", "had picks graded"],
+      joined: ["fa-user-plus", "joined TrustMyRecord"],
+      user_joined: ["fa-user-plus", "joined TrustMyRecord"],
+      signup: ["fa-user-plus", "joined TrustMyRecord"],
+      achievement: ["fa-award", "earned an achievement"]
+    };
+    const found = labels[type] || ["fa-bell", "had public activity"];
+    const content = String(item.content || item.message || item.title || "").trim();
+    return `<article class="feed-item" data-id="${esc(item.item_id || item.id || Date.now())}" data-type="activity">
+      ${header(item)}
+      ${activityTitle(found[0], `${displayName(item)} ${found[1]}`)}
+      ${content ? `<div class="fi-content">${esc(content)}</div>` : ""}
+      ${localActions(item)}
     </article>`;
   }
 
@@ -207,6 +260,7 @@
       return renderPickActivity(item);
     }
     if (item.item_type === "poll" || item.post_type === "poll") return renderPoll(item);
+    if (item.item_type === "activity" || item.post_type === "activity" || item.notif_type || item.activity_type) return renderActivityEvent(item);
     if (item.item_type === "pick" || item.post_type === "pick" || item.post_type === "pick_share") {
       const safe = scrubPendingPickFields({ ...item, item_type: "pick_activity", post_type: item.pick_status === "pending" ? "submitted_picks_summary" : "graded_pick_summary", activity_count: 1 });
       return renderPickActivity(safe);
@@ -423,17 +477,90 @@
       if (cleanupFilter === "picks") items = items.filter(i => i.item_type === "pick_activity" || isPickLike(i));
       items.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
       if (!items.length) {
-        list.innerHTML = '<div class="empty-state"><i class="fas fa-stream"></i><h3>Your feed is ready.</h3><p>Public posts and privacy-safe pick activity will appear here as users participate.</p></div>';
+        list.innerHTML = emptyFeedState();
       } else {
         const html = items.map(renderItem).filter(Boolean).join("");
-        list.innerHTML = html || '<div class="empty-state"><i class="fas fa-stream"></i><h3>Your feed is ready.</h3><p>Public posts and privacy-safe pick activity will appear here as users participate.</p></div>';
+        list.innerHTML = html || emptyFeedState();
       }
+      updateRightRail(items);
       const more = document.getElementById("loadMore");
       if (more) more.style.display = items.length >= LIMIT ? "block" : "none";
     } catch (error) {
       list.innerHTML = `<div class="empty-state"><i class="fas fa-database"></i><h3>Feed unavailable</h3><p>${esc(error.message || "Live feed data is not available right now.")}</p></div>`;
+      updateRightRail([]);
     }
   };
+
+  function emptyFeedState() {
+    return `<div class="empty-state is-polished">
+      <i class="fas fa-stream"></i>
+      <h3>The feed is ready for real activity.</h3>
+      <p>Lock picks, start a forum thread, follow verified handicappers, or finish your profile to bring your public sports record to life.</p>
+      <div class="empty-state-actions">
+        <a class="is-primary" href="/sportsbook/"><i class="fas fa-plus"></i> Make picks</a>
+        <a href="/forum/"><i class="fas fa-comments"></i> Start a thread</a>
+        <a href="/handicappers/"><i class="fas fa-user-check"></i> Follow handicappers</a>
+        <a href="/profile/"><i class="fas fa-id-card"></i> Complete profile</a>
+      </div>
+    </div>`;
+  }
+
+  function sameLocalDay(dateStr) {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    if (Number.isNaN(d.getTime())) return false;
+    return d.toDateString() === new Date().toDateString();
+  }
+
+  function itemTime(item) {
+    return item.created_at || item.graded_at || item.locked_at || item.updated_at;
+  }
+
+  function updateRightRail(items) {
+    const liveCard = document.getElementById("liveActivityCard");
+    const liveList = document.getElementById("liveActivityList");
+    const sportsCard = document.getElementById("trendingSportsCard");
+    const sportsList = document.getElementById("trendingSportsList");
+    const todayItems = (items || []).filter(i => sameLocalDay(itemTime(i)));
+
+    const locked = todayItems
+      .filter(i => i && i.item_type === "pick_activity" && i.post_type === "submitted_picks_summary")
+      .reduce((sum, i) => sum + Number(i.activity_count || 1), 0);
+    const graded = todayItems
+      .filter(i => i && i.item_type === "pick_activity" && i.post_type === "graded_pick_summary")
+      .reduce((sum, i) => sum + Number(i.activity_count || 1), 0);
+    const discussions = todayItems.filter(i => {
+      const t = String(i.post_type || i.item_type || i.notif_type || i.activity_type || "").toLowerCase();
+      return ["text", "status", "hot_take", "poll", "forum_reply", "reply_created", "forum_post", "thread_created"].includes(t);
+    }).length;
+    const joined = todayItems.filter(i => {
+      const t = String(i.post_type || i.item_type || i.notif_type || i.activity_type || i.type || "").toLowerCase();
+      return ["joined", "user_joined", "signup"].includes(t);
+    }).length;
+
+    const rows = [
+      locked > 0 ? ["fa-lock", "Locked picks today", locked] : null,
+      graded > 0 ? ["fa-circle-check", "Graded results today", graded] : null,
+      discussions > 0 ? ["fa-comments", "Active discussions", discussions] : null,
+      joined > 0 ? ["fa-user-plus", "New members today", joined] : null
+    ].filter(Boolean);
+
+    if (liveCard && liveList) {
+      liveCard.style.display = rows.length ? "" : "none";
+      liveList.innerHTML = rows.map(row => `<div class="rs-live-row"><i class="fas ${row[0]}"></i><span>${esc(row[1])}</span><b>${row[2]}</b></div>`).join("");
+    }
+
+    const sports = {};
+    (items || []).forEach(item => {
+      const sport = formatSportSafe(item.sport || item.sport_key || item.primary_sport || item.league);
+      if (sport) sports[sport] = (sports[sport] || 0) + 1;
+    });
+    const sportRows = Object.entries(sports).sort((a, b) => b[1] - a[1]).slice(0, 4);
+    if (sportsCard && sportsList) {
+      sportsCard.style.display = sportRows.length ? "" : "none";
+      sportsList.innerHTML = sportRows.map(([sport, count]) => `<div class="rs-live-row"><i class="fas fa-fire"></i><span>${esc(sport)}</span><b>${count}</b></div>`).join("");
+    }
+  }
 
   window.setFilter = function setFilter(filter, btn) {
     cleanupFilter = filter;
