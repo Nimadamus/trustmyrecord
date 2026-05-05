@@ -16,8 +16,8 @@ const html = fs.readFileSync(pagePath, 'utf8');
 const script = fs.readFileSync(scriptPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
-assert(/\/static\/css\/mlb-simulator\.css\?v=20260505-prerun-polish/.test(html), 'live page uses versioned simulator stylesheet');
-assert(/\/static\/js\/mlb-simulator\.js\?v=20260505-prerun-polish/.test(html), 'live page uses versioned simulator script');
+assert(/\/static\/css\/mlb-simulator\.css\?v=20260505-stress-export/.test(html), 'live page uses versioned simulator stylesheet');
+assert(/\/static\/js\/mlb-simulator\.js\?v=20260505-stress-export/.test(html), 'live page uses versioned simulator script');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
 assert(/id="awayPitcherSelect" class="sim-select starter-select pitcher-select"/.test(html), 'Team A starter select uses the same styled select pattern');
@@ -379,7 +379,7 @@ async function flushAsync() {
   await flushAsync();
   assert(/TrustMyRecord MLB Simulator Box Score/.test(clipboardText), 'copy box score writes readable export text');
   simulator.saveBoxScore();
-  assert(/^mlb-simulator-.*-box-score\.txt$/.test(savedDownload), 'save box score uses clean filename');
+  assert(/^trustmyrecord-mlb-simulator-box-score-.*-\d{4}-\d{2}-\d{2}\.txt$/.test(savedDownload), 'save box score uses clean dated filename');
   assert(/Starting pitchers/.test(elements.inputSummary.innerHTML), 'output includes selected starters row');
   assert(/Zac Gallen|Bryce Elder/.test(elements.matchupNotes.innerHTML), 'output notes include selected current pitcher names');
   assert.strictEqual(elements.dataModeValue.textContent, 'Baseline ratings', 'fallback output states baseline data mode');

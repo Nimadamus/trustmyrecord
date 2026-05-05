@@ -104,7 +104,10 @@ function assertBoxScore(result) {
   assert(box.away.runs <= 20 && box.home.runs <= 20, 'individual runs remain capped');
   assert(box.away.runs + box.home.runs <= 30, 'combined runs remain capped');
   assert(box.away.hits >= box.away.runs && box.home.hits >= box.home.runs, 'hits are compatible with runs');
+  assert(box.away.hits <= 25 && box.home.hits <= 25, 'hits remain plausible');
+  assert(box.away.errors <= 4 && box.home.errors <= 4, 'errors remain plausible');
   assert(box.winner.id === (box.away.runs > box.home.runs ? result.away.id : result.home.id), 'winner matches line score');
+  assert(result.winner.id === (result.homeWin >= result.awayWin ? result.home.id : result.away.id), 'projected winner matches higher win probability');
 }
 
 (async () => {
@@ -117,13 +120,18 @@ function assertBoxScore(result) {
     assert.strictEqual(elements.boxScorePanel.getAttribute('data-box-score-state'), 'projected', mode + ' renders box score panel');
     assert(/<tr/.test(elements.boxScoreBody.innerHTML), mode + ' renders box score rows');
     assert(/Starting Pitchers:/.test(simulator.boxScoreText(result)), mode + ' export includes starters');
+    assert(/Generated: \d{4}-\d{2}-\d{2}T/.test(simulator.boxScoreText(result)), mode + ' export includes generated timestamp');
+    assert(/Projected final:/.test(simulator.boxScoreText(result)), mode + ' export includes projected final score');
+    assert(/Win probability:/.test(simulator.boxScoreText(result)), mode + ' export includes win probability');
+    assert(/Expected runs:/.test(simulator.boxScoreText(result)), mode + ' export includes expected runs');
+    assert(/Matchup notes:/.test(simulator.boxScoreText(result)), mode + ' export includes matchup notes');
     assert(/Projection notice: Simulation-based estimate/.test(simulator.boxScoreText(result)), mode + ' export includes honest projection notice');
   });
   simulator.copyBoxScore();
   await Promise.resolve();
   assert(/TrustMyRecord MLB Simulator Box Score/.test(clipboard), 'copy action writes box score text');
   simulator.saveBoxScore();
-  assert(/^mlb-simulator-.*-box-score\.txt$/.test(savedFilename), 'save action downloads a clean text filename');
+  assert(/^trustmyrecord-mlb-simulator-box-score-.*-\d{4}-\d{2}-\d{2}\.txt$/.test(savedFilename), 'save action downloads a clean dated text filename');
   console.log('mlb-simulator-boxscore-test: ok');
 })().catch((error) => {
   console.error(error);

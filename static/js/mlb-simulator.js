@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'prerun-polish-20260505';
+    var UI_BUILD = 'stress-export-20260505';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -471,6 +471,18 @@
                 if (awayScore < 20 && awayScore + homeScore < 30) awayScore += 1;
                 else if (homeScore > 0) homeScore -= 1;
             }
+        }
+        if (homeWin >= awayWin && homeScore <= awayScore) {
+            if (homeScore < 20 && homeScore + awayScore < 30) homeScore = awayScore + 1;
+            else awayScore = Math.max(0, homeScore - 1);
+        } else if (awayWin > homeWin && awayScore <= homeScore) {
+            if (awayScore < 20 && homeScore + awayScore < 30) awayScore = homeScore + 1;
+            else homeScore = Math.max(0, awayScore - 1);
+        }
+        while (awayScore + homeScore > 30) {
+            if (homeWin >= awayWin && awayScore > 0) awayScore -= 1;
+            else if (awayWin > homeWin && homeScore > 0) homeScore -= 1;
+            else break;
         }
         var awayInnings = distributeRuns(awayScore, awayRuns, random, false);
         var homeInnings = distributeRuns(homeScore, homeRuns, random, true);
@@ -1226,10 +1238,15 @@
     function boxScoreText(result) {
         if (!result || !result.boxScore) return '';
         var box = result.boxScore;
+        var generatedAt = new Date().toISOString();
         var lines = [];
         lines.push('TrustMyRecord MLB Simulator Box Score');
+        lines.push('Generated: ' + generatedAt);
         lines.push(result.away.name + ' at ' + result.home.name);
         lines.push('Mode: ' + result.simulationMode + ' / Data: ' + result.dataMode);
+        lines.push('Projected final: ' + result.away.name + ' ' + box.away.runs + ', ' + result.home.name + ' ' + box.home.runs);
+        lines.push('Win probability: ' + result.away.name + ' ' + roundPct(result.awayWin) + ' / ' + result.home.name + ' ' + roundPct(result.homeWin));
+        lines.push('Expected runs: ' + result.away.name + ' ' + result.awayRuns + ' / ' + result.home.name + ' ' + result.homeRuns);
         lines.push('Starting Pitchers: ' + result.away.name + ': ' + result.awayPitcher.name + ' | ' + result.home.name + ': ' + result.homePitcher.name);
         lines.push('');
         lines.push('Team        1 2 3 4 5 6 7 8 9 | R H E');
@@ -1241,13 +1258,15 @@
         lines.push(box.summary);
         lines.push('Pitcher lines: ' + box.pitcherLines.join(' / '));
         lines.push('Key performers: ' + box.keyPerformers.join(' / '));
+        lines.push('Matchup notes: ' + result.keyExplanation);
         lines.push('Projection notice: Simulation-based estimate, not sportsbook odds or a guaranteed result.');
         return lines.join('\n');
     }
     function boxScoreFilename(result) {
         var away = slugify(result.away.name);
         var home = slugify(result.home.name);
-        return 'mlb-simulator-' + away + '-vs-' + home + '-box-score.txt';
+        var stamp = new Date().toISOString().slice(0, 10);
+        return 'trustmyrecord-mlb-simulator-box-score-' + away + '-vs-' + home + '-' + stamp + '.txt';
     }
     function setExportButtons(enabled) {
         var copy = byId('copyBoxScoreButton');

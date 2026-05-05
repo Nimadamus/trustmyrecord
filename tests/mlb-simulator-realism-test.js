@@ -83,6 +83,7 @@ function validateResult(result, label) {
     if (!Number.isFinite(Number(result[field]))) invalid.push('non-finite ' + field);
   });
   if (result.awayWin < 0 || result.awayWin > 1 || result.homeWin < 0 || result.homeWin > 1 || result.winnerPct < 0 || result.winnerPct > 1) invalid.push('win probability outside 0-100');
+  if (result.awayWin < 0.01 || result.awayWin > 0.99 || result.homeWin < 0.01 || result.homeWin > 0.99 || result.winnerPct < 0.01 || result.winnerPct > 0.99) invalid.push('win probability outside 1-99');
   if (result.awayRuns < 0.5 || result.awayRuns > 9.5 || result.homeRuns < 0.5 || result.homeRuns > 9.5) invalid.push('expected runs outside realistic model range');
   const away = result.boxScore.away;
   const home = result.boxScore.home;
@@ -93,9 +94,23 @@ function validateResult(result, label) {
   if (sum(home.innings) !== home.runs) invalid.push('home inning total mismatch');
   if (away.innings.length !== 9 || home.innings.length !== 9) invalid.push('box score does not have nine innings per side');
   if (away.hits < away.runs || home.hits < home.runs) invalid.push('hits lower than runs');
+  if (away.hits > 25 || home.hits > 25) invalid.push('hits above plausible cap');
   if (away.errors < 0 || home.errors < 0) invalid.push('negative errors');
+  if (away.errors > 4 || home.errors > 4) invalid.push('errors above plausible cap');
   if (away.runs === home.runs) invalid.push('simulation ended tied');
   if (result.boxScore.winner.id !== (away.runs > home.runs ? result.away.id : result.home.id)) invalid.push('winner does not match final score');
+  if (result.winner.id !== (result.homeWin >= result.awayWin ? result.home.id : result.away.id)) invalid.push('projected winner does not match higher win probability');
+  const rendered = [
+    result.away.name,
+    result.home.name,
+    result.awayPitcher && result.awayPitcher.name,
+    result.homePitcher && result.homePitcher.name,
+    result.keyExplanation,
+    result.simulationMode,
+    result.dataMode,
+    result.boxScore.summary,
+  ].join(' ');
+  if (/NaN|undefined|\[object Object\]|Run to calculate|Choose starters|Select teams/.test(rendered)) invalid.push('rendered result contains placeholder or broken value');
   return invalid.map((reason) => label + ': ' + reason);
 }
 
@@ -136,6 +151,9 @@ const summary = {
   highestCombinedScoreObserved: 0,
   gamesAbove15TotalRuns: 0,
   gamesAbove20TotalRuns: 0,
+  teamScoresAbove15: 0,
+  teamScoresAbove18: 0,
+  combinedScoresAbove25: 0,
   invalidOutputs: 0,
   invalidExamples: [],
   extremeValidOutputs: [],
@@ -181,6 +199,9 @@ for (let i = 0; i < totalSimulations; i += 1) {
   summary.highestCombinedScoreObserved = Math.max(summary.highestCombinedScoreObserved, combined);
   if (combined > 15) summary.gamesAbove15TotalRuns += 1;
   if (combined > 20) summary.gamesAbove20TotalRuns += 1;
+  if (awayScore > 15 || homeScore > 15) summary.teamScoresAbove15 += 1;
+  if (awayScore > 18 || homeScore > 18) summary.teamScoresAbove18 += 1;
+  if (combined > 25) summary.combinedScoresAbove25 += 1;
   const extremeKey = [mode, result.away.id, result.home.id, result.awayPitcher.id, result.homePitcher.id, awayScore, homeScore].join('|');
   if (!extremeKeys.has(extremeKey)) {
     extremeKeys.add(extremeKey);
@@ -197,6 +218,9 @@ summary.averageHomeRunsScored = Number((homeRunTotal / totalSimulations).toFixed
 summary.averageAwayRunsScored = Number((awayRunTotal / totalSimulations).toFixed(2));
 summary.percentageGamesAbove15TotalRuns = Number(((summary.gamesAbove15TotalRuns / totalSimulations) * 100).toFixed(2));
 summary.percentageGamesAbove20TotalRuns = Number(((summary.gamesAbove20TotalRuns / totalSimulations) * 100).toFixed(2));
+summary.percentageTeamScoresAbove15 = Number(((summary.teamScoresAbove15 / totalSimulations) * 100).toFixed(2));
+summary.percentageTeamScoresAbove18 = Number(((summary.teamScoresAbove18 / totalSimulations) * 100).toFixed(2));
+summary.percentageCombinedScoresAbove25 = Number(((summary.combinedScoresAbove25 / totalSimulations) * 100).toFixed(2));
 summary.extremeValidOutputs = summary.extremeValidOutputs
   .sort((a, b) => b.totalRuns - a.totalRuns)
   .slice(0, 8);
@@ -205,6 +229,8 @@ assert.strictEqual(summary.invalidOutputs, 0, 'realism batch has zero invalid ou
 assert(summary.modeCounts.current > 0 && summary.modeCounts.historical > 0 && summary.modeCounts.mixed > 0, 'all simulator modes are represented');
 assert(summary.highestScoreObserved <= 20, 'highest individual score stays under hard cap');
 assert(summary.highestCombinedScoreObserved <= 30, 'highest combined score stays under hard cap');
+assert.strictEqual(summary.teamScoresAbove18, 0, 'no team score exceeds extreme outlier threshold');
+assert.strictEqual(summary.combinedScoresAbove25, 0, 'no combined score exceeds conservative high-total threshold');
 
 console.log('mlb-simulator-realism-test: ok');
 console.log(JSON.stringify(summary, null, 2));
