@@ -16,8 +16,8 @@ const html = fs.readFileSync(pagePath, 'utf8');
 const script = fs.readFileSync(scriptPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
-assert(/\/static\/css\/mlb-simulator\.css\?v=20260505-realism-boxscore/.test(html), 'live page uses versioned simulator stylesheet');
-assert(/\/static\/js\/mlb-simulator\.js\?v=20260505-realism-boxscore/.test(html), 'live page uses versioned simulator script');
+assert(/\/static\/css\/mlb-simulator\.css\?v=20260505-prerun-polish/.test(html), 'live page uses versioned simulator stylesheet');
+assert(/\/static\/js\/mlb-simulator\.js\?v=20260505-prerun-polish/.test(html), 'live page uses versioned simulator script');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
 assert(/id="awayPitcherSelect" class="sim-select starter-select pitcher-select"/.test(html), 'Team A starter select uses the same styled select pattern');
@@ -40,8 +40,10 @@ assert(/awayHeaderLogo/.test(html) && /homeHeaderLogo/.test(html), 'matchup revi
 assert(/Inside the TrustMyRecord MLB Simulator/.test(html), 'explainer section is present');
 assert(/model-based estimate/.test(html), 'explainer avoids overclaiming accuracy');
 assert(/id="boxScorePanel"/.test(html), 'box score panel is present');
+assert(/id="projectionEmptyState"/.test(html), 'pre-run projection empty state is present');
 assert(/Copy Box Score/.test(html), 'copy box score action is present');
 assert(/Save Box Score/.test(html), 'save box score action is present');
+assert(/Select two teams, choose starting pitchers, then run the simulator/.test(html), 'pre-run state uses a single polished instruction panel');
 assert(/Choose starters/.test(html), 'starter-dependent empty state is polished');
 assert(!/Loading MLB games|Loading sportsbook board|Waiting for board data|Projection engine not connected yet|Not connected for custom simulation|Unavailable without real inputs/.test(html), 'old board-dependent placeholder text is removed');
 assert(!/lock pick|locked pick|submit pick/i.test(html), 'page does not expose sportsbook submission actions');
@@ -60,7 +62,7 @@ const elementIds = [
   'eraAdjustmentValue','simulationModeValue','dataModeValue','awayProbabilityLabel','homeProbabilityLabel',
   'awayProbabilityValue','homeProbabilityValue','awayProbabilityBar','homeProbabilityBar','projectionNotice',
   'comparisonGrid','inputSummary','matchupNotes','boxScorePanel','boxScoreTitle','boxScoreBody',
-  'boxScoreSummary','copyBoxScoreButton','saveBoxScoreButton'
+  'boxScoreSummary','copyBoxScoreButton','saveBoxScoreButton','projectionEmptyState','probabilityLab'
 ];
 
 let savedDownload = null;
@@ -348,9 +350,16 @@ async function flushAsync() {
   assert(/Verified live inputs are unavailable/.test(elements.dataModeDetail.textContent), 'live input unavailability is explicit');
   assert(/baseline team and starter profiles/.test(elements.liveInputGrid.innerHTML), 'data notes give one compact fallback message');
   assert(!/No matching current MLB game found|No verified record match available|No verified injury report match available|No verified player roster list is connected|No verified bullpen depth|No verified sportsbook odds match available/.test(elements.liveInputGrid.innerHTML), 'fallback data notes do not render unavailable source wall');
+  assert.strictEqual(elements.projectionShell.getAttribute('data-projection-state'), 'not-connected', 'pre-run metric card grid is hidden by state');
+  assert.strictEqual(elements.projectionEmptyState.getAttribute('data-empty-state'), 'ready', 'pre-run empty state is visible by state');
+  assert.strictEqual(elements.probabilityLab.getAttribute('data-probability-state'), 'empty', 'pre-run probability bars are hidden by state');
+  assert.strictEqual(elements.copyBoxScoreButton.disabled, true, 'copy box score button is disabled before simulation');
+  assert.strictEqual(elements.saveBoxScoreButton.disabled, true, 'save box score button is disabled before simulation');
 
   simulator.runSimulation();
   assert.strictEqual(elements.resultCard.getAttribute('data-result-state'), 'projected', 'fallback run renders projected state');
+  assert.strictEqual(elements.projectionEmptyState.getAttribute('data-empty-state'), 'hidden', 'pre-run empty state hides after simulation');
+  assert.strictEqual(elements.probabilityLab.getAttribute('data-probability-state'), 'projected', 'probability lab appears after simulation');
   assert(/%/.test(elements.winProbabilityValue.textContent), 'estimated win percentage renders after simulation');
   assert.strictEqual(elements.boxScorePanel.getAttribute('data-box-score-state'), 'projected', 'box score panel renders after simulation');
   assert(/<tr/.test(elements.boxScoreBody.innerHTML), 'box score table rows render after simulation');

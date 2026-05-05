@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'realism-boxscore-20260505';
+    var UI_BUILD = 'prerun-polish-20260505';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -1263,9 +1263,9 @@
         if (!panel || !title || !body || !summary) return;
         if (!result || !result.boxScore) {
             panel.setAttribute('data-box-score-state', 'empty');
-            title.textContent = 'Run a simulation to generate a box score';
-            body.innerHTML = '<tr><td colspan="13">Select teams, choose starters, and run the simulator.</td></tr>';
-            summary.textContent = 'The simulated line score will appear here after the projection runs.';
+            title.textContent = 'Box score appears after simulation';
+            body.innerHTML = '<tr><td colspan="13">Run a matchup to generate the inning-by-inning line score.</td></tr>';
+            summary.textContent = 'Run a matchup to unlock R/H/E totals and export actions.';
             setExportButtons(false);
             return;
         }
@@ -1281,6 +1281,10 @@
         if (!result) {
             var shell = byId('projectionShell');
             if (shell) shell.setAttribute('data-projection-state', 'not-connected');
+            var emptyState = byId('projectionEmptyState');
+            if (emptyState) emptyState.setAttribute('data-empty-state', 'ready');
+            var probabilityLab = byId('probabilityLab');
+            if (probabilityLab) probabilityLab.setAttribute('data-probability-state', 'empty');
             setText('projectedScoreValue', 'Run simulation');
             setText('winProbabilityValue', 'Select teams');
             setText('expectedRunsValue', 'Choose starters');
@@ -1301,7 +1305,7 @@
             setText('homeScoreBig', '--');
             setText('awayExpectedTile', 'Starter selected above');
             setText('homeExpectedTile', 'Starter selected above');
-            setText('keyExplanationValue', 'Your selected matchup and starters are ready. Run the simulator to generate projected score range, win probability, expected runs, and matchup notes.');
+            setText('keyExplanationValue', 'Select two teams, choose starting pitchers, then run the simulator to generate projected score, win probability, expected runs, confidence band, and full box score.');
             var emptyCard = byId('resultCard');
             if (emptyCard) emptyCard.setAttribute('data-result-state', 'empty');
             setText('projectionNotice', 'Simulation-based estimate mode is ready. Select two teams and click Run Simulation.');
@@ -1313,6 +1317,10 @@
         }
         var shellProjected = byId('projectionShell');
         if (shellProjected) shellProjected.setAttribute('data-projection-state', 'projected');
+        var emptyProjected = byId('projectionEmptyState');
+        if (emptyProjected) emptyProjected.setAttribute('data-empty-state', 'hidden');
+        var probabilityProjected = byId('probabilityLab');
+        if (probabilityProjected) probabilityProjected.setAttribute('data-probability-state', 'projected');
         var resultCard = byId('resultCard');
         if (resultCard) resultCard.setAttribute('data-result-state', 'projected');
         setText('winnerBadge', result.winner.name + ' ' + roundPct(result.winnerPct));
@@ -1351,6 +1359,10 @@
         var shell = byId('projectionShell');
         var resultCard = byId('resultCard');
         if (shell) shell.setAttribute('data-projection-state', 'loading');
+        var emptyState = byId('projectionEmptyState');
+        if (emptyState) emptyState.setAttribute('data-empty-state', 'hidden');
+        var probabilityLab = byId('probabilityLab');
+        if (probabilityLab) probabilityLab.setAttribute('data-probability-state', 'empty');
         if (resultCard) resultCard.setAttribute('data-result-state', 'loading');
         setText('winnerBadge', 'Running baseline sim...');
         setText('awayScoreLabel', away ? away.name : 'Team A');
