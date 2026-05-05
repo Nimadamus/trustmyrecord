@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="canonical" href="https://trustmyrecord.com/trendspotter/">
+  <title>Trendspotter | TrustMyRecord Verified Sports Trends</title>
+  <meta name="description" content="TrustMyRecord Trendspotter displays verified sports trend artifacts from real available data only, with unavailable sports and unsupported data clearly labeled.">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/trendspotter.css?v=20260505">
+</head>
+<body>
+  <header class="ts-topbar">
+    <a class="ts-brand" href="/" aria-label="TrustMyRecord home">
+      <span class="ts-brand-mark">TMR</span>
+      <span>
+        <strong>TrustMyRecord</strong>
+        <small>Receipts over rhetoric</small>
+      </span>
+    </a>
+    <nav class="ts-nav" aria-label="Primary">
+      <a href="/sportsbook/">Make Picks</a>
+      <a href="/handicappers/">Records</a>
+      <a href="/feed/">Feed</a>
+      <a href="/forum/">Forum</a>
+    </nav>
+  </header>
+
+  <main class="ts-shell">
+    <section class="ts-hero" aria-labelledby="trendspotter-title">
+      <div>
+        <p class="ts-kicker">Verified artifact reader</p>
+        <h1 id="trendspotter-title">Trendspotter</h1>
+        <p class="ts-lead">Real trend insights from verified Trendspotter artifacts. No fake records, no fake picks, no guessed stats.</p>
+      </div>
+      <aside class="ts-hero-panel" aria-label="Data rules">
+        <span>Data source</span>
+        <strong>Verified JSON only</strong>
+        <p>Unavailable data is labeled unavailable. Internal scores are labeled as internal scoring, not betting advice.</p>
+      </aside>
+    </section>
+
+    <section class="ts-controls" aria-label="Trend filters">
+      <div class="ts-tabs" role="tablist" aria-label="Sports">
+        <button type="button" class="is-active" data-sport="NBA">NBA</button>
+        <button type="button" data-sport="NHL">NHL</button>
+        <button type="button" data-sport="NFL">NFL</button>
+        <button type="button" data-sport="MLB">MLB</button>
+      </div>
+      <div class="ts-status-pill" id="tsStatusPill">Loading verified artifacts</div>
+    </section>
+
+    <section class="ts-summary-grid" aria-label="Artifact summary">
+      <article>
+        <span>Sport</span>
+        <strong id="summarySport">--</strong>
+      </article>
+      <article>
+        <span>Verified trends</span>
+        <strong id="summaryCount">--</strong>
+      </article>
+      <article>
+        <span>Artifact</span>
+        <strong id="summaryArtifact">--</strong>
+      </article>
+      <article>
+        <span>Generated</span>
+        <strong id="summaryGenerated">--</strong>
+      </article>
+    </section>
+
+    <section class="ts-message is-hidden" id="tsMessage" aria-live="polite"></section>
+
+    <section class="ts-layout">
+      <div>
+        <div class="ts-section-heading">
+          <p>Verified trends</p>
+          <h2 id="trendHeading">NBA trend artifacts</h2>
+        </div>
+        <div class="ts-loading" id="tsLoading" aria-live="polite">
+          <span></span>
+          <p>Loading verified Trendspotter data...</p>
+        </div>
+        <div class="ts-trend-list" id="trendList"></div>
+      </div>
+
+      <aside class="ts-side" aria-label="Source and availability details">
+        <article class="ts-side-card">
+          <h2>Source Chain</h2>
+          <ul id="sourceList">
+            <li>Loading sources...</li>
+          </ul>
+        </article>
+        <article class="ts-side-card">
+          <h2>Unavailable Data</h2>
+          <ul id="unavailableList">
+            <li>Loading availability...</li>
+          </ul>
+        </article>
+        <article class="ts-side-card">
+          <h2>Guardrails</h2>
+          <p>Trendspotter does not read user picks, pending picks, locked pick details, profile records, leaderboards, grading output, or autograder state.</p>
+        </article>
+      </aside>
+    </section>
+  </main>
+
+  <script src="/static/js/config.js?v=20260330"></script>
+  <script src="/static/js/trendspotter.js?v=20260505"></script>
+</body>
+</html>
