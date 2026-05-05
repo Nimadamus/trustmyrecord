@@ -24383,8 +24383,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <script src="/static/js/platform-production-fix.js?v=20260415d"></script>
     <script src="/static/js/sportsbook-dashboard-sync.js?v=20260415d"></script>
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260501navspacing">
-<script defer src="/static/js/tmr-sitewide.js?v=20260501navspacing"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260505sportsbooknavclean">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260505sportsbooknavclean"></script>
     <style>
         /* Make Your Picks polish: visual-only overrides, no pick-flow logic changes. */
         #picks.page-section {
@@ -28157,13 +28157,56 @@ document.addEventListener('DOMContentLoaded', function() {
         line-height: 1.45 !important;
     }
 
-    /* Final sportsbook cleanup: keep board header/date rows level and readable. */
+    /* Final sportsbook cleanup: nav and board rows only. */
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links a[href*="trendspotter"] {
+        display: none !important;
+    }
+
+    @media (min-width: 641px) {
+        body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__inner {
+            width: min(1500px, calc(100% - 28px)) !important;
+            min-height: auto !important;
+            grid-template-columns: minmax(178px, max-content) minmax(0, 1fr) max-content max-content !important;
+            column-gap: clamp(8px, 0.8vw, 14px) !important;
+            row-gap: 8px !important;
+            padding: 8px 0 !important;
+        }
+
+        body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links {
+            min-width: 0 !important;
+            display: flex !important;
+            flex-wrap: wrap !important;
+            justify-content: center !important;
+            align-items: center !important;
+            gap: 6px 8px !important;
+            overflow: visible !important;
+            white-space: normal !important;
+        }
+
+        body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links a,
+        body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__button {
+            flex: 0 0 auto !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            min-height: 32px !important;
+            padding: 6px 8px !important;
+            font-size: clamp(10.5px, 0.66vw, 12px) !important;
+            line-height: 1.1 !important;
+            white-space: nowrap !important;
+            letter-spacing: 0.035em !important;
+        }
+    }
+
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-board-grid-head {
         display: grid !important;
         grid-template-columns: minmax(260px, 1.9fr) repeat(3, minmax(124px, 1fr)) !important;
         align-items: center !important;
-        min-height: 46px !important;
-        padding: 12px 20px !important;
+        min-height: 42px !important;
+        height: 42px !important;
+        padding: 10px 18px !important;
+        margin: 0 !important;
+        gap: 0 12px !important;
+        border-radius: 0 !important;
         overflow: visible !important;
     }
 
@@ -28179,42 +28222,76 @@ document.addEventListener('DOMContentLoaded', function() {
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-board-row {
         grid-template-columns: minmax(260px, 1.9fr) repeat(3, minmax(124px, 1fr)) !important;
         align-items: stretch !important;
-        min-height: 176px !important;
+        min-height: 154px !important;
+        height: auto !important;
+        gap: 0 12px !important;
+        margin: 0 !important;
         overflow: visible !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-board-row + .sb-board-row {
+        margin-top: 0 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-board-grid-body {
+        display: block !important;
+        gap: 0 !important;
+        row-gap: 0 !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-board-matchup {
         display: grid !important;
-        grid-template-rows: auto minmax(112px, 1fr) !important;
+        grid-template-rows: 22px 46px 46px !important;
         align-content: start !important;
-        gap: 12px !important;
-        padding: 18px 20px !important;
+        gap: 6px !important;
+        padding: 14px 18px !important;
+        min-height: 142px !important;
         overflow: visible !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-board-when {
+        grid-row: 1 !important;
         min-height: 22px !important;
-        line-height: 1.25 !important;
+        height: 22px !important;
+        line-height: 22px !important;
         margin: 0 !important;
-        white-space: normal !important;
+        padding: 0 9px !important;
+        white-space: nowrap !important;
         overflow: visible !important;
         text-overflow: clip !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-board-teams {
-        min-height: 112px !important;
+        grid-row: 2 / 4 !important;
+        grid-template-rows: 46px 46px !important;
+        gap: 6px !important;
+        min-height: 98px !important;
+        height: 98px !important;
         align-content: center !important;
     }
 
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-board-team {
+        min-height: 46px !important;
+        height: 46px !important;
+    }
+
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-board-col {
-        padding-top: 18px !important;
-        padding-bottom: 18px !important;
+        padding-top: 36px !important;
+        padding-bottom: 14px !important;
         overflow: visible !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds-stack {
+        grid-template-rows: 46px 46px !important;
+        gap: 6px !important;
         height: auto !important;
-        min-height: 112px !important;
+        min-height: 98px !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds {
+        height: 46px !important;
+        min-height: 46px !important;
+        max-height: 46px !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-empty-slip {
@@ -28315,13 +28392,16 @@ document.addEventListener('DOMContentLoaded', function() {
     (function(){
         function removeCommandCenterLabel() {
             if (!document.body || document.body.getAttribute('data-tmr-route') !== 'sportsbook') return;
-            var scope = document.getElementById('picks') || document.body;
-            scope.querySelectorAll('a, button, [role="tab"], .tab, .nav-link, .sportsbook-lobby-label').forEach(function (el) {
+            var scope = document.body;
+            scope.querySelectorAll('a, button, [role="tab"], .tab, .nav-link, .sportsbook-lobby-label, span, div').forEach(function (el) {
                 if ((el.textContent || '').trim() === 'Command Center') el.remove();
             });
         }
         removeCommandCenterLabel();
         document.addEventListener('DOMContentLoaded', removeCommandCenterLabel);
+        try {
+            new MutationObserver(removeCommandCenterLabel).observe(document.documentElement, { childList: true, subtree: true });
+        } catch (_) {}
     })();
     </script>
     <script src="/static/js/tmr-redesign-loader.js?v=20260501a" defer></script>
