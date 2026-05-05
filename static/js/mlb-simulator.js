@@ -243,9 +243,9 @@
                 name: row[1],
                 quality: row[2],
                 era: row[3],
-                source: 'Team rotation option',
+                source: 'Starter list selection',
                 verified: false,
-                note: 'Named pitcher option from ESPN roster snapshot; not confirmed official starter'
+                note: 'Starter list is for simulation selection and may not reflect today\'s confirmed starter'
             });
         });
         return options;
