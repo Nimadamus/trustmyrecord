@@ -292,7 +292,7 @@
             </div>
 
             <div id="emptyState" class="empty-state" hidden>
-                <h2>No pending picks</h2>
+                <h2>No pending picks right now.</h2>
                 <p>Locked picks will appear here after you submit them and before the grader settles the final result.</p>
                 <a class="btn btn-primary" href="/sportsbook/">Make a Pick</a>
             </div>
@@ -384,28 +384,11 @@
             return (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')) + 'u';
         }
         function pickText(pick) {
-            if (window.TMR && typeof window.TMR.formatPickDisplayLabel === 'function') {
-                return window.TMR.formatPickDisplayLabel(pick);
+            if (window.TMR && typeof window.TMR.formatPickDisplay === 'function') {
+                return window.TMR.formatPickDisplay(pick);
             }
-            var selection = String(pick.selection_label || pick.selection || 'Pick').trim();
-            var market = String(pick.market_type || pick.market || '').toLowerCase();
-            var line = pick.line_snapshot != null ? pick.line_snapshot : pick.line;
-            if (market === 'h2h' || market.indexOf('moneyline') !== -1) {
-                return /\bML\b$/i.test(selection) ? selection : selection + ' ML';
-            }
-            if (line == null || line === '') return selection || 'Pick';
-            var n = Number(line);
-            var s = Number.isFinite(n) ? String(n) : String(line).trim();
-            if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
-            if ((market.indexOf('spread') !== -1 || market.indexOf('run_line') !== -1 || market.indexOf('puck_line') !== -1) && Number.isFinite(n) && n > 0) {
-                s = '+' + s;
-            }
-            var escaped = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            if (new RegExp('(?:^|\\s)' + escaped + '$').test(selection)) return selection;
-            var totalSide = market.indexOf('total') !== -1 && !/\b(over|under)\b/i.test(selection)
-                ? (/\bover\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Over' : (/\bunder\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Under' : ''))
-                : '';
-            return (selection || 'Pick').replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '').trim() + totalSide + ' ' + s;
+            var selection = String(pick.selection || 'Pick').trim();
+            return selection || 'Pick';
         }
         function matchup(pick) {
             if (pick.away_team || pick.home_team) return [pick.away_team, pick.home_team].filter(Boolean).join(' @ ');
@@ -414,10 +397,10 @@
         function statusText(pick) {
             var now = Date.now();
             var start = pick.commence_time ? new Date(pick.commence_time).getTime() : NaN;
-            if (pick.game_completed) return 'Awaiting Final';
-            if (Number.isFinite(start) && start > now) return 'Game Not Started';
-            if (Number.isFinite(start) && start <= now) return 'In Progress';
-            return 'Awaiting Grade';
+            if (pick.game_completed) return 'Locked - Awaiting Final';
+            if (Number.isFinite(start) && start > now) return 'Locked - Game Not Started';
+            if (Number.isFinite(start) && start <= now) return 'Locked - In Progress';
+            return 'Locked - Awaiting Grade';
         }
         function rowHtml(pick) {
             var pickLabel = pickText(pick);
@@ -492,6 +475,5 @@
         boot();
     })();
     </script>
-<script src="/static/js/analytics.js?v=20260504a"></script>
 </body>
 </html>
