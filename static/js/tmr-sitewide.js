@@ -15,7 +15,7 @@
         ["/handicappers/", "Find Handicappers"],
         ["/arena/", "Arena"],
         ["/forum/", "Forums"],
-        ["/marketplace/", "Sell Picks"]
+        ["/marketplace/", "Sell Your Picks"]
     ];
 
     // Pages that should highlight Arena in the top nav even though they
