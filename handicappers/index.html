@@ -443,6 +443,11 @@
         .hm-stat.is-negative { color: #ff3b30; }
         .hm-stat.is-muted { color: var(--muted); }
 
+        .hm-count strong.is-negative,
+        .hm-leader-card span.is-negative {
+            color: #ff3b30;
+        }
+
         .hm-sports {
             display: flex;
             flex-wrap: wrap;
@@ -1226,6 +1231,13 @@
             if (el) el.textContent = value;
         }
 
+        function setMetricText(el, value, metricValue) {
+            if (!el) return;
+            el.textContent = value;
+            el.classList.remove('is-positive', 'is-negative', 'is-muted', 'is-neutral');
+            el.classList.add(statClass(metricValue));
+        }
+
         function leaderValue(value, formatter) {
             return value ? formatter(value) : '--';
         }
@@ -1260,7 +1272,7 @@
             setText(els.totalPicks, String(totalPicks));
             setText(els.bestRecord, leaderValue(bestRecord, member => formatRecord(member.stats)));
             setText(els.bestRecordUser, bestRecord ? '@' + bestRecord.username + ' · ' + formatPercent(bestRecord.stats.winRate, true) : 'No qualified records yet');
-            setText(els.topUnits, leaderValue(topUnits, member => formatUnits(member.stats.units, true)));
+            setMetricText(els.topUnits, leaderValue(topUnits, member => formatUnits(member.stats.units, true)), topUnits ? topUnits.stats.units : null);
             setText(els.topUnitsUser, topUnits ? '@' + topUnits.username : 'No qualified records yet');
             setText(els.recentActivity, leaderValue(recent, member => formatLastActive(member.stats.lastActivity || member.lastActive)));
             setText(els.recentActivityUser, recent ? '@' + recent.username : 'No pick activity yet');
@@ -1271,11 +1283,11 @@
             const withPicks = members.filter(member => Number(member.stats.totalPicks || 0) > 0);
             const qualified = members.filter(isQualifiedTopPerformer);
             const cards = [
-                ['Units Leader', bestBy(qualified, () => true, member => Number(member.stats.units || 0)), member => formatUnits(member.stats.units, true)],
-                ['Best ROI', bestBy(qualified, member => member.stats.roi != null, member => Number(member.stats.roi || 0)), member => formatPercent(member.stats.roi, true)],
-                ['Most Picks', bestBy(qualified, () => true, member => Number(member.stats.totalPicks || 0)), member => member.stats.totalPicks + ' picks'],
-                ['Best Win Rate', bestBy(qualified, member => member.stats.winRate != null, member => Number(member.stats.winRate || 0)), member => formatPercent(member.stats.winRate, true)],
-                ['Newest Active Capper', bestBy(withPicks, member => gradedCount(member) > 0, getActivityTime), member => formatLastActive(member.stats.lastActivity || member.lastActive)]
+                ['Units Leader', bestBy(qualified, () => true, member => Number(member.stats.units || 0)), member => formatUnits(member.stats.units, true), member => member.stats.units],
+                ['Best ROI', bestBy(qualified, member => member.stats.roi != null, member => Number(member.stats.roi || 0)), member => formatPercent(member.stats.roi, true), member => member.stats.roi],
+                ['Most Picks', bestBy(qualified, () => true, member => Number(member.stats.totalPicks || 0)), member => member.stats.totalPicks + ' picks', () => null],
+                ['Best Win Rate', bestBy(qualified, member => member.stats.winRate != null, member => Number(member.stats.winRate || 0)), member => formatPercent(member.stats.winRate, true), member => member.stats.winRate == null ? null : Number(member.stats.winRate) - 50],
+                ['Newest Active Capper', bestBy(withPicks, member => gradedCount(member) > 0, getActivityTime), member => formatLastActive(member.stats.lastActivity || member.lastActive), () => null]
             ].filter(([, member]) => !!member);
 
             if (!cards.length) {
@@ -1283,11 +1295,12 @@
                 return;
             }
 
-            els.featured.innerHTML = cards.map(([label, member, formatter]) => {
+            els.featured.innerHTML = cards.map(([label, member, formatter, metricGetter]) => {
+                const metricClass = statClass(metricGetter(member));
                 return '<div class="hm-leader-card">' +
                     '<b>' + escapeHtml(label) + '</b>' +
                     '<strong>' + escapeHtml(member.displayName) + '</strong>' +
-                    '<span>@' + escapeHtml(member.username) + ' · ' + escapeHtml(formatter(member)) + '</span>' +
+                    '<span class="' + metricClass + '">@' + escapeHtml(member.username) + ' · ' + escapeHtml(formatter(member)) + '</span>' +
                 '</div>';
             }).join('');
         }
