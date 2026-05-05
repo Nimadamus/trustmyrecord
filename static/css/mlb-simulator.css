@@ -152,7 +152,19 @@
 }
 
 .sim-panel {
+    position: relative;
+    overflow: hidden;
     padding: 18px;
+}
+
+.sim-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(45, 212, 191, 0.82), rgba(244, 201, 93, 0.7), rgba(96, 165, 250, 0.72));
+    opacity: 0.68;
+    pointer-events: none;
 }
 
 .sim-control-panel {
@@ -283,7 +295,15 @@
 
 .live-input-grid div.available {
     border-color: rgba(52, 211, 153, 0.32);
-    background: rgba(52, 211, 153, 0.08);
+    background:
+        linear-gradient(135deg, rgba(52, 211, 153, 0.12), rgba(15, 23, 42, 0.5)),
+        rgba(52, 211, 153, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.live-input-grid div.unavailable {
+    border-style: dashed;
+    background: rgba(15, 23, 42, 0.34);
 }
 
 .live-input-grid span {
@@ -527,11 +547,17 @@
 .sim-button.primary {
     background: linear-gradient(135deg, rgba(45, 212, 191, 0.95), rgba(96, 165, 250, 0.82));
     color: #041016;
+    box-shadow: 0 12px 30px rgba(45, 212, 191, 0.18);
 }
 
 .sim-button.secondary {
     background: rgba(45, 212, 191, 0.08);
     color: #dffcf8;
+}
+
+.sim-button:not(:disabled):hover {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
 }
 
 .sim-button:disabled {
@@ -573,6 +599,8 @@
 }
 
 .projection-shell > div {
+    position: relative;
+    overflow: hidden;
     min-height: 104px;
     display: grid;
     align-content: center;
@@ -581,6 +609,16 @@
     border: 1px dashed rgba(45, 212, 191, 0.24);
     border-radius: 8px;
     background: rgba(45, 212, 191, 0.045);
+}
+
+.projection-shell > div::after {
+    content: "";
+    position: absolute;
+    inset: auto 12px 10px;
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--sim-cyan), var(--sim-gold));
+    opacity: 0.42;
 }
 
 .projection-shell small,
