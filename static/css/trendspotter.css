@@ -29,9 +29,9 @@ body {
 
 body {
   background:
-    linear-gradient(180deg, rgba(15, 23, 42, .88), rgba(5, 7, 13, 0) 360px),
-    radial-gradient(circle at 22% 8%, rgba(34, 211, 238, .14), transparent 330px),
-    radial-gradient(circle at 82% 0%, rgba(45, 212, 191, .1), transparent 300px),
+    linear-gradient(180deg, rgba(15, 23, 42, .94), rgba(5, 7, 13, 0) 430px),
+    radial-gradient(circle at 26% 7%, rgba(34, 211, 238, .18), transparent 360px),
+    radial-gradient(circle at 84% 2%, rgba(45, 212, 191, .14), transparent 340px),
     var(--ts-bg);
 }
 
@@ -101,16 +101,25 @@ button { font: inherit; }
 }
 
 .ts-shell {
-  width: min(1120px, calc(100% - 36px));
+  width: min(1180px, calc(100% - 36px));
   margin: 0 auto;
   padding: 34px 0 76px;
 }
 
 .ts-hero {
-  padding: clamp(28px, 5vw, 56px) 0 26px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 390px);
+  align-items: center;
+  gap: clamp(22px, 4vw, 48px);
+  min-height: 420px;
+  padding: clamp(34px, 6vw, 68px) 0 24px;
 }
 
 .ts-kicker { margin: 0 0 12px; }
+
+.ts-hero-copy {
+  max-width: 780px;
+}
 
 .ts-hero h1 {
   margin: 0;
@@ -121,23 +130,120 @@ button { font: inherit; }
 }
 
 .ts-lead {
-  max-width: 760px;
+  max-width: 720px;
   margin: 18px 0 0;
   color: #d9e5f5;
-  font-size: clamp(17px, 2vw, 22px);
+  font-size: clamp(18px, 2.2vw, 24px);
   line-height: 1.55;
 }
 
-.ts-data-note {
+.ts-feature-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.ts-feature-row span {
+  min-height: 38px;
   display: inline-flex;
-  margin: 18px 0 0;
-  padding: 10px 12px;
-  border: 1px solid rgba(45, 212, 191, .26);
-  border-radius: var(--ts-radius);
-  color: var(--ts-muted-2);
+  align-items: center;
+  padding: 0 13px;
+  border: 1px solid rgba(45, 212, 191, .3);
+  border-radius: 999px;
+  color: #dcfbff;
   background: rgba(45, 212, 191, .08);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 850;
+}
+
+.ts-preview-panel,
+.ts-how article {
+  border: 1px solid var(--ts-border);
+  border-radius: var(--ts-radius);
+  background: linear-gradient(180deg, rgba(16, 26, 43, .96), rgba(7, 13, 24, .96));
+  box-shadow: 0 18px 48px rgba(0, 0, 0, .24);
+}
+
+.ts-preview-panel {
+  padding: 20px;
+}
+
+.ts-preview-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(148, 163, 184, .16);
+}
+
+.ts-preview-head span,
+.ts-how span {
+  color: var(--ts-cyan);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.ts-preview-head strong {
+  color: #fff;
+  font-size: 15px;
+  text-align: right;
+}
+
+.ts-preview-panel dl {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 0;
+}
+
+.ts-preview-panel div {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 12px;
+  border: 1px solid rgba(148, 163, 184, .14);
+  border-radius: var(--ts-radius);
+  background: rgba(3, 5, 10, .34);
+}
+
+.ts-preview-panel dt,
+.ts-preview-panel dd {
+  margin: 0;
+}
+
+.ts-preview-panel dt {
+  color: var(--ts-muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.ts-preview-panel dd {
+  color: var(--ts-muted-2);
+  text-align: right;
+  line-height: 1.35;
+}
+
+.ts-how {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ts-how article {
+  min-height: 86px;
+  padding: 18px;
+}
+
+.ts-how strong {
+  display: block;
+  margin-top: 8px;
+  color: #fff;
+  font-size: 18px;
 }
 
 .ts-step,
@@ -151,7 +257,7 @@ button { font: inherit; }
 }
 
 .ts-step.is-disabled {
-  opacity: .48;
+  opacity: .78;
 }
 
 .ts-step-head {
@@ -186,14 +292,16 @@ button { font: inherit; }
 }
 
 .ts-option {
-  min-height: 84px;
-  padding: 16px;
+  min-height: 100px;
+  padding: 18px;
   border: 1px solid var(--ts-border-2);
   border-radius: var(--ts-radius);
   color: var(--ts-text);
-  background: rgba(3, 5, 10, .38);
+  background:
+    linear-gradient(180deg, rgba(16, 26, 43, .7), rgba(3, 5, 10, .42));
   text-align: left;
   cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
 }
 
 .ts-option:hover,
@@ -214,7 +322,7 @@ button { font: inherit; }
 }
 
 .ts-option strong {
-  font-size: 20px;
+  font-size: 22px;
   line-height: 1.2;
 }
 
@@ -263,6 +371,7 @@ button { font: inherit; }
   color: #f8d69b;
   background: rgba(245, 165, 36, .08);
   line-height: 1.5;
+  font-weight: 750;
 }
 
 .ts-run-panel,
@@ -385,6 +494,8 @@ button { font: inherit; }
 }
 
 @media (max-width: 860px) {
+  .ts-hero,
+  .ts-how,
   .ts-sport-grid,
   .ts-matchup-grid,
   .ts-type-grid,
@@ -416,6 +527,15 @@ button { font: inherit; }
 
   .ts-hero h1 {
     font-size: 48px;
+  }
+
+  .ts-hero {
+    min-height: auto;
+  }
+
+  .ts-feature-row span {
+    width: 100%;
+    justify-content: center;
   }
 
   .ts-option {
