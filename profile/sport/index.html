@@ -91,7 +91,8 @@
       .header-card { grid-template-columns: 1fr; }
       .ledger-row { grid-template-columns: 1fr 1fr; }
       .table-shell { overflow-x: auto; }
-      table { min-width: 720px; }
+      table { min-width: 920px; }
+      #marketTable table { min-width: 1320px; }
     }
     @media (max-width: 520px) {
       .page { width: min(100% - 24px, 1280px); padding-top: 22px; }
@@ -119,7 +120,7 @@
     </section>
 
     <section class="section">
-      <div class="section-head"><div><div class="section-title">Market Breakdown</div><div class="section-sub">Only market categories present in verified graded picks are shown.</div></div></div>
+      <div class="section-head"><div><div class="section-title">Advanced Bet Type Metrics</div><div class="section-sub">Each row is calculated from this sport's verified graded ledger picks for that bet type.</div></div></div>
       <div class="table-shell" id="marketTable"></div>
     </section>
     <section class="section">
@@ -196,6 +197,133 @@
       const x = Number(o);
       if (!Number.isFinite(x) || x === 0) return '-';
       return (x > 0 ? '+' : '') + Math.round(x);
+    }
+    function impliedProb(american) {
+      const o = Number(american);
+      if (!Number.isFinite(o) || o === 0) return null;
+      return o > 0 ? 100 / (o + 100) : (-o) / ((-o) + 100);
+    }
+    function probToAmerican(p) {
+      if (!Number.isFinite(p) || p <= 0 || p >= 1) return 0;
+      return p >= 0.5 ? -Math.round((p / (1 - p)) * 100) : Math.round(((1 - p) / p) * 100);
+    }
+    function actualStake(units, odds) {
+      const stake = Number(units) || 0;
+      const price = Number(odds);
+      if (!Number.isFinite(price)) return stake;
+      return price < 0 ? stake * (Math.abs(price) / 100) : stake;
+    }
+    function marketLabel(key) {
+      return MARKET_LABELS[key] || String(key || 'Unknown Market').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+    function computeAdvancedPickMetrics(picks) {
+      let wins = 0, losses = 0, pushes = 0, risked = 0, net = 0, probSum = 0, probCount = 0, unitSum = 0, maxUnit = 0;
+      let firstAt = null, lastAt = null;
+      const activeDays = new Set();
+      const ordered = picks.slice().sort((a, b) => new Date(a.graded_at || a.locked_at || 0) - new Date(b.graded_at || b.locked_at || 0));
+      ordered.forEach(p => {
+        const status = String(p.status || '').toLowerCase();
+        if (status === 'won') wins += 1;
+        else if (status === 'lost') losses += 1;
+        else if (status === 'push' || status === 'pushed') pushes += 1;
+        const units = Number(p.units || 0);
+        const stake = actualStake(units, p.odds_snapshot);
+        risked += stake;
+        net += Number(p.result_units || 0);
+        unitSum += units;
+        if (units > maxUnit) maxUnit = units;
+        const ip = impliedProb(p.odds_snapshot);
+        if (ip != null) { probSum += ip; probCount += 1; }
+        const t = new Date(p.locked_at || p.created_at || 0).getTime();
+        if (Number.isFinite(t)) {
+          if (firstAt == null || t < firstAt) firstAt = t;
+          if (lastAt == null || t > lastAt) lastAt = t;
+          activeDays.add(new Date(t).toISOString().slice(0, 10));
+        }
+      });
+      const decisions = wins + losses;
+      const total = ordered.length;
+      const avgUnits = total > 0 ? unitSum / total : 0;
+      const roiFrac = risked > 0 ? net / risked : 0;
+      const avgImplied = probCount > 0 ? probSum / probCount : null;
+      const effectiveUnits = avgUnits > 0 ? (net / avgUnits) * 3 : 0;
+      const effectiveWinRate = decisions > 0 ? (110 / 210) * (1 + roiFrac) * 100 : 0;
+      let zScore = null;
+      if (decisions >= 5 && avgImplied != null && avgImplied > 0 && avgImplied < 1) {
+        const variance = decisions * avgImplied * (1 - avgImplied);
+        if (variance > 0) zScore = (wins - decisions * avgImplied) / Math.sqrt(variance);
+      }
+      let currentStreak = 0, bestStreak = 0, worstStreak = 0, runWin = 0, runLoss = 0;
+      ordered.forEach(p => {
+        const status = String(p.status || '').toLowerCase();
+        if (status === 'won') {
+          runWin += 1; runLoss = 0; bestStreak = Math.max(bestStreak, runWin);
+        } else if (status === 'lost') {
+          runLoss += 1; runWin = 0; worstStreak = Math.max(worstStreak, runLoss);
+        }
+      });
+      if (runWin > 0) currentStreak = runWin;
+      else if (runLoss > 0) currentStreak = -runLoss;
+      let cumulative = 0, peak = 0, maxDrawdown = 0;
+      ordered.forEach(p => {
+        cumulative += Number(p.result_units || 0);
+        peak = Math.max(peak, cumulative);
+        maxDrawdown = Math.max(maxDrawdown, peak - cumulative);
+      });
+      return {
+        total, wins, losses, pushes, decisions,
+        record: wins + '-' + losses + '-' + pushes,
+        winRate: decisions > 0 ? (wins / decisions) * 100 : 0,
+        avgOdds: avgImplied != null ? probToAmerican(avgImplied) : 0,
+        avgUnits,
+        maxUnit,
+        net,
+        roi: risked > 0 ? roiFrac * 100 : 0,
+        effectiveUnits,
+        effectiveWinRate,
+        zScore,
+        avgDailyPicks: activeDays.size > 0 ? total / activeDays.size : null,
+        currentStreak,
+        bestStreak,
+        worstStreak: -worstStreak,
+        maxDrawdown,
+        peakUnits: peak,
+        firstAt,
+        lastAt
+      };
+    }
+    function groupPicksByMarket(picks) {
+      const map = new Map();
+      picks.forEach(p => {
+        const key = String(p.market_type || 'unknown_market').toLowerCase();
+        if (!map.has(key)) map.set(key, []);
+        map.get(key).push(p);
+      });
+      return Array.from(map.entries())
+        .map(([key, rows]) => ({ key, label: marketLabel(key), metrics: computeAdvancedPickMetrics(rows) }))
+        .sort((a, b) => b.metrics.total - a.metrics.total || b.metrics.net - a.metrics.net);
+    }
+    function advancedMarketRows(picks) {
+      return groupPicksByMarket(picks).map(item => {
+        const m = item.metrics;
+        return [
+          { html: esc(item.label), cls: 'name' },
+          { html: String(m.total) },
+          { html: m.record },
+          { html: m.decisions ? m.winRate.toFixed(1) + '%' : '-', cls: m.decisions ? (m.winRate >= 50 ? 'pos' : 'neg') : 'zero' },
+          { html: fmtOdds(m.avgOdds) },
+          { html: m.avgUnits.toFixed(2) + 'u' },
+          { html: signed(m.net, 'u', 2), cls: signClass(m.net) },
+          { html: signed(m.roi, '%', 2), cls: signClass(m.roi) },
+          { html: signed(m.effectiveUnits, 'u', 2), cls: signClass(m.effectiveUnits) },
+          { html: m.decisions ? m.effectiveWinRate.toFixed(2) + '%' : '-', cls: m.decisions ? (m.effectiveWinRate >= 52.38 ? 'pos' : 'neg') : 'zero' },
+          { html: m.zScore == null ? '-' : signed(m.zScore, '', 2), cls: m.zScore == null ? 'zero' : signClass(m.zScore) },
+          { html: '-' + m.maxDrawdown.toFixed(2) + 'u', cls: m.maxDrawdown > 0 ? 'neg' : 'zero' },
+          { html: String(m.bestStreak) },
+          { html: String(m.worstStreak), cls: m.worstStreak < 0 ? 'neg' : 'zero' },
+          { html: m.avgDailyPicks == null ? '-' : m.avgDailyPicks.toFixed(2) }
+        ];
+      });
     }
     function rowStats(row) {
       const w = Number(row.wins || 0), l = Number(row.losses || 0), p = Number(row.pushes || 0);
@@ -349,11 +477,16 @@
       document.getElementById('sumWin').textContent = Number(s.wins || 0) + Number(s.losses || 0) > 0 ? win.toFixed(1) + '%' : '-';
       document.getElementById('sumWin').className = Number(s.wins || 0) + Number(s.losses || 0) > 0 ? (win >= 50 ? 'pos' : 'neg') : 'zero';
       document.getElementById('sumOdds').textContent = s.avg_odds != null ? fmtOdds(s.avg_odds) : '-';
-      const splits = metrics.splits || {};
       table('marketTable',
-        [{label:'Market'}, {label:'Picks', num:true}, {label:'W-L-P', num:true}, {label:'Win %', num:true}, {label:'Avg Odds', num:true}, {label:'Net Units', num:true}, {label:'ROI', num:true}],
-        breakdownRows(splits.by_market || [], item => MARKET_LABELS[item.key] || String(item.key || '').replace(/_/g, ' '), true)
+        [
+          {label:'Bet Type'}, {label:'Picks', num:true}, {label:'W-L-P', num:true}, {label:'Win %', num:true},
+          {label:'Avg Odds', num:true}, {label:'Avg Units', num:true}, {label:'Net Units', num:true}, {label:'ROI', num:true},
+          {label:'Eff Units', num:true}, {label:'Eff Win %', num:true}, {label:'Z-Score', num:true}, {label:'Max DD', num:true},
+          {label:'Best Streak', num:true}, {label:'Worst Streak', num:true}, {label:'ADP', num:true}
+        ],
+        advancedMarketRows(picks)
       );
+      const splits = metrics.splits || {};
       table('unitTable',
         [{label:'Unit Size'}, {label:'Picks', num:true}, {label:'W-L-P', num:true}, {label:'Win %', num:true}, {label:'Net Units', num:true}, {label:'ROI', num:true}],
         breakdownRows(splits.by_unit_size || [], item => UNIT_LABELS[item.key] || String(item.key || '').replace(/_/g, ' '), false)
