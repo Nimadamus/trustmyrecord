@@ -21,109 +21,26 @@ assert(/homeTeamSelect/.test(html), 'Team B selector is present');
 assert(/awayPoolSelect/.test(html), 'Team A pool selector is present');
 assert(/homePoolSelect/.test(html), 'Team B pool selector is present');
 assert(/Run Simulation/.test(html), 'Run Simulation button is present');
-assert(/Current vs Current/.test(html), 'current-current preset is present');
-assert(/Classic vs Classic/.test(html), 'classic-classic preset is present');
-assert(/Current vs Classic/.test(html), 'mixed preset is present');
+assert(/Current Teams/.test(html), 'current-team preset is present');
+assert(/Classic Teams/.test(html), 'classic-team preset is present');
+assert(/Mixed Era Matchup/.test(html), 'mixed-era preset is present');
 assert(/Projected Winner/.test(html), 'visual result card is present');
 assert(/simulator baselines/i.test(html), 'baseline explanation is present');
-assert(/does not include injuries or confirmed lineups/.test(html), 'honest limitations text is present');
-assert(!/Loading MLB games|Loading sportsbook board|Waiting for board data|Projection engine not connected yet/.test(html), 'old board-dependent placeholder text is removed');
+assert(/not using live rosters, injuries, starters, weather, sportsbook odds, or verified betting edges yet/.test(html), 'honest limitations text is present');
+assert(!/Loading MLB games|Loading sportsbook board|Waiting for board data|Projection engine not connected yet|Not connected for custom simulation|Unavailable without real inputs/.test(html), 'old board-dependent placeholder text is removed');
 assert(!/lock pick|locked pick|submit pick/i.test(html), 'page does not expose sportsbook submission actions');
+assert(!/DraftKings|FanDuel|BetMGM|live verified|official injury/i.test(html), 'page does not include fake live data claims');
 
 function makeElement(id) {
-  return {
-    id,
-    disabled: false,
-    value: '',
-    textContent: '',
-    innerHTML: '',
-    className: '',
-    attributes: {},
-    listeners: {},
-    style: {},
-    classList: {
-      toggle() {},
-    },
-    addEventListener(type, fn) {
-      this.listeners[type] = fn;
-    },
-    setAttribute(name, value) {
-      this.attributes[name] = String(value);
-    },
-    getAttribute(name) {
-      return this.attributes[name];
-    },
-  };
+  return { id, disabled: false, value: '', textContent: '', innerHTML: '', className: '', attributes: {}, listeners: {}, style: {}, classList: { toggle() {} }, addEventListener(type, fn) { this.listeners[type] = fn; }, setAttribute(name, value) { this.attributes[name] = String(value); }, getAttribute(name) { return this.attributes[name]; } };
 }
 
-const elementIds = [
-  'awayTeamSelect',
-  'homeTeamSelect',
-  'awayPoolSelect',
-  'homePoolSelect',
-  'runSimulationButton',
-  'refreshTeamsButton',
-  'currentModeButton',
-  'historicalModeButton',
-  'mixedModeButton',
-  'awayTeamMeta',
-  'homeTeamMeta',
-  'selectedMatchupTitle',
-  'awayHeaderName',
-  'homeHeaderName',
-  'awayHeaderMeta',
-  'homeHeaderMeta',
-  'awayEraBadge',
-  'homeEraBadge',
-  'resultCard',
-  'winnerBadge',
-  'awayScoreLabel',
-  'homeScoreLabel',
-  'awayScoreBig',
-  'homeScoreBig',
-  'awayExpectedTile',
-  'homeExpectedTile',
-  'keyExplanationValue',
-  'simDataSourceTitle',
-  'simDataSourceDetail',
-  'simBoardMessage',
-  'projectionShell',
-  'projectedScoreValue',
-  'winProbabilityValue',
-  'expectedRunsValue',
-  'totalRangeValue',
-  'runEnvironmentValue',
-  'simulationConfidenceValue',
-  'awayProbabilityLabel',
-  'homeProbabilityLabel',
-  'awayProbabilityValue',
-  'homeProbabilityValue',
-  'awayProbabilityBar',
-  'homeProbabilityBar',
-  'projectionNotice',
-  'comparisonGrid',
-  'inputSummary',
-  'matchupNotes',
-];
-
+const elementIds = ['awayTeamSelect','homeTeamSelect','awayPoolSelect','homePoolSelect','runSimulationButton','refreshTeamsButton','currentModeButton','historicalModeButton','mixedModeButton','modeHelpText','awayTeamMeta','homeTeamMeta','selectedMatchupTitle','awayHeaderName','homeHeaderName','awayHeaderMeta','homeHeaderMeta','awayEraBadge','homeEraBadge','resultCard','winnerBadge','awayScoreLabel','homeScoreLabel','awayScoreBig','homeScoreBig','awayExpectedTile','homeExpectedTile','keyExplanationValue','simDataSourceTitle','simDataSourceDetail','simBoardMessage','projectionShell','projectedScoreValue','winProbabilityValue','expectedRunsValue','totalRangeValue','runEnvironmentValue','simulationConfidenceValue','eraAdjustmentValue','awayProbabilityLabel','homeProbabilityLabel','awayProbabilityValue','homeProbabilityValue','awayProbabilityBar','homeProbabilityBar','projectionNotice','comparisonGrid','inputSummary','matchupNotes'];
 const elements = {};
 elementIds.forEach((id) => { elements[id] = makeElement(id); });
 
-const context = {
-  window: {},
-  document: {
-    readyState: 'complete',
-    getElementById(id) {
-      return elements[id] || null;
-    },
-    addEventListener() {},
-  },
-  console,
-  Math,
-  Number,
-};
+const context = { window: {}, document: { readyState: 'complete', getElementById(id) { return elements[id] || null; }, addEventListener() {} }, console, Math, Number };
 context.window.document = context.document;
-
 vm.runInNewContext(script, context);
 const simulator = context.window.TMRMlbSimulator;
 
@@ -139,7 +56,6 @@ assert.strictEqual(elements.homeTeamSelect.disabled, false, 'Team B selector is 
 assert.strictEqual(elements.runSimulationButton.disabled, false, 'Run Simulation is enabled with default teams');
 
 simulator.runSimulation();
-
 assert.strictEqual(elements.projectionShell.getAttribute('data-projection-state'), 'projected', 'run simulation renders projected state');
 assert.strictEqual(elements.resultCard.getAttribute('data-result-state'), 'projected', 'visual result card renders projected state');
 assert(!/--/.test(elements.projectedScoreValue.textContent), 'score range renders after simulation');
@@ -148,6 +64,8 @@ assert(/%/.test(elements.winnerBadge.textContent), 'projected winner tile includ
 assert(/Expected runs/.test(elements.awayExpectedTile.textContent), 'Team A expected runs render in result card');
 assert(/Expected runs/.test(elements.homeExpectedTile.textContent), 'Team B expected runs render in result card');
 assert(/projects ahead|composite team rating/.test(elements.keyExplanationValue.textContent), 'key explanation renders');
+assert(/lean|matchup/i.test(elements.simulationConfidenceValue.textContent), 'confidence label renders');
+assert(/baseline|normalized/i.test(elements.eraAdjustmentValue.textContent), 'era adjustment renders');
 assert(/Simulation-based estimate, not sportsbook odds or provider projection/.test(elements.projectionNotice.textContent), 'disclaimer is explicit');
 assert(/Not used \/ not invented/.test(elements.inputSummary.innerHTML), 'sportsbook odds are not shown as real inputs');
 assert(/Not used for this estimate/.test(elements.inputSummary.innerHTML), 'SportsDataIO data is not shown as a real input');
@@ -157,6 +75,8 @@ assert(/Offense/.test(elements.comparisonGrid.innerHTML), 'team comparison rende
 elements.historicalModeButton.listeners.click();
 assert(/1927 New York Yankees/.test(elements.awayTeamSelect.innerHTML), 'historical teams render after tab switch');
 assert(/2023 Texas Rangers/.test(elements.homeTeamSelect.innerHTML), 'full historical list is present');
+simulator.runSimulation();
+assert(/normalized/i.test(elements.eraAdjustmentValue.textContent), 'classic matchup shows era normalization note');
 
 elements.mixedModeButton.listeners.click();
 assert.strictEqual(elements.awayPoolSelect.value, 'current', 'mixed mode keeps Team A current');
@@ -166,5 +86,9 @@ assert(/1927 New York Yankees/.test(elements.homeTeamSelect.innerHTML), 'mixed m
 simulator.runSimulation();
 assert.strictEqual(elements.projectionShell.getAttribute('data-projection-state'), 'projected', 'mixed matchup can run simulation');
 assert(/%/.test(elements.winProbabilityValue.textContent), 'mixed matchup win probability renders');
+assert(/normalized/i.test(elements.eraAdjustmentValue.textContent), 'mixed matchup shows era normalization note');
+
+const allRenderedText = [elements.simBoardMessage.textContent, elements.projectionNotice.textContent, elements.inputSummary.innerHTML, elements.matchupNotes.innerHTML].join(' ');
+assert(!/DraftKings|FanDuel|BetMGM|live verified|official injury/i.test(allRenderedText), 'rendered simulator avoids fake live data claims');
 
 console.log('mlb-simulator-page-test: ok');
