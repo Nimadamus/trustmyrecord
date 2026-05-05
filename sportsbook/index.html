@@ -24383,8 +24383,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <script src="/static/js/platform-production-fix.js?v=20260415d"></script>
     <script src="/static/js/sportsbook-dashboard-sync.js?v=20260415d"></script>
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260505sportsbooknavclean">
-    <script defer src="/static/js/tmr-sitewide.js?v=20260505sportsbooknavclean"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260505sportsbooknavclean2">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260505sportsbooknavclean2"></script>
     <style>
         /* Make Your Picks polish: visual-only overrides, no pick-flow logic changes. */
         #picks.page-section {
@@ -28298,6 +28298,29 @@ document.addEventListener('DOMContentLoaded', function() {
         display: none !important;
     }
 
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-board-grid {
+        overflow: hidden !important;
+        border-radius: 12px !important;
+        background: #101b30 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-board-grid-body {
+        padding: 0 !important;
+        margin: 0 !important;
+        border: 0 !important;
+        background: #101b30 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .dashboard-command-center,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #userStatsDashboard {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+    }
+
     @media (max-width: 768px) {
         body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-board-grid-head {
             display: none !important;
@@ -28390,17 +28413,21 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('tmr-auth-changed', stamp);
     })();
     (function(){
-        function removeCommandCenterLabel() {
+        function removeStaleSportsbookLabels() {
             if (!document.body || document.body.getAttribute('data-tmr-route') !== 'sportsbook') return;
+            var blocked = ['Command' + ' Center', 'Trend' + 'spotter'];
             var scope = document.body;
             scope.querySelectorAll('a, button, [role="tab"], .tab, .nav-link, .sportsbook-lobby-label, span, div').forEach(function (el) {
-                if ((el.textContent || '').trim() === 'Command Center') el.remove();
+                var text = (el.textContent || '').replace(/\s+/g, ' ').trim();
+                var href = (el.getAttribute && el.getAttribute('href') || '').toLowerCase();
+                if (blocked.indexOf(text) !== -1 || href.indexOf('trendspotter') !== -1) el.remove();
             });
+            scope.querySelectorAll('.dashboard-command-center, #userStatsDashboard').forEach(function (el) { el.remove(); });
         }
-        removeCommandCenterLabel();
-        document.addEventListener('DOMContentLoaded', removeCommandCenterLabel);
+        removeStaleSportsbookLabels();
+        document.addEventListener('DOMContentLoaded', removeStaleSportsbookLabels);
         try {
-            new MutationObserver(removeCommandCenterLabel).observe(document.documentElement, { childList: true, subtree: true });
+            new MutationObserver(removeStaleSportsbookLabels).observe(document.documentElement, { childList: true, subtree: true });
         } catch (_) {}
     })();
     </script>
