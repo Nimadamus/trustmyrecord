@@ -1035,7 +1035,21 @@
                             roi: totalPicks > 0 && decisions > 0 ? numberFrom(summary.roi) : null,
                             winRate: decisions > 0 ? numberFrom(summary.win_rate, (wins / decisions) * 100) : null,
                             currentStreak: numberFrom(summary.current_streak, summary.streak) || base.currentStreak || 0,
-                            sports: extractSports(user, metrics)
+                            sports: extractSports(user, metrics),
+                            lastPick: base.lastPick,
+                            lastActivity: firstValidDate(
+                                summary.last_activity_at,
+                                summary.lastActivityAt,
+                                summary.last_active_at,
+                                summary.lastActiveAt,
+                                summary.last_pick_at,
+                                summary.lastPickAt,
+                                metrics.last_activity_at,
+                                metrics.lastActivityAt,
+                                metrics.last_active_at,
+                                metrics.lastActiveAt,
+                                base.lastActivity
+                            )
                         };
                     }
                 } catch (error) {
