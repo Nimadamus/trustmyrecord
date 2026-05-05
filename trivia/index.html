@@ -1129,22 +1129,22 @@
     </div>
 
     <!-- Stats Bar -->
-    <div class="stats-bar">
+    <div class="stats-bar" aria-label="Your trivia stats">
         <div class="stat-box">
-            <div class="stat-value" id="statTotalPlayed">0</div>
-            <div class="stat-label">Quizzes Taken</div>
+            <div class="stat-value" id="statQuestionsAnswered">0</div>
+            <div class="stat-label">Questions Answered</div>
         </div>
         <div class="stat-box">
-            <div class="stat-value" id="statBestScore">--</div>
-            <div class="stat-label">Best Score</div>
+            <div class="stat-value" id="statAccuracy">0%</div>
+            <div class="stat-label">Correct Rate</div>
         </div>
         <div class="stat-box">
             <div class="stat-value" id="statTotalPoints">0</div>
             <div class="stat-label">Total Points</div>
         </div>
         <div class="stat-box">
-            <div class="stat-value" id="statAccuracy">--</div>
-            <div class="stat-label">Avg Accuracy</div>
+            <div class="stat-value" id="statQuestionsCorrect">0</div>
+            <div class="stat-label">Correct Answers</div>
         </div>
     </div>
 
@@ -1735,7 +1735,7 @@ async function submitQuizAnswer() {
 }
 
 function showAnswerResult(result, wasTimeout) {
-    var isCorrect = result.correct || false;
+    var isCorrect = !!(result.is_correct || result.correct);
     var pointsEarned = result.points_earned || result.pointsEarned || 0;
     var correctAnswer = result.correct_answer || result.correctAnswer || {};
     var correctAnswerText = correctAnswer.answer_text || correctAnswer.text || (typeof correctAnswer === 'string' ? correctAnswer : '');
@@ -1785,6 +1785,7 @@ function showAnswerResult(result, wasTimeout) {
     }
     btn.disabled = true;
 
+    loadUserStats();
     currentQuizProgress++;
     setTimeout(function() { loadNextQuestion(); }, 1300);
 }
@@ -2384,33 +2385,50 @@ async function renderCustomQuestionsList() {
 // ================================================================
 async function loadUserStats() {
     var username = getCurrentUsername();
+    var answeredEl = document.getElementById('statQuestionsAnswered');
+    var correctEl = document.getElementById('statQuestionsCorrect');
+    var pointsEl = document.getElementById('statTotalPoints');
+    var accuracyEl = document.getElementById('statAccuracy');
+
+    function setZeroState() {
+        if (answeredEl) answeredEl.textContent = '0';
+        if (correctEl) correctEl.textContent = '0';
+        if (pointsEl) pointsEl.textContent = '0';
+        if (accuracyEl) accuracyEl.textContent = '0%';
+    }
+
+    function formatRate(value) {
+        var rounded = Math.round(value * 10) / 10;
+        return (Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)) + '%';
+    }
+
     if (!username) {
-        document.getElementById('statTotalPlayed').textContent = '0';
-        document.getElementById('statBestScore').textContent = '--';
-        document.getElementById('statTotalPoints').textContent = '0';
-        document.getElementById('statAccuracy').textContent = '--';
+        setZeroState();
         return;
     }
 
     try {
         await api.ready;
         var data = await api.request('/trivia/users/' + encodeURIComponent(username) + '/stats');
-        var stats = data.stats || data;
+        var stats = data.stats || data.overall || data;
 
-        var totalPlayed = stats.quizzes_played || stats.quizzesPlayed || stats.total_sessions || 0;
-        var totalPoints = stats.total_points || stats.totalPoints || 0;
-        var bestScore = stats.best_score || stats.bestScore || stats.best_percentage || 0;
-        var accuracy = stats.accuracy || stats.correct_percentage || stats.avg_accuracy || 0;
+        var answered = Number(stats.questions_answered || stats.questionsAnswered || 0);
+        var correct = Number(stats.questions_correct || stats.questionsCorrect || 0);
+        var totalPoints = Number(stats.total_points || stats.totalPoints || 0);
+        var accuracy = answered > 0 ? (correct / answered) * 100 : 0;
 
-        if (typeof accuracy === 'number' && accuracy > 0 && accuracy <= 1) accuracy = Math.round(accuracy * 100);
-        if (typeof bestScore === 'number' && bestScore > 0 && bestScore <= 1) bestScore = Math.round(bestScore * 100);
+        if (stats.accuracy != null && answered > 0) {
+            accuracy = Number(stats.accuracy) || accuracy;
+            if (accuracy > 0 && accuracy <= 1) accuracy *= 100;
+        }
 
-        document.getElementById('statTotalPlayed').textContent = totalPlayed;
-        document.getElementById('statBestScore').textContent = totalPlayed > 0 ? Math.round(bestScore) + '%' : '--';
-        document.getElementById('statTotalPoints').textContent = totalPoints;
-        document.getElementById('statAccuracy').textContent = totalPlayed > 0 ? Math.round(accuracy) + '%' : '--';
+        if (answeredEl) answeredEl.textContent = String(answered);
+        if (correctEl) correctEl.textContent = String(correct);
+        if (pointsEl) pointsEl.textContent = String(totalPoints);
+        if (accuracyEl) accuracyEl.textContent = formatRate(accuracy);
     } catch(e) {
         console.error('Failed to load user stats:', e);
+        setZeroState();
     }
 }
 
