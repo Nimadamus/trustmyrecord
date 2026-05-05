@@ -87,8 +87,8 @@
                 try {
                     if (!window.api || typeof window.api.request !== 'function') throw new Error('API client unavailable.');
                     const [usersPayload, picksPayload] = await Promise.all([
-                        window.api.request('/users?query=&limit=500&offset=0'),
-                        window.api.request('/picks?limit=500&offset=0')
+                        window.api.request('/users?query=&limit=100&offset=0'),
+                        window.api.request('/picks?limit=100&offset=0')
                     ]);
                     const users = asArray(usersPayload, 'users');
                     const picks = asArray(picksPayload, 'picks');
@@ -108,7 +108,7 @@
                     setText('activationRate', activationRate);
                     setText('lastSignupDate', fmtDate(lastSignup));
                     setText('lastPickDate', fmtDate(lastPick));
-                    setText('notes', 'Fetched ' + users.length + ' user rows and ' + picks.length + ' pick rows from the live API. If the API paginates beyond 500 rows, these counts should be treated as a diagnostic sample until a backend aggregate endpoint is added.');
+                    setText('notes', 'Fetched ' + users.length + ' user rows and ' + picks.length + ' pick rows from the live API. If the API paginates beyond 100 rows, these counts should be treated as a diagnostic sample until a backend aggregate endpoint is added.');
                     setStatus('Live activation metrics loaded.');
                 } catch (error) {
                     setStatus('Activation metrics unavailable from the current API response: ' + ((error && error.message) || 'Unknown error'));
