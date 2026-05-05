@@ -916,3 +916,223 @@
         text-align: left;
     }
 }
+
+/* Flagship simulator layout pass */
+.sim-shell {
+    width: min(1480px, calc(100% - 32px));
+    padding: 46px 0 72px;
+}
+
+.sim-hero {
+    grid-template-columns: minmax(0, 1fr) 420px;
+    gap: 32px;
+    padding: 26px 0 18px;
+}
+
+.sim-hero h1 {
+    max-width: 920px;
+    font-size: clamp(56px, 8vw, 116px);
+    line-height: 0.88;
+}
+
+.sim-subtitle {
+    max-width: 920px;
+    margin-top: 20px;
+    color: #dbeafe;
+    font-size: clamp(16px, 1.3vw, 20px);
+}
+
+.sim-status-card {
+    min-height: 112px;
+    padding: 20px;
+    border-color: rgba(45, 212, 191, 0.28);
+}
+
+.sim-workflow {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.sim-workflow div {
+    min-height: 94px;
+    padding: 15px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(45, 212, 191, 0.08), rgba(96, 165, 250, 0.04)), rgba(3, 7, 14, 0.48);
+}
+
+.sim-workflow span,
+.sim-workflow small {
+    display: block;
+    color: var(--sim-muted);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.sim-workflow strong {
+    display: block;
+    margin: 8px 0 5px;
+    color: var(--sim-text);
+    font-family: Barlow, Inter, sans-serif;
+    font-size: 24px;
+    line-height: 1;
+}
+
+.sim-workspace {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.sim-panel {
+    padding: 24px;
+}
+
+.sim-control-panel,
+.sim-score-panel {
+    grid-column: 1 / -1;
+    grid-row: auto;
+}
+
+.sim-compare-panel {
+    grid-column: span 5;
+}
+
+.sim-notes-panel {
+    grid-column: span 7;
+}
+
+.sim-panel h2 {
+    font-size: clamp(28px, 3vw, 42px);
+}
+
+.team-picker-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.team-picker-card {
+    padding: 18px;
+}
+
+.team-side {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-height: 30px;
+    padding: 7px 10px;
+    border: 1px solid rgba(45, 212, 191, 0.28);
+    border-radius: 999px;
+    background: rgba(45, 212, 191, 0.08);
+}
+
+.sim-select {
+    min-height: 52px;
+    font: 800 15px/1.4 Inter, system-ui, sans-serif;
+}
+
+.pitcher-options {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.pitcher-choice {
+    min-height: 96px;
+    padding: 12px;
+}
+
+.pitcher-choice strong {
+    font-size: 14px;
+}
+
+.sim-actions {
+    grid-template-columns: minmax(260px, 420px) 170px;
+}
+
+.sim-button {
+    min-height: 56px;
+    font-size: 15px;
+}
+
+.matchup-header {
+    margin-bottom: 16px;
+}
+
+.matchup-header article {
+    min-height: 136px;
+    padding: 20px;
+}
+
+.matchup-header strong {
+    font-size: clamp(34px, 4vw, 56px);
+}
+
+.winner-strip {
+    padding: 18px 20px;
+}
+
+.winner-strip strong {
+    font-size: clamp(32px, 4vw, 54px);
+}
+
+.scoreboard-readout {
+    grid-template-columns: minmax(0, 1fr) 70px minmax(0, 1fr);
+    padding: 20px;
+}
+
+.scoreboard-readout article {
+    min-height: 170px;
+    padding: 18px;
+}
+
+.scoreboard-readout strong {
+    font-size: clamp(54px, 8vw, 132px);
+    line-height: 0.9;
+}
+
+.key-explanation {
+    padding: 0 20px 20px;
+    font-size: 16px;
+}
+
+.projection-shell {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.projection-shell > div {
+    min-height: 122px;
+}
+
+.projection-value {
+    font-size: clamp(19px, 2vw, 32px);
+}
+
+@media (max-width: 1180px) {
+    .pitcher-options,
+    .projection-shell {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 920px) {
+    .sim-hero,
+    .sim-workflow,
+    .sim-workspace,
+    .team-picker-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sim-control-panel,
+    .sim-score-panel,
+    .sim-compare-panel,
+    .sim-notes-panel {
+        grid-column: 1 / -1;
+    }
+
+    .pitcher-options,
+    .projection-shell {
+        grid-template-columns: 1fr;
+    }
+}
