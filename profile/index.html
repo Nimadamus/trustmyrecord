@@ -6412,7 +6412,10 @@
                 if (cols >= 7) cells.push('<td class="num">' + (b.avg_odds != null ? fmtAmericanOdds(b.avg_odds) : '—') + '</td>');
                 cells.push('<td class="num ' + netCls + '">' + fmtSigned(net, 'u', 2) + '</td>');
                 cells.push('<td class="num ' + roiCls + '">' + fmtSigned(roi, '%', 2) + '</td>');
-                return '<tr>' + cells.join('') + '</tr>';
+                const rowAttrs = opts.sportLeague
+                    ? ' class="profile-sport-breakdown-row" role="link" tabindex="0" data-href="' + escapeHtml(buildProfileSportBreakdownUrl(b.key)) + '" onclick="if(!event.target.closest(\'a\')) window.location.href=this.dataset.href" onkeydown="if((event.key===\'Enter\'||event.key===\' \')&&!event.target.closest(\'a\')){event.preventDefault();window.location.href=this.dataset.href;}"'
+                    : '';
+                return '<tr' + rowAttrs + '>' + cells.join('') + '</tr>';
             };
             tbody.innerHTML = rows.map(cellFor).join('');
         };
