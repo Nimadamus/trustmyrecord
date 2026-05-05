@@ -644,6 +644,18 @@
         }
 
         .breakdown-name { font-weight: 600; font-size: 0.85rem; }
+        .profile-sport-filter-link {
+            color: inherit;
+            text-decoration: underline;
+            text-decoration-color: rgba(45, 212, 191, 0.55);
+            text-underline-offset: 3px;
+            cursor: pointer;
+        }
+        .profile-sport-filter-link:hover,
+        .profile-sport-filter-link:focus-visible {
+            color: var(--accent-cyan, #2dd4bf);
+            text-decoration-color: currentColor;
+        }
         .breakdown-record { color: var(--text-secondary); font-size: 0.8rem; }
         .breakdown-winrate { font-weight: 700; font-size: 0.9rem; }
 
@@ -1641,7 +1653,7 @@
                     <article class="profile-advanced-metric" data-advanced-metric-card="avg_daily_picks">
                         <span class="profile-advanced-metric__label">Picks Per Day</span>
                         <strong class="profile-advanced-metric__value is-empty" id="profileAdvAvgDailyPicks">Not enough data yet</strong>
-                        <span class="profile-advanced-metric__sub" id="profileAdvAvgDailyPicksSub">Total picks over active days</span>
+                        <span class="profile-advanced-metric__sub" id="profileAdvAvgDailyPicksSub">Graded public picks over active dates</span>
                     </article>
                     <article class="profile-advanced-metric" data-advanced-metric-card="clv" hidden>
                         <span class="profile-advanced-metric__label">CLV</span>
@@ -1995,7 +2007,7 @@
                           <label><span>Sport</span><select data-tmrx-filter="sport"><option value="">All</option><option value="baseball_mlb">MLB</option><option value="basketball_nba">NBA</option><option value="icehockey_nhl">NHL</option><option value="americanfootball_nfl">NFL</option></select></label>
                           <label><span>Market</span><select data-tmrx-filter="market"><option value="">All</option><option value="h2h">Moneyline</option><option value="spreads">Spread</option><option value="totals">Total</option><option value="team_totals">Team Total</option><option value="f5_h2h,f5_spreads,f5_totals">First Five</option></select></label>
                           <label><span>Result</span><select data-tmrx-filter="result"><option value="">All</option><option value="won">Won</option><option value="lost">Lost</option><option value="push">Push</option><option value="pending">Pending</option></select></label>
-                          <label><span>Odds</span><select data-tmrx-filter="odds"><option value="">All</option><option value="heavy_favorite">Heavy Fav (-200+)</option><option value="favorite">Fav (-110 to -199)</option><option value="even">Even</option><option value="underdog">Dog (+101 to +200)</option><option value="big_underdog">Longshot (+201+)</option></select></label>
+                          <label><span>Odds</span><select data-tmrx-filter="odds"><option value="">All</option><option value="heavy_favorite">Heavy Fav (-200+)</option><option value="favorite">Favorite (-110 to -200)</option><option value="underdog">Dog (+100 to +200)</option><option value="big_underdog">Longshot (+201+)</option></select></label>
                           <label><span>Unit Size</span><select data-tmrx-filter="unit_size"><option value="">All</option><option value="0.5_to_1u">0.5u-1u</option><option value="1.5_to_2u">1.5u-2u</option><option value="2.5_to_3u">2.5u-3u</option><option value="3u_plus">3u+</option></select></label>
                           <label><span>Period</span><select data-tmrx-filter="period"><option value="">All Time</option><option value="7">Last 7d</option><option value="30">Last 30d</option><option value="90">Last 90d</option><option value="365">Last 365d</option></select></label>
                           <label><span>Side</span><select data-tmrx-filter="side"><option value="">All</option><option value="favorite">Favorite</option><option value="underdog">Underdog</option></select></label>
@@ -2153,7 +2165,7 @@
                               <tr data-tmrx-adv-top="z_score"><td class="name">Z-Score</td><td class="num zero">&mdash;</td><td>Skill-vs-luck signal. Hidden until 5+ decisions.</td></tr>
                               <tr data-tmrx-adv-top="avg_odds"><td class="name">AOP (Avg Odds per Pick)</td><td class="num zero">&mdash;</td><td>Average implied probability converted back to American.</td></tr>
                               <tr data-tmrx-adv-top="avg_units"><td class="name">AUR (Avg Units Risked)</td><td class="num zero">&mdash;</td><td>Mean stake across settled picks.</td></tr>
-                              <tr data-tmrx-adv-top="avg_daily_picks"><td class="name">ADP (Avg Daily Picks)</td><td class="num zero">&mdash;</td><td>Total picks / days active.</td></tr>
+                              <tr data-tmrx-adv-top="avg_daily_picks"><td class="name">Picks Per Day</td><td class="num zero">&mdash;</td><td>Graded public picks / active pick dates.</td></tr>
                               <tr data-tmrx-adv-top="push_rate"><td class="name">Push Rate</td><td class="num zero">&mdash;</td><td>Pushes / total settled.</td></tr>
                               <tr data-tmrx-adv-top="consistency"><td class="name">Consistency Score</td><td class="num zero">&mdash;</td><td>Inverse-stddev of monthly net units. Hidden until 3+ active months.</td></tr>
                               <tr data-tmrx-adv-top="capper_rating"><td class="name">Capper Rating</td><td class="num zero">&mdash;</td><td>Composite. Hidden until 25+ decisions.</td></tr>
@@ -2384,9 +2396,8 @@
                     <select id="filterOdds" onchange="applyFilters()" class="filter-control">
                         <option value="">All Odds</option>
                         <option value="heavy-fav">Heavy Fav (-200+)</option>
-                        <option value="fav">Favorite (-110 to -199)</option>
-                        <option value="even">Even (+100 to -109)</option>
-                        <option value="dog">Underdog (+101 to +200)</option>
+                        <option value="fav">Favorite (-110 to -200)</option>
+                        <option value="dog">Dog (+100 to +200)</option>
                         <option value="longshot">Longshot (+201+)</option>
                     </select>
                     <select id="filterUnits" onchange="applyFilters()" class="filter-control">
@@ -2540,7 +2551,7 @@
                 <div class="support-module">
                     <div class="support-module-head">
                         <div class="section-title">Performance by Odds Range</div>
-                        <div class="support-module-note">Favorites, even money, and dogs</div>
+                        <div class="support-module-note">Favorites and dogs</div>
                     </div>
                     <div class="breakdown-grid" id="oddsRangeGrid"></div>
                 </div>
@@ -2656,7 +2667,7 @@
                             <tr><td class="stats-metric-label">eWP (Effective Win %)</td><td class="stats-metric-context">The win-rate equivalent of the profile's ROI if every pick were priced at -110.</td></tr>
                             <tr><td class="stats-metric-label">AOP (Avg Odds per Pick)</td><td class="stats-metric-context">Average implied probability converted back to American odds.</td></tr>
                             <tr><td class="stats-metric-label">AUR (Avg Units Risked)</td><td class="stats-metric-context">Average stake size across settled picks.</td></tr>
-                            <tr><td class="stats-metric-label">ADP (Avg Daily Picks)</td><td class="stats-metric-context">Total picks divided by active ledger days.</td></tr>
+                            <tr><td class="stats-metric-label">Picks Per Day</td><td class="stats-metric-context">Graded public picks divided by active pick dates.</td></tr>
                             <tr><td class="stats-metric-label">Max Drawdown</td><td class="stats-metric-context">Largest peak-to-trough unit decline in the equity curve.</td></tr>
                             <tr><td class="stats-metric-label">CLV (Closing Line Value)</td><td class="stats-metric-context">Unavailable until closing-line tracking is enabled on stored picks. No estimates are displayed.</td></tr>
                         </tbody>
@@ -2928,7 +2939,7 @@
                               <tr data-tmrx-adv="z_score"><td class="name">Z-Score</td><td class="num zero">&mdash;</td><td>Standardized skill-vs-luck signal at avg-implied-prob baseline. Hidden until 5+ decisions.</td></tr>
                               <tr data-tmrx-adv="avg_odds"><td class="name">AOP (Avg Odds per Pick)</td><td class="num zero">&mdash;</td><td>Average implied probability converted back to American.</td></tr>
                               <tr data-tmrx-adv="avg_units"><td class="name">AUR (Avg Units Risked)</td><td class="num zero">&mdash;</td><td>Mean stake across settled picks.</td></tr>
-                              <tr data-tmrx-adv="avg_daily_picks"><td class="name">ADP (Avg Daily Picks)</td><td class="num zero">&mdash;</td><td>Total picks / days active. Hidden until first/last pick exist.</td></tr>
+                              <tr data-tmrx-adv="avg_daily_picks"><td class="name">Picks Per Day</td><td class="num zero">&mdash;</td><td>Graded public picks / active pick dates.</td></tr>
                               <tr data-tmrx-adv="push_rate"><td class="name">Push Rate</td><td class="num zero">&mdash;</td><td>Pushes / total settled.</td></tr>
                               <tr data-tmrx-adv="consistency"><td class="name">Consistency Score</td><td class="num zero">&mdash;</td><td>Inverse-stddev of monthly net units. Hidden until 3+ active months.</td></tr>
                               <tr data-tmrx-adv="capper_rating"><td class="name">Capper Rating</td><td class="num zero">&mdash;</td><td>Composite (ROI &middot; sample &middot; eWP &middot; Z &middot; drawdown &middot; consistency). Hidden until 25+ decisions.</td></tr>
@@ -2989,7 +3000,7 @@
                                 <div class="tmr-cap-metric" title="Z-Score: standardized skill-vs-luck signal. Z = (W − n·p) / √(n·p·(1−p)) where p is the breakeven hit rate at your average odds (AOP). Higher absolute Z = more likely skill than variance."><span class="tmr-cap-metric__label">Z-Score</span><span class="tmr-cap-metric__value is-placeholder" id="advZScore">—</span><span class="tmr-cap-metric__sub">Skill-vs-luck signal</span></div>
                                 <div class="tmr-cap-metric" title="Average Odds per Pick (AOP). Computed as the average implied probability across picks, then converted back to American — never an arithmetic mean of moneylines."><span class="tmr-cap-metric__label">AOP (Avg odds)</span><span class="tmr-cap-metric__value is-placeholder" id="advAop">—</span><span class="tmr-cap-metric__sub">Avg price per pick</span></div>
                                 <div class="tmr-cap-metric" title="Average Units Risked per Pick (AUR). Mean stake across all settled picks."><span class="tmr-cap-metric__label">AUR (Avg risk)</span><span class="tmr-cap-metric__value is-placeholder" id="advAur">—</span><span class="tmr-cap-metric__sub">Avg stake per pick</span></div>
-                                <div class="tmr-cap-metric" title="Average Daily Picks (ADP). total_picks / days active (first → last locked pick)."><span class="tmr-cap-metric__label">ADP (Picks/day)</span><span class="tmr-cap-metric__value is-placeholder" id="advAdp">—</span><span class="tmr-cap-metric__sub">Volume per day</span></div>
+                                <div class="tmr-cap-metric" title="Picks Per Day: graded public picks divided by active pick dates. Zero-pick dates do not count."><span class="tmr-cap-metric__label">Picks Per Day</span><span class="tmr-cap-metric__value is-placeholder" id="advAdp">—</span><span class="tmr-cap-metric__sub">Active pick dates only</span></div>
                             </div>
                         </div>
 
@@ -3279,7 +3290,7 @@
                                 <div class="tmr-cap-card__metrics" data-split-body><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Favorite</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Underdog</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div>
                             </div>
                             <div class="tmr-cap-card" data-split="by_odds_bucket">
-                                <div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">$</div><div class="tmr-cap-card__name"><strong>By odds range</strong><span>Heavy fav / fav / even / dog / longshot</span></div></div>
+                                <div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">$</div><div class="tmr-cap-card__name"><strong>By odds range</strong><span>Heavy fav / fav / dog / longshot</span></div></div>
                                 <div class="tmr-cap-card__metrics" data-split-body><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best bucket</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst bucket</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div>
                             </div>
                             <div class="tmr-cap-card" data-split="by_unit_size">
@@ -5038,8 +5049,7 @@
     </script>
     <script src="/static/js/config.js?v=20260330"></script>
     <script src="/static/js/analytics.js?v=20260405"></script>
-    <script src="/static/js/backend-api.js?v=20260423a"></script>
-    <script src="/static/js/pick-display-format.js?v=20260505pickdisplay1"></script>
+    <script src="/static/js/backend-api.js?v=20260505pickcontext1"></script>
     <script src="/static/js/nav-badges.js"></script>
     <script src="/static/js/auth-persistent.js?v=20260424a"></script>
     <script src="/static/js/auto-grader-fixed.js?v=20260405b"></script>
@@ -5078,6 +5088,29 @@
     const pathProfileMatch = (window.location.pathname || '').match(/\/profile\/([^/?#]+)/i);
     let profileUsername = (urlParams.get('user') || urlParams.get('username') || (pathProfileMatch ? decodeURIComponent(pathProfileMatch[1]) : '') || '').trim() || null;
     const profileView = (urlParams.get('view') || '').trim().toLowerCase();
+    const SPORT_QUERY_ALIASES = {
+        mlb: 'baseball_mlb',
+        baseball: 'baseball_mlb',
+        baseball_mlb: 'baseball_mlb',
+        nba: 'basketball_nba',
+        basketball_nba: 'basketball_nba',
+        nfl: 'americanfootball_nfl',
+        americanfootball_nfl: 'americanfootball_nfl',
+        nhl: 'icehockey_nhl',
+        hockey: 'icehockey_nhl',
+        icehockey_nhl: 'icehockey_nhl',
+        ncaab: 'basketball_ncaab',
+        basketball_ncaab: 'basketball_ncaab',
+        ncaaf: 'americanfootball_ncaaf',
+        americanfootball_ncaaf: 'americanfootball_ncaaf',
+        wnba: 'basketball_wnba',
+        basketball_wnba: 'basketball_wnba',
+        epl: 'soccer_epl',
+        soccer_epl: 'soccer_epl',
+        mls: 'soccer_usa_mls',
+        soccer_usa_mls: 'soccer_usa_mls'
+    };
+    const initialSportFilter = normalizeProfileSportParam(urlParams.get('sport') || urlParams.get('league') || '');
 
     // ======================== UNIFIED STATS ========================
     function getMarketTypeGroup(marketType) {
@@ -5389,44 +5422,46 @@
         if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
         return num > 0 ? '+' + s : s;
     }
+    function formatTotalLineValue(value) {
+        if (value == null || value === '' || isNaN(Number(value))) return '--';
+        const num = Number(value);
+        let s = String(Math.abs(num));
+        if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
+        return s;
+    }
 
     function formatPickDisplayValue(pick) {
-        if (window.TMR && typeof window.TMR.formatPickDisplayLabel === 'function') {
-            return window.TMR.formatPickDisplayLabel(pick);
-        }
-        const selection = String((pick && (pick.selection_label || pick.selection || pick.team)) || 'Pick').trim();
-        const market = String((pick && (pick.market_type || pick.market)) || '').toLowerCase();
-        const line = pick ? (pick.line_snapshot != null ? pick.line_snapshot : pick.line) : null;
-        if (market === 'h2h' || market.indexOf('moneyline') !== -1) {
-            return /\bML\b$/i.test(selection) ? selection : selection + ' ML';
-        }
-        if (line == null || line === '') return selection || 'Pick';
-        const num = Number(line);
-        let s = Number.isFinite(num) ? String(num) : String(line).trim();
-        if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
-        if ((market.indexOf('spread') !== -1 || market.indexOf('run_line') !== -1 || market.indexOf('puck_line') !== -1) && Number.isFinite(num) && num > 0) {
-            s = '+' + s;
-        }
-        const escaped = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        if (new RegExp('(?:^|\\s)' + escaped + '$').test(selection)) return selection;
-        const totalSide = market.indexOf('total') !== -1 && !/\b(over|under)\b/i.test(selection)
-            ? (/\bover\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Over' : (/\bunder\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Under' : ''))
-            : '';
-        return (selection || 'Pick').replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '').trim() + totalSide + ' ' + s;
-    }
-
-    function formatPickDisplayParts(pick) {
         if (window.TMR && typeof window.TMR.formatPickDisplay === 'function') {
-            return window.TMR.formatPickDisplay(pick);
+            const formatted = window.TMR.formatPickDisplay(pick);
+            if (formatted && !/^(over|under)$/i.test(String(formatted).trim())) return formatted;
         }
-        return {
-            pickLabel: formatPickDisplayValue(pick),
-            lineLabel: formatLineValue(pick && pick.line_snapshot != null ? pick.line_snapshot : (pick && pick.line))
-        };
-    }
-
-    function formatPickLineDisplayValue(pick) {
-        return formatPickDisplayParts(pick).lineLabel;
+        const selection = String(pick && pick.selection || 'Pick').trim();
+        const line = formatLineValue(pick && pick.line_snapshot);
+        const market = String(pick && pick.market_type || '').toLowerCase();
+        const home = String(pick && pick.home_team || '').trim();
+        const away = String(pick && pick.away_team || '').trim();
+        const matchup = away && home ? away + ' @ ' + home : '';
+        const selectionOnlySide = /^(over|under)$/i.test(selection);
+        const isTotal = market.indexOf('total') !== -1 || /\b(over|under)\b/i.test(selection);
+        const isMoneyline = market === 'h2h';
+        const isSpread = market === 'spreads' || market.indexOf('spread') !== -1;
+        const sport = String(pick && pick.sport_key || '').toLowerCase();
+        const spreadLabel = sport.indexOf('icehockey') !== -1 ? 'Puck Line' : sport.indexOf('baseball') !== -1 ? 'Run Line' : 'Spread';
+        if (isTotal && selectionOnlySide) {
+            const totalLine = formatTotalLineValue(pick && pick.line_snapshot);
+            const base = matchup ? matchup + ' ' + selection : (market === 'team_totals' ? 'Team Total ' + selection : 'Total ' + selection);
+            return totalLine !== '--' ? base + ' ' + totalLine : base;
+        }
+        if (isMoneyline && selection && !/\b(moneyline|ml)\b/i.test(selection)) {
+            return selection + ' Moneyline';
+        }
+        if (isSpread && selection && !/\b(spread|run line|puck line)\b/i.test(selection)) {
+            return selection + ' ' + spreadLabel + (line !== '--' && selection.indexOf(line) === -1 ? ' ' + line : '');
+        }
+        if (line !== '--' && !/\b(over|under|ml)\b/i.test(selection) && selection.indexOf(line) === -1) {
+            return selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '') + ' ' + line;
+        }
+        return selection || 'Pick';
     }
 
     function formatUnitsValue(value) {
@@ -5869,7 +5904,7 @@
                 set('advZScore', (z >= 0 ? '+' : '') + z.toFixed(2), { signed: z });
             }
             if (s.avg_daily_picks != null) {
-                set('advAdp', Number(s.avg_daily_picks).toFixed(2) + '/day');
+                set('advAdp', Number(s.avg_daily_picks).toFixed(2));
             }
             // Sample size lives next to scores cards too.
             if (s.total_picks != null) set('advSampleSize', String(s.total_picks));
@@ -6065,8 +6100,10 @@
         );
         setCard(
             'profileAdvAvgDailyPicks',
-            s.avg_daily_picks != null ? Number(s.avg_daily_picks).toFixed(2) + '/day' : null,
-            s.avg_daily_picks != null ? 'Active ledger days' : 'Coming once enough graded data is available',
+            s.avg_daily_picks != null ? Number(s.avg_daily_picks).toFixed(2) : null,
+            s.avg_daily_picks != null
+                ? (Number(s.active_pick_days || 0) > 0 ? Number(s.active_pick_days) + ' active pick dates' : 'Active pick dates only')
+                : 'Coming once enough graded data is available',
             null
         );
         const clv = scores.clv != null ? Number(scores.clv) : null;
@@ -6261,8 +6298,8 @@
             period_1_h2h: 'P1 ML', period_1_spreads: 'P1 Spread', period_1_totals: 'P1 Total',
             alt_spreads: 'Alt Spread', alt_totals: 'Alt Total',
             // odds buckets
-            heavy_favorite: 'Heavy Fav (-200+)', favorite: 'Favorite (-110 to -199)',
-            even: 'Even (+100 / -109)', underdog: 'Underdog (+101 to +200)',
+            heavy_favorite: 'Heavy Fav (-200+)', favorite: 'Favorite (-110 to -200)',
+            underdog: 'Dog (+100 to +200)',
             big_underdog: 'Longshot (+201+)',
             // unit buckets
             '0.5_to_1u': '0.5u – 1u', '1.5_to_2u': '1.5u – 2u',
@@ -6327,9 +6364,15 @@
                 const labelCells = opts.sportLeague
                     ? (function() {
                         const parts = sportLeagueOf(b.key);
+                        const sportHref = escapeHtml(buildProfileSportBreakdownUrl(b.key));
+                        const sportKey = escapeHtml(String(b.key || ''));
+                        const sportLabel = escapeHtml(parts[0]);
+                        const leagueLabel = escapeHtml(parts[1]);
+                        const linkedSport = '<a class="profile-sport-filter-link profile-sport-breakdown-link" href="' + sportHref + '" title="View ' + escapeHtml(fmtSport(b.key)) + ' breakdown">' + sportLabel + '</a>';
+                        const linkedLeague = '<a class="profile-sport-filter-link profile-sport-breakdown-link" href="' + sportHref + '" title="View ' + escapeHtml(fmtSport(b.key)) + ' breakdown">' + leagueLabel + '<span class="profile-sport-view-indicator">View Breakdown</span></a>';
                         return [
-                            '<td class="name">' + parts[0] + '</td>',
-                            '<td class="league">' + parts[1] + '</td>'
+                            '<td class="name">' + linkedSport + '</td>',
+                            '<td class="league">' + linkedLeague + '</td>'
                         ];
                     })()
                     : ['<td class="name">' + labelOf('by_' + splitKey, b.key) + '</td>'];
@@ -6341,7 +6384,10 @@
                 if (cols >= 7) cells.push('<td class="num">' + (b.avg_odds != null ? fmtAmericanOdds(b.avg_odds) : '—') + '</td>');
                 cells.push('<td class="num ' + netCls + '">' + fmtSigned(net, 'u', 2) + '</td>');
                 cells.push('<td class="num ' + roiCls + '">' + fmtSigned(roi, '%', 2) + '</td>');
-                return '<tr>' + cells.join('') + '</tr>';
+                const rowAttrs = opts.sportLeague
+                    ? ' class="profile-sport-breakdown-row" role="link" tabindex="0" data-href="' + escapeHtml(buildProfileSportBreakdownUrl(b.key)) + '" onclick="if(!event.target.closest(\'a\')) window.location.href=this.dataset.href" onkeydown="if((event.key===\'Enter\'||event.key===\' \')&&!event.target.closest(\'a\')){event.preventDefault();window.location.href=this.dataset.href;}"'
+                    : '';
+                return '<tr' + rowAttrs + '>' + cells.join('') + '</tr>';
             };
             tbody.innerHTML = rows.map(cellFor).join('');
         };
@@ -6411,7 +6457,7 @@
         }
         if (s.avg_odds != null) setAdv('avg_odds', fmtAmericanOdds(s.avg_odds));
         if (s.avg_units != null) setAdv('avg_units', Number(s.avg_units).toFixed(2) + 'u');
-        if (s.avg_daily_picks != null) setAdv('avg_daily_picks', Number(s.avg_daily_picks).toFixed(2) + '/day');
+        if (s.avg_daily_picks != null) setAdv('avg_daily_picks', Number(s.avg_daily_picks).toFixed(2));
         if (sc.push_rate != null) setAdv('push_rate', Number(sc.push_rate).toFixed(2) + '%');
         if (sc.consistency != null) {
             const v = Number(sc.consistency);
@@ -6647,8 +6693,7 @@
                 return '<tr><td>' + fmtDate(p.created_at || p.locked_at) + '</td><td>' + sportLabel(p.sport_key) + '</td><td colspan="6" class="zero" style="font-style:italic;">Pending — pick details revealed once graded</td><td>' + resultTag(p.status) + '</td><td class="num zero">—</td></tr>';
             }
             const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team) : '—';
-            const display = formatPickDisplayParts(p);
-            const line = display.lineLabel || '—';
+            const line = p.line_snapshot != null ? Number(p.line_snapshot).toFixed(1) : '—';
             const units = p.units != null ? Number(p.units).toFixed(1) + 'u' : '—';
             const result = String(p.status || 'pending').toLowerCase();
             const net = p.result_units != null ? Number(p.result_units) : null;
@@ -6658,7 +6703,7 @@
                 '<td>' + fmtDate(p.created_at || p.locked_at) + '</td>' +
                 '<td>' + sportLabel(p.sport_key) + '</td>' +
                 '<td>' + game + '</td>' +
-                '<td class="name">' + (display.pickLabel || '—') + '</td>' +
+                '<td class="name">' + capEsc(formatPickDisplayValue(p)) + '</td>' +
                 '<td>' + marketLabel(p.market_type) + '</td>' +
                 '<td class="num">' + line + '</td>' +
                 '<td class="num">' + fmtAmericanOdds(p.odds_snapshot) + '</td>' +
@@ -6678,7 +6723,7 @@
         if (!table) return;
         const tbody = table.querySelector('tbody');
         if (!tbody) return;
-        const rows = (Array.isArray(splitArr) ? splitArr : []).filter(b => Number(b.total) >= 3);
+        const rows = (Array.isArray(splitArr) ? splitArr : []).filter(b => Number(b.total) >= 3 && !(splitKey === 'by_odds_bucket' && String(b.key || '').toLowerCase() === 'even'));
         if (!rows.length) return; // keep the empty-state row
         const labelOf = (typeof window.formatBucketLabel === 'function') ? (k, v) => window.formatBucketLabel(k, v) : (k, v) => String(v || '—');
         // Per PickMonitor: rows sorted by net units desc (best at top).
@@ -6721,7 +6766,7 @@
         const k = String(bucketKey);
         if (splitKey === 'by_sport')        return k.toUpperCase().replace(/_/g, ' ');
         if (splitKey === 'by_market')       return marketTypeLabel(k);
-        if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',even:'Even (±110)',underdog:'Dog (+110 to +200)',big_underdog:'Big Dog (+200+)'})[k] || k;
+        if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',underdog:'Dog (+100 to +200)',big_underdog:'Big Dog (+200+)'})[k] || k;
         if (splitKey === 'by_fav_dog')      return ({favorite:'Favorite',underdog:'Underdog'})[k] || k;
         if (splitKey === 'by_unit_size')    return ({'0.5_to_1u':'0.5–1u','1.5_to_2u':'1.5–2u','2.5_to_3u':'2.5–3u','3u_plus':'3u+'})[k] || k;
         if (splitKey === 'by_day_of_week')  return ({sun:'Sunday',mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday'})[k] || k;
@@ -6733,7 +6778,7 @@
         const k = String(bucketKey);
         if (splitKey === 'by_sport')        return k.toUpperCase().replace(/_/g, ' ');
         if (splitKey === 'by_market')       return marketTypeLabel(k);
-        if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',even:'Even (±110)',underdog:'Dog (+110 to +200)',big_underdog:'Big Dog (+200+)'})[k] || k;
+        if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',underdog:'Dog (+100 to +200)',big_underdog:'Big Dog (+200+)'})[k] || k;
         if (splitKey === 'by_fav_dog')      return ({favorite:'Favorite',underdog:'Underdog'})[k] || k;
         if (splitKey === 'by_unit_size')    return ({'0.5_to_1u':'0.5–1u','1.5_to_2u':'1.5–2u','2.5_to_3u':'2.5–3u','3u_plus':'3u+'})[k] || k;
         if (splitKey === 'by_day_of_week')  return ({sun:'Sunday',mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday'})[k] || k;
@@ -6986,7 +7031,14 @@
         renderPicksTable(picks);
         renderAnalytics(stats);
         renderCapperMetrics(picks);
-        await refreshAdvancedBreakdowns();
+        if (initialSportFilter) {
+            ensureSportFilterOption(initialSportFilter);
+            const sportSelect = document.getElementById('filterSport');
+            if (sportSelect) sportSelect.value = initialSportFilter;
+            applyFilters();
+        } else {
+            await refreshAdvancedBreakdowns();
+        }
         applyProfileDeepLinkView();
     }
 
@@ -7080,8 +7132,7 @@
         const o = Number(odds);
         if (!Number.isFinite(o)) return null;
         if (o < -200) return 'heavy_favorite';
-        if (o < -110) return 'favorite';
-        if (o <= 110) return 'even';
+        if (o < 0) return 'favorite';
         if (o <= 200) return 'underdog';
         return 'big_underdog';
     }
@@ -7216,6 +7267,9 @@
             return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[ch];
         });
     }
+    function escapeHtml(value) {
+        return capEsc(value);
+    }
 
     // ===== Helpers used by the Performance Overview card =====
     function formatAvgOddsForOverview(rows) {
@@ -7349,9 +7403,8 @@
         renderCapBreakdown('capTableUnits', rows, [1,2,3,4,5].map(n => [n + 'u Picks', p => Math.round(capUnits(p)) === n]));
         renderCapBreakdown('capTableOdds', rows, [
             ['Heavy Favorite', p => capOdds(p) < -200],
-            ['Favorite', p => capOdds(p) >= -200 && capOdds(p) < -110],
-            ['Even', p => capOdds(p) >= -110 && capOdds(p) <= 110],
-            ['Underdog', p => capOdds(p) > 110 && capOdds(p) <= 200],
+            ['Favorite (-110 to -200)', p => capOdds(p) >= -200 && capOdds(p) < 0],
+            ['Dog (+100 to +200)', p => capOdds(p) >= 100 && capOdds(p) <= 200],
             ['Big Underdog', p => capOdds(p) > 200]
         ]);
         renderCapBreakdown('capTableFavDog', rows, [
@@ -7372,7 +7425,12 @@
         }
         const body = buckets.map(([label, pred]) => {
             const s = calcCapStats(rows.filter(p => pred(p)));
-            return '<tr><td>' + label + '</td><td>' + s.picks + '</td><td>' + s.record + '</td><td class="' + (s.picks ? capValueClass(s.winRate - 50) : 'capper-neutral') + '">' + s.winRate.toFixed(1) + '%</td><td class="' + capValueClass(s.units) + '">' + capUnitsText(s.units) + '</td><td class="' + capValueClass(s.roi) + '">' + s.roi.toFixed(1) + '%</td></tr>';
+            const sportKeys = { MLB: 'baseball_mlb', NFL: 'americanfootball_nfl', NBA: 'basketball_nba', NHL: 'icehockey_nhl', NCAAB: 'basketball_ncaab', NCAAF: 'americanfootball_ncaaf' };
+            const sportKey = id === 'capTableSport' ? sportKeys[label] : '';
+            const categoryLabel = sportKey
+                ? '<a class="profile-sport-filter-link" href="' + escapeHtml(buildProfileSportFilterUrl(sportKey)) + '" onclick="return setProfileSportFilter(\'' + escapeHtml(sportKey) + '\', { updateUrl: true, scroll: true, clearOtherFilters: true });" title="View only ' + escapeHtml(label) + ' picks">' + escapeHtml(label) + '</a>'
+                : escapeHtml(label);
+            return '<tr><td>' + categoryLabel + '</td><td>' + s.picks + '</td><td>' + s.record + '</td><td class="' + (s.picks ? capValueClass(s.winRate - 50) : 'capper-neutral') + '">' + s.winRate.toFixed(1) + '%</td><td class="' + capValueClass(s.units) + '">' + capUnitsText(s.units) + '</td><td class="' + capValueClass(s.roi) + '">' + s.roi.toFixed(1) + '%</td></tr>';
         }).join('');
         el.innerHTML = '<table class="capper-table"><thead><tr><th>Category</th><th>Picks</th><th>Record</th><th>Win Rate</th><th>Units</th><th>ROI</th></tr></thead><tbody>' + body + '</tbody></table>';
     }
@@ -7412,14 +7470,13 @@
             const status = capStatus(p);
             const pl = isCapGraded(p) ? capPL(p) : 0;
             const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team) : (p.game || p.game_name || '—');
-            const display = formatPickDisplayParts(p);
-            const line = display.lineLabel || '—';
+            const line = p.line_snapshot != null ? p.line_snapshot : (p.line != null ? p.line : '—');
             const odds = capOdds(p);
             return '<tr>'
                 + '<td>' + (p.locked_at ? new Date(p.locked_at).toLocaleDateString() : '—') + '</td>'
                 + '<td>' + pmSportLabel(p.sport_key) + '</td>'
                 + '<td>' + capEsc(String(game)) + '</td>'
-                + '<td>' + capEsc(String(display.pickLabel || '—')) + '</td>'
+                + '<td>' + capEsc(formatPickDisplayValue(p)) + '</td>'
                 + '<td>' + line + '</td>'
                 + '<td>' + (Number.isFinite(odds) ? (odds > 0 ? '+' : '') + odds : '—') + '</td>'
                 + '<td>' + capUnits(p).toFixed(2) + 'u</td>'
@@ -7539,14 +7596,13 @@
         };
         tbody.innerHTML = rows.map(p => {
             const r = pmResultClass(p);
-            const display = formatPickDisplayParts(p);
             const resultBadge = '<span class="pm-result pm-result--' + r + '">' + (r === 'pending' ? 'Pending' : r === 'push' ? 'Push' : r === 'won' ? 'Win' : 'Loss') + '</span>';
             return '<tr>'
                 + '<td class="pm-cell-date">' + fmtDate(p.locked_at || p.created_at) + '</td>'
                 + '<td>' + escHtml(pmSportLabel(p.sport_key)) + '</td>'
                 + '<td>' + escHtml(pmMarketLabel(p.market_type)) + '</td>'
-                + '<td class="pm-cell-pick">' + escHtml(display.pickLabel || '') + '</td>'
-                + '<td class="num">' + escHtml(display.lineLabel || '—') + '</td>'
+                + '<td class="pm-cell-pick">' + escHtml(formatPickDisplayValue(p)) + '</td>'
+                + '<td class="num">' + escHtml(fmtLine(p.line_snapshot)) + '</td>'
                 + '<td class="num">' + escHtml(fmtOdds(p.odds_snapshot)) + '</td>'
                 + '<td class="num">' + escHtml(fmtUnits(p.units)) + '</td>'
                 + '<td>' + resultBadge + '</td>'
@@ -7999,9 +8055,8 @@
         const sport = fmtSport(p.sport_key);
         const sc = sport.toLowerCase().replace(/\s/g, '');
         const odds = formatOddsValue(p.odds_snapshot != null ? p.odds_snapshot : p.odds);
-        const display = formatPickDisplayParts(p);
-        const line = display.lineLabel;
-        const sel = display.pickLabel;
+        const line = formatLineValue(p.line_snapshot);
+        const sel = formatPickDisplayValue(p);
         const matchup = (p.away_team && p.home_team) ? p.away_team + ' @ ' + p.home_team : (p.event_name || '--');
         const units = formatUnitsValue(p.units);
         const status = normalizeStatus(p.status);
@@ -8201,8 +8256,8 @@
             ['Current Streak', currentStreak, 'Current graded streak'],
             ['Best Streak', s.bestStreak + 'W', 'Longest winning streak'],
             ['Worst Streak', s.worstStreak + 'L', 'Longest losing streak'],
-            ['Highest Unit Win', ledger.bestWin ? formatSignedUnits(ledger.bestWin.pl) : '--', ledger.bestWin ? (ledger.bestWin.pick.selection || 'Winning pick') : 'No winning picks yet'],
-            ['Biggest Loss', ledger.biggestLoss ? formatSignedUnits(ledger.biggestLoss.pl) : '--', ledger.biggestLoss ? (ledger.biggestLoss.pick.selection || 'Losing pick') : 'No losing picks yet']
+            ['Highest Unit Win', ledger.bestWin ? formatSignedUnits(ledger.bestWin.pl) : '--', ledger.bestWin ? formatPickDisplayValue(ledger.bestWin.pick) : 'No winning picks yet'],
+            ['Biggest Loss', ledger.biggestLoss ? formatSignedUnits(ledger.biggestLoss.pl) : '--', ledger.biggestLoss ? formatPickDisplayValue(ledger.biggestLoss.pick) : 'No losing picks yet']
         ];
 
         if (adv) {
@@ -8378,9 +8433,8 @@
         });
         const ranges = [
             { label: 'Heavy Fav (-200+)', test: o => o <= -200 },
-            { label: 'Favorite (-110 to -199)', test: o => o >= -199 && o <= -110 },
-            { label: 'Pick/Even (-109 to +100)', test: o => o >= -109 && o <= 100 },
-            { label: 'Underdog (+101 to +200)', test: o => o >= 101 && o <= 200 },
+            { label: 'Favorite (-110 to -200)', test: o => o <= -110 && o >= -200 },
+            { label: 'Dog (+100 to +200)', test: o => o >= 100 && o <= 200 },
             { label: 'Longshot (+201+)', test: o => o >= 201 }
         ];
         const rows = [];
@@ -8407,7 +8461,7 @@
         g.innerHTML = recent.map(p => {
             const c = p.status === 'won' ? '#22c55e' : p.status === 'lost' ? '#ef4444' : '#6b7280';
             const l = p.status === 'won' ? 'W' : p.status === 'lost' ? 'L' : 'P';
-            const tip = (p.selection || '') + ' ' + (p.odds_snapshot ? (p.odds_snapshot > 0 ? '+' : '') + p.odds_snapshot : '');
+            const tip = formatPickDisplayValue(p) + ' ' + (p.odds_snapshot ? (p.odds_snapshot > 0 ? '+' : '') + p.odds_snapshot : '');
             return '<div title="' + tip + '" style="width:28px;height:28px;border-radius:4px;background:' + c + ';display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;cursor:default;">' + l + '</div>';
         }).join('');
     }
@@ -8787,29 +8841,34 @@
         }).join('');
     }
 
-    function bRowExtended(name, record, wr, units) {
+    function bRowExtended(name, record, wr, units, href) {
         const c = parseFloat(wr) >= 50 ? 'positive' : parseFloat(wr) > 0 ? 'negative' : '';
         const uc = units >= 0 ? 'positive' : 'negative';
-        return '<div class="breakdown-row"><div style="flex:1;"><div class="breakdown-name">' + name + '</div><div class="breakdown-record">' + record + '</div></div>' +
+        const tag = href ? 'a' : 'div';
+        const attr = href ? ' href="' + escapeHtml(href) + '" title="View breakdown" aria-label="View breakdown"' : '';
+        const indicator = href ? '<span class="breakdown-row-indicator">View Breakdown <span aria-hidden="true">&rsaquo;</span></span>' : '';
+        return '<' + tag + ' class="breakdown-row' + (href ? ' is-clickable' : '') + '"' + attr + '><div style="flex:1;"><div class="breakdown-name">' + name + '</div><div class="breakdown-record">' + record + '</div></div>' +
             '<div style="text-align:right;"><div class="breakdown-winrate ' + c + '">' + wr + '%</div>' +
-            '<div style="font-size:.8rem;color:' + (units >= 0 ? 'var(--accent-green)' : 'var(--accent-red)') + ';">' + (units >= 0 ? '+' : '') + units.toFixed(2) + 'u</div></div></div>';
+            '<div style="font-size:.8rem;color:' + (units >= 0 ? 'var(--accent-green)' : 'var(--accent-red)') + ';">' + (units >= 0 ? '+' : '') + units.toFixed(2) + 'u</div>' + indicator + '</div></' + tag + '>';
     }
 
     function populateFilterDropdowns() {
         const sportSelect = document.getElementById('filterSport');
         if (!sportSelect) return;
+        const currentValue = sportSelect.value || '';
         const sports = new Set();
         allLoadedPicks.forEach(p => { if (p.sport_key) sports.add(p.sport_key); });
+        if (currentValue) sports.add(currentValue);
         let opts = '<option value="">All Sports</option>';
         sports.forEach(sk => { opts += '<option value="' + sk + '">' + fmtSport(sk) + '</option>'; });
         sportSelect.innerHTML = opts;
+        if (currentValue) sportSelect.value = currentValue;
     }
 
     function getAdvancedStatsFilters() {
         const oddsMap = {
             'heavy-fav': 'heavy_favorite',
             'fav': 'favorite',
-            'even': 'even',
             'dog': 'underdog',
             'longshot': 'big_underdog'
         };
@@ -8866,9 +8925,8 @@
     function oddsBucketLabel(value) {
         return {
             heavy_favorite: 'Heavy Fav (-200+)',
-            favorite: 'Favorite (-110 to -199)',
-            even: 'Even / Pickem (-109 to +110)',
-            underdog: 'Underdog (+111 to +200)',
+            favorite: 'Favorite (-110 to -200)',
+            underdog: 'Dog (+100 to +200)',
             big_underdog: 'Longshot (+201+)'
         }[value] || value || 'Odds Range';
     }
@@ -9029,9 +9087,8 @@
             filtered = filtered.filter(p => {
                 const o = p.odds_snapshot || p.odds || -110;
                 if (odds === 'heavy-fav') return o <= -200;
-                if (odds === 'fav') return o >= -199 && o <= -110;
-                if (odds === 'even') return o >= -109 && o <= 100;
-                if (odds === 'dog') return o >= 101 && o <= 200;
+                if (odds === 'fav') return o < 0 && o >= -200;
+                if (odds === 'dog') return o >= 100 && o <= 200;
                 if (odds === 'longshot') return o >= 201;
                 return true;
             });
@@ -9137,7 +9194,7 @@
             }
             if (result) parts.push(result.charAt(0).toUpperCase() + result.slice(1));
             if (odds) {
-                const oddsLabels = { 'heavy-fav': 'Heavy Favorites', 'fav': 'Favorites', 'even': 'Even Money', 'dog': 'Underdogs', 'longshot': 'Longshots' };
+                const oddsLabels = { 'heavy-fav': 'Heavy Favorites', 'fav': 'Favorites', 'dog': 'Dogs', 'longshot': 'Longshots' };
                 parts.push(oddsLabels[odds] || odds);
             }
             if (units) {
@@ -9227,6 +9284,15 @@
         renderPicksTable(allLoadedPicks);
         renderCapperMetrics(allLoadedPicks);
         refreshAdvancedBreakdowns();
+        try {
+            const params = new URLSearchParams(window.location.search || '');
+            if (params.has('sport') || params.has('league')) {
+                params.delete('sport');
+                params.delete('league');
+                const query = params.toString();
+                history.pushState(null, '', window.location.pathname + (query ? '?' + query : ''));
+            }
+        } catch (e) {}
         analyticsTrack('profile_filters_cleared', {
             username: profileUsername || '',
             previous_filters: JSON.stringify(previousFilterState)
@@ -9328,7 +9394,7 @@
             const status = p.status === 'pushed' ? 'push' : p.status;
             const c = status === 'won' ? '#22c55e' : status === 'lost' ? '#ef4444' : '#6b7280';
             const l = status === 'won' ? 'W' : status === 'lost' ? 'L' : 'P';
-            const tip = marketTypeLabel(p.market_type) + ': ' + (p.selection || '') + ' ' + (p.odds_snapshot ? (p.odds_snapshot > 0 ? '+' : '') + p.odds_snapshot : '');
+            const tip = marketTypeLabel(p.market_type) + ': ' + formatPickDisplayValue(p) + ' ' + (p.odds_snapshot ? (p.odds_snapshot > 0 ? '+' : '') + p.odds_snapshot : '');
             return '<div title="' + tip + '" style="width:28px;height:28px;border-radius:4px;background:' + c + ';display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;cursor:default;">' + l + '</div>';
         }).join('');
     }
@@ -9341,13 +9407,115 @@
             const t = Number(i.total_picks) || (w + l + p);
             const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
             const units = Number(i.net_units || i.units || 0);
-            return bRowExtended(fmtSport(i.sport_key), w + '-' + l + '-' + p + ' (' + t + ' picks)', wr, units);
+            const sportKey = String(i.sport_key || '').trim();
+            const sportLabel = fmtSport(sportKey);
+            return bRowExtended(escapeHtml(sportLabel), w + '-' + l + '-' + p + ' (' + t + ' picks)', wr, units, buildProfileSportBreakdownUrl(sportKey));
         }).join('');
     }
-
     // ======================== UTILITY ========================
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function normalizeProfileSportParam(value) {
+        const raw = String(value || '').trim();
+        if (!raw) return '';
+        const key = raw.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
+        return SPORT_QUERY_ALIASES[key] || raw;
+    }
+
+    function buildProfileSportFilterUrl(sportKey) {
+        const params = new URLSearchParams(window.location.search || '');
+        if (profileUsername && !params.get('user') && !params.get('username')) {
+            params.set('user', profileUsername);
+        }
+        if (sportKey) params.set('sport', fmtSport(sportKey));
+        else params.delete('sport');
+        params.delete('league');
+        params.set('view', 'ledger');
+        return window.location.pathname + '?' + params.toString();
+    }
+
+    function profileSportSlug(sportKey) {
+        const canonical = normalizeProfileSportParam(sportKey);
+        const map = {
+            baseball_mlb: 'mlb',
+            basketball_nba: 'nba',
+            icehockey_nhl: 'nhl',
+            americanfootball_nfl: 'nfl',
+            basketball_ncaab: 'ncaab',
+            americanfootball_ncaaf: 'ncaaf'
+        };
+        return map[canonical] || String(canonical || sportKey || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+
+    function buildProfileSportBreakdownUrl(sportKey) {
+        const params = new URLSearchParams();
+        const username = profileUsername || new URLSearchParams(window.location.search || '').get('user') || '';
+        if (username) params.set('user', username);
+        params.set('sport', profileSportSlug(sportKey));
+        return '/profile/sport/?' + params.toString();
+    }
+
+    function ensureSportFilterOption(sportKey) {
+        const select = document.getElementById('filterSport');
+        if (!select || !sportKey) return;
+        const exists = Array.from(select.options).some(function(option) {
+            return option.value === sportKey;
+        });
+        if (!exists) {
+            const option = document.createElement('option');
+            option.value = sportKey;
+            option.textContent = fmtSport(sportKey);
+            select.appendChild(option);
+        }
+    }
+
+    function setProfileSportFilter(sportKey, options) {
+        options = options || {};
+        const normalizedSport = normalizeProfileSportParam(sportKey);
+        const sportSelect = document.getElementById('filterSport');
+        if (!sportSelect) return false;
+
+        if (options.clearOtherFilters) {
+            ['filterSearch', 'filterType', 'filterResult', 'filterOdds', 'filterUnits', 'filterDateFrom', 'filterDateTo'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            const period = document.getElementById('filterPeriod');
+            if (period) period.value = 'all';
+            const sort = document.getElementById('filterSort');
+            if (sort) sort.value = 'date_desc';
+            activeQuickFilter = null;
+            currentTableSort = 'date_desc';
+        }
+
+        if (normalizedSport) ensureSportFilterOption(normalizedSport);
+        sportSelect.value = normalizedSport || '';
+
+        if (options.updateUrl) {
+            const nextUrl = buildProfileSportFilterUrl(normalizedSport);
+            history.pushState(null, '', nextUrl);
+        }
+
+        applyFilters();
+
+        if (options.scroll) {
+            const target = document.querySelector('.picks-section') || document.getElementById('picksTableWrapper');
+            if (target && typeof target.scrollIntoView === 'function') {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        return false;
+    }
+
     function fmtSport(k) {
-        return { americanfootball_nfl: 'NFL', basketball_nba: 'NBA', baseball_mlb: 'MLB', icehockey_nhl: 'NHL', soccer_epl: 'EPL', basketball_ncaab: 'NCAAB', americanfootball_ncaaf: 'NCAAF' }[k] || k || 'Pick';
+        return { americanfootball_nfl: 'NFL', basketball_nba: 'NBA', baseball_mlb: 'MLB', icehockey_nhl: 'NHL', soccer_epl: 'EPL', soccer_usa_mls: 'MLS', basketball_ncaab: 'NCAAB', americanfootball_ncaaf: 'NCAAF', basketball_wnba: 'WNBA' }[k] || k || 'Pick';
     }
 
     function showToast(msg, type) {
@@ -11464,6 +11632,70 @@
         }
       }
     </style>
+<style id="profile-solid-red-and-clickable-sports">
+  body.profile-page {
+    --accent-red: #ff3333 !important;
+    --tmr-red: #ff3333 !important;
+    --r-red: #ff3333 !important;
+  }
+  body.profile-page .negative,
+  body.profile-page .is-negative,
+  body.profile-page .is-neg,
+  body.profile-page .neg,
+  body.profile-page .pm-neg,
+  body.profile-page .cc-negative,
+  body.profile-page .capper-neg,
+  body.profile-page .profit-cell.negative,
+  body.profile-page .tmrx-value.is-neg,
+  body.profile-page .tmrx-period-cell .v.is-neg,
+  body.profile-page .tmrx-dd-cell .v.is-neg,
+  body.profile-page .tmrx-table .neg,
+  body.profile-page .stats-summary-table td.is-negative,
+  body.profile-page .profile-rail-value.is-negative,
+  body.profile-page .profile-advanced-metric__value.is-neg {
+    color: #ff3333 !important;
+  }
+  body.profile-page .breakdown-row.is-clickable {
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    border-color: rgba(148, 163, 184, 0.2);
+    transition: background .16s ease, border-color .16s ease, transform .16s ease;
+  }
+  body.profile-page .breakdown-row.is-clickable:hover,
+  body.profile-page .tmrx-table tbody tr:hover td {
+    background: rgba(34, 211, 238, .07) !important;
+    border-color: rgba(34, 211, 238, .28);
+  }
+  body.profile-page .breakdown-row-indicator,
+  body.profile-page .profile-sport-view-indicator {
+    display: block;
+    margin-top: 4px;
+    color: #8fb3d9;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  body.profile-page .profile-sport-breakdown-link {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 2px;
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  body.profile-page .tmrx-table td.num,
+  body.profile-page .tmrx-table th.num,
+  body.profile-page .summary-cell strong,
+  body.profile-page .tmr-cap-metric__value,
+  body.profile-page .profile-advanced-metric__value,
+  body.profile-page .breakdown-winrate,
+  body.profile-page .profile-rail-value {
+    white-space: nowrap;
+  }
+</style>
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  8:02:00 PM -->
