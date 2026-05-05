@@ -15,7 +15,7 @@
         ["/handicappers/", "Find Handicappers"],
         ["/arena/", "Arena"],
         ["/forum/", "Forums"],
-        ["/marketplace/", "Sell Your Picks"]
+        ["/marketplace/", "Sell Picks"]
     ];
 
     // Pages that should highlight Arena in the top nav even though they
@@ -24,6 +24,7 @@
 
     const routeMeta = {
         "sportsbook.html": ["Make Picks", "Lock picks before games start. Build a public, permanent record."],
+        "trendspotter.html": ["Trendspotter", "Select a matchup and generate verified betting trends from real artifact data."],
         "leaderboards.html": ["Leaderboards", "Handicapping records, trivia points, polls, online challenges, and handicapper challenges &mdash; every leaderboard in one hub."],
         "handicappers.html": ["Find Handicappers", "Search members, compare verified records, follow cappers, and open public profiles."],
         "arena.html": ["Arena", "Challenge rivals in sports picks, MLB The Show, Madden, NBA 2K, EA FC, and NHL."],
