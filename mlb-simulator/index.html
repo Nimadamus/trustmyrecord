@@ -30,7 +30,7 @@
             <div>
                 <p class="sim-kicker">Data Lab</p>
                 <h1>MLB Simulator</h1>
-                <p class="sim-subtitle">Build current-team, classic-team, or mixed-era MLB matchups and run a clearly labeled simulation estimate with projected score, win probability, expected runs, confidence band, key factors, data mode, and limitations.</p>
+                <p class="sim-subtitle">Build current-team, classic-team, or mixed-era MLB matchups, choose starter profiles for both clubs, and run a clearly labeled projection with score range, win probability, expected runs, key factors, and data-source transparency.</p>
             </div>
             <div class="sim-status-card" aria-live="polite">
                 <span class="sim-status-dot" aria-hidden="true"></span>
@@ -41,10 +41,18 @@
             </div>
         </section>
 
+        <section class="sim-workflow" aria-label="Simulator workflow">
+            <div><span>Step 1</span><strong>Mode</strong><small>Current, classic, or mixed era</small></div>
+            <div><span>Step 2</span><strong>Teams</strong><small>Pick Team A and Team B</small></div>
+            <div><span>Step 3</span><strong>Starters</strong><small>Choose one profile per side</small></div>
+            <div><span>Step 4</span><strong>Run</strong><small>Generate the matchup</small></div>
+            <div><span>Step 5</span><strong>Review</strong><small>Projection and input notes</small></div>
+        </section>
+
         <section class="sim-workspace" aria-label="MLB simulator controls">
             <section class="sim-panel sim-control-panel">
                 <div class="sim-panel-heading">
-                    <p class="sim-label">Matchup Builder</p>
+                    <p class="sim-label">Step 1-4</p>
                     <h2>Team Selection</h2>
                 </div>
 
@@ -134,7 +142,7 @@
 
             <section class="sim-panel sim-score-panel" aria-label="Simulation results">
                 <div class="sim-panel-heading compact">
-                    <p class="sim-label">Output</p>
+                    <p class="sim-label">Step 5</p>
                     <h2 id="selectedMatchupTitle">No matchup selected</h2>
                 </div>
 
@@ -160,14 +168,14 @@
                     <div class="scoreboard-readout">
                         <article>
                             <span id="awayScoreLabel">Team A</span>
-                            <strong id="awayScoreBig">--</strong>
-                            <small id="awayExpectedTile">Expected runs --</small>
+                            <strong id="awayScoreBig">Ready</strong>
+                            <small id="awayExpectedTile">Choose team and starter</small>
                         </article>
                         <div class="score-divider">to</div>
                         <article class="home">
                             <span id="homeScoreLabel">Team B</span>
-                            <strong id="homeScoreBig">--</strong>
-                            <small id="homeExpectedTile">Expected runs --</small>
+                            <strong id="homeScoreBig">Ready</strong>
+                            <small id="homeExpectedTile">Choose team and starter</small>
                         </article>
                     </div>
                     <p id="keyExplanationValue" class="key-explanation">Select a matchup and run the simulator to generate a projected winner, score range, win probability, and notes.</p>
@@ -175,39 +183,39 @@
 
                 <div id="projectionShell" class="projection-shell" data-projection-state="not-connected">
                     <div>
-                        <span id="projectedScoreValue" class="projection-value muted">--</span>
+                        <span id="projectedScoreValue" class="projection-value muted">Awaiting matchup</span>
                         <small>Projected Score Range</small>
                     </div>
                     <div>
-                        <span id="winProbabilityValue" class="projection-value muted">--</span>
+                        <span id="winProbabilityValue" class="projection-value muted">Select teams</span>
                         <small>Simulated Winner / Win %</small>
                     </div>
                     <div>
-                        <span id="expectedRunsValue" class="projection-value muted">--</span>
+                        <span id="expectedRunsValue" class="projection-value muted">Choose starters</span>
                         <small>Expected Runs</small>
                     </div>
                     <div>
-                        <span id="totalRangeValue" class="projection-value muted">--</span>
+                        <span id="totalRangeValue" class="projection-value muted">Pending</span>
                         <small>Total Runs Range</small>
                     </div>
                     <div>
-                        <span id="runEnvironmentValue" class="projection-value muted">--</span>
+                        <span id="runEnvironmentValue" class="projection-value muted">Pending</span>
                         <small>Run Environment</small>
                     </div>
                     <div>
-                        <span id="simulationConfidenceValue" class="projection-value muted">--</span>
+                        <span id="simulationConfidenceValue" class="projection-value muted">Pending</span>
                         <small>Confidence Band</small>
                     </div>
                     <div>
-                        <span id="eraAdjustmentValue" class="projection-value muted">--</span>
+                        <span id="eraAdjustmentValue" class="projection-value muted">Pending</span>
                         <small>Era Adjustment</small>
                     </div>
                     <div>
-                        <span id="simulationModeValue" class="projection-value muted">--</span>
+                        <span id="simulationModeValue" class="projection-value muted">Ready</span>
                         <small>Simulation Mode Used</small>
                     </div>
                     <div>
-                        <span id="dataModeValue" class="projection-value muted">--</span>
+                        <span id="dataModeValue" class="projection-value muted">Baseline ratings</span>
                         <small>Data Mode Used</small>
                     </div>
                 </div>
@@ -216,12 +224,12 @@
                     <div class="probability-row">
                         <span id="awayProbabilityLabel">Team A</span>
                         <div class="probability-track"><span id="awayProbabilityBar" style="width: 50%"></span></div>
-                        <strong id="awayProbabilityValue">--</strong>
+                        <strong id="awayProbabilityValue">Ready</strong>
                     </div>
                     <div class="probability-row">
                         <span id="homeProbabilityLabel">Team B</span>
                         <div class="probability-track"><span id="homeProbabilityBar" style="width: 50%"></span></div>
-                        <strong id="homeProbabilityValue">--</strong>
+                        <strong id="homeProbabilityValue">Ready</strong>
                     </div>
                 </div>
 
