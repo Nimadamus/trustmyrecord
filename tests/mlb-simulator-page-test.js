@@ -29,9 +29,9 @@ assert(/Starting pitchers/.test(html), 'starting pitcher slot is present');
 assert(/Ballpark\/weather/.test(html), 'ballpark/weather slot is present');
 assert(/Sportsbook odds/.test(html), 'sportsbook odds slot is present');
 assert(/Roster context/.test(html), 'roster context slot is present');
-assert(/Recent form/.test(html), 'recent form slot is present');
+assert(/Recent scoring form/.test(html), 'recent scoring form slot is present');
 assert(/Bullpen context/.test(html), 'bullpen context slot is present');
-assert(/not using live rosters, injuries, starters, weather, sportsbook odds, or betting-edge claims yet/.test(html), 'honest limitations text is present');
+assert(/Verified live inputs appear only when matched; live rosters, injuries, weather, confirmed starters, and betting-edge claims are not used/.test(html), 'honest limitations text is present');
 assert(!/Loading MLB games|Loading sportsbook board|Waiting for board data|Projection engine not connected yet|Not connected for custom simulation|Unavailable without real inputs/.test(html), 'old board-dependent placeholder text is removed');
 assert(!/lock pick|locked pick|submit pick/i.test(html), 'page does not expose sportsbook submission actions');
 assert(!/live verified|official injury/i.test(html), 'page does not include fake live data claims');
@@ -109,6 +109,35 @@ function buildFetchMock(mode) {
       });
     }
     if (String(url).includes('site.api.espn.com')) {
+      const todayKey = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      if (!String(url).includes('dates=' + todayKey)) {
+        return mockResponse({
+          events: [
+            {
+              id: 'recent_tex_1',
+              date: '2026-05-03T20:10Z',
+              status: { type: { completed: true, shortDetail: 'Final' } },
+              competitions: [{
+                competitors: [
+                  { homeAway: 'home', score: '3', team: { displayName: 'Boston Red Sox' } },
+                  { homeAway: 'away', score: '6', team: { displayName: 'Texas Rangers' } },
+                ],
+              }],
+            },
+            {
+              id: 'recent_nyy_1',
+              date: '2026-05-03T17:05Z',
+              status: { type: { completed: true, shortDetail: 'Final' } },
+              competitions: [{
+                competitors: [
+                  { homeAway: 'home', score: '9', team: { displayName: 'New York Yankees' } },
+                  { homeAway: 'away', score: '4', team: { displayName: 'Baltimore Orioles' } },
+                ],
+              }],
+            },
+          ],
+        });
+      }
       return mockResponse({
         events: [{
           id: '401815218',
@@ -200,6 +229,7 @@ async function flushAsync() {
   assert(/Starting pitchers/.test(elements.liveInputGrid.innerHTML), 'live input grid renders starting pitchers');
   assert(/Ballpark\/weather/.test(elements.liveInputGrid.innerHTML), 'live input grid renders ballpark/weather');
   assert(/Sportsbook odds/.test(elements.liveInputGrid.innerHTML), 'live input grid renders sportsbook odds');
+  assert(/Recent scoring form/.test(elements.liveInputGrid.innerHTML), 'live input grid renders recent scoring form');
   assert(!/Connected|Available<\/span>/.test(elements.liveInputGrid.innerHTML), 'unverified live inputs are not shown as connected');
 
   simulator.runSimulation();
@@ -239,6 +269,8 @@ async function flushAsync() {
   assert(/Starting pitchers/.test(live.elements.inputSummary.innerHTML), 'live path includes starting pitcher source');
   assert(/Ballpark\/weather/.test(live.elements.inputSummary.innerHTML), 'live path includes ballpark source');
   assert(/Sportsbook odds/.test(live.elements.inputSummary.innerHTML), 'live path includes sportsbook source when verified');
+  assert(/Recent scoring form/.test(live.elements.inputSummary.innerHTML), 'live path includes recent scoring form source');
+  assert(/Recent scoring form from ESPN finals/.test(live.elements.matchupNotes.innerHTML), 'live path factors recent final scores');
   assert(/Gerrit Cole|Jacob deGrom|Yankee Stadium/.test(live.elements.matchupNotes.innerHTML), 'live path renders verified context as factors');
   assert(!/verified betting edge|official injury/i.test(live.elements.matchupNotes.innerHTML), 'live path does not claim fake edges or injuries');
 
