@@ -7,7 +7,7 @@
     var STYLE_ID = 'tmr-redesign-runtime-css';
     var CSS = [
         /* ===== Shared dark tokens ===== */
-        ':root{--rd-bg:#070b14;--rd-bg-2:#0a1322;--rd-surface:#101b30;--rd-surface-2:#16243f;--rd-surface-3:#1d2f4f;--rd-line:#1f2e48;--rd-line-2:#2c4066;--rd-ink:#f1f5fb;--rd-ink-2:#b9c4d6;--rd-muted:#7a8499;--rd-green:#53d337;--rd-green-2:#3eb423;--rd-red:#ef4444;--rd-gold:#f5b400;--rd-teal:#1fb8d9;}',
+        ':root{--rd-bg:#070b14;--rd-bg-2:#0a1322;--rd-surface:#101b30;--rd-surface-2:#16243f;--rd-surface-3:#1d2f4f;--rd-line:#1f2e48;--rd-line-2:#2c4066;--rd-ink:#f1f5fb;--rd-ink-2:#b9c4d6;--rd-muted:#7a8499;--rd-green:#53d337;--rd-green-2:#3eb423;--rd-red:#dc2626;--rd-gold:#f5b400;--rd-teal:#1fb8d9;}',
 
         /* ===== SPORTSBOOK runtime-class overrides ===== */
         'body[data-tmr-route="index"][data-tmr-route] .tmr-market-card,body.tmr-site-shell .tmr-market-card{background:linear-gradient(180deg,var(--rd-surface),var(--rd-bg-2))!important;border:1px solid var(--rd-line)!important;border-radius:14px!important;box-shadow:0 12px 40px rgba(0,0,0,.4)!important;}',
@@ -75,7 +75,7 @@
         'body.tmr-social-profile .stat-value,body.tmr-social-profile .big-stat-value,body.tmr-social-profile .kpi-value,body.tmr-social-profile .kpi__value{font-family:"JetBrains Mono","Inter",monospace!important;color:var(--rd-ink)!important;letter-spacing:-.02em!important;}',
         'body.tmr-social-profile .stat-label,body.tmr-social-profile .big-stat-label,body.tmr-social-profile .kpi-label,body.tmr-social-profile .kpi__label{color:var(--rd-muted)!important;letter-spacing:.14em!important;text-transform:uppercase!important;font-weight:700!important;font-size:10.5px!important;}',
         'body.tmr-social-profile .pick-result.win,body.tmr-social-profile .result-win{background:rgba(34,197,94,.16)!important;color:#4ade80!important;border:1px solid rgba(34,197,94,.3)!important;}',
-        'body.tmr-social-profile .pick-result.loss,body.tmr-social-profile .result-loss{background:rgba(239,68,68,.16)!important;color:#f87171!important;border:1px solid rgba(239,68,68,.3)!important;}',
+        'body.tmr-social-profile .pick-result.loss,body.tmr-social-profile .result-loss{background:rgba(220,38,38,.16)!important;color:#dc2626!important;border:1px solid rgba(220,38,38,.3)!important;}',
         'body.tmr-social-profile .pick-result.pending,body.tmr-social-profile .result-pending{background:rgba(245,180,0,.16)!important;color:var(--rd-gold)!important;border:1px solid rgba(245,180,0,.3)!important;}',
         'body.tmr-social-profile{background:radial-gradient(900px 520px at 85% -10%,rgba(31,184,217,.09),transparent 58%),radial-gradient(760px 460px at -10% 25%,rgba(29,78,216,.08),transparent 60%),#050a14!important;}',
         'body.tmr-social-profile .profile-top-strip{background:#0a1322!important;border-bottom:1px solid var(--rd-line)!important;color:var(--rd-ink-2)!important;}',
