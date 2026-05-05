@@ -204,8 +204,20 @@
 
 .sim-toggle button.active {
     border-color: rgba(45, 212, 191, 0.55);
-    background: rgba(45, 212, 191, 0.12);
+    background: linear-gradient(135deg, rgba(45, 212, 191, 0.18), rgba(96, 165, 250, 0.12));
     color: var(--sim-text);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 24px rgba(45, 212, 191, 0.09);
+}
+
+.sim-mode-help {
+    margin: -4px 0 14px;
+    padding: 10px 12px;
+    border: 1px solid rgba(96, 165, 250, 0.18);
+    border-radius: 8px;
+    background: rgba(96, 165, 250, 0.055);
+    color: #dbeafe;
+    font-size: 12px;
+    line-height: 1.45;
 }
 
 .team-picker-grid {
@@ -259,6 +271,10 @@
     color: var(--sim-text);
     padding: 0 12px;
     font: 700 14px/1.4 Inter, system-ui, sans-serif;
+}
+
+.sim-score-panel {
+    border-color: rgba(244, 201, 93, 0.24);
 }
 
 .matchup-header {
@@ -326,6 +342,17 @@
         linear-gradient(135deg, rgba(244, 201, 93, 0.12), transparent 42%),
         linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(3, 7, 14, 0.96));
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 18px 42px rgba(0, 0, 0, 0.28);
+}
+
+.result-card[data-result-state="loading"] {
+    border-color: rgba(244, 201, 93, 0.42);
+    background:
+        linear-gradient(90deg, rgba(244, 201, 93, 0.1), rgba(45, 212, 191, 0.08), rgba(244, 201, 93, 0.1)),
+        linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(3, 7, 14, 0.96));
+}
+
+.result-card[data-result-state="projected"] {
+    border-color: rgba(52, 211, 153, 0.36);
 }
 
 .winner-strip {
@@ -516,6 +543,10 @@
 
 .projection-shell[data-projection-state="projected"] .projection-value {
     color: var(--sim-text);
+}
+
+.projection-shell[data-projection-state="loading"] .projection-value {
+    color: var(--sim-gold);
 }
 
 .probability-lab {
