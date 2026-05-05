@@ -77,15 +77,15 @@
     };
 
     var LIVE_INPUT_SOURCES = [
-        ['rosterContext', 'Roster context', 'Unavailable', 'No verified current roster feed is connected.'],
+        ['scheduleFinals', 'MLB schedule/finals', 'Unavailable', 'No verified current schedule or final score match is connected.'],
+        ['teamRecords', 'Team records', 'Unavailable', 'No verified team record match is connected.'],
         ['startingPitchers', 'Starting pitchers', 'Unavailable', 'No confirmed or probable starter feed is connected.'],
+        ['ballparkWeather', 'Ballpark/weather', 'Unavailable', 'No verified venue or weather feed is connected.'],
+        ['sportsbookOdds', 'Sportsbook odds', 'Unavailable', 'No verified sportsbook source is connected.'],
+        ['rosterContext', 'Roster context', 'Unavailable', 'No verified current roster feed is connected.'],
         ['recentForm', 'Recent form', 'Unavailable', 'No verified recent-form feed is connected.'],
-        ['bullpenContext', 'Bullpen context', 'Unavailable', 'No verified bullpen availability feed is connected.'],
-        ['parkWeather', 'Park/weather', 'Unavailable', 'No verified park or weather feed is connected.'],
-        ['sportsbookOdds', 'Sportsbook odds', 'Unavailable', 'No verified sportsbook source is connected.']
-    ].map(function (row) {
-        return { key: row[0], label: row[1], status: row[2], detail: row[3], verified: false };
-    });
+        ['bullpenContext', 'Bullpen context', 'Unavailable', 'No verified bullpen availability feed is connected.']
+    ].map(function (row) { return { key: row[0], label: row[1], status: row[2], detail: row[3], verified: false }; });
 
     var state = {
         preset: 'current',
@@ -94,6 +94,14 @@
         teams: LOCAL_TEAMS,
         dataMode: 'baseline',
         liveInputs: LIVE_INPUT_SOURCES,
+        liveContext: {
+            status: 'idle',
+            loadedAt: null,
+            scheduleGames: [],
+            boardGames: [],
+            espnEvents: [],
+            error: null
+        },
         awayTeamId: LOCAL_TEAMS.current[0].id,
         homeTeamId: LOCAL_TEAMS.current[1].id,
         simulation: null
@@ -107,6 +115,19 @@
         return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
     function setText(id, value) { var el = byId(id); if (el) el.textContent = value; }
+    function normalizeName(value) { return String(value || '').toLowerCase().replace(/^the\s+/, '').replace(/[^a-z0-9]/g, ''); }
+    function todayEspnDate() { return new Date().toISOString().slice(0, 10).replace(/-/g, ''); }
+    function apiBaseUrl() {
+        if (typeof CONFIG !== 'undefined' && CONFIG && CONFIG.api && CONFIG.api.baseUrl) return CONFIG.api.baseUrl;
+        return 'https://trustmyrecord-api.onrender.com/api';
+    }
+    function fetchJson(url) {
+        if (typeof fetch !== 'function') return Promise.reject(new Error('fetch unavailable'));
+        return fetch(url, { headers: { 'Accept': 'application/json' } }).then(function (res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+        });
+    }
 
     function poolTeams(pool) { return state.teams[pool] || []; }
     function activeTeams() { return poolTeams(state.awayPool).concat(poolTeams(state.homePool)); }
@@ -175,12 +196,206 @@
         return 'Verified live inputs are unavailable, so this matchup will use internal baseline ratings.';
     }
 
-    function simulate(away, home) {
+    function parseRecord(summary) {
+        var match = String(summary || '').match(/(\d+)\s*-\s*(\d+)/);
+        if (!match) return null;
+        var wins = Number(match[1]);
+        var losses = Number(match[2]);
+        var total = wins + losses;
+        if (!total) return null;
+        return { wins: wins, losses: losses, pct: wins / total, summary: wins + '-' + losses };
+    }
+    function recordFromCompetitor(comp) {
+        var records = Array.isArray(comp && comp.records) ? comp.records : [];
+        var overall = records.filter(function (record) { return record && (record.name === 'overall' || record.type === 'total'); })[0] || records[0];
+        return parseRecord(overall && overall.summary);
+    }
+    function probableFromCompetitor(comp) {
+        var probable = Array.isArray(comp && comp.probables) ? comp.probables[0] : null;
+        if (!probable) return null;
+        var eraStat = (probable.statistics || []).filter(function (stat) { return stat && String(stat.abbreviation || stat.name).toUpperCase() === 'ERA'; })[0];
+        var era = eraStat ? Number(eraStat.displayValue) : null;
+        return {
+            name: probable.athlete && (probable.athlete.displayName || probable.athlete.fullName) || probable.displayName || 'Probable starter',
+            record: probable.record || '',
+            era: Number.isFinite(era) ? era : null
+        };
+    }
+    function extractEspnEvent(event) {
+        var comp = event && event.competitions && event.competitions[0];
+        var competitors = comp && Array.isArray(comp.competitors) ? comp.competitors : [];
+        var home = competitors.filter(function (team) { return team.homeAway === 'home'; })[0];
+        var away = competitors.filter(function (team) { return team.homeAway === 'away'; })[0];
+        if (!home || !away) return null;
+        var homeName = home.team && (home.team.displayName || home.team.name);
+        var awayName = away.team && (away.team.displayName || away.team.name);
+        return {
+            id: event.id,
+            homeTeam: homeName,
+            awayTeam: awayName,
+            commenceTime: event.date || comp.date,
+            completed: !!(event.status && event.status.type && event.status.type.completed),
+            statusDetail: event.status && event.status.type && (event.status.type.shortDetail || event.status.type.detail || event.status.type.description) || 'Scheduled',
+            homeScore: home.score != null ? Number(home.score) : null,
+            awayScore: away.score != null ? Number(away.score) : null,
+            venue: comp.venue && comp.venue.fullName ? {
+                name: comp.venue.fullName,
+                city: comp.venue.address && comp.venue.address.city || '',
+                state: comp.venue.address && comp.venue.address.state || '',
+                indoor: comp.venue.indoor === true
+            } : null,
+            homeRecord: recordFromCompetitor(home),
+            awayRecord: recordFromCompetitor(away),
+            homeStarter: probableFromCompetitor(home),
+            awayStarter: probableFromCompetitor(away)
+        };
+    }
+    function teamsMatch(gameLike, away, home) {
+        if (!gameLike || !away || !home) return false;
+        var awayNames = [gameLike.away_team, gameLike.awayTeam].map(normalizeName);
+        var homeNames = [gameLike.home_team, gameLike.homeTeam].map(normalizeName);
+        return awayNames.indexOf(normalizeName(away.name)) !== -1 && homeNames.indexOf(normalizeName(home.name)) !== -1;
+    }
+    function getMarket(game, key) {
+        var bookmakers = Array.isArray(game && game.bookmakers) ? game.bookmakers : [];
+        for (var b = 0; b < bookmakers.length; b += 1) {
+            var markets = Array.isArray(bookmakers[b].markets) ? bookmakers[b].markets : [];
+            for (var m = 0; m < markets.length; m += 1) {
+                if (markets[m].key === key) return { bookmaker: bookmakers[b], market: markets[m] };
+            }
+        }
+        return null;
+    }
+    function marketOddsFor(game, away, home) {
+        var h2h = getMarket(game, 'h2h');
+        var totals = getMarket(game, 'totals');
+        if (!h2h || !Array.isArray(h2h.market.outcomes)) return null;
+        var awayOutcome = h2h.market.outcomes.filter(function (outcome) { return normalizeName(outcome.name) === normalizeName(away.name); })[0];
+        var homeOutcome = h2h.market.outcomes.filter(function (outcome) { return normalizeName(outcome.name) === normalizeName(home.name); })[0];
+        if (!awayOutcome || !homeOutcome) return null;
+        var totalOutcome = totals && totals.market && Array.isArray(totals.market.outcomes) ? totals.market.outcomes[0] : null;
+        return {
+            book: h2h.bookmaker.title || h2h.bookmaker.key || 'Sportsbook board',
+            updatedAt: game.updated_at || h2h.bookmaker.last_update || null,
+            awayPrice: awayOutcome.price,
+            homePrice: homeOutcome.price,
+            total: totalOutcome && totalOutcome.point != null ? totalOutcome.point : null
+        };
+    }
+    function impliedFromAmerican(price) {
+        var n = Number(price);
+        if (!Number.isFinite(n) || n === 0) return null;
+        return n > 0 ? 100 / (n + 100) : Math.abs(n) / (Math.abs(n) + 100);
+    }
+    function selectedLiveContext(away, home) {
+        if (!away || !home || away.era !== 'current' || home.era !== 'current') return null;
+        var espnGame = (state.liveContext.espnEvents || []).filter(function (game) { return teamsMatch(game, away, home); })[0] || null;
+        var scheduleGame = (state.liveContext.scheduleGames || []).filter(function (game) { return teamsMatch(game, away, home); })[0] || null;
+        var boardGame = (state.liveContext.boardGames || []).filter(function (game) { return teamsMatch(game, away, home); })[0] || null;
+        if (!espnGame && !scheduleGame && !boardGame) return null;
+        var odds = boardGame ? marketOddsFor(boardGame, away, home) : null;
+        return { espnGame: espnGame, scheduleGame: scheduleGame, boardGame: boardGame, odds: odds };
+    }
+    function liveInputsForContext(context) {
+        var espnGame = context && context.espnGame;
+        var scheduleGame = context && context.scheduleGame;
+        var odds = context && context.odds;
+        var startersAvailable = !!(espnGame && espnGame.awayStarter && espnGame.homeStarter);
+        var recordsAvailable = !!(espnGame && espnGame.awayRecord && espnGame.homeRecord);
+        return [
+            {
+                key: 'scheduleFinals',
+                label: 'MLB schedule/finals',
+                verified: !!(espnGame || scheduleGame),
+                status: (espnGame || scheduleGame) ? ((espnGame && espnGame.completed) || (scheduleGame && scheduleGame.completed) ? 'Final score available' : 'Scheduled game found') : 'Unavailable',
+                detail: (espnGame && espnGame.statusDetail) || (scheduleGame && scheduleGame.commence_time ? 'Scheduled ' + new Date(scheduleGame.commence_time).toLocaleString() : 'No matching current MLB game found.')
+            },
+            {
+                key: 'teamRecords',
+                label: 'Team records',
+                verified: recordsAvailable,
+                status: recordsAvailable ? 'Available from ESPN scoreboard' : 'Unavailable',
+                detail: recordsAvailable ? espnGame.awayTeam + ' ' + espnGame.awayRecord.summary + ' / ' + espnGame.homeTeam + ' ' + espnGame.homeRecord.summary : 'No verified record match available.'
+            },
+            {
+                key: 'startingPitchers',
+                label: 'Starting pitchers',
+                verified: startersAvailable,
+                status: startersAvailable ? 'Probable starters available' : 'Unavailable',
+                detail: startersAvailable ? espnGame.awayStarter.name + ' vs ' + espnGame.homeStarter.name : 'No confirmed or probable starter match available.'
+            },
+            {
+                key: 'ballparkWeather',
+                label: 'Ballpark/weather',
+                verified: !!(espnGame && espnGame.venue),
+                status: espnGame && espnGame.venue ? 'Ballpark available' : 'Unavailable',
+                detail: espnGame && espnGame.venue ? espnGame.venue.name + (espnGame.venue.city ? ', ' + espnGame.venue.city : '') + '. Weather not connected.' : 'No verified venue or weather match available.'
+            },
+            {
+                key: 'sportsbookOdds',
+                label: 'Sportsbook odds',
+                verified: !!odds,
+                status: odds ? 'Available from backend board' : 'Unavailable',
+                detail: odds ? odds.book + ' moneyline snapshot; used as market context, not a betting edge.' : 'No verified sportsbook odds match available.'
+            },
+            { key: 'rosterContext', label: 'Roster context', status: 'Unavailable', detail: 'No verified current roster feed is connected.', verified: false },
+            { key: 'recentForm', label: 'Recent form', status: 'Unavailable', detail: 'No verified recent-form feed is connected.', verified: false },
+            { key: 'bullpenContext', label: 'Bullpen context', status: 'Unavailable', detail: 'No verified bullpen availability feed is connected.', verified: false }
+        ];
+    }
+    function setLiveInputsForMatchup(away, home) {
+        state.activeLiveContext = selectedLiveContext(away, home);
+        state.liveInputs = liveInputsForContext(state.activeLiveContext);
+        state.dataMode = verifiedLiveInputs().length ? 'live' : 'baseline';
+    }
+
+    function starterEraAdjustment(starter) {
+        if (!starter || !Number.isFinite(starter.era)) return 0;
+        return clamp((starter.era - 4.2) * 0.22, -0.45, 0.55);
+    }
+    function recordStrengthAdjustment(record) {
+        if (!record || !Number.isFinite(record.pct)) return 0;
+        return clamp((record.pct - 0.5) * 9, -3.5, 3.5);
+    }
+    function simulate(away, home, context) {
         var awayRuns = expectedRunsFor(away, home, 0);
         var homeRuns = expectedRunsFor(home, away, 0.18);
+        var liveFactors = [];
+        if (context && context.espnGame) {
+            if (context.espnGame.homeStarter) {
+                awayRuns = clamp(awayRuns + starterEraAdjustment(context.espnGame.homeStarter), 1.7, 9.2);
+                liveFactors.push(home.name + ' probable starter: ' + context.espnGame.homeStarter.name + (context.espnGame.homeStarter.record ? ' ' + context.espnGame.homeStarter.record : '') + '.');
+            }
+            if (context.espnGame.awayStarter) {
+                homeRuns = clamp(homeRuns + starterEraAdjustment(context.espnGame.awayStarter), 1.7, 9.2);
+                liveFactors.push(away.name + ' probable starter: ' + context.espnGame.awayStarter.name + (context.espnGame.awayStarter.record ? ' ' + context.espnGame.awayStarter.record : '') + '.');
+            }
+        }
         var awayStrength = strength(away);
         var homeStrength = strength(home) + 1.7;
+        if (context && context.espnGame) {
+            awayStrength += recordStrengthAdjustment(context.espnGame.awayRecord);
+            homeStrength += recordStrengthAdjustment(context.espnGame.homeRecord);
+            if (context.espnGame.awayRecord && context.espnGame.homeRecord) {
+                liveFactors.push('Team records: ' + away.abbreviation + ' ' + context.espnGame.awayRecord.summary + ', ' + home.abbreviation + ' ' + context.espnGame.homeRecord.summary + '.');
+            }
+            if (context.espnGame.venue) {
+                liveFactors.push('Ballpark context: ' + context.espnGame.venue.name + ' is verified; weather is not connected.');
+            }
+        }
         var homeWin = clamp(1 / (1 + Math.exp(-(((homeRuns - awayRuns) * 0.55) + ((homeStrength - awayStrength) * 0.027)))), 0.17, 0.83);
+        if (context && context.odds) {
+            var awayImp = impliedFromAmerican(context.odds.awayPrice);
+            var homeImp = impliedFromAmerican(context.odds.homePrice);
+            if (awayImp != null && homeImp != null) {
+                var noVigHome = homeImp / (homeImp + awayImp);
+                homeWin = clamp((homeWin * 0.85) + (noVigHome * 0.15), 0.17, 0.83);
+                liveFactors.push('Market context: ' + context.odds.book + ' moneyline snapshot is included, but no betting edge is claimed.');
+            }
+            if (context.odds.total != null) {
+                liveFactors.push('Market total snapshot: ' + context.odds.total + ' runs.');
+            }
+        }
         var awayWin = 1 - homeWin;
         var winner = homeWin >= awayWin ? home : away;
         var winnerPct = Math.max(homeWin, awayWin);
@@ -222,6 +437,9 @@
             simulationMode: simulationModeLabel(),
             dataMode: dataModeLabel(),
             dataLimitations: dataModeDetail(),
+            dataSourcesUsed: verifiedLiveInputs().map(function (source) { return source.label; }),
+            missingDataSources: state.liveInputs.filter(function (source) { return !source.verified; }).map(function (source) { return source.label; }),
+            liveFactors: liveFactors,
             offensiveEdge: edgeLabel('offense', away, home),
             pitchingEdge: edgeLabel('startingPitching', away, home),
             runPreventionEdge: edgeLabel('runPrevention', away, home),
@@ -260,6 +478,7 @@
 
         var away = findTeamInPool(state.awayTeamId, state.awayPool);
         var home = findTeamInPool(state.homeTeamId, state.homePool);
+        setLiveInputsForMatchup(away, home);
         setText('awayTeamMeta', teamMeta(away));
         setText('homeTeamMeta', teamMeta(home));
         setText('selectedMatchupTitle', away && home ? away.name + ' vs ' + home.name : 'Choose two teams');
@@ -322,24 +541,23 @@
     function renderInputStatus(result) {
         var container = byId('inputSummary');
         if (!container) return;
+        var usedSources = result && result.dataSourcesUsed && result.dataSourcesUsed.length ? result.dataSourcesUsed.join(', ') : 'Internal baseline team ratings';
+        var missingSources = result && result.missingDataSources && result.missingDataSources.length ? result.missingDataSources.join(', ') : 'None listed';
         var rows = result ? [
             ['Winner', result.winner.name + ' ' + roundPct(result.winnerPct)],
             ['Run environment', result.runEnvironment + ' / ' + result.totalRange[0] + '-' + result.totalRange[1] + ' runs'],
             ['Simulation mode', result.simulationMode],
             ['Data mode', result.dataMode],
+            ['Data sources used', usedSources],
+            ['Missing data', missingSources],
             ['Offensive edge', result.offensiveEdge],
             ['Pitching edge', result.pitchingEdge],
             ['Run prevention edge', result.runPreventionEdge],
             ['Era adjustment', result.eraAdjustment],
             ['Confidence band', result.confidenceBand],
             ['Volatility', result.volatility],
-            ['Roster context', 'Unavailable for this estimate'],
-            ['Starting pitchers', 'Unavailable for this estimate'],
-            ['Recent form', 'Unavailable for this estimate'],
-            ['Bullpen context', 'Unavailable for this estimate'],
-            ['Park/weather', 'Unavailable for this estimate'],
             ['SportsDataIO', 'Not used for this estimate'],
-            ['Sportsbook odds', 'Not used / not invented'],
+            ['Sportsbook odds', result.dataSourcesUsed.indexOf('Sportsbook odds') !== -1 ? 'Verified backend board snapshot used as context' : 'Not used / not invented'],
             ['Official records', 'Excluded from picks and records']
         ] : [
             ['Dataset', 'Internal baseline team ratings'],
@@ -356,8 +574,10 @@
     function renderNotes(result) {
         var list = byId('matchupNotes');
         if (!list) return;
+        var liveFactorNotes = result && result.liveFactors && result.liveFactors.length ? result.liveFactors : [];
+        var fallbackOnly = !result || !result.dataSourcesUsed || !result.dataSourcesUsed.length;
         var notes = result ? [
-            'Simulation-based estimate, not sportsbook odds or provider projection.',
+            result.dataSourcesUsed.indexOf('Sportsbook odds') !== -1 ? 'Simulation-based estimate with a verified market snapshot included as context; this is not a betting edge.' : 'Simulation-based estimate, not sportsbook odds or provider projection.',
             result.winner.name + ' grades as the simulated winner because of baseline run expectation and team-strength weighting.',
             'Average simulated score: ' + result.away.abbreviation + ' ' + result.awayRuns + ', ' + result.home.abbreviation + ' ' + result.homeRuns + '.',
             'Projected score range: ' + result.away.abbreviation + ' ' + result.awayRange[0] + '-' + result.awayRange[1] + ', ' + result.home.abbreviation + ' ' + result.homeRange[0] + '-' + result.homeRange[1] + '.',
@@ -365,9 +585,11 @@
             'Data mode used: ' + result.dataMode + '.',
             'Era adjustment: ' + result.eraAdjustment + '.',
             'Confidence band: ' + result.confidenceBand + ' based only on internal simulation strength.',
+            'Data sources used: ' + (result.dataSourcesUsed.length ? result.dataSourcesUsed.join(', ') : 'Internal baseline team ratings only') + '.',
+            'Missing data sources: ' + (result.missingDataSources.length ? result.missingDataSources.join(', ') : 'None listed') + '.',
             'Data limitations: ' + result.dataLimitations,
-            'Uses internal baseline team rating only; does not yet include live rosters, injuries, weather, confirmed starters, or sportsbook odds.'
-        ] : [
+            fallbackOnly ? 'Uses internal baseline team rating only; does not yet include live rosters, injuries, weather, confirmed starters, or sportsbook odds.' : 'Live context is used only for the verified sources listed above; unlisted rosters, injuries, weather, confirmed starters, recent form, and bullpen status remain unavailable.'
+        ].concat(liveFactorNotes) : [
             'Choose a mode, select two teams, and run the simulator. Current and historical options are loaded locally, so failed provider data will not block this tool.',
             'Simulator baselines are internal ratings. They are not SportsDataIO data, sportsbook odds, verified betting edges, official picks, or graded records.'
         ];
@@ -436,7 +658,7 @@
         var homeBar = byId('homeProbabilityBar');
         if (awayBar) awayBar.style.width = clamp(result.awayWin * 100, 2, 98) + '%';
         if (homeBar) homeBar.style.width = clamp(result.homeWin * 100, 2, 98) + '%';
-        setText('projectionNotice', 'Simulation-based estimate, not sportsbook odds or provider projection. No SportsDataIO data, betting edge, or official record is created.');
+        setText('projectionNotice', result.dataSourcesUsed.length ? 'Verified live inputs are included where listed. No SportsDataIO data, betting edge, or official record is created.' : 'Simulation-based estimate, not sportsbook odds or provider projection. No SportsDataIO data, betting edge, or official record is created.');
         renderComparison(result);
         renderInputStatus(result);
         renderNotes(result);
@@ -482,8 +704,50 @@
             return;
         }
         renderLoading(away, home);
-        state.simulation = simulate(away, home);
+        setLiveInputsForMatchup(away, home);
+        state.simulation = simulate(away, home, state.activeLiveContext);
         renderResult(state.simulation);
+    }
+
+    function normalizeBoardResponse(data) {
+        if (Array.isArray(data)) return data;
+        if (data && Array.isArray(data.games)) return data.games;
+        return [];
+    }
+
+    function loadLiveContext() {
+        state.liveContext.status = 'loading';
+        renderDataModeStatus();
+        var base = apiBaseUrl();
+        var espnUrl = 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=' + todayEspnDate();
+        return Promise.allSettled([
+            fetchJson(base + '/games?sport=baseball_mlb'),
+            fetchJson(base + '/games/board/baseball_mlb'),
+            fetchJson(espnUrl)
+        ]).then(function (results) {
+            var schedule = results[0].status === 'fulfilled' && results[0].value && Array.isArray(results[0].value.games) ? results[0].value.games : [];
+            var board = results[1].status === 'fulfilled' ? normalizeBoardResponse(results[1].value) : [];
+            var espnEvents = results[2].status === 'fulfilled' && results[2].value && Array.isArray(results[2].value.events) ? results[2].value.events.map(extractEspnEvent).filter(Boolean) : [];
+            state.liveContext = {
+                status: schedule.length || board.length || espnEvents.length ? 'available' : 'unavailable',
+                loadedAt: new Date().toISOString(),
+                scheduleGames: schedule,
+                boardGames: board,
+                espnEvents: espnEvents,
+                error: null
+            };
+            renderSelectors();
+            if (state.simulation) {
+                var away = findTeamInPool(state.awayTeamId, state.awayPool);
+                var home = findTeamInPool(state.homeTeamId, state.homePool);
+                state.simulation = simulate(away, home, state.activeLiveContext);
+                renderResult(state.simulation);
+            }
+        }).catch(function (error) {
+            state.liveContext.status = 'unavailable';
+            state.liveContext.error = error && error.message || 'Live context unavailable';
+            renderSelectors();
+        });
     }
 
     function wireEvents() {
@@ -511,12 +775,15 @@
         wireEvents();
         renderSelectors();
         renderResult(null);
+        loadLiveContext();
     }
 
     window.TMRMlbSimulator = {
         state: state,
         localTeams: LOCAL_TEAMS,
         liveInputs: LIVE_INPUT_SOURCES,
+        loadLiveContext: loadLiveContext,
+        selectedLiveContext: selectedLiveContext,
         runSimulation: runSimulation,
         simulate: simulate
     };
