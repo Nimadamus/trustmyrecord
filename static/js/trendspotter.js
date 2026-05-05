@@ -108,7 +108,7 @@
   }
 
   function getMatchups(sport) {
-    return unique(trendsForSport(sport).map(function (trend) { return trend.matchup; })).sort();
+    return unique(trendsForSport(sport).filter(isRenderableTrend).map(function (trend) { return trend.matchup; })).sort();
   }
 
   function trendText(trend) {
@@ -180,7 +180,9 @@
       : "Choose a sport above to load verified matchups.";
     els.matchupEmpty.classList.toggle("is-hidden", Boolean(matchups.length));
     els.matchupOptions.innerHTML = matchups.map(function (matchup) {
-      var count = trendsForSport(state.sport).filter(function (trend) { return trend.matchup === matchup; }).length;
+      var count = trendsForSport(state.sport).filter(function (trend) {
+        return trend.matchup === matchup && isRenderableTrend(trend);
+      }).length;
       return optionButton({
         group: "matchup",
         value: matchup,
@@ -268,12 +270,18 @@
   }
 
   function basedOnText(trend) {
-    var parts = [];
-    if (trend.sample) parts.push(String(trend.sample) + " verified games");
-    if (trend.date_range) parts.push(String(trend.date_range));
-    if (trend.source_url) parts.push("source schedule");
-    if (!parts.length && trend.slate_date) parts.push("verified " + trend.slate_date + " artifact");
-    return parts.length ? parts.join(" / ") : "verified artifact fields";
+    return String(trend.sample) + " verified games / " + String(trend.date_range) + " / source schedule";
+  }
+
+  function isRenderableTrend(trend) {
+    if (!trend || typeof trend !== "object") return false;
+    var required = ["sport", "matchup", "claim", "bet_type", "sample", "date_range", "source_url", "team_abbr"];
+    var complete = required.every(function (field) {
+      return trend[field] !== undefined && trend[field] !== null && String(trend[field]).trim() !== "";
+    });
+    if (!complete) return false;
+    if (!Array.isArray(trend.game_log) || !trend.game_log.length) return false;
+    return true;
   }
 
   function renderTrend(trend, type) {
@@ -283,11 +291,11 @@
       "    <span class=\"ts-type-label\">" + escapeHtml(trendLabel(type, trend)) + "</span>",
       trend.rank ? "    <span class=\"ts-rank\">#" + escapeHtml(trend.rank) + "</span>" : "",
       "  </div>",
-      "  <p class=\"ts-claim\">" + escapeHtml(trend.claim || "Verified trend") + "</p>",
+      "  <p class=\"ts-claim\">" + escapeHtml(trend.claim) + "</p>",
       "  <dl class=\"ts-result-meta\">",
       "    <div><dt>Based on</dt><dd>" + escapeHtml(basedOnText(trend)) + "</dd></div>",
-      "    <div><dt>Team</dt><dd>" + escapeHtml(trend.team_abbr || "Unavailable") + "</dd></div>",
-      "    <div><dt>Market</dt><dd>" + escapeHtml(trend.bet_type || "Unavailable") + "</dd></div>",
+      "    <div><dt>Team</dt><dd>" + escapeHtml(trend.team_abbr) + "</dd></div>",
+      "    <div><dt>Market</dt><dd>" + escapeHtml(trend.bet_type) + "</dd></div>",
       "  </dl>",
       trend.source_url ? "  <a class=\"ts-source\" href=\"" + escapeHtml(trend.source_url) + "\" target=\"_blank\" rel=\"noopener\">Verified source</a>" : "",
       "</article>"
@@ -298,7 +306,7 @@
     var type = { id: "all", label: "All verified trends", shortLabel: "Verified trend" };
     if (!state.sport || !state.matchup) return;
     var results = trendsForSport(state.sport).filter(function (trend) {
-      return trend.matchup === state.matchup;
+      return trend.matchup === state.matchup && isRenderableTrend(trend);
     });
 
     els.resultsTitle.textContent = state.matchup + " verified trends";
@@ -306,7 +314,7 @@
     els.resultsSection.classList.remove("is-hidden");
 
     if (!results.length) {
-      els.resultsList.innerHTML = "<div class=\"ts-no-results\">No verified trends available yet for this matchup and trend type.</div>";
+      els.resultsList.innerHTML = "<div class=\"ts-no-results\">No verified trends available yet for this matchup.</div>";
       return;
     }
     els.resultsList.innerHTML = results.map(function (trend) {
