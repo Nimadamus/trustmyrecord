@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pending Picks | TrustMyRecord</title>
+    <title>My Pending Picks | TrustMyRecord</title>
     <meta name="robots" content="noindex,nofollow">
     <link rel="canonical" href="https://trustmyrecord.com/my-pending-picks/">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -257,7 +257,7 @@
         <header class="pending-head">
             <div>
                 <p class="pending-kicker">Private ledger</p>
-                <h1>Pending Picks</h1>
+                <h1>My Pending Picks</h1>
                 <p class="pending-subtitle">Locked picks waiting for final grading.</p>
             </div>
             <nav class="pending-actions" aria-label="Pending picks actions">
@@ -292,7 +292,7 @@
             </div>
 
             <div id="emptyState" class="empty-state" hidden>
-                <h2>No pending picks</h2>
+                <h2>No pending picks right now.</h2>
                 <p>Locked picks will appear here after you submit them and before the grader settles the final result.</p>
                 <a class="btn btn-primary" href="/sportsbook/">Make a Pick</a>
             </div>
@@ -321,8 +321,7 @@
     </main>
 
     <script src="/static/js/config.js?v=20260430a"></script>
-    <script src="/static/js/pick-display-format.js?v=20260505pickdisplay1"></script>
-    <script src="/static/js/backend-api.js?v=20260503pending1"></script>
+    <script src="/static/js/backend-api.js?v=20260505pickcontext1"></script>
     <script>
     (function () {
         var authState = document.getElementById('authState');
@@ -385,49 +384,26 @@
             return (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')) + 'u';
         }
         function pickText(pick) {
-            if (window.TMR && typeof window.TMR.formatPickDisplayLabel === 'function') {
-                return window.TMR.formatPickDisplayLabel(pick);
-            }
-            var selection = String(pick.selection_label || pick.selection || 'Pick').trim();
-            var market = String(pick.market_type || pick.market || '').toLowerCase();
-            var line = pick.line_snapshot != null ? pick.line_snapshot : pick.line;
-            if (market === 'h2h' || market.indexOf('moneyline') !== -1) {
-                return /\bML\b$/i.test(selection) ? selection : selection + ' ML';
-            }
-            if (line == null || line === '') return selection || 'Pick';
-            var n = Number(line);
-            var s = Number.isFinite(n) ? String(n) : String(line).trim();
-            if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
-            if ((market.indexOf('spread') !== -1 || market.indexOf('run_line') !== -1 || market.indexOf('puck_line') !== -1) && Number.isFinite(n) && n > 0) {
-                s = '+' + s;
-            }
-            var escaped = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            if (new RegExp('(?:^|\\s)' + escaped + '$').test(selection)) return selection;
-            var totalSide = market.indexOf('total') !== -1 && !/\b(over|under)\b/i.test(selection)
-                ? (/\bover\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Over' : (/\bunder\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Under' : ''))
-                : '';
-            return (selection || 'Pick').replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '').trim() + totalSide + ' ' + s;
-        }
-        function pickDisplay(pick) {
             if (window.TMR && typeof window.TMR.formatPickDisplay === 'function') {
                 return window.TMR.formatPickDisplay(pick);
             }
-            return { pickLabel: pickText(pick), lineLabel: fmtLine(pick.line_snapshot) };
+            var selection = String(pick.selection || 'Pick').trim();
+            return selection || 'Pick';
         }
         function matchup(pick) {
             if (pick.away_team || pick.home_team) return [pick.away_team, pick.home_team].filter(Boolean).join(' @ ');
             return 'Matchup pending';
         }
         function statusText(pick) {
-            return 'PENDING';
+            return 'Pending';
         }
         function rowHtml(pick) {
-            var display = pickDisplay(pick);
+            var pickLabel = pickText(pick);
             return '<tr>'
                 + '<td>' + esc(fmtDate(pick.commence_time)) + '<span class="pick-sub">' + esc(matchup(pick)) + '</span></td>'
                 + '<td><span class="league-chip">' + esc(sportLabel(pick.sport_key)) + '</span></td>'
-                + '<td><span class="pick-main">' + esc(display.pickLabel) + '</span><span class="pick-sub">' + esc(marketLabel(pick.market_type)) + '</span></td>'
-                + '<td>' + esc(display.lineLabel) + '</td>'
+                + '<td><span class="pick-main">' + esc(pickLabel) + '</span><span class="pick-sub">' + esc(marketLabel(pick.market_type)) + '</span></td>'
+                + '<td>' + esc(fmtLine(pick.line_snapshot)) + '</td>'
                 + '<td>' + esc(fmtOdds(pick.odds_snapshot)) + '</td>'
                 + '<td>' + esc(fmtUnits(pick.units)) + '</td>'
                 + '<td>' + esc(fmtDate(pick.locked_at || pick.created_at)) + '</td>'
@@ -438,12 +414,11 @@
             return '<div class="pending-card-row"><div class="pending-card-label">' + esc(label) + '</div><div class="pending-card-value">' + value + '</div></div>';
         }
         function cardHtml(pick) {
-            var display = pickDisplay(pick);
             return '<article class="pending-card">'
                 + cardRow('Date of Game', esc(fmtDate(pick.commence_time)) + '<span class="pick-sub">' + esc(matchup(pick)) + '</span>')
                 + cardRow('League', '<span class="league-chip">' + esc(sportLabel(pick.sport_key)) + '</span>')
-                + cardRow('Pick', '<span class="pick-main">' + esc(display.pickLabel) + '</span><span class="pick-sub">' + esc(marketLabel(pick.market_type)) + '</span>')
-                + cardRow('Line', esc(display.lineLabel))
+                + cardRow('Pick', '<span class="pick-main">' + esc(pickText(pick)) + '</span><span class="pick-sub">' + esc(marketLabel(pick.market_type)) + '</span>')
+                + cardRow('Line', esc(fmtLine(pick.line_snapshot)))
                 + cardRow('Odds', esc(fmtOdds(pick.odds_snapshot)))
                 + cardRow('Units', esc(fmtUnits(pick.units)))
                 + cardRow('Time Submitted', esc(fmtDate(pick.locked_at || pick.created_at)))
