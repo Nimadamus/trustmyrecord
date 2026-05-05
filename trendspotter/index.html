@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="canonical" href="https://trustmyrecord.com/trendspotter/">
   <title>Trendspotter | TrustMyRecord Matchup Trends</title>
-  <meta name="description" content="Select a matchup and generate verified betting trends from TrustMyRecord Trendspotter artifacts. Missing data is labeled unavailable.">
+  <meta name="description" content="Select a sport, matchup, and trend type to view verified TrustMyRecord Trendspotter data.">
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/trendspotter.css?v=20260505d">
+  <link rel="stylesheet" href="/static/css/trendspotter.css?v=20260505guided1">
 </head>
 <body>
   <header class="ts-topbar">
@@ -21,179 +21,74 @@
         <small>Receipts over rhetoric</small>
       </span>
     </a>
-    <nav class="ts-nav" aria-label="Primary">
-      <a href="/sportsbook/">Make Picks</a>
-      <a href="/handicappers/">Records</a>
-      <a href="/feed/">Feed</a>
-      <a href="/forum/">Forum</a>
-    </nav>
+    <p class="ts-internal-note">Hidden internal beta</p>
   </header>
 
   <main class="ts-shell">
     <section class="ts-hero" aria-labelledby="trendspotter-title">
-      <div>
-        <p class="ts-kicker">Verified matchup tool</p>
-        <h1 id="trendspotter-title">Trendspotter</h1>
-        <p class="ts-lead">Select a matchup and generate verified betting trends from real artifact data. Missing inputs are labeled unavailable instead of guessed.</p>
-      </div>
-      <aside class="ts-hero-panel" aria-label="Data rules">
-        <span>Data source</span>
-        <strong>Verified artifacts only</strong>
-        <p>Trends are filtered from existing Trendspotter JSON artifacts. Anything not present in those artifacts is marked unavailable.</p>
-      </aside>
+      <p class="ts-kicker">Verified trend workflow</p>
+      <h1 id="trendspotter-title">Trendspotter</h1>
+      <p class="ts-lead">Choose a sport, matchup, and trend type. Trendspotter only surfaces verified trends from available artifacts.</p>
+      <p class="ts-data-note">Trends are based only on available verified data.</p>
     </section>
 
-    <section class="ts-tool" aria-label="Trendspotter controls">
-      <div class="ts-control-grid">
-        <label class="ts-field" for="sportSelect">
-          <span>Sport</span>
-          <select id="sportSelect">
-            <option value="NBA">NBA</option>
-            <option value="NHL">NHL</option>
-            <option value="NFL">NFL</option>
-            <option value="MLB">MLB</option>
-          </select>
-        </label>
-
-        <label class="ts-field" for="teamAInput">
-          <span>Team A</span>
-          <input id="teamAInput" list="teamOptions" autocomplete="off" placeholder="Search team">
-        </label>
-
-        <label class="ts-field" for="teamBInput">
-          <span>Team B</span>
-          <input id="teamBInput" list="teamOptions" autocomplete="off" placeholder="Search team">
-        </label>
-
-        <label class="ts-field ts-field-wide" for="matchupSelect">
-          <span>Scheduled board matchup</span>
-          <select id="matchupSelect">
-            <option value="">Load a sport to see verified matchups</option>
-          </select>
-        </label>
-
-        <button class="ts-generate" id="generateBtn" type="button">Generate Trends</button>
+    <section class="ts-step" id="sportStep" aria-labelledby="sportStepTitle">
+      <div class="ts-step-head">
+        <span>Step 1</span>
+        <h2 id="sportStepTitle">Select Sport</h2>
       </div>
-      <datalist id="teamOptions"></datalist>
-      <div class="ts-status-row">
-        <div class="ts-status-pill" id="tsStatusPill">Loading verified artifacts</div>
-        <p id="selectionHint">Choose a sport, then select two teams or a verified matchup.</p>
+      <div class="ts-option-grid ts-sport-grid" id="sportOptions"></div>
+    </section>
+
+    <section class="ts-step is-disabled" id="matchupStep" aria-labelledby="matchupStepTitle" aria-disabled="true">
+      <div class="ts-step-head">
+        <span>Step 2</span>
+        <h2 id="matchupStepTitle">Select Matchup</h2>
+      </div>
+      <div class="ts-loading is-hidden" id="matchupLoading" aria-live="polite">
+        <span></span>
+        <p>Loading verified matchups...</p>
+      </div>
+      <div class="ts-option-grid ts-matchup-grid" id="matchupOptions"></div>
+      <p class="ts-empty is-hidden" id="matchupEmpty">No verified matchups available yet for this sport.</p>
+    </section>
+
+    <section class="ts-step is-disabled" id="trendTypeStep" aria-labelledby="trendTypeStepTitle" aria-disabled="true">
+      <div class="ts-step-head">
+        <span>Step 3</span>
+        <h2 id="trendTypeStepTitle">Select Trend Type</h2>
+        <p>What type of trend are you looking for?</p>
+      </div>
+      <div class="ts-option-grid ts-type-grid" id="trendTypeOptions"></div>
+    </section>
+
+    <section class="ts-step is-disabled" id="runStep" aria-labelledby="runStepTitle" aria-disabled="true">
+      <div class="ts-step-head">
+        <span>Step 4</span>
+        <h2 id="runStepTitle">Run Trendspotter</h2>
+      </div>
+      <div class="ts-run-panel">
+        <div>
+          <p class="ts-selection-label">Current selection</p>
+          <strong id="selectionSummary">Select a sport, matchup, and trend type.</strong>
+        </div>
+        <button class="ts-run-button" id="runTrendspotter" type="button" disabled>Run Trendspotter</button>
       </div>
     </section>
 
-    <section class="ts-message is-hidden" id="tsMessage" aria-live="polite"></section>
-
-    <section class="ts-summary-grid" aria-label="Matchup summary">
-      <article>
-        <span>Selected sport</span>
-        <strong id="summarySport">--</strong>
-      </article>
-      <article>
-        <span>Selected matchup</span>
-        <strong id="summaryMatchup">--</strong>
-      </article>
-      <article>
-        <span>Verified trends</span>
-        <strong id="summaryCount">--</strong>
-      </article>
-      <article>
-        <span>Artifact</span>
-        <strong id="summaryArtifact">--</strong>
-      </article>
-    </section>
-
-    <div class="ts-loading" id="tsLoading" aria-live="polite">
-      <span></span>
-      <p>Loading verified Trendspotter data...</p>
-    </div>
-
-    <section class="ts-results" aria-label="Generated matchup trends">
-      <article class="ts-result-card" id="overviewCard">
-        <div class="ts-card-head">
-          <p>Matchup Overview</p>
-          <h2 id="overviewTitle">Select a matchup</h2>
+    <section class="ts-results is-hidden" id="resultsSection" aria-labelledby="resultsTitle" aria-live="polite">
+      <div class="ts-results-head">
+        <div>
+          <p class="ts-kicker">Trend Results</p>
+          <h2 id="resultsTitle">Verified trends</h2>
         </div>
-        <div class="ts-overview-grid" id="overviewGrid"></div>
-      </article>
-
-      <article class="ts-result-card" id="teamCard">
-        <div class="ts-card-head">
-          <p>Team Trends</p>
-          <h2 id="teamTrendTitle">Team A and Team B</h2>
-        </div>
-        <div class="ts-two-col">
-          <section>
-            <h3 id="teamAHeading">Team A trends</h3>
-            <div class="ts-trend-list" id="teamATrends"></div>
-          </section>
-          <section>
-            <h3 id="teamBHeading">Team B trends</h3>
-            <div class="ts-trend-list" id="teamBTrends"></div>
-          </section>
-        </div>
-      </article>
-
-      <article class="ts-result-card" id="h2hCard">
-        <div class="ts-card-head">
-          <p>Head-to-Head Trends</p>
-          <h2>Verified H2H signals</h2>
-        </div>
-        <div class="ts-trend-list" id="h2hTrends"></div>
-      </article>
-
-      <article class="ts-result-card" id="venueCard">
-        <div class="ts-card-head">
-          <p>Home/Road Trends</p>
-          <h2>Venue context</h2>
-        </div>
-        <div class="ts-trend-list" id="venueTrends"></div>
-      </article>
-
-      <article class="ts-result-card" id="formCard">
-        <div class="ts-card-head">
-          <p>Recent Form Trends</p>
-          <h2>Current form context</h2>
-        </div>
-        <div class="ts-trend-list" id="formTrends"></div>
-      </article>
-
-      <div class="ts-market-grid" id="marketGrid">
-        <article class="ts-result-card" id="spreadCard">
-          <div class="ts-card-head">
-            <p>Spread / Run Line Trends</p>
-            <h2>Verified line trends</h2>
-          </div>
-          <div class="ts-trend-list" id="spreadTrends"></div>
-        </article>
-        <article class="ts-result-card" id="totalCard">
-          <div class="ts-card-head">
-            <p>Total / Over-Under Trends</p>
-            <h2>Verified totals trends</h2>
-          </div>
-          <div class="ts-trend-list" id="totalTrends"></div>
-        </article>
+        <div class="ts-result-count" id="resultCount">0 trends</div>
       </div>
-
-      <article class="ts-result-card" id="dataCard">
-        <div class="ts-card-head">
-          <p>Data Availability</p>
-          <h2>Verified inputs and unavailable data</h2>
-        </div>
-        <div class="ts-availability">
-          <section>
-            <h3>Source Chain</h3>
-            <ul id="sourceList"></ul>
-          </section>
-          <section>
-            <h3>Unavailable Notices</h3>
-            <ul id="unavailableList"></ul>
-          </section>
-        </div>
-      </article>
+      <div class="ts-results-list" id="resultsList"></div>
     </section>
   </main>
 
   <script src="/static/js/config.js?v=20260330"></script>
-  <script src="/static/js/trendspotter.js?v=20260505d"></script>
+  <script src="/static/js/trendspotter.js?v=20260505guided1"></script>
 </body>
 </html>
