@@ -57,13 +57,38 @@
         ['classic-2023-tex', '2023 Texas Rangers', 'TEX', 2023, 115, 101, 102, 99, 1.08]
     ];
 
-    var CURRENT_PITCHER_PROFILES = [
-        ['ace', 'Ace profile', 114, 3.25, 'Modeled simulator profile'],
-        ['above', 'Above average starter', 106, 3.75, 'Modeled simulator profile'],
-        ['average', 'League average starter', 100, 4.20, 'Modeled simulator profile'],
-        ['backend', 'Back end starter', 92, 4.85, 'Modeled simulator profile'],
-        ['bullpen', 'Bullpen game', 94, 4.65, 'Modeled simulator profile']
-    ];
+    var CURRENT_PITCHERS = {
+        ARI: [['gallen', 'Zac Gallen', 112, 3.45], ['kelly', 'Merrill Kelly', 106, 3.75], ['nelson', 'Ryne Nelson', 100, 4.15], ['pfaadt', 'Brandon Pfaadt', 99, 4.25], ['rodriguez', 'Eduardo Rodriguez', 102, 4.05]],
+        ATL: [['elder', 'Bryce Elder', 101, 4.10], ['fuentes', 'Didier Fuentes', 96, 4.45], ['holmes', 'Grant Holmes', 98, 4.30], ['lopez', 'Reynaldo Lopez', 108, 3.65], ['perez', 'Martin Perez', 97, 4.35]],
+        BAL: [['bassitt', 'Chris Bassitt', 104, 3.95], ['baz', 'Shane Baz', 106, 3.80], ['bradish', 'Kyle Bradish', 108, 3.70], ['povich', 'Cade Povich', 97, 4.35], ['young', 'Brandon Young', 94, 4.60]],
+        BOS: [['bello', 'Brayan Bello', 102, 4.05], ['bennett', 'Jake Bennett', 94, 4.55], ['early', 'Connelly Early', 95, 4.50], ['suarez', 'Ranger Suarez', 108, 3.65], ['tolle', 'Payton Tolle', 93, 4.65]],
+        CHC: [['assad', 'Javier Assad', 100, 4.20], ['boyd', 'Matthew Boyd', 101, 4.10], ['cabrera', 'Edward Cabrera', 102, 4.05], ['imanaga', 'Shota Imanaga', 110, 3.55], ['rea', 'Colin Rea', 97, 4.35]],
+        CWS: [['burke', 'Sean Burke', 96, 4.45], ['fedde', 'Erick Fedde', 101, 4.10], ['kay', 'Anthony Kay', 92, 4.75], ['martin', 'Davis Martin', 94, 4.60], ['schultz', 'Noah Schultz', 98, 4.30]],
+        CIN: [['abbott', 'Andrew Abbott', 103, 4.00], ['burns', 'Chase Burns', 101, 4.10], ['lowder', 'Rhett Lowder', 98, 4.30], ['petty', 'Chase Petty', 94, 4.60], ['singer', 'Brady Singer', 100, 4.20]],
+        CLE: [['bibee', 'Tanner Bibee', 108, 3.65], ['cantillo', 'Joey Cantillo', 96, 4.45], ['cecconi', 'Slade Cecconi', 95, 4.50], ['messick', 'Parker Messick', 97, 4.35], ['williams', 'Gavin Williams', 104, 3.95]],
+        COL: [['dollander', 'Chase Dollander', 99, 4.25], ['freeland', 'Kyle Freeland', 96, 4.45], ['lorenzen', 'Michael Lorenzen', 97, 4.35], ['quintana', 'Jose Quintana', 98, 4.30], ['sugano', 'Tomoyuki Sugano', 100, 4.20]],
+        DET: [['flaherty', 'Jack Flaherty', 108, 3.65], ['madden', 'Ty Madden', 96, 4.45], ['montero', 'Keider Montero', 95, 4.50], ['valdez', 'Framber Valdez', 112, 3.45], ['anderson', 'Drew Anderson', 92, 4.75]],
+        HOU: [['arrighetti', 'Spencer Arrighetti', 99, 4.25], ['bolton', 'Cody Bolton', 92, 4.75], ['burrows', 'Mike Burrows', 94, 4.60], ['lambert', 'Peter Lambert', 93, 4.65], ['mccullers', 'Lance McCullers Jr.', 102, 4.05]],
+        KC: [['bubic', 'Kris Bubic', 101, 4.10], ['cameron', 'Noah Cameron', 97, 4.35], ['lugo', 'Seth Lugo', 109, 3.60], ['ragans', 'Cole Ragans', 113, 3.40], ['wacha', 'Michael Wacha', 103, 4.00]],
+        LAA: [['aldegheri', 'Sam Aldegheri', 94, 4.60], ['detmers', 'Reid Detmers', 100, 4.20], ['farris', 'Mitch Farris', 92, 4.75], ['kochanowicz', 'Jack Kochanowicz', 96, 4.45], ['soriano', 'Jose Soriano', 101, 4.10]],
+        LAD: [['glasnow', 'Tyler Glasnow', 113, 3.40], ['sasaki', 'Roki Sasaki', 112, 3.45], ['sheehan', 'Emmet Sheehan', 101, 4.10], ['wrobleski', 'Justin Wrobleski', 96, 4.45], ['yamamoto', 'Yoshinobu Yamamoto', 114, 3.35]],
+        MIA: [['alcantara', 'Sandy Alcantara', 110, 3.55], ['junk', 'Janson Junk', 94, 4.60], ['meyer', 'Max Meyer', 101, 4.10], ['paddack', 'Chris Paddack', 98, 4.30], ['perez', 'Eury Perez', 107, 3.70]],
+        MIL: [['drohan', 'Shane Drohan', 94, 4.60], ['harrison', 'Kyle Harrison', 99, 4.25], ['henderson', 'Logan Henderson', 97, 4.35], ['misiorowski', 'Jacob Misiorowski', 104, 3.95], ['patrick', 'Chad Patrick', 96, 4.45]],
+        MIN: [['bradley', 'Taj Bradley', 101, 4.10], ['klein', 'John Klein', 92, 4.75], ['ober', 'Bailey Ober', 105, 3.90], ['prielipp', 'Connor Prielipp', 94, 4.60], ['ryan', 'Joe Ryan', 108, 3.65]],
+        NYM: [['holmes', 'Clay Holmes', 101, 4.10], ['mclean', 'Nolan McLean', 98, 4.30], ['peralta', 'Freddy Peralta', 109, 3.60], ['peterson', 'David Peterson', 103, 4.00], ['scott', 'Christian Scott', 99, 4.25]],
+        NYY: [['fried', 'Max Fried', 114, 3.35], ['rodriguez', 'Elmer Rodriguez', 94, 4.60], ['schlittler', 'Cam Schlittler', 96, 4.45], ['warren', 'Will Warren', 97, 4.35], ['weathers', 'Ryan Weathers', 99, 4.25]],
+        ATH: [['civale', 'Aaron Civale', 100, 4.20], ['ginn', 'J.T. Ginn', 95, 4.50], ['lopez', 'Jacob Lopez', 97, 4.35], ['severino', 'Luis Severino', 103, 4.00], ['springs', 'Jeffrey Springs', 104, 3.95]],
+        PHI: [['luzardo', 'Jesus Luzardo', 107, 3.70], ['nola', 'Aaron Nola', 110, 3.55], ['painter', 'Andrew Painter', 103, 4.00], ['sanchez', 'Cristopher Sanchez', 109, 3.60], ['wheeler', 'Zack Wheeler', 116, 3.25]],
+        PIT: [['ashcraft', 'Braxton Ashcraft', 96, 4.45], ['chandler', 'Bubba Chandler', 99, 4.25], ['keller', 'Mitch Keller', 102, 4.05], ['mlodzinski', 'Carmen Mlodzinski', 94, 4.60], ['skenes', 'Paul Skenes', 118, 3.15]],
+        SD: [['buehler', 'Walker Buehler', 104, 3.95], ['canning', 'Griffin Canning', 98, 4.30], ['darvish', 'Yu Darvish', 106, 3.80], ['king', 'Michael King', 110, 3.55], ['vasquez', 'Randy Vasquez', 95, 4.50]],
+        SF: [['houser', 'Adrian Houser', 98, 4.30], ['mahle', 'Tyler Mahle', 102, 4.05], ['mcdonald', 'Trevor McDonald', 94, 4.60], ['ray', 'Robbie Ray', 104, 3.95], ['roupp', 'Landen Roupp', 96, 4.45]],
+        SEA: [['castillo', 'Luis Castillo', 110, 3.55], ['gilbert', 'Logan Gilbert', 111, 3.50], ['hancock', 'Emerson Hancock', 97, 4.35], ['kirby', 'George Kirby', 112, 3.45], ['woo', 'Bryan Woo', 108, 3.65]],
+        STL: [['leahy', 'Kyle Leahy', 94, 4.60], ['liberatore', 'Matthew Liberatore', 98, 4.30], ['may', 'Dustin May', 103, 4.00], ['mcgreevy', 'Michael McGreevy', 96, 4.45], ['pallante', 'Andre Pallante', 97, 4.35]],
+        TB: [['martinez', 'Nick Martinez', 101, 4.10], ['matz', 'Steven Matz', 98, 4.30], ['mcclanahan', 'Shane McClanahan', 114, 3.35], ['rasmussen', 'Drew Rasmussen', 108, 3.65], ['baker', 'Bryan Baker', 92, 4.75]],
+        TEX: [['degrom', 'Jacob deGrom', 118, 3.15], ['eovaldi', 'Nathan Eovaldi', 106, 3.80], ['gore', 'MacKenzie Gore', 105, 3.90], ['leiter', 'Jack Leiter', 98, 4.30], ['rocker', 'Kumar Rocker', 99, 4.25]],
+        TOR: [['cease', 'Dylan Cease', 110, 3.55], ['corbin', 'Patrick Corbin', 95, 4.50], ['gausman', 'Kevin Gausman', 109, 3.60], ['lauer', 'Eric Lauer', 96, 4.45], ['yesavage', 'Trey Yesavage', 98, 4.30]],
+        WSH: [['cavalli', 'Cade Cavalli', 97, 4.35], ['griffin', 'Foster Griffin', 94, 4.60], ['irvin', 'Jake Irvin', 100, 4.20], ['littell', 'Zack Littell', 98, 4.30], ['mikolas', 'Miles Mikolas', 99, 4.25]]
+    };
 
     var HISTORICAL_PITCHERS = {
         'classic-1927-nyy': [['hoyt', 'Waite Hoyt', 116, 2.63], ['pennock', 'Herb Pennock', 112, 3.00], ['ruether', 'Dutch Ruether', 101, 3.38]],
@@ -209,16 +234,18 @@
                 note: liveStarter.record || 'Listed by ESPN as probable'
             });
         }
-        var profileRows = liveStarter && liveStarter.name ? CURRENT_PITCHER_PROFILES.filter(function (row) { return row[0] !== 'ace'; }) : CURRENT_PITCHER_PROFILES;
-        profileRows.forEach(function (row) {
+        var rosterRows = (CURRENT_PITCHERS[team.abbreviation] || []).filter(function (row) {
+            return !liveStarter || !liveStarter.name || normalizeName(row[1]) !== normalizeName(liveStarter.name);
+        });
+        rosterRows.slice(0, liveStarter && liveStarter.name ? 4 : 5).forEach(function (row) {
             options.push({
                 id: pitcherId(side, team.id + '-' + row[0]),
                 name: row[1],
                 quality: row[2],
                 era: row[3],
-                source: row[4],
+                source: 'Team rotation option',
                 verified: false,
-                note: 'Manual simulator profile; not a real named starter'
+                note: 'Named pitcher option from ESPN roster snapshot; not confirmed official starter'
             });
         });
         return options;
@@ -260,7 +287,7 @@
         return '<button type="button" class="pitcher-choice' + (selected ? ' selected' : '') + '" data-pitcher-id="' + escapeHtml(pitcher.id) + '" aria-checked="' + (selected ? 'true' : 'false') + '" role="radio">' +
             '<span class="pitcher-radio-dot" aria-hidden="true"></span>' +
             '<span class="pitcher-detail"><strong>' + escapeHtml(pitcher.name) + '</strong>' +
-            '<span>' + escapeHtml(pitcher.verified ? 'Verified probable starter' : 'Modeled starter profile') + '</span>' +
+            '<span>' + escapeHtml(pitcher.verified ? 'Verified probable starter' : pitcher.source) + '</span>' +
             '<small>' + escapeHtml((pitcher.era != null ? 'Model ERA ' + pitcher.era + ' / ' : '') + 'Rating ' + Math.round(pitcher.quality)) + '</small>' +
             '<em>' + escapeHtml(pitcher.note || pitcher.source || 'Baseline simulator rating') + '</em></span>' +
             '</button>';
