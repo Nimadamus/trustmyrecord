@@ -30,13 +30,13 @@
             <div>
                 <p class="sim-kicker">Data Lab</p>
                 <h1>MLB Simulator</h1>
-                <p class="sim-subtitle">Build current-vs-current, classic-vs-classic, or cross-era MLB matchups and run a clearly labeled simulation estimate with a projected winner, score range, win probability, expected runs, explanation, and notes.</p>
+                <p class="sim-subtitle">Build current-team, classic-team, or mixed-era MLB matchups and run a clearly labeled simulation estimate with a projected winner, score range, win probability, expected runs, confidence, era context, explanation, and notes.</p>
             </div>
             <div class="sim-status-card" aria-live="polite">
                 <span class="sim-status-dot" aria-hidden="true"></span>
                 <div>
                     <strong id="simDataSourceTitle">Simulator dataset</strong>
-                    <span id="simDataSourceDetail">Loading current and classic teams...</span>
+                    <span id="simDataSourceDetail">Preparing baseline team library...</span>
                 </div>
             </div>
         </section>
@@ -49,10 +49,11 @@
                 </div>
 
                 <div class="sim-toggle three-up" role="group" aria-label="Matchup presets">
-                    <button id="currentModeButton" type="button" class="active" data-mode="current">Current vs Current</button>
-                    <button id="historicalModeButton" type="button" data-mode="historical">Classic vs Classic</button>
-                    <button id="mixedModeButton" type="button" data-mode="mixed">Current vs Classic</button>
+                    <button id="currentModeButton" type="button" class="active" data-mode="current">Current Teams</button>
+                    <button id="historicalModeButton" type="button" data-mode="historical">Classic Teams</button>
+                    <button id="mixedModeButton" type="button" data-mode="mixed">Mixed Era Matchup</button>
                 </div>
+                <p id="modeHelpText" class="sim-mode-help">Current Teams mode compares two modern MLB baseline profiles.</p>
 
                 <div class="team-picker-grid">
                     <article class="team-picker-card">
@@ -67,7 +68,7 @@
                         <label class="sim-field">
                             <span>Away team</span>
                             <select id="awayTeamSelect" class="sim-select">
-                                <option value="">Loading local teams...</option>
+                                <option value="">Preparing team list...</option>
                             </select>
                         </label>
                         <div id="awayTeamMeta" class="team-meta">No team selected</div>
@@ -85,7 +86,7 @@
                         <label class="sim-field">
                             <span>Home team</span>
                             <select id="homeTeamSelect" class="sim-select">
-                                <option value="">Loading local teams...</option>
+                                <option value="">Preparing team list...</option>
                             </select>
                         </label>
                         <div id="homeTeamMeta" class="team-meta">No team selected</div>
@@ -97,7 +98,7 @@
                     <button id="refreshTeamsButton" class="sim-button secondary" type="button">Reset</button>
                 </div>
                 <div id="simBoardMessage" class="sim-message" role="status">Local simulator baselines are ready even when provider data is unavailable.</div>
-                <p class="sim-explainer">Limitations: this is a simulation experience using internal baseline ratings for offense, run prevention, starting pitching, bullpen, home field, and volatility. It is not live verified SportsDataIO, does not include injuries or confirmed lineups, does not load sportsbook odds, does not create betting edges, and does not affect official picks or records.</p>
+                <p class="sim-explainer">This simulator uses internal baseline team ratings and historical context. It is not using live rosters, injuries, starters, weather, sportsbook odds, or verified betting edges yet.</p>
             </section>
 
             <section class="sim-panel sim-score-panel" aria-label="Simulation results">
@@ -164,7 +165,11 @@
                     </div>
                     <div>
                         <span id="simulationConfidenceValue" class="projection-value muted">--</span>
-                        <small>Simulation Notes</small>
+                        <small>Confidence Label</small>
+                    </div>
+                    <div>
+                        <span id="eraAdjustmentValue" class="projection-value muted">--</span>
+                        <small>Era Adjustment</small>
                     </div>
                 </div>
 
@@ -200,13 +205,13 @@
                     <h2>Inputs & Notes</h2>
                 </div>
                 <div id="inputSummary" class="input-summary">
-                    <div><strong>SportsDataIO</strong><span>Not connected for custom simulation</span></div>
-                    <div><strong>Sportsbook odds</strong><span>Not used</span></div>
-                    <div><strong>Confidence</strong><span>Unavailable without real inputs</span></div>
+                    <div><strong>Baseline data</strong><span>Internal team ratings and historical context</span></div>
+                    <div><strong>Live inputs</strong><span>Rosters, injuries, starters, weather, and odds not connected</span></div>
+                    <div><strong>Verified edges</strong><span>Not claimed by this simulator</span></div>
                     <div><strong>Official records</strong><span>Excluded</span></div>
                 </div>
                 <ul id="matchupNotes" class="matchup-notes">
-                    <li>Curated simulator data is clearly labeled and separate from provider-backed projections.</li>
+                    <li>Select a mode and matchup to generate a baseline simulation. No sportsbook board is required.</li>
                 </ul>
             </section>
         </section>
