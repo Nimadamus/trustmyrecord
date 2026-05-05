@@ -16,7 +16,7 @@ const html = fs.readFileSync(pagePath, 'utf8');
 const script = fs.readFileSync(scriptPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
-assert(/\/static\/js\/mlb-simulator\.js\?v=20260505-named-starters/.test(html), 'live page uses versioned simulator script');
+assert(/\/static\/js\/mlb-simulator\.js\?v=20260505-starter-dropdowns/.test(html), 'live page uses versioned simulator script');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
 assert(/awayPitcherOptions/.test(html), 'Team A visible pitcher options are present');
@@ -235,27 +235,28 @@ function choose(elements, awayLabel, homeLabel) {
 }
 
 function choosePitchers(elements, awayLabel, homeLabel) {
-  const awayId = pitcherChoiceId(elements.awayPitcherOptions.innerHTML, awayLabel);
-  const homeId = pitcherChoiceId(elements.homePitcherOptions.innerHTML, homeLabel);
-  elements.awayPitcherOptions.listeners.click({ target: pitcherClickTarget(awayId) });
-  elements.homePitcherOptions.listeners.click({ target: pitcherClickTarget(homeId) });
+  const awayId = pitcherOptionId(elements.awayPitcherOptions.innerHTML, awayLabel);
+  const homeId = pitcherOptionId(elements.homePitcherOptions.innerHTML, homeLabel);
+  elements.awayPitcherOptions.listeners.change({ target: pitcherSelectTarget('away', awayId) });
+  elements.homePitcherOptions.listeners.change({ target: pitcherSelectTarget('home', homeId) });
 }
 
-function pitcherChoiceId(html, label) {
+function pitcherOptionId(html, label) {
   const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const cards = html.match(/<button[\s\S]*?<\/button>/g) || [];
-  const card = cards.filter((item) => new RegExp('<strong>' + escaped + '</strong>').test(item))[0];
-  assert(card, 'pitcher option exists: ' + label);
-  const match = card.match(/data-pitcher-id="([^"]+)"/);
+  const options = html.match(/<option[\s\S]*?<\/option>/g) || [];
+  const option = options.filter((item) => new RegExp('>' + escaped + ', ERA ').test(item))[0];
+  assert(option, 'pitcher option exists: ' + label);
+  const match = option.match(/value="([^"]+)"/);
   assert(match, 'pitcher option id exists: ' + label);
   return match[1];
 }
 
-function pitcherClickTarget(id) {
+function pitcherSelectTarget(side, id) {
   return {
+    value: id,
     closest(selector) {
-      if (selector !== '[data-pitcher-id]') return null;
-      return { getAttribute(name) { return name === 'data-pitcher-id' ? id : null; } };
+      if (selector !== '[data-pitcher-side="' + side + '"]') return null;
+      return { value: id };
     },
   };
 }
@@ -288,14 +289,15 @@ async function flushAsync() {
     assert(pitchers.every((pitcher) => /^[A-Z][A-Za-z'. -]+$/.test(pitcher.name)), team.name + ' historical starter options are actual names');
     assert(!/baseline ace|baseline starter|depth starter|era-average starter|staff game|Ace profile|Above average starter|League average starter|Back end starter|Bullpen game/.test(pitchers.map((pitcher) => pitcher.name).join('|')), team.name + ' has no fallback starter labels');
   });
-  assert.strictEqual((elements.awayPitcherOptions.innerHTML.match(/class="pitcher-choice/g) || []).length, 5, 'Team A shows five visible pitcher options');
-  assert.strictEqual((elements.homePitcherOptions.innerHTML.match(/class="pitcher-choice/g) || []).length, 5, 'Team B shows five visible pitcher options');
+  assert.strictEqual((elements.awayPitcherOptions.innerHTML.match(/<option value=/g) || []).length, 5, 'Team A dropdown shows five pitcher options');
+  assert.strictEqual((elements.homePitcherOptions.innerHTML.match(/<option value=/g) || []).length, 5, 'Team B dropdown shows five pitcher options');
   assert(/Zac Gallen/.test(elements.awayPitcherOptions.innerHTML), 'current Team A renders real named pitcher options');
   assert(/Bryce Elder/.test(elements.homePitcherOptions.innerHTML), 'current Team B renders real named pitcher options');
-  assert(/Starter list selection/.test(elements.homePitcherOptions.innerHTML), 'current starter options are labeled as starter selections');
-  assert(/Starter list is for simulation selection and may not reflect today&#39;s confirmed starter/.test(elements.homePitcherOptions.innerHTML), 'current starter options include non-confirmed-starter note');
+  assert(/Zac Gallen, ERA 3.45, W-L N\/A/.test(elements.awayPitcherOptions.innerHTML), 'current dropdown option includes name, ERA, and W-L fallback');
+  assert(/Starter list is for simulation selection and may not reflect today's confirmed starter/.test(elements.homePitcherMeta.textContent), 'current starter area includes one non-confirmed-starter note');
   assert(!/Ace profile|Above average starter|League average starter|Back end starter|Bullpen game/.test(elements.awayPitcherOptions.innerHTML + elements.homePitcherOptions.innerHTML), 'current mode does not render generic starter profiles');
   assert(!/Team rotation option/.test(elements.awayPitcherOptions.innerHTML + elements.homePitcherOptions.innerHTML), 'current selector does not use vague team-rotation wording');
+  assert(!/Rating|Starter list selection|Historical simulator input/.test(elements.awayPitcherOptions.innerHTML + elements.homePitcherOptions.innerHTML), 'dropdown avoids extra rating/source clutter');
   assert.strictEqual(elements.dataModeBadge.textContent, 'Baseline ratings', 'baseline data mode is explicit by default');
   assert(/Verified live inputs are unavailable/.test(elements.dataModeDetail.textContent), 'live input unavailability is explicit');
   assert(/baseline team and starter profiles/.test(elements.liveInputGrid.innerHTML), 'data notes give one compact fallback message');
@@ -324,9 +326,9 @@ async function flushAsync() {
   assert(/1927 New York Yankees/.test(elements.awayTeamSelect.innerHTML), 'historical teams render after tab switch');
   assert(/2023 Texas Rangers/.test(elements.homeTeamSelect.innerHTML), 'full historical list is present');
   assert(/Waite Hoyt/.test(elements.awayPitcherOptions.innerHTML), 'historical pitcher options render');
-  assert.strictEqual((elements.awayPitcherOptions.innerHTML.match(/class="pitcher-choice/g) || []).length, 5, 'historical Team A shows five visible pitcher options');
-  assert.strictEqual((elements.homePitcherOptions.innerHTML.match(/class="pitcher-choice/g) || []).length, 5, 'historical Team B shows five visible pitcher options');
-  assert(/Historical simulator input/.test(elements.awayPitcherMeta.textContent), 'historical pitcher meta labels modeled source');
+  assert.strictEqual((elements.awayPitcherOptions.innerHTML.match(/<option value=/g) || []).length, 5, 'historical Team A dropdown shows five pitcher options');
+  assert.strictEqual((elements.homePitcherOptions.innerHTML.match(/<option value=/g) || []).length, 5, 'historical Team B dropdown shows five pitcher options');
+  assert(/Waite Hoyt, ERA 2.63, W-L N\/A/.test(elements.awayPitcherOptions.innerHTML), 'historical dropdown option includes name, ERA, and W-L fallback');
   simulator.runSimulation();
   assert(/Classic baseline/.test(elements.simulationModeValue.textContent), 'classic matchup reports classic simulation mode');
   assert(/Waite Hoyt|Red Ruffing/.test(elements.matchupNotes.innerHTML), 'classic output includes historical starter names');
@@ -336,8 +338,8 @@ async function flushAsync() {
   assert.strictEqual(elements.homePoolSelect.value, 'historical', 'mixed mode sets Team B historical');
   assert(/Zac Gallen/.test(elements.awayPitcherOptions.innerHTML), 'mixed mode current pitcher options render');
   assert(/Red Ruffing/.test(elements.homePitcherOptions.innerHTML), 'mixed mode historical pitcher options render');
-  assert.strictEqual((elements.awayPitcherOptions.innerHTML.match(/class="pitcher-choice/g) || []).length, 5, 'mixed Team A shows five visible pitcher options');
-  assert.strictEqual((elements.homePitcherOptions.innerHTML.match(/class="pitcher-choice/g) || []).length, 5, 'mixed Team B shows five visible pitcher options');
+  assert.strictEqual((elements.awayPitcherOptions.innerHTML.match(/<option value=/g) || []).length, 5, 'mixed Team A dropdown shows five pitcher options');
+  assert.strictEqual((elements.homePitcherOptions.innerHTML.match(/<option value=/g) || []).length, 5, 'mixed Team B dropdown shows five pitcher options');
   simulator.runSimulation();
   assert.strictEqual(elements.projectionShell.getAttribute('data-projection-state'), 'projected', 'mixed matchup can run simulation');
   assert(/Mixed-era baseline/.test(elements.simulationModeValue.textContent), 'mixed matchup reports mixed-era simulation mode');
@@ -346,10 +348,10 @@ async function flushAsync() {
   const live = createSimulator('available');
   await live.simulator.loadLiveContext();
   choose(live.elements, 'Texas Rangers', 'New York Yankees');
-  assert.strictEqual((live.elements.awayPitcherOptions.innerHTML.match(/class="pitcher-choice/g) || []).length, 5, 'live Team A shows five visible pitcher options');
-  assert.strictEqual((live.elements.homePitcherOptions.innerHTML.match(/class="pitcher-choice/g) || []).length, 5, 'live Team B shows five visible pitcher options');
-  assert(/Jacob deGrom/.test(live.elements.awayPitcherOptions.innerHTML) && /Verified probable starter/.test(live.elements.awayPitcherOptions.innerHTML), 'live probable away starter appears as a selectable verified pitcher');
-  assert(/Gerrit Cole/.test(live.elements.homePitcherOptions.innerHTML) && /Verified probable starter/.test(live.elements.homePitcherOptions.innerHTML), 'live probable home starter appears as a selectable verified pitcher');
+  assert.strictEqual((live.elements.awayPitcherOptions.innerHTML.match(/<option value=/g) || []).length, 5, 'live Team A dropdown shows five pitcher options');
+  assert.strictEqual((live.elements.homePitcherOptions.innerHTML.match(/<option value=/g) || []).length, 5, 'live Team B dropdown shows five pitcher options');
+  assert(/Jacob deGrom, ERA 3.2, W-L 2-1/.test(live.elements.awayPitcherOptions.innerHTML), 'live probable away starter appears as a selectable dropdown option');
+  assert(/Gerrit Cole, ERA 2.88, W-L 3-1/.test(live.elements.homePitcherOptions.innerHTML), 'live probable home starter appears as a selectable dropdown option');
   live.simulator.runSimulation();
   assert.strictEqual(live.elements.dataModeBadge.textContent, 'Verified live inputs', 'live path switches data mode');
   assert.strictEqual(live.elements.dataModeValue.textContent, 'Verified live inputs', 'live output states verified data mode');
