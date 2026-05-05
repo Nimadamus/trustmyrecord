@@ -1,445 +1,342 @@
 (function () {
     'use strict';
 
-    var SPORT_KEY = 'baseball_mlb';
+    var CURRENT_TEAMS = [
+        ['current-ari', 'Arizona Diamondbacks', 'ARI', 'NL', 'West', 102, 99, 98, 98, 1.03],
+        ['current-atl', 'Atlanta Braves', 'ATL', 'NL', 'East', 108, 103, 104, 101, 1.05],
+        ['current-bal', 'Baltimore Orioles', 'BAL', 'AL', 'East', 106, 101, 100, 100, 1.04],
+        ['current-bos', 'Boston Red Sox', 'BOS', 'AL', 'East', 101, 97, 96, 97, 1.06],
+        ['current-chc', 'Chicago Cubs', 'CHC', 'NL', 'Central', 101, 100, 99, 100, 1.01],
+        ['current-cws', 'Chicago White Sox', 'CWS', 'AL', 'Central', 90, 88, 89, 88, 1.08],
+        ['current-cin', 'Cincinnati Reds', 'CIN', 'NL', 'Central', 100, 96, 96, 97, 1.07],
+        ['current-cle', 'Cleveland Guardians', 'CLE', 'AL', 'Central', 99, 104, 102, 106, 0.96],
+        ['current-col', 'Colorado Rockies', 'COL', 'NL', 'West', 94, 87, 87, 89, 1.14],
+        ['current-det', 'Detroit Tigers', 'DET', 'AL', 'Central', 99, 102, 103, 100, 0.99],
+        ['current-hou', 'Houston Astros', 'HOU', 'AL', 'West', 104, 101, 100, 101, 1.01],
+        ['current-kc', 'Kansas City Royals', 'KC', 'AL', 'Central', 100, 103, 103, 100, 0.98],
+        ['current-laa', 'Los Angeles Angels', 'LAA', 'AL', 'West', 96, 92, 92, 92, 1.07],
+        ['current-lad', 'Los Angeles Dodgers', 'LAD', 'NL', 'West', 114, 107, 106, 105, 1.03],
+        ['current-mia', 'Miami Marlins', 'MIA', 'NL', 'East', 89, 90, 91, 90, 1.05],
+        ['current-mil', 'Milwaukee Brewers', 'MIL', 'NL', 'Central', 101, 104, 102, 105, 0.97],
+        ['current-min', 'Minnesota Twins', 'MIN', 'AL', 'Central', 101, 100, 100, 100, 1.02],
+        ['current-nym', 'New York Mets', 'NYM', 'NL', 'East', 103, 100, 99, 101, 1.03],
+        ['current-nyy', 'New York Yankees', 'NYY', 'AL', 'East', 109, 104, 103, 104, 1.02],
+        ['current-ath', 'Athletics', 'ATH', 'AL', 'West', 94, 91, 91, 91, 1.08],
+        ['current-phi', 'Philadelphia Phillies', 'PHI', 'NL', 'East', 107, 105, 106, 102, 1.01],
+        ['current-pit', 'Pittsburgh Pirates', 'PIT', 'NL', 'Central', 94, 97, 99, 95, 1.04],
+        ['current-sd', 'San Diego Padres', 'SD', 'NL', 'West', 103, 101, 101, 100, 1.02],
+        ['current-sf', 'San Francisco Giants', 'SF', 'NL', 'West', 98, 99, 99, 99, 1.00],
+        ['current-sea', 'Seattle Mariners', 'SEA', 'AL', 'West', 98, 106, 107, 103, 0.98],
+        ['current-stl', 'St. Louis Cardinals', 'STL', 'NL', 'Central', 99, 98, 97, 99, 1.01],
+        ['current-tb', 'Tampa Bay Rays', 'TB', 'AL', 'East', 100, 102, 101, 103, 0.98],
+        ['current-tex', 'Texas Rangers', 'TEX', 'AL', 'West', 104, 98, 97, 98, 1.06],
+        ['current-tor', 'Toronto Blue Jays', 'TOR', 'AL', 'East', 101, 101, 101, 100, 1.00],
+        ['current-wsh', 'Washington Nationals', 'WSH', 'NL', 'East', 93, 92, 92, 92, 1.06]
+    ];
+
+    var HISTORICAL_TEAMS = [
+        ['classic-1927-nyy', '1927 New York Yankees', 'NYY', 1927, 124, 112, 110, 101, 1.08],
+        ['classic-1939-nyy', '1939 New York Yankees', 'NYY', 1939, 121, 118, 114, 106, 1.00],
+        ['classic-1955-bkn', '1955 Brooklyn Dodgers', 'BKN', 1955, 113, 105, 103, 104, 1.04],
+        ['classic-1961-nyy', '1961 New York Yankees', 'NYY', 1961, 118, 109, 107, 104, 1.07],
+        ['classic-1969-nym', '1969 New York Mets', 'NYM', 1969, 100, 114, 116, 107, 0.94],
+        ['classic-1975-cin', '1975 Cincinnati Reds', 'CIN', 1975, 115, 106, 103, 105, 0.98],
+        ['classic-1984-det', '1984 Detroit Tigers', 'DET', 1984, 112, 111, 108, 110, 0.97],
+        ['classic-1986-nym', '1986 New York Mets', 'NYM', 1986, 110, 112, 111, 106, 0.97],
+        ['classic-1988-lad', '1988 Los Angeles Dodgers', 'LAD', 1988, 99, 112, 113, 108, 0.95],
+        ['classic-1995-atl', '1995 Atlanta Braves', 'ATL', 1995, 104, 116, 119, 107, 0.93],
+        ['classic-1998-nyy', '1998 New York Yankees', 'NYY', 1998, 113, 113, 110, 111, 0.95],
+        ['classic-2001-sea', '2001 Seattle Mariners', 'SEA', 2001, 112, 110, 106, 111, 0.96],
+        ['classic-2004-bos', '2004 Boston Red Sox', 'BOS', 2004, 114, 104, 103, 106, 1.04],
+        ['classic-2016-chc', '2016 Chicago Cubs', 'CHC', 2016, 108, 114, 113, 108, 0.96],
+        ['classic-2017-hou', '2017 Houston Astros', 'HOU', 2017, 116, 108, 107, 106, 1.02],
+        ['classic-2019-wsh', '2019 Washington Nationals', 'WSH', 2019, 108, 105, 109, 100, 1.05],
+        ['classic-2020-lad', '2020 Los Angeles Dodgers', 'LAD', 2020, 116, 112, 110, 110, 0.98],
+        ['classic-2021-atl', '2021 Atlanta Braves', 'ATL', 2021, 106, 103, 104, 104, 1.04],
+        ['classic-2022-hou', '2022 Houston Astros', 'HOU', 2022, 109, 114, 113, 112, 0.95],
+        ['classic-2023-tex', '2023 Texas Rangers', 'TEX', 2023, 115, 101, 102, 99, 1.08]
+    ];
+
+    function makeCurrent(row) {
+        return {
+            id: row[0], era: 'current', name: row[1], abbreviation: row[2], league: row[3], division: row[4],
+            offense: row[5], runPrevention: row[6], startingPitching: row[7], bullpen: row[8], volatility: row[9]
+        };
+    }
+
+    function makeHistorical(row) {
+        return {
+            id: row[0], era: 'historical', name: row[1], abbreviation: row[2], season: row[3], league: 'Classic', division: 'Curated',
+            offense: row[4], runPrevention: row[5], startingPitching: row[6], bullpen: row[7], volatility: row[8]
+        };
+    }
+
+    var LOCAL_TEAMS = {
+        current: CURRENT_TEAMS.map(makeCurrent),
+        historical: HISTORICAL_TEAMS.map(makeHistorical)
+    };
+
     var state = {
-        games: [],
-        selectedGameId: '',
-        loading: false,
-        projectionLoading: false,
-        projectionError: '',
-        projectionByGameId: {}
-    };
-    var projectionRequestId = 0;
-
-    var MARKET_LABELS = {
-        h2h: 'Moneyline',
-        spreads: 'Run Line',
-        totals: 'Game Total',
-        team_totals: 'Team Totals',
-        f5_h2h: 'First 5 Moneyline',
-        f5_spreads: 'First 5 Run Line',
-        f5_totals: 'First 5 Total',
-        alt_spreads: 'Alt Run Lines',
-        alt_totals: 'Alt Totals'
+        mode: 'current',
+        teams: LOCAL_TEAMS,
+        awayTeamId: LOCAL_TEAMS.current[0].id,
+        homeTeamId: LOCAL_TEAMS.current[1].id,
+        simulation: null
     };
 
-    var GROUP_PRIORITY = ['full_game', 'spread', 'total', 'team_totals', 'first_5', 'alt_spreads', 'alt_totals'];
-
-    function byId(id) {
-        return document.getElementById(id);
-    }
-
+    function byId(id) { return document.getElementById(id); }
+    function clamp(value, min, max) { return Math.min(max, Math.max(min, value)); }
+    function round1(value) { return Math.round(value * 10) / 10; }
+    function roundPct(value) { return (value * 100).toFixed(1).replace(/\.0$/, '') + '%'; }
     function escapeHtml(value) {
-        return String(value == null ? '' : value)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
+        return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function setText(id, value) { var el = byId(id); if (el) el.textContent = value; }
+
+    function activeTeams() { return state.teams[state.mode] || []; }
+    function findTeam(id) { return activeTeams().filter(function (team) { return team.id === id; })[0] || null; }
+    function strength(team) {
+        return (team.offense * 0.38) + (team.runPrevention * 0.25) + (team.startingPitching * 0.22) + (team.bullpen * 0.15);
+    }
+    function edgeLabel(metric, away, home) {
+        var gap = away[metric] - home[metric];
+        if (Math.abs(gap) < 2.5) return 'Near even';
+        return (gap > 0 ? away.name : home.name) + ' +' + Math.abs(Math.round(gap));
+    }
+    function expectedRunsFor(offenseTeam, defenseTeam, homeBonus) {
+        var offenseLift = (offenseTeam.offense - 100) * 0.047;
+        var starterDrag = (100 - defenseTeam.startingPitching) * 0.029;
+        var bullpenDrag = (100 - defenseTeam.bullpen) * 0.019;
+        var preventionDrag = (100 - defenseTeam.runPrevention) * 0.021;
+        return clamp(4.3 + offenseLift + starterDrag + bullpenDrag + preventionDrag + homeBonus, 1.7, 9.2);
+    }
+    function volatilityLabel(value) {
+        if (value >= 1.07) return 'High';
+        if (value <= 0.97) return 'Low';
+        return 'Medium';
     }
 
-    function setText(id, value) {
-        var el = byId(id);
-        if (el) el.textContent = value;
+    function simulate(away, home) {
+        var awayRuns = expectedRunsFor(away, home, 0);
+        var homeRuns = expectedRunsFor(home, away, 0.18);
+        var awayStrength = strength(away);
+        var homeStrength = strength(home) + 1.7;
+        var homeWin = clamp(1 / (1 + Math.exp(-(((homeRuns - awayRuns) * 0.55) + ((homeStrength - awayStrength) * 0.027)))), 0.17, 0.83);
+        var awayWin = 1 - homeWin;
+        var winner = homeWin >= awayWin ? home : away;
+        var winnerPct = Math.max(homeWin, awayWin);
+        var volatility = clamp((away.volatility + home.volatility) / 2, 0.92, 1.16);
+        var spread = round1(1.1 * volatility);
+        var totalRuns = awayRuns + homeRuns;
+        return {
+            status: 'estimated',
+            away: away,
+            home: home,
+            winner: winner,
+            winnerPct: winnerPct,
+            awayWin: awayWin,
+            homeWin: homeWin,
+            awayRuns: round1(awayRuns),
+            homeRuns: round1(homeRuns),
+            awayRange: [round1(Math.max(0.5, awayRuns - spread)), round1(awayRuns + spread)],
+            homeRange: [round1(Math.max(0.5, homeRuns - spread)), round1(homeRuns + spread)],
+            totalRange: [round1(Math.max(2, totalRuns - spread * 1.35)), round1(totalRuns + spread * 1.35)],
+            runEnvironment: totalRuns >= 9.8 ? 'Elevated' : (totalRuns <= 7.4 ? 'Suppressed' : 'Balanced'),
+            volatility: volatilityLabel(volatility),
+            strengthGap: round1(Math.abs(homeStrength - awayStrength)),
+            offensiveEdge: edgeLabel('offense', away, home),
+            pitchingEdge: edgeLabel('startingPitching', away, home),
+            runPreventionEdge: edgeLabel('runPrevention', away, home),
+            bullpenEdge: edgeLabel('bullpen', away, home)
+        };
     }
 
-    function setMessage(text, kind) {
-        var el = byId('simBoardMessage');
-        if (!el) return;
-        el.textContent = text || '';
-        el.className = 'sim-message' + (kind ? ' ' + kind : '');
+    function teamOption(team) {
+        return '<option value="' + escapeHtml(team.id) + '">' + escapeHtml(team.name) + '</option>';
     }
 
-    function setProjectionValue(id, value, muted) {
-        var el = byId(id);
-        if (!el) return;
-        el.textContent = value || '--';
-        el.className = 'projection-value' + (muted ? ' muted' : '');
-    }
+    function renderSelectors() {
+        var teams = activeTeams();
+        if (!findTeam(state.awayTeamId)) state.awayTeamId = teams[0] ? teams[0].id : '';
+        if (!findTeam(state.homeTeamId)) state.homeTeamId = teams[1] ? teams[1].id : '';
+        if (state.awayTeamId === state.homeTeamId && teams.length > 1) state.homeTeamId = teams.filter(function (team) { return team.id !== state.awayTeamId; })[0].id;
 
-    function setProjectionState(stateName) {
-        var shell = byId('projectionShell');
-        if (shell) shell.setAttribute('data-projection-state', stateName || 'not-connected');
-    }
-
-    function formatDateTime(value) {
-        if (!value) return 'Game time unavailable';
-        var date = new Date(value);
-        if (Number.isNaN(date.getTime())) return 'Game time unavailable';
-        return date.toLocaleString([], {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit'
-        });
-    }
-
-    function formatLine(value, signed) {
-        if (value == null || value === '') return '';
-        var num = Number(value);
-        if (!Number.isFinite(num)) return String(value);
-        var text = String(num);
-        if (text.indexOf('.') !== -1) text = text.replace(/0+$/, '').replace(/\.$/, '');
-        return signed && num > 0 ? '+' + text : text;
-    }
-
-    function formatOdds(value) {
-        if (value == null || value === '') return '';
-        var num = Number(value);
-        if (!Number.isFinite(num)) return String(value);
-        return num > 0 ? '+' + num : String(num);
-    }
-
-    function formatProbability(value) {
-        if (value == null || value === '') return '';
-        var num = Number(value);
-        if (!Number.isFinite(num)) return '';
-        var pct = num <= 1 ? num * 100 : num;
-        return pct.toFixed(pct >= 10 ? 1 : 2).replace(/\.0$/, '') + '%';
-    }
-
-    function formatEdge(value) {
-        if (value == null || value === '') return '';
-        var num = Number(value);
-        if (!Number.isFinite(num)) return '';
-        var signed = num > 0 ? '+' : '';
-        return signed + num.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
-    }
-
-    function getSelectedGame() {
-        return state.games.find(function (game) {
-            return String(game.id) === String(state.selectedGameId);
-        }) || null;
-    }
-
-    function getMarketCount(game) {
-        return (game && Array.isArray(game.market_groups) ? game.market_groups : [])
-            .reduce(function (sum, group) {
-                return sum + (Array.isArray(group.items) ? group.items.length : 0);
-            }, 0);
-    }
-
-    function normalizeGroupLabel(group) {
-        if (!group) return 'Market';
-        if (group.label) return group.label;
-        var first = Array.isArray(group.items) ? group.items[0] : null;
-        return MARKET_LABELS[first && first.market_type] || group.key || 'Market';
-    }
-
-    function sortGroups(groups) {
-        return groups.slice().sort(function (a, b) {
-            var aRank = GROUP_PRIORITY.indexOf(a.key);
-            var bRank = GROUP_PRIORITY.indexOf(b.key);
-            if (aRank === -1) aRank = 999;
-            if (bRank === -1) bRank = 999;
-            return aRank - bRank;
-        });
-    }
-
-    function renderMatchupOptions() {
-        var select = byId('mlbMatchupSelect');
-        if (!select) return;
-
-        if (state.loading) {
-            select.disabled = true;
-            select.innerHTML = '<option value="">Loading MLB games...</option>';
-            return;
+        var awaySelect = byId('awayTeamSelect');
+        var homeSelect = byId('homeTeamSelect');
+        if (awaySelect) {
+            awaySelect.disabled = false;
+            awaySelect.innerHTML = teams.map(teamOption).join('');
+            awaySelect.value = state.awayTeamId;
+        }
+        if (homeSelect) {
+            homeSelect.disabled = false;
+            homeSelect.innerHTML = teams.map(teamOption).join('');
+            homeSelect.value = state.homeTeamId;
         }
 
-        if (!state.games.length) {
-            select.disabled = true;
-            select.innerHTML = '<option value="">No MLB matchups available</option>';
-            return;
-        }
+        var away = findTeam(state.awayTeamId);
+        var home = findTeam(state.homeTeamId);
+        setText('awayTeamMeta', away ? [away.abbreviation, away.league, away.division].join(' / ') : 'No team selected');
+        setText('homeTeamMeta', home ? [home.abbreviation, home.league, home.division].join(' / ') : 'No team selected');
+        setText('selectedMatchupTitle', away && home ? away.name + ' vs ' + home.name : 'Choose two teams');
+        setText('simDataSourceTitle', 'Local simulator baselines');
+        setText('simDataSourceDetail', 'Usable without SportsDataIO credentials. These are internal simulator baseline ratings, not sportsbook odds or provider projections.');
+        setText('simBoardMessage', 'Team vs Team Simulator ready: ' + teams.length + ' ' + (state.mode === 'historical' ? 'curated historical' : 'current MLB') + ' teams loaded.');
 
-        select.disabled = false;
-        select.innerHTML = state.games.map(function (game) {
-            var label = (game.away_team || 'Away') + ' at ' + (game.home_team || 'Home') + ' - ' + formatDateTime(game.commence_time);
-            return '<option value="' + escapeHtml(game.id) + '">' + escapeHtml(label) + '</option>';
-        }).join('');
-
-        if (!state.selectedGameId || !getSelectedGame()) {
-            state.selectedGameId = state.games[0].id;
-        }
-        select.value = state.selectedGameId;
+        var run = byId('runSimulationButton');
+        if (run) run.disabled = !(away && home && away.id !== home.id);
+        var current = byId('currentModeButton');
+        var historical = byId('historicalModeButton');
+        if (current) current.classList.toggle('active', state.mode === 'current');
+        if (historical) historical.classList.toggle('active', state.mode === 'historical');
     }
 
-    function renderMarketGroups(game) {
-        var container = byId('marketGroups');
+    function renderComparison(result) {
+        var container = byId('comparisonGrid');
         if (!container) return;
-
-        var groups = game && Array.isArray(game.market_groups) ? game.market_groups : [];
-        if (!game) {
-            container.innerHTML = '<div class="sim-empty">Select a matchup to view moneyline, run line, total, team total, and F5 availability.</div>';
+        if (!result) {
+            container.innerHTML = '<div class="sim-empty">Run a simulation to compare team strength, offense, pitching/run prevention, and volatility.</div>';
             return;
         }
-
-        if (!groups.length) {
-            container.innerHTML = '<div class="sim-empty">No sportsbook-backed market groups are available for this matchup yet. The simulator will not synthesize lines.</div>';
-            return;
-        }
-
-        container.innerHTML = sortGroups(groups).map(function (group) {
-            var items = Array.isArray(group.items) ? group.items : [];
-            if (!items.length) return '';
-            return [
-                '<section class="market-group">',
-                '<h3>' + escapeHtml(normalizeGroupLabel(group)) + '</h3>',
-                '<div class="market-card-grid">',
-                items.map(function (item) {
-                    var line = formatLine(item.line, true);
-                    var odds = formatOdds(item.odds);
-                    var detail = [
-                        line ? 'Line ' + line : '',
-                        odds ? 'Odds ' + odds : '',
-                        item.book_title || item.source_label || ''
-                    ].filter(Boolean).join(' | ');
-                    return [
-                        '<article class="market-card">',
-                        '<strong>' + escapeHtml(item.selection_label || item.selection || 'Market') + '</strong>',
-                        '<em>' + escapeHtml(MARKET_LABELS[item.market_type] || item.market_type || group.label || 'Market') + '</em>',
-                        '<small>' + escapeHtml(detail || 'Line pending') + '</small>',
-                        '</article>'
-                    ].join('');
-                }).join(''),
-                '</div>',
-                '</section>'
-            ].join('');
+        var rows = [
+            ['Overall Strength', Math.round(strength(result.away)), Math.round(strength(result.home))],
+            ['Offense', result.away.offense, result.home.offense],
+            ['Run Prevention', result.away.runPrevention, result.home.runPrevention],
+            ['Starting Pitching', result.away.startingPitching, result.home.startingPitching],
+            ['Bullpen', result.away.bullpen, result.home.bullpen],
+            ['Volatility', Math.round(result.away.volatility * 100), Math.round(result.home.volatility * 100)]
+        ];
+        container.innerHTML = rows.map(function (row) {
+            return '<article class="comparison-card"><h3>' + escapeHtml(row[0]) + '</h3>' +
+                '<div class="comparison-bar"><span style="width:' + clamp(row[1], 8, 100) + '%"></span><strong>' + row[1] + '</strong></div>' +
+                '<div class="comparison-bar home"><span style="width:' + clamp(row[2], 8, 100) + '%"></span><strong>' + row[2] + '</strong></div></article>';
         }).join('');
     }
 
-    function flattenMissingData(missing) {
-        if (!missing || typeof missing !== 'object') return [];
-        return Object.keys(missing).reduce(function (items, key) {
-            var value = missing[key];
-            if (Array.isArray(value)) {
-                value.forEach(function (item) {
-                    if (item) items.push(String(item).replace(/_/g, ' '));
-                });
-            }
-            return items;
-        }, []);
+    function renderInputStatus(result) {
+        var container = byId('inputSummary');
+        if (!container) return;
+        var rows = result ? [
+            ['Winner', result.winner.name + ' ' + roundPct(result.winnerPct)],
+            ['Run environment', result.runEnvironment + ' / ' + result.totalRange[0] + '-' + result.totalRange[1] + ' runs'],
+            ['Offensive edge', result.offensiveEdge],
+            ['Pitching edge', result.pitchingEdge],
+            ['Run prevention edge', result.runPreventionEdge],
+            ['Volatility', result.volatility],
+            ['SportsDataIO', 'Not used for this estimate'],
+            ['Sportsbook odds', 'Not used / not invented'],
+            ['Official records', 'Excluded from picks and records']
+        ] : [
+            ['Dataset', 'Internal simulator baselines'],
+            ['SportsDataIO', 'Optional provider data unavailable'],
+            ['Sportsbook odds', 'Not used / not invented'],
+            ['Official records', 'Excluded from picks and records']
+        ];
+        container.innerHTML = rows.map(function (row) {
+            return '<div><strong>' + escapeHtml(row[0]) + '</strong><span>' + escapeHtml(row[1]) + '</span></div>';
+        }).join('');
     }
 
-    function renderProjection() {
-        var game = getSelectedGame();
-        var notice = byId('projectionNotice');
-        if (!game) {
-            setProjectionState('not-connected');
-            setProjectionValue('projectedScoreValue', '--', true);
-            setProjectionValue('winProbabilityValue', '--', true);
-            setProjectionValue('confidenceEdgeValue', '--', true);
-            if (notice) notice.textContent = 'Select an MLB matchup to check backend projection readiness.';
-            return;
-        }
-
-        if (state.projectionLoading) {
-            setProjectionState('loading');
-            setProjectionValue('projectedScoreValue', '--', true);
-            setProjectionValue('winProbabilityValue', '--', true);
-            setProjectionValue('confidenceEdgeValue', '--', true);
-            if (notice) notice.textContent = 'Loading projection from the backend simulator...';
-            return;
-        }
-
-        if (state.projectionError) {
-            setProjectionState('error');
-            setProjectionValue('projectedScoreValue', '--', true);
-            setProjectionValue('winProbabilityValue', '--', true);
-            setProjectionValue('confidenceEdgeValue', '--', true);
-            if (notice) notice.textContent = 'Projection unavailable right now. ' + state.projectionError;
-            return;
-        }
-
-        var response = state.projectionByGameId[game.id];
-        var projection = response && response.projection ? response.projection : null;
-        if (!projection) {
-            setProjectionState('not-connected');
-            setProjectionValue('projectedScoreValue', '--', true);
-            setProjectionValue('winProbabilityValue', '--', true);
-            setProjectionValue('confidenceEdgeValue', '--', true);
-            if (notice) notice.textContent = 'Projection engine not connected yet. This page does not invent projected scores, win probabilities, injuries, odds, or model edges.';
-            return;
-        }
-
-        if (projection.status === 'projected') {
-            var score = projection.projected_score;
-            var scoreText = score && score.away != null && score.home != null
-                ? (game.away_team + ' ' + score.away + ' - ' + game.home_team + ' ' + score.home)
-                : '--';
-            var winProbability = projection.win_probability || {};
-            var awayProbability = formatProbability(winProbability.away);
-            var homeProbability = formatProbability(winProbability.home);
-            var probabilityText = awayProbability && homeProbability
-                ? (game.away_team + ' ' + awayProbability + ' / ' + game.home_team + ' ' + homeProbability)
-                : '--';
-            var confidence = projection.confidence_rating || {};
-            var confidenceText = confidence.label || '';
-            var edgeText = formatEdge(projection.edge_score);
-            var confidenceEdgeText = [confidenceText, edgeText ? 'Edge ' + edgeText : ''].filter(Boolean).join(' / ') || '--';
-
-            setProjectionState('projected');
-            setProjectionValue('projectedScoreValue', scoreText, scoreText === '--');
-            setProjectionValue('winProbabilityValue', probabilityText, probabilityText === '--');
-            setProjectionValue('confidenceEdgeValue', confidenceEdgeText, confidenceEdgeText === '--');
-            if (notice) notice.textContent = 'Projection generated from backend simulator inputs. Empty fields mean the backend did not return that value.';
-            return;
-        }
-
-        if (projection.status !== 'insufficient_data') {
-            setProjectionState('error');
-            setProjectionValue('projectedScoreValue', '--', true);
-            setProjectionValue('winProbabilityValue', '--', true);
-            setProjectionValue('confidenceEdgeValue', '--', true);
-            if (notice) notice.textContent = 'Projection unavailable right now. Backend returned an unsupported simulator payload.';
-            return;
-        }
-
-        var missing = flattenMissingData(projection.explanation && projection.explanation.missing_data);
-        setProjectionState('insufficient-data');
-        setProjectionValue('projectedScoreValue', '--', true);
-        setProjectionValue('winProbabilityValue', '--', true);
-        setProjectionValue('confidenceEdgeValue', '--', true);
-        if (notice) {
-            notice.textContent = missing.length
-                ? 'Backend cannot project this game yet. Missing inputs: ' + missing.join(', ') + '.'
-                : 'Backend cannot project this game yet because required real simulator inputs are unavailable.';
-        }
+    function renderNotes(result) {
+        var list = byId('matchupNotes');
+        if (!list) return;
+        var notes = result ? [
+            'Simulation-based estimate, not sportsbook odds or provider projection.',
+            result.winner.name + ' grades as the simulated winner because of baseline run expectation and team-strength weighting.',
+            'Average simulated score: ' + result.away.abbreviation + ' ' + result.awayRuns + ', ' + result.home.abbreviation + ' ' + result.homeRuns + '.',
+            'Projected score range: ' + result.away.abbreviation + ' ' + result.awayRange[0] + '-' + result.awayRange[1] + ', ' + result.home.abbreviation + ' ' + result.homeRange[0] + '-' + result.homeRange[1] + '.',
+            'The model uses local offense, run prevention, starting pitching, bullpen, home-field, and volatility baselines only.'
+        ] : [
+            'Choose two teams and run the simulator. Current and historical options are loaded locally, so failed provider data will not block this tool.',
+            'Simulator baselines are internal ratings. They are not SportsDataIO data, sportsbook odds, official picks, edges, or graded records.'
+        ];
+        list.innerHTML = notes.map(function (note) { return '<li>' + escapeHtml(note) + '</li>'; }).join('');
     }
 
-    function renderSelectedGame() {
-        var game = getSelectedGame();
-        setText('selectedMatchupTitle', game ? (game.away_team + ' at ' + game.home_team) : 'No matchup selected');
-        setText('awayTeamName', game ? game.away_team : '--');
-        setText('homeTeamName', game ? game.home_team : '--');
-        setText('gameTimeLabel', game ? formatDateTime(game.commence_time) : 'Game time unavailable');
-        var groupCount = game && Array.isArray(game.market_groups) ? game.market_groups.length : 0;
-        var marketCount = getMarketCount(game);
-        setText('marketCountLabel', groupCount + ' market groups / ' + marketCount + ' selections');
-        setText('boardInputStatus', game ? 'Connected to MLB market board' : 'No matchup selected');
-        renderMarketGroups(game);
-        renderProjection();
-    }
-
-    function updateBoardStatus(data) {
-        var summary = data && data.summary ? data.summary : {};
-        setText('simDataSourceTitle', 'Existing MLB market board');
-        setText('simDataSourceDetail', summary.message || 'Read-only /api/games/board/baseball_mlb data');
-    }
-
-    async function loadMlbBoard() {
-        state.loading = true;
-        renderMatchupOptions();
-        setMessage('Loading MLB board from TrustMyRecord market infrastructure...');
-        setText('boardInputStatus', 'Loading');
-
-        try {
-            if (!window.api || typeof window.api.getMarketBoard !== 'function') {
-                throw new Error('TrustMyRecord API client is not available on this page.');
-            }
-            if (window.api.ready) {
-                try { await window.api.ready; } catch (error) {}
-            }
-            var data = await window.api.getMarketBoard(SPORT_KEY);
-            state.games = Array.isArray(data && data.games) ? data.games : [];
-            state.selectedGameId = state.games.length ? state.games[0].id : '';
-            updateBoardStatus(data);
-            setMessage(state.games.length
-                ? 'Loaded ' + state.games.length + ' MLB matchup' + (state.games.length === 1 ? '' : 's') + '.'
-                : 'No upcoming MLB matchups are available from the existing board right now.');
-        } catch (error) {
-            state.games = [];
-            state.selectedGameId = '';
-            setText('simDataSourceDetail', 'Unable to load MLB board.');
-            setText('boardInputStatus', 'Unavailable');
-            setMessage(error && error.message ? error.message : 'Unable to load MLB board.', 'error');
-        } finally {
-            state.loading = false;
-            renderMatchupOptions();
-            renderSelectedGame();
-            if (state.selectedGameId) {
-                loadProjectionForSelectedGame();
-            }
-        }
-    }
-
-    async function loadProjectionForSelectedGame() {
-        var game = getSelectedGame();
-        var currentRequest = projectionRequestId + 1;
-        projectionRequestId = currentRequest;
-        state.projectionError = '';
-
-        if (!game || !game.id) {
-            state.projectionLoading = false;
-            renderProjection();
+    function renderResult(result) {
+        if (!result) {
+            var shell = byId('projectionShell');
+            if (shell) shell.setAttribute('data-projection-state', 'not-connected');
+            setText('projectedScoreValue', '--');
+            setText('winProbabilityValue', '--');
+            setText('expectedRunsValue', '--');
+            setText('awayProbabilityLabel', 'Team A');
+            setText('homeProbabilityLabel', 'Team B');
+            setText('awayProbabilityValue', '--');
+            setText('homeProbabilityValue', '--');
+            setText('projectionNotice', 'Simulation-based estimate mode is ready. Select two teams and click Run Simulation.');
+            renderComparison(null);
+            renderInputStatus(null);
+            renderNotes(null);
             return;
         }
+        var shellProjected = byId('projectionShell');
+        if (shellProjected) shellProjected.setAttribute('data-projection-state', 'projected');
+        setText('projectedScoreValue', result.away.abbreviation + ' ' + result.awayRange[0] + '-' + result.awayRange[1] + ' / ' + result.home.abbreviation + ' ' + result.homeRange[0] + '-' + result.homeRange[1]);
+        setText('winProbabilityValue', result.winner.abbreviation + ' ' + roundPct(result.winnerPct));
+        setText('expectedRunsValue', result.away.abbreviation + ' ' + result.awayRuns + ' / ' + result.home.abbreviation + ' ' + result.homeRuns);
+        setText('awayProbabilityLabel', result.away.name);
+        setText('homeProbabilityLabel', result.home.name);
+        setText('awayProbabilityValue', roundPct(result.awayWin));
+        setText('homeProbabilityValue', roundPct(result.homeWin));
+        var awayBar = byId('awayProbabilityBar');
+        var homeBar = byId('homeProbabilityBar');
+        if (awayBar) awayBar.style.width = clamp(result.awayWin * 100, 2, 98) + '%';
+        if (homeBar) homeBar.style.width = clamp(result.homeWin * 100, 2, 98) + '%';
+        setText('projectionNotice', 'Simulation-based estimate, not sportsbook odds or provider projection. No SportsDataIO data, betting edge, or official record is created.');
+        renderComparison(result);
+        renderInputStatus(result);
+        renderNotes(result);
+    }
 
-        state.projectionLoading = true;
-        renderProjection();
+    function switchMode(mode) {
+        state.mode = mode === 'historical' ? 'historical' : 'current';
+        state.awayTeamId = activeTeams()[0].id;
+        state.homeTeamId = activeTeams()[1].id;
+        state.simulation = null;
+        renderSelectors();
+        renderResult(null);
+    }
 
-        try {
-            if (!window.api || typeof window.api.request !== 'function') {
-                throw new Error('TrustMyRecord projection API client is not available.');
-            }
-            if (window.api.ready) {
-                try { await window.api.ready; } catch (error) {}
-            }
-            var response = await window.api.request('/mlb-simulator/mlb/projection/' + encodeURIComponent(game.id));
-            var projection = response && response.projection;
-            if (!projection || (projection.status !== 'projected' && projection.status !== 'insufficient_data')) {
-                throw new Error('Backend returned an unsupported simulator payload.');
-            }
-            if (projectionRequestId !== currentRequest) return;
-            state.projectionByGameId[game.id] = response;
-        } catch (error) {
-            if (projectionRequestId !== currentRequest) return;
-            state.projectionError = error && error.message ? error.message : 'Unable to load backend projection.';
-        } finally {
-            if (projectionRequestId === currentRequest) {
-                state.projectionLoading = false;
-                renderProjection();
-            }
+    function runSimulation() {
+        var away = findTeam(state.awayTeamId);
+        var home = findTeam(state.homeTeamId);
+        if (!away || !home || away.id === home.id) {
+            setText('projectionNotice', 'Select two different teams to run a simulation. No output was generated.');
+            return;
         }
+        state.simulation = simulate(away, home);
+        renderResult(state.simulation);
     }
 
     function wireEvents() {
-        var select = byId('mlbMatchupSelect');
-        if (select) {
-            select.addEventListener('change', function () {
-                state.selectedGameId = select.value;
-                renderSelectedGame();
-                loadProjectionForSelectedGame();
-            });
-        }
-
-        var refresh = byId('refreshMlbBoard');
-        if (refresh) {
-            refresh.addEventListener('click', loadMlbBoard);
-        }
+        var away = byId('awayTeamSelect');
+        var home = byId('homeTeamSelect');
+        var run = byId('runSimulationButton');
+        var refresh = byId('refreshTeamsButton');
+        var current = byId('currentModeButton');
+        var historical = byId('historicalModeButton');
+        if (away) away.addEventListener('change', function () { state.awayTeamId = away.value; state.simulation = null; renderSelectors(); renderResult(null); });
+        if (home) home.addEventListener('change', function () { state.homeTeamId = home.value; state.simulation = null; renderSelectors(); renderResult(null); });
+        if (run) run.addEventListener('click', runSimulation);
+        if (refresh) refresh.addEventListener('click', function () { renderSelectors(); renderResult(null); });
+        if (current) current.addEventListener('click', function () { switchMode('current'); });
+        if (historical) historical.addEventListener('click', function () { switchMode('historical'); });
     }
 
     function init() {
         wireEvents();
-        renderSelectedGame();
-        loadMlbBoard();
+        renderSelectors();
+        renderResult(null);
     }
 
     window.TMRMlbSimulator = {
-        SPORT_KEY: SPORT_KEY,
         state: state,
-        loadMlbBoard: loadMlbBoard,
-        loadProjectionForSelectedGame: loadProjectionForSelectedGame,
-        renderSelectedGame: renderSelectedGame,
-        renderMarketGroups: renderMarketGroups,
-        renderProjection: renderProjection
+        localTeams: LOCAL_TEAMS,
+        runSimulation: runSimulation,
+        simulate: simulate
     };
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
 })();

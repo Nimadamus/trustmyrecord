@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="canonical" href="https://trustmyrecord.com/mlb-simulator/">
     <title>MLB Simulator | TrustMyRecord</title>
-    <meta name="description" content="Select an MLB matchup and inspect sportsbook market context for a future TrustMyRecord projection engine.">
+    <meta name="description" content="Select current or classic MLB teams and run a clearly labeled TrustMyRecord simulator estimate.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -28,102 +28,124 @@
     <main class="sim-shell">
         <section class="sim-hero">
             <div>
-                <p class="sim-kicker">TrustMyRecord Tools</p>
+                <p class="sim-kicker">Data Lab</p>
                 <h1>MLB Simulator</h1>
-                <p class="sim-subtitle">Load the current MLB board, select a matchup, and review available betting market context. The projection engine is intentionally not showing numbers until a real model is connected.</p>
+                <p class="sim-subtitle">Pick two MLB teams, run a transparent simulation-based estimate, and see a simulated winner, score ranges, win percentage, expected runs, matchup notes, and baseline team comparisons. Provider-backed projections only appear when real SportsDataIO and market inputs are available.</p>
             </div>
             <div class="sim-status-card" aria-live="polite">
                 <span class="sim-status-dot" aria-hidden="true"></span>
                 <div>
-                    <strong id="simDataSourceTitle">MLB board</strong>
-                    <span id="simDataSourceDetail">Waiting for board data...</span>
+                    <strong id="simDataSourceTitle">Simulator dataset</strong>
+                    <span id="simDataSourceDetail">Loading current and classic teams...</span>
                 </div>
             </div>
         </section>
 
-        <section class="sim-grid" aria-label="MLB simulator workspace">
-            <aside class="sim-panel sim-selector-panel">
+        <section class="sim-workspace" aria-label="MLB simulator controls">
+            <section class="sim-panel sim-control-panel">
                 <div class="sim-panel-heading">
-                    <p class="sim-label">Matchup</p>
-                    <h2>Select Game</h2>
+                    <p class="sim-label">Matchup Builder</p>
+                    <h2>Team Selection</h2>
                 </div>
-                <label class="sim-field">
-                    <span>MLB slate</span>
-                    <select id="mlbMatchupSelect" class="sim-select" disabled>
-                        <option value="">Loading MLB games...</option>
-                    </select>
-                </label>
-                <button id="refreshMlbBoard" class="sim-button" type="button">Refresh Board</button>
-                <div id="simBoardMessage" class="sim-message" role="status">Loading sportsbook board...</div>
-            </aside>
 
-            <section class="sim-panel sim-matchup-card" aria-label="Selected matchup">
-                <div class="sim-panel-heading">
-                    <p class="sim-label">Teams</p>
-                    <h2 id="selectedMatchupTitle">No matchup selected</h2>
+                <div class="sim-toggle" role="group" aria-label="Team dataset">
+                    <button id="currentModeButton" type="button" class="active" data-mode="current">Current Teams</button>
+                    <button id="historicalModeButton" type="button" data-mode="historical">Classic Teams</button>
                 </div>
-                <div class="team-scoreboard">
-                    <article>
-                        <span>Away</span>
-                        <strong id="awayTeamName">--</strong>
+
+                <div class="team-picker-grid">
+                    <article class="team-picker-card">
+                        <span class="team-side">Team A</span>
+                        <label class="sim-field">
+                            <span>Away team</span>
+                            <select id="awayTeamSelect" class="sim-select">
+                                <option value="">Loading local teams...</option>
+                            </select>
+                        </label>
+                        <div id="awayTeamMeta" class="team-meta">No team selected</div>
                     </article>
-                    <div class="versus">at</div>
-                    <article>
-                        <span>Home</span>
-                        <strong id="homeTeamName">--</strong>
+
+                    <article class="team-picker-card">
+                        <span class="team-side">Team B</span>
+                        <label class="sim-field">
+                            <span>Home team</span>
+                            <select id="homeTeamSelect" class="sim-select">
+                                <option value="">Loading local teams...</option>
+                            </select>
+                        </label>
+                        <div id="homeTeamMeta" class="team-meta">No team selected</div>
                     </article>
                 </div>
-                <div class="sim-meta-row">
-                    <span id="gameTimeLabel">Game time unavailable</span>
-                    <span id="marketCountLabel">0 market groups</span>
+
+                <div class="sim-actions">
+                    <button id="runSimulationButton" class="sim-button primary" type="button">Run Simulation</button>
+                    <button id="refreshTeamsButton" class="sim-button secondary" type="button">Reset</button>
                 </div>
+                <div id="simBoardMessage" class="sim-message" role="status">Local simulator baselines are ready even when provider data is unavailable.</div>
+                <p class="sim-explainer">How it works: the simulator uses local baseline ratings for offense, run prevention, starting pitching, bullpen, home field, and volatility. These are internal simulator baselines, not SportsDataIO stats, sportsbook odds, official picks, or betting edges.</p>
             </section>
 
-            <section class="sim-panel sim-projection-panel" aria-label="Projection output">
-                <div class="sim-panel-heading">
-                    <p class="sim-label">Projection</p>
-                    <h2>Engine Status</h2>
+            <section class="sim-panel sim-score-panel" aria-label="Simulation results">
+                <div class="sim-panel-heading compact">
+                    <p class="sim-label">Output</p>
+                    <h2 id="selectedMatchupTitle">No matchup selected</h2>
                 </div>
+
                 <div id="projectionShell" class="projection-shell" data-projection-state="not-connected">
                     <div>
                         <span id="projectedScoreValue" class="projection-value muted">--</span>
-                        <small>Projected Score</small>
+                        <small>Projected Score Range</small>
                     </div>
                     <div>
                         <span id="winProbabilityValue" class="projection-value muted">--</span>
-                        <small>Win Probability</small>
+                        <small>Simulated Winner / Win %</small>
                     </div>
                     <div>
-                        <span id="confidenceEdgeValue" class="projection-value muted">--</span>
-                        <small>Confidence / Edge</small>
+                        <span id="expectedRunsValue" class="projection-value muted">--</span>
+                        <small>Expected Runs</small>
                     </div>
                 </div>
-                <p id="projectionNotice" class="sim-notice">Projection engine not connected yet. This page does not invent projected scores, win probabilities, injuries, odds, or model edges.</p>
+
+                <div class="probability-lab">
+                    <div class="probability-row">
+                        <span id="awayProbabilityLabel">Team A</span>
+                        <div class="probability-track"><span id="awayProbabilityBar" style="width: 50%"></span></div>
+                        <strong id="awayProbabilityValue">--</strong>
+                    </div>
+                    <div class="probability-row">
+                        <span id="homeProbabilityLabel">Team B</span>
+                        <div class="probability-track"><span id="homeProbabilityBar" style="width: 50%"></span></div>
+                        <strong id="homeProbabilityValue">--</strong>
+                    </div>
+                </div>
+
+                <p id="projectionNotice" class="sim-notice">Select two teams and run the simulator. Outputs here are never counted as official picks or user records.</p>
             </section>
 
-            <section class="sim-panel sim-markets-panel" aria-label="Available market context">
-                <div class="sim-panel-heading">
-                    <p class="sim-label">Market Context</p>
-                    <h2>Available Lines</h2>
+            <section class="sim-panel sim-compare-panel" aria-label="Offensive and defensive comparison">
+                <div class="sim-panel-heading compact">
+                    <p class="sim-label">Comparison</p>
+                    <h2>Team Profile</h2>
                 </div>
-                <div id="marketGroups" class="market-groups">
-                    <div class="sim-empty">Select a matchup to view moneyline, run line, total, team total, and F5 availability.</div>
+                <div id="comparisonGrid" class="comparison-grid">
+                    <div class="sim-empty">Run a simulation to compare offense, run prevention, starting pitching, and bullpen baselines.</div>
                 </div>
             </section>
 
-            <section class="sim-panel sim-reasoning-panel" aria-label="Key inputs">
-                <div class="sim-panel-heading">
-                    <p class="sim-label">Inputs</p>
-                    <h2>Connected Data</h2>
+            <section class="sim-panel sim-notes-panel" aria-label="Key matchup notes">
+                <div class="sim-panel-heading compact">
+                    <p class="sim-label">Readout</p>
+                    <h2>Inputs & Notes</h2>
                 </div>
                 <div id="inputSummary" class="input-summary">
-                    <div><strong>Offense</strong><span>Not connected</span></div>
-                    <div><strong>Pitching</strong><span>Not connected</span></div>
-                    <div><strong>Bullpen</strong><span>Not connected</span></div>
-                    <div><strong>Recent form</strong><span>Not connected</span></div>
-                    <div><strong>Park/weather</strong><span>Not connected</span></div>
-                    <div><strong>Sportsbook board</strong><span id="boardInputStatus">Loading</span></div>
+                    <div><strong>SportsDataIO</strong><span>Not connected for custom simulation</span></div>
+                    <div><strong>Sportsbook odds</strong><span>Not used</span></div>
+                    <div><strong>Confidence</strong><span>Unavailable without real inputs</span></div>
+                    <div><strong>Official records</strong><span>Excluded</span></div>
                 </div>
+                <ul id="matchupNotes" class="matchup-notes">
+                    <li>Curated simulator data is clearly labeled and separate from provider-backed projections.</li>
+                </ul>
             </section>
         </section>
     </main>

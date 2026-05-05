@@ -16,14 +16,14 @@ const html = fs.readFileSync(pagePath, 'utf8');
 const script = fs.readFileSync(scriptPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
-assert(/\/static\/js\/backend-api\.js/.test(html), 'page loads shared API client');
-assert(/\/static\/js\/mlb-simulator\.js/.test(html), 'page loads simulator script');
-assert(/Projection engine not connected yet/.test(html), 'page clearly labels unconnected projection engine');
-assert(!/pending picks/i.test(html), 'page does not expose pending picks language');
+assert(/awayTeamSelect/.test(html), 'Team A selector is present');
+assert(/homeTeamSelect/.test(html), 'Team B selector is present');
+assert(/Run Simulation/.test(html), 'Run Simulation button is present');
+assert(/Current Teams/.test(html), 'current-team tab is present');
+assert(/Classic Teams/.test(html), 'historical-team tab is present');
+assert(/simulator baselines/i.test(html), 'baseline explanation is present');
+assert(!/Loading MLB games|Loading sportsbook board|Waiting for board data|Projection engine not connected yet/.test(html), 'old board-dependent placeholder text is removed');
 assert(!/lock pick|locked pick|submit pick/i.test(html), 'page does not expose sportsbook submission actions');
-assert(!/\b\d+\s*-\s*\d+\b/.test(html.replace(/2026|404/g, '')), 'page does not hard-code projected scores');
-assert(!/\b\d+(\.\d+)?%/.test(html), 'page does not hard-code win probability percentages');
-assert(/\/mlb-simulator\/mlb\/projection\//.test(script), 'client calls MLB simulator projection endpoint');
 
 function makeElement(id) {
   return {
@@ -35,6 +35,10 @@ function makeElement(id) {
     className: '',
     attributes: {},
     listeners: {},
+    style: {},
+    classList: {
+      toggle() {},
+    },
     addEventListener(type, fn) {
       this.listeners[type] = fn;
     },
@@ -47,210 +51,78 @@ function makeElement(id) {
   };
 }
 
-function makeContext(boardResponse, projectionHandler) {
-  const elements = {};
-  [
-    'mlbMatchupSelect',
-    'refreshMlbBoard',
-    'simBoardMessage',
-    'simDataSourceTitle',
-    'simDataSourceDetail',
-    'selectedMatchupTitle',
-    'awayTeamName',
-    'homeTeamName',
-    'gameTimeLabel',
-    'marketCountLabel',
-    'marketGroups',
-    'boardInputStatus',
-    'projectionShell',
-    'projectedScoreValue',
-    'winProbabilityValue',
-    'confidenceEdgeValue',
-    'projectionNotice',
-  ].forEach((id) => { elements[id] = makeElement(id); });
+const elementIds = [
+  'awayTeamSelect',
+  'homeTeamSelect',
+  'runSimulationButton',
+  'refreshTeamsButton',
+  'currentModeButton',
+  'historicalModeButton',
+  'awayTeamMeta',
+  'homeTeamMeta',
+  'selectedMatchupTitle',
+  'simDataSourceTitle',
+  'simDataSourceDetail',
+  'simBoardMessage',
+  'projectionShell',
+  'projectedScoreValue',
+  'winProbabilityValue',
+  'expectedRunsValue',
+  'awayProbabilityLabel',
+  'homeProbabilityLabel',
+  'awayProbabilityValue',
+  'homeProbabilityValue',
+  'awayProbabilityBar',
+  'homeProbabilityBar',
+  'projectionNotice',
+  'comparisonGrid',
+  'inputSummary',
+  'matchupNotes',
+];
 
-  const calls = [];
-  const projection = projectionHandler || (async () => ({
-    projection: {
-      status: 'insufficient_data',
-      projection_available: false,
-      projected_score: null,
-      win_probability: { away: null, home: null },
-      confidence_rating: null,
-      edge_score: null,
-      leans: { moneyline: null, run_line: null, game_total: null, team_totals: null, f5: null },
-      explanation: {
-        missing_data: {
-          required_missing: ['starting_pitchers', 'offense', 'bullpen'],
-          model_detail_missing: ['away_starter_era'],
-        },
-      },
+const elements = {};
+elementIds.forEach((id) => { elements[id] = makeElement(id); });
+
+const context = {
+  window: {},
+  document: {
+    readyState: 'complete',
+    getElementById(id) {
+      return elements[id] || null;
     },
-  }));
-  const context = {
-    window: {
-      api: {
-        ready: Promise.resolve(),
-        async getMarketBoard(sportKey) {
-          calls.push({ method: 'getMarketBoard', sportKey });
-          return boardResponse;
-        },
-        async request(url) {
-          calls.push({ method: 'request', url });
-          return projection(url);
-        },
-      },
-    },
-    document: {
-      readyState: 'complete',
-      getElementById(id) {
-        return elements[id] || null;
-      },
-      addEventListener() {},
-    },
-    console,
-    setTimeout,
-    clearTimeout,
-    Date,
-    Number,
-  };
-  context.window.document = context.document;
-  return { context, elements, calls };
-}
+    addEventListener() {},
+  },
+  console,
+  Math,
+  Number,
+};
+context.window.document = context.document;
 
-async function tick() {
-  for (let i = 0; i < 20; i += 1) {
-    await Promise.resolve();
-  }
-  await new Promise((resolve) => setTimeout(resolve, 0));
-  for (let i = 0; i < 20; i += 1) {
-    await Promise.resolve();
-  }
-}
+vm.runInNewContext(script, context);
+const simulator = context.window.TMRMlbSimulator;
 
-async function main() {
-  const board = {
-    summary: { message: '1/1 games are showing sportsbook-backed markets.' },
-    games: [{
-      id: 'game_1',
-      sport_key: 'baseball_mlb',
-      away_team: 'Seattle Mariners',
-      home_team: 'Texas Rangers',
-      commence_time: '2026-05-05T01:00:00Z',
-      market_groups: [{
-        key: 'full_game',
-        label: 'Full Game',
-        items: [
-          { market_type: 'h2h', selection_label: 'Seattle Mariners ML', selection: 'Seattle Mariners', odds: 120, book_title: 'DraftKings' },
-          { market_type: 'h2h', selection_label: 'Texas Rangers ML', selection: 'Texas Rangers', odds: -140, book_title: 'DraftKings' },
-        ],
-      }, {
-        key: 'spread',
-        label: 'Run Line',
-        items: [
-          { market_type: 'spreads', selection_label: 'Seattle Mariners +1.5', line: 1.5, odds: -160, book_title: 'DraftKings' },
-        ],
-      }],
-    }],
-  };
+assert(simulator, 'simulator API is exposed for smoke tests');
+assert.strictEqual(simulator.localTeams.current.length, 30, '30 current teams are available locally');
+assert.strictEqual(simulator.localTeams.historical.length, 20, '20 curated historical teams are available locally');
+assert(/Arizona Diamondbacks/.test(elements.awayTeamSelect.innerHTML), 'current teams render into Team A selector');
+assert(/Atlanta Braves/.test(elements.homeTeamSelect.innerHTML), 'current teams render into Team B selector');
+assert.strictEqual(elements.awayTeamSelect.disabled, false, 'Team A selector is immediately usable');
+assert.strictEqual(elements.homeTeamSelect.disabled, false, 'Team B selector is immediately usable');
+assert.strictEqual(elements.runSimulationButton.disabled, false, 'Run Simulation is enabled with default teams');
 
-  const loaded = makeContext(board);
-  vm.runInNewContext(script, loaded.context);
-  await tick();
+simulator.runSimulation();
 
-  assert.deepStrictEqual(loaded.calls, [
-    { method: 'getMarketBoard', sportKey: 'baseball_mlb' },
-    { method: 'request', url: '/mlb-simulator/mlb/projection/game_1' },
-  ], 'loads board and projection endpoint');
-  assert(/Seattle Mariners at Texas Rangers/.test(loaded.elements.selectedMatchupTitle.textContent), 'renders selected matchup');
-  assert(/Moneyline/.test(loaded.elements.marketGroups.innerHTML), 'renders moneyline context');
-  assert(/Run Line/.test(loaded.elements.marketGroups.innerHTML), 'renders run line context');
-  assert.strictEqual(loaded.elements.projectionShell.getAttribute('data-projection-state'), 'insufficient-data', 'renders insufficient data state');
-  assert(/Backend cannot project this game yet/.test(loaded.elements.projectionNotice.textContent), 'explains insufficient backend data');
-  assert(/starting pitchers|offense|bullpen/.test(loaded.elements.projectionNotice.textContent), 'lists missing simulator inputs');
-  assert.strictEqual(loaded.elements.projectedScoreValue.textContent, '--', 'insufficient data keeps score blank');
-  assert.strictEqual(loaded.elements.winProbabilityValue.textContent, '--', 'insufficient data keeps win probability blank');
-  assert.strictEqual(loaded.elements.confidenceEdgeValue.textContent, '--', 'insufficient data keeps edge blank');
-  assert(!/\b\d+\s*-\s*\d+\b/.test(loaded.elements.marketGroups.innerHTML), 'market context does not render fake projected score');
-  assert(!/\b\d+(\.\d+)?%/.test(loaded.elements.marketGroups.innerHTML), 'market context does not render fake win probabilities');
-  assert(!/pending picks/i.test(loaded.elements.projectionNotice.textContent + loaded.elements.marketGroups.innerHTML), 'does not expose pending picks');
+assert.strictEqual(elements.projectionShell.getAttribute('data-projection-state'), 'projected', 'run simulation renders projected state');
+assert(!/--/.test(elements.projectedScoreValue.textContent), 'score range renders after simulation');
+assert(/%/.test(elements.winProbabilityValue.textContent), 'estimated win percentage renders after simulation');
+assert(/Simulation-based estimate, not sportsbook odds or provider projection/.test(elements.projectionNotice.textContent), 'disclaimer is explicit');
+assert(/Not used \/ not invented/.test(elements.inputSummary.innerHTML), 'sportsbook odds are not shown as real inputs');
+assert(/Not used for this estimate/.test(elements.inputSummary.innerHTML), 'SportsDataIO data is not shown as a real input');
+assert(/Official records/.test(elements.inputSummary.innerHTML), 'record isolation is visible');
+assert(/Offense/.test(elements.comparisonGrid.innerHTML), 'team comparison renders');
 
-  let resolveProjection;
-  const loadingProjection = new Promise((resolve) => { resolveProjection = resolve; });
-  const loading = makeContext(board, () => loadingProjection);
-  vm.runInNewContext(script, loading.context);
-  await tick();
-  assert.strictEqual(loading.elements.projectionShell.getAttribute('data-projection-state'), 'loading', 'renders projection loading state');
-  assert(/Loading projection/.test(loading.elements.projectionNotice.textContent), 'loading state is explicit');
-  resolveProjection({
-    projection: {
-      status: 'insufficient_data',
-      projection_available: false,
-      projected_score: null,
-      win_probability: { away: null, home: null },
-      confidence_rating: null,
-      edge_score: null,
-      explanation: { missing_data: { required_missing: ['offense'] } },
-    },
-  });
-  await tick();
+elements.historicalModeButton.listeners.click();
+assert(/1927 New York Yankees/.test(elements.awayTeamSelect.innerHTML), 'historical teams render after tab switch');
+assert(/2023 Texas Rangers/.test(elements.homeTeamSelect.innerHTML), 'full historical list is present');
 
-  const projected = makeContext(board, async () => ({
-    projection: {
-      status: 'projected',
-      projection_available: true,
-      projected_score: { away: 4.8, home: 4.1 },
-      win_probability: { away: 0.57, home: 0.43 },
-      confidence_rating: { label: 'low', score: 0.41 },
-      edge_score: 0.031,
-      leans: { moneyline: 'Seattle Mariners' },
-      explanation: { missing_data: { required_missing: [] } },
-    },
-  }));
-  vm.runInNewContext(script, projected.context);
-  await tick();
-  assert.strictEqual(projected.elements.projectionShell.getAttribute('data-projection-state'), 'projected', 'renders projected state');
-  assert(/Seattle Mariners 4.8 - Texas Rangers 4.1/.test(projected.elements.projectedScoreValue.textContent), 'renders real projected score');
-  assert(/57%/.test(projected.elements.winProbabilityValue.textContent), 'renders real win probability');
-  assert(/low/.test(projected.elements.confidenceEdgeValue.textContent), 'renders real confidence label');
-  assert(/Edge \+0.031/.test(projected.elements.confidenceEdgeValue.textContent), 'renders real edge score');
-
-  const failed = makeContext(board, async () => {
-    throw new Error('Projection route failed');
-  });
-  vm.runInNewContext(script, failed.context);
-  await tick();
-  assert.strictEqual(failed.elements.projectionShell.getAttribute('data-projection-state'), 'error', 'renders projection error state');
-  assert(/Projection unavailable right now/.test(failed.elements.projectionNotice.textContent), 'error state is explicit');
-  assert.strictEqual(failed.elements.projectedScoreValue.textContent, '--', 'error state clears score');
-  assert.strictEqual(failed.elements.winProbabilityValue.textContent, '--', 'error state clears probability');
-
-  const malformed = makeContext(board, async () => ({
-    projection: {
-      status: 'placeholder_projection',
-      projected_score: { away: 99, home: 99 },
-      win_probability: { away: 0.99, home: 0.01 },
-    },
-  }));
-  vm.runInNewContext(script, malformed.context);
-  await tick();
-  assert.strictEqual(malformed.elements.projectionShell.getAttribute('data-projection-state'), 'error', 'renders malformed payload error state');
-  assert(/unsupported simulator payload/.test(malformed.elements.projectionNotice.textContent), 'malformed payload has explicit error');
-  assert.strictEqual(malformed.elements.projectedScoreValue.textContent, '--', 'malformed payload does not render score');
-  assert.strictEqual(malformed.elements.winProbabilityValue.textContent, '--', 'malformed payload does not render probability');
-  assert(!/99/.test(malformed.elements.projectedScoreValue.textContent + malformed.elements.winProbabilityValue.textContent), 'malformed payload does not leak fallback numbers');
-
-  const empty = makeContext({ summary: { message: 'No upcoming games found for this sport.' }, games: [] });
-  vm.runInNewContext(script, empty.context);
-  await tick();
-  assert.strictEqual(empty.elements.mlbMatchupSelect.disabled, true, 'empty board disables selector');
-  assert(/No upcoming MLB matchups/.test(empty.elements.simBoardMessage.textContent), 'empty board has defensive message');
-  assert(!empty.calls.some((call) => call.method === 'request'), 'empty board does not request projection without game id');
-
-  console.log('mlb-simulator-page-test: ok');
-}
-
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+console.log('mlb-simulator-page-test: ok');
