@@ -1,6 +1,9 @@
 (function () {
     'use strict';
 
+    var UI_BUILD = 'starter-dropdowns-20260505';
+    if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
+
     var CURRENT_TEAMS = [
         ['current-ari', 'Arizona Diamondbacks', 'ARI', 'NL', 'West', 102, 99, 98, 98, 1.03],
         ['current-atl', 'Atlanta Braves', 'ATL', 'NL', 'East', 108, 103, 104, 101, 1.05],
@@ -1225,6 +1228,7 @@
     }
 
     window.TMRMlbSimulator = {
+        uiBuild: UI_BUILD,
         state: state,
         localTeams: LOCAL_TEAMS,
         liveInputs: LIVE_INPUT_SOURCES,
