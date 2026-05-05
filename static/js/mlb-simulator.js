@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'product-polish-logos-20260505';
+    var UI_BUILD = 'realism-boxscore-20260505';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -202,6 +202,36 @@
     function escapeAttr(value) { return escapeHtml(value); }
     function setText(id, value) { var el = byId(id); if (el) el.textContent = value; }
     function normalizeName(value) { return String(value || '').toLowerCase().replace(/^the\s+/, '').replace(/[^a-z0-9]/g, ''); }
+    function seededHash(value) {
+        var str = String(value || '');
+        var h = 2166136261;
+        for (var i = 0; i < str.length; i += 1) {
+            h ^= str.charCodeAt(i);
+            h = Math.imul(h, 16777619);
+        }
+        return h >>> 0;
+    }
+    function seededRandom(seed) {
+        var t = seed >>> 0;
+        return function () {
+            t += 0x6D2B79F5;
+            var x = t;
+            x = Math.imul(x ^ (x >>> 15), x | 1);
+            x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+            return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+        };
+    }
+    function poisson(lambda, random) {
+        lambda = clamp(lambda, 0.02, 3.4);
+        var limit = Math.exp(-lambda);
+        var k = 0;
+        var product = 1;
+        do {
+            k += 1;
+            product *= random();
+        } while (product > limit && k < 12);
+        return k - 1;
+    }
     function todayEspnDate() { return new Date().toISOString().slice(0, 10).replace(/-/g, ''); }
     function espnDateOffset(daysBack) {
         var d = new Date();
@@ -353,6 +383,123 @@
         var gap = away[metric] - home[metric];
         if (Math.abs(gap) < 2.5) return 'Near even';
         return (gap > 0 ? away.name : home.name) + ' +' + Math.abs(Math.round(gap));
+    }
+    function inningWeights(isHome) {
+        return isHome ? [0.108, 0.111, 0.114, 0.113, 0.112, 0.112, 0.112, 0.109, 0.109] : [0.111, 0.112, 0.114, 0.113, 0.112, 0.111, 0.109, 0.109, 0.109];
+    }
+    function controlledFinalScore(expected, opponentExpected, winShare, random) {
+        var base = clamp(expected, 1.4, 8.6);
+        var lambda = clamp(base * (0.78 + random() * 0.44), 1.0, 9.6);
+        var score = poisson(lambda, random);
+        if (random() < 0.18) score += poisson(clamp(base * 0.22, 0.1, 2.1), random);
+        if (base >= 5.2 && winShare > 0.62 && random() < 0.14) score += 2 + poisson(0.85, random);
+        if (base >= 6.3 && random() < 0.08) score += 1 + poisson(0.65, random);
+        if (winShare > 0.58 && random() < 0.22) score += 1;
+        if (winShare < 0.38 && random() < 0.16) score = Math.max(0, score - 1);
+        var rareOutlier = random() < 0.006 && base >= 5.7;
+        var cap = rareOutlier ? 20 : (base >= 6.6 ? 16 : (base <= 3.2 ? 10 : 13));
+        if (opponentExpected >= 6.2 && score > 14 && !rareOutlier) cap = Math.min(cap, 14);
+        return clamp(score, 0, cap);
+    }
+    function distributeRuns(total, expected, random, isHome) {
+        var weights = inningWeights(isHome);
+        var innings = weights.map(function () { return 0; });
+        var remaining = total;
+        weights.forEach(function (weight, index) {
+            if (index === 8) return;
+            var lambda = clamp(expected * weight * (0.72 + random() * 0.68), 0.02, 1.85);
+            var maxInning = remaining >= 10 ? 6 : 4;
+            var runs = Math.min(remaining, Math.min(maxInning, poisson(lambda, random)));
+            innings[index] = runs;
+            remaining -= runs;
+        });
+        while (remaining > 0) {
+            var idx = Math.floor(random() * 9);
+            if (innings[idx] < (remaining > 6 ? 6 : 4)) {
+                innings[idx] += 1;
+                remaining -= 1;
+            }
+        }
+        return innings;
+    }
+    function hitTotalForRuns(runs, team, pitcher, random) {
+        var offenseLift = clamp((team.offense - 100) * 0.025, -0.7, 0.9);
+        var pitcherDrag = pitcher ? clamp((100 - pitcher.quality) * 0.012, -0.35, 0.45) : 0;
+        return Math.round(clamp(runs + 4.2 + offenseLift + pitcherDrag + (random() * 3.8), Math.max(runs, 1), 18));
+    }
+    function errorTotal(team, random) {
+        var prevention = clamp((104 - team.runPrevention) * 0.012, -0.25, 0.35);
+        var chance = clamp(0.44 + prevention, 0.18, 0.78);
+        var errors = random() < chance ? 1 : 0;
+        if (random() < 0.06) errors += 1;
+        return errors;
+    }
+    function buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin) {
+        var seed = seededHash([away.id, home.id, awayPitcher && awayPitcher.id, homePitcher && homePitcher.id, round1(awayRuns), round1(homeRuns), round1(awayWin), state.preset].join('|'));
+        var random = seededRandom(seed);
+        var awayScore = controlledFinalScore(awayRuns, homeRuns, awayWin, random);
+        var homeScore = controlledFinalScore(homeRuns, awayRuns, homeWin, random);
+        if (awayScore === homeScore) {
+            if (homeWin >= awayWin) homeScore += 1;
+            else awayScore += 1;
+        }
+        var combined = awayScore + homeScore;
+        if (combined > 30) {
+            var excess = combined - 30;
+            while (excess > 0) {
+                if (awayScore >= homeScore && awayScore > 0) awayScore -= 1;
+                else if (homeScore > 0) homeScore -= 1;
+                excess -= 1;
+            }
+            if (awayScore === homeScore) {
+                if (homeWin >= awayWin && awayScore > 0) awayScore -= 1;
+                else if (homeScore > 0) homeScore -= 1;
+            }
+        }
+        awayScore = clamp(awayScore, 0, 20);
+        homeScore = clamp(homeScore, 0, 20);
+        while (awayScore + homeScore > 30) {
+            if (awayScore >= homeScore && awayScore > 0) awayScore -= 1;
+            else if (homeScore > 0) homeScore -= 1;
+            else break;
+        }
+        if (awayScore === homeScore) {
+            if (homeWin >= awayWin) {
+                if (homeScore < 20 && awayScore + homeScore < 30) homeScore += 1;
+                else if (awayScore > 0) awayScore -= 1;
+            } else {
+                if (awayScore < 20 && awayScore + homeScore < 30) awayScore += 1;
+                else if (homeScore > 0) homeScore -= 1;
+            }
+        }
+        var awayInnings = distributeRuns(awayScore, awayRuns, random, false);
+        var homeInnings = distributeRuns(homeScore, homeRuns, random, true);
+        var awayHits = hitTotalForRuns(awayScore, away, homePitcher, random);
+        var homeHits = hitTotalForRuns(homeScore, home, awayPitcher, random);
+        var awayErrors = errorTotal(away, random);
+        var homeErrors = errorTotal(home, random);
+        var winner = homeScore > awayScore ? home : away;
+        var loser = homeScore > awayScore ? away : home;
+        var winnerPitcher = homeScore > awayScore ? homePitcher : awayPitcher;
+        var awayLate = awayInnings[6] + awayInnings[7] + awayInnings[8];
+        var homeLate = homeInnings[6] + homeInnings[7] + homeInnings[8];
+        var turningPoint = (awayLate || homeLate) ? 'Late innings swung ' + (homeLate >= awayLate ? home.abbreviation : away.abbreviation) + ' with a ' + Math.max(awayLate, homeLate) + '-run finish.' : 'The game stayed controlled after the starters set the run environment.';
+        return {
+            seed: seed,
+            away: { team: away, innings: awayInnings, runs: awayScore, hits: awayHits, errors: awayErrors, starter: awayPitcher },
+            home: { team: home, innings: homeInnings, runs: homeScore, hits: homeHits, errors: homeErrors, starter: homePitcher },
+            winner: winner,
+            loser: loser,
+            summary: winner.name + ' defeats ' + loser.name + ', ' + Math.max(awayScore, homeScore) + '-' + Math.min(awayScore, homeScore) + '. ' + (winnerPitcher ? winnerPitcher.name + ' gives the winning side the stronger starter profile. ' : '') + turningPoint,
+            pitcherLines: [
+                away.name + ': ' + (awayPitcher ? awayPitcher.name : 'Starter unavailable') + ' / ' + clamp(5 + Math.round(random() * 2), 4, 7) + ' IP model line',
+                home.name + ': ' + (homePitcher ? homePitcher.name : 'Starter unavailable') + ' / ' + clamp(5 + Math.round(random() * 2), 4, 7) + ' IP model line'
+            ],
+            keyPerformers: [
+                winner.abbreviation + ' lineup: ' + Math.max(2, Math.min(5, Math.round(Math.max(awayScore, homeScore) / 2))) + ' run-scoring chances converted',
+                loser.abbreviation + ' lineup: ' + Math.max(1, Math.min(4, Math.round(Math.min(awayScore, homeScore) / 2) + 1)) + ' scoring chances'
+            ]
+        };
     }
     function expectedRunsFor(offenseTeam, defenseTeam, homeBonus) {
         var offenseLift = (offenseTeam.offense - 100) * 0.047;
@@ -834,12 +981,11 @@
         var volatility = clamp((away.volatility + home.volatility) / 2, 0.92, 1.16);
         var spread = round1(1.1 * volatility);
         var totalRuns = awayRuns + homeRuns;
-        var projectedAwayScore = Math.max(1, Math.round(awayRuns + (awayWin > homeWin ? 0.24 : -0.08)));
-        var projectedHomeScore = Math.max(1, Math.round(homeRuns + (homeWin >= awayWin ? 0.24 : -0.08)));
-        if (projectedAwayScore === projectedHomeScore) {
-            if (homeWin >= awayWin) projectedHomeScore += 1;
-            else projectedAwayScore += 1;
-        }
+        var boxScore = buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin);
+        var projectedAwayScore = boxScore.away.runs;
+        var projectedHomeScore = boxScore.home.runs;
+        winner = boxScore.winner;
+        winnerPct = winner.id === home.id ? homeWin : awayWin;
         var reasonParts = [];
         reasonParts.push(winner.name + ' projects ahead because the run expectation and composite team rating lean their way.');
         if (Math.abs(away.offense - home.offense) >= 4) reasonParts.push(edgeLabel('offense', away, home) + ' on offense.');
@@ -858,6 +1004,7 @@
             homeRuns: round1(homeRuns),
             projectedAwayScore: projectedAwayScore,
             projectedHomeScore: projectedHomeScore,
+            boxScore: boxScore,
             awayRange: [round1(Math.max(0.5, awayRuns - spread)), round1(awayRuns + spread)],
             homeRange: [round1(Math.max(0.5, homeRuns - spread)), round1(homeRuns + spread)],
             totalRange: [round1(Math.max(2, totalRuns - spread * 1.35)), round1(totalRuns + spread * 1.35)],
@@ -1067,6 +1214,68 @@
         ];
         list.innerHTML = notes.map(function (note) { return '<li>' + escapeHtml(note) + '</li>'; }).join('');
     }
+    function sum(values) {
+        return values.reduce(function (total, value) { return total + Number(value || 0); }, 0);
+    }
+    function boxRow(line, winnerId) {
+        var isWinner = line.team.id === winnerId;
+        return '<tr class="' + (isWinner ? 'winner-row' : '') + '"><th scope="row">' + escapeHtml(line.team.abbreviation) + '</th>' +
+            line.innings.map(function (runs) { return '<td>' + runs + '</td>'; }).join('') +
+            '<td class="total-runs">' + line.runs + '</td><td>' + line.hits + '</td><td>' + line.errors + '</td></tr>';
+    }
+    function boxScoreText(result) {
+        if (!result || !result.boxScore) return '';
+        var box = result.boxScore;
+        var lines = [];
+        lines.push('TrustMyRecord MLB Simulator Box Score');
+        lines.push(result.away.name + ' at ' + result.home.name);
+        lines.push('Mode: ' + result.simulationMode + ' / Data: ' + result.dataMode);
+        lines.push('Starting Pitchers: ' + result.away.name + ': ' + result.awayPitcher.name + ' | ' + result.home.name + ': ' + result.homePitcher.name);
+        lines.push('');
+        lines.push('Team        1 2 3 4 5 6 7 8 9 | R H E');
+        [box.away, box.home].forEach(function (line) {
+            lines.push((line.team.abbreviation + '          ').slice(0, 10) + line.innings.join(' ') + ' | ' + line.runs + ' ' + line.hits + ' ' + line.errors);
+        });
+        lines.push('');
+        lines.push('Final: ' + box.winner.name + ' ' + Math.max(box.away.runs, box.home.runs) + ', ' + box.loser.name + ' ' + Math.min(box.away.runs, box.home.runs));
+        lines.push(box.summary);
+        lines.push('Pitcher lines: ' + box.pitcherLines.join(' / '));
+        lines.push('Key performers: ' + box.keyPerformers.join(' / '));
+        lines.push('Projection notice: Simulation-based estimate, not sportsbook odds or a guaranteed result.');
+        return lines.join('\n');
+    }
+    function boxScoreFilename(result) {
+        var away = slugify(result.away.name);
+        var home = slugify(result.home.name);
+        return 'mlb-simulator-' + away + '-vs-' + home + '-box-score.txt';
+    }
+    function setExportButtons(enabled) {
+        var copy = byId('copyBoxScoreButton');
+        var save = byId('saveBoxScoreButton');
+        if (copy) copy.disabled = !enabled;
+        if (save) save.disabled = !enabled;
+    }
+    function renderBoxScore(result) {
+        var panel = byId('boxScorePanel');
+        var title = byId('boxScoreTitle');
+        var body = byId('boxScoreBody');
+        var summary = byId('boxScoreSummary');
+        if (!panel || !title || !body || !summary) return;
+        if (!result || !result.boxScore) {
+            panel.setAttribute('data-box-score-state', 'empty');
+            title.textContent = 'Run a simulation to generate a box score';
+            body.innerHTML = '<tr><td colspan="13">Select teams, choose starters, and run the simulator.</td></tr>';
+            summary.textContent = 'The simulated line score will appear here after the projection runs.';
+            setExportButtons(false);
+            return;
+        }
+        var box = result.boxScore;
+        panel.setAttribute('data-box-score-state', 'projected');
+        title.textContent = result.away.abbreviation + ' at ' + result.home.abbreviation + ' / Final ' + box.away.runs + '-' + box.home.runs;
+        body.innerHTML = boxRow(box.away, box.winner.id) + boxRow(box.home, box.winner.id);
+        summary.innerHTML = '<strong>' + escapeHtml(box.summary) + '</strong><span>' + escapeHtml(box.pitcherLines.join(' / ')) + '</span><span>' + escapeHtml(box.keyPerformers.join(' / ')) + '</span>';
+        setExportButtons(true);
+    }
 
     function renderResult(result) {
         if (!result) {
@@ -1099,6 +1308,7 @@
             renderComparison(null);
             renderInputStatus(null);
             renderNotes(null);
+            renderBoxScore(null);
             return;
         }
         var shellProjected = byId('projectionShell');
@@ -1134,6 +1344,7 @@
         renderComparison(result);
         renderInputStatus(result);
         renderNotes(result);
+        renderBoxScore(result);
     }
 
     function renderLoading(away, home) {
@@ -1183,6 +1394,38 @@
         setLiveInputsForMatchup(away, home);
         state.simulation = simulate(away, home, state.activeLiveContext);
         renderResult(state.simulation);
+    }
+    function copyBoxScore() {
+        if (!state.simulation) return;
+        var text = boxScoreText(state.simulation);
+        if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function () {
+                setText('projectionNotice', 'Box score copied to clipboard.');
+            }).catch(function () {
+                setText('projectionNotice', 'Copy failed in this browser. Save Box Score is still available.');
+            });
+        } else {
+            setText('projectionNotice', 'Clipboard copy is unavailable in this browser. Save Box Score is still available.');
+        }
+    }
+    function saveBoxScore() {
+        if (!state.simulation) return;
+        var text = boxScoreText(state.simulation);
+        var filename = boxScoreFilename(state.simulation);
+        if (typeof Blob === 'undefined' || typeof window === 'undefined' || !window.URL || !document.createElement || !document.body) {
+            setText('projectionNotice', 'File save is unavailable in this browser.');
+            return;
+        }
+        var blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        var url = window.URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        setText('projectionNotice', 'Box score saved as ' + filename + '.');
     }
 
     function normalizeBoardResponse(data) {
@@ -1253,6 +1496,8 @@
         var homePitcherSelect = byId('homePitcherSelect');
         var run = byId('runSimulationButton');
         var refresh = byId('refreshTeamsButton');
+        var copyBox = byId('copyBoxScoreButton');
+        var saveBox = byId('saveBoxScoreButton');
         var current = byId('currentModeButton');
         var historical = byId('historicalModeButton');
         var mixed = byId('mixedModeButton');
@@ -1275,6 +1520,8 @@
             renderResult(null);
         });
         if (run) run.addEventListener('click', runSimulation);
+        if (copyBox) copyBox.addEventListener('click', copyBoxScore);
+        if (saveBox) saveBox.addEventListener('click', saveBoxScore);
         if (refresh) refresh.addEventListener('click', function () { switchMode('current'); });
         if (current) current.addEventListener('click', function () { switchMode('current'); });
         if (historical) historical.addEventListener('click', function () { switchMode('historical'); });
@@ -1297,7 +1544,10 @@
         selectedLiveContext: selectedLiveContext,
         pitcherOptionsFor: pitcherOptionsFor,
         runSimulation: runSimulation,
-        simulate: simulate
+        simulate: simulate,
+        boxScoreText: boxScoreText,
+        copyBoxScore: copyBoxScore,
+        saveBoxScore: saveBoxScore
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

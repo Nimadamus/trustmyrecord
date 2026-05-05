@@ -16,8 +16,8 @@ const html = fs.readFileSync(pagePath, 'utf8');
 const script = fs.readFileSync(scriptPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
-assert(/\/static\/css\/mlb-simulator\.css\?v=20260505-product-polish-logos/.test(html), 'live page uses versioned simulator stylesheet');
-assert(/\/static\/js\/mlb-simulator\.js\?v=20260505-product-polish-logos/.test(html), 'live page uses versioned simulator script');
+assert(/\/static\/css\/mlb-simulator\.css\?v=20260505-realism-boxscore/.test(html), 'live page uses versioned simulator stylesheet');
+assert(/\/static\/js\/mlb-simulator\.js\?v=20260505-realism-boxscore/.test(html), 'live page uses versioned simulator script');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
 assert(/id="awayPitcherSelect" class="sim-select starter-select pitcher-select"/.test(html), 'Team A starter select uses the same styled select pattern');
@@ -39,6 +39,9 @@ assert(/awayPickerIdentity/.test(html) && /homePickerIdentity/.test(html), 'team
 assert(/awayHeaderLogo/.test(html) && /homeHeaderLogo/.test(html), 'matchup review logo areas are present');
 assert(/Inside the TrustMyRecord MLB Simulator/.test(html), 'explainer section is present');
 assert(/model-based estimate/.test(html), 'explainer avoids overclaiming accuracy');
+assert(/id="boxScorePanel"/.test(html), 'box score panel is present');
+assert(/Copy Box Score/.test(html), 'copy box score action is present');
+assert(/Save Box Score/.test(html), 'save box score action is present');
 assert(/Choose starters/.test(html), 'starter-dependent empty state is polished');
 assert(!/Loading MLB games|Loading sportsbook board|Waiting for board data|Projection engine not connected yet|Not connected for custom simulation|Unavailable without real inputs/.test(html), 'old board-dependent placeholder text is removed');
 assert(!/lock pick|locked pick|submit pick/i.test(html), 'page does not expose sportsbook submission actions');
@@ -56,8 +59,12 @@ const elementIds = [
   'winProbabilityValue','expectedRunsValue','totalRangeValue','runEnvironmentValue','simulationConfidenceValue',
   'eraAdjustmentValue','simulationModeValue','dataModeValue','awayProbabilityLabel','homeProbabilityLabel',
   'awayProbabilityValue','homeProbabilityValue','awayProbabilityBar','homeProbabilityBar','projectionNotice',
-  'comparisonGrid','inputSummary','matchupNotes'
+  'comparisonGrid','inputSummary','matchupNotes','boxScorePanel','boxScoreTitle','boxScoreBody',
+  'boxScoreSummary','copyBoxScoreButton','saveBoxScoreButton'
 ];
+
+let savedDownload = null;
+let clipboardText = '';
 
 function makeElement(id) {
   return {
@@ -207,17 +214,48 @@ function createSimulator(fetchMode) {
   const elements = {};
   elementIds.forEach((id) => { elements[id] = makeElement(id); });
   const context = {
-    window: {},
+    window: {
+      URL: {
+        createObjectURL(blob) { return 'blob:mlb-box-score'; },
+        revokeObjectURL() {},
+      },
+    },
     document: {
       readyState: 'complete',
       getElementById(id) { return elements[id] || null; },
       addEventListener() {},
+      createElement(tag) {
+        assert.strictEqual(tag, 'a', 'save action creates an anchor');
+        return {
+          href: '',
+          download: '',
+          click() { savedDownload = this.download; },
+        };
+      },
+      body: {
+        appendChild() {},
+        removeChild() {},
+      },
     },
     console,
     Math,
     Number,
     Date,
     Promise,
+    Blob: class Blob {
+      constructor(parts, options) {
+        this.parts = parts;
+        this.options = options;
+      }
+    },
+    navigator: {
+      clipboard: {
+        writeText(value) {
+          clipboardText = value;
+          return Promise.resolve();
+        },
+      },
+    },
     fetch: buildFetchMock(fetchMode),
     CONFIG: { api: { baseUrl: 'https://trustmyrecord-api.onrender.com/api' } },
   };
@@ -314,6 +352,25 @@ async function flushAsync() {
   simulator.runSimulation();
   assert.strictEqual(elements.resultCard.getAttribute('data-result-state'), 'projected', 'fallback run renders projected state');
   assert(/%/.test(elements.winProbabilityValue.textContent), 'estimated win percentage renders after simulation');
+  assert.strictEqual(elements.boxScorePanel.getAttribute('data-box-score-state'), 'projected', 'box score panel renders after simulation');
+  assert(/<tr/.test(elements.boxScoreBody.innerHTML), 'box score table rows render after simulation');
+  assert(/Final/.test(elements.boxScoreTitle.textContent), 'box score title includes final score');
+  assert.strictEqual(elements.copyBoxScoreButton.disabled, false, 'copy box score button enables after simulation');
+  assert.strictEqual(elements.saveBoxScoreButton.disabled, false, 'save box score button enables after simulation');
+  const fallbackBox = simulator.state.simulation.boxScore;
+  assert.strictEqual(fallbackBox.away.innings.reduce((total, value) => total + value, 0), fallbackBox.away.runs, 'away inning totals equal away final score');
+  assert.strictEqual(fallbackBox.home.innings.reduce((total, value) => total + value, 0), fallbackBox.home.runs, 'home inning totals equal home final score');
+  assert(fallbackBox.away.runs <= 20 && fallbackBox.home.runs <= 20, 'box score caps individual scores at baseball range');
+  assert(fallbackBox.away.runs + fallbackBox.home.runs <= 30, 'box score caps combined scores at baseball range');
+  const fallbackText = simulator.boxScoreText(simulator.state.simulation);
+  assert(/TrustMyRecord MLB Simulator Box Score/.test(fallbackText), 'readable box score export text is generated');
+  assert(/Starting Pitchers:/.test(fallbackText), 'box score export includes starting pitchers');
+  assert(/Team\s+1 2 3 4 5 6 7 8 9 \| R H E/.test(fallbackText), 'box score export includes inning header');
+  simulator.copyBoxScore();
+  await flushAsync();
+  assert(/TrustMyRecord MLB Simulator Box Score/.test(clipboardText), 'copy box score writes readable export text');
+  simulator.saveBoxScore();
+  assert(/^mlb-simulator-.*-box-score\.txt$/.test(savedDownload), 'save box score uses clean filename');
   assert(/Starting pitchers/.test(elements.inputSummary.innerHTML), 'output includes selected starters row');
   assert(/Zac Gallen|Bryce Elder/.test(elements.matchupNotes.innerHTML), 'output notes include selected current pitcher names');
   assert.strictEqual(elements.dataModeValue.textContent, 'Baseline ratings', 'fallback output states baseline data mode');
