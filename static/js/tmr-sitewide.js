@@ -11,7 +11,7 @@
     const routes = [
         ["/", "Home"],
         [sportsbookPicksHref, "Make Picks"],
-        ["/trendspotter/", "Trendspotter"],
+        ["/trustmyrecord-tools/", "Tools"],
         ["/feed/", "Feed"],
         ["/handicappers/", "Find Handicappers"],
         ["/arena/", "Arena"],
@@ -26,6 +26,8 @@
 
     const routeMeta = {
         "sportsbook.html": ["Make Picks", "Lock picks before games start. Build a public, permanent record."],
+        "trustmyrecord-tools.html": ["Tools", "Run simulations, surface verified trends, and build sharper sports analysis from structured data."],
+        "mlb-simulator.html": ["Tools", "Simulate baseball matchups with starter context and projected box score output."],
         "trendspotter.html": ["Trendspotter", "Select a matchup and generate verified betting trends from real artifact data."],
         "leaderboards.html": ["Leaderboards", "Handicapping records, trivia points, polls, online challenges, and handicapper challenges &mdash; every leaderboard in one hub."],
         "handicappers.html": ["Find Handicappers", "Search members, compare verified records, follow cappers, and open public profiles."],
@@ -292,7 +294,9 @@
                                 : segs[segs.length - 1] + ".html")
                             : "index.html";
                         const isArenaLink = hrefFile === "arena.html";
-                        const active = currentFile === hrefFile || (isArenaLink && ARENA_GROUP.has(currentFile));
+                        const active = currentFile === hrefFile ||
+                            (isArenaLink && ARENA_GROUP.has(currentFile)) ||
+                            (hrefFile === "trustmyrecord-tools.html" && location.pathname.indexOf("/trustmyrecord-tools/") === 0);
                         return `<a href="${href}"${active ? ' aria-current="page"' : ""}>${label}</a>`;
                     }).join("")}
                 </div>
