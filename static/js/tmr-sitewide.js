@@ -11,14 +11,14 @@
     const routes = [
         ["/", "Home"],
         [sportsbookPicksHref, "Make Picks"],
+        ["/trendspotter/", "Trendspotter"],
         ["/feed/", "Feed"],
         ["/handicappers/", "Find Handicappers"],
         ["/arena/", "Arena"],
         ["/forum/", "Forums"],
         ["/marketplace/", "Sell Your Picks"]
     ];
-    const blockedNavHrefs = new Set(["/trendspotter/"]);
-    const visibleRoutes = routes.filter(([href]) => !blockedNavHrefs.has(href));
+    const visibleRoutes = routes;
 
     // Pages that should highlight Arena in the top nav even though they
     // have their own URL.
@@ -26,6 +26,7 @@
 
     const routeMeta = {
         "sportsbook.html": ["Make Picks", "Lock picks before games start. Build a public, permanent record."],
+        "trendspotter.html": ["Trendspotter", "Select a matchup and generate verified betting trends from real artifact data."],
         "leaderboards.html": ["Leaderboards", "Handicapping records, trivia points, polls, online challenges, and handicapper challenges &mdash; every leaderboard in one hub."],
         "handicappers.html": ["Find Handicappers", "Search members, compare verified records, follow cappers, and open public profiles."],
         "arena.html": ["Arena", "Challenge rivals in sports picks, MLB The Show, Madden, NBA 2K, EA FC, and NHL."],
@@ -309,7 +310,6 @@
         </div>
     `;
     document.body.prepend(nav);
-    nav.querySelectorAll('a[href*="trendspotter"]').forEach((element) => element.remove());
 
     const actions = nav.querySelector(".tmr-global-nav__actions");
     const toggleButton = nav.querySelector(".tmr-global-nav__toggle");
