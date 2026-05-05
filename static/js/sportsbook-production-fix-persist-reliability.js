@@ -31,6 +31,18 @@
         WTA: 'tennis_wta'
     };
 
+    const ESPN_SCOREBOARD_PATHS = {
+        baseball_mlb: 'baseball/mlb',
+        basketball_nba: 'basketball/nba',
+        basketball_wnba: 'basketball/wnba',
+        icehockey_nhl: 'hockey/nhl',
+        americanfootball_nfl: 'football/nfl',
+        americanfootball_ncaaf: 'football/college-football',
+        basketball_ncaab: 'basketball/mens-college-basketball',
+        soccer_epl: 'soccer/eng.1',
+        soccer_usa_mls: 'soccer/usa.1'
+    };
+
     const STATUS_MAP = {
         win: 'won',
         won: 'won',
@@ -588,6 +600,146 @@
         } catch (error) {}
     }
 
+    function formatEspnDate(daysOffset) {
+        const date = new Date();
+        date.setDate(date.getDate() + (daysOffset || 0));
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        return '' + yyyy + mm + dd;
+    }
+
+    function parseAmericanOdds(value) {
+        if (value == null || value === '') return null;
+        const parsed = Number(String(value).replace(/[^0-9+\-.]/g, ''));
+        if (!Number.isFinite(parsed) || parsed === 0) return null;
+        return parsed;
+    }
+
+    function parseEspnBookmakers(oddsArray, homeTeam, awayTeam) {
+        if (!Array.isArray(oddsArray)) return [];
+        return oddsArray.map(function(odds) {
+            const provider = odds && odds.provider ? odds.provider : {};
+            const title = provider.displayName || provider.name || 'ESPN';
+            const key = String(title).toLowerCase().replace(/[^a-z0-9]+/g, '') || 'espn';
+            const markets = [];
+
+            const homeMl = parseAmericanOdds(odds && odds.moneyline && odds.moneyline.home && odds.moneyline.home.close && odds.moneyline.home.close.odds);
+            const awayMl = parseAmericanOdds(odds && odds.moneyline && odds.moneyline.away && odds.moneyline.away.close && odds.moneyline.away.close.odds);
+            if (homeMl != null && awayMl != null) {
+                markets.push({
+                    key: 'h2h',
+                    outcomes: [
+                        { name: homeTeam, price: homeMl },
+                        { name: awayTeam, price: awayMl }
+                    ]
+                });
+            }
+
+            const homeSpreadLine = odds && odds.pointSpread && odds.pointSpread.home && odds.pointSpread.home.close ? Number(odds.pointSpread.home.close.line) : null;
+            const awaySpreadLine = odds && odds.pointSpread && odds.pointSpread.away && odds.pointSpread.away.close ? Number(odds.pointSpread.away.close.line) : null;
+            const homeSpreadOdds = parseAmericanOdds(odds && odds.pointSpread && odds.pointSpread.home && odds.pointSpread.home.close && odds.pointSpread.home.close.odds);
+            const awaySpreadOdds = parseAmericanOdds(odds && odds.pointSpread && odds.pointSpread.away && odds.pointSpread.away.close && odds.pointSpread.away.close.odds);
+            if (Number.isFinite(homeSpreadLine) && Number.isFinite(awaySpreadLine) && homeSpreadOdds != null && awaySpreadOdds != null) {
+                markets.push({
+                    key: 'spreads',
+                    outcomes: [
+                        { name: homeTeam, point: homeSpreadLine, price: homeSpreadOdds },
+                        { name: awayTeam, point: awaySpreadLine, price: awaySpreadOdds }
+                    ]
+                });
+            }
+
+            let totalLine = null;
+            if (odds && odds.total && odds.total.over && odds.total.over.close) {
+                totalLine = Number(String(odds.total.over.close.line || '').replace(/[ou]/ig, ''));
+            }
+            if (!Number.isFinite(totalLine) && odds && odds.overUnder != null) {
+                totalLine = Number(odds.overUnder);
+            }
+            const overOdds = parseAmericanOdds(odds && odds.total && odds.total.over && odds.total.over.close && odds.total.over.close.odds);
+            const underOdds = parseAmericanOdds(odds && odds.total && odds.total.under && odds.total.under.close && odds.total.under.close.odds);
+            if (Number.isFinite(totalLine) && totalLine > 0 && overOdds != null && underOdds != null) {
+                markets.push({
+                    key: 'totals',
+                    outcomes: [
+                        { name: 'Over', point: totalLine, price: overOdds },
+                        { name: 'Under', point: totalLine, price: underOdds }
+                    ]
+                });
+            }
+
+            return markets.length ? { key: key, title: title, markets: markets } : null;
+        }).filter(Boolean);
+    }
+
+    async function fetchEspnScoreboardBoard(sportKey) {
+        const espnPath = ESPN_SCOREBOARD_PATHS[sportKey];
+        if (!espnPath) throw new Error('No ESPN fallback for ' + sportKey);
+
+        for (let day = 0; day <= 2; day += 1) {
+            const url = 'https://site.api.espn.com/apis/site/v2/sports/' + espnPath + '/scoreboard?dates=' + formatEspnDate(day);
+            const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+            if (!response.ok) throw new Error('ESPN returned ' + response.status);
+            const payload = await response.json();
+            const games = ((payload && payload.events) || []).map(function(event) {
+                const comp = event && event.competitions && event.competitions[0];
+                const competitors = comp && Array.isArray(comp.competitors) ? comp.competitors : [];
+                const homeComp = competitors.find(function(c) { return c.homeAway === 'home'; });
+                const awayComp = competitors.find(function(c) { return c.homeAway === 'away'; });
+                const homeTeam = homeComp && homeComp.team && homeComp.team.displayName;
+                const awayTeam = awayComp && awayComp.team && awayComp.team.displayName;
+                const start = Date.parse((event && event.date) || (comp && comp.date) || '');
+                const status = (comp && comp.status && comp.status.type) || (event && event.status && event.status.type) || {};
+                const stateText = String(status.state || '').toLowerCase();
+                if (!homeTeam || !awayTeam || status.completed || stateText === 'in' || stateText === 'post' || !Number.isFinite(start) || start <= Date.now()) {
+                    return null;
+                }
+                const pickLogo = function(team) {
+                    if (!team) return '';
+                    if (team.logo) return team.logo;
+                    if (Array.isArray(team.logos) && team.logos[0] && team.logos[0].href) return team.logos[0].href;
+                    return '';
+                };
+                return {
+                    id: String((event && event.id) || ''),
+                    sport_key: sportKey,
+                    sport_title: sportKey === 'baseball_mlb' ? 'MLB' : sportKey,
+                    commence_time: new Date(start).toISOString(),
+                    home_team: homeTeam,
+                    away_team: awayTeam,
+                    home_logo: pickLogo(homeComp && homeComp.team),
+                    away_logo: pickLogo(awayComp && awayComp.team),
+                    home_abbr: homeComp && homeComp.team && homeComp.team.abbreviation,
+                    away_abbr: awayComp && awayComp.team && awayComp.team.abbreviation,
+                    bookmakers: parseEspnBookmakers((comp && comp.odds) || [], homeTeam, awayTeam),
+                    updated_at: new Date().toISOString()
+                };
+            }).filter(Boolean);
+
+            const boardGames = buildFallbackBoardGames(games, sportKey);
+            if (boardGames.length) {
+                return {
+                    sport_key: sportKey,
+                    games: boardGames,
+                    summary: {
+                        severity: 'warning',
+                        message: 'Showing ESPN scoreboard sportsbook lines while the advanced board feed refreshes.'
+                    }
+                };
+            }
+        }
+
+        return {
+            sport_key: sportKey,
+            games: [],
+            summary: {
+                severity: 'warning',
+                message: 'No ESPN sportsbook lines are posted yet.'
+            }
+        };
+    }
+
     async function fetchMarketBoardFast(sportKey, forceRefresh) {
         const boardFetchStartedAt = nowMs();
         if (!sportKey) throw new Error('Missing sport key');
@@ -998,6 +1150,7 @@
             '.tmr-team-row{display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:10px;color:#f8fafc;}',
             '.tmr-team-side{display:inline-flex;align-items:center;justify-content:center;min-width:54px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:10px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#aeb8c6;}',
             '.tmr-team-abbr{width:30px;height:30px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);font-size:11px;font-weight:900;letter-spacing:0.08em;color:#dbe7ef;flex-shrink:0;}',
+            '.tmr-team-abbr img{width:26px;height:26px;object-fit:contain;display:block;}',
             '.tmr-team-name{font-size:clamp(18px,2vw,22px);font-weight:800;letter-spacing:-0.03em;line-height:1.05;}',
             '.tmr-matchup-divider{display:flex;align-items:center;gap:10px;padding-left:66px;color:#6f7a89;font-size:10px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;}',
             '.tmr-matchup-divider::before,.tmr-matchup-divider::after{content:"";height:1px;flex:1;background:rgba(255,255,255,0.08);}',
@@ -1780,9 +1933,9 @@
                 '<div>' +
                 '<div class="tmr-market-topline"><span class="tmr-market-league">Game ' + boardNumber + ' • ' + escapeHtml(state.selectedSport || game.sport_title || 'Board') + '</span><span class="tmr-market-status">' + escapeHtml(formatStartsIn(game.commence_time)) + '</span></div>' +
                 '<div class="tmr-market-matchup">' +
-                '<div class="tmr-team-row"><span class="tmr-team-side">Away</span><span class="tmr-team-abbr">' + escapeHtml(teamBadge(game.away_team)) + '</span><span class="tmr-team-name">' + escapeHtml(game.away_team) + '</span></div>' +
+                '<div class="tmr-team-row"><span class="tmr-team-side">Away</span>' + renderTeamLogoBadge(game, 'away') + '<span class="tmr-team-name">' + escapeHtml(game.away_team) + '</span></div>' +
                 '<div class="tmr-matchup-divider">@</div>' +
-                '<div class="tmr-team-row"><span class="tmr-team-side">Home</span><span class="tmr-team-abbr">' + escapeHtml(teamBadge(game.home_team)) + '</span><span class="tmr-team-name">' + escapeHtml(game.home_team) + '</span></div>' +
+                '<div class="tmr-team-row"><span class="tmr-team-side">Home</span>' + renderTeamLogoBadge(game, 'home') + '<span class="tmr-team-name">' + escapeHtml(game.home_team) + '</span></div>' +
                 '</div>' +
                 '<div class="tmr-market-meta">' +
                 '<span class="tmr-market-chip accent">' + escapeHtml(new Date(game.commence_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + '</span>' +
@@ -1834,6 +1987,70 @@
             .map(function(part) { return part.charAt(0); })
             .join('')
             .toUpperCase() || '--';
+    }
+
+    function mlbLogoSlug(teamName) {
+        const normalized = String(teamName || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        const slugs = {
+            'arizona diamondbacks': 'ari',
+            'athletics': 'ath',
+            'atlanta braves': 'atl',
+            'baltimore orioles': 'bal',
+            'boston red sox': 'bos',
+            'chicago cubs': 'chc',
+            'chicago white sox': 'chw',
+            'cincinnati reds': 'cin',
+            'cleveland guardians': 'cle',
+            'colorado rockies': 'col',
+            'detroit tigers': 'det',
+            'houston astros': 'hou',
+            'kansas city royals': 'kc',
+            'los angeles angels': 'laa',
+            'los angeles dodgers': 'lad',
+            'miami marlins': 'mia',
+            'milwaukee brewers': 'mil',
+            'minnesota twins': 'min',
+            'new york mets': 'nym',
+            'new york yankees': 'nyy',
+            'philadelphia phillies': 'phi',
+            'pittsburgh pirates': 'pit',
+            'san diego padres': 'sd',
+            'san francisco giants': 'sf',
+            'seattle mariners': 'sea',
+            'st louis cardinals': 'stl',
+            'tampa bay rays': 'tb',
+            'texas rangers': 'tex',
+            'toronto blue jays': 'tor',
+            'washington nationals': 'wsh'
+        };
+        return slugs[normalized] || '';
+    }
+
+    function getTeamLogoUrl(game, side) {
+        const prefix = side === 'home' ? 'home' : 'away';
+        const direct = game && (
+            game[prefix + '_logo'] ||
+            game[prefix + '_team_logo'] ||
+            game[prefix + '_logo_url'] ||
+            game[prefix + '_image']
+        );
+        if (direct) return direct;
+
+        const sportKey = String(game && game.sport_key || '').toLowerCase();
+        if (sportKey !== 'baseball_mlb') return '';
+
+        const abbr = String(game && (game[prefix + '_abbr'] || game[prefix + '_abbreviation']) || '').toLowerCase();
+        const slug = abbr || mlbLogoSlug(game && game[prefix + '_team']);
+        return slug ? 'https://a.espncdn.com/i/teamlogos/mlb/500/scoreboard/' + slug + '.png' : '';
+    }
+
+    function renderTeamLogoBadge(game, side) {
+        const teamName = game && game[(side === 'home' ? 'home' : 'away') + '_team'];
+        const logoUrl = getTeamLogoUrl(game, side);
+        if (logoUrl) {
+            return '<span class="tmr-team-abbr"><img src="' + escapeHtml(logoUrl) + '" alt="' + escapeHtml(teamName || 'Team') + ' logo" loading="lazy" decoding="async" onerror="this.replaceWith(document.createTextNode(\'' + escapeHtml(teamBadge(teamName)) + '\'))"></span>';
+        }
+        return '<span class="tmr-team-abbr">' + escapeHtml(teamBadge(teamName)) + '</span>';
     }
 
     function getOptionTag(option, game) {
@@ -1941,6 +2158,36 @@
         }
 
         try {
+            let espnFastFallback = null;
+            let espnFastFallbackRendered = false;
+            if (sportKey === 'baseball_mlb' && !cachedBoard && !staleBoard) {
+                espnFastFallback = fetchEspnScoreboardBoard(sportKey).catch(function(error) {
+                    recordBoardEvent('board_espn_fast_fallback_failed', {
+                        sport: sport,
+                        sport_key: sportKey,
+                        message: error && error.message ? error.message : String(error || 'Unknown error')
+                    });
+                    return null;
+                });
+                window.setTimeout(function() {
+                    if (requestId !== latestBoardRequestId || state.selectedSport !== sport) return;
+                    if (state.lastBoardRenderSport === sport && state.lastBoardRenderAt > Date.now() - 3000) return;
+                    espnFastFallback.then(function(fallback) {
+                        if (!fallback || !fallback.games || !fallback.games.length) return;
+                        if (requestId !== latestBoardRequestId || state.selectedSport !== sport) return;
+                        if (state.lastBoardRenderSport === sport && state.lastBoardRenderAt > Date.now() - 3000) return;
+                        espnFastFallbackRendered = true;
+                        renderBoardIfCurrent(requestId, sport, badge, fallback);
+                        recordBoardEvent('board_espn_fast_fallback_rendered', {
+                            sport: sport,
+                            sport_key: sportKey,
+                            game_count: fallback.games.length,
+                            elapsed_ms: elapsedMs(selectionStartedAt)
+                        });
+                    });
+                }, 1200);
+            }
+
             let response = normalizeBoardResponse(await fetchMarketBoardFast(sportKey, !cachedBoard), sport);
             if ((!response.games || response.games.length === 0) && !cachedBoard) {
                 recordBoardEvent('board_empty_initial', {
@@ -1966,6 +2213,22 @@
                     });
                 }
             }
+            if ((!response.games || response.games.length === 0) && sportKey === 'baseball_mlb') {
+                const espnResponse = espnFastFallback ? await espnFastFallback : await fetchEspnScoreboardBoard(sportKey);
+                if (espnResponse && espnResponse.games && espnResponse.games.length) {
+                    response = espnResponse;
+                    recordBoardEvent('board_empty_recovered_from_espn', {
+                        sport: sport,
+                        sport_key: sportKey,
+                        game_count: espnResponse.games.length
+                    });
+                }
+            }
+            if (espnFastFallbackRendered && response && response.games && response.games.length && response.summary && response.summary.message && response.summary.message.indexOf('ESPN scoreboard') !== -1) {
+                window.clearTimeout(slowMessageTimer);
+                window.clearTimeout(loadingTimeoutTimer);
+                return;
+            }
             renderBoardIfCurrent(requestId, sport, badge, response);
             recordBoardEvent('board_selection_complete', {
                 sport: sport,
@@ -1984,6 +2247,19 @@
                 message: error && error.message ? error.message : String(error || 'Unknown error')
             });
             try {
+                if (sportKey === 'baseball_mlb') {
+                    const espnResponse = await fetchEspnScoreboardBoard(sportKey);
+                    if (espnResponse && espnResponse.games && espnResponse.games.length) {
+                        if (requestId !== latestBoardRequestId || state.selectedSport !== sport) return;
+                        renderBoardIfCurrent(requestId, sport, badge, espnResponse);
+                        recordBoardEvent('board_primary_failed_recovered_from_espn', {
+                            sport: sport,
+                            sport_key: sportKey,
+                            game_count: espnResponse.games.length
+                        });
+                        return;
+                    }
+                }
                 let fallbackGames = null;
                 try {
                     fallbackGames = await directApiRequest('/games/odds/' + encodeURIComponent(sportKey), { timeoutMs: 8000 });
@@ -2520,7 +2796,7 @@
     }
 
     function isMoneylineMarket(market) {
-        return market === 'h2h' || market === 'moneyline' || market === 'money_line' || market.indexOf('moneyline') !== -1 || market.indexOf('money_line') !== -1 || /(^|_)h2h$/.test(market);
+        return market === 'h2h' || market === 'moneyline' || market.indexOf('moneyline') !== -1 || /(^|_)h2h$/.test(market);
     }
 
     function isSpreadMarket(market) {
@@ -2532,6 +2808,9 @@
     }
 
     function formatPickDisplayLabel(pick) {
+        if (window.TMR && typeof window.TMR.formatPickDisplay === 'function') {
+            return window.TMR.formatPickDisplay(pick).pickLabel;
+        }
         pick = pick || {};
         const market = String(pick.market_type || pick.market || pick.bet_type || pick.betType || '').toLowerCase();
         const rawSelection = String(pick.selection_label || pick.selection || pick.pick || pick.team || 'Pick').trim();
@@ -2539,8 +2818,7 @@
         const base = rawSelection || 'Pick';
 
         if (isMoneylineMarket(market)) {
-            const team = stripTrailingLine(base);
-            return hasTrailingMl(team) ? team : team + ' ML';
+            return hasTrailingMl(base) ? base : base + ' ML';
         }
 
         if (isSpreadMarket(market)) {
