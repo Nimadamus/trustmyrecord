@@ -77,7 +77,9 @@
     };
 
     var state = {
-        mode: 'current',
+        preset: 'current',
+        awayPool: 'current',
+        homePool: 'current',
         teams: LOCAL_TEAMS,
         awayTeamId: LOCAL_TEAMS.current[0].id,
         homeTeamId: LOCAL_TEAMS.current[1].id,
@@ -93,8 +95,20 @@
     }
     function setText(id, value) { var el = byId(id); if (el) el.textContent = value; }
 
-    function activeTeams() { return state.teams[state.mode] || []; }
-    function findTeam(id) { return activeTeams().filter(function (team) { return team.id === id; })[0] || null; }
+    function poolTeams(pool) { return state.teams[pool] || []; }
+    function activeTeams() { return poolTeams(state.awayPool).concat(poolTeams(state.homePool)); }
+    function findTeamInPool(id, pool) { return poolTeams(pool).filter(function (team) { return team.id === id; })[0] || null; }
+    function findTeam(id) {
+        return poolTeams('current').concat(poolTeams('historical')).filter(function (team) { return team.id === id; })[0] || null;
+    }
+    function eraLabel(team) {
+        if (!team) return 'Select team';
+        return team.era === 'historical' ? 'Classic ' + team.season : 'Current MLB';
+    }
+    function teamMeta(team) {
+        if (!team) return 'No team selected';
+        return team.era === 'historical' ? [team.abbreviation, team.season, 'Historical'].join(' / ') : [team.abbreviation, team.league, team.division].join(' / ');
+    }
     function strength(team) {
         return (team.offense * 0.38) + (team.runPrevention * 0.25) + (team.startingPitching * 0.22) + (team.bullpen * 0.15);
     }
@@ -128,6 +142,17 @@
         var volatility = clamp((away.volatility + home.volatility) / 2, 0.92, 1.16);
         var spread = round1(1.1 * volatility);
         var totalRuns = awayRuns + homeRuns;
+        var projectedAwayScore = Math.max(1, Math.round(awayRuns + (awayWin > homeWin ? 0.24 : -0.08)));
+        var projectedHomeScore = Math.max(1, Math.round(homeRuns + (homeWin >= awayWin ? 0.24 : -0.08)));
+        if (projectedAwayScore === projectedHomeScore) {
+            if (homeWin >= awayWin) projectedHomeScore += 1;
+            else projectedAwayScore += 1;
+        }
+        var reasonParts = [];
+        reasonParts.push(winner.name + ' projects ahead because the run expectation and composite team rating lean their way.');
+        if (Math.abs(away.offense - home.offense) >= 4) reasonParts.push(edgeLabel('offense', away, home) + ' on offense.');
+        if (Math.abs(away.startingPitching - home.startingPitching) >= 4) reasonParts.push(edgeLabel('startingPitching', away, home) + ' in starting pitching.');
+        if (Math.abs(away.bullpen - home.bullpen) >= 4) reasonParts.push(edgeLabel('bullpen', away, home) + ' in bullpen baseline.');
         return {
             status: 'estimated',
             away: away,
@@ -138,6 +163,8 @@
             homeWin: homeWin,
             awayRuns: round1(awayRuns),
             homeRuns: round1(homeRuns),
+            projectedAwayScore: projectedAwayScore,
+            projectedHomeScore: projectedHomeScore,
             awayRange: [round1(Math.max(0.5, awayRuns - spread)), round1(awayRuns + spread)],
             homeRange: [round1(Math.max(0.5, homeRuns - spread)), round1(homeRuns + spread)],
             totalRange: [round1(Math.max(2, totalRuns - spread * 1.35)), round1(totalRuns + spread * 1.35)],
@@ -147,7 +174,8 @@
             offensiveEdge: edgeLabel('offense', away, home),
             pitchingEdge: edgeLabel('startingPitching', away, home),
             runPreventionEdge: edgeLabel('runPrevention', away, home),
-            bullpenEdge: edgeLabel('bullpen', away, home)
+            bullpenEdge: edgeLabel('bullpen', away, home),
+            keyExplanation: reasonParts.join(' ')
         };
     }
 
@@ -156,39 +184,52 @@
     }
 
     function renderSelectors() {
-        var teams = activeTeams();
-        if (!findTeam(state.awayTeamId)) state.awayTeamId = teams[0] ? teams[0].id : '';
-        if (!findTeam(state.homeTeamId)) state.homeTeamId = teams[1] ? teams[1].id : '';
-        if (state.awayTeamId === state.homeTeamId && teams.length > 1) state.homeTeamId = teams.filter(function (team) { return team.id !== state.awayTeamId; })[0].id;
+        var awayTeams = poolTeams(state.awayPool);
+        var homeTeams = poolTeams(state.homePool);
+        if (!findTeamInPool(state.awayTeamId, state.awayPool)) state.awayTeamId = awayTeams[0] ? awayTeams[0].id : '';
+        if (!findTeamInPool(state.homeTeamId, state.homePool)) state.homeTeamId = homeTeams[1] ? homeTeams[1].id : (homeTeams[0] ? homeTeams[0].id : '');
+        if (state.awayTeamId === state.homeTeamId && homeTeams.length > 1) state.homeTeamId = homeTeams.filter(function (team) { return team.id !== state.awayTeamId; })[0].id;
 
+        var awayPoolSelect = byId('awayPoolSelect');
+        var homePoolSelect = byId('homePoolSelect');
         var awaySelect = byId('awayTeamSelect');
         var homeSelect = byId('homeTeamSelect');
+        if (awayPoolSelect) awayPoolSelect.value = state.awayPool;
+        if (homePoolSelect) homePoolSelect.value = state.homePool;
         if (awaySelect) {
             awaySelect.disabled = false;
-            awaySelect.innerHTML = teams.map(teamOption).join('');
+            awaySelect.innerHTML = awayTeams.map(teamOption).join('');
             awaySelect.value = state.awayTeamId;
         }
         if (homeSelect) {
             homeSelect.disabled = false;
-            homeSelect.innerHTML = teams.map(teamOption).join('');
+            homeSelect.innerHTML = homeTeams.map(teamOption).join('');
             homeSelect.value = state.homeTeamId;
         }
 
-        var away = findTeam(state.awayTeamId);
-        var home = findTeam(state.homeTeamId);
-        setText('awayTeamMeta', away ? [away.abbreviation, away.league, away.division].join(' / ') : 'No team selected');
-        setText('homeTeamMeta', home ? [home.abbreviation, home.league, home.division].join(' / ') : 'No team selected');
+        var away = findTeamInPool(state.awayTeamId, state.awayPool);
+        var home = findTeamInPool(state.homeTeamId, state.homePool);
+        setText('awayTeamMeta', teamMeta(away));
+        setText('homeTeamMeta', teamMeta(home));
         setText('selectedMatchupTitle', away && home ? away.name + ' vs ' + home.name : 'Choose two teams');
+        setText('awayHeaderName', away ? away.name : 'Select Team A');
+        setText('homeHeaderName', home ? home.name : 'Select Team B');
+        setText('awayHeaderMeta', teamMeta(away));
+        setText('homeHeaderMeta', teamMeta(home));
+        setText('awayEraBadge', eraLabel(away));
+        setText('homeEraBadge', eraLabel(home));
         setText('simDataSourceTitle', 'Local simulator baselines');
-        setText('simDataSourceDetail', 'Usable without SportsDataIO credentials. These are internal simulator baseline ratings, not sportsbook odds or provider projections.');
-        setText('simBoardMessage', 'Team vs Team Simulator ready: ' + teams.length + ' ' + (state.mode === 'historical' ? 'curated historical' : 'current MLB') + ' teams loaded.');
+        setText('simDataSourceDetail', 'Baseline simulator mode. Uses internal team ratings only, not sportsbook odds or provider projections.');
+        setText('simBoardMessage', 'Baseline simulator loaded: Team A has ' + awayTeams.length + ' ' + (state.awayPool === 'historical' ? 'classic' : 'current') + ' teams; Team B has ' + homeTeams.length + ' ' + (state.homePool === 'historical' ? 'classic' : 'current') + ' teams.');
 
         var run = byId('runSimulationButton');
         if (run) run.disabled = !(away && home && away.id !== home.id);
         var current = byId('currentModeButton');
         var historical = byId('historicalModeButton');
-        if (current) current.classList.toggle('active', state.mode === 'current');
-        if (historical) historical.classList.toggle('active', state.mode === 'historical');
+        var mixed = byId('mixedModeButton');
+        if (current) current.classList.toggle('active', state.preset === 'current');
+        if (historical) historical.classList.toggle('active', state.preset === 'historical');
+        if (mixed) mixed.classList.toggle('active', state.preset === 'mixed');
     }
 
     function renderComparison(result) {
@@ -245,10 +286,10 @@
             result.winner.name + ' grades as the simulated winner because of baseline run expectation and team-strength weighting.',
             'Average simulated score: ' + result.away.abbreviation + ' ' + result.awayRuns + ', ' + result.home.abbreviation + ' ' + result.homeRuns + '.',
             'Projected score range: ' + result.away.abbreviation + ' ' + result.awayRange[0] + '-' + result.awayRange[1] + ', ' + result.home.abbreviation + ' ' + result.homeRange[0] + '-' + result.homeRange[1] + '.',
-            'The model uses local offense, run prevention, starting pitching, bullpen, home-field, and volatility baselines only.'
+            'Uses internal baseline team rating only; does not yet include live rosters, injuries, weather, confirmed starters, or sportsbook odds.'
         ] : [
             'Choose two teams and run the simulator. Current and historical options are loaded locally, so failed provider data will not block this tool.',
-            'Simulator baselines are internal ratings. They are not SportsDataIO data, sportsbook odds, official picks, edges, or graded records.'
+            'Simulator baselines are internal ratings. They are not SportsDataIO data, sportsbook odds, verified betting edges, official picks, or graded records.'
         ];
         list.innerHTML = notes.map(function (note) { return '<li>' + escapeHtml(note) + '</li>'; }).join('');
     }
@@ -260,10 +301,23 @@
             setText('projectedScoreValue', '--');
             setText('winProbabilityValue', '--');
             setText('expectedRunsValue', '--');
+            setText('totalRangeValue', '--');
+            setText('runEnvironmentValue', '--');
+            setText('simulationConfidenceValue', '--');
             setText('awayProbabilityLabel', 'Team A');
             setText('homeProbabilityLabel', 'Team B');
             setText('awayProbabilityValue', '--');
             setText('homeProbabilityValue', '--');
+            setText('winnerBadge', 'Run a simulation');
+            setText('awayScoreLabel', 'Team A');
+            setText('homeScoreLabel', 'Team B');
+            setText('awayScoreBig', '--');
+            setText('homeScoreBig', '--');
+            setText('awayExpectedTile', 'Expected runs --');
+            setText('homeExpectedTile', 'Expected runs --');
+            setText('keyExplanationValue', 'Select a matchup and run the simulator to generate a projected winner, score range, win probability, and notes.');
+            var emptyCard = byId('resultCard');
+            if (emptyCard) emptyCard.setAttribute('data-result-state', 'empty');
             setText('projectionNotice', 'Simulation-based estimate mode is ready. Select two teams and click Run Simulation.');
             renderComparison(null);
             renderInputStatus(null);
@@ -272,9 +326,22 @@
         }
         var shellProjected = byId('projectionShell');
         if (shellProjected) shellProjected.setAttribute('data-projection-state', 'projected');
+        var resultCard = byId('resultCard');
+        if (resultCard) resultCard.setAttribute('data-result-state', 'projected');
+        setText('winnerBadge', result.winner.name + ' ' + roundPct(result.winnerPct));
+        setText('awayScoreLabel', result.away.name);
+        setText('homeScoreLabel', result.home.name);
+        setText('awayScoreBig', result.projectedAwayScore);
+        setText('homeScoreBig', result.projectedHomeScore);
+        setText('awayExpectedTile', 'Expected runs ' + result.awayRuns);
+        setText('homeExpectedTile', 'Expected runs ' + result.homeRuns);
+        setText('keyExplanationValue', result.keyExplanation);
         setText('projectedScoreValue', result.away.abbreviation + ' ' + result.awayRange[0] + '-' + result.awayRange[1] + ' / ' + result.home.abbreviation + ' ' + result.homeRange[0] + '-' + result.homeRange[1]);
         setText('winProbabilityValue', result.winner.abbreviation + ' ' + roundPct(result.winnerPct));
         setText('expectedRunsValue', result.away.abbreviation + ' ' + result.awayRuns + ' / ' + result.home.abbreviation + ' ' + result.homeRuns);
+        setText('totalRangeValue', result.totalRange[0] + '-' + result.totalRange[1]);
+        setText('runEnvironmentValue', result.runEnvironment);
+        setText('simulationConfidenceValue', result.volatility + ' volatility');
         setText('awayProbabilityLabel', result.away.name);
         setText('homeProbabilityLabel', result.home.name);
         setText('awayProbabilityValue', roundPct(result.awayWin));
@@ -290,17 +357,27 @@
     }
 
     function switchMode(mode) {
-        state.mode = mode === 'historical' ? 'historical' : 'current';
-        state.awayTeamId = activeTeams()[0].id;
-        state.homeTeamId = activeTeams()[1].id;
+        state.preset = mode === 'historical' || mode === 'mixed' ? mode : 'current';
+        if (state.preset === 'historical') {
+            state.awayPool = 'historical';
+            state.homePool = 'historical';
+        } else if (state.preset === 'mixed') {
+            state.awayPool = 'current';
+            state.homePool = 'historical';
+        } else {
+            state.awayPool = 'current';
+            state.homePool = 'current';
+        }
+        state.awayTeamId = poolTeams(state.awayPool)[0].id;
+        state.homeTeamId = poolTeams(state.homePool)[1] ? poolTeams(state.homePool)[1].id : poolTeams(state.homePool)[0].id;
         state.simulation = null;
         renderSelectors();
         renderResult(null);
     }
 
     function runSimulation() {
-        var away = findTeam(state.awayTeamId);
-        var home = findTeam(state.homeTeamId);
+        var away = findTeamInPool(state.awayTeamId, state.awayPool);
+        var home = findTeamInPool(state.homeTeamId, state.homePool);
         if (!away || !home || away.id === home.id) {
             setText('projectionNotice', 'Select two different teams to run a simulation. No output was generated.');
             return;
@@ -312,16 +389,22 @@
     function wireEvents() {
         var away = byId('awayTeamSelect');
         var home = byId('homeTeamSelect');
+        var awayPool = byId('awayPoolSelect');
+        var homePool = byId('homePoolSelect');
         var run = byId('runSimulationButton');
         var refresh = byId('refreshTeamsButton');
         var current = byId('currentModeButton');
         var historical = byId('historicalModeButton');
+        var mixed = byId('mixedModeButton');
+        if (awayPool) awayPool.addEventListener('change', function () { state.awayPool = awayPool.value === 'historical' ? 'historical' : 'current'; state.preset = 'custom'; state.awayTeamId = poolTeams(state.awayPool)[0].id; state.simulation = null; renderSelectors(); renderResult(null); });
+        if (homePool) homePool.addEventListener('change', function () { state.homePool = homePool.value === 'historical' ? 'historical' : 'current'; state.preset = 'custom'; state.homeTeamId = poolTeams(state.homePool)[0].id; state.simulation = null; renderSelectors(); renderResult(null); });
         if (away) away.addEventListener('change', function () { state.awayTeamId = away.value; state.simulation = null; renderSelectors(); renderResult(null); });
         if (home) home.addEventListener('change', function () { state.homeTeamId = home.value; state.simulation = null; renderSelectors(); renderResult(null); });
         if (run) run.addEventListener('click', runSimulation);
-        if (refresh) refresh.addEventListener('click', function () { renderSelectors(); renderResult(null); });
+        if (refresh) refresh.addEventListener('click', function () { switchMode('current'); });
         if (current) current.addEventListener('click', function () { switchMode('current'); });
         if (historical) historical.addEventListener('click', function () { switchMode('historical'); });
+        if (mixed) mixed.addEventListener('click', function () { switchMode('mixed'); });
     }
 
     function init() {
