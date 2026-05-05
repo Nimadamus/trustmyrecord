@@ -277,16 +277,17 @@
     }
     function pitcherMeta(pitcher) {
         if (!pitcher) return 'No pitcher selected.';
-        return pitcher.source + (pitcher.era != null ? ' / model ERA ' + pitcher.era : '') + ' / rating ' + Math.round(pitcher.quality) + (pitcher.note ? ' / ' + pitcher.note : '');
+        return 'Starter list is for simulation selection and may not reflect today\'s confirmed starter.';
     }
-    function pitcherChoiceButton(pitcher, selected) {
-        return '<button type="button" class="pitcher-choice' + (selected ? ' selected' : '') + '" data-pitcher-id="' + escapeHtml(pitcher.id) + '" aria-checked="' + (selected ? 'true' : 'false') + '" role="radio">' +
-            '<span class="pitcher-radio-dot" aria-hidden="true"></span>' +
-            '<span class="pitcher-detail"><strong>' + escapeHtml(pitcher.name) + '</strong>' +
-            '<span>' + escapeHtml(pitcher.verified ? 'Verified probable starter' : pitcher.source) + '</span>' +
-            '<small>' + escapeHtml((pitcher.era != null ? 'Model ERA ' + pitcher.era + ' / ' : '') + 'Rating ' + Math.round(pitcher.quality)) + '</small>' +
-            '<em>' + escapeHtml(pitcher.note || pitcher.source || 'Baseline simulator rating') + '</em></span>' +
-            '</button>';
+    function pitcherRecord(pitcher) {
+        var match = String(pitcher && pitcher.note ? pitcher.note : '').match(/(\d+\s*-\s*\d+)/);
+        return match ? match[1].replace(/\s+/g, '') : 'N/A';
+    }
+    function pitcherOptionLabel(pitcher) {
+        return pitcher.name + ', ERA ' + (pitcher.era != null ? pitcher.era : 'N/A') + ', W-L ' + pitcherRecord(pitcher);
+    }
+    function pitcherOptionTag(pitcher, selected) {
+        return '<option value="' + escapeHtml(pitcher.id) + '"' + (selected ? ' selected' : '') + '>' + escapeHtml(pitcherOptionLabel(pitcher)) + '</option>';
     }
     function strength(team) {
         return (team.offense * 0.38) + (team.runPrevention * 0.25) + (team.startingPitching * 0.22) + (team.bullpen * 0.15);
@@ -846,7 +847,7 @@
         var key = side === 'away' ? 'awayPitcherId' : 'homePitcherId';
         var pitcher = selectedPitcher(side, team, context);
         if (container) {
-            container.innerHTML = options.length ? options.map(function (option) { return pitcherChoiceButton(option, option.id === state[key]); }).join('') : '<div class="pitcher-empty">Starting pitcher list unavailable.</div>';
+            container.innerHTML = options.length ? '<select class="pitcher-select" data-pitcher-side="' + side + '" aria-label="' + (side === 'away' ? 'Team A' : 'Team B') + ' starting pitcher">' + options.map(function (option) { return pitcherOptionTag(option, option.id === state[key]); }).join('') + '</select>' : '<div class="pitcher-empty">Starting pitcher list unavailable.</div>';
         }
         if (meta) meta.textContent = pitcherMeta(pitcher);
     }
@@ -1191,19 +1192,19 @@
         if (homePool) homePool.addEventListener('change', function () { state.homePool = homePool.value === 'historical' ? 'historical' : 'current'; state.preset = 'custom'; state.homeTeamId = poolTeams(state.homePool)[0].id; state.homePitcherId = ''; state.homePitcherTouched = false; state.simulation = null; renderSelectors(); renderResult(null); });
         if (away) away.addEventListener('change', function () { state.awayTeamId = away.value; state.awayPitcherId = ''; state.awayPitcherTouched = false; state.simulation = null; renderSelectors(); renderResult(null); });
         if (home) home.addEventListener('change', function () { state.homeTeamId = home.value; state.homePitcherId = ''; state.homePitcherTouched = false; state.simulation = null; renderSelectors(); renderResult(null); });
-        if (awayPitcherOptions) awayPitcherOptions.addEventListener('click', function (event) {
-            var button = event.target && event.target.closest ? event.target.closest('[data-pitcher-id]') : null;
-            if (!button) return;
-            state.awayPitcherId = button.getAttribute('data-pitcher-id');
+        if (awayPitcherOptions) awayPitcherOptions.addEventListener('change', function (event) {
+            var select = event.target && event.target.closest ? event.target.closest('[data-pitcher-side="away"]') : null;
+            if (!select) return;
+            state.awayPitcherId = select.value;
             state.awayPitcherTouched = true;
             state.simulation = null;
             renderPitcherOptions('away', findTeamInPool(state.awayTeamId, state.awayPool), state.activeLiveContext);
             renderResult(null);
         });
-        if (homePitcherOptions) homePitcherOptions.addEventListener('click', function (event) {
-            var button = event.target && event.target.closest ? event.target.closest('[data-pitcher-id]') : null;
-            if (!button) return;
-            state.homePitcherId = button.getAttribute('data-pitcher-id');
+        if (homePitcherOptions) homePitcherOptions.addEventListener('change', function (event) {
+            var select = event.target && event.target.closest ? event.target.closest('[data-pitcher-side="home"]') : null;
+            if (!select) return;
+            state.homePitcherId = select.value;
             state.homePitcherTouched = true;
             state.simulation = null;
             renderPitcherOptions('home', findTeamInPool(state.homeTeamId, state.homePool), state.activeLiveContext);
