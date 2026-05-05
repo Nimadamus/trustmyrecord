@@ -18,6 +18,9 @@ const script = fs.readFileSync(scriptPath, 'utf8');
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
+assert(/awayPitcherSelect/.test(html), 'Team A pitcher selector is present');
+assert(/homePitcherSelect/.test(html), 'Team B pitcher selector is present');
+assert(/Starting pitcher/.test(html), 'starting pitcher controls are labeled');
 assert(/Run Simulation/.test(html), 'Run Simulation button is present');
 assert(/Current Teams/.test(html), 'current-team preset is present');
 assert(/Classic Teams/.test(html), 'classic-team preset is present');
@@ -41,6 +44,7 @@ assert(!/live verified|official injury/i.test(html), 'page does not include fake
 
 const elementIds = [
   'awayTeamSelect','homeTeamSelect','awayPoolSelect','homePoolSelect','runSimulationButton','refreshTeamsButton',
+  'awayPitcherSelect','homePitcherSelect','awayPitcherMeta','homePitcherMeta',
   'currentModeButton','historicalModeButton','mixedModeButton','modeHelpText','dataModeBadge','dataModeDetail',
   'liveInputGrid','awayTeamMeta','homeTeamMeta','selectedMatchupTitle','awayHeaderName','homeHeaderName',
   'awayHeaderMeta','homeHeaderMeta','awayEraBadge','homeEraBadge','resultCard','winnerBadge','awayScoreLabel',
@@ -233,6 +237,13 @@ function choose(elements, awayLabel, homeLabel) {
   elements.homeTeamSelect.listeners.change();
 }
 
+function choosePitchers(elements, awayLabel, homeLabel) {
+  elements.awayPitcherSelect.value = optionValue(elements.awayPitcherSelect.innerHTML, awayLabel);
+  elements.awayPitcherSelect.listeners.change();
+  elements.homePitcherSelect.value = optionValue(elements.homePitcherSelect.innerHTML, homeLabel);
+  elements.homePitcherSelect.listeners.change();
+}
+
 async function flushAsync() {
   await Promise.resolve();
   await Promise.resolve();
@@ -249,6 +260,8 @@ async function flushAsync() {
   assert.strictEqual(simulator.localTeams.current.length, 30, '30 current teams are available locally');
   assert.strictEqual(simulator.localTeams.historical.length, 20, '20 curated historical teams are available locally');
   assert.strictEqual(simulator.liveInputs.length, 11, 'live input architecture exposes eleven source slots');
+  assert(/ARI Team baseline ace/.test(elements.awayPitcherSelect.innerHTML), 'current baseline pitcher options render');
+  assert(/ATL Mid-rotation starter/.test(elements.homePitcherSelect.innerHTML), 'current opponent pitcher options render');
   assert.strictEqual(elements.dataModeBadge.textContent, 'Baseline ratings', 'baseline data mode is explicit by default');
   assert(/Verified live inputs are unavailable/.test(elements.dataModeDetail.textContent), 'live input unavailability is explicit');
   assert(/MLB schedule\/finals/.test(elements.liveInputGrid.innerHTML), 'live input grid renders schedule/finals');
@@ -265,7 +278,13 @@ async function flushAsync() {
   simulator.runSimulation();
   assert.strictEqual(elements.resultCard.getAttribute('data-result-state'), 'projected', 'fallback run renders projected state');
   assert(/%/.test(elements.winProbabilityValue.textContent), 'estimated win percentage renders after simulation');
+  assert(/Starting pitchers/.test(elements.inputSummary.innerHTML), 'output includes selected starters row');
+  assert(/ARI Team baseline ace|ATL Team baseline ace/.test(elements.matchupNotes.innerHTML), 'output notes include selected current starter names');
   assert.strictEqual(elements.dataModeValue.textContent, 'Baseline ratings', 'fallback output states baseline data mode');
+  const baselineScore = elements.expectedRunsValue.textContent;
+  choosePitchers(elements, 'ARI Depth starter', 'ATL Team baseline ace');
+  simulator.runSimulation();
+  assert.notStrictEqual(elements.expectedRunsValue.textContent, baselineScore, 'changing selected current starters changes projection');
   assert(/Simulation-based estimate, not sportsbook odds or provider projection/.test(elements.projectionNotice.textContent), 'fallback disclaimer is explicit');
   assert(/Sportsbook odds/.test(elements.inputSummary.innerHTML), 'missing sportsbook data is shown cleanly');
   assert(!/DraftKings|FanDuel|BetMGM|live verified|official injury/i.test([
@@ -278,19 +297,26 @@ async function flushAsync() {
   elements.historicalModeButton.listeners.click();
   assert(/1927 New York Yankees/.test(elements.awayTeamSelect.innerHTML), 'historical teams render after tab switch');
   assert(/2023 Texas Rangers/.test(elements.homeTeamSelect.innerHTML), 'full historical list is present');
+  assert(/Waite Hoyt/.test(elements.awayPitcherSelect.innerHTML), 'historical pitcher options render');
   simulator.runSimulation();
   assert(/Classic baseline/.test(elements.simulationModeValue.textContent), 'classic matchup reports classic simulation mode');
+  assert(/Waite Hoyt|Red Ruffing/.test(elements.matchupNotes.innerHTML), 'classic output includes historical starter names');
 
   elements.mixedModeButton.listeners.click();
   assert.strictEqual(elements.awayPoolSelect.value, 'current', 'mixed mode keeps Team A current');
   assert.strictEqual(elements.homePoolSelect.value, 'historical', 'mixed mode sets Team B historical');
+  assert(/ARI Team baseline ace/.test(elements.awayPitcherSelect.innerHTML), 'mixed mode current pitcher options render');
+  assert(/Red Ruffing/.test(elements.homePitcherSelect.innerHTML), 'mixed mode historical pitcher options render');
   simulator.runSimulation();
   assert.strictEqual(elements.projectionShell.getAttribute('data-projection-state'), 'projected', 'mixed matchup can run simulation');
   assert(/Mixed-era baseline/.test(elements.simulationModeValue.textContent), 'mixed matchup reports mixed-era simulation mode');
+  assert(/Starting Pitchers/.test(elements.matchupNotes.innerHTML), 'mixed output includes selected starter section');
 
   const live = createSimulator('available');
   await live.simulator.loadLiveContext();
   choose(live.elements, 'Texas Rangers', 'New York Yankees');
+  assert(/Jacob deGrom/.test(live.elements.awayPitcherSelect.innerHTML), 'live probable away starter appears as a selectable pitcher');
+  assert(/Gerrit Cole/.test(live.elements.homePitcherSelect.innerHTML), 'live probable home starter appears as a selectable pitcher');
   live.simulator.runSimulation();
   assert.strictEqual(live.elements.dataModeBadge.textContent, 'Verified live inputs', 'live path switches data mode');
   assert.strictEqual(live.elements.dataModeValue.textContent, 'Verified live inputs', 'live output states verified data mode');
@@ -307,6 +333,12 @@ async function flushAsync() {
   assert(/Recent scoring form/.test(live.elements.inputSummary.innerHTML), 'live path includes recent scoring form source');
   assert(/Recent scoring form from ESPN finals/.test(live.elements.matchupNotes.innerHTML), 'live path factors recent final scores');
   assert(/Gerrit Cole|Jacob deGrom|Yankee Stadium|Weather context from ESPN|ESPN injury report|Bullpen context is limited/.test(live.elements.matchupNotes.innerHTML), 'live path renders verified context as factors');
+  assert(/Starting Pitchers:/.test(live.elements.matchupNotes.innerHTML) && /Jacob deGrom/.test(live.elements.matchupNotes.innerHTML) && /Gerrit Cole/.test(live.elements.matchupNotes.innerHTML), 'live output shows selected verified probable starters');
+  const liveExpectedRuns = live.elements.expectedRunsValue.textContent;
+  choosePitchers(live.elements, 'TEX Depth starter', 'Gerrit Cole');
+  live.simulator.runSimulation();
+  assert.notStrictEqual(live.elements.expectedRunsValue.textContent, liveExpectedRuns, 'changing selected live/manual starter changes projection');
+  assert(/TEX Depth starter/.test(live.elements.matchupNotes.innerHTML), 'manual selected current starter is shown in output');
   assert(!/verified betting edge|official injury/i.test(live.elements.matchupNotes.innerHTML), 'live path does not claim fake edges or injuries');
 
   console.log('mlb-simulator-page-test: ok');
