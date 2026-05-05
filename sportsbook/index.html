@@ -10059,11 +10059,13 @@ window.toggleSportFamily = function (family) {
             }
         } catch (e) {}
 
-        // Two-sided default cells (top = away, bottom = home).
-        // No ctx → buttons render disabled, so missing markets don't fake-click.
-        var spreadCell = oddsStack(oddsButton('—', '—'), oddsButton('—', '—'));
-        var mlCell = oddsStack(oddsButton('—', '—'), oddsButton('—', '—'));
-        var totalCell = oddsStack(oddsButton('—', '—'), oddsButton('—', '—'));
+        // Two-sided default buttons. No ctx -> disabled placeholders.
+        var awaySpreadBtn = oddsButton('—', '—');
+        var homeSpreadBtn = oddsButton('—', '—');
+        var awayMlBtn = oddsButton('ML', '—');
+        var homeMlBtn = oddsButton('ML', '—');
+        var overBtn = oddsButton('O —', '—');
+        var underBtn = oddsButton('U —', '—');
         var gi = gameIndex | 0;
 
         if (book) {
@@ -10075,19 +10077,15 @@ window.toggleSportFamily = function (family) {
                 var awayPx = awaySpread ? fmtPrice(awaySpread.price) : null;
                 var homeLine = homeSpread ? fmtLine(homeSpread.point) : null;
                 var homePx = homeSpread ? fmtPrice(homeSpread.price) : null;
-                spreadCell = oddsStack(
-                    oddsButton(awayLine, awayPx, awaySpread ? { gameIndex: gi, betType: 'spread', team: away, line: awaySpread.point, odds: awaySpread.price, awayTeam: away, homeTeam: home } : null),
-                    oddsButton(homeLine, homePx, homeSpread ? { gameIndex: gi, betType: 'spread', team: home, line: homeSpread.point, odds: homeSpread.price, awayTeam: away, homeTeam: home } : null)
-                );
+                awaySpreadBtn = oddsButton(awayLine, awayPx, awaySpread ? { gameIndex: gi, betType: 'spread', team: away, line: awaySpread.point, odds: awaySpread.price, awayTeam: away, homeTeam: home } : null);
+                homeSpreadBtn = oddsButton(homeLine, homePx, homeSpread ? { gameIndex: gi, betType: 'spread', team: home, line: homeSpread.point, odds: homeSpread.price, awayTeam: away, homeTeam: home } : null);
             }
             var mlM = findMarket(book, 'h2h');
             if (mlM) {
                 var awayMl = findOutcome(mlM, away) || (mlM.outcomes && mlM.outcomes[0]);
                 var homeMl = findOutcome(mlM, home) || (mlM.outcomes && mlM.outcomes[1]);
-                mlCell = oddsStack(
-                    oddsButton('ML', awayMl ? fmtPrice(awayMl.price) : null, awayMl ? { gameIndex: gi, betType: 'ml', team: away, line: '', odds: awayMl.price, awayTeam: away, homeTeam: home } : null),
-                    oddsButton('ML', homeMl ? fmtPrice(homeMl.price) : null, homeMl ? { gameIndex: gi, betType: 'ml', team: home, line: '', odds: homeMl.price, awayTeam: away, homeTeam: home } : null)
-                );
+                awayMlBtn = oddsButton('ML', awayMl ? fmtPrice(awayMl.price) : null, awayMl ? { gameIndex: gi, betType: 'ml', team: away, line: '', odds: awayMl.price, awayTeam: away, homeTeam: home } : null);
+                homeMlBtn = oddsButton('ML', homeMl ? fmtPrice(homeMl.price) : null, homeMl ? { gameIndex: gi, betType: 'ml', team: home, line: '', odds: homeMl.price, awayTeam: away, homeTeam: home } : null);
             }
             var totalM = findMarket(book, 'totals');
             if (totalM && totalM.outcomes && totalM.outcomes.length >= 2) {
@@ -10101,36 +10099,36 @@ window.toggleSportFamily = function (family) {
                 if (!under) under = totalM.outcomes[1];
                 var overLine = (over && over.point != null) ? 'O ' + over.point : 'O —';
                 var underLine = (under && under.point != null) ? 'U ' + under.point : 'U —';
-                totalCell = oddsStack(
-                    oddsButton(overLine, over ? fmtPrice(over.price) : null, over ? { gameIndex: gi, betType: 'over', team: 'Over', line: over.point, odds: over.price, awayTeam: away, homeTeam: home } : null),
-                    oddsButton(underLine, under ? fmtPrice(under.price) : null, under ? { gameIndex: gi, betType: 'under', team: 'Under', line: under.point, odds: under.price, awayTeam: away, homeTeam: home } : null)
-                );
+                overBtn = oddsButton(overLine, over ? fmtPrice(over.price) : null, over ? { gameIndex: gi, betType: 'over', team: 'Over', line: over.point, odds: over.price, awayTeam: away, homeTeam: home } : null);
+                underBtn = oddsButton(underLine, under ? fmtPrice(under.price) : null, under ? { gameIndex: gi, betType: 'under', team: 'Under', line: under.point, odds: under.price, awayTeam: away, homeTeam: home } : null);
             }
         }
 
-        var matchup =
-            '<div class="sb-board-matchup">' +
-                '<div class="sb-board-when">' +
-                    (dateStr ? '<span>' + dateStr + '</span>' : '') +
-                    (timeStr ? '<span>' + timeStr + '</span>' : '') +
-                '</div>' +
-                '<div class="sb-board-teams">' +
-                    '<div class="sb-board-team"><span class="sb-team-tag">A</span><b>' + (away || 'Away') + '</b></div>' +
-                    '<div class="sb-board-team"><span class="sb-team-tag">H</span><b>' + (home || 'Home') + '</b></div>' +
-                '</div>' +
-            '</div>';
+        var whenText = [dateStr, timeStr].filter(Boolean).join(' • ');
+        var awayTeamCell = '<div class="team-cell"><span class="sb-team-tag">A</span><b>' + (away || 'Away') + '</b></div>';
+        var homeTeamCell = '<div class="team-cell"><span class="sb-team-tag">H</span><b>' + (home || 'Home') + '</b></div>';
 
-        var sport = (window.TMR && window.TMR.selectedSport) || 'NBA';
-        var openHandler = "window.selectSportAndShowGames('" + sport + "')";
-        var actionCell = '<button type="button" class="sb-board-action" onclick="' + openHandler + '">Open Board</button>';
-
-        return '<div class="sb-board-row">' +
-               matchup +
-               '<div class="sb-board-col" data-col="spread">' + spreadCell + '</div>' +
-               '<div class="sb-board-col" data-col="ml">' + mlCell + '</div>' +
-               '<div class="sb-board-col" data-col="total">' + totalCell + '</div>' +
-               actionCell +
-               '</div>';
+        return '<article class="sportsbook-game-card">' +
+            '<div class="game-meta-row">' + (whenText || '&nbsp;') + '</div>' +
+            '<div class="market-grid-row market-header-row">' +
+                '<div class="market-header-cell">Matchup</div>' +
+                '<div class="market-header-cell">Spread</div>' +
+                '<div class="market-header-cell">Moneyline</div>' +
+                '<div class="market-header-cell">Total</div>' +
+            '</div>' +
+            '<div class="market-grid-row team-market-row away-team-row">' +
+                awayTeamCell +
+                '<div class="odds-cell">' + awaySpreadBtn + '</div>' +
+                '<div class="odds-cell">' + awayMlBtn + '</div>' +
+                '<div class="odds-cell">' + overBtn + '</div>' +
+            '</div>' +
+            '<div class="market-grid-row team-market-row home-team-row">' +
+                homeTeamCell +
+                '<div class="odds-cell">' + homeSpreadBtn + '</div>' +
+                '<div class="odds-cell">' + homeMlBtn + '</div>' +
+                '<div class="odds-cell">' + underBtn + '</div>' +
+            '</div>' +
+        '</article>';
     }
 
     function setHeader(sport) {
@@ -28797,6 +28795,222 @@ document.addEventListener('DOMContentLoaded', function() {
 
         body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds-price {
             font-size: 11.5px !important;
+        }
+    }
+
+    /* Sportsbook board reset v5: render each game as one clean sportsbook grid. */
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-board-grid {
+        background: transparent !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        overflow: visible !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-board-grid > .sportsbook-board-grid-head {
+        display: none !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-board-grid-body {
+        display: grid !important;
+        gap: 12px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+        border: 0 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-game-card {
+        --tmr-game-grid: minmax(260px, 1.8fr) minmax(140px, 1fr) minmax(140px, 1fr) minmax(140px, 1fr);
+        display: block !important;
+        width: 100% !important;
+        overflow: hidden !important;
+        border: 1px solid #1f2e48 !important;
+        border-radius: 14px !important;
+        background: #101b30 !important;
+        box-shadow: none !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-game-card *,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-game-card *::before,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-game-card *::after {
+        box-sizing: border-box !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .game-meta-row {
+        position: static !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 36px !important;
+        padding: 8px 12px !important;
+        margin: 0 !important;
+        border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+        background: #0b1525 !important;
+        color: #aebed3 !important;
+        font: 700 12px/1.2 "Inter", system-ui, sans-serif !important;
+        letter-spacing: 0.02em !important;
+        text-align: center !important;
+        text-transform: uppercase !important;
+        white-space: nowrap !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .market-grid-row {
+        display: grid !important;
+        grid-template-columns: var(--tmr-game-grid) !important;
+        align-items: stretch !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        gap: 0 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .market-header-row {
+        min-height: 42px !important;
+        background: #07101d !important;
+        border-bottom: 1px solid #1f2e48 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .market-header-cell {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 42px !important;
+        padding: 0 12px !important;
+        border-left: 1px solid rgba(31, 46, 72, 0.72) !important;
+        color: #9bacbf !important;
+        font: 800 11px/1.1 "Inter", system-ui, sans-serif !important;
+        letter-spacing: 0.12em !important;
+        text-align: center !important;
+        text-transform: uppercase !important;
+        white-space: nowrap !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .market-header-cell:first-child {
+        justify-content: flex-start !important;
+        border-left: 0 !important;
+        padding-left: 16px !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-market-row {
+        min-height: 58px !important;
+        border-bottom: 1px solid rgba(31, 46, 72, 0.72) !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-market-row:last-child {
+        border-bottom: 0 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-cell {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 12px !important;
+        min-height: 58px !important;
+        padding: 10px 16px !important;
+        overflow: hidden !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-cell .sb-team-tag {
+        flex: 0 0 30px !important;
+        width: 30px !important;
+        height: 30px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-cell b {
+        display: block !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        color: #eef5ff !important;
+        font: 750 16px/1.15 "Inter", system-ui, sans-serif !important;
+        letter-spacing: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-cell {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 58px !important;
+        padding: 6px 8px !important;
+        border-left: 1px solid rgba(31, 46, 72, 0.72) !important;
+        overflow: hidden !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-cell .sb-odds {
+        width: 100% !important;
+        min-height: 44px !important;
+        height: 44px !important;
+        max-height: 44px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 2px !important;
+        margin: 0 !important;
+        padding: 5px 8px !important;
+        border-radius: 8px !important;
+        text-align: center !important;
+        transform: none !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-cell .sb-odds-line,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-cell .sb-odds-price {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        position: static !important;
+        text-align: center !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        transform: none !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-cell .sb-odds-line {
+        color: #f3f7ff !important;
+        font: 700 13.5px/1.1 "Inter", system-ui, sans-serif !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-cell .sb-odds-price {
+        color: #8be56e !important;
+        font: 700 12.25px/1.1 "Inter", system-ui, sans-serif !important;
+    }
+
+    @media (max-width: 860px) {
+        body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-game-card {
+            --tmr-game-grid: 1fr !important;
+        }
+
+        body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .market-header-row {
+            display: none !important;
+        }
+
+        body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-market-row {
+            grid-template-columns: 1fr !important;
+            min-height: 0 !important;
+        }
+
+        body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-cell {
+            min-height: 44px !important;
+            padding: 9px 14px !important;
+            border-bottom: 1px solid rgba(31, 46, 72, 0.58) !important;
+        }
+
+        body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-cell {
+            min-height: 58px !important;
+            border-left: 0 !important;
+            border-bottom: 1px solid rgba(31, 46, 72, 0.42) !important;
+        }
+
+        body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-cell:last-child {
+            border-bottom: 0 !important;
         }
     }
     </style>
