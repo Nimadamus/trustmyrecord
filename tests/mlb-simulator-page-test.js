@@ -31,7 +31,7 @@ assert(/Sportsbook odds/.test(html), 'sportsbook odds slot is present');
 assert(/Roster context/.test(html), 'roster context slot is present');
 assert(/Recent form/.test(html), 'recent form slot is present');
 assert(/Bullpen context/.test(html), 'bullpen context slot is present');
-assert(/not using live rosters, injuries, starters, weather, sportsbook odds, or verified betting edges yet/.test(html), 'honest limitations text is present');
+assert(/not using live rosters, injuries, starters, weather, sportsbook odds, or betting-edge claims yet/.test(html), 'honest limitations text is present');
 assert(!/Loading MLB games|Loading sportsbook board|Waiting for board data|Projection engine not connected yet|Not connected for custom simulation|Unavailable without real inputs/.test(html), 'old board-dependent placeholder text is removed');
 assert(!/lock pick|locked pick|submit pick/i.test(html), 'page does not expose sportsbook submission actions');
 assert(!/live verified|official injury/i.test(html), 'page does not include fake live data claims');
