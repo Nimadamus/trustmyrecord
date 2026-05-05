@@ -1,127 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="canonical" href="https://trustmyrecord.com/trustmyrecord-tools/">
-    <title>TrustMyRecord Tools | Sports Simulators, Verified Trends, and Model Workflows</title>
-    <meta name="description" content="The TrustMyRecord tools ecosystem. MLB matchup simulator, verified trend research, model-builder workflows, and structured sports analytics tools built for sharper analysis.">
-    <meta property="og:title" content="TrustMyRecord Tools">
-    <meta property="og:description" content="Simulations, verified trends, and model workflows built for sharper sports analysis.">
-    <meta property="og:url" content="https://trustmyrecord.com/trustmyrecord-tools/">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="TrustMyRecord">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="TrustMyRecord Tools">
-    <meta name="twitter:description" content="Sports simulators, verified trends, and model workflows from TrustMyRecord.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/mlb-simulator-explainer.css">
-    <style>
-        body { background: #06101f; color: #e8f2ff; font-family: 'Inter', system-ui, sans-serif; margin: 0; }
-        .hub-shell { width: min(1180px, 100%); margin: 0 auto; padding: 56px 24px 96px; }
-        .hub-hero { display: grid; gap: 14px; padding: 28px 0 18px; border-bottom: 1px solid rgba(255,255,255,.08); margin-bottom: 36px; }
-        .hub-kicker { color: #67e8f9; font-size: 12px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
-        .hub-hero h1 { margin: 0; font-family: 'Barlow', 'Inter', sans-serif; font-size: clamp(34px, 5vw, 54px); line-height: 1.02; letter-spacing: -.025em; color: #fff; }
-        .hub-hero p { margin: 0; max-width: 760px; color: #b8c8e0; font-size: clamp(15px, 1.5vw, 18px); line-height: 1.55; }
-        .hub-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
-        .hub-card { display: flex; flex-direction: column; gap: 14px; padding: 26px 24px 24px; border: 1px solid rgba(255,255,255,.10); border-radius: 16px; background: linear-gradient(180deg, rgba(20, 32, 58, .72) 0%, rgba(8, 14, 28, .82) 100%); box-shadow: 0 18px 44px rgba(5, 10, 24, .35); }
-        .hub-card.featured { border-color: rgba(45, 212, 191, .35); box-shadow: 0 22px 56px rgba(45, 212, 191, .12), 0 18px 44px rgba(5, 10, 24, .35); }
-        .hub-card .hub-tag { align-self: flex-start; padding: 4px 10px; border-radius: 999px; font-size: 10.5px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
-        .hub-card .hub-tag.live { color: #07101f; background: linear-gradient(135deg, #67e8f9, #2dd4bf); }
-        .hub-card .hub-tag.beta { color: #07101f; background: #f4c95d; }
-        .hub-card .hub-tag.soon { color: #cfe1f5; background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.16); }
-        .hub-card h2 { margin: 0; font-family: 'Barlow', 'Inter', sans-serif; font-size: 24px; line-height: 1.1; letter-spacing: -.01em; color: #fff; }
-        .hub-card p { margin: 0; color: #b8c8e0; font-size: 14.5px; line-height: 1.6; }
-        .hub-card-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: auto; padding-top: 6px; }
-        .hub-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 0 18px; border-radius: 10px; font-size: 13px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; }
-        .hub-btn.primary { color: #07101f; background: linear-gradient(135deg, #67e8f9, #2dd4bf); box-shadow: 0 14px 32px rgba(45, 212, 191, .25); }
-        .hub-btn.ghost { color: #e8f2ff; border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.05); }
-        .hub-btn.disabled { color: #6b7d97; border: 1px dashed rgba(255,255,255,.14); background: transparent; cursor: not-allowed; pointer-events: none; }
-        .hub-foot { margin-top: 48px; padding: 22px 24px; border: 1px solid rgba(255,255,255,.08); border-radius: 14px; background: rgba(255,255,255,.03); color: #9fb0c8; font-size: 13.5px; line-height: 1.6; }
-        .hub-foot a { color: #67e8f9; }
-        @media (max-width: 600px) {
-            .hub-shell { padding: 40px 18px 72px; }
-            .hub-card { padding: 22px 20px 20px; }
-            .hub-card h2 { font-size: 21px; }
-        }
-    </style>
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "CollectionPage",
-      "name": "TrustMyRecord Tools",
-      "description": "Sports simulators, verified trends, and model workflows from TrustMyRecord.",
-      "url": "https://trustmyrecord.com/trustmyrecord-tools/",
-      "publisher": {
-        "@type": "Organization",
-        "name": "TrustMyRecord",
-        "url": "https://trustmyrecord.com/"
-      }
-    }
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="canonical" href="https://trustmyrecord.com/trustmyrecord-tools/">
+  <title>TrustMyRecord Tools | Sports Analysis Tools</title>
+  <meta name="description" content="TrustMyRecord tools for simulations, verified matchup trends, and structured sports analysis.">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#05070d; --panel:#0b1220; --panel2:#101a2b; --line:#1f3350; --text:#f8fafc; --muted:#9aa8bc; --cyan:#22d3ee; --teal:#2dd4bf; --warn:#f5a524; --font:"Inter",system-ui,sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 20% 0%, rgba(34,211,238,.15), transparent 360px), linear-gradient(180deg,#07101d,#05070d); color: var(--text); font-family: var(--font); }
+    a { color: inherit; text-decoration: none; }
+    .tools-topbar { min-height: 72px; display:flex; align-items:center; justify-content:space-between; gap:18px; padding:14px clamp(18px,4vw,44px); border-bottom:1px solid var(--line); background:rgba(3,5,10,.88); }
+    .tools-brand { display:inline-flex; align-items:center; gap:12px; font-weight:900; }
+    .tools-mark { display:grid; place-items:center; width:42px; height:42px; border-radius:8px; color:#031016; background:linear-gradient(135deg,var(--teal),#77f8ff); font-size:13px; }
+    .tools-nav { display:flex; gap:10px; flex-wrap:wrap; }
+    .tools-nav a { min-height:38px; display:inline-flex; align-items:center; padding:0 12px; border:1px solid rgba(148,163,184,.18); border-radius:8px; color:#d9e5f5; font-size:12px; font-weight:850; text-transform:uppercase; letter-spacing:.06em; }
+    .tools-shell { width:min(1160px,calc(100% - 36px)); margin:0 auto; padding:clamp(42px,7vw,82px) 0 80px; }
+    .tools-hero { display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:28px; align-items:end; margin-bottom:28px; }
+    .tools-kicker, .tool-card span { color:var(--cyan); font-size:11px; font-weight:900; letter-spacing:.14em; text-transform:uppercase; }
+    h1 { margin:12px 0 14px; font-size:clamp(46px,8vw,88px); line-height:.92; }
+    .tools-hero p { max-width:760px; margin:0; color:#cbd5e1; font-size:clamp(17px,2vw,22px); line-height:1.55; }
+    .tools-note { padding:18px; border:1px solid var(--line); border-radius:8px; background:rgba(16,26,43,.72); color:#cbd5e1; line-height:1.5; }
+    .tools-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    .tool-card { padding:22px; border:1px solid var(--line); border-radius:8px; background:linear-gradient(180deg,rgba(16,26,43,.96),rgba(7,13,24,.96)); box-shadow:0 18px 48px rgba(0,0,0,.24); }
+    .tool-card h2 { margin:10px 0; font-size:28px; }
+    .tool-card p { margin:0; color:#cbd5e1; line-height:1.6; }
+    .tool-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    .tool-btn { min-height:42px; display:inline-flex; align-items:center; justify-content:center; padding:0 14px; border:1px solid rgba(148,163,184,.24); border-radius:8px; color:#e8f2ff; font-size:12px; font-weight:900; letter-spacing:.05em; text-transform:uppercase; }
+    .tool-btn.primary { color:#04111a; border-color:transparent; background:linear-gradient(135deg,var(--teal),var(--cyan)); }
+    .tool-status { color:var(--warn); }
+    @media (max-width: 820px) { .tools-hero, .tools-grid { grid-template-columns:1fr; } .tools-topbar { align-items:flex-start; flex-direction:column; } }
+  </style>
 </head>
 <body>
-    <header class="sim-explainer-topbar" aria-label="TrustMyRecord navigation">
-        <a class="sim-explainer-brand" href="/">TrustMyRecord</a>
-        <nav class="sim-explainer-nav" aria-label="Primary">
-            <a href="/">Home</a>
-            <a href="/sportsbook/">Sportsbook</a>
-            <a href="/handicappers/">Handicappers</a>
-            <a href="/trustmyrecord-tools/" aria-current="page">Tools</a>
-        </nav>
-    </header>
-
-    <main class="hub-shell">
-        <section class="hub-hero">
-            <span class="hub-kicker">TrustMyRecord Tools</span>
-            <h1>Simulations, verified trends, and model workflows built for sharper sports analysis.</h1>
-            <p>Structured tools for fans, analysts, and serious sports bettors. Pick a matchup, surface a verified trend, or build a model. Every tool is labeled honestly about what it does and what it does not.</p>
-        </section>
-
-        <section class="hub-grid" aria-label="Available tools">
-            <article class="hub-card featured">
-                <span class="hub-tag live">Live Tool</span>
-                <h2>MLB Simulator</h2>
-                <p>Compare current MLB teams, classic teams, and mixed era matchups with starting pitcher context and projected box score style outputs. Built for repeatable scenario testing, not crystal-ball calls.</p>
-                <div class="hub-card-actions">
-                    <a class="hub-btn primary" href="/mlb-simulator/">Use Tool</a>
-                    <a class="hub-btn ghost" href="/trustmyrecord-tools/mlb-simulator/">Read Explainer</a>
-                </div>
-            </article>
-
-            <article class="hub-card">
-                <span class="hub-tag live">Live Tool</span>
-                <h2>Trendspotter</h2>
-                <p>Surfaces verified trends from available matchup data. Built to organize repeatable patterns into something a researcher can actually use, not a feed of noise dressed up as signal.</p>
-                <div class="hub-card-actions">
-                    <a class="hub-btn primary" href="/trendspotter/">Open Trendspotter</a>
-                </div>
-            </article>
-
-            <article class="hub-card">
-                <span class="hub-tag beta">Workspace</span>
-                <h2>Model Builder</h2>
-                <p>Private model configuration workspace for building and testing model logic before public release. Aimed at structured backtesting and honest model evaluation.</p>
-                <div class="hub-card-actions">
-                    <a class="hub-btn primary" href="/model-builder/">Open Model Builder</a>
-                </div>
-            </article>
-
-            <article class="hub-card">
-                <span class="hub-tag soon">Coming Soon</span>
-                <h2>BetLegend Pro</h2>
-                <p>Advanced research console for structured betting analysis and model-supported review. Public access has not opened yet. No fake URL, no fake stats.</p>
-                <div class="hub-card-actions">
-                    <span class="hub-btn disabled" aria-disabled="true">Not Yet Available</span>
-                </div>
-            </article>
-        </section>
-
-        <div class="hub-foot">
-            TrustMyRecord tools are built around verified records, transparent inputs, and honest limitations. None of these tools claim guaranteed winners, and none ingest live odds, lineups, injuries, or weather unless that data source is explicitly labeled inside the tool itself. <a href="/">Return to TrustMyRecord</a>.
+  <header class="tools-topbar">
+    <a class="tools-brand" href="/"><span class="tools-mark">TMR</span><span>TrustMyRecord</span></a>
+    <nav class="tools-nav" aria-label="Tools navigation">
+      <a href="/sportsbook/">Make Picks</a>
+      <a href="/mlb-simulator/">MLB Simulator</a>
+      <a href="/trendspotter/">Trendspotter</a>
+    </nav>
+  </header>
+  <main class="tools-shell">
+    <section class="tools-hero">
+      <div>
+        <span class="tools-kicker">TrustMyRecord Tools</span>
+        <h1>Structured sports analysis tools.</h1>
+        <p>Run simulations, surface verified trends, and build sharper sports analysis from structured data.</p>
+      </div>
+      <aside class="tools-note">Tools display supported data only. Unsupported or unavailable data is marked unavailable or coming soon.</aside>
+    </section>
+    <section class="tools-grid" aria-label="Tool cards">
+      <article class="tool-card">
+        <span>Live Tool</span>
+        <h2>MLB Simulator</h2>
+        <p>Simulate current teams, classic teams, and mixed era matchups with starter context and projected box score output.</p>
+        <div class="tool-actions">
+          <a class="tool-btn primary" href="/mlb-simulator/">Use Simulator</a>
+          <a class="tool-btn" href="/trustmyrecord-tools/mlb-simulator/">How It Works</a>
         </div>
-    </main>
+      </article>
+      <article class="tool-card">
+        <span>Verified Data</span>
+        <h2>Trendspotter</h2>
+        <p>Select a sport and matchup to surface only verified trends from available data artifacts.</p>
+        <div class="tool-actions">
+          <a class="tool-btn primary" href="/trendspotter/">Open Trendspotter</a>
+        </div>
+      </article>
+      <article class="tool-card">
+        <span class="tool-status">Coming Soon</span>
+        <h2>BetLegend Pro</h2>
+        <p>No confirmed public URL is available yet. This tool will remain marked coming soon until a supported route is confirmed.</p>
+      </article>
+      <article class="tool-card">
+        <span class="tool-status">Private / Coming Soon</span>
+        <h2>Model Builder</h2>
+        <p>No confirmed public URL is available yet. This tool will remain private or coming soon until a supported route is confirmed.</p>
+      </article>
+    </section>
+  </main>
 </body>
 </html>
