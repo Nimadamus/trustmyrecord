@@ -323,6 +323,8 @@ async function flushAsync() {
   assert(/1927 New York Yankees/.test(elements.awayTeamSelect.innerHTML), 'historical teams render after tab switch');
   assert(/2023 Texas Rangers/.test(elements.homeTeamSelect.innerHTML), 'full historical list is present');
   assert(/Waite Hoyt/.test(elements.awayPitcherOptions.innerHTML), 'historical pitcher options render');
+  assert.strictEqual((elements.awayPitcherOptions.innerHTML.match(/class="pitcher-choice/g) || []).length, 5, 'historical Team A shows five visible pitcher options');
+  assert.strictEqual((elements.homePitcherOptions.innerHTML.match(/class="pitcher-choice/g) || []).length, 5, 'historical Team B shows five visible pitcher options');
   assert(/Historical simulator input/.test(elements.awayPitcherMeta.textContent), 'historical pitcher meta labels modeled source');
   simulator.runSimulation();
   assert(/Classic baseline/.test(elements.simulationModeValue.textContent), 'classic matchup reports classic simulation mode');
@@ -333,6 +335,8 @@ async function flushAsync() {
   assert.strictEqual(elements.homePoolSelect.value, 'historical', 'mixed mode sets Team B historical');
   assert(/ARI Ace profile/.test(elements.awayPitcherOptions.innerHTML), 'mixed mode current pitcher options render');
   assert(/Red Ruffing/.test(elements.homePitcherOptions.innerHTML), 'mixed mode historical pitcher options render');
+  assert.strictEqual((elements.awayPitcherOptions.innerHTML.match(/class="pitcher-choice/g) || []).length, 5, 'mixed Team A shows five visible pitcher options');
+  assert.strictEqual((elements.homePitcherOptions.innerHTML.match(/class="pitcher-choice/g) || []).length, 5, 'mixed Team B shows five visible pitcher options');
   simulator.runSimulation();
   assert.strictEqual(elements.projectionShell.getAttribute('data-projection-state'), 'projected', 'mixed matchup can run simulation');
   assert(/Mixed-era baseline/.test(elements.simulationModeValue.textContent), 'mixed matchup reports mixed-era simulation mode');
