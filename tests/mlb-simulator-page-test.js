@@ -25,13 +25,16 @@ assert(/Mixed Era Matchup/.test(html), 'mixed-era preset is present');
 assert(/Data Mode/.test(html), 'data mode status area is present');
 assert(/MLB schedule\/finals/.test(html), 'schedule/finals slot is present');
 assert(/Team records/.test(html), 'team records slot is present');
-assert(/Starting pitchers/.test(html), 'starting pitcher slot is present');
-assert(/Ballpark\/weather/.test(html), 'ballpark/weather slot is present');
+assert(/Probable starters/.test(html), 'probable starter slot is present');
+assert(/Confirmed starter status/.test(html), 'confirmed starter slot is present');
+assert(/Ballpark/.test(html), 'ballpark slot is present');
+assert(/Weather/.test(html), 'weather slot is present');
 assert(/Sportsbook odds/.test(html), 'sportsbook odds slot is present');
+assert(/Injury report/.test(html), 'injury report slot is present');
 assert(/Roster context/.test(html), 'roster context slot is present');
 assert(/Recent scoring form/.test(html), 'recent scoring form slot is present');
 assert(/Bullpen context/.test(html), 'bullpen context slot is present');
-assert(/Verified live inputs appear only when matched; live rosters, injuries, weather, confirmed starters, and betting-edge claims are not used/.test(html), 'honest limitations text is present');
+assert(/Verified live inputs appear only when matched; unavailable roster lists, confirmed starter status, bullpen workload, and betting-edge claims are not used/.test(html), 'honest limitations text is present');
 assert(!/Loading MLB games|Loading sportsbook board|Waiting for board data|Projection engine not connected yet|Not connected for custom simulation|Unavailable without real inputs/.test(html), 'old board-dependent placeholder text is removed');
 assert(!/lock pick|locked pick|submit pick/i.test(html), 'page does not expose sportsbook submission actions');
 assert(!/live verified|official injury/i.test(html), 'page does not include fake live data claims');
@@ -109,6 +112,29 @@ function buildFetchMock(mode) {
       });
     }
     if (String(url).includes('site.api.espn.com')) {
+      if (String(url).includes('/summary?event=401815218')) {
+        return mockResponse({
+          injuries: [
+            {
+              team: { displayName: 'New York Yankees' },
+              injuries: [
+                { status: '15-Day-IL', athlete: { displayName: 'Yankees Reliever', position: { abbreviation: 'RP' }, status: { abbreviation: '15-Day-IL' } }, details: { type: 'Shoulder' } },
+                { status: 'Day-To-Day', athlete: { displayName: 'Yankees Outfielder', position: { abbreviation: 'CF' }, status: { abbreviation: 'Day-To-Day' } }, details: { type: 'Knee' } },
+              ],
+            },
+            {
+              team: { displayName: 'Texas Rangers' },
+              injuries: [
+                { status: '10-Day-IL', athlete: { displayName: 'Rangers Infielder', position: { abbreviation: '2B' }, status: { abbreviation: '10-Day-IL' } }, details: { type: 'Wrist' } },
+              ],
+            },
+          ],
+          rosters: [
+            { homeAway: 'home', team: { displayName: 'New York Yankees' } },
+            { homeAway: 'away', team: { displayName: 'Texas Rangers' } },
+          ],
+        });
+      }
       const todayKey = new Date().toISOString().slice(0, 10).replace(/-/g, '');
       if (!String(url).includes('dates=' + todayKey)) {
         return mockResponse({
@@ -142,6 +168,7 @@ function buildFetchMock(mode) {
         events: [{
           id: '401815218',
           date: '2026-05-05T23:05Z',
+          weather: { displayValue: 'Clear', temperature: 81, gust: 14, precipitation: 0 },
           status: { type: { completed: false, shortDetail: '5/5 - 7:05 PM EDT' } },
           competitions: [{
             venue: { fullName: 'Yankee Stadium', address: { city: 'Bronx', state: 'New York' }, indoor: false },
@@ -221,14 +248,17 @@ async function flushAsync() {
   await flushAsync();
   assert.strictEqual(simulator.localTeams.current.length, 30, '30 current teams are available locally');
   assert.strictEqual(simulator.localTeams.historical.length, 20, '20 curated historical teams are available locally');
-  assert.strictEqual(simulator.liveInputs.length, 8, 'live input architecture exposes eight source slots');
+  assert.strictEqual(simulator.liveInputs.length, 11, 'live input architecture exposes eleven source slots');
   assert.strictEqual(elements.dataModeBadge.textContent, 'Baseline ratings', 'baseline data mode is explicit by default');
   assert(/Verified live inputs are unavailable/.test(elements.dataModeDetail.textContent), 'live input unavailability is explicit');
   assert(/MLB schedule\/finals/.test(elements.liveInputGrid.innerHTML), 'live input grid renders schedule/finals');
   assert(/Team records/.test(elements.liveInputGrid.innerHTML), 'live input grid renders team records');
-  assert(/Starting pitchers/.test(elements.liveInputGrid.innerHTML), 'live input grid renders starting pitchers');
-  assert(/Ballpark\/weather/.test(elements.liveInputGrid.innerHTML), 'live input grid renders ballpark/weather');
+  assert(/Probable starters/.test(elements.liveInputGrid.innerHTML), 'live input grid renders probable starters');
+  assert(/Confirmed starter status/.test(elements.liveInputGrid.innerHTML), 'live input grid renders confirmed starter status');
+  assert(/Ballpark/.test(elements.liveInputGrid.innerHTML), 'live input grid renders ballpark');
+  assert(/Weather/.test(elements.liveInputGrid.innerHTML), 'live input grid renders weather');
   assert(/Sportsbook odds/.test(elements.liveInputGrid.innerHTML), 'live input grid renders sportsbook odds');
+  assert(/Injury report/.test(elements.liveInputGrid.innerHTML), 'live input grid renders injury report');
   assert(/Recent scoring form/.test(elements.liveInputGrid.innerHTML), 'live input grid renders recent scoring form');
   assert(!/Connected|Available<\/span>/.test(elements.liveInputGrid.innerHTML), 'unverified live inputs are not shown as connected');
 
@@ -266,12 +296,17 @@ async function flushAsync() {
   assert.strictEqual(live.elements.dataModeValue.textContent, 'Verified live inputs', 'live output states verified data mode');
   assert(/MLB schedule\/finals/.test(live.elements.inputSummary.innerHTML), 'live path includes schedule/finals source');
   assert(/Team records/.test(live.elements.inputSummary.innerHTML), 'live path includes team records source');
-  assert(/Starting pitchers/.test(live.elements.inputSummary.innerHTML), 'live path includes starting pitcher source');
-  assert(/Ballpark\/weather/.test(live.elements.inputSummary.innerHTML), 'live path includes ballpark source');
+  assert(/Probable starters/.test(live.elements.inputSummary.innerHTML), 'live path includes probable starter source');
+  assert(/Confirmed starter status/.test(live.elements.inputSummary.innerHTML), 'live path lists confirmed starter status as missing');
+  assert(/Ballpark/.test(live.elements.inputSummary.innerHTML), 'live path includes ballpark source');
+  assert(/Weather/.test(live.elements.inputSummary.innerHTML), 'live path includes weather source');
   assert(/Sportsbook odds/.test(live.elements.inputSummary.innerHTML), 'live path includes sportsbook source when verified');
+  assert(/Injury report/.test(live.elements.inputSummary.innerHTML), 'live path includes injury report source');
+  assert(/Roster context/.test(live.elements.inputSummary.innerHTML), 'live path labels missing roster context');
+  assert(/Bullpen context/.test(live.elements.inputSummary.innerHTML), 'live path includes bullpen context from reliever injuries');
   assert(/Recent scoring form/.test(live.elements.inputSummary.innerHTML), 'live path includes recent scoring form source');
   assert(/Recent scoring form from ESPN finals/.test(live.elements.matchupNotes.innerHTML), 'live path factors recent final scores');
-  assert(/Gerrit Cole|Jacob deGrom|Yankee Stadium/.test(live.elements.matchupNotes.innerHTML), 'live path renders verified context as factors');
+  assert(/Gerrit Cole|Jacob deGrom|Yankee Stadium|Weather context from ESPN|ESPN injury report|Bullpen context is limited/.test(live.elements.matchupNotes.innerHTML), 'live path renders verified context as factors');
   assert(!/verified betting edge|official injury/i.test(live.elements.matchupNotes.innerHTML), 'live path does not claim fake edges or injuries');
 
   console.log('mlb-simulator-page-test: ok');
