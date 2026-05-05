@@ -2,7 +2,7 @@
   "use strict";
 
   var SPORTS = ["MLB", "NBA", "NHL", "NFL"];
-  var state = { sport: "", matchup: "", trendType: "" };
+  var state = { sport: "", matchup: "", trendType: "all" };
   var cache = {};
 
   var TREND_TYPES = [
@@ -73,15 +73,13 @@
   }
 
   function updateSummary() {
-    var type = getTrendType(state.trendType);
     var parts = [
       state.sport || "Select sport",
-      state.matchup || "Select matchup",
-      type ? type.label : "Select trend type"
+      state.matchup || "Select matchup"
     ];
     els.selectionSummary.textContent = parts.join(" / ");
-    els.runButton.disabled = !(state.sport && state.matchup && state.trendType);
-    setStepEnabled(els.runStep, !els.runButton.disabled);
+    els.runButton.disabled = !(state.sport && state.matchup);
+    setStepEnabled(els.runStep, false);
   }
 
   function renderSportOptions() {
@@ -211,7 +209,7 @@
   function selectSport(sport) {
     state.sport = sport;
     state.matchup = "";
-    state.trendType = "";
+    state.trendType = "all";
     clearResults();
     renderSportOptions();
     setStepEnabled(els.trendTypeStep, false);
@@ -224,11 +222,11 @@
 
   function selectMatchup(matchup) {
     state.matchup = matchup;
-    state.trendType = "";
+    state.trendType = "all";
     clearResults();
     renderMatchups();
-    renderTrendTypes();
     updateSummary();
+    runTrendspotter();
   }
 
   function selectTrendType(typeId) {
@@ -259,6 +257,7 @@
   }
 
   function trendLabel(type, trend) {
+    if (!type || type.id === "all") return trend.bet_type ? String(trend.bet_type).replace(/_/g, " ") : "Verified trend";
     if (type.id === "team") return "Team trend";
     if (type.id === "total") return "Total trend";
     if (type.id === "moneyline" || type.id === "spread") return "Market trend";
@@ -293,13 +292,13 @@
   }
 
   function runTrendspotter() {
-    var type = getTrendType(state.trendType);
-    if (!state.sport || !state.matchup || !type) return;
+    var type = { id: "all", label: "All verified trends", shortLabel: "Verified trend" };
+    if (!state.sport || !state.matchup) return;
     var results = trendsForSport(state.sport).filter(function (trend) {
-      return trend.matchup === state.matchup && trendMatchesType(trend, type.id);
+      return trend.matchup === state.matchup;
     });
 
-    els.resultsTitle.textContent = state.matchup + " / " + type.label;
+    els.resultsTitle.textContent = state.matchup + " verified trends";
     els.resultCount.textContent = results.length + " trend" + (results.length === 1 ? "" : "s");
     els.resultsSection.classList.remove("is-hidden");
 
