@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Pending Picks | TrustMyRecord</title>
+    <title>Pending Picks | TrustMyRecord</title>
     <meta name="robots" content="noindex,nofollow">
     <link rel="canonical" href="https://trustmyrecord.com/my-pending-picks/">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -257,7 +257,7 @@
         <header class="pending-head">
             <div>
                 <p class="pending-kicker">Private ledger</p>
-                <h1>My Pending Picks</h1>
+                <h1>Pending Picks</h1>
                 <p class="pending-subtitle">Locked picks waiting for final grading.</p>
             </div>
             <nav class="pending-actions" aria-label="Pending picks actions">
@@ -419,12 +419,7 @@
             return 'Matchup pending';
         }
         function statusText(pick) {
-            var now = Date.now();
-            var start = pick.commence_time ? new Date(pick.commence_time).getTime() : NaN;
-            if (pick.game_completed) return 'Awaiting Final';
-            if (Number.isFinite(start) && start > now) return 'Game Not Started';
-            if (Number.isFinite(start) && start <= now) return 'In Progress';
-            return 'Awaiting Grade';
+            return 'PENDING';
         }
         function rowHtml(pick) {
             var display = pickDisplay(pick);
