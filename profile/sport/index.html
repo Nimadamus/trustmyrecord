@@ -258,7 +258,8 @@
       }
       if (market === 'h2h' && selection && !/\b(moneyline|ml)\b/i.test(selection)) return selection + ' Moneyline';
       if ((market === 'spreads' || market.indexOf('spread') !== -1) && selection && !/\b(spread|run line|puck line)\b/i.test(selection)) {
-        const label = String(p && p.sport_key || '').indexOf('icehockey') !== -1 ? 'Puck Line' : 'Run Line / Spread';
+        const sport = String(p && p.sport_key || '').toLowerCase();
+        const label = sport.indexOf('icehockey') !== -1 ? 'Puck Line' : sport.indexOf('baseball') !== -1 ? 'Run Line' : 'Spread';
         return selection + ' ' + label + (line && selection.indexOf(line) === -1 ? ' ' + line : '');
       }
       if (line && !/\b(over|under|ml)\b/i.test(selection) && selection.indexOf(line) === -1) return selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '') + ' ' + line;

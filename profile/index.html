@@ -5445,7 +5445,8 @@
         const isTotal = market.indexOf('total') !== -1 || /\b(over|under)\b/i.test(selection);
         const isMoneyline = market === 'h2h';
         const isSpread = market === 'spreads' || market.indexOf('spread') !== -1;
-        const isPuckOrRunLine = isSpread && /icehockey/i.test(String(pick && pick.sport_key || '')) ? 'Puck Line' : isSpread ? 'Run Line / Spread' : '';
+        const sport = String(pick && pick.sport_key || '').toLowerCase();
+        const spreadLabel = sport.indexOf('icehockey') !== -1 ? 'Puck Line' : sport.indexOf('baseball') !== -1 ? 'Run Line' : 'Spread';
         if (isTotal && selectionOnlySide) {
             const totalLine = formatTotalLineValue(pick && pick.line_snapshot);
             const base = matchup ? matchup + ' ' + selection : (market === 'team_totals' ? 'Team Total ' + selection : 'Total ' + selection);
@@ -5455,7 +5456,7 @@
             return selection + ' Moneyline';
         }
         if (isSpread && selection && !/\b(spread|run line|puck line)\b/i.test(selection)) {
-            return selection + ' ' + isPuckOrRunLine + (line !== '--' && selection.indexOf(line) === -1 ? ' ' + line : '');
+            return selection + ' ' + spreadLabel + (line !== '--' && selection.indexOf(line) === -1 ? ' ' + line : '');
         }
         if (line !== '--' && !/\b(over|under|ml)\b/i.test(selection) && selection.indexOf(line) === -1) {
             return selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '') + ' ' + line;
