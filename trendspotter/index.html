@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/trendspotter.css?v=20260505c">
+  <link rel="stylesheet" href="/static/css/trendspotter.css?v=20260505d">
 </head>
 <body>
   <header class="ts-topbar">
@@ -34,7 +34,7 @@
       <div>
         <p class="ts-kicker">Verified matchup tool</p>
         <h1 id="trendspotter-title">Trendspotter</h1>
-        <p class="ts-lead">Select a matchup and generate verified betting trends. No fake records, no fake picks, no guessed odds, and no placeholder stats.</p>
+        <p class="ts-lead">Select a matchup and generate verified betting trends from real artifact data. Missing inputs are labeled unavailable instead of guessed.</p>
       </div>
       <aside class="ts-hero-panel" aria-label="Data rules">
         <span>Data source</span>
@@ -116,7 +116,7 @@
         <div class="ts-overview-grid" id="overviewGrid"></div>
       </article>
 
-      <article class="ts-result-card">
+      <article class="ts-result-card" id="teamCard">
         <div class="ts-card-head">
           <p>Team Trends</p>
           <h2 id="teamTrendTitle">Team A and Team B</h2>
@@ -133,7 +133,7 @@
         </div>
       </article>
 
-      <article class="ts-result-card">
+      <article class="ts-result-card" id="h2hCard">
         <div class="ts-card-head">
           <p>Head-to-Head Trends</p>
           <h2>Verified H2H signals</h2>
@@ -141,7 +141,7 @@
         <div class="ts-trend-list" id="h2hTrends"></div>
       </article>
 
-      <article class="ts-result-card">
+      <article class="ts-result-card" id="venueCard">
         <div class="ts-card-head">
           <p>Home/Road Trends</p>
           <h2>Venue context</h2>
@@ -149,7 +149,7 @@
         <div class="ts-trend-list" id="venueTrends"></div>
       </article>
 
-      <article class="ts-result-card">
+      <article class="ts-result-card" id="formCard">
         <div class="ts-card-head">
           <p>Recent Form Trends</p>
           <h2>Current form context</h2>
@@ -157,15 +157,15 @@
         <div class="ts-trend-list" id="formTrends"></div>
       </article>
 
-      <div class="ts-market-grid">
-        <article class="ts-result-card">
+      <div class="ts-market-grid" id="marketGrid">
+        <article class="ts-result-card" id="spreadCard">
           <div class="ts-card-head">
             <p>Spread / Run Line Trends</p>
             <h2>Verified line trends</h2>
           </div>
           <div class="ts-trend-list" id="spreadTrends"></div>
         </article>
-        <article class="ts-result-card">
+        <article class="ts-result-card" id="totalCard">
           <div class="ts-card-head">
             <p>Total / Over-Under Trends</p>
             <h2>Verified totals trends</h2>
@@ -174,7 +174,7 @@
         </article>
       </div>
 
-      <article class="ts-result-card">
+      <article class="ts-result-card" id="dataCard">
         <div class="ts-card-head">
           <p>Data Availability</p>
           <h2>Verified inputs and unavailable data</h2>
@@ -194,6 +194,6 @@
   </main>
 
   <script src="/static/js/config.js?v=20260330"></script>
-  <script src="/static/js/trendspotter.js?v=20260505c"></script>
+  <script src="/static/js/trendspotter.js?v=20260505d"></script>
 </body>
 </html>
