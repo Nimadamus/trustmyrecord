@@ -591,7 +591,7 @@
             fallbackOnly ? 'Uses internal baseline team rating only; does not yet include live rosters, injuries, weather, confirmed starters, or sportsbook odds.' : 'Live context is used only for the verified sources listed above; unlisted rosters, injuries, weather, confirmed starters, recent form, and bullpen status remain unavailable.'
         ].concat(liveFactorNotes) : [
             'Choose a mode, select two teams, and run the simulator. Current and historical options are loaded locally, so failed provider data will not block this tool.',
-            'Simulator baselines are internal ratings. They are not SportsDataIO data, sportsbook odds, verified betting edges, official picks, or graded records.'
+            'Simulator baselines are internal ratings. They are not SportsDataIO data, sportsbook odds, betting-edge claims, official picks, or graded records.'
         ];
         list.innerHTML = notes.map(function (note) { return '<li>' + escapeHtml(note) + '</li>'; }).join('');
     }
