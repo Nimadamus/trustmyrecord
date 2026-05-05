@@ -57,6 +57,36 @@
         ['classic-2023-tex', '2023 Texas Rangers', 'TEX', 2023, 115, 101, 102, 99, 1.08]
     ];
 
+    var CURRENT_PITCHER_PROFILES = [
+        ['ace', 'Team baseline ace', 112, 3.35, 'Manual baseline profile'],
+        ['mid', 'Mid-rotation starter', 100, 4.20, 'Manual baseline profile'],
+        ['depth', 'Depth starter', 91, 4.85, 'Manual baseline profile'],
+        ['bullpen', 'Bullpen opener', 95, 4.55, 'Manual baseline profile']
+    ];
+
+    var HISTORICAL_PITCHERS = {
+        'classic-1927-nyy': [['hoyt', 'Waite Hoyt', 116, 2.63], ['pennock', 'Herb Pennock', 112, 3.00], ['ruether', 'Dutch Ruether', 101, 3.38]],
+        'classic-1939-nyy': [['ruffing', 'Red Ruffing', 118, 2.93], ['gomez', 'Lefty Gomez', 110, 3.41], ['russo', 'Marius Russo', 104, 2.41]],
+        'classic-1955-bkn': [['newcombe', 'Don Newcombe', 116, 3.20], ['podres', 'Johnny Podres', 106, 3.95], ['craig', 'Roger Craig', 99, 4.10]],
+        'classic-1961-nyy': [['ford', 'Whitey Ford', 121, 3.21], ['terry', 'Ralph Terry', 107, 3.15], ['stafford', 'Bill Stafford', 102, 2.68]],
+        'classic-1969-nym': [['seaver', 'Tom Seaver', 124, 2.21], ['koosman', 'Jerry Koosman', 114, 2.28], ['gentry', 'Gary Gentry', 106, 3.43]],
+        'classic-1975-cin': [['nolan', 'Gary Nolan', 108, 3.16], ['gullett', 'Don Gullett', 106, 2.42], ['billingham', 'Jack Billingham', 99, 4.11]],
+        'classic-1984-det': [['morris', 'Jack Morris', 113, 3.60], ['petry', 'Dan Petry', 107, 3.24], ['wilcox', 'Milt Wilcox', 101, 4.00]],
+        'classic-1986-nym': [['gooden', 'Dwight Gooden', 121, 2.84], ['darling', 'Ron Darling', 109, 2.81], ['fernandez', 'Sid Fernandez', 108, 3.52]],
+        'classic-1988-lad': [['hershiser', 'Orel Hershiser', 125, 2.26], ['leary', 'Tim Leary', 105, 2.91], ['belcher', 'Tim Belcher', 103, 2.91]],
+        'classic-1995-atl': [['maddux', 'Greg Maddux', 130, 1.63], ['glavine', 'Tom Glavine', 116, 3.08], ['smoltz', 'John Smoltz', 112, 3.18]],
+        'classic-1998-nyy': [['cone', 'David Cone', 117, 3.55], ['pettitte', 'Andy Pettitte', 111, 4.24], ['wells', 'David Wells', 115, 3.49]],
+        'classic-2001-sea': [['garcia', 'Freddy Garcia', 116, 3.05], ['moyer', 'Jamie Moyer', 109, 3.43], ['sele', 'Aaron Sele', 103, 3.60]],
+        'classic-2004-bos': [['schilling', 'Curt Schilling', 122, 3.26], ['martinez', 'Pedro Martinez', 118, 3.90], ['wakefield', 'Tim Wakefield', 99, 4.87]],
+        'classic-2016-chc': [['arrieta', 'Jake Arrieta', 115, 3.10], ['hendricks', 'Kyle Hendricks', 120, 2.13], ['lester', 'Jon Lester', 116, 2.44]],
+        'classic-2017-hou': [['keuchel', 'Dallas Keuchel', 114, 2.90], ['verlander', 'Justin Verlander', 118, 1.06], ['mccullers', 'Lance McCullers Jr.', 105, 4.25]],
+        'classic-2019-wsh': [['scherzer', 'Max Scherzer', 122, 2.92], ['strasburg', 'Stephen Strasburg', 118, 3.32], ['corbin', 'Patrick Corbin', 108, 3.25]],
+        'classic-2020-lad': [['kershaw', 'Clayton Kershaw', 118, 2.16], ['buehler', 'Walker Buehler', 113, 3.44], ['urias', 'Julio Urias', 107, 3.27]],
+        'classic-2021-atl': [['fried', 'Max Fried', 115, 3.04], ['morton', 'Charlie Morton', 109, 3.34], ['anderson', 'Ian Anderson', 103, 3.58]],
+        'classic-2022-hou': [['verlander', 'Justin Verlander', 124, 1.75], ['valdez', 'Framber Valdez', 115, 2.82], ['javier', 'Cristian Javier', 111, 2.54]],
+        'classic-2023-tex': [['eovaldi', 'Nathan Eovaldi', 111, 3.63], ['montgomery', 'Jordan Montgomery', 110, 2.79], ['gray', 'Jon Gray', 101, 4.12]]
+    };
+
     function makeCurrent(row) {
         return {
             id: row[0], era: 'current', name: row[1], abbreviation: row[2], league: row[3], division: row[4],
@@ -109,6 +139,10 @@
         },
         awayTeamId: LOCAL_TEAMS.current[0].id,
         homeTeamId: LOCAL_TEAMS.current[1].id,
+        awayPitcherId: '',
+        homePitcherId: '',
+        awayPitcherTouched: false,
+        homePitcherTouched: false,
         simulation: null
     };
 
@@ -157,6 +191,68 @@
     function teamMeta(team) {
         if (!team) return 'No team selected';
         return team.era === 'historical' ? [team.abbreviation, team.season, 'Historical'].join(' / ') : [team.abbreviation, team.league, team.division].join(' / ');
+    }
+    function pitcherId(side, slug) { return side + '-pitcher-' + slug; }
+    function slugify(value) { return normalizeName(value).slice(0, 40) || 'starter'; }
+    function currentPitchersForTeam(team, side, context) {
+        var liveStarter = context && context.espnGame ? (side === 'away' ? context.espnGame.awayStarter : context.espnGame.homeStarter) : null;
+        var options = [];
+        if (liveStarter && liveStarter.name) {
+            options.push({
+                id: pitcherId(side, 'live-' + slugify(liveStarter.name)),
+                name: liveStarter.name,
+                quality: 104 + clamp((4.2 - (Number.isFinite(liveStarter.era) ? liveStarter.era : 4.2)) * 8, -12, 16),
+                era: Number.isFinite(liveStarter.era) ? liveStarter.era : null,
+                source: 'Verified ESPN probable starter',
+                verified: true,
+                note: liveStarter.record || 'Listed by ESPN as probable'
+            });
+        }
+        CURRENT_PITCHER_PROFILES.forEach(function (row) {
+            options.push({
+                id: pitcherId(side, team.id + '-' + row[0]),
+                name: team.abbreviation + ' ' + row[1],
+                quality: row[2],
+                era: row[3],
+                source: row[4],
+                verified: false,
+                note: 'Manual selection; not a verified named starter'
+            });
+        });
+        return options;
+    }
+    function historicalPitchersForTeam(team, side) {
+        var rows = HISTORICAL_PITCHERS[team.id] || [];
+        if (!rows.length) {
+            rows = [['ace', team.season + ' baseline ace', team.startingPitching + 6, 3.2], ['mid', team.season + ' baseline starter', team.startingPitching, 4.0], ['depth', team.season + ' depth starter', team.startingPitching - 8, 4.7]];
+        }
+        return rows.map(function (row) {
+            return {
+                id: pitcherId(side, team.id + '-' + row[0]),
+                name: row[1],
+                quality: row[2],
+                era: row[3],
+                source: 'Curated historical baseline',
+                verified: false,
+                note: 'Historical pitcher option; not live verified starter data'
+            };
+        });
+    }
+    function pitcherOptionsFor(team, side, context) {
+        if (!team) return [];
+        return team.era === 'historical' ? historicalPitchersForTeam(team, side) : currentPitchersForTeam(team, side, context);
+    }
+    function selectedPitcher(side, team, context) {
+        var options = pitcherOptionsFor(team, side, context);
+        var selectedId = side === 'away' ? state.awayPitcherId : state.homePitcherId;
+        return options.filter(function (pitcher) { return pitcher.id === selectedId; })[0] || options[0] || null;
+    }
+    function pitcherMeta(pitcher) {
+        if (!pitcher) return 'No pitcher selected.';
+        return pitcher.source + (pitcher.era != null ? ' / ERA ' + pitcher.era : '') + ' / rating ' + Math.round(pitcher.quality);
+    }
+    function pitcherOption(pitcher) {
+        return '<option value="' + escapeHtml(pitcher.id) + '">' + escapeHtml(pitcher.name) + '</option>';
     }
     function strength(team) {
         return (team.offense * 0.38) + (team.runPrevention * 0.25) + (team.startingPitching * 0.22) + (team.bullpen * 0.15);
@@ -543,6 +639,14 @@
         if (!starter || !Number.isFinite(starter.era)) return 0;
         return clamp((starter.era - 4.2) * 0.22, -0.45, 0.55);
     }
+    function selectedPitcherRunAdjustment(pitcher) {
+        if (!pitcher) return 0;
+        return clamp((100 - pitcher.quality) * 0.028, -0.58, 0.52);
+    }
+    function selectedPitcherStrengthAdjustment(pitcher) {
+        if (!pitcher) return 0;
+        return clamp((pitcher.quality - 100) * 0.24, -4.2, 5.4);
+    }
     function recordStrengthAdjustment(record) {
         if (!record || !Number.isFinite(record.pct)) return 0;
         return clamp((record.pct - 0.5) * 9, -3.5, 3.5);
@@ -555,18 +659,20 @@
         var awayRuns = expectedRunsFor(away, home, 0);
         var homeRuns = expectedRunsFor(home, away, 0.18);
         var liveFactors = [];
-        if (context && context.espnGame) {
-            if (context.espnGame.homeStarter) {
-                awayRuns = clamp(awayRuns + starterEraAdjustment(context.espnGame.homeStarter), 1.7, 9.2);
-                liveFactors.push(home.name + ' probable starter: ' + context.espnGame.homeStarter.name + (context.espnGame.homeStarter.record ? ' ' + context.espnGame.homeStarter.record : '') + '.');
-            }
-            if (context.espnGame.awayStarter) {
-                homeRuns = clamp(homeRuns + starterEraAdjustment(context.espnGame.awayStarter), 1.7, 9.2);
-                liveFactors.push(away.name + ' probable starter: ' + context.espnGame.awayStarter.name + (context.espnGame.awayStarter.record ? ' ' + context.espnGame.awayStarter.record : '') + '.');
-            }
-        }
+        var awayPitcher = selectedPitcher('away', away, context);
+        var homePitcher = selectedPitcher('home', home, context);
+        awayRuns = clamp(awayRuns + selectedPitcherRunAdjustment(homePitcher), 1.7, 9.2);
+        homeRuns = clamp(homeRuns + selectedPitcherRunAdjustment(awayPitcher), 1.7, 9.2);
         var awayStrength = strength(away);
         var homeStrength = strength(home) + 1.7;
+        awayStrength += selectedPitcherStrengthAdjustment(awayPitcher);
+        homeStrength += selectedPitcherStrengthAdjustment(homePitcher);
+        if (awayPitcher && homePitcher) {
+            liveFactors.push('Starting Pitchers: ' + away.name + ': ' + awayPitcher.name + ' (' + awayPitcher.source + '); ' + home.name + ': ' + homePitcher.name + ' (' + homePitcher.source + ').');
+        }
+        if (awayPitcher && homePitcher && Math.abs(awayPitcher.quality - homePitcher.quality) >= 7) {
+            liveFactors.push('Starting pitching matchup: ' + (awayPitcher.quality > homePitcher.quality ? awayPitcher.name : homePitcher.name) + ' grades higher in this simulator profile and moves the run projection.');
+        }
         if (context && context.espnGame) {
             awayStrength += recordStrengthAdjustment(context.espnGame.awayRecord);
             homeStrength += recordStrengthAdjustment(context.espnGame.homeRecord);
@@ -647,6 +753,7 @@
         if (Math.abs(away.offense - home.offense) >= 4) reasonParts.push(edgeLabel('offense', away, home) + ' on offense.');
         if (Math.abs(away.startingPitching - home.startingPitching) >= 4) reasonParts.push(edgeLabel('startingPitching', away, home) + ' in starting pitching.');
         if (Math.abs(away.bullpen - home.bullpen) >= 4) reasonParts.push(edgeLabel('bullpen', away, home) + ' in bullpen baseline.');
+        if (awayPitcher && homePitcher) reasonParts.push('Selected starters: ' + awayPitcher.name + ' vs ' + homePitcher.name + '.');
         return {
             status: 'estimated',
             away: away,
@@ -678,12 +785,38 @@
             pitchingEdge: edgeLabel('startingPitching', away, home),
             runPreventionEdge: edgeLabel('runPrevention', away, home),
             bullpenEdge: edgeLabel('bullpen', away, home),
-            keyExplanation: reasonParts.join(' ')
+            keyExplanation: reasonParts.join(' '),
+            awayPitcher: awayPitcher,
+            homePitcher: homePitcher
         };
     }
 
     function teamOption(team) {
         return '<option value="' + escapeHtml(team.id) + '">' + escapeHtml(team.name) + '</option>';
+    }
+    function ensurePitcherSelection(side, team, context) {
+        var options = pitcherOptionsFor(team, side, context);
+        var key = side === 'away' ? 'awayPitcherId' : 'homePitcherId';
+        var touchedKey = side === 'away' ? 'awayPitcherTouched' : 'homePitcherTouched';
+        if (!options.length) {
+            state[key] = '';
+            return null;
+        }
+        if (!options.filter(function (pitcher) { return pitcher.id === state[key]; })[0] || (!state[touchedKey] && options[0].verified)) state[key] = options[0].id;
+        return options;
+    }
+    function renderPitcherSelect(side, team, context) {
+        var options = ensurePitcherSelection(side, team, context) || [];
+        var select = byId(side === 'away' ? 'awayPitcherSelect' : 'homePitcherSelect');
+        var meta = byId(side === 'away' ? 'awayPitcherMeta' : 'homePitcherMeta');
+        var key = side === 'away' ? 'awayPitcherId' : 'homePitcherId';
+        var pitcher = selectedPitcher(side, team, context);
+        if (select) {
+            select.disabled = !team;
+            select.innerHTML = options.length ? options.map(pitcherOption).join('') : '<option value="">Select team first</option>';
+            select.value = state[key];
+        }
+        if (meta) meta.textContent = pitcherMeta(pitcher);
     }
 
     function renderSelectors() {
@@ -713,6 +846,8 @@
         var away = findTeamInPool(state.awayTeamId, state.awayPool);
         var home = findTeamInPool(state.homeTeamId, state.homePool);
         setLiveInputsForMatchup(away, home);
+        renderPitcherSelect('away', away, state.activeLiveContext);
+        renderPitcherSelect('home', home, state.activeLiveContext);
         setText('awayTeamMeta', teamMeta(away));
         setText('homeTeamMeta', teamMeta(home));
         setText('selectedMatchupTitle', away && home ? away.name + ' vs ' + home.name : 'Choose two teams');
@@ -779,6 +914,7 @@
         var missingSources = result && result.missingDataSources && result.missingDataSources.length ? result.missingDataSources.join(', ') : 'None listed';
         var rows = result ? [
             ['Winner', result.winner.name + ' ' + roundPct(result.winnerPct)],
+            ['Starting pitchers', result.away.name + ': ' + result.awayPitcher.name + ' / ' + result.home.name + ': ' + result.homePitcher.name],
             ['Run environment', result.runEnvironment + ' / ' + result.totalRange[0] + '-' + result.totalRange[1] + ' runs'],
             ['Simulation mode', result.simulationMode],
             ['Data mode', result.dataMode],
@@ -795,6 +931,7 @@
             ['Official records', 'Excluded from picks and records']
         ] : [
             ['Dataset', 'Internal baseline team ratings'],
+            ['Starting pitchers', 'Choose starters for both teams'],
             ['Data mode', dataModeLabel()],
             ['Live inputs', 'Shown only when matched to verified sources'],
             ['Sportsbook odds', 'Not used / not invented'],
@@ -813,6 +950,7 @@
         var notes = result ? [
             result.dataSourcesUsed.indexOf('Sportsbook odds') !== -1 ? 'Simulation-based estimate with a verified market snapshot included as context; this is not a betting edge.' : 'Simulation-based estimate, not sportsbook odds or provider projection.',
             result.winner.name + ' grades as the simulated winner because of baseline run expectation and team-strength weighting.',
+            'Starting Pitchers: ' + result.away.name + ': ' + result.awayPitcher.name + '; ' + result.home.name + ': ' + result.homePitcher.name + '.',
             'Average simulated score: ' + result.away.abbreviation + ' ' + result.awayRuns + ', ' + result.home.abbreviation + ' ' + result.homeRuns + '.',
             'Projected score range: ' + result.away.abbreviation + ' ' + result.awayRange[0] + '-' + result.awayRange[1] + ', ' + result.home.abbreviation + ' ' + result.homeRange[0] + '-' + result.homeRange[1] + '.',
             'Simulation mode used: ' + result.simulationMode + '.',
@@ -925,6 +1063,10 @@
         }
         state.awayTeamId = poolTeams(state.awayPool)[0].id;
         state.homeTeamId = poolTeams(state.homePool)[1] ? poolTeams(state.homePool)[1].id : poolTeams(state.homePool)[0].id;
+        state.awayPitcherId = '';
+        state.homePitcherId = '';
+        state.awayPitcherTouched = false;
+        state.homePitcherTouched = false;
         state.simulation = null;
         renderSelectors();
         renderResult(null);
@@ -1007,15 +1149,19 @@
         var home = byId('homeTeamSelect');
         var awayPool = byId('awayPoolSelect');
         var homePool = byId('homePoolSelect');
+        var awayPitcher = byId('awayPitcherSelect');
+        var homePitcher = byId('homePitcherSelect');
         var run = byId('runSimulationButton');
         var refresh = byId('refreshTeamsButton');
         var current = byId('currentModeButton');
         var historical = byId('historicalModeButton');
         var mixed = byId('mixedModeButton');
-        if (awayPool) awayPool.addEventListener('change', function () { state.awayPool = awayPool.value === 'historical' ? 'historical' : 'current'; state.preset = 'custom'; state.awayTeamId = poolTeams(state.awayPool)[0].id; state.simulation = null; renderSelectors(); renderResult(null); });
-        if (homePool) homePool.addEventListener('change', function () { state.homePool = homePool.value === 'historical' ? 'historical' : 'current'; state.preset = 'custom'; state.homeTeamId = poolTeams(state.homePool)[0].id; state.simulation = null; renderSelectors(); renderResult(null); });
-        if (away) away.addEventListener('change', function () { state.awayTeamId = away.value; state.simulation = null; renderSelectors(); renderResult(null); });
-        if (home) home.addEventListener('change', function () { state.homeTeamId = home.value; state.simulation = null; renderSelectors(); renderResult(null); });
+        if (awayPool) awayPool.addEventListener('change', function () { state.awayPool = awayPool.value === 'historical' ? 'historical' : 'current'; state.preset = 'custom'; state.awayTeamId = poolTeams(state.awayPool)[0].id; state.awayPitcherId = ''; state.awayPitcherTouched = false; state.simulation = null; renderSelectors(); renderResult(null); });
+        if (homePool) homePool.addEventListener('change', function () { state.homePool = homePool.value === 'historical' ? 'historical' : 'current'; state.preset = 'custom'; state.homeTeamId = poolTeams(state.homePool)[0].id; state.homePitcherId = ''; state.homePitcherTouched = false; state.simulation = null; renderSelectors(); renderResult(null); });
+        if (away) away.addEventListener('change', function () { state.awayTeamId = away.value; state.awayPitcherId = ''; state.awayPitcherTouched = false; state.simulation = null; renderSelectors(); renderResult(null); });
+        if (home) home.addEventListener('change', function () { state.homeTeamId = home.value; state.homePitcherId = ''; state.homePitcherTouched = false; state.simulation = null; renderSelectors(); renderResult(null); });
+        if (awayPitcher) awayPitcher.addEventListener('change', function () { state.awayPitcherId = awayPitcher.value; state.awayPitcherTouched = true; state.simulation = null; renderPitcherSelect('away', findTeamInPool(state.awayTeamId, state.awayPool), state.activeLiveContext); renderResult(null); });
+        if (homePitcher) homePitcher.addEventListener('change', function () { state.homePitcherId = homePitcher.value; state.homePitcherTouched = true; state.simulation = null; renderPitcherSelect('home', findTeamInPool(state.homeTeamId, state.homePool), state.activeLiveContext); renderResult(null); });
         if (run) run.addEventListener('click', runSimulation);
         if (refresh) refresh.addEventListener('click', function () { switchMode('current'); });
         if (current) current.addEventListener('click', function () { switchMode('current'); });
