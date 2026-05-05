@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="canonical" href="https://trustmyrecord.com/trendspotter/">
-  <title>Trendspotter | TrustMyRecord Verified Sports Trends</title>
-  <meta name="description" content="TrustMyRecord Trendspotter displays verified sports trend artifacts from real available data only, with unavailable sports and unsupported data clearly labeled.">
+  <title>Trendspotter | TrustMyRecord Matchup Trends</title>
+  <meta name="description" content="Select a matchup and generate verified betting trends from TrustMyRecord Trendspotter artifacts. Missing data is labeled unavailable.">
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/trendspotter.css?v=20260505">
+  <link rel="stylesheet" href="/static/css/trendspotter.css?v=20260505b">
 </head>
 <body>
   <header class="ts-topbar">
@@ -32,31 +32,65 @@
   <main class="ts-shell">
     <section class="ts-hero" aria-labelledby="trendspotter-title">
       <div>
-        <p class="ts-kicker">Verified artifact reader</p>
+        <p class="ts-kicker">Verified matchup tool</p>
         <h1 id="trendspotter-title">Trendspotter</h1>
-        <p class="ts-lead">Real trend insights from verified Trendspotter artifacts. No fake records, no fake picks, no guessed stats.</p>
+        <p class="ts-lead">Select a matchup and generate verified betting trends. No fake records, no fake picks, no guessed odds, and no placeholder stats.</p>
       </div>
       <aside class="ts-hero-panel" aria-label="Data rules">
         <span>Data source</span>
-        <strong>Verified JSON only</strong>
-        <p>Unavailable data is labeled unavailable. Internal scores are labeled as internal scoring, not betting advice.</p>
+        <strong>Verified artifacts only</strong>
+        <p>Trends are filtered from existing Trendspotter JSON artifacts. Anything not present in those artifacts is marked unavailable.</p>
       </aside>
     </section>
 
-    <section class="ts-controls" aria-label="Trend filters">
-      <div class="ts-tabs" role="tablist" aria-label="Sports">
-        <button type="button" class="is-active" data-sport="NBA">NBA</button>
-        <button type="button" data-sport="NHL">NHL</button>
-        <button type="button" data-sport="NFL">NFL</button>
-        <button type="button" data-sport="MLB">MLB</button>
+    <section class="ts-tool" aria-label="Trendspotter controls">
+      <div class="ts-control-grid">
+        <label class="ts-field" for="sportSelect">
+          <span>Sport</span>
+          <select id="sportSelect">
+            <option value="NBA">NBA</option>
+            <option value="NHL">NHL</option>
+            <option value="NFL">NFL</option>
+            <option value="MLB">MLB</option>
+          </select>
+        </label>
+
+        <label class="ts-field" for="teamAInput">
+          <span>Team A</span>
+          <input id="teamAInput" list="teamOptions" autocomplete="off" placeholder="Search team">
+        </label>
+
+        <label class="ts-field" for="teamBInput">
+          <span>Team B</span>
+          <input id="teamBInput" list="teamOptions" autocomplete="off" placeholder="Search team">
+        </label>
+
+        <label class="ts-field ts-field-wide" for="matchupSelect">
+          <span>Scheduled board matchup</span>
+          <select id="matchupSelect">
+            <option value="">Load a sport to see verified matchups</option>
+          </select>
+        </label>
+
+        <button class="ts-generate" id="generateBtn" type="button">Generate Trends</button>
       </div>
-      <div class="ts-status-pill" id="tsStatusPill">Loading verified artifacts</div>
+      <datalist id="teamOptions"></datalist>
+      <div class="ts-status-row">
+        <div class="ts-status-pill" id="tsStatusPill">Loading verified artifacts</div>
+        <p id="selectionHint">Choose a sport, then select two teams or a verified matchup.</p>
+      </div>
     </section>
 
-    <section class="ts-summary-grid" aria-label="Artifact summary">
+    <section class="ts-message is-hidden" id="tsMessage" aria-live="polite"></section>
+
+    <section class="ts-summary-grid" aria-label="Matchup summary">
       <article>
-        <span>Sport</span>
+        <span>Selected sport</span>
         <strong id="summarySport">--</strong>
+      </article>
+      <article>
+        <span>Selected matchup</span>
+        <strong id="summaryMatchup">--</strong>
       </article>
       <article>
         <span>Verified trends</span>
@@ -66,49 +100,100 @@
         <span>Artifact</span>
         <strong id="summaryArtifact">--</strong>
       </article>
-      <article>
-        <span>Generated</span>
-        <strong id="summaryGenerated">--</strong>
-      </article>
     </section>
 
-    <section class="ts-message is-hidden" id="tsMessage" aria-live="polite"></section>
+    <div class="ts-loading" id="tsLoading" aria-live="polite">
+      <span></span>
+      <p>Loading verified Trendspotter data...</p>
+    </div>
 
-    <section class="ts-layout">
-      <div>
-        <div class="ts-section-heading">
-          <p>Verified trends</p>
-          <h2 id="trendHeading">NBA trend artifacts</h2>
+    <section class="ts-results" aria-label="Generated matchup trends">
+      <article class="ts-result-card" id="overviewCard">
+        <div class="ts-card-head">
+          <p>Matchup Overview</p>
+          <h2 id="overviewTitle">Select a matchup</h2>
         </div>
-        <div class="ts-loading" id="tsLoading" aria-live="polite">
-          <span></span>
-          <p>Loading verified Trendspotter data...</p>
+        <div class="ts-overview-grid" id="overviewGrid"></div>
+      </article>
+
+      <article class="ts-result-card">
+        <div class="ts-card-head">
+          <p>Team Trends</p>
+          <h2 id="teamTrendTitle">Team A and Team B</h2>
         </div>
-        <div class="ts-trend-list" id="trendList"></div>
+        <div class="ts-two-col">
+          <section>
+            <h3 id="teamAHeading">Team A trends</h3>
+            <div class="ts-trend-list" id="teamATrends"></div>
+          </section>
+          <section>
+            <h3 id="teamBHeading">Team B trends</h3>
+            <div class="ts-trend-list" id="teamBTrends"></div>
+          </section>
+        </div>
+      </article>
+
+      <article class="ts-result-card">
+        <div class="ts-card-head">
+          <p>Head-to-Head Trends</p>
+          <h2>Verified H2H signals</h2>
+        </div>
+        <div class="ts-trend-list" id="h2hTrends"></div>
+      </article>
+
+      <article class="ts-result-card">
+        <div class="ts-card-head">
+          <p>Home/Road Trends</p>
+          <h2>Venue context</h2>
+        </div>
+        <div class="ts-trend-list" id="venueTrends"></div>
+      </article>
+
+      <article class="ts-result-card">
+        <div class="ts-card-head">
+          <p>Recent Form Trends</p>
+          <h2>Current form context</h2>
+        </div>
+        <div class="ts-trend-list" id="formTrends"></div>
+      </article>
+
+      <div class="ts-market-grid">
+        <article class="ts-result-card">
+          <div class="ts-card-head">
+            <p>Spread / Run Line Trends</p>
+            <h2>Verified line trends</h2>
+          </div>
+          <div class="ts-trend-list" id="spreadTrends"></div>
+        </article>
+        <article class="ts-result-card">
+          <div class="ts-card-head">
+            <p>Total / Over-Under Trends</p>
+            <h2>Verified totals trends</h2>
+          </div>
+          <div class="ts-trend-list" id="totalTrends"></div>
+        </article>
       </div>
 
-      <aside class="ts-side" aria-label="Source and availability details">
-        <article class="ts-side-card">
-          <h2>Source Chain</h2>
-          <ul id="sourceList">
-            <li>Loading sources...</li>
-          </ul>
-        </article>
-        <article class="ts-side-card">
-          <h2>Unavailable Data</h2>
-          <ul id="unavailableList">
-            <li>Loading availability...</li>
-          </ul>
-        </article>
-        <article class="ts-side-card">
-          <h2>Guardrails</h2>
-          <p>Trendspotter does not read user picks, pending picks, locked pick details, profile records, leaderboards, grading output, or autograder state.</p>
-        </article>
-      </aside>
+      <article class="ts-result-card">
+        <div class="ts-card-head">
+          <p>Data Availability</p>
+          <h2>Verified inputs and unavailable data</h2>
+        </div>
+        <div class="ts-availability">
+          <section>
+            <h3>Source Chain</h3>
+            <ul id="sourceList"></ul>
+          </section>
+          <section>
+            <h3>Unavailable Notices</h3>
+            <ul id="unavailableList"></ul>
+          </section>
+        </div>
+      </article>
     </section>
   </main>
 
   <script src="/static/js/config.js?v=20260330"></script>
-  <script src="/static/js/trendspotter.js?v=20260505"></script>
+  <script src="/static/js/trendspotter.js?v=20260505b"></script>
 </body>
 </html>
