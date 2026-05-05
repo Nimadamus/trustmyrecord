@@ -237,6 +237,7 @@
         var rosterRows = (CURRENT_PITCHERS[team.abbreviation] || []).filter(function (row) {
             return !liveStarter || !liveStarter.name || normalizeName(row[1]) !== normalizeName(liveStarter.name);
         });
+        if (!rosterRows.length && !options.length) return [];
         rosterRows.slice(0, liveStarter && liveStarter.name ? 4 : 5).forEach(function (row) {
             options.push({
                 id: pitcherId(side, team.id + '-' + row[0]),
@@ -845,7 +846,7 @@
         var key = side === 'away' ? 'awayPitcherId' : 'homePitcherId';
         var pitcher = selectedPitcher(side, team, context);
         if (container) {
-            container.innerHTML = options.length ? options.map(function (option) { return pitcherChoiceButton(option, option.id === state[key]); }).join('') : '<div class="pitcher-empty">Choose a team to load starter profiles.</div>';
+            container.innerHTML = options.length ? options.map(function (option) { return pitcherChoiceButton(option, option.id === state[key]); }).join('') : '<div class="pitcher-empty">Starting pitcher list unavailable.</div>';
         }
         if (meta) meta.textContent = pitcherMeta(pitcher);
     }
