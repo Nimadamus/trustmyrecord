@@ -279,8 +279,10 @@ async function flushAsync() {
   assert.strictEqual((elements.homePitcherOptions.innerHTML.match(/class="pitcher-choice/g) || []).length, 5, 'Team B shows five visible pitcher options');
   assert(/Zac Gallen/.test(elements.awayPitcherOptions.innerHTML), 'current Team A renders real named pitcher options');
   assert(/Bryce Elder/.test(elements.homePitcherOptions.innerHTML), 'current Team B renders real named pitcher options');
-  assert(/Team rotation option/.test(elements.homePitcherOptions.innerHTML), 'current starter options are labeled as team rotation options');
+  assert(/Starter list selection/.test(elements.homePitcherOptions.innerHTML), 'current starter options are labeled as starter selections');
+  assert(/Starter list is for simulation selection and may not reflect today&#39;s confirmed starter/.test(elements.homePitcherOptions.innerHTML), 'current starter options include non-confirmed-starter note');
   assert(!/Ace profile|Above average starter|League average starter|Back end starter|Bullpen game/.test(elements.awayPitcherOptions.innerHTML + elements.homePitcherOptions.innerHTML), 'current mode does not render generic starter profiles');
+  assert(!/Team rotation option/.test(elements.awayPitcherOptions.innerHTML + elements.homePitcherOptions.innerHTML), 'current selector does not use vague team-rotation wording');
   assert.strictEqual(elements.dataModeBadge.textContent, 'Baseline ratings', 'baseline data mode is explicit by default');
   assert(/Verified live inputs are unavailable/.test(elements.dataModeDetail.textContent), 'live input unavailability is explicit');
   assert(/baseline team and starter profiles/.test(elements.liveInputGrid.innerHTML), 'data notes give one compact fallback message');
