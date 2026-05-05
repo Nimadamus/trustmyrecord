@@ -2484,8 +2484,9 @@
                 </div>
             </div>
             <div class="empty-state" id="picksEmptyState" style="display:none;">
-                <p style="font-size:1.5rem;margin-bottom:8px;">No picks yet</p>
-                <p>This user hasn't locked a pick into their public record yet.</p>
+                <p style="font-size:1.5rem;margin-bottom:8px;">You have not posted a pick yet.</p>
+                <p>Post your first pick to start building your verified record.</p>
+                <a class="profile-first-pick-cta" href="/sportsbook/?first_pick=1">Make First Pick</a>
             </div>
         </div>
     </section>
@@ -5022,6 +5023,20 @@
             text-align: center;
             color: #94a3b8 !important;
         }
+        body.profile-page .profile-first-pick-cta,
+        body.profile-page.tmr-site-shell .profile-first-pick-cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 12px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #2dd4bf, #22d3ee);
+            color: #04111a !important;
+            font-size: 13px;
+            font-weight: 900;
+            text-decoration: none;
+        }
 
         /* Mobile: stack pick row fields vertically with key fields up top */
         @media (max-width: 760px) {
@@ -6665,7 +6680,7 @@
         }
         const picks = (resp && Array.isArray(resp.picks)) ? resp.picks : [];
         if (!picks.length) {
-            tbody.innerHTML = '<tr class="empty"><td colspan="10">No picks locked yet.</td></tr>';
+            tbody.innerHTML = '<tr class="empty"><td colspan="10">You have not posted a pick yet. Post your first pick to start building your verified record.</td></tr>';
             if (meta) meta.textContent = '0 picks';
             return;
         }
@@ -7686,8 +7701,9 @@
         }
         const emptyLedgerNote = showEmptyLedgerNote
             ? '<div class="profile-empty-ledger">' +
-                '<p><strong>No picks yet.</strong></p>' +
-                '<p>Graded picks will build this public record after they are settled.</p>' +
+                '<p><strong>You have not posted a pick yet.</strong></p>' +
+                '<p>Post your first pick to start building your verified record.</p>' +
+                '<p><a class="profile-first-pick-cta" href="/sportsbook/?first_pick=1">Make First Pick</a></p>' +
               '</div>'
             : '';
         const rail = '<div class="profile-rail" aria-label="Pick monitor stats">' +

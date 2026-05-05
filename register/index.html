@@ -223,17 +223,17 @@
             <div class="brand">
                 <a href="/">TRUST<span>MY</span>RECORD</a>
             </div>
-            <h2>Start a clean public record.</h2>
-            <p>Create a real backend account and start building picks, receipts, and a visible profile from day one.</p>
+            <h2>Welcome to TrustMyRecord.</h2>
+            <p>Build your verified sports record by posting your first pick.</p>
             <div class="trust-list">
-                <div class="trust-item"><strong>One public profile</strong><span>Your record, feed, picks, and competition all connect to the same account.</span></div>
+                <div class="trust-item"><strong>Make your first pick</strong><span>Start simple with a side, total, or moneyline.</span></div>
                 <div class="trust-item"><strong>Locked receipts</strong><span>Picks are made before results and stay attached to your history.</span></div>
-                <div class="trust-item"><strong>Built for sports credibility</strong><span>Use picks, hangout, trivia, and arena to build visible proof over time.</span></div>
+                <div class="trust-item"><strong>One public profile</strong><span>Your record, feed, picks, and competition all connect to the same account.</span></div>
             </div>
         </aside>
         <div class="content">
             <h1>Create <span class="accent">Account</span></h1>
-            <p class="sub">Register directly against the live TrustMyRecord backend.</p>
+            <p class="sub">Create your account, then post your first pick to start building a verified record.</p>
 
             <form id="direct-register-form">
                 <div class="field">
@@ -375,8 +375,8 @@
                     if (data && data.user && (data.accessToken || data.access_token || data.tokens)) {
                         await persistBackendLogin(data.user);
                         var ru = data.user || {};
-                        var runame = ru.username || ru.displayName || username || '';
-                        window.location.replace('/profile/' + (runame ? '?user=' + encodeURIComponent(runame) : ''));
+                        try { sessionStorage.setItem('tmr_post_auth_redirect', 'picks'); } catch (error) {}
+                        window.location.replace('/sportsbook/?first_pick=1');
                         return;
                     }
 

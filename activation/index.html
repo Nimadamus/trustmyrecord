@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activation Diagnostics | TrustMyRecord</title>
+    <style>
+        :root { color-scheme: dark; --bg:#07111a; --card:#101923; --border:#233446; --text:#f8fafc; --muted:#94a3b8; --cyan:#22d3ee; }
+        * { box-sizing: border-box; }
+        body { margin:0; min-height:100vh; background:var(--bg); color:var(--text); font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif; }
+        main { width:min(1040px, calc(100% - 32px)); margin:0 auto; padding:36px 0; }
+        a { color:var(--cyan); }
+        .top { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; margin-bottom:22px; }
+        h1 { margin:0 0 8px; font-size:clamp(26px, 4vw, 40px); line-height:1; }
+        p { color:var(--muted); line-height:1.55; margin:0; }
+        .grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
+        .card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:18px; }
+        .label { color:var(--muted); font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+        .value { display:block; margin-top:8px; font-size:30px; font-weight:900; }
+        .wide { grid-column:1 / -1; }
+        .status { margin:16px 0; padding:12px 14px; border:1px solid var(--border); border-radius:8px; color:var(--muted); }
+        button { border:0; border-radius:8px; background:linear-gradient(135deg,#2dd4bf,#22d3ee); color:#04111a; cursor:pointer; font-weight:900; padding:11px 16px; white-space:nowrap; }
+        @media (max-width:760px) { .top { flex-direction:column; } .grid { grid-template-columns:1fr; } button { width:100%; } }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="top">
+            <div>
+                <h1>Activation Diagnostics</h1>
+                <p>Live activation counts from the TrustMyRecord API. This page does not create users, picks, records, or fake activity.</p>
+            </div>
+            <button id="refreshBtn" type="button">Refresh Metrics</button>
+        </div>
+        <div class="status" id="status">Loading live metrics...</div>
+        <section class="grid" aria-label="Activation metrics">
+            <div class="card"><span class="label">Total Users</span><strong class="value" id="totalUsers">-</strong></div>
+            <div class="card"><span class="label">Users With Zero Picks</span><strong class="value" id="zeroPickUsers">-</strong></div>
+            <div class="card"><span class="label">Users With At Least One Pick</span><strong class="value" id="activatedUsers">-</strong></div>
+            <div class="card"><span class="label">Activation Rate</span><strong class="value" id="activationRate">-</strong></div>
+            <div class="card"><span class="label">Last Signup Date</span><strong class="value" id="lastSignupDate">-</strong></div>
+            <div class="card"><span class="label">Last Pick Date</span><strong class="value" id="lastPickDate">-</strong></div>
+            <div class="card wide">
+                <span class="label">Notes</span>
+                <p id="notes" style="margin-top:8px;">Counts are computed only from API data returned to this diagnostic page.</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/js/config.js?v=20260317"></script>
+    <script src="/static/js/backend-api.js?v=20260430remember1"></script>
+    <script>
+        (function() {
+            const ids = ['totalUsers', 'zeroPickUsers', 'activatedUsers', 'activationRate', 'lastSignupDate', 'lastPickDate'];
+            function setText(id, text) {
+                const el = document.getElementById(id);
+                if (el) el.textContent = text;
+            }
+            function setStatus(text) { setText('status', text); }
+            function asArray(payload, key) {
+                if (Array.isArray(payload)) return payload;
+                if (payload && Array.isArray(payload[key])) return payload[key];
+                if (payload && Array.isArray(payload.results)) return payload.results;
+                return [];
+            }
+            function dateValue(item, keys) {
+                for (const key of keys) {
+                    const raw = item && item[key];
+                    const t = raw ? Date.parse(raw) : NaN;
+                    if (Number.isFinite(t)) return t;
+                }
+                return NaN;
+            }
+            function fmtDate(ms) {
+                if (!Number.isFinite(ms)) return 'Unavailable';
+                return new Date(ms).toLocaleString();
+            }
+            function userKey(user) {
+                return String((user && (user.id || user.user_id || user.username || user.email)) || '').toLowerCase();
+            }
+            function pickUserKey(pick) {
+                return String((pick && (pick.user_id || pick.userId || pick.username || pick.user || pick.user_email)) || '').toLowerCase();
+            }
+            async function loadMetrics() {
+                ids.forEach(id => setText(id, '-'));
+                setStatus('Loading live metrics...');
+                try {
+                    if (!window.api || typeof window.api.request !== 'function') throw new Error('API client unavailable.');
+                    const [usersPayload, picksPayload] = await Promise.all([
+                        window.api.request('/users?query=&limit=500&offset=0'),
+                        window.api.request('/picks?limit=500&offset=0')
+                    ]);
+                    const users = asArray(usersPayload, 'users');
+                    const picks = asArray(picksPayload, 'picks');
+                    const totalUsers = Number(usersPayload && (usersPayload.total || usersPayload.count || usersPayload.total_users)) || users.length;
+                    const pickUsers = new Set(picks.map(pickUserKey).filter(Boolean));
+                    const usersWithPicks = users.filter(user => {
+                        const explicit = Number(user.total_picks || user.totalPicks || user.pick_count || user.pickCount || user.locked_picks || 0);
+                        return explicit > 0 || pickUsers.has(userKey(user));
+                    }).length;
+                    const zeroPickUsers = Math.max(0, totalUsers - usersWithPicks);
+                    const activationRate = totalUsers > 0 ? ((usersWithPicks / totalUsers) * 100).toFixed(1) + '%' : '0.0%';
+                    const lastSignup = Math.max.apply(null, users.map(u => dateValue(u, ['created_at', 'createdAt', 'joinedDate', 'registered_at'])).filter(Number.isFinite));
+                    const lastPick = Math.max.apply(null, picks.map(p => dateValue(p, ['locked_at', 'created_at', 'createdAt', 'submitted_at'])).filter(Number.isFinite));
+                    setText('totalUsers', String(totalUsers));
+                    setText('zeroPickUsers', String(zeroPickUsers));
+                    setText('activatedUsers', String(usersWithPicks));
+                    setText('activationRate', activationRate);
+                    setText('lastSignupDate', fmtDate(lastSignup));
+                    setText('lastPickDate', fmtDate(lastPick));
+                    setText('notes', 'Fetched ' + users.length + ' user rows and ' + picks.length + ' pick rows from the live API. If the API paginates beyond 500 rows, these counts should be treated as a diagnostic sample until a backend aggregate endpoint is added.');
+                    setStatus('Live activation metrics loaded.');
+                } catch (error) {
+                    setStatus('Activation metrics unavailable from the current API response: ' + ((error && error.message) || 'Unknown error'));
+                    setText('notes', 'No values were fabricated. Add or expose a backend aggregate endpoint if this API route is restricted.');
+                }
+            }
+            document.getElementById('refreshBtn').addEventListener('click', loadMetrics);
+            loadMetrics();
+        })();
+    </script>
+</body>
+</html>
