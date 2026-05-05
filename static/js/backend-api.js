@@ -1,4 +1,4 @@
-/**
+﻿/**
  * TrustMyRecord Backend API Client
  * Connects frontend to Node.js/Express backend
  */
@@ -420,7 +420,7 @@ class TrustMyRecordAPI {
     // ==================== USER ROUTES ====================
 
     async getUserProfile(username) {
-        return this.request(`/users/${encodeURIComponent(username)}`);
+        return this.request(`/users/${username}`);
     }
 
     async updateProfile(updates) {
@@ -439,11 +439,9 @@ class TrustMyRecordAPI {
         const normalizedOptions = typeof options === 'string'
             ? { ...legacyOptions, sortBy: options }
             : (options || {});
-        const { sport, sortBy = 'roi', limit = 50, minPicks, min_picks } = normalizedOptions;
+        const { sport, sortBy = 'roi', limit = 50 } = normalizedOptions;
         let url = `/users/leaderboard?sortBy=${sortBy}&limit=${limit}`;
         if (sport) url += `&sport=${sport}`;
-        const minimumPicks = minPicks != null ? minPicks : min_picks;
-        if (minimumPicks != null) url += `&minPicks=${encodeURIComponent(minimumPicks)}`;
         return this.request(url);
     }
 
@@ -460,6 +458,91 @@ class TrustMyRecordAPI {
         });
         const query = params.toString();
         return this.request(`/users/${encodeURIComponent(username)}/stats/advanced${query ? `?${query}` : ''}`);
+    }
+
+    // ==================== MODEL BUILDER ROUTES ====================
+    // Private saved configuration objects only. No Model Tracker, picks,
+    // public performance fields, leaderboard/profile stats, or marketplace data.
+
+    sanitizeModelDefinitionPayload(payload = {}) {
+        const forbidden = new Set([
+            'roi',
+            'win_rate',
+            'sample_size',
+            'wins',
+            'losses',
+            'pushes',
+            'net_units',
+            'result_units',
+            'performance',
+            'stats',
+            'analytics',
+            'comparison',
+            'record',
+            'marketplace',
+            'marketplace_id',
+            'leaderboard',
+            'grading_stats',
+            'public_profile',
+            'tracker_id',
+            'model_tracker_id',
+            'tracked_pick_id',
+            'prediction',
+            'predictions',
+            'backtest',
+            'backtest_results'
+        ]);
+        const stripForbidden = (value) => {
+            if (Array.isArray(value)) return value.map(stripForbidden);
+            if (!value || typeof value !== 'object') return value;
+            const out = {};
+            Object.entries(value).forEach(([key, childValue]) => {
+                if (!forbidden.has(key)) out[key] = stripForbidden(childValue);
+            });
+            return out;
+        };
+        const clean = stripForbidden(payload || {});
+        clean.visibility = 'private';
+        clean.source_type = 'manual_builder';
+        return clean;
+    }
+
+    async listModelDefinitions(options = {}) {
+        const params = new URLSearchParams();
+        if (options.status) params.set('status', options.status);
+        if (options.include_archived != null) params.set('include_archived', String(Boolean(options.include_archived)));
+        const query = params.toString();
+        return this.request(`/model-builder/models${query ? `?${query}` : ''}`);
+    }
+
+    async getModelDefinition(modelId) {
+        return this.request(`/model-builder/models/${encodeURIComponent(modelId)}`);
+    }
+
+    async createModelDefinition(modelDefinition) {
+        return this.request('/model-builder/models', {
+            method: 'POST',
+            body: this.sanitizeModelDefinitionPayload(modelDefinition)
+        });
+    }
+
+    async updateModelDefinition(modelId, updates) {
+        return this.request(`/model-builder/models/${encodeURIComponent(modelId)}`, {
+            method: 'PUT',
+            body: this.sanitizeModelDefinitionPayload(updates)
+        });
+    }
+
+    async archiveModelDefinition(modelId) {
+        return this.request(`/model-builder/models/${encodeURIComponent(modelId)}/archive`, {
+            method: 'POST'
+        });
+    }
+
+    async deleteModelDefinition(modelId) {
+        return this.request(`/model-builder/models/${encodeURIComponent(modelId)}`, {
+            method: 'DELETE'
+        });
     }
 
     // ==================== PICKS ROUTES ====================
@@ -915,6 +998,72 @@ class TrustMyRecordAPI {
             return { activity: [] };
         }
     }
+}
+
+if (typeof window !== 'undefined') {
+    window.TMR = window.TMR || {};
+    if (typeof window.TMR.formatLine !== 'function') {
+        window.TMR.formatLine = function (value, options) {
+            if (value == null || value === '') return '';
+            const num = Number(value);
+            if (!Number.isFinite(num)) return String(value).trim();
+            let text = String(num);
+            if (text.indexOf('.') !== -1) text = text.replace(/0+$/, '').replace(/\.$/, '');
+            return options && options.signed && num > 0 ? '+' + text : text;
+        };
+    }
+
+    window.TMR.formatPickDisplay = function (pick) {
+        pick = pick || {};
+        const market = String(pick.market_type || pick.marketType || pick.bet_type || pick.betType || '').toLowerCase();
+        const rawSelection = String(pick.selection_label || pick.selection || pick.pick || pick.side || pick.team || 'Pick').trim();
+        const selection = rawSelection.replace(/\s+/g, ' ');
+        const lineValue = pick.line_snapshot != null ? pick.line_snapshot : (pick.line != null ? pick.line : pick.point);
+        const hasLine = lineValue != null && lineValue !== '' && Number.isFinite(Number(lineValue));
+        const signedLine = hasLine ? window.TMR.formatLine(lineValue, { signed: true }) : '';
+        const plainLine = hasLine ? window.TMR.formatLine(lineValue) : '';
+        const lowerSelection = selection.toLowerCase();
+        const awayTeam = String(pick.away_team || (pick.game && pick.game.away_team) || '').trim();
+        const homeTeam = String(pick.home_team || (pick.game && pick.game.home_team) || '').trim();
+        const matchup = awayTeam && homeTeam ? awayTeam + ' @ ' + homeTeam : '';
+        const hasTotalSide = /\b(over|under)\b/i.test(selection);
+        const hasMatchup = matchup && selection.indexOf(matchup) !== -1;
+
+        if (!selection) return 'Pick';
+
+        if (market === 'h2h' || market === 'moneyline' || market.endsWith('_h2h')) {
+            return /\bml\b$/i.test(selection) ? selection : selection + ' ML';
+        }
+
+        if (market === 'spreads' || market === 'spread' || market.endsWith('_spreads') || market.includes('run_line') || market.includes('puck_line')) {
+            if (!signedLine) return selection;
+            return selection.indexOf(signedLine) !== -1 ? selection : selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '') + ' ' + signedLine;
+        }
+
+        if (market === 'team_totals' || market === 'team_total') {
+            if (!plainLine || !hasTotalSide) return selection;
+            const withoutLine = selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '').trim();
+            const withTeamTotal = /\bteam\s+total\b/i.test(withoutLine)
+                ? withoutLine
+                : withoutLine.replace(/\b(over|under)\b/i, 'Team Total $1');
+            return withTeamTotal.match(new RegExp('\\b' + plainLine.replace('.', '\\.') + '\\b')) ? withTeamTotal : withTeamTotal + ' ' + plainLine;
+        }
+
+        if (market === 'totals' || market === 'total' || market.endsWith('_totals')) {
+            if (!plainLine) return matchup && hasTotalSide && !hasMatchup ? matchup + ' ' + selection : selection;
+            if (hasTotalSide) {
+                const selectionWithLine = selection.match(new RegExp('\\b' + plainLine.replace('.', '\\.') + '\\b')) ? selection : selection + ' ' + plainLine;
+                return matchup && !hasMatchup ? matchup + ' ' + selectionWithLine : selectionWithLine;
+            }
+            if (lowerSelection === 'over' || lowerSelection === 'under') return selection + ' ' + plainLine;
+            return selection;
+        }
+
+        if (signedLine && selection.indexOf(signedLine) === -1 && !/\b(over|under|ml)\b/i.test(selection)) {
+            return selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '') + ' ' + signedLine;
+        }
+        return selection;
+    };
 }
 
 // Create global API instance
