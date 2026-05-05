@@ -275,6 +275,18 @@ async function flushAsync() {
   assert.strictEqual(simulator.localTeams.current.length, 30, '30 current teams are available locally');
   assert.strictEqual(simulator.localTeams.historical.length, 20, '20 curated historical teams are available locally');
   assert.strictEqual(simulator.liveInputs.length, 11, 'live input architecture exposes eleven source slots');
+  simulator.localTeams.current.forEach((team) => {
+    const pitchers = simulator.pitcherOptionsFor(team, 'away', null);
+    assert.strictEqual(pitchers.length, 5, team.name + ' has five current named starter options');
+    assert(pitchers.every((pitcher) => /^[A-Z][A-Za-z'. -]+$/.test(pitcher.name)), team.name + ' starter options are actual names');
+    assert(!/Ace profile|Above average starter|League average starter|Back end starter|Bullpen game|baseline ace|baseline starter|depth starter|era-average starter|staff game/.test(pitchers.map((pitcher) => pitcher.name).join('|')), team.name + ' has no generic starter options');
+  });
+  simulator.localTeams.historical.forEach((team) => {
+    const pitchers = simulator.pitcherOptionsFor(team, 'away', null);
+    assert.strictEqual(pitchers.length, 5, team.name + ' has five historical named starter options');
+    assert(pitchers.every((pitcher) => /^[A-Z][A-Za-z'. -]+$/.test(pitcher.name)), team.name + ' historical starter options are actual names');
+    assert(!/baseline ace|baseline starter|depth starter|era-average starter|staff game|Ace profile|Above average starter|League average starter|Back end starter|Bullpen game/.test(pitchers.map((pitcher) => pitcher.name).join('|')), team.name + ' has no fallback starter labels');
+  });
   assert.strictEqual((elements.awayPitcherOptions.innerHTML.match(/class="pitcher-choice/g) || []).length, 5, 'Team A shows five visible pitcher options');
   assert.strictEqual((elements.homePitcherOptions.innerHTML.match(/class="pitcher-choice/g) || []).length, 5, 'Team B shows five visible pitcher options');
   assert(/Zac Gallen/.test(elements.awayPitcherOptions.innerHTML), 'current Team A renders real named pitcher options');
