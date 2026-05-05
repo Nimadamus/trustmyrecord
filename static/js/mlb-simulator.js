@@ -79,10 +79,13 @@
     var LIVE_INPUT_SOURCES = [
         ['scheduleFinals', 'MLB schedule/finals', 'Unavailable', 'No verified current schedule or final score match is connected.'],
         ['teamRecords', 'Team records', 'Unavailable', 'No verified team record match is connected.'],
-        ['startingPitchers', 'Starting pitchers', 'Unavailable', 'No confirmed or probable starter feed is connected.'],
-        ['ballparkWeather', 'Ballpark/weather', 'Unavailable', 'No verified venue or weather feed is connected.'],
+        ['startingPitchers', 'Probable starters', 'Unavailable', 'No probable starter feed is connected.'],
+        ['confirmedStarters', 'Confirmed starter status', 'Unavailable', 'No confirmed-starter status feed is connected.'],
+        ['ballpark', 'Ballpark', 'Unavailable', 'No verified venue feed is connected.'],
+        ['weather', 'Weather', 'Unavailable', 'No verified weather feed is connected.'],
         ['sportsbookOdds', 'Sportsbook odds', 'Unavailable', 'No verified sportsbook source is connected.'],
-        ['rosterContext', 'Roster context', 'Unavailable', 'No verified current roster feed is connected.'],
+        ['injuryReport', 'Injury report', 'Unavailable', 'No verified injury report feed is connected.'],
+        ['rosterContext', 'Roster context', 'Unavailable', 'No verified player roster feed is connected.'],
         ['recentForm', 'Recent scoring form', 'Unavailable', 'No verified recent final-score feed is connected.'],
         ['bullpenContext', 'Bullpen context', 'Unavailable', 'No verified bullpen availability feed is connected.']
     ].map(function (row) { return { key: row[0], label: row[1], status: row[2], detail: row[3], verified: false }; });
@@ -100,6 +103,7 @@
             scheduleGames: [],
             boardGames: [],
             espnEvents: [],
+            espnSummaries: {},
             recentEvents: [],
             error: null
         },
@@ -203,6 +207,7 @@
         return verifiedLiveInputs().length ? 'Verified live inputs' : 'Baseline ratings';
     }
     function dataModeDetail() {
+        if (state.awayPool === 'historical' || state.homePool === 'historical') return 'Classic and mixed-era matchups use historical baseline model ratings; live inputs are current-game only.';
         if (verifiedLiveInputs().length) return 'Verified live inputs are connected for this simulation where explicitly listed.';
         return 'Verified live inputs are unavailable, so this matchup will use internal baseline ratings.';
     }
@@ -232,6 +237,17 @@
             era: Number.isFinite(era) ? era : null
         };
     }
+    function extractWeather(event) {
+        var weather = event && event.weather || null;
+        if (!weather) return null;
+        var temp = Number(weather.temperature != null ? weather.temperature : weather.highTemperature);
+        return {
+            display: weather.displayValue || '',
+            temperature: Number.isFinite(temp) ? temp : null,
+            precipitation: Number(weather.precipitation),
+            gust: Number(weather.gust)
+        };
+    }
     function extractEspnEvent(event) {
         var comp = event && event.competitions && event.competitions[0];
         var competitors = comp && Array.isArray(comp.competitors) ? comp.competitors : [];
@@ -255,11 +271,92 @@
                 state: comp.venue.address && comp.venue.address.state || '',
                 indoor: comp.venue.indoor === true
             } : null,
+            weather: extractWeather(event),
             homeRecord: recordFromCompetitor(home),
             awayRecord: recordFromCompetitor(away),
             homeStarter: probableFromCompetitor(home),
             awayStarter: probableFromCompetitor(away)
         };
+    }
+    function summaryForEvent(id) {
+        return id && state.liveContext.espnSummaries ? state.liveContext.espnSummaries[id] || null : null;
+    }
+    function injuryStatus(item) {
+        return item && (item.status || item.shortStatus || item.type && (item.type.abbreviation || item.type.description) || item.athlete && item.athlete.status && (item.athlete.status.abbreviation || item.athlete.status.name)) || '';
+    }
+    function injuryDetail(item) {
+        return item && item.details && (item.details.type || item.details.detail || item.details.displayDetail || item.details.displayDescription) || '';
+    }
+    function injuryPosition(item) {
+        return item && item.athlete && item.athlete.position && (item.athlete.position.abbreviation || item.athlete.position.displayName) || '';
+    }
+    function teamInjuryReport(summary, team) {
+        var groups = Array.isArray(summary && summary.injuries) ? summary.injuries : [];
+        var group = groups.filter(function (entry) { return entry && entry.team && normalizeName(entry.team.displayName) === normalizeName(team.name); })[0];
+        var injuries = group && Array.isArray(group.injuries) ? group.injuries : [];
+        if (!injuries.length) return null;
+        var ilCount = injuries.filter(function (item) { return /IL|injured/i.test(injuryStatus(item)); }).length;
+        var dayToDay = injuries.filter(function (item) { return /day/i.test(injuryStatus(item)); }).length;
+        var rpCount = injuries.filter(function (item) { return /RP|Relief/i.test(injuryPosition(item)); }).length;
+        var notable = injuries.slice(0, 3).map(function (item) {
+            var name = item && item.athlete && (item.athlete.displayName || item.athlete.fullName) || 'Listed player';
+            var pos = injuryPosition(item);
+            var status = injuryStatus(item);
+            var detail = injuryDetail(item);
+            return name + (pos ? ' ' + pos : '') + (status ? ' ' + status : '') + (detail ? ' - ' + detail : '');
+        });
+        return {
+            count: injuries.length,
+            ilCount: ilCount,
+            dayToDay: dayToDay,
+            relieverCount: rpCount,
+            notable: notable,
+            summary: injuries.length + ' listed' + (ilCount ? ', ' + ilCount + ' IL' : '') + (rpCount ? ', ' + rpCount + ' RP' : '')
+        };
+    }
+    function collectRosterPlayers(entry) {
+        var players = [];
+        function add(item) {
+            if (!item) return;
+            var athlete = item.athlete || item;
+            var name = athlete.displayName || athlete.fullName || athlete.name;
+            if (!name) return;
+            players.push({
+                name: name,
+                position: athlete.position && (athlete.position.abbreviation || athlete.position.displayName) || item.position && item.position.abbreviation || ''
+            });
+        }
+        (entry.roster || []).forEach(add);
+        (entry.athletes || []).forEach(add);
+        (entry.groups || []).forEach(function (group) { (group.athletes || group.roster || []).forEach(add); });
+        var seen = {};
+        return players.filter(function (player) {
+            var key = normalizeName(player.name);
+            if (seen[key]) return false;
+            seen[key] = true;
+            return true;
+        });
+    }
+    function teamRosterContext(summary, team) {
+        var groups = Array.isArray(summary && summary.rosters) ? summary.rosters : [];
+        var group = groups.filter(function (entry) { return entry && entry.team && normalizeName(entry.team.displayName) === normalizeName(team.name); })[0];
+        var players = group ? collectRosterPlayers(group) : [];
+        if (!players.length) return null;
+        var relievers = players.filter(function (player) { return /RP|Relief/i.test(player.position); }).length;
+        return { count: players.length, relievers: relievers, summary: players.length + ' roster players' + (relievers ? ', ' + relievers + ' RP' : '') };
+    }
+    function summaryContext(summary, away, home) {
+        if (!summary) return null;
+        var injuries = {
+            away: teamInjuryReport(summary, away),
+            home: teamInjuryReport(summary, home)
+        };
+        var rosters = {
+            away: teamRosterContext(summary, away),
+            home: teamRosterContext(summary, home)
+        };
+        if (!injuries.away && !injuries.home && !rosters.away && !rosters.home) return null;
+        return { injuries: injuries, rosters: rosters };
     }
     function teamsMatch(gameLike, away, home) {
         if (!gameLike || !away || !home) return false;
@@ -304,9 +401,11 @@
         var scheduleGame = (state.liveContext.scheduleGames || []).filter(function (game) { return teamsMatch(game, away, home); })[0] || null;
         var boardGame = (state.liveContext.boardGames || []).filter(function (game) { return teamsMatch(game, away, home); })[0] || null;
         var recentForm = buildRecentForm(away, home);
-        if (!espnGame && !scheduleGame && !boardGame && !recentForm) return null;
+        var summary = summaryForEvent(espnGame && espnGame.id);
+        var extraContext = summaryContext(summary, away, home);
+        if (!espnGame && !scheduleGame && !boardGame && !recentForm && !extraContext) return null;
         var odds = boardGame ? marketOddsFor(boardGame, away, home) : null;
-        return { espnGame: espnGame, scheduleGame: scheduleGame, boardGame: boardGame, odds: odds, recentForm: recentForm };
+        return { espnGame: espnGame, scheduleGame: scheduleGame, boardGame: boardGame, odds: odds, recentForm: recentForm, summary: summary, extraContext: extraContext };
     }
     function completedTeamResult(event, team) {
         if (!event || !event.completed || !team) return null;
@@ -358,6 +457,11 @@
         var scheduleGame = context && context.scheduleGame;
         var odds = context && context.odds;
         var recentForm = context && context.recentForm;
+        var extra = context && context.extraContext;
+        var weather = espnGame && espnGame.weather;
+        var injuryAvailable = !!(extra && extra.injuries && (extra.injuries.away || extra.injuries.home));
+        var rosterAvailable = !!(extra && extra.rosters && extra.rosters.away && extra.rosters.home);
+        var bullpenAvailable = !!(extra && ((extra.injuries && ((extra.injuries.away && extra.injuries.away.relieverCount) || (extra.injuries.home && extra.injuries.home.relieverCount))) || (extra.rosters && extra.rosters.away && extra.rosters.home && (extra.rosters.away.relievers || extra.rosters.home.relievers))));
         var startersAvailable = !!(espnGame && espnGame.awayStarter && espnGame.homeStarter);
         var recordsAvailable = !!(espnGame && espnGame.awayRecord && espnGame.homeRecord);
         var recentAvailable = !!(recentForm && recentForm.away && recentForm.home);
@@ -378,17 +482,31 @@
             },
             {
                 key: 'startingPitchers',
-                label: 'Starting pitchers',
+                label: 'Probable starters',
                 verified: startersAvailable,
                 status: startersAvailable ? 'Probable starters available' : 'Unavailable',
                 detail: startersAvailable ? espnGame.awayStarter.name + ' vs ' + espnGame.homeStarter.name : 'No confirmed or probable starter match available.'
             },
             {
-                key: 'ballparkWeather',
-                label: 'Ballpark/weather',
+                key: 'confirmedStarters',
+                label: 'Confirmed starter status',
+                verified: false,
+                status: 'Unavailable',
+                detail: startersAvailable ? 'ESPN lists probable starters; confirmed starter status is not connected.' : 'No confirmed starter status match available.'
+            },
+            {
+                key: 'ballpark',
+                label: 'Ballpark',
                 verified: !!(espnGame && espnGame.venue),
                 status: espnGame && espnGame.venue ? 'Ballpark available' : 'Unavailable',
-                detail: espnGame && espnGame.venue ? espnGame.venue.name + (espnGame.venue.city ? ', ' + espnGame.venue.city : '') + '. Weather not connected.' : 'No verified venue or weather match available.'
+                detail: espnGame && espnGame.venue ? espnGame.venue.name + (espnGame.venue.city ? ', ' + espnGame.venue.city : '') + '.' : 'No verified venue match available.'
+            },
+            {
+                key: 'weather',
+                label: 'Weather',
+                verified: !!weather,
+                status: weather ? 'Available from ESPN scoreboard' : 'Unavailable',
+                detail: weather ? [weather.temperature != null ? weather.temperature + 'F' : '', weather.display || '', Number.isFinite(weather.gust) ? 'gust ' + weather.gust + ' mph' : ''].filter(Boolean).join(' / ') : 'No verified weather match available.'
             },
             {
                 key: 'sportsbookOdds',
@@ -398,14 +516,21 @@
                 detail: odds ? odds.book + ' moneyline snapshot; used as market context, not a betting edge.' : 'No verified sportsbook odds match available.'
             },
             {
+                key: 'injuryReport',
+                label: 'Injury report',
+                verified: injuryAvailable,
+                status: injuryAvailable ? 'Available from ESPN summary' : 'Unavailable',
+                detail: injuryAvailable ? [extra.injuries.away ? espnGame.awayTeam + ': ' + extra.injuries.away.summary : espnGame.awayTeam + ': none listed', extra.injuries.home ? espnGame.homeTeam + ': ' + extra.injuries.home.summary : espnGame.homeTeam + ': none listed'].join(' / ') : 'No verified injury report match available.'
+            },
+            {
                 key: 'recentForm',
                 label: 'Recent scoring form',
                 status: recentAvailable ? 'Available from ESPN final scores' : 'Unavailable',
                 detail: recentAvailable ? 'Last ' + recentForm.away.games + ': ' + recentForm.away.summary + ' / Last ' + recentForm.home.games + ': ' + recentForm.home.summary : 'No verified recent final-score sample matched both teams.',
                 verified: recentAvailable
             },
-            { key: 'rosterContext', label: 'Roster context', status: 'Unavailable', detail: 'No verified current roster feed is connected.', verified: false },
-            { key: 'bullpenContext', label: 'Bullpen context', status: 'Unavailable', detail: 'No verified bullpen availability feed is connected.', verified: false }
+            { key: 'rosterContext', label: 'Roster context', status: rosterAvailable ? 'Available from ESPN roster payload' : 'Unavailable', detail: rosterAvailable ? espnGame.awayTeam + ': ' + extra.rosters.away.summary + ' / ' + espnGame.homeTeam + ': ' + extra.rosters.home.summary : 'No verified player roster list is connected for this matchup.', verified: rosterAvailable },
+            { key: 'bullpenContext', label: 'Bullpen context', status: bullpenAvailable ? 'Bullpen injury/depth context available' : 'Unavailable', detail: bullpenAvailable ? 'Derived from ESPN roster/injury context only; workload and availability are not connected.' : 'No verified bullpen depth, workload, or availability feed is connected.', verified: bullpenAvailable }
         ];
     }
     function setLiveInputsForMatchup(away, home) {
@@ -421,6 +546,10 @@
     function recordStrengthAdjustment(record) {
         if (!record || !Number.isFinite(record.pct)) return 0;
         return clamp((record.pct - 0.5) * 9, -3.5, 3.5);
+    }
+    function injuryStrengthPenalty(report) {
+        if (!report) return 0;
+        return clamp((report.ilCount * 0.32) + (report.dayToDay * 0.12) + (report.relieverCount * 0.12), 0, 2.8);
     }
     function simulate(away, home, context) {
         var awayRuns = expectedRunsFor(away, home, 0);
@@ -445,8 +574,35 @@
                 liveFactors.push('Team records: ' + away.abbreviation + ' ' + context.espnGame.awayRecord.summary + ', ' + home.abbreviation + ' ' + context.espnGame.homeRecord.summary + '.');
             }
             if (context.espnGame.venue) {
-                liveFactors.push('Ballpark context: ' + context.espnGame.venue.name + ' is verified; weather is not connected.');
+                liveFactors.push('Ballpark context: ' + context.espnGame.venue.name + ' is verified from ESPN.');
             }
+            if (context.espnGame.weather) {
+                var weather = context.espnGame.weather;
+                if (weather.temperature != null && weather.temperature >= 80) {
+                    awayRuns = clamp(awayRuns + 0.08, 1.7, 9.2);
+                    homeRuns = clamp(homeRuns + 0.08, 1.7, 9.2);
+                }
+                if (Number.isFinite(weather.precipitation) && weather.precipitation > 0) {
+                    awayRuns = clamp(awayRuns - 0.04, 1.7, 9.2);
+                    homeRuns = clamp(homeRuns - 0.04, 1.7, 9.2);
+                }
+                liveFactors.push('Weather context from ESPN: ' + [weather.temperature != null ? weather.temperature + 'F' : '', weather.display || '', Number.isFinite(weather.gust) ? 'gust ' + weather.gust + ' mph' : ''].filter(Boolean).join(' / ') + '.');
+            }
+        }
+        if (context && context.extraContext && context.extraContext.injuries) {
+            var awayInjuries = context.extraContext.injuries.away;
+            var homeInjuries = context.extraContext.injuries.home;
+            if (awayInjuries) awayStrength -= injuryStrengthPenalty(awayInjuries);
+            if (homeInjuries) homeStrength -= injuryStrengthPenalty(homeInjuries);
+            if (awayInjuries || homeInjuries) {
+                liveFactors.push('ESPN injury report: ' + away.abbreviation + ' ' + (awayInjuries ? awayInjuries.summary : 'none listed') + '; ' + home.abbreviation + ' ' + (homeInjuries ? homeInjuries.summary : 'none listed') + '.');
+            }
+        }
+        if (context && context.extraContext && context.extraContext.rosters && context.extraContext.rosters.away && context.extraContext.rosters.home) {
+            liveFactors.push('Roster context from ESPN: ' + away.abbreviation + ' ' + context.extraContext.rosters.away.summary + '; ' + home.abbreviation + ' ' + context.extraContext.rosters.home.summary + '.');
+        }
+        if (context && context.extraContext && context.extraContext.injuries && ((context.extraContext.injuries.away && context.extraContext.injuries.away.relieverCount) || (context.extraContext.injuries.home && context.extraContext.injuries.home.relieverCount))) {
+            liveFactors.push('Bullpen context is limited to reliever injury listings; live workload and availability are not connected.');
         }
         if (context && context.recentForm) {
             if (context.recentForm.away) {
@@ -666,7 +822,7 @@
             'Data sources used: ' + (result.dataSourcesUsed.length ? result.dataSourcesUsed.join(', ') : 'Internal baseline team ratings only') + '.',
             'Missing data sources: ' + (result.missingDataSources.length ? result.missingDataSources.join(', ') : 'None listed') + '.',
             'Data limitations: ' + result.dataLimitations,
-            fallbackOnly ? 'Uses internal baseline team rating only; does not yet include live rosters, injuries, weather, confirmed starters, or sportsbook odds.' : 'Live context is used only for the verified sources listed above; unlisted rosters, injuries, weather, confirmed starters, and bullpen status remain unavailable.'
+            fallbackOnly ? 'Uses internal baseline team rating only; does not yet include live rosters, injuries, weather, confirmed starters, or sportsbook odds.' : 'Live context is used only for the verified sources listed above; unavailable roster lists, confirmed starter status, bullpen workload, and bullpen availability remain excluded.'
         ].concat(liveFactorNotes) : [
             'Choose a mode, select two teams, and run the simulator. Current and historical options are loaded locally, so failed provider data will not block this tool.',
             'Simulator baselines are internal ratings. They are not SportsDataIO data, sportsbook odds, betting-edge claims, official picks, or graded records.'
@@ -811,22 +967,34 @@
             });
             var espnEvents = espnEventsByDate[0] || [];
             var recentEvents = espnEventsByDate.reduce(function (all, events) { return all.concat(events); }, []).filter(function (event) { return event && event.completed; });
-            state.liveContext = {
-                status: schedule.length || board.length || espnEvents.length ? 'available' : 'unavailable',
-                loadedAt: new Date().toISOString(),
-                scheduleGames: schedule,
-                boardGames: board,
-                espnEvents: espnEvents,
-                recentEvents: recentEvents,
-                error: null
-            };
-            renderSelectors();
-            if (state.simulation) {
-                var away = findTeamInPool(state.awayTeamId, state.awayPool);
-                var home = findTeamInPool(state.homeTeamId, state.homePool);
-                state.simulation = simulate(away, home, state.activeLiveContext);
-                renderResult(state.simulation);
-            }
+            var summaryRequests = espnEvents.slice(0, 20).filter(function (event) { return event && event.id; }).map(function (event) {
+                return fetchJson('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/summary?event=' + encodeURIComponent(event.id)).then(function (summary) {
+                    return { id: event.id, summary: summary };
+                });
+            });
+            return Promise.allSettled(summaryRequests).then(function (summaryResults) {
+                var summaries = {};
+                summaryResults.forEach(function (result) {
+                    if (result.status === 'fulfilled' && result.value && result.value.id) summaries[result.value.id] = result.value.summary;
+                });
+                state.liveContext = {
+                    status: schedule.length || board.length || espnEvents.length ? 'available' : 'unavailable',
+                    loadedAt: new Date().toISOString(),
+                    scheduleGames: schedule,
+                    boardGames: board,
+                    espnEvents: espnEvents,
+                    espnSummaries: summaries,
+                    recentEvents: recentEvents,
+                    error: null
+                };
+                renderSelectors();
+                if (state.simulation) {
+                    var away = findTeamInPool(state.awayTeamId, state.awayPool);
+                    var home = findTeamInPool(state.homeTeamId, state.homePool);
+                    state.simulation = simulate(away, home, state.activeLiveContext);
+                    renderResult(state.simulation);
+                }
+            });
         }).catch(function (error) {
             state.liveContext.status = 'unavailable';
             state.liveContext.error = error && error.message || 'Live context unavailable';
