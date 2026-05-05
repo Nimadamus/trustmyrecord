@@ -58,10 +58,11 @@
     ];
 
     var CURRENT_PITCHER_PROFILES = [
-        ['ace', 'Team baseline ace', 112, 3.35, 'Manual baseline profile'],
-        ['mid', 'Mid-rotation starter', 100, 4.20, 'Manual baseline profile'],
-        ['depth', 'Depth starter', 91, 4.85, 'Manual baseline profile'],
-        ['bullpen', 'Bullpen opener', 95, 4.55, 'Manual baseline profile']
+        ['ace', 'Ace profile', 114, 3.25, 'Modeled simulator profile'],
+        ['above', 'Above average starter', 106, 3.75, 'Modeled simulator profile'],
+        ['average', 'League average starter', 100, 4.20, 'Modeled simulator profile'],
+        ['backend', 'Back end starter', 92, 4.85, 'Modeled simulator profile'],
+        ['bullpen', 'Bullpen game', 94, 4.65, 'Modeled simulator profile']
     ];
 
     var HISTORICAL_PITCHERS = {
@@ -216,7 +217,7 @@
                 era: row[3],
                 source: row[4],
                 verified: false,
-                note: 'Manual selection; not a verified named starter'
+                note: 'Manual simulator profile; not a real named starter'
             });
         });
         return options;
@@ -232,9 +233,9 @@
                 name: row[1],
                 quality: row[2],
                 era: row[3],
-                source: 'Curated historical baseline',
+                source: 'Historical simulator input',
                 verified: false,
-                note: 'Historical pitcher option; not live verified starter data'
+                note: 'Curated historical simulator input; not live verified starter data'
             };
         });
     }
@@ -249,10 +250,10 @@
     }
     function pitcherMeta(pitcher) {
         if (!pitcher) return 'No pitcher selected.';
-        return pitcher.source + (pitcher.era != null ? ' / ERA ' + pitcher.era : '') + ' / rating ' + Math.round(pitcher.quality);
+        return pitcher.source + (pitcher.era != null ? ' / model ERA ' + pitcher.era : '') + ' / rating ' + Math.round(pitcher.quality) + (pitcher.note ? ' / ' + pitcher.note : '');
     }
     function pitcherOption(pitcher) {
-        return '<option value="' + escapeHtml(pitcher.id) + '">' + escapeHtml(pitcher.name) + '</option>';
+        return '<option value="' + escapeHtml(pitcher.id) + '">' + escapeHtml(pitcher.name + (pitcher.verified ? ' - verified probable' : ' - simulator profile')) + '</option>';
     }
     function strength(team) {
         return (team.offense * 0.38) + (team.runPrevention * 0.25) + (team.startingPitching * 0.22) + (team.bullpen * 0.15);
@@ -668,7 +669,7 @@
         awayStrength += selectedPitcherStrengthAdjustment(awayPitcher);
         homeStrength += selectedPitcherStrengthAdjustment(homePitcher);
         if (awayPitcher && homePitcher) {
-            liveFactors.push('Starting Pitchers: ' + away.name + ': ' + awayPitcher.name + ' (' + awayPitcher.source + '); ' + home.name + ': ' + homePitcher.name + ' (' + homePitcher.source + ').');
+            liveFactors.push('Starting Pitchers: ' + away.name + ': ' + awayPitcher.name + ' (' + awayPitcher.source + ', ' + (awayPitcher.verified ? 'verified probable' : 'modeled input') + '); ' + home.name + ': ' + homePitcher.name + ' (' + homePitcher.source + ', ' + (homePitcher.verified ? 'verified probable' : 'modeled input') + ').');
         }
         if (awayPitcher && homePitcher && Math.abs(awayPitcher.quality - homePitcher.quality) >= 7) {
             liveFactors.push('Starting pitching matchup: ' + (awayPitcher.quality > homePitcher.quality ? awayPitcher.name : homePitcher.name) + ' grades higher in this simulator profile and moves the run projection.');
