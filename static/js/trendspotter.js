@@ -175,6 +175,9 @@
 
   function renderMatchups() {
     var matchups = getMatchups(state.sport);
+    els.matchupEmpty.textContent = state.sport
+      ? "No verified matchups available yet for this sport."
+      : "Choose a sport above to load verified matchups.";
     els.matchupEmpty.classList.toggle("is-hidden", Boolean(matchups.length));
     els.matchupOptions.innerHTML = matchups.map(function (matchup) {
       var count = trendsForSport(state.sport).filter(function (trend) { return trend.matchup === matchup; }).length;
