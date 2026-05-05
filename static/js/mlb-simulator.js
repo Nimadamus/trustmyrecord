@@ -83,7 +83,7 @@
         ['ballparkWeather', 'Ballpark/weather', 'Unavailable', 'No verified venue or weather feed is connected.'],
         ['sportsbookOdds', 'Sportsbook odds', 'Unavailable', 'No verified sportsbook source is connected.'],
         ['rosterContext', 'Roster context', 'Unavailable', 'No verified current roster feed is connected.'],
-        ['recentForm', 'Recent form', 'Unavailable', 'No verified recent-form feed is connected.'],
+        ['recentForm', 'Recent scoring form', 'Unavailable', 'No verified recent final-score feed is connected.'],
         ['bullpenContext', 'Bullpen context', 'Unavailable', 'No verified bullpen availability feed is connected.']
     ].map(function (row) { return { key: row[0], label: row[1], status: row[2], detail: row[3], verified: false }; });
 
@@ -100,6 +100,7 @@
             scheduleGames: [],
             boardGames: [],
             espnEvents: [],
+            recentEvents: [],
             error: null
         },
         awayTeamId: LOCAL_TEAMS.current[0].id,
@@ -117,6 +118,16 @@
     function setText(id, value) { var el = byId(id); if (el) el.textContent = value; }
     function normalizeName(value) { return String(value || '').toLowerCase().replace(/^the\s+/, '').replace(/[^a-z0-9]/g, ''); }
     function todayEspnDate() { return new Date().toISOString().slice(0, 10).replace(/-/g, ''); }
+    function espnDateOffset(daysBack) {
+        var d = new Date();
+        d.setDate(d.getDate() - daysBack);
+        return d.toISOString().slice(0, 10).replace(/-/g, '');
+    }
+    function recentEspnDates() {
+        var dates = [];
+        for (var i = 0; i <= 6; i += 1) dates.push(espnDateOffset(i));
+        return dates;
+    }
     function apiBaseUrl() {
         if (typeof CONFIG !== 'undefined' && CONFIG && CONFIG.api && CONFIG.api.baseUrl) return CONFIG.api.baseUrl;
         return 'https://trustmyrecord-api.onrender.com/api';
@@ -292,16 +303,64 @@
         var espnGame = (state.liveContext.espnEvents || []).filter(function (game) { return teamsMatch(game, away, home); })[0] || null;
         var scheduleGame = (state.liveContext.scheduleGames || []).filter(function (game) { return teamsMatch(game, away, home); })[0] || null;
         var boardGame = (state.liveContext.boardGames || []).filter(function (game) { return teamsMatch(game, away, home); })[0] || null;
-        if (!espnGame && !scheduleGame && !boardGame) return null;
+        var recentForm = buildRecentForm(away, home);
+        if (!espnGame && !scheduleGame && !boardGame && !recentForm) return null;
         var odds = boardGame ? marketOddsFor(boardGame, away, home) : null;
-        return { espnGame: espnGame, scheduleGame: scheduleGame, boardGame: boardGame, odds: odds };
+        return { espnGame: espnGame, scheduleGame: scheduleGame, boardGame: boardGame, odds: odds, recentForm: recentForm };
+    }
+    function completedTeamResult(event, team) {
+        if (!event || !event.completed || !team) return null;
+        var isAway = normalizeName(event.awayTeam) === normalizeName(team.name);
+        var isHome = normalizeName(event.homeTeam) === normalizeName(team.name);
+        if (!isAway && !isHome) return null;
+        var scored = isAway ? event.awayScore : event.homeScore;
+        var allowed = isAway ? event.homeScore : event.awayScore;
+        if (!Number.isFinite(scored) || !Number.isFinite(allowed)) return null;
+        return {
+            date: event.commenceTime,
+            opponent: isAway ? event.homeTeam : event.awayTeam,
+            scored: scored,
+            allowed: allowed,
+            won: scored > allowed,
+            differential: scored - allowed
+        };
+    }
+    function recentForTeam(team) {
+        var games = (state.liveContext.recentEvents || [])
+            .map(function (event) { return completedTeamResult(event, team); })
+            .filter(Boolean)
+            .sort(function (a, b) { return new Date(b.date).getTime() - new Date(a.date).getTime(); })
+            .slice(0, 5);
+        if (!games.length) return null;
+        var wins = games.filter(function (game) { return game.won; }).length;
+        var runsFor = games.reduce(function (sum, game) { return sum + game.scored; }, 0);
+        var runsAgainst = games.reduce(function (sum, game) { return sum + game.allowed; }, 0);
+        return {
+            games: games.length,
+            wins: wins,
+            losses: games.length - wins,
+            runsFor: runsFor,
+            runsAgainst: runsAgainst,
+            runDiff: runsFor - runsAgainst,
+            avgFor: round1(runsFor / games.length),
+            avgAgainst: round1(runsAgainst / games.length),
+            summary: wins + '-' + (games.length - wins) + ', ' + (runsFor - runsAgainst >= 0 ? '+' : '') + (runsFor - runsAgainst) + ' run diff'
+        };
+    }
+    function buildRecentForm(away, home) {
+        var awayForm = recentForTeam(away);
+        var homeForm = recentForTeam(home);
+        if (!awayForm && !homeForm) return null;
+        return { away: awayForm, home: homeForm };
     }
     function liveInputsForContext(context) {
         var espnGame = context && context.espnGame;
         var scheduleGame = context && context.scheduleGame;
         var odds = context && context.odds;
+        var recentForm = context && context.recentForm;
         var startersAvailable = !!(espnGame && espnGame.awayStarter && espnGame.homeStarter);
         var recordsAvailable = !!(espnGame && espnGame.awayRecord && espnGame.homeRecord);
+        var recentAvailable = !!(recentForm && recentForm.away && recentForm.home);
         return [
             {
                 key: 'scheduleFinals',
@@ -338,8 +397,14 @@
                 status: odds ? 'Available from backend board' : 'Unavailable',
                 detail: odds ? odds.book + ' moneyline snapshot; used as market context, not a betting edge.' : 'No verified sportsbook odds match available.'
             },
+            {
+                key: 'recentForm',
+                label: 'Recent scoring form',
+                status: recentAvailable ? 'Available from ESPN final scores' : 'Unavailable',
+                detail: recentAvailable ? 'Last ' + recentForm.away.games + ': ' + recentForm.away.summary + ' / Last ' + recentForm.home.games + ': ' + recentForm.home.summary : 'No verified recent final-score sample matched both teams.',
+                verified: recentAvailable
+            },
             { key: 'rosterContext', label: 'Roster context', status: 'Unavailable', detail: 'No verified current roster feed is connected.', verified: false },
-            { key: 'recentForm', label: 'Recent form', status: 'Unavailable', detail: 'No verified recent-form feed is connected.', verified: false },
             { key: 'bullpenContext', label: 'Bullpen context', status: 'Unavailable', detail: 'No verified bullpen availability feed is connected.', verified: false }
         ];
     }
@@ -381,6 +446,19 @@
             }
             if (context.espnGame.venue) {
                 liveFactors.push('Ballpark context: ' + context.espnGame.venue.name + ' is verified; weather is not connected.');
+            }
+        }
+        if (context && context.recentForm) {
+            if (context.recentForm.away) {
+                awayRuns = clamp(awayRuns + clamp((context.recentForm.away.avgFor - 4.4) * 0.08, -0.28, 0.28), 1.7, 9.2);
+                awayStrength += clamp(context.recentForm.away.runDiff * 0.12, -2.5, 2.5);
+            }
+            if (context.recentForm.home) {
+                homeRuns = clamp(homeRuns + clamp((context.recentForm.home.avgFor - 4.4) * 0.08, -0.28, 0.28), 1.7, 9.2);
+                homeStrength += clamp(context.recentForm.home.runDiff * 0.12, -2.5, 2.5);
+            }
+            if (context.recentForm.away && context.recentForm.home) {
+                liveFactors.push('Recent scoring form from ESPN finals: ' + away.abbreviation + ' ' + context.recentForm.away.summary + '; ' + home.abbreviation + ' ' + context.recentForm.home.summary + '.');
             }
         }
         var homeWin = clamp(1 / (1 + Math.exp(-(((homeRuns - awayRuns) * 0.55) + ((homeStrength - awayStrength) * 0.027)))), 0.17, 0.83);
@@ -562,7 +640,7 @@
         ] : [
             ['Dataset', 'Internal baseline team ratings'],
             ['Data mode', dataModeLabel()],
-            ['Live inputs', 'Rosters, injuries, starters, weather, and odds unavailable'],
+            ['Live inputs', 'Shown only when matched to verified sources'],
             ['Sportsbook odds', 'Not used / not invented'],
             ['Official records', 'Excluded from picks and records']
         ];
@@ -588,7 +666,7 @@
             'Data sources used: ' + (result.dataSourcesUsed.length ? result.dataSourcesUsed.join(', ') : 'Internal baseline team ratings only') + '.',
             'Missing data sources: ' + (result.missingDataSources.length ? result.missingDataSources.join(', ') : 'None listed') + '.',
             'Data limitations: ' + result.dataLimitations,
-            fallbackOnly ? 'Uses internal baseline team rating only; does not yet include live rosters, injuries, weather, confirmed starters, or sportsbook odds.' : 'Live context is used only for the verified sources listed above; unlisted rosters, injuries, weather, confirmed starters, recent form, and bullpen status remain unavailable.'
+            fallbackOnly ? 'Uses internal baseline team rating only; does not yet include live rosters, injuries, weather, confirmed starters, or sportsbook odds.' : 'Live context is used only for the verified sources listed above; unlisted rosters, injuries, weather, confirmed starters, and bullpen status remain unavailable.'
         ].concat(liveFactorNotes) : [
             'Choose a mode, select two teams, and run the simulator. Current and historical options are loaded locally, so failed provider data will not block this tool.',
             'Simulator baselines are internal ratings. They are not SportsDataIO data, sportsbook odds, betting-edge claims, official picks, or graded records.'
@@ -719,21 +797,27 @@
         state.liveContext.status = 'loading';
         renderDataModeStatus();
         var base = apiBaseUrl();
-        var espnUrl = 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=' + todayEspnDate();
+        var espnUrls = recentEspnDates().map(function (date) {
+            return 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=' + date;
+        });
         return Promise.allSettled([
             fetchJson(base + '/games?sport=baseball_mlb'),
-            fetchJson(base + '/games/board/baseball_mlb'),
-            fetchJson(espnUrl)
-        ]).then(function (results) {
+            fetchJson(base + '/games/board/baseball_mlb')
+        ].concat(espnUrls.map(fetchJson))).then(function (results) {
             var schedule = results[0].status === 'fulfilled' && results[0].value && Array.isArray(results[0].value.games) ? results[0].value.games : [];
             var board = results[1].status === 'fulfilled' ? normalizeBoardResponse(results[1].value) : [];
-            var espnEvents = results[2].status === 'fulfilled' && results[2].value && Array.isArray(results[2].value.events) ? results[2].value.events.map(extractEspnEvent).filter(Boolean) : [];
+            var espnEventsByDate = results.slice(2).map(function (result) {
+                return result.status === 'fulfilled' && result.value && Array.isArray(result.value.events) ? result.value.events.map(extractEspnEvent).filter(Boolean) : [];
+            });
+            var espnEvents = espnEventsByDate[0] || [];
+            var recentEvents = espnEventsByDate.reduce(function (all, events) { return all.concat(events); }, []).filter(function (event) { return event && event.completed; });
             state.liveContext = {
                 status: schedule.length || board.length || espnEvents.length ? 'available' : 'unavailable',
                 loadedAt: new Date().toISOString(),
                 scheduleGames: schedule,
                 boardGames: board,
                 espnEvents: espnEvents,
+                recentEvents: recentEvents,
                 error: null
             };
             renderSelectors();
