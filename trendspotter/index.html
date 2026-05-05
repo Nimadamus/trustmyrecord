@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/trendspotter.css?v=20260505live2">
+  <link rel="stylesheet" href="/static/css/trendspotter.css?v=20260505polish1">
 </head>
 <body>
   <header class="ts-topbar">
@@ -25,10 +25,51 @@
 
   <main class="ts-shell">
     <section class="ts-hero" aria-labelledby="trendspotter-title">
-      <p class="ts-kicker">Verified trend workflow</p>
-      <h1 id="trendspotter-title">Trendspotter</h1>
-      <p class="ts-lead">Choose a sport and matchup. Trendspotter only surfaces verified trends from available artifacts.</p>
-      <p class="ts-data-note">Trends are based only on available verified data.</p>
+      <div class="ts-hero-copy">
+        <p class="ts-kicker">Verified matchup intelligence</p>
+        <h1 id="trendspotter-title">Trendspotter</h1>
+        <p class="ts-lead">Select a sport, choose a verified matchup, and surface only trends backed by available data.</p>
+        <div class="ts-feature-row" aria-label="Trendspotter guardrails">
+          <span>Verified trends only</span>
+          <span>Matchup specific</span>
+          <span>No invented odds or records</span>
+        </div>
+      </div>
+      <aside class="ts-preview-panel" aria-label="Trend output preview">
+        <div class="ts-preview-head">
+          <span>Trend output preview</span>
+          <strong>Verified data only</strong>
+        </div>
+        <dl>
+          <div>
+            <dt>Market</dt>
+            <dd>Shown only when verified</dd>
+          </div>
+          <div>
+            <dt>Source</dt>
+            <dd>Available artifact</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd>Unavailable data is labeled</dd>
+          </div>
+        </dl>
+      </aside>
+    </section>
+
+    <section class="ts-how" aria-label="How Trendspotter works">
+      <article>
+        <span>Step 1</span>
+        <strong>Choose sport</strong>
+      </article>
+      <article>
+        <span>Step 2</span>
+        <strong>Select matchup</strong>
+      </article>
+      <article>
+        <span>Step 3</span>
+        <strong>Review verified trends</strong>
+      </article>
     </section>
 
     <section class="ts-step" id="sportStep" aria-labelledby="sportStepTitle">
@@ -50,7 +91,7 @@
         <p>Loading verified matchups...</p>
       </div>
       <div class="ts-option-grid ts-matchup-grid" id="matchupOptions"></div>
-      <p class="ts-empty is-hidden" id="matchupEmpty">No verified matchups available yet for this sport.</p>
+      <p class="ts-empty" id="matchupEmpty">Choose a sport above to load verified matchups.</p>
     </section>
 
     <section class="ts-step is-hidden" id="trendTypeStep" aria-labelledby="trendTypeStepTitle" aria-disabled="true">
@@ -89,6 +130,6 @@
   </main>
 
   <script src="/static/js/config.js?v=20260330"></script>
-  <script src="/static/js/trendspotter.js?v=20260505live2"></script>
+  <script src="/static/js/trendspotter.js?v=20260505polish1"></script>
 </body>
 </html>
