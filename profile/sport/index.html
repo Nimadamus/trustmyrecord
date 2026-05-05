@@ -172,7 +172,7 @@
   </main>
 
   <script src="/static/js/config.js"></script>
-  <script src="/static/js/backend-api.js?v=20260423a"></script>
+  <script src="/static/js/backend-api.js?v=20260505pickcontext1"></script>
   <script>
     const SPORT_ALIASES = {
       mlb: 'baseball_mlb', baseball: 'baseball_mlb', baseball_mlb: 'baseball_mlb',
@@ -248,7 +248,7 @@
       const market = String(p && p.market_type || '').toLowerCase();
       const home = String(p && p.home_team || '').trim();
       const away = String(p && p.away_team || '').trim();
-      const matchup = away && home ? away + '/' + home : '';
+      const matchup = away && home ? away + ' @ ' + home : '';
       const sideOnly = /^(over|under)$/i.test(selection);
       const isTotal = market.indexOf('total') !== -1 || /\b(over|under)\b/i.test(selection);
       if (isTotal && sideOnly) {
