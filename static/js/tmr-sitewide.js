@@ -15,8 +15,10 @@
         ["/handicappers/", "Find Handicappers"],
         ["/arena/", "Arena"],
         ["/forum/", "Forums"],
-        ["/marketplace/", "Sell Picks"]
+        ["/marketplace/", "Sell Your Picks"]
     ];
+    const blockedNavHrefs = new Set(["/trendspotter/"]);
+    const visibleRoutes = routes.filter(([href]) => !blockedNavHrefs.has(href));
 
     // Pages that should highlight Arena in the top nav even though they
     // have their own URL.
@@ -24,7 +26,6 @@
 
     const routeMeta = {
         "sportsbook.html": ["Make Picks", "Lock picks before games start. Build a public, permanent record."],
-        "trendspotter.html": ["Trendspotter", "Select a matchup and generate verified betting trends from real artifact data."],
         "leaderboards.html": ["Leaderboards", "Handicapping records, trivia points, polls, online challenges, and handicapper challenges &mdash; every leaderboard in one hub."],
         "handicappers.html": ["Find Handicappers", "Search members, compare verified records, follow cappers, and open public profiles."],
         "arena.html": ["Arena", "Challenge rivals in sports picks, MLB The Show, Madden, NBA 2K, EA FC, and NHL."],
@@ -281,7 +282,7 @@
             </button>
             <div class="tmr-global-nav__panel">
                 <div class="tmr-global-nav__links">
-                    ${routes.slice(1).filter(([href]) => href !== "profile.html").map(([href, label]) => {
+                    ${visibleRoutes.slice(1).filter(([href]) => href !== "profile.html").map(([href, label]) => {
                         const hrefPath = href.split("#")[0].toLowerCase();
                         const segs = hrefPath.split("/").filter(Boolean);
                         const hrefFile = segs.length
@@ -308,6 +309,7 @@
         </div>
     `;
     document.body.prepend(nav);
+    nav.querySelectorAll('a[href*="trendspotter"]').forEach((element) => element.remove());
 
     const actions = nav.querySelector(".tmr-global-nav__actions");
     const toggleButton = nav.querySelector(".tmr-global-nav__toggle");
