@@ -30,7 +30,7 @@
             <div>
                 <p class="sim-kicker">Data Lab</p>
                 <h1>MLB Simulator</h1>
-                <p class="sim-subtitle">Pick two MLB teams, run a transparent simulation-based estimate, and see a simulated winner, score ranges, win percentage, expected runs, matchup notes, and baseline team comparisons. Provider-backed projections only appear when real SportsDataIO and market inputs are available.</p>
+                <p class="sim-subtitle">Build current-vs-current, classic-vs-classic, or cross-era MLB matchups and run a clearly labeled simulation estimate with a projected winner, score range, win probability, expected runs, explanation, and notes.</p>
             </div>
             <div class="sim-status-card" aria-live="polite">
                 <span class="sim-status-dot" aria-hidden="true"></span>
@@ -48,14 +48,22 @@
                     <h2>Team Selection</h2>
                 </div>
 
-                <div class="sim-toggle" role="group" aria-label="Team dataset">
-                    <button id="currentModeButton" type="button" class="active" data-mode="current">Current Teams</button>
-                    <button id="historicalModeButton" type="button" data-mode="historical">Classic Teams</button>
+                <div class="sim-toggle three-up" role="group" aria-label="Matchup presets">
+                    <button id="currentModeButton" type="button" class="active" data-mode="current">Current vs Current</button>
+                    <button id="historicalModeButton" type="button" data-mode="historical">Classic vs Classic</button>
+                    <button id="mixedModeButton" type="button" data-mode="mixed">Current vs Classic</button>
                 </div>
 
                 <div class="team-picker-grid">
                     <article class="team-picker-card">
                         <span class="team-side">Team A</span>
+                        <label class="sim-field compact-field">
+                            <span>Team pool</span>
+                            <select id="awayPoolSelect" class="sim-select">
+                                <option value="current">Current MLB</option>
+                                <option value="historical">Classic Historical</option>
+                            </select>
+                        </label>
                         <label class="sim-field">
                             <span>Away team</span>
                             <select id="awayTeamSelect" class="sim-select">
@@ -67,6 +75,13 @@
 
                     <article class="team-picker-card">
                         <span class="team-side">Team B</span>
+                        <label class="sim-field compact-field">
+                            <span>Team pool</span>
+                            <select id="homePoolSelect" class="sim-select">
+                                <option value="current">Current MLB</option>
+                                <option value="historical">Classic Historical</option>
+                            </select>
+                        </label>
                         <label class="sim-field">
                             <span>Home team</span>
                             <select id="homeTeamSelect" class="sim-select">
@@ -82,13 +97,48 @@
                     <button id="refreshTeamsButton" class="sim-button secondary" type="button">Reset</button>
                 </div>
                 <div id="simBoardMessage" class="sim-message" role="status">Local simulator baselines are ready even when provider data is unavailable.</div>
-                <p class="sim-explainer">How it works: the simulator uses local baseline ratings for offense, run prevention, starting pitching, bullpen, home field, and volatility. These are internal simulator baselines, not SportsDataIO stats, sportsbook odds, official picks, or betting edges.</p>
+                <p class="sim-explainer">Limitations: this is a simulation experience using internal baseline ratings for offense, run prevention, starting pitching, bullpen, home field, and volatility. It is not live verified SportsDataIO, does not include injuries or confirmed lineups, does not load sportsbook odds, does not create betting edges, and does not affect official picks or records.</p>
             </section>
 
             <section class="sim-panel sim-score-panel" aria-label="Simulation results">
                 <div class="sim-panel-heading compact">
                     <p class="sim-label">Output</p>
                     <h2 id="selectedMatchupTitle">No matchup selected</h2>
+                </div>
+
+                <div class="matchup-header" aria-live="polite">
+                    <article>
+                        <span id="awayEraBadge">Team A</span>
+                        <strong id="awayHeaderName">Select Team A</strong>
+                        <small id="awayHeaderMeta">Current or classic</small>
+                    </article>
+                    <div class="matchup-vs">vs</div>
+                    <article class="home">
+                        <span id="homeEraBadge">Team B</span>
+                        <strong id="homeHeaderName">Select Team B</strong>
+                        <small id="homeHeaderMeta">Current or classic</small>
+                    </article>
+                </div>
+
+                <div id="resultCard" class="result-card" data-result-state="empty">
+                    <div class="winner-strip">
+                        <span>Projected Winner</span>
+                        <strong id="winnerBadge">Run a simulation</strong>
+                    </div>
+                    <div class="scoreboard-readout">
+                        <article>
+                            <span id="awayScoreLabel">Team A</span>
+                            <strong id="awayScoreBig">--</strong>
+                            <small id="awayExpectedTile">Expected runs --</small>
+                        </article>
+                        <div class="score-divider">to</div>
+                        <article class="home">
+                            <span id="homeScoreLabel">Team B</span>
+                            <strong id="homeScoreBig">--</strong>
+                            <small id="homeExpectedTile">Expected runs --</small>
+                        </article>
+                    </div>
+                    <p id="keyExplanationValue" class="key-explanation">Select a matchup and run the simulator to generate a projected winner, score range, win probability, and notes.</p>
                 </div>
 
                 <div id="projectionShell" class="projection-shell" data-projection-state="not-connected">
@@ -103,6 +153,18 @@
                     <div>
                         <span id="expectedRunsValue" class="projection-value muted">--</span>
                         <small>Expected Runs</small>
+                    </div>
+                    <div>
+                        <span id="totalRangeValue" class="projection-value muted">--</span>
+                        <small>Total Runs Range</small>
+                    </div>
+                    <div>
+                        <span id="runEnvironmentValue" class="projection-value muted">--</span>
+                        <small>Run Environment</small>
+                    </div>
+                    <div>
+                        <span id="simulationConfidenceValue" class="projection-value muted">--</span>
+                        <small>Simulation Notes</small>
                     </div>
                 </div>
 
