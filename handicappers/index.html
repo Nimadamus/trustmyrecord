@@ -1274,11 +1274,51 @@
             return Number.isFinite(time) ? time : 0;
         }
 
+        function formatLineValue(value) {
+            if (value == null || value === '') return '';
+            const num = Number(value);
+            if (!Number.isFinite(num)) return String(value);
+            return Number.isInteger(num) ? String(num) : num.toFixed(1);
+        }
+
+        function shortTeamName(value) {
+            const text = String(value || '').trim();
+            if (!text) return '';
+            const parts = text.split(/\s+/);
+            return parts.length > 1 ? parts[parts.length - 1] : text;
+        }
+
+        function formatPickTitle(pick) {
+            const selection = String(pick.selection || pick.pick || '').trim();
+            const market = String(pick.market_type || pick.market || pick.bet_type || '').trim().toLowerCase();
+            const line = formatLineValue(pick.line_snapshot || pick.line || pick.total || pick.spread);
+            const home = String(pick.home_team || pick.homeTeam || '').trim();
+            const away = String(pick.away_team || pick.awayTeam || '').trim();
+            const matchup = away && home ? shortTeamName(away) + '/' + shortTeamName(home) : '';
+            const sport = normalizeSportName(pick.sport_display || pick.sport_key || pick.sport);
+            const directionOnly = /^(over|under)$/i.test(selection);
+
+            if (market.includes('total') && directionOnly) {
+                const totalType = market.includes('team') ? 'Team Total' : 'Total';
+                const prefix = matchup || sport || 'Game';
+                return [prefix, totalType, selection, line].filter(Boolean).join(' ');
+            }
+            if ((market.includes('spread') || market.includes('handicap')) && selection) {
+                return [selection, line].filter(Boolean).join(' ');
+            }
+            if ((market.includes('h2h') || market.includes('moneyline') || market === 'ml') && selection) {
+                return selection + ' Moneyline';
+            }
+            if (selection && !directionOnly) return [selection, line].filter(Boolean).join(' ');
+            if (directionOnly) return [sport || 'Game', market.includes('team') ? 'Team Total' : 'Total', selection, line || 'line unavailable'].filter(Boolean).join(' ');
+            return sport ? sport + ' pick' : 'Tracked pick';
+        }
+
         function formatPickSummary(pick) {
             if (!pick) {
                 return { title: 'No pick activity yet', meta: 'No stored picks' };
             }
-            const selection = pick.selection || pick.pick || 'Tracked pick';
+            const selection = formatPickTitle(pick);
             const sport = normalizeSportName(pick.sport_display || pick.sport_key || pick.sport);
             const status = String(pick.status || 'pending').toLowerCase();
             const result = status === 'won' ? 'Won' : status === 'lost' ? 'Lost' : status === 'push' || status === 'pushed' ? 'Push' : 'Pending';
