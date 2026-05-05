@@ -1,55 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="canonical" href="https://trustmyrecord.com/trustmyrecord-tools/mlb-simulator/">
-  <title>How MLB Simulator Works | TrustMyRecord Tools</title>
-  <meta name="description" content="How the TrustMyRecord MLB Simulator workflow is structured, from team selection to starter context and projected box score output.">
-  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-  <style>
-    body { margin:0; background:#05070d; color:#f8fafc; font-family:Inter,system-ui,sans-serif; }
-    a { color:inherit; text-decoration:none; }
-    .wrap { width:min(980px,calc(100% - 36px)); margin:0 auto; padding:64px 0; }
-    .top { min-height:72px; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px clamp(18px,4vw,44px); border-bottom:1px solid #1f3350; background:#050914; }
-    .brand { font-weight:900; }
-    .nav { display:flex; gap:10px; flex-wrap:wrap; }
-    .nav a, .btn { min-height:40px; display:inline-flex; align-items:center; justify-content:center; padding:0 14px; border:1px solid rgba(148,163,184,.24); border-radius:8px; font-size:12px; font-weight:900; letter-spacing:.05em; text-transform:uppercase; }
-    .btn.primary { color:#04111a; border-color:transparent; background:linear-gradient(135deg,#2dd4bf,#22d3ee); }
-    h1 { margin:12px 0 14px; font-size:clamp(42px,7vw,76px); line-height:.95; }
-    p { color:#cbd5e1; line-height:1.65; }
-    .kicker { color:#22d3ee; font-size:11px; font-weight:900; letter-spacing:.14em; text-transform:uppercase; }
-    .steps { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:28px 0; }
-    .step { padding:18px; border:1px solid #1f3350; border-radius:8px; background:linear-gradient(180deg,#101a2b,#08111f); }
-    .step span { color:#22d3ee; font-size:11px; font-weight:900; letter-spacing:.12em; text-transform:uppercase; }
-    .step strong { display:block; margin-top:8px; font-size:18px; }
-    .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:24px; }
-    @media(max-width:760px){ .top{align-items:flex-start; flex-direction:column;} .steps{grid-template-columns:1fr;} .actions .btn{width:100%;} }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="canonical" href="https://trustmyrecord.com/trustmyrecord-tools/mlb-simulator/">
+    <title>How the TrustMyRecord MLB Simulator Works | Baseball Matchup Projection Tool</title>
+    <meta name="description" content="A structured MLB matchup simulator for current teams, classic teams, and mixed era matchups. Pick the starters, run the projection, read the box score, and use the result the way a serious analyst would.">
+    <meta property="og:title" content="How the TrustMyRecord MLB Simulator Works">
+    <meta property="og:description" content="A baseball matchup simulator built for current MLB teams, classic teams, and mixed era matchups, with starting pitcher inputs, projected scores, and box score style outputs.">
+    <meta property="og:url" content="https://trustmyrecord.com/trustmyrecord-tools/mlb-simulator/">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="TrustMyRecord">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How the TrustMyRecord MLB Simulator Works">
+    <meta name="twitter:description" content="An MLB matchup simulator for current teams, classic teams, and mixed era matchups. Starting pitcher inputs, projected box score outputs, and structured baseball analysis.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/mlb-simulator-explainer.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "How the TrustMyRecord MLB Simulator Works",
+      "description": "A structured MLB matchup simulator for current teams, classic teams, and mixed era matchups, with starting pitcher inputs, projected scores, and box score style outputs.",
+      "url": "https://trustmyrecord.com/trustmyrecord-tools/mlb-simulator/",
+      "mainEntityOfPage": "https://trustmyrecord.com/trustmyrecord-tools/mlb-simulator/",
+      "publisher": {
+        "@type": "Organization",
+        "name": "TrustMyRecord",
+        "url": "https://trustmyrecord.com/",
+        "logo": "https://trustmyrecord.com/static/favicon.svg"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "TrustMyRecord"
+      },
+      "datePublished": "2026-05-05",
+      "dateModified": "2026-05-05"
+    }
+    </script>
 </head>
 <body>
-  <header class="top">
-    <a class="brand" href="/">TrustMyRecord</a>
-    <nav class="nav" aria-label="Tools navigation">
-      <a href="/trustmyrecord-tools/">Tools Hub</a>
-      <a href="/mlb-simulator/">Use Simulator</a>
-    </nav>
-  </header>
-  <main class="wrap">
-    <span class="kicker">MLB Simulator</span>
-    <h1>How the simulator workflow is structured.</h1>
-    <p>MLB Simulator is built around team selection, starter context, simulation inputs, and projected box score style output. This page explains the workflow without changing simulator behavior.</p>
-    <section class="steps" aria-label="MLB Simulator workflow">
-      <article class="step"><span>Step 1</span><strong>Select teams</strong></article>
-      <article class="step"><span>Step 2</span><strong>Set starters</strong></article>
-      <article class="step"><span>Step 3</span><strong>Run matchup</strong></article>
-      <article class="step"><span>Step 4</span><strong>Review output</strong></article>
-    </section>
-    <p>The simulator route remains the source of truth for available teams, starter inputs, and generated output. No simulator logic is duplicated on this page.</p>
-    <div class="actions">
-      <a class="btn primary" href="/mlb-simulator/">Use Simulator</a>
-      <a class="btn" href="/trustmyrecord-tools/">Back to Tools Hub</a>
-    </div>
-  </main>
+    <header class="sim-explainer-topbar" aria-label="TrustMyRecord navigation">
+        <a class="sim-explainer-brand" href="/">TrustMyRecord</a>
+        <nav class="sim-explainer-nav" aria-label="Primary">
+            <a href="/">Home</a>
+            <a href="/sportsbook/">Sportsbook</a>
+            <a href="/handicappers/">Handicappers</a>
+            <a href="/mlb-simulator/">Use MLB Simulator</a>
+        </nav>
+    </header>
+
+    <main class="sim-explainer-shell">
+        <section class="sim-explainer-hero">
+            <div>
+                <p class="sim-kicker">TrustMyRecord Tools</p>
+                <h1>How the TrustMyRecord MLB Simulator Works</h1>
+                <p class="sim-lead">A baseball matchup simulator built for current MLB teams, classic teams, and mixed era matchups. Pick the starters, run the projection, read the box score, and use the result the way a serious analyst would: as a question, not an answer.</p>
+                <div class="sim-hero-actions">
+                    <a class="sim-action primary" href="/mlb-simulator/">Use the MLB Simulator</a>
+                    <a class="sim-action" href="/">Explore TrustMyRecord</a>
+                </div>
+            </div>
+            <aside class="sim-hero-visual" aria-label="Simulator output example">
+                <div class="score-card">
+                    <div class="score-card-head"><span>Projected Box Score</span><span>Model Output</span></div>
+                    <div class="score-row"><strong>Current Team</strong><span>1</span><span>2</span><span>3</span><span>R</span></div>
+                    <div class="score-row"><strong>Classic Team</strong><span>0</span><span>3</span><span>1</span><span>4</span></div>
+                    <div class="score-totals"><strong>Projection</strong><span>SP</span><span>OFF</span><span>RP</span><span>7-4</span></div>
+                </div>
+                <div class="metric-grid">
+                    <div class="metric"><strong>Teams</strong><span>Current and classic profiles</span></div>
+                    <div class="metric"><strong>Starters</strong><span>Pitcher context changes the matchup</span></div>
+                    <div class="metric"><strong>Output</strong><span>Projected score and notes</span></div>
+                </div>
+            </aside>
+        </section>
+
+        <section class="sim-section">
+            <h2>Most baseball arguments end the same way: vibes</h2>
+            <p>A team has a good record. A pitcher has a famous name. A lineup put up six runs last night against a Triple-A spot starter. Reputation gets in front of the actual matchup, and the conversation collapses into who feels stronger that day.</p>
+            <p>The TrustMyRecord MLB Simulator was built to break that loop. It is a baseball matchup simulator that lets you set two teams against each other, current rosters, classic clubs from another era, or a mixed era matchup, choose the starting pitchers, and run a structured projection. The output is a model-based estimate with a box score style readout, not a verdict. The point is to swap &ldquo;I think they win&rdquo; for a comparison you can actually rerun.</p>
+        </section>
+
+        <section class="sim-section">
+            <h2>What the tool actually does</h2>
+            <p>You pick two teams. You pick the starters. You hit run. Three matchup modes are available, and they cover most of the questions baseball fans, analysts, and bettors actually want answered.</p>
+            <div class="sim-grid-3">
+                <article class="sim-card">
+                    <h3>Current Teams</h3>
+                    <p>Preview a real game or compare two modern rosters. Useful when you want to see whether a team that looks dominant on paper actually grades that way against a specific opponent.</p>
+                </article>
+                <article class="sim-card">
+                    <h3>Classic Teams</h3>
+                    <p>The historical sandbox. The 1927 Yankees, the 1975 Reds, the 2001 Mariners. Legendary clubs face each other inside a consistent framework instead of dueling reputations.</p>
+                </article>
+                <article class="sim-card">
+                    <h3>Mixed Era Matchups</h3>
+                    <p>Put a current roster against a classic club and see what the model says. Best read as a scenario, not a settled answer about a different baseball environment.</p>
+                </article>
+            </div>
+            <p>Each run returns a projected score, a simulated winner with a win percentage, expected runs, a baseline comparison across offense and run prevention, and matchup notes that walk you through what the simulator weighted. The box score style output is what makes the result feel like an actual baseball game instead of a number on a screen. Under the hood it is one tool serving several search intents at once: an MLB matchup simulator, a historical MLB simulator, a classic MLB team simulator, a baseball box score simulator, and an MLB team comparison simulator.</p>
+        </section>
+
+        <section class="sim-section">
+            <h2>Why baseball is hard to simulate honestly</h2>
+            <p>Baseball is the noisiest of the major American sports. A 162-game season produces real signal, but inside any single game the variance is brutal. A bottom-of-the-order hitter beats a Cy Young candidate. A fly ball that dies on the warning track in April carries 20 feet farther in July. A bullpen that ranked top-five for two months gets cooked in 90 minutes because a manager stayed one batter too long.</p>
+            <p>That noise is exactly why structured simulation has value. You are not trying to predict the literal outcome of one game. You are modeling the matchup with consistent inputs so you can compare scenarios on equal footing. Run the same teams with two different starters and the projection moves. Swap in a classic club and the projection moves again. The movement is where the analysis lives.</p>
+            <div class="sim-callout">
+                <p>A simulator that pretends it has solved baseball is selling something. A simulator that gives you a clean, repeatable framework for thinking through a matchup is doing real work.</p>
+            </div>
+        </section>
+
+        <section class="sim-section">
+            <h2>How the simulator thinks</h2>
+            <p>The engine is built around defined inputs any baseball analyst would recognize: team baseline, starting pitcher context, offensive profile, run prevention, run environment, matchup logic, and the volatility baseball never lets you ignore. Same inputs, same logic, every run. That is the difference between a simulator and a number generator.</p>
+            <div class="sim-flow" aria-label="Simulator flow">
+                <div class="sim-flow-step"><span>01</span><strong>Team Selection</strong></div>
+                <div class="sim-flow-step"><span>02</span><strong>Starter Selection</strong></div>
+                <div class="sim-flow-step"><span>03</span><strong>Simulation Engine</strong></div>
+                <div class="sim-flow-step"><span>04</span><strong>Projected Score</strong></div>
+                <div class="sim-flow-step"><span>05</span><strong>Box Score Output</strong></div>
+            </div>
+            <p>What the simulator does not do, and is not pretending to do: it does not pull live confirmed lineups, verified injury reports, sportsbook odds, bullpen workload across the last week, or weather. Where provider feeds for SportsDataIO and market inputs are connected, that is labeled clearly on the tool itself. Anywhere else, the output is the simulator&rsquo;s internal baselines, useful for structured comparison but not a stand-in for live game-day intel.</p>
+        </section>
+
+        <section class="sim-section">
+            <h2>The starter is the lever</h2>
+            <div class="sim-grid-2">
+                <div>
+                    <p>If there is one variable that breaks lazy baseball analysis, it is the starting pitcher. The same two rosters can produce wildly different projections depending on who throws first pitch. A power lineup that crushes mid-velocity stuff plays one way against a strikeout ace and a different way against a soft-contact veteran who works the bottom of the zone.</p>
+                    <p>The simulator treats the starter as a real input, not a label. Pick your starters, run the matchup, then swap one starter and run it again. The shift in projected score is the most useful single read the tool gives you.</p>
+                </div>
+                <aside class="sim-card">
+                    <h3>Why the starter shift matters</h3>
+                    <p>The delta between two runs of the same matchup, with one variable changed, is more informative than any single projection on its own. It surfaces how much of a team&rsquo;s expected output is actually riding on one arm, which is the read most baseball debates skip entirely.</p>
+                </aside>
+            </div>
+        </section>
+
+        <section class="sim-section">
+            <h2>Current, classic, and mixed era, read honestly</h2>
+            <p>Current-team mode is the everyday use case. Classic-team mode is the historical sandbox. Mixed era is where things get fun and where honesty matters most. Comparing a current roster to a classic club involves real assumptions about run environment, equipment, training, and scheduling that no model fully resolves.</p>
+            <p>The right way to read mixed era output is as a scenario, not a settled answer. Use it to surface specific questions: How much does a modern starter&rsquo;s strikeout rate matter against a historically aggressive lineup? Does a classic club&rsquo;s top-end star power offset modern bullpen depth? How does a current roster&rsquo;s depth compare with a classic team&rsquo;s peak strength? Those are the conversations the tool is built to start.</p>
+        </section>
+
+        <section class="sim-section">
+            <h2>Reading the box score</h2>
+            <p>The projected box score is intentionally designed to feel like a real game result. Innings, runs, a final line, matchup notes. That is the point. It is easier to think about a matchup when the output looks like baseball.</p>
+            <p>It is still a model output. A 7&ndash;4 projection is not a prophecy. It is the simulator&rsquo;s read on the matchup as configured. The tool earns its keep in comparison: run a setup, change a starter, switch one team to its classic-mode counterpart, and watch how the projection moves. Treat the box score as a conversation starter, not a closing argument.</p>
+            <div class="bar-chart" aria-label="What the simulator weights most">
+                <div class="bar-line"><span>Team Baseline</span><div class="bar-track"><span style="width: 82%"></span></div><strong>High</strong></div>
+                <div class="bar-line"><span>Starter Context</span><div class="bar-track"><span style="width: 74%"></span></div><strong>Major</strong></div>
+                <div class="bar-line"><span>Run Environment</span><div class="bar-track"><span style="width: 58%"></span></div><strong>Moderate</strong></div>
+                <div class="bar-line"><span>Volatility</span><div class="bar-track"><span style="width: 46%"></span></div><strong>Real</strong></div>
+            </div>
+        </section>
+
+        <section class="sim-section">
+            <h2>How to use it as a research tool, not a crystal ball</h2>
+            <p>For fans, the simulator is the cleanest way to make a baseball argument actually go somewhere. Instead of dueling reputations, you have a shared scoreboard.</p>
+            <p>For sports bettors, the value is upstream of the bet. The simulator is a baseball prediction simulator and a sports betting research tool, but it is not a betting edge engine. The right workflow looks like this: run the matchup, see where the projection lands, then go check the things the model does not see. Confirmed lineup. Late-breaking injury news. Bullpen availability over the last 48 hours. Park factors and weather. Market movement on the total and the side. If the simulator&rsquo;s read disagrees with the market, that is a question worth investigating, not a green light.</p>
+            <p>A good simulator points you toward better questions. It does not answer them for you. Verified information from reliable sources still has to do the closing work.</p>
+        </section>
+
+        <section class="sim-section">
+            <h2>How to use it</h2>
+            <ol class="sim-steps">
+                <li><b>1</b><span>Open the <a href="/mlb-simulator/">MLB Simulator</a> and choose current teams, classic teams, or a mixed era setup.</span></li>
+                <li><b>2</b><span>Select the away team and home team. Decide what question you are testing before you run the model.</span></li>
+                <li><b>3</b><span>Choose the starting pitcher context for each side when starter options are available.</span></li>
+                <li><b>4</b><span>Run the simulation and read the projected score, win estimate, team comparison, and matchup notes together.</span></li>
+                <li><b>5</b><span>Change one variable at a time, like the starter or the team mode, and pay attention to how the projection moves.</span></li>
+            </ol>
+        </section>
+
+        <section class="sim-section">
+            <h2>Why this fits TrustMyRecord</h2>
+            <p>TrustMyRecord is being built around a single idea: in sports, your record should be verifiable, your tools should be honest about what they do, and the people calling themselves analysts should be willing to show their work.</p>
+            <p>The MLB Simulator is one of the first public tools in that ecosystem. It sits next to verified handicapper profiles, the leaderboard, the sportsbook surface, and the model-builder workspace. Each of those products is built on the same principle: show the user the structure, label the limits, do not dress up estimates as certainty. The simulator is the version of that idea you can play with in a browser. It is also a statement of direction. TrustMyRecord is a sports analytics tool platform, not a picks site cosplaying as one.</p>
+        </section>
+
+        <section class="sim-section">
+            <h2>What is coming</h2>
+            <p>Future work on the simulator focuses on the same things the rest of the platform is investing in: better visual presentation, richer team branding, deeper statistical context inside the output, sharper matchup cards, and tighter integration with the broader TrustMyRecord tools ecosystem. Improvements will land carefully, with the same rule that governs everything else here. Keep the inputs clear, the limitations clear, and the outputs honest. No fake claims about guaranteed winners. No overselling. The tool will keep getting better. The standard for what it claims will not change.</p>
+        </section>
+
+        <section class="sim-cta">
+            <h2>Run a matchup</h2>
+            <p>The fastest way to understand the simulator is to use it. Pick two teams, choose your starters, run the projection, then change one variable and run it again. The second run is where the thinking starts.</p>
+            <div class="sim-cta-actions">
+                <a class="sim-action primary" href="/mlb-simulator/">Use the MLB Simulator</a>
+                <a class="sim-action" href="/">Explore TrustMyRecord</a>
+            </div>
+        </section>
+    </main>
 </body>
 </html>
