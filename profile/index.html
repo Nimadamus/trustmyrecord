@@ -6395,9 +6395,12 @@
                 const labelCells = opts.sportLeague
                     ? (function() {
                         const parts = sportLeagueOf(b.key);
+                        const sportHref = escapeHtml(buildProfileSportBreakdownUrl(b.key));
+                        const sportLabel = escapeHtml(parts[0]);
+                        const leagueLabel = escapeHtml(parts[1]);
                         return [
-                            '<td class="name">' + parts[0] + '</td>',
-                            '<td class="league">' + parts[1] + '</td>'
+                            '<td class="name"><a class="profile-sport-filter-link profile-sport-breakdown-link" href="' + sportHref + '" title="View ' + escapeHtml(fmtSport(b.key)) + ' breakdown">' + sportLabel + '</a></td>',
+                            '<td class="league"><a class="profile-sport-filter-link profile-sport-breakdown-link" href="' + sportHref + '" title="View ' + escapeHtml(fmtSport(b.key)) + ' breakdown">' + leagueLabel + '<span class="profile-sport-view-indicator">View Breakdown</span></a></td>'
                         ];
                     })()
                     : ['<td class="name">' + labelOf('by_' + splitKey, b.key) + '</td>'];
@@ -8842,12 +8845,17 @@
         }).join('');
     }
 
-    function bRowExtended(name, record, wr, units) {
+    function bRowExtended(name, record, wr, units, href) {
         const c = parseFloat(wr) >= 50 ? 'positive' : parseFloat(wr) > 0 ? 'negative' : '';
         const uc = units >= 0 ? 'positive' : 'negative';
-        return '<div class="breakdown-row"><div style="flex:1;"><div class="breakdown-name">' + name + '</div><div class="breakdown-record">' + record + '</div></div>' +
+        const tag = href ? 'a' : 'div';
+        const attrs = href ? ' href="' + escapeHtml(href) + '"' : '';
+        const rowClass = 'breakdown-row' + (href ? ' is-clickable' : '');
+        return '<' + tag + ' class="' + rowClass + '"' + attrs + '><div style="flex:1;"><div class="breakdown-name">' + name + '</div><div class="breakdown-record">' + record + '</div></div>' +
             '<div style="text-align:right;"><div class="breakdown-winrate ' + c + '">' + wr + '%</div>' +
-            '<div style="font-size:.8rem;color:' + (units >= 0 ? 'var(--accent-green)' : 'var(--accent-red)') + ';">' + (units >= 0 ? '+' : '') + units.toFixed(2) + 'u</div></div></div>';
+            '<div style="font-size:.8rem;color:' + (units >= 0 ? 'var(--accent-green)' : 'var(--accent-red)') + ';">' + (units >= 0 ? '+' : '') + units.toFixed(2) + 'u</div>' +
+            (href ? '<div class="profile-sport-view-indicator profile-sport-view-indicator--legacy">View Breakdown &rsaquo;</div>' : '') +
+            '</div></' + tag + '>';
     }
 
     function populateFilterDropdowns() {
@@ -9387,13 +9395,35 @@
             const t = Number(i.total_picks) || (w + l + p);
             const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
             const units = Number(i.net_units || i.units || 0);
-            return bRowExtended(fmtSport(i.sport_key), w + '-' + l + '-' + p + ' (' + t + ' picks)', wr, units);
+            return bRowExtended(fmtSport(i.sport_key), w + '-' + l + '-' + p + ' (' + t + ' picks)', wr, units, buildProfileSportBreakdownUrl(i.sport_key));
         }).join('');
     }
 
     // ======================== UTILITY ========================
     function fmtSport(k) {
         return { americanfootball_nfl: 'NFL', basketball_nba: 'NBA', baseball_mlb: 'MLB', icehockey_nhl: 'NHL', soccer_epl: 'EPL', basketball_ncaab: 'NCAAB', americanfootball_ncaaf: 'NCAAF' }[k] || k || 'Pick';
+    }
+
+    function profileSportSlug(sportKey) {
+        const key = String(sportKey || '').toLowerCase();
+        return {
+            baseball_mlb: 'mlb',
+            basketball_nba: 'nba',
+            icehockey_nhl: 'nhl',
+            americanfootball_nfl: 'nfl',
+            americanfootball_ncaaf: 'ncaaf',
+            basketball_ncaab: 'ncaab',
+            soccer_epl: 'epl',
+            mma_mixed_martial_arts: 'mma'
+        }[key] || key.replace(/^(baseball_|basketball_|icehockey_|americanfootball_|soccer_)/, '');
+    }
+
+    function buildProfileSportBreakdownUrl(sportKey) {
+        const params = new URLSearchParams();
+        const username = profileUsername || new URLSearchParams(window.location.search || '').get('user') || '';
+        if (username) params.set('user', username);
+        params.set('sport', profileSportSlug(sportKey));
+        return '/profile/sport/?' + params.toString();
     }
 
     function showToast(msg, type) {
@@ -11540,6 +11570,79 @@
         }
       }
     </style>
+
+<style id="profile-solid-red-and-clickable-sports">
+  body.profile-page {
+    --accent-red: #ff3333 !important;
+    --tmr-red: #ff3333 !important;
+    --r-red: #ff3333 !important;
+  }
+  body.profile-page .negative,
+  body.profile-page .is-negative,
+  body.profile-page .is-neg,
+  body.profile-page .neg,
+  body.profile-page .pm-neg,
+  body.profile-page .cc-negative,
+  body.profile-page .capper-neg,
+  body.profile-page .profit-cell.negative,
+  body.profile-page .tmrx-value.is-neg,
+  body.profile-page .tmrx-period-cell .v.is-neg,
+  body.profile-page .tmrx-dd-cell .v.is-neg,
+  body.profile-page .tmrx-table .neg,
+  body.profile-page .stats-summary-table td.is-negative,
+  body.profile-page .profile-rail-value.is-negative,
+  body.profile-page .profile-advanced-metric__value.is-neg {
+    color: #ff3333 !important;
+  }
+  body.profile-page .tmrx-table tbody tr:has(.profile-sport-breakdown-link),
+  body.profile-page .breakdown-row.is-clickable {
+    cursor: pointer;
+    transition: background-color .16s ease, border-color .16s ease, transform .16s ease;
+  }
+  body.profile-page .tmrx-table tbody tr:has(.profile-sport-breakdown-link):hover,
+  body.profile-page .breakdown-row.is-clickable:hover {
+    background: rgba(255,255,255,.055);
+  }
+  body.profile-page .breakdown-row.is-clickable {
+    color: inherit;
+    text-decoration: none;
+  }
+  body.profile-page .profile-sport-filter-link,
+  body.profile-page .profile-sport-breakdown-link {
+    color: inherit;
+    text-decoration: none;
+  }
+  body.profile-page .profile-sport-view-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 10px;
+    color: #9fb0c8;
+    font-size: .72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+  body.profile-page .profile-sport-view-indicator::after {
+    content: '\\203A';
+    color: #d4deee;
+    font-size: 1rem;
+    line-height: 1;
+  }
+  body.profile-page .profile-sport-view-indicator--legacy {
+    justify-content: flex-end;
+    margin-left: 0;
+    margin-top: 3px;
+  }
+  @media (max-width: 720px) {
+    body.profile-page .profile-sport-view-indicator { display: none; }
+  }
+</style>
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  8:02:00 PM -->
+
+
+
+
