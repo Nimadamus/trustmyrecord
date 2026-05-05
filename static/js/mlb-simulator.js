@@ -213,7 +213,7 @@
         profileRows.forEach(function (row) {
             options.push({
                 id: pitcherId(side, team.id + '-' + row[0]),
-                name: team.abbreviation + ' ' + row[1],
+                name: row[1],
                 quality: row[2],
                 era: row[3],
                 source: row[4],
@@ -258,9 +258,11 @@
     }
     function pitcherChoiceButton(pitcher, selected) {
         return '<button type="button" class="pitcher-choice' + (selected ? ' selected' : '') + '" data-pitcher-id="' + escapeHtml(pitcher.id) + '" aria-checked="' + (selected ? 'true' : 'false') + '" role="radio">' +
-            '<strong>' + escapeHtml(pitcher.name) + '</strong>' +
-            '<span>' + escapeHtml(pitcher.verified ? 'Verified probable starter' : pitcher.source) + '</span>' +
+            '<span class="pitcher-radio-dot" aria-hidden="true"></span>' +
+            '<span class="pitcher-detail"><strong>' + escapeHtml(pitcher.name) + '</strong>' +
+            '<span>' + escapeHtml(pitcher.verified ? 'Verified probable starter' : 'Modeled starter profile') + '</span>' +
             '<small>' + escapeHtml((pitcher.era != null ? 'Model ERA ' + pitcher.era + ' / ' : '') + 'Rating ' + Math.round(pitcher.quality)) + '</small>' +
+            '<em>' + escapeHtml(pitcher.note || pitcher.source || 'Baseline simulator rating') + '</em></span>' +
             '</button>';
     }
     function strength(team) {
@@ -886,10 +888,12 @@
         setText('dataModeDetail', dataModeDetail());
         var grid = byId('liveInputGrid');
         if (!grid) return;
-        grid.innerHTML = state.liveInputs.map(function (source) {
-            var statusClass = source.verified ? 'available' : 'unavailable';
-            return '<div class="' + statusClass + '"><strong>' + escapeHtml(source.label) + '</strong><span>' + escapeHtml(source.status) + '</span><small>' + escapeHtml(source.detail) + '</small></div>';
-        }).join('');
+        var verified = verifiedLiveInputs();
+        if (!verified.length) {
+            grid.innerHTML = '<div class="data-note-line">Verified live inputs appear when available. This simulator currently uses baseline team and starter profiles when verified live feeds are unavailable.</div>';
+            return;
+        }
+        grid.innerHTML = '<div class="data-note-line"><strong>Verified sources used:</strong> ' + escapeHtml(verified.map(function (source) { return source.label; }).join(', ')) + '. Missing live feeds are not guessed or displayed as facts.</div>';
     }
 
     function renderComparison(result) {
@@ -918,7 +922,6 @@
         var container = byId('inputSummary');
         if (!container) return;
         var usedSources = result && result.dataSourcesUsed && result.dataSourcesUsed.length ? result.dataSourcesUsed.join(', ') : 'Internal baseline team ratings';
-        var missingSources = result && result.missingDataSources && result.missingDataSources.length ? result.missingDataSources.join(', ') : 'None listed';
         var rows = result ? [
             ['Winner', result.winner.name + ' ' + roundPct(result.winnerPct)],
             ['Starting pitchers', result.away.name + ': ' + result.awayPitcher.name + ' / ' + result.home.name + ': ' + result.homePitcher.name],
@@ -926,7 +929,6 @@
             ['Simulation mode', result.simulationMode],
             ['Data mode', result.dataMode],
             ['Data sources used', usedSources],
-            ['Missing data', missingSources],
             ['Offensive edge', result.offensiveEdge],
             ['Pitching edge', result.pitchingEdge],
             ['Run prevention edge', result.runPreventionEdge],
@@ -965,9 +967,8 @@
             'Era adjustment: ' + result.eraAdjustment + '.',
             'Confidence band: ' + result.confidenceBand + ' based only on internal simulation strength.',
             'Data sources used: ' + (result.dataSourcesUsed.length ? result.dataSourcesUsed.join(', ') : 'Internal baseline team ratings only') + '.',
-            'Missing data sources: ' + (result.missingDataSources.length ? result.missingDataSources.join(', ') : 'None listed') + '.',
             'Data limitations: ' + result.dataLimitations,
-            fallbackOnly ? 'Uses internal baseline team rating only; does not yet include live rosters, injuries, weather, confirmed starters, or sportsbook odds.' : 'Live context is used only for the verified sources listed above; unavailable roster lists, confirmed starter status, bullpen workload, and bullpen availability remain excluded.'
+            fallbackOnly ? 'Baseline simulator profiles are used when verified live feeds are unavailable.' : 'Live context is used only for verified sources; missing feeds are not guessed.'
         ].concat(liveFactorNotes) : [
             'Choose a mode, select two teams, and run the simulator. Current and historical options are loaded locally, so failed provider data will not block this tool.',
             'Simulator baselines are internal ratings. They are not SportsDataIO data, sportsbook odds, betting-edge claims, official picks, or graded records.'
