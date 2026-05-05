@@ -741,6 +741,8 @@
         let visibleMembers = [];
         const MIN_TOP_PERFORMER_GRADED_PICKS = 10;
         const social = window.socialSystem || (typeof SocialSystem !== 'undefined' ? new SocialSystem() : null);
+        const DIRECTORY_API_BASE = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+        const DIRECTORY_TIMEOUT_MS = 9000;
 
         function escapeHtml(value) {
             return String(value == null ? '' : value)
@@ -943,7 +945,7 @@
             const sorted = decisions.slice().sort((a, b) =>
                 new Date(a.locked_at || a.created_at || 0).getTime() - new Date(b.locked_at || b.created_at || 0).getTime()
             );
-            const latestPick = normalized.slice().sort((a, b) =>
+            const latestPick = graded.slice().sort((a, b) =>
                 new Date(b.locked_at || b.created_at || 0).getTime() - new Date(a.locked_at || a.created_at || 0).getTime()
             )[0] || null;
             let currentStreak = 0;
@@ -989,14 +991,13 @@
         }
 
         async function fetchUserPicks(user, username) {
-            if (!window.api || typeof window.api.request !== 'function') return [];
             const queries = [];
             if (user.id || user.user_id) queries.push('/picks?limit=100&offset=0&userId=' + encodeURIComponent(user.id || user.user_id));
             if (username) queries.push('/picks?limit=100&offset=0&username=' + encodeURIComponent(username));
 
             for (const query of queries) {
                 try {
-                    const data = await window.api.request(query);
+                    const data = await directoryRequest(query);
                     const picks = Array.isArray(data) ? data : Array.isArray(data?.picks) ? data.picks : [];
                     if (picks.length) return picks;
                 } catch (error) {}
@@ -1006,9 +1007,11 @@
 
         async function hydrateStats(user) {
             const username = normalizeUsername(user);
-            let base = {
+            let base = statsFromUser(user);
+            base = {
                 ...defaultStats(),
-                sports: extractSports(user, {})
+                ...base,
+                sports: base.sports && base.sports.length ? base.sports : extractSports(user, {})
             };
 
             const pickStats = statsFromPicks(user, await fetchUserPicks(user, username));
@@ -1019,9 +1022,9 @@
                 base.totalPicks > 0 &&
                 (base.roi == null || base.winRate == null || !base.sports.length || (!user.stats && !user.summary && !user.metrics));
 
-            if (needsMetrics && window.api && typeof window.api.request === 'function') {
+            if (needsMetrics) {
                 try {
-                    const metrics = await window.api.request('/users/' + encodeURIComponent(username) + '/metrics');
+                    const metrics = await directoryRequest('/users/' + encodeURIComponent(username) + '/metrics');
                     const summary = metrics && metrics.summary ? metrics.summary : null;
                     if (summary) {
                         const wins = numberFrom(summary.wins) || 0;
@@ -1115,18 +1118,65 @@
             });
         }
 
+        function timeoutPromise(ms, label) {
+            return new Promise((_, reject) => {
+                setTimeout(() => reject(new Error(label + ' timed out')), ms);
+            });
+        }
+
+        async function directApiRequest(endpoint) {
+            if (typeof fetch !== 'function') throw new Error('Fetch unavailable');
+            const options = {
+                headers: { 'Content-Type': 'application/json' }
+            };
+            if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+                options.signal = AbortSignal.timeout(DIRECTORY_TIMEOUT_MS);
+            }
+            const response = await fetch(DIRECTORY_API_BASE + endpoint, options);
+            const text = await response.text();
+            let data = {};
+            try {
+                data = text ? JSON.parse(text) : {};
+            } catch (error) {
+                data = {};
+            }
+            if (!response.ok) {
+                throw new Error(data.error || data.message || 'Directory API request failed');
+            }
+            return data;
+        }
+
+        async function directoryRequest(endpoint) {
+            const attempts = [];
+            if (window.api && typeof window.api.request === 'function') {
+                attempts.push(() => Promise.race([
+                    window.api.request(endpoint),
+                    timeoutPromise(DIRECTORY_TIMEOUT_MS, endpoint)
+                ]));
+            }
+            attempts.push(() => directApiRequest(endpoint));
+
+            let lastError = null;
+            for (const attempt of attempts) {
+                try {
+                    return await attempt();
+                } catch (error) {
+                    lastError = error;
+                }
+            }
+            throw lastError || new Error('Directory request failed');
+        }
+
         async function fetchBackendUsers() {
-            if (!window.api || typeof window.api.request !== 'function') return [];
-            const responses = [];
-            try {
-                responses.push(await window.api.request('/users?limit=250&offset=0'));
-            } catch (error) {}
-            try {
-                responses.push(await window.api.searchUsers('', { limit: 250, offset: 0 }));
-            } catch (error) {}
-            try {
-                responses.push(await window.api.getLeaderboard({ sortBy: 'units', limit: 250 }));
-            } catch (error) {}
+            const requests = [
+                directoryRequest('/users?limit=250&offset=0'),
+                directoryRequest('/users?query=&limit=250&offset=0'),
+                directoryRequest('/users/leaderboard?sortBy=units&limit=250')
+            ];
+            const settled = await Promise.allSettled(requests);
+            const responses = settled
+                .filter(result => result.status === 'fulfilled')
+                .map(result => result.value);
             const users = [];
             responses.forEach(data => {
                 if (Array.isArray(data)) users.push(...data);
@@ -1134,6 +1184,10 @@
                 else if (Array.isArray(data?.leaderboard)) users.push(...data.leaderboard);
                 else if (Array.isArray(data?.data)) users.push(...data.data);
             });
+            if (!users.length) {
+                const failed = settled.find(result => result.status === 'rejected');
+                if (failed) throw failed.reason;
+            }
             return uniqUsers(users).filter(isProductionDirectoryUser);
         }
 
