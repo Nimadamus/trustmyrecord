@@ -9331,25 +9331,13 @@
             </div>
         </div>
 
-        <!-- Pending picks rail: hydrated for signed-in users from private /api/picks/pending. -->
-        <section id="pendingPicksRail" class="pending-picks-rail" hidden aria-label="Your pending picks">
-            <div class="pending-picks-rail__head">
-                <div>
-                    <h3 class="pending-picks-rail__title">Locked Picks Awaiting Grading</h3>
-                    <p class="pending-picks-rail__sub">Submitted picks stay here until the game starts and the grader settles them into your public record.</p>
-                </div>
-                <div class="pending-picks-rail__meta">
-                    <span class="pending-picks-rail__count" id="pendingPicksCount">0</span>
-                    <span class="pending-picks-rail__count-label">pending</span>
-                    <a class="pending-picks-rail__view" href="/my-pending-picks/">My Pending Picks <i class="fas fa-arrow-right"></i></a>
-                </div>
-            </div>
-            <div class="pending-picks-rail__list" id="pendingPicksList"></div>
-            <div class="pending-picks-rail__empty" id="pendingPicksEmpty" hidden>
-                <i class="fas fa-clock"></i> No pending picks right now. Lock one below and it will show up here until it grades.
-            </div>
-        </section>
+        <div class="pending-picks-linkbar" aria-label="Pending picks">
+            <a class="pending-picks-linkbar__link" href="/my-pending-picks/">View Pending Picks <i class="fas fa-arrow-right"></i></a>
+        </div>
         <style>
+            .pending-picks-linkbar{display:flex;justify-content:flex-end;margin:10px 0 12px;}
+            .pending-picks-linkbar__link{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid rgba(0,255,255,0.24);border-radius:8px;background:rgba(0,255,255,0.07);color:#67e8f9;text-decoration:none;font:800 12px/1 'Inter',sans-serif;letter-spacing:.02em;}
+            .pending-picks-linkbar__link:hover{border-color:rgba(0,255,255,0.45);background:rgba(0,255,255,0.12);color:#fff;}
             .pending-picks-rail{margin:14px 0 24px;padding:28px;background:linear-gradient(180deg,rgba(13,20,31,0.98),rgba(7,12,20,0.98));border:1px solid rgba(45,212,191,0.3);border-radius:18px;box-shadow:0 22px 54px rgba(0,0,0,0.24);}
             .pending-picks-rail__head{display:flex;justify-content:space-between;align-items:flex-start;gap:22px;flex-wrap:wrap;margin-bottom:22px;}
             .pending-picks-rail__title{margin:0 0 8px;font:900 30px/1.08 'Barlow','Inter',sans-serif;color:#f8fafc;letter-spacing:-0.015em;}
@@ -9702,7 +9690,7 @@
                         <div class="tmr-pending-picks-list" id="tmrPendingPicksList">
                             <div class="tmr-pending-empty">Loading your pending picks…</div>
                         </div>
-                        <a href="/my-pending-picks/" class="sportsbook-lobby-secondary-btn sportsbook-lobby-secondary-btn--wide" style="margin-top:10px;">Open My Pending Picks</a>
+                        <a href="/my-pending-picks/" class="sportsbook-lobby-secondary-btn sportsbook-lobby-secondary-btn--wide" style="margin-top:10px;">Open Pending Picks</a>
                     </div>
                 </aside>
             </div>
