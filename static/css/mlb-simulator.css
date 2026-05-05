@@ -1,17 +1,21 @@
 :root {
-    --sim-bg: #070b12;
-    --sim-panel: rgba(11, 18, 31, 0.9);
-    --sim-line: rgba(148, 163, 184, 0.18);
+    --sim-bg: #070a0f;
+    --sim-panel: rgba(12, 17, 24, 0.94);
+    --sim-rail: rgba(148, 163, 184, 0.18);
     --sim-text: #f8fafc;
-    --sim-muted: #96a3b5;
+    --sim-muted: #9aa7b8;
     --sim-cyan: #2dd4bf;
+    --sim-blue: #60a5fa;
     --sim-gold: #f4c95d;
+    --sim-red: #fb7185;
 }
 
 .mlb-simulator-page {
+    min-height: 100vh;
     background:
-        radial-gradient(circle at 18% 0%, rgba(45, 212, 191, 0.12), transparent 30%),
-        linear-gradient(180deg, #07111d 0%, var(--sim-bg) 100%) !important;
+        linear-gradient(180deg, rgba(12, 17, 24, 0.12), rgba(7, 10, 15, 1)),
+        repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.035) 0, rgba(148, 163, 184, 0.035) 1px, transparent 1px, transparent 84px),
+        var(--sim-bg) !important;
 }
 
 .sim-topbar {
@@ -22,9 +26,9 @@
     align-items: center;
     justify-content: space-between;
     gap: 18px;
-    padding: 14px max(18px, calc((100vw - 1180px) / 2));
+    padding: 14px max(18px, calc((100vw - 1200px) / 2));
     border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-    background: rgba(5, 9, 18, 0.86);
+    background: rgba(5, 8, 13, 0.9);
     backdrop-filter: blur(16px);
 }
 
@@ -59,17 +63,17 @@
 }
 
 .sim-shell {
-    width: min(1180px, calc(100% - 32px));
+    width: min(1200px, calc(100% - 32px));
     margin: 0 auto;
-    padding: 42px 0 64px;
+    padding: 38px 0 64px;
 }
 
 .sim-hero {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-columns: minmax(0, 1fr) 360px;
     align-items: end;
-    gap: 22px;
-    margin-bottom: 20px;
+    gap: 24px;
+    margin-bottom: 18px;
 }
 
 .sim-kicker,
@@ -92,12 +96,12 @@
 }
 
 .sim-hero h1 {
-    font-size: clamp(38px, 7vw, 72px);
+    font-size: clamp(42px, 7vw, 78px);
     line-height: 0.95;
 }
 
 .sim-subtitle {
-    max-width: 740px;
+    max-width: 760px;
     margin: 14px 0 0;
     color: var(--sim-muted);
     font-size: 15px;
@@ -106,10 +110,10 @@
 
 .sim-status-card,
 .sim-panel {
-    border: 1px solid var(--sim-line);
+    border: 1px solid var(--sim-rail);
     border-radius: 8px;
-    background: linear-gradient(180deg, var(--sim-panel), rgba(6, 10, 18, 0.92));
-    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.28);
+    background: linear-gradient(180deg, var(--sim-panel), rgba(6, 9, 14, 0.96));
+    box-shadow: 0 20px 54px rgba(0, 0, 0, 0.34);
 }
 
 .sim-status-card {
@@ -136,12 +140,12 @@
     height: 10px;
     border-radius: 999px;
     background: var(--sim-cyan);
-    box-shadow: 0 0 18px rgba(45, 212, 191, 0.7);
+    box-shadow: 0 0 18px rgba(45, 212, 191, 0.72);
 }
 
-.sim-grid {
+.sim-workspace {
     display: grid;
-    grid-template-columns: 330px minmax(0, 1fr);
+    grid-template-columns: minmax(320px, 430px) minmax(0, 1fr);
     gap: 16px;
 }
 
@@ -149,23 +153,75 @@
     padding: 18px;
 }
 
-.sim-selector-panel,
-.sim-projection-panel {
-    align-self: start;
-}
-
-.sim-markets-panel,
-.sim-reasoning-panel {
-    grid-column: span 2;
+.sim-control-panel {
+    grid-row: span 2;
 }
 
 .sim-panel-heading {
     margin-bottom: 14px;
 }
 
+.sim-panel-heading.compact {
+    margin-bottom: 12px;
+}
+
 .sim-panel h2 {
     font-size: 25px;
     line-height: 1.05;
+}
+
+.sim-toggle {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.sim-toggle button,
+.sim-button {
+    min-height: 42px;
+    border-radius: 8px;
+    font: 800 13px/1.3 Inter, system-ui, sans-serif;
+    cursor: pointer;
+}
+
+.sim-toggle button {
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    background: rgba(15, 23, 42, 0.72);
+    color: var(--sim-muted);
+}
+
+.sim-toggle button.active {
+    border-color: rgba(45, 212, 191, 0.55);
+    background: rgba(45, 212, 191, 0.12);
+    color: var(--sim-text);
+}
+
+.team-picker-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.team-picker-card {
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 8px;
+    background: rgba(3, 7, 14, 0.44);
+}
+
+.team-side,
+.team-meta {
+    color: var(--sim-muted);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.team-side {
+    color: var(--sim-cyan);
 }
 
 .sim-field {
@@ -178,32 +234,41 @@
     text-transform: uppercase;
 }
 
-.sim-select,
-.sim-button {
-    min-height: 42px;
+.sim-select {
+    min-height: 44px;
+    width: 100%;
+    border: 1px solid rgba(148, 163, 184, 0.24);
     border-radius: 8px;
+    background: rgba(3, 7, 14, 0.78);
+    color: var(--sim-text);
+    padding: 0 12px;
     font: 700 14px/1.4 Inter, system-ui, sans-serif;
 }
 
-.sim-select {
-    width: 100%;
-    border: 1px solid rgba(148, 163, 184, 0.24);
-    background: rgba(3, 7, 14, 0.76);
-    color: var(--sim-text);
-    padding: 0 12px;
+.sim-actions {
+    display: grid;
+    grid-template-columns: 1fr 150px;
+    gap: 10px;
+    margin-top: 14px;
 }
 
 .sim-button {
-    width: 100%;
-    margin-top: 12px;
     border: 1px solid rgba(45, 212, 191, 0.42);
-    background: rgba(45, 212, 191, 0.12);
-    color: #dffcf8;
-    cursor: pointer;
 }
 
-.sim-button:hover {
-    border-color: rgba(45, 212, 191, 0.8);
+.sim-button.primary {
+    background: linear-gradient(135deg, rgba(45, 212, 191, 0.95), rgba(96, 165, 250, 0.82));
+    color: #041016;
+}
+
+.sim-button.secondary {
+    background: rgba(45, 212, 191, 0.08);
+    color: #dffcf8;
+}
+
+.sim-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
 }
 
 .sim-message,
@@ -218,68 +283,19 @@
     margin-top: 12px;
 }
 
+.sim-explainer {
+    margin: 12px 0 0;
+    padding: 12px;
+    border: 1px solid rgba(244, 201, 93, 0.22);
+    border-radius: 8px;
+    background: rgba(244, 201, 93, 0.06);
+    color: #dbeafe;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
 .sim-message.error {
     color: #fecaca;
-}
-
-.team-scoreboard {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    gap: 12px;
-    align-items: stretch;
-}
-
-.team-scoreboard article {
-    min-height: 108px;
-    display: grid;
-    align-content: center;
-    gap: 8px;
-    padding: 16px;
-    border: 1px solid rgba(148, 163, 184, 0.14);
-    border-radius: 8px;
-    background: rgba(3, 7, 14, 0.48);
-}
-
-.team-scoreboard span,
-.sim-meta-row span,
-.projection-shell small,
-.market-card small,
-.input-summary span {
-    color: var(--sim-muted);
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-}
-
-.team-scoreboard strong {
-    color: var(--sim-text);
-    font-family: Barlow, Inter, sans-serif;
-    font-size: clamp(24px, 4vw, 36px);
-    line-height: 1;
-}
-
-.versus {
-    align-self: center;
-    color: var(--sim-gold);
-    font-size: 12px;
-    font-weight: 900;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-}
-
-.sim-meta-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 12px;
-}
-
-.sim-meta-row span {
-    padding: 7px 9px;
-    border: 1px solid rgba(148, 163, 184, 0.14);
-    border-radius: 8px;
-    background: rgba(3, 7, 14, 0.34);
 }
 
 .projection-shell {
@@ -289,7 +305,7 @@
 }
 
 .projection-shell > div {
-    min-height: 98px;
+    min-height: 104px;
     display: grid;
     align-content: center;
     gap: 7px;
@@ -299,12 +315,22 @@
     background: rgba(45, 212, 191, 0.04);
 }
 
+.projection-shell small,
+.input-summary span,
+.comparison-card strong {
+    color: var(--sim-muted);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
 .projection-value {
     color: var(--sim-text);
     font-family: Barlow, Inter, sans-serif;
-    font-size: 28px;
+    font-size: clamp(18px, 2.4vw, 25px);
     font-weight: 800;
-    line-height: 1;
+    line-height: 1.12;
 }
 
 .projection-value.muted {
@@ -329,60 +355,82 @@
     background: rgba(45, 212, 191, 0.08);
 }
 
-.projection-shell[data-projection-state="projected"] .projection-value {
-    font-size: clamp(18px, 2.3vw, 24px);
-    line-height: 1.15;
-}
-
-.market-groups {
+.probability-lab {
     display: grid;
-    gap: 12px;
-}
-
-.market-group {
+    gap: 10px;
+    margin-top: 14px;
+    padding: 14px;
     border: 1px solid rgba(148, 163, 184, 0.14);
     border-radius: 8px;
+    background: rgba(3, 7, 14, 0.36);
+}
+
+.probability-row {
+    display: grid;
+    grid-template-columns: minmax(120px, 190px) minmax(120px, 1fr) 64px;
+    align-items: center;
+    gap: 10px;
+    color: var(--sim-text);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.probability-track {
+    height: 10px;
     overflow: hidden;
-    background: rgba(3, 7, 14, 0.35);
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.15);
 }
 
-.market-group h3 {
-    margin: 0;
-    padding: 12px 14px;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-    color: #e2e8f0;
-    font-size: 14px;
-    font-weight: 900;
+.probability-track span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--sim-cyan), var(--sim-blue));
+    transition: width 180ms ease;
 }
 
-.market-card-grid {
+.sim-notice {
+    margin: 12px 0 0;
+}
+
+.comparison-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
-    padding: 12px;
 }
 
-.market-card {
-    min-height: 74px;
+.comparison-card {
     display: grid;
-    gap: 6px;
+    gap: 9px;
     padding: 12px;
-    border: 1px solid rgba(148, 163, 184, 0.12);
+    border: 1px solid rgba(148, 163, 184, 0.14);
     border-radius: 8px;
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(3, 7, 14, 0.36);
 }
 
-.market-card strong {
+.comparison-card h3 {
+    margin: 0;
     color: var(--sim-text);
     font-size: 14px;
-    line-height: 1.25;
 }
 
-.market-card em {
-    color: var(--sim-cyan);
-    font-style: normal;
-    font-size: 13px;
-    font-weight: 800;
+.comparison-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 34px;
+    align-items: center;
+    gap: 8px;
+}
+
+.comparison-bar span {
+    display: block;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--sim-cyan);
+}
+
+.comparison-bar.home span {
+    background: var(--sim-blue);
 }
 
 .input-summary {
@@ -405,15 +453,32 @@
     font-size: 14px;
 }
 
-@media (max-width: 860px) {
+.matchup-notes {
+    display: grid;
+    gap: 8px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.matchup-notes li {
+    padding: 11px 12px;
+    border-left: 3px solid rgba(45, 212, 191, 0.72);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.56);
+    color: #dbeafe;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+@media (max-width: 920px) {
     .sim-hero,
-    .sim-grid {
+    .sim-workspace {
         grid-template-columns: 1fr;
     }
 
-    .sim-markets-panel,
-    .sim-reasoning-panel {
-        grid-column: auto;
+    .sim-control-panel {
+        grid-row: auto;
     }
 
     .projection-shell,
@@ -422,7 +487,7 @@
     }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 640px) {
     .sim-topbar {
         align-items: flex-start;
         flex-direction: column;
@@ -432,15 +497,9 @@
         justify-content: flex-start;
     }
 
-    .team-scoreboard {
-        grid-template-columns: 1fr;
-    }
-
-    .versus {
-        text-align: center;
-    }
-
-    .market-card-grid {
+    .sim-actions,
+    .comparison-grid,
+    .probability-row {
         grid-template-columns: 1fr;
     }
 }
