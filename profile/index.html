@@ -6508,7 +6508,7 @@
                 const sx = i => padX + (i / xRng) * (W - padX * 2);
                 const sy = y => H - padY - ((y - yMin) / yRng) * (H - padY * 2);
                 const last = ys[ys.length - 1];
-                const stroke = last >= 0 ? '#22D3EE' : '#fca5a5';
+                const stroke = last >= 0 ? '#22D3EE' : '#dc2626';
                 const fillTop = last >= 0 ? 'rgba(34,211,238,0.40)' : 'rgba(252,165,165,0.30)';
                 const d = eq.map((p, i) => (i ? 'L' : 'M') + sx(i).toFixed(2) + ' ' + sy(Number(p.units) || 0).toFixed(2)).join(' ');
                 const zeroY = sy(0).toFixed(2);
@@ -6517,8 +6517,8 @@
                 const guideY2 = (H - padY).toFixed(2);
                 const svgMarkup =
                     '<defs><linearGradient id="tmrxEqGrad" x1="0" y1="0" x2="0" y2="1">' +
-                    '<stop offset="0" stop-color="' + (last >= 0 ? '#22D3EE' : '#fca5a5') + '" stop-opacity=".40"/>' +
-                    '<stop offset="1" stop-color="' + (last >= 0 ? '#22D3EE' : '#fca5a5') + '" stop-opacity="0"/>' +
+                    '<stop offset="0" stop-color="' + (last >= 0 ? '#22D3EE' : '#dc2626') + '" stop-opacity=".40"/>' +
+                    '<stop offset="1" stop-color="' + (last >= 0 ? '#22D3EE' : '#dc2626') + '" stop-opacity="0"/>' +
                     '</linearGradient></defs>' +
                     '<line x1="0" y1="' + guideY1 + '" x2="' + W + '" y2="' + guideY1 + '" stroke="#1F3350" stroke-dasharray="4 4"/>' +
                     '<line x1="0" y1="' + zeroY + '" x2="' + W + '" y2="' + zeroY + '" stroke="rgba(148,163,184,0.32)" stroke-dasharray="3 4"/>' +
@@ -10055,7 +10055,7 @@
       .tmrx-table tbody tr:hover td { background: rgba(34,211,238,.04); }
       .tmrx-table .name { font-weight: 800; color: #f1f5fb; }
       .tmrx-table .pos { color: #86efac; }
-      .tmrx-table .neg { color: #fca5a5; }
+      .tmrx-table .neg { color: #dc2626; }
       .tmrx-table .zero { color: #94a3b8; }
       .tmrx-table .empty td { padding: 22px 16px; text-align: center; color: #64748b; font-style: italic; }
 
