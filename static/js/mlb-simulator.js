@@ -228,6 +228,9 @@
         if (!rows.length) {
             rows = [['ace', team.season + ' baseline ace', team.startingPitching + 6, 3.2], ['mid', team.season + ' baseline starter', team.startingPitching, 4.0], ['depth', team.season + ' depth starter', team.startingPitching - 8, 4.7]];
         }
+        rows = rows.slice();
+        if (rows.length < 5) rows.push(['era-average', team.season + ' era-average starter', team.startingPitching - 3, 4.05]);
+        if (rows.length < 5) rows.push(['staff-game', team.season + ' staff game', team.startingPitching - 10, 4.75]);
         return rows.map(function (row) {
             return {
                 id: pitcherId(side, team.id + '-' + row[0]),
