@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'starter-dropdowns-20260505';
+    var UI_BUILD = 'starter-dropdowns-20260505-qa2';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -850,7 +850,7 @@
         var key = side === 'away' ? 'awayPitcherId' : 'homePitcherId';
         var pitcher = selectedPitcher(side, team, context);
         if (container) {
-            container.innerHTML = options.length ? '<select class="pitcher-select" data-pitcher-side="' + side + '" aria-label="' + (side === 'away' ? 'Team A' : 'Team B') + ' starting pitcher">' + options.map(function (option) { return pitcherOptionTag(option, option.id === state[key]); }).join('') + '</select>' : '<div class="pitcher-empty">Starting pitcher list unavailable.</div>';
+            container.innerHTML = options.length ? '<select class="sim-select starter-select pitcher-select" data-pitcher-side="' + side + '" aria-label="' + (side === 'away' ? 'Team A' : 'Team B') + ' starting pitcher">' + options.map(function (option) { return pitcherOptionTag(option, option.id === state[key]); }).join('') + '</select>' : '<div class="pitcher-empty">Starting pitcher list unavailable.</div>';
         }
         if (meta) meta.textContent = pitcherMeta(pitcher);
     }

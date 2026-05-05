@@ -357,21 +357,29 @@
 .pitcher-options {
     display: grid;
     gap: 8px;
+    grid-template-columns: 1fr;
+    min-width: 0;
+    width: 100%;
 }
 
+.starter-select,
 .pitcher-select {
     width: 100%;
+    min-width: 0;
     min-height: 56px;
-    padding: 0 42px 0 14px;
+    padding: 0 44px 0 14px;
     border: 1px solid rgba(148, 163, 184, 0.24);
     border-radius: 8px;
     background:
         linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(2, 6, 23, 0.94));
     color: var(--sim-text);
-    font: 800 15px/1.2 Inter, sans-serif;
+    font: 800 15px/1.25 Inter, sans-serif;
     cursor: pointer;
+    white-space: normal;
+    text-overflow: clip;
 }
 
+.starter-select:focus,
 .pitcher-select:focus {
     outline: 2px solid rgba(45, 212, 191, 0.42);
     outline-offset: 2px;
@@ -1227,7 +1235,6 @@
 }
 
 @media (max-width: 1180px) {
-    .pitcher-options,
     .projection-shell {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
