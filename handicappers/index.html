@@ -315,8 +315,8 @@
 
         .hm-row {
             display: grid;
-            grid-template-columns: minmax(300px, 1.5fr) 76px 78px 70px 78px 60px 76px 108px minmax(170px, 0.9fr) 96px;
-            gap: 10px;
+            grid-template-columns: minmax(288px, 1.45fr) 76px 84px 96px 88px 56px 70px 96px minmax(158px, 0.85fr) 84px;
+            gap: 12px;
             align-items: center;
             padding: 20px 14px;
             border-bottom: 1px solid rgba(148, 163, 184, 0.12);
@@ -335,6 +335,15 @@
             position: sticky;
             top: 0;
             z-index: 3;
+        }
+
+        .hm-head > div {
+            min-width: 0;
+        }
+
+        .hm-head > div:nth-child(n+2):nth-child(-n+7),
+        .hm-head > div:nth-child(10) {
+            text-align: center;
         }
 
         .hm-member-row {
@@ -437,6 +446,8 @@
             line-height: 1.18;
             font-weight: 850;
             white-space: nowrap;
+            min-width: 0;
+            text-align: center;
         }
 
         .hm-stat.is-positive { color: #8ef3b2; }
