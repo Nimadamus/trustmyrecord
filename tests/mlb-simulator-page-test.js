@@ -16,8 +16,8 @@ const html = fs.readFileSync(pagePath, 'utf8');
 const script = fs.readFileSync(scriptPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
-assert(/\/static\/css\/mlb-simulator\.css\?v=20260505-stress-export/.test(html), 'live page uses versioned simulator stylesheet');
-assert(/\/static\/js\/mlb-simulator\.js\?v=20260505-stress-export/.test(html), 'live page uses versioned simulator script');
+assert(/\/static\/css\/mlb-simulator\.css\?v=20260505-standalone-box-score/.test(html), 'live page uses versioned simulator stylesheet');
+assert(/\/static\/js\/mlb-simulator\.js\?v=20260505-standalone-box-score/.test(html), 'live page uses versioned simulator script');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
 assert(/id="awayPitcherSelect" class="sim-select starter-select pitcher-select"/.test(html), 'Team A starter select uses the same styled select pattern');
@@ -40,9 +40,12 @@ assert(/awayHeaderLogo/.test(html) && /homeHeaderLogo/.test(html), 'matchup revi
 assert(/Inside the TrustMyRecord MLB Simulator/.test(html), 'explainer section is present');
 assert(/model-based estimate/.test(html), 'explainer avoids overclaiming accuracy');
 assert(/id="boxScorePanel"/.test(html), 'box score panel is present');
+assert(/class="sim-panel box-score-panel"/.test(html), 'box score is a standalone panel');
+assert(/id="viewBoxScoreLink"/.test(html), 'view box score jump link is present');
 assert(/id="projectionEmptyState"/.test(html), 'pre-run projection empty state is present');
 assert(/Copy Box Score/.test(html), 'copy box score action is present');
 assert(/Save Box Score/.test(html), 'save box score action is present');
+assert(/Run a simulation to generate a box score\./.test(html), 'box score empty placeholder is clear');
 assert(/Select two teams, choose starting pitchers, then run the simulator/.test(html), 'pre-run state uses a single polished instruction panel');
 assert(/Choose starters/.test(html), 'starter-dependent empty state is polished');
 assert(!/Loading MLB games|Loading sportsbook board|Waiting for board data|Projection engine not connected yet|Not connected for custom simulation|Unavailable without real inputs/.test(html), 'old board-dependent placeholder text is removed');
@@ -62,7 +65,7 @@ const elementIds = [
   'eraAdjustmentValue','simulationModeValue','dataModeValue','awayProbabilityLabel','homeProbabilityLabel',
   'awayProbabilityValue','homeProbabilityValue','awayProbabilityBar','homeProbabilityBar','projectionNotice',
   'comparisonGrid','inputSummary','matchupNotes','boxScorePanel','boxScoreTitle','boxScoreBody',
-  'boxScoreSummary','copyBoxScoreButton','saveBoxScoreButton','projectionEmptyState','probabilityLab'
+  'boxScoreSummary','copyBoxScoreButton','saveBoxScoreButton','viewBoxScoreLink','projectionEmptyState','probabilityLab'
 ];
 
 let savedDownload = null;
@@ -83,6 +86,7 @@ function makeElement(id) {
     addEventListener(type, fn) { this.listeners[type] = fn; },
     setAttribute(name, value) { this.attributes[name] = String(value); },
     getAttribute(name) { return this.attributes[name]; },
+    scrollIntoView(options) { this.scrolledWith = options; },
   };
 }
 
@@ -355,6 +359,7 @@ async function flushAsync() {
   assert.strictEqual(elements.probabilityLab.getAttribute('data-probability-state'), 'empty', 'pre-run probability bars are hidden by state');
   assert.strictEqual(elements.copyBoxScoreButton.disabled, true, 'copy box score button is disabled before simulation');
   assert.strictEqual(elements.saveBoxScoreButton.disabled, true, 'save box score button is disabled before simulation');
+  assert.strictEqual(elements.viewBoxScoreLink.getAttribute('aria-disabled'), 'true', 'view box score link starts disabled');
 
   simulator.runSimulation();
   assert.strictEqual(elements.resultCard.getAttribute('data-result-state'), 'projected', 'fallback run renders projected state');
@@ -366,6 +371,9 @@ async function flushAsync() {
   assert(/Final/.test(elements.boxScoreTitle.textContent), 'box score title includes final score');
   assert.strictEqual(elements.copyBoxScoreButton.disabled, false, 'copy box score button enables after simulation');
   assert.strictEqual(elements.saveBoxScoreButton.disabled, false, 'save box score button enables after simulation');
+  assert.strictEqual(elements.viewBoxScoreLink.getAttribute('aria-disabled'), 'false', 'view box score link enables after simulation');
+  simulator.viewBoxScore({ preventDefault() {} });
+  assert(elements.boxScorePanel.scrolledWith && elements.boxScorePanel.scrolledWith.block === 'start', 'view box score jumps to standalone panel');
   const fallbackBox = simulator.state.simulation.boxScore;
   assert.strictEqual(fallbackBox.away.innings.reduce((total, value) => total + value, 0), fallbackBox.away.runs, 'away inning totals equal away final score');
   assert.strictEqual(fallbackBox.home.innings.reduce((total, value) => total + value, 0), fallbackBox.home.runs, 'home inning totals equal home final score');

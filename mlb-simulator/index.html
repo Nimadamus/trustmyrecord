@@ -10,11 +10,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-page-polish.css">
-    <link rel="stylesheet" href="/static/css/mlb-simulator.css?v=20260505-stress-export">
+    <link rel="stylesheet" href="/static/css/mlb-simulator.css?v=20260505-standalone-box-score">
     <script src="/static/js/config.js"></script>
     <script src="/static/js/backend-api.js"></script>
 </head>
-<body class="tmr-polished-page mlb-simulator-page" data-mlb-simulator-build="stress-export-20260505">
+<body class="tmr-polished-page mlb-simulator-page" data-mlb-simulator-build="standalone-box-score-20260505">
     <header class="sim-topbar" aria-label="TrustMyRecord navigation">
         <a class="sim-brand" href="/">TrustMyRecord</a>
         <nav class="sim-nav" aria-label="Primary">
@@ -169,6 +169,9 @@
                         </article>
                     </div>
                     <p id="keyExplanationValue" class="key-explanation">Select a matchup and run the simulator to generate a projected winner, score range, win probability, and notes.</p>
+                    <div class="result-jump-actions">
+                        <a id="viewBoxScoreLink" class="sim-button secondary compact-action view-box-score-link" href="#boxScorePanel" aria-disabled="true">View Box Score</a>
+                    </div>
                 </div>
 
                 <div id="projectionEmptyState" class="projection-empty-state" data-empty-state="ready">
@@ -230,34 +233,35 @@
                 </div>
 
                 <p id="projectionNotice" class="sim-notice">Select two teams and run the simulator. Outputs here are never counted as official picks or user records.</p>
+            </section>
 
-                <section id="boxScorePanel" class="box-score-panel" data-box-score-state="empty" aria-label="Simulated box score">
-                    <div class="box-score-heading">
-                        <div>
-                            <span>Box Score</span>
-                            <strong id="boxScoreTitle">Box score appears after simulation</strong>
-                        </div>
-                        <div class="box-score-actions">
-                            <button id="copyBoxScoreButton" class="sim-button secondary compact-action" type="button" disabled>Copy Box Score</button>
-                            <button id="saveBoxScoreButton" class="sim-button secondary compact-action" type="button" disabled>Save Box Score</button>
-                        </div>
+            <section id="boxScorePanel" class="sim-panel box-score-panel" data-box-score-state="empty" aria-label="Simulated box score">
+                <div class="box-score-heading">
+                    <div>
+                        <p class="sim-label">Full Box Score</p>
+                        <h2>Box Score</h2>
+                        <strong id="boxScoreTitle">Run a simulation to generate a box score.</strong>
                     </div>
-                    <div class="box-score-scroll">
-                        <table class="box-score-table">
-                            <thead>
-                                <tr>
-                                    <th>Team</th>
-                                    <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th>
-                                    <th>R</th><th>H</th><th>E</th>
-                                </tr>
-                            </thead>
-                            <tbody id="boxScoreBody">
-                                <tr><td colspan="13">Run a matchup to generate the inning-by-inning line score.</td></tr>
-                            </tbody>
-                        </table>
+                    <div class="box-score-actions">
+                        <button id="copyBoxScoreButton" class="sim-button secondary compact-action" type="button" disabled>Copy Box Score</button>
+                        <button id="saveBoxScoreButton" class="sim-button secondary compact-action" type="button" disabled>Save Box Score</button>
                     </div>
-                    <div id="boxScoreSummary" class="box-score-summary">Run a matchup to unlock R/H/E totals and export actions.</div>
-                </section>
+                </div>
+                <div class="box-score-scroll">
+                    <table class="box-score-table">
+                        <thead>
+                            <tr>
+                                <th>Team</th>
+                                <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th>
+                                <th>R</th><th>H</th><th>E</th>
+                            </tr>
+                        </thead>
+                        <tbody id="boxScoreBody">
+                            <tr><td colspan="13">Run a simulation to generate a box score.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="boxScoreSummary" class="box-score-summary">Run a simulation to generate a box score.</div>
             </section>
 
             <section class="sim-panel sim-compare-panel" aria-label="Offensive and defensive comparison">
@@ -328,6 +332,6 @@
         </section>
     </main>
 
-    <script src="/static/js/mlb-simulator.js?v=20260505-stress-export"></script>
+    <script src="/static/js/mlb-simulator.js?v=20260505-standalone-box-score"></script>
 </body>
 </html>

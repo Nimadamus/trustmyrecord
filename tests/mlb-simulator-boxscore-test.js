@@ -20,7 +20,7 @@ const ids = [
   'totalRangeValue','runEnvironmentValue','simulationConfidenceValue','eraAdjustmentValue','simulationModeValue',
   'dataModeValue','awayProbabilityLabel','homeProbabilityLabel','awayProbabilityValue','homeProbabilityValue',
   'awayProbabilityBar','homeProbabilityBar','projectionNotice','comparisonGrid','inputSummary','matchupNotes',
-  'boxScorePanel','boxScoreTitle','boxScoreBody','boxScoreSummary','copyBoxScoreButton','saveBoxScoreButton'
+  'boxScorePanel','boxScoreTitle','boxScoreBody','boxScoreSummary','copyBoxScoreButton','saveBoxScoreButton','viewBoxScoreLink'
 ];
 
 let clipboard = '';
@@ -40,6 +40,7 @@ function element(id) {
     addEventListener(type, fn) { this.listeners[type] = fn; },
     setAttribute(name, value) { this.attributes[name] = String(value); },
     getAttribute(name) { return this.attributes[name]; },
+    scrollIntoView(options) { this.scrolledWith = options; },
   };
 }
 
@@ -118,6 +119,7 @@ function assertBoxScore(result) {
     assertBoxScore(result);
     simulator.runSimulation();
     assert.strictEqual(elements.boxScorePanel.getAttribute('data-box-score-state'), 'projected', mode + ' renders box score panel');
+    assert.strictEqual(elements.viewBoxScoreLink.getAttribute('aria-disabled'), 'false', mode + ' enables view box score jump');
     assert(/<tr/.test(elements.boxScoreBody.innerHTML), mode + ' renders box score rows');
     assert(/Starting Pitchers:/.test(simulator.boxScoreText(result)), mode + ' export includes starters');
     assert(/Generated: \d{4}-\d{2}-\d{2}T/.test(simulator.boxScoreText(result)), mode + ' export includes generated timestamp');
@@ -132,6 +134,8 @@ function assertBoxScore(result) {
   assert(/TrustMyRecord MLB Simulator Box Score/.test(clipboard), 'copy action writes box score text');
   simulator.saveBoxScore();
   assert(/^trustmyrecord-mlb-simulator-box-score-.*-\d{4}-\d{2}-\d{2}\.txt$/.test(savedFilename), 'save action downloads a clean dated text filename');
+  simulator.viewBoxScore({ preventDefault() {} });
+  assert(elements.boxScorePanel.scrolledWith && elements.boxScorePanel.scrolledWith.block === 'start', 'view action scrolls to standalone box score');
   console.log('mlb-simulator-boxscore-test: ok');
 })().catch((error) => {
   console.error(error);

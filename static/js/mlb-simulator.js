@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'stress-export-20260505';
+    var UI_BUILD = 'standalone-box-score-20260505';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -1271,8 +1271,10 @@
     function setExportButtons(enabled) {
         var copy = byId('copyBoxScoreButton');
         var save = byId('saveBoxScoreButton');
+        var view = byId('viewBoxScoreLink');
         if (copy) copy.disabled = !enabled;
         if (save) save.disabled = !enabled;
+        if (view) view.setAttribute('aria-disabled', enabled ? 'false' : 'true');
     }
     function renderBoxScore(result) {
         var panel = byId('boxScorePanel');
@@ -1282,15 +1284,15 @@
         if (!panel || !title || !body || !summary) return;
         if (!result || !result.boxScore) {
             panel.setAttribute('data-box-score-state', 'empty');
-            title.textContent = 'Box score appears after simulation';
-            body.innerHTML = '<tr><td colspan="13">Run a matchup to generate the inning-by-inning line score.</td></tr>';
-            summary.textContent = 'Run a matchup to unlock R/H/E totals and export actions.';
+            title.textContent = 'Run a simulation to generate a box score.';
+            body.innerHTML = '<tr><td colspan="13">Run a simulation to generate a box score.</td></tr>';
+            summary.textContent = 'Run a simulation to generate a box score.';
             setExportButtons(false);
             return;
         }
         var box = result.boxScore;
         panel.setAttribute('data-box-score-state', 'projected');
-        title.textContent = result.away.abbreviation + ' at ' + result.home.abbreviation + ' / Final ' + box.away.runs + '-' + box.home.runs;
+        title.textContent = result.away.name + ' at ' + result.home.name + ' / Final ' + result.away.abbreviation + ' ' + box.away.runs + ', ' + result.home.abbreviation + ' ' + box.home.runs;
         body.innerHTML = boxRow(box.away, box.winner.id) + boxRow(box.home, box.winner.id);
         summary.innerHTML = '<strong>' + escapeHtml(box.summary) + '</strong><span>' + escapeHtml(box.pitcherLines.join(' / ')) + '</span><span>' + escapeHtml(box.keyPerformers.join(' / ')) + '</span>';
         setExportButtons(true);
@@ -1458,6 +1460,16 @@
         window.URL.revokeObjectURL(url);
         setText('projectionNotice', 'Box score saved as ' + filename + '.');
     }
+    function viewBoxScore(event) {
+        if (event && event.preventDefault) event.preventDefault();
+        var panel = byId('boxScorePanel');
+        if (!panel) return;
+        if (typeof panel.scrollIntoView === 'function') {
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (typeof window !== 'undefined') {
+            window.location.hash = 'boxScorePanel';
+        }
+    }
 
     function normalizeBoardResponse(data) {
         if (Array.isArray(data)) return data;
@@ -1529,6 +1541,7 @@
         var refresh = byId('refreshTeamsButton');
         var copyBox = byId('copyBoxScoreButton');
         var saveBox = byId('saveBoxScoreButton');
+        var viewBox = byId('viewBoxScoreLink');
         var current = byId('currentModeButton');
         var historical = byId('historicalModeButton');
         var mixed = byId('mixedModeButton');
@@ -1553,6 +1566,7 @@
         if (run) run.addEventListener('click', runSimulation);
         if (copyBox) copyBox.addEventListener('click', copyBoxScore);
         if (saveBox) saveBox.addEventListener('click', saveBoxScore);
+        if (viewBox) viewBox.addEventListener('click', viewBoxScore);
         if (refresh) refresh.addEventListener('click', function () { switchMode('current'); });
         if (current) current.addEventListener('click', function () { switchMode('current'); });
         if (historical) historical.addEventListener('click', function () { switchMode('historical'); });
@@ -1578,7 +1592,8 @@
         simulate: simulate,
         boxScoreText: boxScoreText,
         copyBoxScore: copyBoxScore,
-        saveBoxScore: saveBoxScore
+        saveBoxScore: saveBoxScore,
+        viewBoxScore: viewBoxScore
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

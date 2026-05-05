@@ -740,6 +740,12 @@
     border: 1px solid rgba(45, 212, 191, 0.42);
 }
 
+.sim-button.view-box-score-link {
+    display: inline-grid;
+    place-items: center;
+    text-decoration: none;
+}
+
 .sim-button.primary {
     background: linear-gradient(135deg, rgba(45, 212, 191, 0.95), rgba(96, 165, 250, 0.82));
     color: #041016;
@@ -759,6 +765,20 @@
 .sim-button:disabled {
     cursor: not-allowed;
     opacity: 0.48;
+}
+
+.view-box-score-link[aria-disabled="true"] {
+    opacity: 0.58;
+}
+
+.result-jump-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 16px 16px;
+}
+
+.result-card[data-result-state="empty"] .result-jump-actions {
+    display: none;
 }
 
 .sim-message,
@@ -966,17 +986,16 @@
 .box-score-panel {
     display: grid;
     gap: 12px;
-    margin-top: 16px;
     padding: 16px;
     border: 1px solid rgba(45, 212, 191, 0.22);
     border-radius: 8px;
     background:
-        linear-gradient(135deg, rgba(45, 212, 191, 0.08), rgba(96, 165, 250, 0.04)),
+        linear-gradient(135deg, rgba(45, 212, 191, 0.1), rgba(96, 165, 250, 0.06)),
         rgba(3, 7, 14, 0.58);
+    scroll-margin-top: 86px;
 }
 
 .box-score-panel[data-box-score-state="empty"] {
-    padding: 14px 16px;
     border-color: rgba(148, 163, 184, 0.16);
     background: rgba(3, 7, 14, 0.42);
 }
@@ -991,27 +1010,22 @@
 
 .box-score-heading {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 14px;
 }
 
-.box-score-heading span {
-    display: block;
-    color: var(--sim-gold);
-    font-size: 11px;
-    font-weight: 900;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+.box-score-heading h2 {
+    margin-top: 0;
 }
 
 .box-score-heading strong {
     display: block;
-    margin-top: 4px;
+    margin-top: 7px;
     color: var(--sim-text);
     font-family: Barlow, Inter, sans-serif;
-    font-size: clamp(24px, 3vw, 38px);
-    line-height: 1;
+    font-size: clamp(20px, 2.4vw, 30px);
+    line-height: 1.08;
 }
 
 .box-score-actions {
