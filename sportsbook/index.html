@@ -9319,201 +9319,13 @@
 <!-- REDESIGNED PICKS SECTION - Games First Flow -->
 <div id="picks" class="page-section active">
     <div class="picks-container-modern">
-        <!-- Logged-out join prompt: visible only when no auth session is active.
-             Hidden automatically once the auth shim flips body[data-tmr-auth] to logged-in. -->
-        <div class="make-picks-loggedout" id="makePicksLoggedOutPrompt">
-            <div>
-                <strong>Heads up:</strong> Browse the board freely, but you'll need a free account to lock a pick onto your public record.
-            </div>
-            <div class="make-picks-loggedout-actions">
-                <a class="make-picks-loggedout-btn make-picks-loggedout-btn--primary" href="/register/">Join Free</a>
-                <a class="make-picks-loggedout-btn" href="/login/">Log In</a>
-            </div>
-        </div>
-
-        <div class="pending-picks-linkbar" aria-label="Pending picks">
-            <a class="pending-picks-linkbar__link" href="/my-pending-picks/">View Pending Picks <i class="fas fa-arrow-right"></i></a>
-        </div>
-        <style>
-            .pending-picks-linkbar{display:flex;justify-content:flex-end;margin:10px 0 12px;}
-            .pending-picks-linkbar__link{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid rgba(0,255,255,0.24);border-radius:8px;background:rgba(0,255,255,0.07);color:#67e8f9;text-decoration:none;font:800 12px/1 'Inter',sans-serif;letter-spacing:.02em;}
-            .pending-picks-linkbar__link:hover{border-color:rgba(0,255,255,0.45);background:rgba(0,255,255,0.12);color:#fff;}
-            .pending-picks-rail{margin:14px 0 24px;padding:28px;background:linear-gradient(180deg,rgba(13,20,31,0.98),rgba(7,12,20,0.98));border:1px solid rgba(45,212,191,0.3);border-radius:18px;box-shadow:0 22px 54px rgba(0,0,0,0.24);}
-            .pending-picks-rail__head{display:flex;justify-content:space-between;align-items:flex-start;gap:22px;flex-wrap:wrap;margin-bottom:22px;}
-            .pending-picks-rail__title{margin:0 0 8px;font:900 30px/1.08 'Barlow','Inter',sans-serif;color:#f8fafc;letter-spacing:-0.015em;}
-            .pending-picks-rail__sub{margin:0;color:#cbd5e1;font-size:16px;line-height:1.55;max-width:760px;font-weight:600;}
-            .pending-picks-rail__meta{display:flex;align-items:center;gap:12px;font-size:14px;color:#a7b4c5;}
-            .pending-picks-rail__count{font:800 28px/1 'Barlow','Inter',sans-serif;color:#00ffff;}
-            .pending-picks-rail__count-label{text-transform:uppercase;letter-spacing:1.5px;font-weight:700;}
-            .pending-picks-rail__view{margin-left:8px;color:#00ffff;text-decoration:none;font-weight:800;font-size:14px;}
-            .pending-picks-rail__view:hover{color:#fff;}
-            .pending-picks-rail__list{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;}
-            .pending-pick-card{background:rgba(11,17,24,0.9);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:19px 20px;display:flex;flex-direction:column;gap:13px;}
-            .pending-pick-card__top{display:flex;justify-content:space-between;align-items:center;gap:12px;}
-            .pending-pick-card__sport{font:800 12px/1 'Inter',sans-serif;text-transform:uppercase;letter-spacing:1.5px;color:#00ffff;background:rgba(0,255,255,0.1);padding:7px 10px;border-radius:6px;}
-            .pending-pick-card__when{font-size:13px;color:#94a3b8;font-weight:600;}
-            .pending-pick-card__pick{color:#f8fafc;font:800 19px/1.35 'Inter',sans-serif;}
-            .pending-pick-card__game{color:#dce5f2;font:800 16px/1.4 'Inter',sans-serif;}
-            .pending-pick-card__detail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px;font-size:14px;color:#a7b4c5;line-height:1.45;}
-            .pending-pick-card__detail span{min-width:0;overflow-wrap:anywhere;}
-            .pending-pick-card__detail b{color:#e2e8f0;font-weight:800;}
-            .pending-pick-card__status{display:inline-flex;width:max-content;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;background:rgba(245,158,11,0.18);border:1px solid rgba(245,158,11,0.32);color:#fde68a;font-size:12px;font-weight:900;letter-spacing:0.11em;text-transform:uppercase;}
-            .pending-picks-rail__empty{padding:18px;color:#94a3b8;font-size:15px;text-align:center;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:10px;}
-            .pending-picks-rail__empty i{margin-right:8px;color:#94a3b8;}
-        </style>
-        <script>
-        (function() {
-            const rail        = document.getElementById('pendingPicksRail');
-            const list        = document.getElementById('pendingPicksList');
-            const emptyMsg    = document.getElementById('pendingPicksEmpty');
-            const countLabel  = document.getElementById('pendingPicksCount');
-            if (!rail || !list || !countLabel) return;
-
-            const escapeHtml = s => String(s == null ? '' : s)
-                .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-
-            function fmtOdds(o) {
-                const n = Number(o);
-                if (!Number.isFinite(n)) return '—';
-                return (n > 0 ? '+' : '') + n;
-            }
-            function fmtAgo(ts) {
-                if (!ts) return '';
-                const d = new Date(ts);
-                if (isNaN(d.getTime())) return '';
-                const ms = Date.now() - d.getTime();
-                const m = Math.floor(ms / 60000);
-                if (m < 1) return 'just now';
-                if (m < 60) return m + 'm ago';
-                const h = Math.floor(m / 60);
-                if (h < 24) return h + 'h ago';
-                const dys = Math.floor(h / 24);
-                return dys + 'd ago';
-            }
-            function fmtMarket(m) {
-                const raw = String(m || '').trim();
-                if (!raw) return '';
-                return raw.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-            }
-            function getCurrentUser() {
-                try {
-                    if (window.auth && typeof window.auth.getCurrentUser === 'function' && window.auth.isLoggedIn()) {
-                        const authUser = window.auth.getCurrentUser();
-                        if (authUser) return authUser.user || authUser;
-                    }
-                    if (window.api && window.api._cachedUser) return window.api._cachedUser;
-                    const raw = localStorage.getItem('tmr_current_user')
-                        || localStorage.getItem('trustmyrecord_session')
-                        || localStorage.getItem('tmr_user')
-                        || localStorage.getItem('user');
-                    if (raw) {
-                        const parsed = JSON.parse(raw);
-                        return parsed && parsed.user ? parsed.user : parsed;
-                    }
-                } catch (e) {}
-                return null;
-            }
-            function isLoggedIn() {
-                if (document.body.getAttribute('data-tmr-auth') === 'logged-in') return true;
-                return !!getCurrentUser();
-            }
-            function normalizePendingPick(p) {
-                if (!p || String(p.status || 'pending').toLowerCase() !== 'pending') return null;
-                const sport = (p.sport_display || p.sport_title || p.sport_key || p.sport || '').toString().toUpperCase().replace(/_/g, ' ');
-                const league = String(p.league || p.sport_title || p.tournament_name || p.sport_key || '').trim().replace(/_/g, ' ');
-                const selection = String(p.selection_label || p.selection || p.pick || p.side || '').trim();
-                const market = fmtMarket(p.market_type);
-                const odds = Number(p.odds_snapshot);
-                const units = Number(p.units);
-                const matchup = String(p.matchup || ((p.away_team || '') + (p.home_team ? ' @ ' + p.home_team : '')) || '').trim();
-                const gameTime = p.commence_time || p.game_time || p.start_time || '';
-                if (!sport || !selection || /^pick$/i.test(selection) || !market || !Number.isFinite(odds) || !Number.isFinite(units)) {
-                    console.warn('[Sportsbook] Skipping malformed pending pick', p);
-                    return null;
-                }
-                let pickText = (window.TMR && typeof window.TMR.formatPickDisplayLabel === 'function')
-                    ? window.TMR.formatPickDisplayLabel(p)
-                    : (function () {
-                        var text = selection.replace(/\b(\d+)\.(\d)0+\b/g, '$1.$2').replace(/\b(\d+)\.0+\b/g, '$1');
-                        var n = Number(p.line_snapshot);
-                        var line = Number.isFinite(n) ? String(n).replace(/\.0+$/, '') : (p.line_snapshot == null ? '' : String(p.line_snapshot));
-                        if (line && /spread|run_line|puck_line/i.test(String(p.market_type || '')) && n > 0) line = '+' + line;
-                        return line && text.indexOf(line) === -1 ? text.replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '') + ' ' + line : text;
-                    })();
-                return {
-                    sport,
-                    league,
-                    matchup,
-                    pickText,
-                    market,
-                    odds,
-                    units,
-                    gameTime,
-                    when: fmtAgo(p.locked_at || p.created_at),
-                    lockedAt: p.locked_at || p.created_at || ''
-                };
-            }
-
-            async function loadPending() {
-                if (!isLoggedIn()) { rail.hidden = true; return; }
-                if (!window.api || typeof window.api.request !== 'function') return;
-
-                let picks = [];
-                try {
-                    const data = await window.api.request('/picks/pending?limit=100');
-                    picks = (data && Array.isArray(data.picks)) ? data.picks : [];
-                } catch (err) {
-                    console.warn('[Sportsbook] pending picks load failed:', err && err.message ? err.message : err);
-                    return;
-                }
-
-                const validPicks = picks.map(normalizePendingPick).filter(Boolean);
-                rail.hidden = false;
-                countLabel.textContent = String(validPicks.length);
-                if (!validPicks.length) {
-                    list.innerHTML = '';
-                    emptyMsg.hidden = false;
-                    emptyMsg.innerHTML = '<i class="fas fa-clock"></i> No pending picks awaiting grade.';
-                    return;
-                }
-                emptyMsg.hidden = true;
-                validPicks.sort((a, b) => new Date(b.lockedAt || 0) - new Date(a.lockedAt || 0));
-                list.innerHTML = validPicks.slice(0, 8).map(p => {
-                    const gameTimeText = p.gameTime ? new Date(p.gameTime).toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }) : 'Time pending';
-                    return '<div class="pending-pick-card">'
-                        + '<div class="pending-pick-card__top">'
-                        + '<span class="pending-pick-card__sport">' + escapeHtml(p.sport) + '</span>'
-                        + '<span class="pending-pick-card__when">' + escapeHtml(p.when) + '</span>'
-                        + '</div>'
-                        + '<div class="pending-pick-card__game">' + escapeHtml(p.matchup || 'Matchup pending') + '</div>'
-                        + '<div class="pending-pick-card__pick">' + escapeHtml(p.pickText) + '</div>'
-                        + '<div class="pending-pick-card__detail">'
-                        + '<span>League: <b>' + escapeHtml(p.league || p.sport) + '</b></span>'
-                        + '<span>Market: <b>' + escapeHtml(p.market) + '</b></span>'
-                        + '<span>Odds: <b>' + escapeHtml(fmtOdds(p.odds)) + '</b></span>'
-                        + '<span>Units: <b>' + escapeHtml(p.units.toFixed(2) + 'u') + '</b></span>'
-                        + '<span>Game: <b>' + escapeHtml(gameTimeText) + '</b></span>'
-                        + '</div>'
-                        + '<span class="pending-pick-card__status">Locked · Awaiting Grading</span>'
-                        + '</div>';
-                }).join('');
-            }
-
-            // Initial + on auth flip
-            loadPending();
-            new MutationObserver(loadPending).observe(document.body, { attributes: true, attributeFilter: ['data-tmr-auth'] });
-            // Refresh every 60s so the rail clears as picks grade
-            setInterval(loadPending, 60000);
-            // Also refresh after a successful lock — UI fires this custom event from the lock-pick flow
-            window.addEventListener('tmr:pickLocked', loadPending);
-        })();
-        </script>
         <div class="section-header sportsbook-page-shell make-picks-header">
             <div class="sportsbook-page-topbar">
                 <div class="sportsbook-page-intro">
                     <h1 class="make-picks-title">Make Your Picks</h1>
                     <p class="make-picks-sub">Choose a sport, select a game, pick a market, and lock your play to your permanent public record.</p>
                 </div>
+                <a class="pending-picks-linkbar__link" href="/my-pending-picks/">My Pending Picks <i class="fas fa-arrow-right"></i></a>
             </div>
             <div class="sportsbook-sport-tabs" aria-label="Sportsbook tabs" hidden style="display:none !important">
                 <button type="button" class="sportsbook-sport-tab" onclick="window.selectSportAndShowGames('MLB')">MLB</button>
@@ -9535,6 +9347,9 @@
                 <button type="button" class="sportsbook-sport-tab sportsbook-sport-tab--muted" title="Consensus board (coming soon)">Consensus</button>
             </div>
             <style>
+                .pending-picks-linkbar__link{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid rgba(0,255,255,0.24);border-radius:8px;background:rgba(0,255,255,0.07);color:#67e8f9;text-decoration:none;font:800 12px/1 'Inter',sans-serif;letter-spacing:.02em;white-space:nowrap;}
+                .pending-picks-linkbar__link:hover{border-color:rgba(0,255,255,0.45);background:rgba(0,255,255,0.12);color:#fff;}
+                @media (max-width: 720px){.sportsbook-page-topbar{align-items:flex-start;}.pending-picks-linkbar__link{margin-top:8px;}}
                 .sportsbook-sport-tabs { overflow-x: auto; scrollbar-width: thin; flex-wrap: nowrap; padding-bottom: 4px; }
                 .sportsbook-sport-tabs::-webkit-scrollbar { height: 4px; }
                 .sportsbook-sport-tabs::-webkit-scrollbar-thumb { background: rgba(112, 221, 255, 0.18); border-radius: 4px; }
@@ -9543,6 +9358,18 @@
                 .sport-more-pop button { display: block; width: 100%; text-align: left; background: transparent; border: 0; color: #cbd5e1; padding: 9px 12px; border-radius: 6px; font: 600 13px/1 'Inter', sans-serif; cursor: pointer; }
                 .sport-more-pop button:hover { background: rgba(0,255,255,0.08); color: #fff; }
             </style>
+        </div>
+
+        <!-- Logged-out join prompt: visible only when no auth session is active.
+             Hidden automatically once the auth shim flips body[data-tmr-auth] to logged-in. -->
+        <div class="make-picks-loggedout" id="makePicksLoggedOutPrompt">
+            <div>
+                <strong>Heads up:</strong> Browse the board freely, but you'll need a free account to lock a pick onto your public record.
+            </div>
+            <div class="make-picks-loggedout-actions">
+                <a class="make-picks-loggedout-btn make-picks-loggedout-btn--primary" href="/register/">Join Free</a>
+                <a class="make-picks-loggedout-btn" href="/login/">Log In</a>
+            </div>
         </div>
 
         <!-- Step 1: Sport Selection -->
