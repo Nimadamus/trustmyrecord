@@ -239,6 +239,8 @@
       thread_created: ["fa-comments", "started a forum discussion"],
       record_improved: ["fa-chart-line", "improved their record"],
       pick_graded: ["fa-circle-check", "had picks graded"],
+      trivia_answered: ["fa-question-circle", "answered trivia"],
+      trivia_created: ["fa-question-circle", "created trivia"],
       joined: ["fa-user-plus", "joined TrustMyRecord"],
       user_joined: ["fa-user-plus", "joined TrustMyRecord"],
       signup: ["fa-user-plus", "joined TrustMyRecord"],
