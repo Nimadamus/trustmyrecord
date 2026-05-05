@@ -64,6 +64,7 @@
     .summary-cell { min-width: 0; padding: 13px 14px; border: 1px solid var(--line); border-radius: 8px; background: rgba(2,6,23,.32); }
     .summary-cell span { display: block; color: var(--muted); font-size: 10px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
     .summary-cell strong { display: block; margin-top: 6px; font: 900 22px/1 Barlow, Inter, sans-serif; font-variant-numeric: tabular-nums; }
+    .summary-cell strong, .strip-cell strong, .metric-cell strong, td.num, th.num { white-space: nowrap; }
     .pos { color: var(--green) !important; }
     .neg { color: var(--red) !important; }
     .zero { color: #aab7ca !important; }
@@ -226,6 +227,42 @@
       const x = Number(o);
       if (!Number.isFinite(x) || x === 0) return '-';
       return (x > 0 ? '+' : '') + Math.round(x);
+    }
+    function fmtLine(value) {
+      if (value == null || value === '' || isNaN(Number(value))) return '';
+      const n = Number(value);
+      let s = String(n);
+      if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
+      return n > 0 ? '+' + s : s;
+    }
+    function fmtTotalLine(value) {
+      if (value == null || value === '' || isNaN(Number(value))) return '';
+      const n = Math.abs(Number(value));
+      let s = String(n);
+      if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
+      return s;
+    }
+    function formatPickDisplay(p) {
+      const selection = String(p && p.selection || 'Pick').trim();
+      const line = fmtLine(p && p.line_snapshot);
+      const market = String(p && p.market_type || '').toLowerCase();
+      const home = String(p && p.home_team || '').trim();
+      const away = String(p && p.away_team || '').trim();
+      const matchup = away && home ? away + '/' + home : '';
+      const sideOnly = /^(over|under)$/i.test(selection);
+      const isTotal = market.indexOf('total') !== -1 || /\b(over|under)\b/i.test(selection);
+      if (isTotal && sideOnly) {
+        const totalLine = fmtTotalLine(p && p.line_snapshot);
+        const base = matchup ? matchup + ' ' + selection : (market === 'team_totals' ? 'Team Total ' + selection : 'Total ' + selection);
+        return totalLine ? base + ' ' + totalLine : base;
+      }
+      if (market === 'h2h' && selection && !/\b(moneyline|ml)\b/i.test(selection)) return selection + ' Moneyline';
+      if ((market === 'spreads' || market.indexOf('spread') !== -1) && selection && !/\b(spread|run line|puck line)\b/i.test(selection)) {
+        const label = String(p && p.sport_key || '').indexOf('icehockey') !== -1 ? 'Puck Line' : 'Run Line / Spread';
+        return selection + ' ' + label + (line && selection.indexOf(line) === -1 ? ' ' + line : '');
+      }
+      if (line && !/\b(over|under|ml)\b/i.test(selection) && selection.indexOf(line) === -1) return selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '') + ' ' + line;
+      return selection || 'Pick';
     }
     function impliedProb(american) {
       const o = Number(american);
@@ -412,7 +449,7 @@
       return '<div class="card-block"><div class="block-title">Recent Graded Picks</div><div class="recent-picks">' + rows.map(p => {
         const net = Number(p.result_units || 0);
         const status = String(p.status || '').toLowerCase();
-        return '<div class="recent-pick"><strong>' + esc(p.selection || 'Pick') + '</strong>' +
+        return '<div class="recent-pick"><strong>' + esc(formatPickDisplay(p)) + '</strong>' +
           '<span>' + esc(new Date(p.locked_at || p.created_at || Date.now()).toLocaleDateString()) + ' - ' + fmtOdds(p.odds_snapshot) + ' - ' + Number(p.units || 0).toFixed(2) + 'u</span>' +
           '<span><span class="pill ' + esc(status) + '">' + esc(status) + '</span> <b class="' + signClass(net) + '">' + signed(net, 'u', 2) + '</b></span></div>';
       }).join('') + '</div></div>';
@@ -586,7 +623,7 @@
         const status = String(p.status || '').toLowerCase();
         const net = Number(p.result_units || 0);
         return '<div class="ledger-row">' +
-          '<div class="ledger-main"><strong>' + esc(p.selection || 'Pick') + '</strong><span>' + esc(MARKET_LABELS[p.market_type] || p.market_type || 'Market') + ' - ' + esc(p.away_team || '') + (p.home_team ? ' at ' + esc(p.home_team) : '') + '</span></div>' +
+          '<div class="ledger-main"><strong>' + esc(formatPickDisplay(p)) + '</strong><span>' + esc(MARKET_LABELS[p.market_type] || p.market_type || 'Market') + ' - ' + esc(p.away_team || '') + (p.home_team ? ' at ' + esc(p.home_team) : '') + '</span></div>' +
           '<div class="ledger-meta">' + esc(new Date(p.locked_at || p.created_at || Date.now()).toLocaleDateString()) + '</div>' +
           '<div class="ledger-meta">' + fmtOdds(p.odds_snapshot) + '</div>' +
           '<div class="ledger-meta">' + Number(p.units || 0).toFixed(2) + 'u</div>' +

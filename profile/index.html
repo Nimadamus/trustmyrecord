@@ -11,7 +11,7 @@
     <meta property="og:title" content="User Profile | TrustMyRecord">
     <meta property="og:description" content="Check out my verified handicapping record and stats.">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260505profile-red2">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260501navspacing">
 <script defer src="/static/js/tmr-sitewide.js?v=20260501navspacing"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,8 +30,8 @@
             --text-muted: #637389;
             --accent-green: #22c55e;
             --accent-green-bg: rgba(34, 197, 94, 0.12);
-            --accent-red: #dc2626;
-            --accent-red-bg: rgba(220, 38, 38, 0.12);
+            --accent-red: #ef4444;
+            --accent-red-bg: rgba(239, 68, 68, 0.12);
             --accent-blue: #1f7ae0;
             --accent-blue-bg: rgba(31, 122, 224, 0.12);
             --accent-gold: #f58220;
@@ -290,9 +290,6 @@
             margin-bottom: 4px;
             color: #f8fbff;
             line-height: 1.1;
-            white-space: nowrap;
-            overflow-wrap: normal;
-            word-break: keep-all;
         }
         .summary-stat-label {
             color: rgba(214, 225, 241, 0.62);
@@ -465,7 +462,7 @@
         }
         .pick-sport.nfl { background: rgba(34,197,94,0.12); color: #4ade80; }
         .pick-sport.nba { background: rgba(249,115,22,0.12); color: #fb923c; }
-        .pick-sport.mlb { background: rgba(220,38,38,0.12); color: #dc2626; }
+        .pick-sport.mlb { background: rgba(239,68,68,0.12); color: #f87171; }
         .pick-sport.nhl { background: rgba(59,130,246,0.12); color: #60a5fa; }
         .pick-sport.ncaab { background: rgba(168,85,247,0.12); color: #c084fc; }
         .pick-sport.ncaaf { background: rgba(245,158,11,0.12); color: #fbbf24; }
@@ -647,6 +644,18 @@
         }
 
         .breakdown-name { font-weight: 600; font-size: 0.85rem; }
+        .profile-sport-filter-link {
+            color: inherit;
+            text-decoration: underline;
+            text-decoration-color: rgba(45, 212, 191, 0.55);
+            text-underline-offset: 3px;
+            cursor: pointer;
+        }
+        .profile-sport-filter-link:hover,
+        .profile-sport-filter-link:focus-visible {
+            color: var(--accent-cyan, #2dd4bf);
+            text-decoration-color: currentColor;
+        }
         .breakdown-record { color: var(--text-secondary); font-size: 0.8rem; }
         .breakdown-winrate { font-weight: 700; font-size: 0.9rem; }
 
@@ -704,7 +713,7 @@
 
         .error-message {
             background: var(--accent-red-bg);
-            border: 1px solid rgba(220,38,38,0.3);
+            border: 1px solid rgba(239,68,68,0.3);
             padding: 24px;
             border-radius: 10px;
             text-align: center;
@@ -934,7 +943,7 @@
       --r-teal:#1fb8d9;
       --r-gold:#f5b400;
       --r-green:#22c55e;
-      --r-red:#dc2626;
+      --r-red:#ef4444;
       --r-blue:#3b82f6;
     }
     body.tmr-social-profile{
@@ -1102,8 +1111,8 @@
     body.tmr-social-profile .pick-result.loss,
     body.tmr-social-profile .result-loss,
     body.tmr-social-profile .pill.loss{
-      background:rgba(220,38,38,.16) !important;color:#dc2626 !important;
-      border:1px solid rgba(220,38,38,.3) !important;border-radius:6px !important;
+      background:rgba(239,68,68,.16) !important;color:#f87171 !important;
+      border:1px solid rgba(239,68,68,.3) !important;border-radius:6px !important;
     }
     body.tmr-social-profile .pick-result.pending,
     body.tmr-social-profile .result-pending,
@@ -1504,9 +1513,6 @@
       line-height: 1.1 !important;
       font-weight: 900 !important;
       color: #eef6ff !important;
-      white-space: nowrap !important;
-      overflow-wrap: normal !important;
-      word-break: keep-all !important;
     }
     body.profile-page.tmr-social-profile .tmr-cap-metric__sub {
       font-size: 11px !important;
@@ -1542,7 +1548,7 @@
       }
     }
     </style>
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260505profile-red2">
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
 </head>
 <body class="profile-page tmr-social-profile">
     <div class="profile-top-strip">
@@ -1704,10 +1710,11 @@
         .profile-advanced-metric-grid{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:10px;}
         .profile-advanced-metric{min-width:0;min-height:126px;padding:13px 12px;border:1px solid rgba(68,91,126,.72);border-radius:10px;background:linear-gradient(180deg,rgba(15,27,46,.98),rgba(8,17,31,.98));box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 12px 28px rgba(0,0,0,.18);display:flex;flex-direction:column;justify-content:flex-start;gap:7px;}
         .profile-advanced-metric__label{color:#afbdd0;font-size:10px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;line-height:1.15;}
-        .profile-advanced-metric__value{color:#f8fbff;font-size:clamp(17px,1.18vw,22px);font-weight:950;line-height:1.05;letter-spacing:0;font-variant-numeric:tabular-nums;white-space:nowrap;overflow-wrap:normal;word-break:keep-all;}
+        .profile-advanced-metric__value{color:#f8fbff;font-size:clamp(17px,1.18vw,22px);font-weight:950;line-height:1.05;letter-spacing:0;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;}
+        [data-advanced-metric-card="avg_daily_picks"] .profile-advanced-metric__value{white-space:nowrap;overflow-wrap:normal;word-break:keep-all;}
         .profile-advanced-metric__value.is-empty{color:#a6b2c4;font-size:13px;font-weight:850;line-height:1.18;}
         .profile-advanced-metric__value.is-pos{color:#22c55e;}
-        .profile-advanced-metric__value.is-neg{color:#dc2626;}
+        .profile-advanced-metric__value.is-neg{color:#ef4444;}
         .profile-advanced-metric__sub{margin-top:auto;color:#7f8ca3;font-size:11px;font-weight:700;line-height:1.25;}
         .profile-advanced-support-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:12px;}
         .profile-advanced-support-grid div{min-height:70px;padding:11px;border:1px solid rgba(148,163,184,.13);border-radius:10px;background:rgba(2,6,23,.32);color:#e7eef8;font-size:12px;font-weight:850;line-height:1.2;}
@@ -2000,7 +2007,7 @@
                           <label><span>Sport</span><select data-tmrx-filter="sport"><option value="">All</option><option value="baseball_mlb">MLB</option><option value="basketball_nba">NBA</option><option value="icehockey_nhl">NHL</option><option value="americanfootball_nfl">NFL</option></select></label>
                           <label><span>Market</span><select data-tmrx-filter="market"><option value="">All</option><option value="h2h">Moneyline</option><option value="spreads">Spread</option><option value="totals">Total</option><option value="team_totals">Team Total</option><option value="f5_h2h,f5_spreads,f5_totals">First Five</option></select></label>
                           <label><span>Result</span><select data-tmrx-filter="result"><option value="">All</option><option value="won">Won</option><option value="lost">Lost</option><option value="push">Push</option><option value="pending">Pending</option></select></label>
-                          <label><span>Odds</span><select data-tmrx-filter="odds"><option value="">All</option><option value="favorite">Favorite (&lt;+100)</option><option value="underdog">Dog (+100+)</option></select></label>
+                          <label><span>Odds</span><select data-tmrx-filter="odds"><option value="">All</option><option value="heavy_favorite">Heavy Fav (-200+)</option><option value="favorite">Favorite (-110 to -200)</option><option value="underdog">Dog (+100 to +200)</option><option value="big_underdog">Longshot (+201+)</option></select></label>
                           <label><span>Unit Size</span><select data-tmrx-filter="unit_size"><option value="">All</option><option value="0.5_to_1u">0.5u-1u</option><option value="1.5_to_2u">1.5u-2u</option><option value="2.5_to_3u">2.5u-3u</option><option value="3u_plus">3u+</option></select></label>
                           <label><span>Period</span><select data-tmrx-filter="period"><option value="">All Time</option><option value="7">Last 7d</option><option value="30">Last 30d</option><option value="90">Last 90d</option><option value="365">Last 365d</option></select></label>
                           <label><span>Side</span><select data-tmrx-filter="side"><option value="">All</option><option value="favorite">Favorite</option><option value="underdog">Underdog</option></select></label>
@@ -2388,8 +2395,10 @@
                     </select>
                     <select id="filterOdds" onchange="applyFilters()" class="filter-control">
                         <option value="">All Odds</option>
-                        <option value="fav">Favorite (&lt;+100)</option>
-                        <option value="dog">Dog (+100+)</option>
+                        <option value="heavy-fav">Heavy Fav (-200+)</option>
+                        <option value="fav">Favorite (-110 to -200)</option>
+                        <option value="dog">Dog (+100 to +200)</option>
+                        <option value="longshot">Longshot (+201+)</option>
                     </select>
                     <select id="filterUnits" onchange="applyFilters()" class="filter-control">
                         <option value="">All Unit Sizes</option>
@@ -2484,9 +2493,8 @@
                 </div>
             </div>
             <div class="empty-state" id="picksEmptyState" style="display:none;">
-                <p style="font-size:1.5rem;margin-bottom:8px;">You have not posted a pick yet.</p>
-                <p>Post your first pick to start building your verified record.</p>
-                <a class="profile-first-pick-cta" href="/sportsbook/?first_pick=1">Make First Pick</a>
+                <p style="font-size:1.5rem;margin-bottom:8px;">No picks yet</p>
+                <p>This user hasn't locked a pick into their public record yet.</p>
             </div>
         </div>
     </section>
@@ -3106,7 +3114,7 @@
                             .pm-table tbody tr:last-child td { border-bottom: 0; }
                             .pm-table .pm-row__name { color: #f4f7fb; font-weight: 700; letter-spacing: .02em; }
                             .pm-table .pm-pos { color: #4ade80; font-weight: 700; }
-                            .pm-table .pm-neg { color: #dc2626; font-weight: 700; }
+                            .pm-table .pm-neg { color: #f87171; font-weight: 700; }
                             .pm-table .pm-table__empty td { padding: 22px 18px; color: #64748b; text-align: center; font-style: italic; }
 
                             /* ===== PickMonitor-style filterable picks table (Picks tab) ===== */
@@ -3164,10 +3172,9 @@
                             .pm-summary-value {
                                 font: 800 16px/1.1 'Barlow', 'Inter', sans-serif; color: #f4f7fb;
                                 font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
-                                white-space: nowrap; overflow-wrap: normal; word-break: keep-all;
                             }
                             .pm-summary-value.pm-pos { color: #4ade80; }
-                            .pm-summary-value.pm-neg { color: #dc2626; }
+                            .pm-summary-value.pm-neg { color: #f87171; }
 
                             .pm-picks-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); }
                             .pm-picks-table {
@@ -3191,7 +3198,7 @@
                             .pm-picks-table .pm-cell-date { color: #94a3b8; }
                             .pm-picks-table .pm-cell-pick { color: #f4f7fb; font-weight: 700; max-width: 240px; overflow: hidden; text-overflow: ellipsis; }
                             .pm-picks-table .pm-pos { color: #4ade80; font-weight: 700; }
-                            .pm-picks-table .pm-neg { color: #dc2626; font-weight: 700; }
+                            .pm-picks-table .pm-neg { color: #f87171; font-weight: 700; }
                             .pm-picks-table .pm-pending { color: #fbbf24; }
                             .pm-result {
                                 display: inline-block;
@@ -3199,7 +3206,7 @@
                                 font: 800 10px/1 'Inter', sans-serif; letter-spacing: .08em; text-transform: uppercase;
                             }
                             .pm-result--won     { background: rgba(74,222,128,0.16);  color: #4ade80; border: 1px solid rgba(74,222,128,0.36); }
-                            .pm-result--lost    { background: rgba(220,38,38,0.16); color: #dc2626; border: 1px solid rgba(220,38,38,0.36); }
+                            .pm-result--lost    { background: rgba(248,113,113,0.16); color: #f87171; border: 1px solid rgba(248,113,113,0.36); }
                             .pm-result--push    { background: rgba(148,163,184,0.16); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.32); }
                             .pm-result--pending { background: rgba(251,191,36,0.14);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.36); }
                             .pm-picks-empty td { padding: 28px 16px; color: #64748b; text-align: center; font-style: italic; }
@@ -3400,8 +3407,8 @@
             --tmr-text-dim: #64748B;
             --tmr-green: #22C55E;
             --tmr-green-soft: rgba(34, 197, 94, 0.14);
-            --tmr-red: #DC2626;
-            --tmr-red-soft: rgba(220, 38, 38, 0.14);
+            --tmr-red: #EF4444;
+            --tmr-red-soft: rgba(239, 68, 68, 0.14);
             --tmr-amber: #F59E0B;
             --tmr-amber-soft: rgba(245, 158, 11, 0.14);
         }
@@ -3759,7 +3766,7 @@
             letter-spacing: -0.02em;
         }
         .profile-rail-value.is-positive { color: #4ade80; }
-        .profile-rail-value.is-negative { color: #dc2626; }
+        .profile-rail-value.is-negative { color: #f87171; }
         .profile-rail-value.is-neutral { color: #f8fafc; }
 
         .capper-monitor {
@@ -3875,7 +3882,7 @@
             text-overflow: ellipsis;
         }
         .capper-pos { color: #4ade80 !important; }
-        .capper-neg { color: #dc2626 !important; }
+        .capper-neg { color: #f87171 !important; }
         .capper-neutral { color: #f8fafc !important; }
         /* Secondary KPI strip — 6 more stats LTR (Apr 30 2026 r3) */
         .capper-second-row {
@@ -3988,7 +3995,7 @@
             text-transform: uppercase;
         }
         .capper-result.won { background: rgba(74, 222, 128, 0.12); color: #4ade80; }
-        .capper-result.lost { background: rgba(220, 38, 38, 0.12); color: #dc2626; }
+        .capper-result.lost { background: rgba(248, 113, 113, 0.12); color: #f87171; }
         .capper-result.push { background: rgba(148, 163, 184, 0.12); color: #cbd5e1; }
         .capper-result.pending { background: rgba(103, 232, 249, 0.1); color: #67e8f9; }
 
@@ -4270,9 +4277,6 @@
             font-weight: 800 !important;
             margin-bottom: 4px !important;
             letter-spacing: -0.04em;
-            white-space: nowrap !important;
-            overflow-wrap: normal !important;
-            word-break: keep-all !important;
         }
         body.profile-page .summary-stat-note,
         body.profile-page.tmr-site-shell .summary-stat-note {
@@ -4532,7 +4536,7 @@
         body.profile-page .loading-spinner { border-color: var(--tmr-border); border-top-color: var(--tmr-cyan); }
         body.profile-page .error-message {
             background: var(--tmr-red-soft);
-            border: 1px solid rgba(220, 38, 38, 0.32);
+            border: 1px solid rgba(239, 68, 68, 0.32);
             color: var(--tmr-text);
             border-radius: 14px;
         }
@@ -4644,7 +4648,7 @@
             --tmr-neon-cyan: #00ffff;
             --tmr-neon-purple: #c084fc;
             --tmr-neon-green: #39ff14;
-            --tmr-neon-red: #dc2626;
+            --tmr-neon-red: #ff3860;
             --tmr-neon-gold: #ffd700;
             --tmr-card-bg: rgba(15, 22, 38, 0.85);
             --tmr-card-bg-strong: rgba(20, 27, 44, 0.96);
@@ -4951,10 +4955,10 @@
         }
         body.profile-page .result-badge.lost,
         body.profile-page.tmr-site-shell .result-badge.lost {
-            background: rgba(220, 38, 38, 0.12) !important;
+            background: rgba(255, 56, 96, 0.12) !important;
             color: var(--tmr-neon-red) !important;
-            border: 1px solid rgba(220, 38, 38, 0.4) !important;
-            box-shadow: 0 0 12px rgba(220, 38, 38, 0.18);
+            border: 1px solid rgba(255, 56, 96, 0.4) !important;
+            box-shadow: 0 0 12px rgba(255, 56, 96, 0.18);
         }
         body.profile-page .result-badge.push,
         body.profile-page.tmr-site-shell .result-badge.push {
@@ -5023,20 +5027,6 @@
             text-align: center;
             color: #94a3b8 !important;
         }
-        body.profile-page .profile-first-pick-cta,
-        body.profile-page.tmr-site-shell .profile-first-pick-cta {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 12px;
-            padding: 10px 16px;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #2dd4bf, #22d3ee);
-            color: #04111a !important;
-            font-size: 13px;
-            font-weight: 900;
-            text-decoration: none;
-        }
 
         /* Mobile: stack pick row fields vertically with key fields up top */
         @media (max-width: 760px) {
@@ -5059,7 +5049,7 @@
     </script>
     <script src="/static/js/config.js?v=20260330"></script>
     <script src="/static/js/analytics.js?v=20260405"></script>
-    <script src="/static/js/backend-api.js?v=20260503profilefix"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
     <script src="/static/js/nav-badges.js"></script>
     <script src="/static/js/auth-persistent.js?v=20260424a"></script>
     <script src="/static/js/auto-grader-fixed.js?v=20260405b"></script>
@@ -5098,6 +5088,29 @@
     const pathProfileMatch = (window.location.pathname || '').match(/\/profile\/([^/?#]+)/i);
     let profileUsername = (urlParams.get('user') || urlParams.get('username') || (pathProfileMatch ? decodeURIComponent(pathProfileMatch[1]) : '') || '').trim() || null;
     const profileView = (urlParams.get('view') || '').trim().toLowerCase();
+    const SPORT_QUERY_ALIASES = {
+        mlb: 'baseball_mlb',
+        baseball: 'baseball_mlb',
+        baseball_mlb: 'baseball_mlb',
+        nba: 'basketball_nba',
+        basketball_nba: 'basketball_nba',
+        nfl: 'americanfootball_nfl',
+        americanfootball_nfl: 'americanfootball_nfl',
+        nhl: 'icehockey_nhl',
+        hockey: 'icehockey_nhl',
+        icehockey_nhl: 'icehockey_nhl',
+        ncaab: 'basketball_ncaab',
+        basketball_ncaab: 'basketball_ncaab',
+        ncaaf: 'americanfootball_ncaaf',
+        americanfootball_ncaaf: 'americanfootball_ncaaf',
+        wnba: 'basketball_wnba',
+        basketball_wnba: 'basketball_wnba',
+        epl: 'soccer_epl',
+        soccer_epl: 'soccer_epl',
+        mls: 'soccer_usa_mls',
+        soccer_usa_mls: 'soccer_usa_mls'
+    };
+    const initialSportFilter = normalizeProfileSportParam(urlParams.get('sport') || urlParams.get('league') || '');
 
     // ======================== UNIFIED STATS ========================
     function getMarketTypeGroup(marketType) {
@@ -5409,30 +5422,45 @@
         if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
         return num > 0 ? '+' + s : s;
     }
+    function formatTotalLineValue(value) {
+        if (value == null || value === '' || isNaN(Number(value))) return '--';
+        const num = Number(value);
+        let s = String(Math.abs(num));
+        if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
+        return s;
+    }
 
     function formatPickDisplayValue(pick) {
-        if (window.TMR && typeof window.TMR.formatPickDisplayLabel === 'function') {
-            return window.TMR.formatPickDisplayLabel(pick);
+        if (window.TMR && typeof window.TMR.formatPickDisplay === 'function') {
+            const formatted = window.TMR.formatPickDisplay(pick);
+            if (formatted && !/^(over|under)$/i.test(String(formatted).trim())) return formatted;
         }
-        const selection = String((pick && (pick.selection_label || pick.selection || pick.team)) || 'Pick').trim();
-        const market = String((pick && (pick.market_type || pick.market)) || '').toLowerCase();
-        const line = pick ? (pick.line_snapshot != null ? pick.line_snapshot : pick.line) : null;
-        if (market === 'h2h' || market.indexOf('moneyline') !== -1) {
-            return /\bML\b$/i.test(selection) ? selection : selection + ' ML';
+        const selection = String(pick && pick.selection || 'Pick').trim();
+        const line = formatLineValue(pick && pick.line_snapshot);
+        const market = String(pick && pick.market_type || '').toLowerCase();
+        const home = String(pick && pick.home_team || '').trim();
+        const away = String(pick && pick.away_team || '').trim();
+        const matchup = away && home ? away + '/' + home : '';
+        const selectionOnlySide = /^(over|under)$/i.test(selection);
+        const isTotal = market.indexOf('total') !== -1 || /\b(over|under)\b/i.test(selection);
+        const isMoneyline = market === 'h2h';
+        const isSpread = market === 'spreads' || market.indexOf('spread') !== -1;
+        const isPuckOrRunLine = isSpread && /icehockey/i.test(String(pick && pick.sport_key || '')) ? 'Puck Line' : isSpread ? 'Run Line / Spread' : '';
+        if (isTotal && selectionOnlySide) {
+            const totalLine = formatTotalLineValue(pick && pick.line_snapshot);
+            const base = matchup ? matchup + ' ' + selection : (market === 'team_totals' ? 'Team Total ' + selection : 'Total ' + selection);
+            return totalLine !== '--' ? base + ' ' + totalLine : base;
         }
-        if (line == null || line === '') return selection || 'Pick';
-        const num = Number(line);
-        let s = Number.isFinite(num) ? String(num) : String(line).trim();
-        if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
-        if ((market.indexOf('spread') !== -1 || market.indexOf('run_line') !== -1 || market.indexOf('puck_line') !== -1) && Number.isFinite(num) && num > 0) {
-            s = '+' + s;
+        if (isMoneyline && selection && !/\b(moneyline|ml)\b/i.test(selection)) {
+            return selection + ' Moneyline';
         }
-        const escaped = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        if (new RegExp('(?:^|\\s)' + escaped + '$').test(selection)) return selection;
-        const totalSide = market.indexOf('total') !== -1 && !/\b(over|under)\b/i.test(selection)
-            ? (/\bover\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Over' : (/\bunder\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Under' : ''))
-            : '';
-        return (selection || 'Pick').replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '').trim() + totalSide + ' ' + s;
+        if (isSpread && selection && !/\b(spread|run line|puck line)\b/i.test(selection)) {
+            return selection + ' ' + isPuckOrRunLine + (line !== '--' && selection.indexOf(line) === -1 ? ' ' + line : '');
+        }
+        if (line !== '--' && !/\b(over|under|ml)\b/i.test(selection) && selection.indexOf(line) === -1) {
+            return selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '') + ' ' + line;
+        }
+        return selection || 'Pick';
     }
 
     function formatUnitsValue(value) {
@@ -5737,84 +5765,17 @@
         }
     }
 
-    function withProfileTimeout(promise, label, timeoutMs) {
-        let timer;
-        const timeout = new Promise((_, reject) => {
-            timer = setTimeout(() => reject(new Error((label || 'Request') + ' timed out')), timeoutMs || 10000);
-        });
-        return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
-    }
-
-    function normalizeProfilePayload(data) {
-        const user = data && (data.user || data);
-        if (!user || typeof user !== 'object') return null;
-        const username = String(user.username || profileUsername || '').trim();
-        if (!username) return null;
-        return {
-            ...user,
-            username,
-            display_name: user.display_name || user.displayName || username,
-            bio: user.bio || '',
-            avatar_url: user.avatar_url || user.avatarUrl || '',
-            favorite_teams: Array.isArray(user.favorite_teams) ? user.favorite_teams : [],
-            favorite_sports: Array.isArray(user.favorite_sports) ? user.favorite_sports : []
-        };
-    }
-
-    async function hydrateOptionalProfileFields() {
-        if (!profileData || !profileData.username || !api || typeof api.request !== 'function') return false;
-        let changed = false;
-
-        try {
-            const teamsData = await withProfileTimeout(
-                api.request('/gaming/teams/' + encodeURIComponent(profileData.username)),
-                'Favorite teams',
-                6000
-            );
-            if (teamsData && Array.isArray(teamsData.favorite_teams)) {
-                const teamRows = teamsData.favorite_teams.filter(t => t && t.team_name);
-                profileData._fav_teams = {};
-                teamRows.forEach(t => {
-                    if (t.sport) profileData._fav_teams[t.sport] = t.team_name;
-                });
-                profileData.favorite_teams = teamRows.map(t => t.team_name).filter(Boolean);
-                if (!Array.isArray(profileData.favorite_sports) || profileData.favorite_sports.length === 0) {
-                    profileData.favorite_sports = Array.from(new Set(teamRows.map(t => t.sport).filter(Boolean)));
-                }
-                changed = true;
-            }
-        } catch(e) {
-            profileData._fav_teams = profileData._fav_teams || {};
-        }
-
-        try {
-            const gamerData = await withProfileTimeout(
-                api.request('/gaming/profile/' + encodeURIComponent(profileData.username)),
-                'Gamer profile',
-                6000
-            );
-            profileData._gamer = (gamerData && gamerData.gamer_profile) ? gamerData.gamer_profile : {};
-            changed = true;
-        } catch(e) {
-            profileData._gamer = profileData._gamer || {};
-        }
-
-        return changed;
-    }
-
     // ======================== LOAD PROFILE ========================
     async function loadProfile() {
-        const profileEndpoint = '/users/' + encodeURIComponent(profileUsername || '');
         try {
-            if (!api || typeof api.request !== 'function') {
+            if (!api || typeof api.getUserProfile !== 'function') {
                 throw new Error('Profile service is unavailable.');
             }
 
-            const data = await withProfileTimeout(api.request(profileEndpoint), 'Profile lookup', 10000);
-            profileData = normalizeProfilePayload(data);
-            if (!profileData || !profileData.id) {
-                throw new Error('Profile response was empty.');
-            }
+            const data = await api.getUserProfile(profileUsername);
+            profileData = data.user || data;
+            // Expose globally so inline onclick handlers (affiliation CTA, etc)
+            // can read the username for per-user localStorage keys.
             window.profileData = profileData;
             profileUserId = profileData.id;
 
@@ -5822,37 +5783,42 @@
                 isFollowingProfile = !!profileData.is_following;
             }
 
-            renderProfileHeader(profileData);
+            // Load favorite teams and gamer profile from backend
+            try {
+                const teamsData = await api.request('/gaming/teams/' + profileUsername);
+                if (teamsData && Array.isArray(teamsData.favorite_teams)) {
+                    const teamRows = teamsData.favorite_teams.filter(t => t && t.team_name);
+                    profileData._fav_teams = {};
+                    teamRows.forEach(t => {
+                        if (t.sport) profileData._fav_teams[t.sport] = t.team_name;
+                    });
+                    profileData.favorite_teams = teamRows.map(t => t.team_name).filter(Boolean);
+                    if (!Array.isArray(profileData.favorite_sports) || profileData.favorite_sports.length === 0) {
+                        profileData.favorite_sports = Array.from(new Set(teamRows.map(t => t.sport).filter(Boolean)));
+                    }
+                }
+            } catch(e) { profileData._fav_teams = {}; }
+
+            try {
+                const gamerData = await api.request('/gaming/profile/' + profileUsername);
+                if (gamerData && gamerData.gamer_profile) profileData._gamer = gamerData.gamer_profile;
+                else profileData._gamer = {};
+            } catch(e) { profileData._gamer = {}; }
+
+            if (!profileData) {
+                throw new Error('User not found.');
+            }
         } catch (error) {
             console.error('[Profile] Profile load failed:', error);
-            console.error('[Profile] Failed profile endpoint:', (api && api.baseUrl ? api.baseUrl : '') + profileEndpoint, 'status:', error && error.status ? error.status : 'unknown');
             document.querySelectorAll('.summary-bar, .picks-section, .analytics-section').forEach(el => el.style.display = 'none');
-            document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>Profile could not be loaded.</h3><p>Please refresh or try again.</p></div>';
+            document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>User Not Found</h3><p>User "' + profileUsername + '" not found or could not be loaded.</p><a href="/" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
             return;
         }
 
+        await refreshLeaderboardRank();
+        await loadAllPicks();
+        renderProfileHeader(profileData);
         loadAdvancedMetrics(profileData.username || profileUsername || '');
-
-        (async function finishProfileHeaderEnhancements() {
-            try {
-                const optionalChanged = await hydrateOptionalProfileFields();
-                await refreshLeaderboardRank();
-                if (optionalChanged || currentLeaderboardRank != null) renderProfileHeader(profileData);
-            } catch (error) {
-                console.warn('[Profile] Optional header enhancements unavailable:', error);
-            }
-        })();
-
-        (async function loadProfileLedger() {
-            try {
-                await loadAllPicks();
-            } catch (error) {
-                console.warn('[Profile] Pick history load failed:', error);
-                allLoadedPicks = [];
-                try { renderPicksTable([]); } catch (_) {}
-            }
-        })();
-
         analyticsTrackPickHistoryView({
             view_type: isOwnProfile ? 'own' : 'public',
             username: profileData.username || profileUsername || '',
@@ -6331,7 +6297,9 @@
             period_1_h2h: 'P1 ML', period_1_spreads: 'P1 Spread', period_1_totals: 'P1 Total',
             alt_spreads: 'Alt Spread', alt_totals: 'Alt Total',
             // odds buckets
-            favorite: 'Favorite (<+100)', underdog: 'Dog (+100+)',
+            heavy_favorite: 'Heavy Fav (-200+)', favorite: 'Favorite (-110 to -200)',
+            underdog: 'Dog (+100 to +200)',
+            big_underdog: 'Longshot (+201+)',
             // unit buckets
             '0.5_to_1u': '0.5u – 1u', '1.5_to_2u': '1.5u – 2u',
             '2.5_to_3u': '2.5u – 3u', '3u_plus': '3u +',
@@ -6396,11 +6364,14 @@
                     ? (function() {
                         const parts = sportLeagueOf(b.key);
                         const sportHref = escapeHtml(buildProfileSportBreakdownUrl(b.key));
+                        const sportKey = escapeHtml(String(b.key || ''));
                         const sportLabel = escapeHtml(parts[0]);
                         const leagueLabel = escapeHtml(parts[1]);
+                        const linkedSport = '<a class="profile-sport-filter-link profile-sport-breakdown-link" href="' + sportHref + '" title="View ' + escapeHtml(fmtSport(b.key)) + ' breakdown">' + sportLabel + '</a>';
+                        const linkedLeague = '<a class="profile-sport-filter-link profile-sport-breakdown-link" href="' + sportHref + '" title="View ' + escapeHtml(fmtSport(b.key)) + ' breakdown">' + leagueLabel + '<span class="profile-sport-view-indicator">View Breakdown</span></a>';
                         return [
-                            '<td class="name"><a class="profile-sport-filter-link profile-sport-breakdown-link" href="' + sportHref + '" title="View ' + escapeHtml(fmtSport(b.key)) + ' breakdown">' + sportLabel + '</a></td>',
-                            '<td class="league"><a class="profile-sport-filter-link profile-sport-breakdown-link" href="' + sportHref + '" title="View ' + escapeHtml(fmtSport(b.key)) + ' breakdown">' + leagueLabel + '<span class="profile-sport-view-indicator">View Breakdown</span></a></td>'
+                            '<td class="name">' + linkedSport + '</td>',
+                            '<td class="league">' + linkedLeague + '</td>'
                         ];
                     })()
                     : ['<td class="name">' + labelOf('by_' + splitKey, b.key) + '</td>'];
@@ -6529,7 +6500,7 @@
                 const sx = i => padX + (i / xRng) * (W - padX * 2);
                 const sy = y => H - padY - ((y - yMin) / yRng) * (H - padY * 2);
                 const last = ys[ys.length - 1];
-                const stroke = last >= 0 ? '#22D3EE' : '#dc2626';
+                const stroke = last >= 0 ? '#22D3EE' : '#fca5a5';
                 const fillTop = last >= 0 ? 'rgba(34,211,238,0.40)' : 'rgba(252,165,165,0.30)';
                 const d = eq.map((p, i) => (i ? 'L' : 'M') + sx(i).toFixed(2) + ' ' + sy(Number(p.units) || 0).toFixed(2)).join(' ');
                 const zeroY = sy(0).toFixed(2);
@@ -6538,8 +6509,8 @@
                 const guideY2 = (H - padY).toFixed(2);
                 const svgMarkup =
                     '<defs><linearGradient id="tmrxEqGrad" x1="0" y1="0" x2="0" y2="1">' +
-                    '<stop offset="0" stop-color="' + (last >= 0 ? '#22D3EE' : '#dc2626') + '" stop-opacity=".40"/>' +
-                    '<stop offset="1" stop-color="' + (last >= 0 ? '#22D3EE' : '#dc2626') + '" stop-opacity="0"/>' +
+                    '<stop offset="0" stop-color="' + (last >= 0 ? '#22D3EE' : '#fca5a5') + '" stop-opacity=".40"/>' +
+                    '<stop offset="1" stop-color="' + (last >= 0 ? '#22D3EE' : '#fca5a5') + '" stop-opacity="0"/>' +
                     '</linearGradient></defs>' +
                     '<line x1="0" y1="' + guideY1 + '" x2="' + W + '" y2="' + guideY1 + '" stroke="#1F3350" stroke-dasharray="4 4"/>' +
                     '<line x1="0" y1="' + zeroY + '" x2="' + W + '" y2="' + zeroY + '" stroke="rgba(148,163,184,0.32)" stroke-dasharray="3 4"/>' +
@@ -6686,7 +6657,7 @@
         }
         const picks = (resp && Array.isArray(resp.picks)) ? resp.picks : [];
         if (!picks.length) {
-            tbody.innerHTML = '<tr class="empty"><td colspan="10">You have not posted a pick yet. Post your first pick to start building your verified record.</td></tr>';
+            tbody.innerHTML = '<tr class="empty"><td colspan="10">No picks locked yet.</td></tr>';
             if (meta) meta.textContent = '0 picks';
             return;
         }
@@ -6731,7 +6702,7 @@
                 '<td>' + fmtDate(p.created_at || p.locked_at) + '</td>' +
                 '<td>' + sportLabel(p.sport_key) + '</td>' +
                 '<td>' + game + '</td>' +
-                '<td class="name">' + (p.selection || '—') + '</td>' +
+                '<td class="name">' + capEsc(formatPickDisplayValue(p)) + '</td>' +
                 '<td>' + marketLabel(p.market_type) + '</td>' +
                 '<td class="num">' + line + '</td>' +
                 '<td class="num">' + fmtAmericanOdds(p.odds_snapshot) + '</td>' +
@@ -6794,7 +6765,7 @@
         const k = String(bucketKey);
         if (splitKey === 'by_sport')        return k.toUpperCase().replace(/_/g, ' ');
         if (splitKey === 'by_market')       return marketTypeLabel(k);
-        if (splitKey === 'by_odds_bucket')  return ({favorite:'Favorite (<+100)',underdog:'Dog (+100+)'})[k] || k;
+        if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',underdog:'Dog (+100 to +200)',big_underdog:'Big Dog (+200+)'})[k] || k;
         if (splitKey === 'by_fav_dog')      return ({favorite:'Favorite',underdog:'Underdog'})[k] || k;
         if (splitKey === 'by_unit_size')    return ({'0.5_to_1u':'0.5–1u','1.5_to_2u':'1.5–2u','2.5_to_3u':'2.5–3u','3u_plus':'3u+'})[k] || k;
         if (splitKey === 'by_day_of_week')  return ({sun:'Sunday',mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday'})[k] || k;
@@ -6806,7 +6777,7 @@
         const k = String(bucketKey);
         if (splitKey === 'by_sport')        return k.toUpperCase().replace(/_/g, ' ');
         if (splitKey === 'by_market')       return marketTypeLabel(k);
-        if (splitKey === 'by_odds_bucket')  return ({favorite:'Favorite (<+100)',underdog:'Dog (+100+)'})[k] || k;
+        if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',underdog:'Dog (+100 to +200)',big_underdog:'Big Dog (+200+)'})[k] || k;
         if (splitKey === 'by_fav_dog')      return ({favorite:'Favorite',underdog:'Underdog'})[k] || k;
         if (splitKey === 'by_unit_size')    return ({'0.5_to_1u':'0.5–1u','1.5_to_2u':'1.5–2u','2.5_to_3u':'2.5–3u','3u_plus':'3u+'})[k] || k;
         if (splitKey === 'by_day_of_week')  return ({sun:'Sunday',mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday'})[k] || k;
@@ -6866,8 +6837,8 @@
         const sy = y => h - padY - ((y - yMin) / yRng) * (h - padY * 2);
         const d  = equityCurve.map((p, i) => (i ? 'L' : 'M') + sx(i).toFixed(2) + ' ' + sy(Number(p.units) || 0).toFixed(2)).join(' ');
         const last = ys[ys.length - 1];
-        const stroke = last >= 0 ? '#4ade80' : '#dc2626';
-        const fillStop = last >= 0 ? 'rgba(74,222,128,0.18)' : 'rgba(220,38,38,0.18)';
+        const stroke = last >= 0 ? '#4ade80' : '#f87171';
+        const fillStop = last >= 0 ? 'rgba(74,222,128,0.18)' : 'rgba(248,113,113,0.18)';
         const zeroY = sy(0);
         const fill = d + ' L' + sx(xRng).toFixed(2) + ' ' + zeroY.toFixed(2) + ' L' + sx(0).toFixed(2) + ' ' + zeroY.toFixed(2) + ' Z';
         el.style.padding = '0';
@@ -6910,8 +6881,8 @@
         el.style.color = 'inherit'; el.style.font = 'inherit';
         el.style.letterSpacing = '0'; el.style.textTransform = 'none';
         el.innerHTML = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">'
-            + '<path d="' + fill + '" fill="rgba(220,38,38,0.18)" stroke="none"/>'
-            + '<path d="' + d + '" fill="none" stroke="#dc2626" stroke-width="2"/>'
+            + '<path d="' + fill + '" fill="rgba(248,113,113,0.18)" stroke="none"/>'
+            + '<path d="' + d + '" fill="none" stroke="#f87171" stroke-width="2"/>'
             + '<text x="' + (w - padX) + '" y="' + (padY - 4) + '" text-anchor="end" font-size="10" fill="#94a3b8">'
             + 'Max DD ' + maxDd.toFixed(2) + 'u</text>'
             + '</svg>';
@@ -6934,7 +6905,7 @@
             const x = padX + i * barW;
             const bh = (Math.abs(v) / maxAbs) * (h / 2 - padY);
             const y  = v >= 0 ? zeroY - bh : zeroY;
-            const c  = v > 0 ? '#4ade80' : v < 0 ? '#dc2626' : 'rgba(255,255,255,0.3)';
+            const c  = v > 0 ? '#4ade80' : v < 0 ? '#f87171' : 'rgba(255,255,255,0.3)';
             return '<rect x="' + (x + 1).toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + Math.max(1, barW - 2).toFixed(1) + '" height="' + Math.max(1, bh).toFixed(1) + '" fill="' + c + '"/>';
         }).join('');
         const wins = deltas.filter(v => v > 0).length;
@@ -6959,7 +6930,7 @@
         const rows = data.map(b => {
             const roi   = Number(b.roi) || 0;
             const pct   = Math.min(100, (Math.abs(roi) / maxAbs) * 100);
-            const color = roi >= 0 ? '#4ade80' : '#dc2626';
+            const color = roi >= 0 ? '#4ade80' : '#f87171';
             const label = formatBucketLabel(splitKey, b.key);
             const meta  = (Number(b.wins) || 0) + '-' + (Number(b.losses) || 0) + (b.pushes ? '-' + b.pushes : '');
             return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
@@ -7059,7 +7030,14 @@
         renderPicksTable(picks);
         renderAnalytics(stats);
         renderCapperMetrics(picks);
-        await refreshAdvancedBreakdowns();
+        if (initialSportFilter) {
+            ensureSportFilterOption(initialSportFilter);
+            const sportSelect = document.getElementById('filterSport');
+            if (sportSelect) sportSelect.value = initialSportFilter;
+            applyFilters();
+        } else {
+            await refreshAdvancedBreakdowns();
+        }
         applyProfileDeepLinkView();
     }
 
@@ -7152,7 +7130,10 @@
     function pmOddsBucket(odds) {
         const o = Number(odds);
         if (!Number.isFinite(o)) return null;
-        return o < 100 ? 'favorite' : 'underdog';
+        if (o < -200) return 'heavy_favorite';
+        if (o < 0) return 'favorite';
+        if (o <= 200) return 'underdog';
+        return 'big_underdog';
     }
     function pmResultClass(p) {
         const r = String(p.result || p.status || '').toLowerCase();
@@ -7420,8 +7401,10 @@
         ]);
         renderCapBreakdown('capTableUnits', rows, [1,2,3,4,5].map(n => [n + 'u Picks', p => Math.round(capUnits(p)) === n]));
         renderCapBreakdown('capTableOdds', rows, [
-            ['Favorite (<+100)', p => capOdds(p) < 100],
-            ['Dog (+100+)', p => capOdds(p) >= 100]
+            ['Heavy Favorite', p => capOdds(p) < -200],
+            ['Favorite (-110 to -200)', p => capOdds(p) >= -200 && capOdds(p) < 0],
+            ['Dog (+100 to +200)', p => capOdds(p) >= 100 && capOdds(p) <= 200],
+            ['Big Underdog', p => capOdds(p) > 200]
         ]);
         renderCapBreakdown('capTableFavDog', rows, [
             ['Favorites', p => capOdds(p) < 0],
@@ -7441,7 +7424,12 @@
         }
         const body = buckets.map(([label, pred]) => {
             const s = calcCapStats(rows.filter(p => pred(p)));
-            return '<tr><td>' + label + '</td><td>' + s.picks + '</td><td>' + s.record + '</td><td class="' + (s.picks ? capValueClass(s.winRate - 50) : 'capper-neutral') + '">' + s.winRate.toFixed(1) + '%</td><td class="' + capValueClass(s.units) + '">' + capUnitsText(s.units) + '</td><td class="' + capValueClass(s.roi) + '">' + s.roi.toFixed(1) + '%</td></tr>';
+            const sportKeys = { MLB: 'baseball_mlb', NFL: 'americanfootball_nfl', NBA: 'basketball_nba', NHL: 'icehockey_nhl', NCAAB: 'basketball_ncaab', NCAAF: 'americanfootball_ncaaf' };
+            const sportKey = id === 'capTableSport' ? sportKeys[label] : '';
+            const categoryLabel = sportKey
+                ? '<a class="profile-sport-filter-link" href="' + escapeHtml(buildProfileSportFilterUrl(sportKey)) + '" onclick="return setProfileSportFilter(\'' + escapeHtml(sportKey) + '\', { updateUrl: true, scroll: true, clearOtherFilters: true });" title="View only ' + escapeHtml(label) + ' picks">' + escapeHtml(label) + '</a>'
+                : escapeHtml(label);
+            return '<tr><td>' + categoryLabel + '</td><td>' + s.picks + '</td><td>' + s.record + '</td><td class="' + (s.picks ? capValueClass(s.winRate - 50) : 'capper-neutral') + '">' + s.winRate.toFixed(1) + '%</td><td class="' + capValueClass(s.units) + '">' + capUnitsText(s.units) + '</td><td class="' + capValueClass(s.roi) + '">' + s.roi.toFixed(1) + '%</td></tr>';
         }).join('');
         el.innerHTML = '<table class="capper-table"><thead><tr><th>Category</th><th>Picks</th><th>Record</th><th>Win Rate</th><th>Units</th><th>ROI</th></tr></thead><tbody>' + body + '</tbody></table>';
     }
@@ -7487,7 +7475,7 @@
                 + '<td>' + (p.locked_at ? new Date(p.locked_at).toLocaleDateString() : '—') + '</td>'
                 + '<td>' + pmSportLabel(p.sport_key) + '</td>'
                 + '<td>' + capEsc(String(game)) + '</td>'
-                + '<td>' + capEsc(String(p.selection || p.pick || '—')) + '</td>'
+                + '<td>' + capEsc(formatPickDisplayValue(p)) + '</td>'
                 + '<td>' + line + '</td>'
                 + '<td>' + (Number.isFinite(odds) ? (odds > 0 ? '+' : '') + odds : '—') + '</td>'
                 + '<td>' + capUnits(p).toFixed(2) + 'u</td>'
@@ -7612,7 +7600,7 @@
                 + '<td class="pm-cell-date">' + fmtDate(p.locked_at || p.created_at) + '</td>'
                 + '<td>' + escHtml(pmSportLabel(p.sport_key)) + '</td>'
                 + '<td>' + escHtml(pmMarketLabel(p.market_type)) + '</td>'
-                + '<td class="pm-cell-pick">' + escHtml(p.selection || p.pick || '') + '</td>'
+                + '<td class="pm-cell-pick">' + escHtml(formatPickDisplayValue(p)) + '</td>'
                 + '<td class="num">' + escHtml(fmtLine(p.line_snapshot)) + '</td>'
                 + '<td class="num">' + escHtml(fmtOdds(p.odds_snapshot)) + '</td>'
                 + '<td class="num">' + escHtml(fmtUnits(p.units)) + '</td>'
@@ -7710,9 +7698,8 @@
         }
         const emptyLedgerNote = showEmptyLedgerNote
             ? '<div class="profile-empty-ledger">' +
-                '<p><strong>You have not posted a pick yet.</strong></p>' +
-                '<p>Post your first pick to start building your verified record.</p>' +
-                '<p><a class="profile-first-pick-cta" href="/sportsbook/?first_pick=1">Make First Pick</a></p>' +
+                '<p><strong>No picks yet.</strong></p>' +
+                '<p>Graded picks will build this public record after they are settled.</p>' +
               '</div>'
             : '';
         const rail = '<div class="profile-rail" aria-label="Pick monitor stats">' +
@@ -8268,8 +8255,8 @@
             ['Current Streak', currentStreak, 'Current graded streak'],
             ['Best Streak', s.bestStreak + 'W', 'Longest winning streak'],
             ['Worst Streak', s.worstStreak + 'L', 'Longest losing streak'],
-            ['Highest Unit Win', ledger.bestWin ? formatSignedUnits(ledger.bestWin.pl) : '--', ledger.bestWin ? (ledger.bestWin.pick.selection || 'Winning pick') : 'No winning picks yet'],
-            ['Biggest Loss', ledger.biggestLoss ? formatSignedUnits(ledger.biggestLoss.pl) : '--', ledger.biggestLoss ? (ledger.biggestLoss.pick.selection || 'Losing pick') : 'No losing picks yet']
+            ['Highest Unit Win', ledger.bestWin ? formatSignedUnits(ledger.bestWin.pl) : '--', ledger.bestWin ? formatPickDisplayValue(ledger.bestWin.pick) : 'No winning picks yet'],
+            ['Biggest Loss', ledger.biggestLoss ? formatSignedUnits(ledger.biggestLoss.pl) : '--', ledger.biggestLoss ? formatPickDisplayValue(ledger.biggestLoss.pick) : 'No losing picks yet']
         ];
 
         if (adv) {
@@ -8444,8 +8431,10 @@
             return s === 'won' || s === 'lost';
         });
         const ranges = [
-            { label: 'Favorite (<+100)', test: o => o < 100 },
-            { label: 'Dog (+100+)', test: o => o >= 100 }
+            { label: 'Heavy Fav (-200+)', test: o => o <= -200 },
+            { label: 'Favorite (-110 to -200)', test: o => o <= -110 && o >= -200 },
+            { label: 'Dog (+100 to +200)', test: o => o >= 100 && o <= 200 },
+            { label: 'Longshot (+201+)', test: o => o >= 201 }
         ];
         const rows = [];
         for (const range of ranges) {
@@ -8469,9 +8458,9 @@
         const recent = graded.slice(0, 20);
         if (recent.length === 0) { g.innerHTML = '<div style="color:var(--text-muted);padding:8px;">No graded picks yet</div>'; return; }
         g.innerHTML = recent.map(p => {
-            const c = p.status === 'won' ? '#22c55e' : p.status === 'lost' ? '#dc2626' : '#6b7280';
+            const c = p.status === 'won' ? '#22c55e' : p.status === 'lost' ? '#ef4444' : '#6b7280';
             const l = p.status === 'won' ? 'W' : p.status === 'lost' ? 'L' : 'P';
-            const tip = (p.selection || '') + ' ' + (p.odds_snapshot ? (p.odds_snapshot > 0 ? '+' : '') + p.odds_snapshot : '');
+            const tip = formatPickDisplayValue(p) + ' ' + (p.odds_snapshot ? (p.odds_snapshot > 0 ? '+' : '') + p.odds_snapshot : '');
             return '<div title="' + tip + '" style="width:28px;height:28px;border-radius:4px;background:' + c + ';display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;cursor:default;">' + l + '</div>';
         }).join('');
     }
@@ -8509,7 +8498,7 @@
         keys.forEach(k => {
             runningUnits += weeks[k].units;
             const pct = Math.abs(runningUnits) / maxAbs * 100;
-            const c = runningUnits >= 0 ? '#22c55e' : '#dc2626';
+            const c = runningUnits >= 0 ? '#22c55e' : '#ef4444';
             const bottom = runningUnits >= 0 ? '50%' : (50 - pct / 2) + '%';
             const dt = new Date(k);
             const lbl = (dt.getMonth() + 1) + '/' + dt.getDate();
@@ -8855,29 +8844,32 @@
         const c = parseFloat(wr) >= 50 ? 'positive' : parseFloat(wr) > 0 ? 'negative' : '';
         const uc = units >= 0 ? 'positive' : 'negative';
         const tag = href ? 'a' : 'div';
-        const attrs = href ? ' href="' + escapeHtml(href) + '"' : '';
-        const rowClass = 'breakdown-row' + (href ? ' is-clickable' : '');
-        return '<' + tag + ' class="' + rowClass + '"' + attrs + '><div style="flex:1;"><div class="breakdown-name">' + name + '</div><div class="breakdown-record">' + record + '</div></div>' +
+        const attr = href ? ' href="' + escapeHtml(href) + '" title="View breakdown" aria-label="View breakdown"' : '';
+        const indicator = href ? '<span class="breakdown-row-indicator">View Breakdown <span aria-hidden="true">&rsaquo;</span></span>' : '';
+        return '<' + tag + ' class="breakdown-row' + (href ? ' is-clickable' : '') + '"' + attr + '><div style="flex:1;"><div class="breakdown-name">' + name + '</div><div class="breakdown-record">' + record + '</div></div>' +
             '<div style="text-align:right;"><div class="breakdown-winrate ' + c + '">' + wr + '%</div>' +
-            '<div style="font-size:.8rem;color:' + (units >= 0 ? 'var(--accent-green)' : 'var(--accent-red)') + ';">' + (units >= 0 ? '+' : '') + units.toFixed(2) + 'u</div>' +
-            (href ? '<div class="profile-sport-view-indicator profile-sport-view-indicator--legacy">View Breakdown &rsaquo;</div>' : '') +
-            '</div></' + tag + '>';
+            '<div style="font-size:.8rem;color:' + (units >= 0 ? 'var(--accent-green)' : 'var(--accent-red)') + ';">' + (units >= 0 ? '+' : '') + units.toFixed(2) + 'u</div>' + indicator + '</div></' + tag + '>';
     }
 
     function populateFilterDropdowns() {
         const sportSelect = document.getElementById('filterSport');
         if (!sportSelect) return;
+        const currentValue = sportSelect.value || '';
         const sports = new Set();
         allLoadedPicks.forEach(p => { if (p.sport_key) sports.add(p.sport_key); });
+        if (currentValue) sports.add(currentValue);
         let opts = '<option value="">All Sports</option>';
         sports.forEach(sk => { opts += '<option value="' + sk + '">' + fmtSport(sk) + '</option>'; });
         sportSelect.innerHTML = opts;
+        if (currentValue) sportSelect.value = currentValue;
     }
 
     function getAdvancedStatsFilters() {
         const oddsMap = {
+            'heavy-fav': 'heavy_favorite',
             'fav': 'favorite',
-            'dog': 'underdog'
+            'dog': 'underdog',
+            'longshot': 'big_underdog'
         };
         return {
             sport: document.getElementById('filterSport').value || '',
@@ -8931,8 +8923,10 @@
 
     function oddsBucketLabel(value) {
         return {
-            favorite: 'Favorite (<+100)',
-            underdog: 'Dog (+100+)'
+            heavy_favorite: 'Heavy Fav (-200+)',
+            favorite: 'Favorite (-110 to -200)',
+            underdog: 'Dog (+100 to +200)',
+            big_underdog: 'Longshot (+201+)'
         }[value] || value || 'Odds Range';
     }
 
@@ -9091,8 +9085,10 @@
         if (odds) {
             filtered = filtered.filter(p => {
                 const o = p.odds_snapshot || p.odds || -110;
-                if (odds === 'fav') return o < 100;
-                if (odds === 'dog') return o >= 100;
+                if (odds === 'heavy-fav') return o <= -200;
+                if (odds === 'fav') return o < 0 && o >= -200;
+                if (odds === 'dog') return o >= 100 && o <= 200;
+                if (odds === 'longshot') return o >= 201;
                 return true;
             });
         }
@@ -9197,7 +9193,7 @@
             }
             if (result) parts.push(result.charAt(0).toUpperCase() + result.slice(1));
             if (odds) {
-                const oddsLabels = { 'fav': 'Favorites', 'dog': 'Dogs' };
+                const oddsLabels = { 'heavy-fav': 'Heavy Favorites', 'fav': 'Favorites', 'dog': 'Dogs', 'longshot': 'Longshots' };
                 parts.push(oddsLabels[odds] || odds);
             }
             if (units) {
@@ -9287,6 +9283,15 @@
         renderPicksTable(allLoadedPicks);
         renderCapperMetrics(allLoadedPicks);
         refreshAdvancedBreakdowns();
+        try {
+            const params = new URLSearchParams(window.location.search || '');
+            if (params.has('sport') || params.has('league')) {
+                params.delete('sport');
+                params.delete('league');
+                const query = params.toString();
+                history.pushState(null, '', window.location.pathname + (query ? '?' + query : ''));
+            }
+        } catch (e) {}
         analyticsTrack('profile_filters_cleared', {
             username: profileUsername || '',
             previous_filters: JSON.stringify(previousFilterState)
@@ -9386,9 +9391,9 @@
         }
         g.innerHTML = rows.map(p => {
             const status = p.status === 'pushed' ? 'push' : p.status;
-            const c = status === 'won' ? '#22c55e' : status === 'lost' ? '#dc2626' : '#6b7280';
+            const c = status === 'won' ? '#22c55e' : status === 'lost' ? '#ef4444' : '#6b7280';
             const l = status === 'won' ? 'W' : status === 'lost' ? 'L' : 'P';
-            const tip = marketTypeLabel(p.market_type) + ': ' + (p.selection || '') + ' ' + (p.odds_snapshot ? (p.odds_snapshot > 0 ? '+' : '') + p.odds_snapshot : '');
+            const tip = marketTypeLabel(p.market_type) + ': ' + formatPickDisplayValue(p) + ' ' + (p.odds_snapshot ? (p.odds_snapshot > 0 ? '+' : '') + p.odds_snapshot : '');
             return '<div title="' + tip + '" style="width:28px;height:28px;border-radius:4px;background:' + c + ';display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;cursor:default;">' + l + '</div>';
         }).join('');
     }
@@ -9401,27 +9406,51 @@
             const t = Number(i.total_picks) || (w + l + p);
             const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
             const units = Number(i.net_units || i.units || 0);
-            return bRowExtended(fmtSport(i.sport_key), w + '-' + l + '-' + p + ' (' + t + ' picks)', wr, units, buildProfileSportBreakdownUrl(i.sport_key));
+            const sportKey = String(i.sport_key || '').trim();
+            const sportLabel = fmtSport(sportKey);
+            return bRowExtended(escapeHtml(sportLabel), w + '-' + l + '-' + p + ' (' + t + ' picks)', wr, units, buildProfileSportBreakdownUrl(sportKey));
         }).join('');
     }
-
     // ======================== UTILITY ========================
-    function fmtSport(k) {
-        return { americanfootball_nfl: 'NFL', basketball_nba: 'NBA', baseball_mlb: 'MLB', icehockey_nhl: 'NHL', soccer_epl: 'EPL', basketball_ncaab: 'NCAAB', americanfootball_ncaaf: 'NCAAF' }[k] || k || 'Pick';
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function normalizeProfileSportParam(value) {
+        const raw = String(value || '').trim();
+        if (!raw) return '';
+        const key = raw.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
+        return SPORT_QUERY_ALIASES[key] || raw;
+    }
+
+    function buildProfileSportFilterUrl(sportKey) {
+        const params = new URLSearchParams(window.location.search || '');
+        if (profileUsername && !params.get('user') && !params.get('username')) {
+            params.set('user', profileUsername);
+        }
+        if (sportKey) params.set('sport', fmtSport(sportKey));
+        else params.delete('sport');
+        params.delete('league');
+        params.set('view', 'ledger');
+        return window.location.pathname + '?' + params.toString();
     }
 
     function profileSportSlug(sportKey) {
-        const key = String(sportKey || '').toLowerCase();
-        return {
+        const canonical = normalizeProfileSportParam(sportKey);
+        const map = {
             baseball_mlb: 'mlb',
             basketball_nba: 'nba',
             icehockey_nhl: 'nhl',
             americanfootball_nfl: 'nfl',
-            americanfootball_ncaaf: 'ncaaf',
             basketball_ncaab: 'ncaab',
-            soccer_epl: 'epl',
-            mma_mixed_martial_arts: 'mma'
-        }[key] || key.replace(/^(baseball_|basketball_|icehockey_|americanfootball_|soccer_)/, '');
+            americanfootball_ncaaf: 'ncaaf'
+        };
+        return map[canonical] || String(canonical || sportKey || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     }
 
     function buildProfileSportBreakdownUrl(sportKey) {
@@ -9432,10 +9461,66 @@
         return '/profile/sport/?' + params.toString();
     }
 
+    function ensureSportFilterOption(sportKey) {
+        const select = document.getElementById('filterSport');
+        if (!select || !sportKey) return;
+        const exists = Array.from(select.options).some(function(option) {
+            return option.value === sportKey;
+        });
+        if (!exists) {
+            const option = document.createElement('option');
+            option.value = sportKey;
+            option.textContent = fmtSport(sportKey);
+            select.appendChild(option);
+        }
+    }
+
+    function setProfileSportFilter(sportKey, options) {
+        options = options || {};
+        const normalizedSport = normalizeProfileSportParam(sportKey);
+        const sportSelect = document.getElementById('filterSport');
+        if (!sportSelect) return false;
+
+        if (options.clearOtherFilters) {
+            ['filterSearch', 'filterType', 'filterResult', 'filterOdds', 'filterUnits', 'filterDateFrom', 'filterDateTo'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            const period = document.getElementById('filterPeriod');
+            if (period) period.value = 'all';
+            const sort = document.getElementById('filterSort');
+            if (sort) sort.value = 'date_desc';
+            activeQuickFilter = null;
+            currentTableSort = 'date_desc';
+        }
+
+        if (normalizedSport) ensureSportFilterOption(normalizedSport);
+        sportSelect.value = normalizedSport || '';
+
+        if (options.updateUrl) {
+            const nextUrl = buildProfileSportFilterUrl(normalizedSport);
+            history.pushState(null, '', nextUrl);
+        }
+
+        applyFilters();
+
+        if (options.scroll) {
+            const target = document.querySelector('.picks-section') || document.getElementById('picksTableWrapper');
+            if (target && typeof target.scrollIntoView === 'function') {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        return false;
+    }
+
+    function fmtSport(k) {
+        return { americanfootball_nfl: 'NFL', basketball_nba: 'NBA', baseball_mlb: 'MLB', icehockey_nhl: 'NHL', soccer_epl: 'EPL', soccer_usa_mls: 'MLS', basketball_ncaab: 'NCAAB', americanfootball_ncaaf: 'NCAAF', basketball_wnba: 'WNBA' }[k] || k || 'Pick';
+    }
+
     function showToast(msg, type) {
         let c = document.getElementById('toastC');
         if (!c) { c = document.createElement('div'); c.id = 'toastC'; c.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;'; document.body.appendChild(c); }
-        const colors = { success: '#22c55e', error: '#dc2626', info: '#3b82f6' };
+        const colors = { success: '#22c55e', error: '#ef4444', info: '#3b82f6' };
         const t = document.createElement('div');
         t.style.cssText = 'background:' + (colors[type] || colors.info) + ';color:#fff;padding:12px 20px;border-radius:8px;font-weight:500;font-size:0.875rem;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
         t.textContent = msg; c.appendChild(t);
@@ -9513,7 +9598,7 @@
                     '</div>';
             }).join('');
         } catch (error) {
-            body.innerHTML = '<div style="padding:12px 4px;color:#dc2626;">Failed to load ' + type + '.</div>';
+            body.innerHTML = '<div style="padding:12px 4px;color:#ef4444;">Failed to load ' + type + '.</div>';
         }
     }
 
@@ -10035,8 +10120,8 @@
 
 
     <script src="/static/js/platform-production-fix.js?v=20260415d"></script>
-    <script src="/static/js/tmr-redesign-loader.js?v=20260505profile-red2" defer></script>
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260505profile-red2">
+    <script src="/static/js/tmr-redesign-loader.js?v=20260502profilehero1" defer></script>
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
 
     <!-- ============================================================
          TMRX STATS REDESIGN (May 1 2026)
@@ -10085,7 +10170,7 @@
       .tmrx-label { font-size: 10.5px; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; color: #a8b4c7; }
       .tmrx-value { max-width: 100%; font-size: 28px; font-weight: 950; color: #f1f5fb; margin-top: 9px; line-height: 1.02; letter-spacing: 0; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: visible; text-overflow: clip; }
       .tmrx-value.is-pos { color: #86efac; }
-      .tmrx-value.is-neg { color: #dc2626; }
+      .tmrx-value.is-neg { color: #ef4444; }
       .tmrx-value.is-placeholder { color: #94a3b8; font-weight: 800; }
       .tmrx-sub { margin-top: 8px; font-size: 11.5px; color: #8391a7; font-weight: 700; line-height: 1.25; }
 
@@ -10094,7 +10179,7 @@
       .tmrx-period-cell .k { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; color: #7a8499; }
       .tmrx-period-cell .v { margin-top: 6px; font-size: 14px; font-weight: 900; color: #f1f5fb; font-variant-numeric: tabular-nums; }
       .tmrx-period-cell .v.is-pos { color: #86efac; }
-      .tmrx-period-cell .v.is-neg { color: #dc2626; }
+      .tmrx-period-cell .v.is-neg { color: #ef4444; }
       .tmrx-period-cell .s { margin-top: 2px; font-size: 11px; color: #7f8ca3; font-weight: 700; }
 
       .tmrx-table-shell { border: 1px solid rgba(31,51,80,.55); border-radius: 12px; overflow: hidden; background: #0a1322; }
@@ -10102,12 +10187,12 @@
       .tmrx-table thead th { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .10em; color: #7a8499; background: #08111f; text-align: left; padding: 10px 14px; border-bottom: 1px solid #1F3350; }
       .tmrx-table thead th.num { text-align: right; }
       .tmrx-table tbody td { padding: 12px 14px; border-bottom: 1px solid rgba(31,51,80,.55); color: #dbe5f4; font-weight: 600; }
-      .tmrx-table tbody td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; overflow-wrap: normal; word-break: keep-all; }
+      .tmrx-table tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
       .tmrx-table tbody tr:last-child td { border-bottom: 0; }
       .tmrx-table tbody tr:hover td { background: rgba(34,211,238,.04); }
       .tmrx-table .name { font-weight: 800; color: #f1f5fb; }
       .tmrx-table .pos { color: #86efac; }
-      .tmrx-table .neg { color: #dc2626; }
+      .tmrx-table .neg { color: #fca5a5; }
       .tmrx-table .zero { color: #94a3b8; }
       .tmrx-table .empty td { padding: 22px 16px; text-align: center; color: #64748b; font-style: italic; }
 
@@ -10121,9 +10206,9 @@
       .tmrx-dd-strip { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; padding: 0 14px 14px; }
       .tmrx-dd-cell { padding: 10px 12px; border: 1px solid rgba(31,51,80,.55); border-radius: 10px; background: rgba(2,6,23,.40); }
       .tmrx-dd-cell .k { font-size: 10.5px; font-weight: 900; text-transform: uppercase; letter-spacing: .10em; color: #7a8499; }
-      .tmrx-dd-cell .v { margin-top: 4px; font-size: 18px; font-weight: 900; color: #f1f5fb; font-variant-numeric: tabular-nums; white-space: nowrap; overflow-wrap: normal; word-break: keep-all; }
+      .tmrx-dd-cell .v { margin-top: 4px; font-size: 18px; font-weight: 900; color: #f1f5fb; font-variant-numeric: tabular-nums; }
       .tmrx-dd-cell .v.is-pos { color: #86efac; }
-      .tmrx-dd-cell .v.is-neg { color: #dc2626; }
+      .tmrx-dd-cell .v.is-neg { color: #ef4444; }
 
       .tmrx-unavail-note { margin-top: 14px; padding: 12px 14px; border: 1px dashed rgba(148,163,184,.28); border-radius: 10px; background: rgba(2,6,23,.40); color: #94a3b8; font-size: 12.5px; }
       .tmrx-unavail-note b { color: #cbd5e1; }
@@ -10532,22 +10617,7 @@
       body.profile-page.tmr-social-profile .tmrx-period-strip::-webkit-scrollbar {
         display: none !important;
       }
-      body.profile-page.tmr-social-profile .tmrx-table .is-neg,
-      body.profile-page.tmr-social-profile .tmrx-table .negative,
-      body.profile-page.tmr-social-profile .tmrx-table .is-negative,
-      body.profile-page.tmr-social-profile .tmrx-table .loss,
-      body.profile-page.tmr-social-profile .tmrx-table .danger,
-      body.profile-page.tmr-social-profile .tmrx-table .text-red,
-      body.profile-page.tmr-social-profile .tmrx-table [class*="text-red"],
-      body.profile-page.tmr-social-profile .tmrx-table [class*="danger"],
-      body.profile-page.tmr-social-profile .stats-summary-table .is-negative,
-      body.profile-page.tmr-social-profile .stats-summary-table .negative,
-      body.profile-page.tmr-social-profile .capper-table .negative,
-      body.profile-page.tmr-social-profile .capper-table .capper-neg,
-      body.profile-page.tmr-social-profile .cc-negative,
-      body.profile-page.tmr-social-profile .pm-neg {
-        color: #dc2626 !important;
-      }      @media (max-width: 1180px) {
+      @media (max-width: 1180px) {
         body.profile-page.tmr-social-profile .tmrx-ribbon {
           grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
         }
@@ -10745,7 +10815,7 @@
       body.profile-page.tmr-social-profile .tmrx-value.is-neg,
       body.profile-page.tmr-social-profile .tmrx-period-cell .v.is-neg,
       body.profile-page.tmr-social-profile .tmrx-dd-cell .v.is-neg {
-        color: #dc2626 !important;
+        color: #ef4444 !important;
       }
       body.profile-page.tmr-social-profile .tmrx-value.is-pos,
       body.profile-page.tmr-social-profile .tmrx-period-cell .v.is-pos,
@@ -10936,7 +11006,7 @@
         border-left-color: #4ade80 !important;
       }
       body.profile-page.tmr-social-profile .picks-table tbody tr.row-lost td:first-child {
-        border-left-color: #dc2626 !important;
+        border-left-color: #fb7185 !important;
       }
       body.profile-page.tmr-social-profile .picks-table tbody tr.row-push td:first-child {
         border-left-color: #fbbf24 !important;
@@ -11199,9 +11269,6 @@
         font-weight: 950 !important;
         letter-spacing: 0 !important;
         font-variant-numeric: tabular-nums !important;
-        white-space: nowrap !important;
-        overflow-wrap: normal !important;
-        word-break: keep-all !important;
       }
       body.profile-page.tmr-social-profile .profile-rail-value.is-positive,
       body.profile-page.tmr-social-profile .profile-advanced-metric__value.is-pos {
@@ -11209,7 +11276,7 @@
       }
       body.profile-page.tmr-social-profile .profile-rail-value.is-negative,
       body.profile-page.tmr-social-profile .profile-advanced-metric__value.is-neg {
-        color: #dc2626 !important;
+        color: #fb7185 !important;
       }
       body.profile-page.tmr-social-profile .profile-advanced-strip-section {
         padding-top: 22px !important;
@@ -11262,6 +11329,9 @@
         font-weight: 950 !important;
         letter-spacing: 0 !important;
         font-variant-numeric: tabular-nums !important;
+        overflow-wrap: anywhere !important;
+      }
+      body.profile-page.tmr-social-profile [data-advanced-metric-card="avg_daily_picks"] .profile-advanced-metric__value {
         white-space: nowrap !important;
         overflow-wrap: normal !important;
         word-break: keep-all !important;
@@ -11378,22 +11448,7 @@
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvanced) {
         order: 90 !important;
       }
-      body.profile-page.tmr-social-profile .tmrx-table .is-neg,
-      body.profile-page.tmr-social-profile .tmrx-table .negative,
-      body.profile-page.tmr-social-profile .tmrx-table .is-negative,
-      body.profile-page.tmr-social-profile .tmrx-table .loss,
-      body.profile-page.tmr-social-profile .tmrx-table .danger,
-      body.profile-page.tmr-social-profile .tmrx-table .text-red,
-      body.profile-page.tmr-social-profile .tmrx-table [class*="text-red"],
-      body.profile-page.tmr-social-profile .tmrx-table [class*="danger"],
-      body.profile-page.tmr-social-profile .stats-summary-table .is-negative,
-      body.profile-page.tmr-social-profile .stats-summary-table .negative,
-      body.profile-page.tmr-social-profile .capper-table .negative,
-      body.profile-page.tmr-social-profile .capper-table .capper-neg,
-      body.profile-page.tmr-social-profile .cc-negative,
-      body.profile-page.tmr-social-profile .pm-neg {
-        color: #dc2626 !important;
-      }      @media (max-width: 1180px) {
+      @media (max-width: 1180px) {
         body.profile-page.tmr-social-profile .profile-header {
           grid-template-columns: 1fr !important;
         }
@@ -11576,7 +11631,6 @@
         }
       }
     </style>
-
 <style id="profile-solid-red-and-clickable-sports">
   body.profile-page {
     --accent-red: #ff3333 !important;
@@ -11600,55 +11654,47 @@
   body.profile-page .profile-advanced-metric__value.is-neg {
     color: #ff3333 !important;
   }
-  body.profile-page .tmrx-table tbody tr:has(.profile-sport-breakdown-link),
   body.profile-page .breakdown-row.is-clickable {
     cursor: pointer;
-    transition: background-color .16s ease, border-color .16s ease, transform .16s ease;
-  }
-  body.profile-page .tmrx-table tbody tr:has(.profile-sport-breakdown-link):hover,
-  body.profile-page .breakdown-row.is-clickable:hover {
-    background: rgba(255,255,255,.055);
-  }
-  body.profile-page .breakdown-row.is-clickable {
-    color: inherit;
     text-decoration: none;
-  }
-  body.profile-page .profile-sport-filter-link,
-  body.profile-page .profile-sport-breakdown-link {
     color: inherit;
-    text-decoration: none;
+    border-color: rgba(148, 163, 184, 0.2);
+    transition: background .16s ease, border-color .16s ease, transform .16s ease;
   }
+  body.profile-page .breakdown-row.is-clickable:hover,
+  body.profile-page .tmrx-table tbody tr:hover td {
+    background: rgba(34, 211, 238, .07) !important;
+    border-color: rgba(34, 211, 238, .28);
+  }
+  body.profile-page .breakdown-row-indicator,
   body.profile-page .profile-sport-view-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    margin-left: 10px;
-    color: #9fb0c8;
-    font-size: .72rem;
-    font-weight: 800;
+    display: block;
+    margin-top: 4px;
+    color: #8fb3d9;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .04em;
     text-transform: uppercase;
-    letter-spacing: 0;
     white-space: nowrap;
   }
-  body.profile-page .profile-sport-view-indicator::after {
-    content: '\\203A';
-    color: #d4deee;
-    font-size: 1rem;
-    line-height: 1;
+  body.profile-page .profile-sport-breakdown-link {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 2px;
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
   }
-  body.profile-page .profile-sport-view-indicator--legacy {
-    justify-content: flex-end;
-    margin-left: 0;
-    margin-top: 3px;
-  }
-  @media (max-width: 720px) {
-    body.profile-page .profile-sport-view-indicator { display: none; }
+  body.profile-page .tmrx-table td.num,
+  body.profile-page .tmrx-table th.num,
+  body.profile-page .summary-cell strong,
+  body.profile-page .tmr-cap-metric__value,
+  body.profile-page .profile-advanced-metric__value,
+  body.profile-page .breakdown-winrate,
+  body.profile-page .profile-rail-value {
+    white-space: nowrap;
   }
 </style>
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  8:02:00 PM -->
-
-
-
-
