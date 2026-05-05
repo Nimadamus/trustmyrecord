@@ -240,7 +240,7 @@
                 if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
                 return s;
             })(pick.line_snapshot);
-            const pickDisplay = (pick.selection || 'Pick') + (_line ? ' ' + _line : '');
+            const pickDisplay = (window.TMR && typeof window.TMR.formatPickDisplay === 'function') ? window.TMR.formatPickDisplay(pick) : ((pick.selection || 'Pick') + (_line ? ' ' + _line : ''));
             const result = status !== 'pending' ? formatUnits(pick.result_units) : (Number(pick.units || 1).toFixed(1) + 'u risked');
             return '<div class="recent-pick-item">' +
                 '<div class="pick-info">' +
@@ -254,6 +254,11 @@
     }
 
     function updateStatsDashboard() {
+        if (document.body && document.body.getAttribute('data-tmr-route') === 'sportsbook') {
+            const sportsbookDashboard = document.getElementById('userStatsDashboard');
+            if (sportsbookDashboard) sportsbookDashboard.remove();
+            return;
+        }
         const dashboard = document.getElementById('userStatsDashboard');
         const picks = getCanonicalPicks();
         const stats = computeStats(picks);
