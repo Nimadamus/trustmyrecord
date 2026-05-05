@@ -14,7 +14,7 @@
       gtag('config', 'G-V5MCVXS2HE');
     </script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260502navspread1">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260501navspacing">
 <script defer src="/static/js/tmr-sitewide.js?v=20260501navspacing"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -216,6 +216,11 @@
         .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); max-width: 760px; margin: 0 auto; }
         .empty-state i { font-size: 48px; margin-bottom: 16px; display: block; color: var(--border); }
         .empty-state h3 { color: var(--text-dim); margin-bottom: 8px; }
+        .challenges-grid > .empty-state,
+        .challenges-grid > .loading {
+            grid-column: 1 / -1;
+            width: 100%;
+        }
 
         /* RESPONSIVE */
         @media (max-width: 768px) {
@@ -541,25 +546,9 @@
         .game-logo-card { border: 1px solid rgba(120,210,255,0.16); border-radius: 16px; min-height: 132px; padding: 16px; cursor: pointer; background: linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.02)); display: flex; flex-direction: column; justify-content: space-between; transition: transform .2s ease, border-color .2s ease, background .2s ease; text-align: left; font-family: var(--font-body); }
         .game-logo-card:hover { transform: translateY(-3px); border-color: rgba(40,232,255,0.46); background: linear-gradient(145deg, rgba(0,174,255,0.15), rgba(168,85,247,0.08)); }
         .game-logo-mark { font-family: var(--font-display); font-size: clamp(1.35rem, 2.4vw, 2rem); font-weight: 800; line-height: .95; letter-spacing: 0; color: #fff; text-shadow: 0 0 24px rgba(40,232,255,0.28); }
-        .game-logo-mark.nowrap { white-space: nowrap; }
         .game-logo-sub { color: #9fb0c5; font-size: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
         .gaming-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
         .gaming-actions .btn { display: inline-flex; align-items: center; gap: 7px; padding: 12px 16px; }
-
-        @media (min-width: 1181px) {
-            body.tmr-site-shell .tmr-global-nav__inner {
-                grid-template-columns: max-content minmax(0, 1fr) max-content !important;
-                column-gap: clamp(28px, 2.4vw, 44px) !important;
-            }
-            body.tmr-site-shell .tmr-global-nav__brand {
-                min-width: max-content !important;
-                flex-shrink: 0 !important;
-            }
-            body.tmr-site-shell .tmr-global-nav__links {
-                justify-content: flex-start !important;
-                padding-left: 0 !important;
-            }
-        }
 
         .tabs { position: sticky; top: 72px; z-index: 40; gap: 8px; }
         .tab { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
@@ -662,59 +651,18 @@
         }
 
         .hero-actions {
-            grid-template-columns: repeat(4, 118px);
-            justify-content: start;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             max-width: 100%;
-            gap: 12px;
+            gap: 10px;
         }
 
         .hero-actions .btn {
-            width: 118px;
-            min-width: 118px;
-            height: 118px;
-            min-height: 118px;
-            aspect-ratio: 1;
-            border-radius: 50% !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            justify-self: center;
+            min-height: 76px;
+            border-radius: 6px;
             flex-direction: column;
-            gap: 8px;
-            padding: 13px 10px !important;
             text-transform: uppercase;
-            letter-spacing: .035em;
-            font-size: .76rem;
-            line-height: 1.05;
-            text-align: center;
-            white-space: normal;
-        }
-
-        .hero-actions .btn i {
-            display: block;
-            width: 1.15em;
-            height: 1.15em;
-            margin: 0 !important;
-            font-size: 1.15rem;
-            line-height: 1;
-            text-align: center;
-            flex: 0 0 auto;
-        }
-
-        .hero-action-label {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 2px;
-            width: 100%;
-            text-align: center;
-        }
-
-        .hero-action-label span {
-            display: block;
-            width: 100%;
-            text-align: center;
+            letter-spacing: .04em;
+            font-size: .8rem;
         }
 
         .hero-stats {
@@ -919,13 +867,7 @@
         }
 
         @media (max-width: 1180px) {
-            .hero-actions { grid-template-columns: repeat(4, 112px); justify-content: center; }
-            .hero-actions .btn {
-                width: 112px;
-                min-width: 112px;
-                height: 112px;
-                min-height: 112px;
-            }
+            .hero-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .arena-action-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         }
 
@@ -937,8 +879,7 @@
         }
 
         @media (max-width: 560px) {
-            .hero-actions { grid-template-columns: repeat(2, 112px); justify-content: center; }
-            .hero-stats, .arena-action-grid, .game-logo-grid { grid-template-columns: 1fr; }
+            .hero-actions, .hero-stats, .arena-action-grid, .game-logo-grid { grid-template-columns: 1fr; }
             .hero h1 { font-size: 3rem; }
             .arena-lane { grid-template-columns: 42px 1fr; }
             .arena-lane-code { display: none; }
@@ -957,10 +898,10 @@
             <h1>Challenge. Compete. Prove it.</h1>
             <p>Issue sports betting challenges, create polls and trivia, jump into online gaming matchups, and accept open challenges from the community.</p>
             <div class="hero-actions">
-                <button class="btn btn-gold" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i><span class="hero-action-label"><span>Issue a</span><span>Challenge</span></span></button>
-                <a href="/trivia/" class="btn btn-outline"><i class="fas fa-question"></i><span class="hero-action-label"><span>Create</span><span>Trivia</span></span></a>
-                <a href="/polls/" class="btn btn-outline"><i class="fas fa-square-poll-vertical"></i><span class="hero-action-label"><span>Start a</span><span>Poll</span></span></a>
-                <button class="btn btn-primary" onclick="switchTab('gaming-room')"><i class="fas fa-gamepad"></i><span class="hero-action-label"><span>Enter Gaming</span><span>Room</span></span></button>
+                <button class="btn btn-gold" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button>
+                <a href="/trivia/" class="btn btn-outline"><i class="fas fa-question"></i> Create Trivia</a>
+                <a href="/polls/" class="btn btn-outline"><i class="fas fa-square-poll-vertical"></i> Start a Poll</a>
+                <button class="btn btn-primary" onclick="switchTab('gaming-room')"><i class="fas fa-gamepad"></i> Enter Gaming Room</button>
             </div>
             <div class="hero-stats">
                 <div class="hero-stat"><div class="num" id="statOpenChallenges">0</div><div class="label">Open Challenges</div></div>
@@ -1078,7 +1019,7 @@
             <button class="game-logo-card" onclick="openCreateChallenge('mlb-the-show-26')"><span class="game-logo-mark">MLB<br>The Show</span><span class="game-logo-sub">Baseball</span></button>
             <button class="game-logo-card" onclick="openCreateChallenge('madden-26')"><span class="game-logo-mark">Madden</span><span class="game-logo-sub">Football</span></button>
             <button class="game-logo-card" onclick="openCreateChallenge('nba-2k26')"><span class="game-logo-mark">NBA<br>2K</span><span class="game-logo-sub">Basketball</span></button>
-            <button class="game-logo-card" onclick="openCreateChallenge('ea-fc-26')"><span class="game-logo-mark nowrap">EA FC</span><span class="game-logo-sub">Soccer</span></button>
+            <button class="game-logo-card" onclick="openCreateChallenge('ea-fc-26')"><span class="game-logo-mark">EA<br>FC</span><span class="game-logo-sub">Soccer</span></button>
             <button class="game-logo-card" onclick="openCreateChallenge('nhl-26')"><span class="game-logo-mark">NHL</span><span class="game-logo-sub">Hockey</span></button>
         </div>
         <div class="gaming-actions">
@@ -1135,7 +1076,7 @@
                 <button class="game-logo-card" onclick="openCreateChallenge('mlb-the-show-26')"><span class="game-logo-mark">MLB<br>The Show</span><span class="game-logo-sub">Challenge flow</span></button>
                 <button class="game-logo-card" onclick="openCreateChallenge('madden-26')"><span class="game-logo-mark">Madden</span><span class="game-logo-sub">Challenge flow</span></button>
                 <button class="game-logo-card" onclick="openCreateChallenge('nba-2k26')"><span class="game-logo-mark">NBA<br>2K</span><span class="game-logo-sub">Challenge flow</span></button>
-                <button class="game-logo-card" onclick="openCreateChallenge('ea-fc-26')"><span class="game-logo-mark nowrap">EA FC</span><span class="game-logo-sub">Challenge flow</span></button>
+                <button class="game-logo-card" onclick="openCreateChallenge('ea-fc-26')"><span class="game-logo-mark">EA<br>FC</span><span class="game-logo-sub">Challenge flow</span></button>
                 <button class="game-logo-card" onclick="openCreateChallenge('nhl-26')"><span class="game-logo-mark">NHL</span><span class="game-logo-sub">Challenge flow</span></button>
             </div>
             <div class="gaming-actions">
@@ -1497,7 +1438,6 @@ let currentGameFilter = 'all';
 let currentLbGameFilter = 'all';
 let currentUser = null;
 let allChallenges = [];
-let challengesLoadController = null;
 
 function analyticsTrack(eventName, params) {
     if (typeof window.TMRAnalytics !== 'undefined' && typeof window.TMRAnalytics.track === 'function') {
@@ -1532,16 +1472,13 @@ function updateNavUser() {
     const navUser = document.getElementById('navUser');
     const navLogin = document.getElementById('navLoginBtn');
     const navRegister = document.getElementById('navRegisterBtn');
-    if (!navUser || !navLogin) return;
     if (currentUser) {
         navUser.style.display = 'flex';
         navLogin.style.display = 'none';
         if (navRegister) navRegister.style.display = 'none';
-        const navUsername = document.getElementById('navUsername');
-        const navAvatar = document.getElementById('navAvatar');
-        if (navUsername) navUsername.textContent = currentUser.username || currentUser.displayName;
+        document.getElementById('navUsername').textContent = currentUser.username || currentUser.displayName;
         const avatar = currentUser.avatar_url || currentUser.avatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${currentUser.username}`;
-        if (navAvatar) navAvatar.src = avatar;
+        document.getElementById('navAvatar').src = avatar;
     } else {
         navLogin.style.display = 'inline-flex';
         if (navRegister) navRegister.style.display = 'inline-flex';
@@ -1591,53 +1528,77 @@ function updateArenaSummaryStats() {
 // ============================================
 // CHALLENGES
 // ============================================
-async function loadChallenges() {
+const OPEN_CHALLENGES_TIMEOUT_MS = 12000;
+
+async function requestOpenChallenges() {
+    if (typeof api === 'undefined' || !api || typeof api.request !== 'function') {
+        throw new Error('Arena API client unavailable');
+    }
+
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = setTimeout(() => {
+        if (controller) controller.abort();
+    }, OPEN_CHALLENGES_TIMEOUT_MS);
+
+    try {
+        return await api.request('/gaming/challenges?limit=50', controller ? { signal: controller.signal } : {});
+    } catch (error) {
+        if (error && error.name === 'AbortError') {
+            throw new Error('Open challenges request timed out');
+        }
+        throw error;
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+function renderOpenChallengesEmptyState(filtered) {
     const container = document.getElementById('challengesList');
     if (!container) return;
 
-    if (challengesLoadController) {
-        challengesLoadController.abort();
+    if (filtered) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No challenges in this game yet</h3><p>Switch filters above or issue the first challenge in this category.</p><button class="btn btn-outline" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button></div>';
+        return;
     }
-    challengesLoadController = new AbortController();
-    const timeoutId = window.setTimeout(() => {
-        if (challengesLoadController) challengesLoadController.abort();
-    }, 12000);
-    container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+    container.innerHTML = '<div class="empty-state"><i class="fas fa-bolt"></i><h3>No open challenges yet.</h3><p>Be the first to issue one.</p><button class="btn btn-gold" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button></div>';
+}
+
+function renderOpenChallengesErrorState() {
+    const container = document.getElementById('challengesList');
+    if (!container) return;
+    container.innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><h3>Could not load open challenges.</h3><p>Try again.</p><button class="btn btn-outline" style="margin-top:12px;" onclick="loadChallenges()"><i class="fas fa-rotate-right"></i> Retry</button></div>';
+}
+
+async function loadChallenges() {
+    const container = document.getElementById('challengesList');
+    if (container) {
+        container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+    }
 
     try {
-        let data;
-        if (api && typeof api.request === 'function') {
-            data = await api.request('/gaming/challenges?limit=50', {
-                signal: challengesLoadController.signal
-            });
-        } else {
-            throw new Error('Challenge API client is not ready');
-        }
-        const challenges = Array.isArray(data) ? data : (Array.isArray(data && data.challenges) ? data.challenges : []);
-        allChallenges = challenges;
-        renderOpenChallengesForCurrentFilter();
-        const openCount = getOpenChallenges().length;
+        const data = await requestOpenChallenges();
+        if (!data || !data.challenges) data = { challenges: [] };
+        allChallenges = data.challenges;
+        renderChallenges(allChallenges);
+        const openCount = allChallenges.filter(c => c.status === 'pending' && !c.challenged_id).length;
         const activeCount = allChallenges.filter(c => ['pending','accepted','in_progress'].includes(c.status)).length;
         const openStat = document.getElementById('statOpenChallenges');
         if (openStat) openStat.textContent = openCount || activeCount;
         if (currentTab === 'my-challenges') renderMyChallenges();
     } catch (e) {
-        if (e && e.name === 'AbortError') {
-            e = new Error('Challenge feed timed out');
-        }
         console.error('Failed to load challenges:', e);
-        renderChallengeErrorState(e);
-    } finally {
-        window.clearTimeout(timeoutId);
-        challengesLoadController = null;
+        allChallenges = [];
+        const openStat = document.getElementById('statOpenChallenges');
+        if (openStat) openStat.textContent = '0';
+        renderOpenChallengesErrorState();
     }
 }
 
 function filterByGame(game) {
     currentGameFilter = game;
     document.querySelectorAll('#gameFilters .game-pill').forEach(p => p.classList.toggle('active', p.dataset.game === game));
-    const openChallenges = getOpenChallenges();
-    const filtered = game === 'all' ? openChallenges : openChallenges.filter(c => c.game_slug === game);
+    const filtered = game === 'all' ? allChallenges : allChallenges.filter(c => c.game_slug === game);
     analyticsTrack('arena_game_filter_applied', {
         filter_name: game,
         visible_challenges: filtered.length
@@ -1645,40 +1606,11 @@ function filterByGame(game) {
     renderChallenges(filtered);
 }
 
-function getOpenChallenges() {
-    return (allChallenges || []).filter(ch => ch && ch.status === 'pending' && !ch.challenged_id);
-}
-
-function renderOpenChallengesForCurrentFilter() {
-    const openChallenges = getOpenChallenges();
-    const filtered = currentGameFilter === 'all'
-        ? openChallenges
-        : openChallenges.filter(ch => ch.game_slug === currentGameFilter);
-    renderChallenges(filtered);
-}
-
-function renderChallengeErrorState(error) {
-    const container = document.getElementById('challengesList');
-    if (!container) return;
-    const message = error && error.status
-        ? `The challenge feed returned HTTP ${error.status}.`
-        : 'The challenge feed did not respond in time.';
-    container.innerHTML = `<div class="empty-state">
-        <i class="fas fa-triangle-exclamation"></i>
-        <h3>Open challenges could not load</h3>
-        <p>${message} Please try again in a moment.</p>
-        <button class="btn btn-gold" style="margin-top:12px;" onclick="loadChallenges()"><i class="fas fa-rotate-right"></i> Retry</button>
-    </div>`;
-}
-
 function renderChallenges(challenges) {
     const container = document.getElementById('challengesList');
-    if (!container) return;
     if (challenges.length === 0) {
-        const noneAtAll = getOpenChallenges().length === 0;
-        container.innerHTML = noneAtAll
-            ? '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No open challenges yet. Be the first to post one.</h3><p>Issue a challenge to another member or leave the opponent blank to make it open.</p><button class="btn btn-gold" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button></div>'
-            : '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No challenges in this game yet</h3><p>Switch filters above or issue the first challenge in this category.</p><button class="btn btn-outline" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button></div>';
+        const noneAtAll = !allChallenges || allChallenges.length === 0;
+        renderOpenChallengesEmptyState(!noneAtAll);
         return;
     }
     container.innerHTML = challenges.map(ch => {
