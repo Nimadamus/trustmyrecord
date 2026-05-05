@@ -15,7 +15,7 @@ assert(fs.existsSync(scriptPath), 'MLB simulator client script exists');
 const html = fs.readFileSync(pagePath, 'utf8');
 const script = fs.readFileSync(scriptPath, 'utf8');
 
-assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/)"/.test(html) || /<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
+assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
 assert(/awayPoolSelect/.test(html), 'Team A pool selector is present');
