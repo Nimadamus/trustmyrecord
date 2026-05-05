@@ -1260,3 +1260,59 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Browser QA hardening: starter selects are injected by JS, so force them to
+   share the visible size and treatment of the team select controls. */
+#awayPitcherOptions,
+#homePitcherOptions,
+.pitcher-options {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+}
+
+.pitcher-field,
+.starter-field {
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+#awayPitcherOptions select,
+#homePitcherOptions select,
+select.starter-select,
+select.pitcher-select,
+.starter-select,
+.pitcher-select {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    min-height: 56px !important;
+    box-sizing: border-box !important;
+    padding: 0 42px 0 14px !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    border-radius: 10px !important;
+    background: #070d17 !important;
+    color: #ffffff !important;
+    font-family: Inter, system-ui, sans-serif !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    appearance: auto;
+}
+
+#awayPitcherOptions select option,
+#homePitcherOptions select option,
+select.starter-select option,
+select.pitcher-select option {
+    background: #070d17 !important;
+    color: #ffffff !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+}
