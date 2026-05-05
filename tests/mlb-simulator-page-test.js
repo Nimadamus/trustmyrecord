@@ -16,8 +16,8 @@ const html = fs.readFileSync(pagePath, 'utf8');
 const script = fs.readFileSync(scriptPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
-assert(/\/static\/css\/mlb-simulator\.css\?v=20260505-starter-dropdowns-qa4/.test(html), 'live page uses versioned simulator stylesheet');
-assert(/\/static\/js\/mlb-simulator\.js\?v=20260505-starter-dropdowns-qa4/.test(html), 'live page uses versioned simulator script');
+assert(/\/static\/css\/mlb-simulator\.css\?v=20260505-product-polish-logos/.test(html), 'live page uses versioned simulator stylesheet');
+assert(/\/static\/js\/mlb-simulator\.js\?v=20260505-product-polish-logos/.test(html), 'live page uses versioned simulator script');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
 assert(/id="awayPitcherSelect" class="sim-select starter-select pitcher-select"/.test(html), 'Team A starter select uses the same styled select pattern');
@@ -34,7 +34,11 @@ assert(/Projection and input notes/.test(html), 'projection review workflow step
 assert(/Data Notes/.test(html), 'compact data notes area is present');
 assert(/Verified live inputs appear when available/.test(html), 'compact live-input limitation text is present');
 assert(!/No matching current MLB game found|No verified record match available|No verified injury report match available|No verified player roster list is connected|No verified bullpen depth|No verified sportsbook odds match available/.test(html), 'unavailable source wall is not rendered in initial HTML');
-assert(/Awaiting matchup/.test(html), 'projected score empty state is polished');
+assert(/Run simulation/.test(html), 'projected score empty state is polished');
+assert(/awayPickerIdentity/.test(html) && /homePickerIdentity/.test(html), 'team identity areas are present');
+assert(/awayHeaderLogo/.test(html) && /homeHeaderLogo/.test(html), 'matchup review logo areas are present');
+assert(/Inside the TrustMyRecord MLB Simulator/.test(html), 'explainer section is present');
+assert(/model-based estimate/.test(html), 'explainer avoids overclaiming accuracy');
 assert(/Choose starters/.test(html), 'starter-dependent empty state is polished');
 assert(!/Loading MLB games|Loading sportsbook board|Waiting for board data|Projection engine not connected yet|Not connected for custom simulation|Unavailable without real inputs/.test(html), 'old board-dependent placeholder text is removed');
 assert(!/lock pick|locked pick|submit pick/i.test(html), 'page does not expose sportsbook submission actions');
@@ -43,6 +47,7 @@ assert(!/live verified|official injury/i.test(html), 'page does not include fake
 const elementIds = [
   'awayTeamSelect','homeTeamSelect','awayPoolSelect','homePoolSelect','runSimulationButton','refreshTeamsButton',
   'awayPitcherSelect','homePitcherSelect','awayPitcherMeta','homePitcherMeta',
+  'awayPickerIdentity','homePickerIdentity','awayHeaderLogo','homeHeaderLogo','awayScoreLogo','homeScoreLogo',
   'currentModeButton','historicalModeButton','mixedModeButton','modeHelpText','dataModeBadge','dataModeDetail',
   'liveInputGrid','awayTeamMeta','homeTeamMeta','selectedMatchupTitle','awayHeaderName','homeHeaderName',
   'awayHeaderMeta','homeHeaderMeta','awayEraBadge','homeEraBadge','resultCard','winnerBadge','awayScoreLabel',
@@ -64,7 +69,7 @@ function makeElement(id) {
     className: '',
     attributes: {},
     listeners: {},
-    style: {},
+    style: { setProperty(name, value) { this[name] = value; } },
     classList: { toggle() {} },
     addEventListener(type, fn) { this.listeners[type] = fn; },
     setAttribute(name, value) { this.attributes[name] = String(value); },

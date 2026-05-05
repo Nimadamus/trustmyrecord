@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'starter-dropdowns-20260505-qa4';
+    var UI_BUILD = 'product-polish-logos-20260505';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -135,6 +135,23 @@
         historical: HISTORICAL_TEAMS.map(makeHistorical)
     };
 
+    var ESPN_TEAM_LOGO_SLUGS = {
+        ARI: 'ari', ATL: 'atl', BAL: 'bal', BOS: 'bos', CHC: 'chc', CWS: 'chw', CIN: 'cin', CLE: 'cle', COL: 'col', DET: 'det',
+        HOU: 'hou', KC: 'kc', LAA: 'laa', LAD: 'lad', MIA: 'mia', MIL: 'mil', MIN: 'min', NYM: 'nym', NYY: 'nyy', ATH: 'oak',
+        PHI: 'phi', PIT: 'pit', SD: 'sd', SF: 'sf', SEA: 'sea', STL: 'stl', TB: 'tb', TEX: 'tex', TOR: 'tor', WSH: 'wsh'
+    };
+
+    var TEAM_COLORS = {
+        ARI: ['#a71930', '#e3d4ad'], ATL: ['#ce1141', '#13274f'], BAL: ['#df4601', '#000000'], BOS: ['#bd3039', '#0c2340'],
+        CHC: ['#0e3386', '#cc3433'], CWS: ['#c4ced4', '#27251f'], CIN: ['#c6011f', '#ffffff'], CLE: ['#e31937', '#0c2340'],
+        COL: ['#33006f', '#c4ced4'], DET: ['#0c2340', '#fa4616'], HOU: ['#eb6e1f', '#002d62'], KC: ['#004687', '#bd9b60'],
+        LAA: ['#ba0021', '#003263'], LAD: ['#005a9c', '#ffffff'], MIA: ['#00a3e0', '#ef3340'], MIL: ['#ffc52f', '#12284b'],
+        MIN: ['#002b5c', '#d31145'], NYM: ['#ff5910', '#002d72'], NYY: ['#0c2340', '#c4ced4'], ATH: ['#003831', '#efb21e'],
+        PHI: ['#e81828', '#002d72'], PIT: ['#fdb827', '#27251f'], SD: ['#2f241d', '#ffc425'], SF: ['#fd5a1e', '#27251f'],
+        SEA: ['#0c2c56', '#005c5c'], STL: ['#c41e3a', '#0c2340'], TB: ['#092c5c', '#8fbce6'], TEX: ['#003278', '#c0111f'],
+        TOR: ['#134a8e', '#1d2d5c'], WSH: ['#ab0003', '#14225a'], BKN: ['#003087', '#ffffff']
+    };
+
     var LIVE_INPUT_SOURCES = [
         ['scheduleFinals', 'MLB schedule/finals', 'Unavailable', 'No verified current schedule or final score match is connected.'],
         ['teamRecords', 'Team records', 'Unavailable', 'No verified team record match is connected.'],
@@ -182,6 +199,7 @@
     function escapeHtml(value) {
         return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
+    function escapeAttr(value) { return escapeHtml(value); }
     function setText(id, value) { var el = byId(id); if (el) el.textContent = value; }
     function normalizeName(value) { return String(value || '').toLowerCase().replace(/^the\s+/, '').replace(/[^a-z0-9]/g, ''); }
     function todayEspnDate() { return new Date().toISOString().slice(0, 10).replace(/-/g, ''); }
@@ -220,6 +238,42 @@
     function teamMeta(team) {
         if (!team) return 'No team selected';
         return team.era === 'historical' ? [team.abbreviation, team.season, 'Historical'].join(' / ') : [team.abbreviation, team.league, team.division].join(' / ');
+    }
+    function teamColors(team) {
+        return team && TEAM_COLORS[team.abbreviation] || ['#2dd4bf', '#60a5fa'];
+    }
+    function teamLogoUrl(team) {
+        if (!team || team.era !== 'current' || !ESPN_TEAM_LOGO_SLUGS[team.abbreviation]) return '';
+        return 'https://a.espncdn.com/i/teamlogos/mlb/500/' + ESPN_TEAM_LOGO_SLUGS[team.abbreviation] + '.png';
+    }
+    function logoMarkup(team, sizeClass) {
+        var abbreviation = team ? team.abbreviation : 'MLB';
+        var colors = teamColors(team);
+        var url = teamLogoUrl(team);
+        var fallbackStyle = 'background: linear-gradient(135deg, ' + colors[0] + ', ' + colors[1] + ');';
+        var fallback = '<span class="team-logo-fallback" style="' + escapeAttr(fallbackStyle) + '">' + escapeHtml(abbreviation) + '</span>';
+        if (!url) return '<span class="team-logo-mark ' + sizeClass + '">' + fallback + '</span>';
+        return "<span class=\"team-logo-mark " + sizeClass + "\"><img src=\"" + escapeAttr(url) + "\" alt=\"" + escapeAttr((team ? team.name : 'MLB') + " logo") + "\" loading=\"lazy\" onerror=\"this.style.display='none';this.nextElementSibling.style.display='grid';\"><span class=\"team-logo-fallback image-fallback\" style=\"" + escapeAttr(fallbackStyle) + "\">" + escapeHtml(abbreviation) + "</span></span>";
+    }
+    function renderTeamIdentity(id, team, label) {
+        var el = byId(id);
+        if (!el) return;
+        if (!team) {
+            el.innerHTML = '<div class="team-logo-mark picker-logo"><span class="team-logo-fallback">MLB</span></div><div><strong>' + escapeHtml(label || 'Select team') + '</strong><span>Choose a team to load starters</span></div>';
+            return;
+        }
+        el.innerHTML = logoMarkup(team, 'picker-logo') + '<div><strong>' + escapeHtml(team.name) + '</strong><span>' + escapeHtml(teamMeta(team)) + '</span></div>';
+    }
+    function setLogo(id, team, sizeClass) {
+        var el = byId(id);
+        if (el) el.innerHTML = logoMarkup(team, sizeClass || 'small-logo');
+    }
+    function applyAccent(id, team) {
+        var el = byId(id);
+        if (!el || !team) return;
+        var colors = teamColors(team);
+        el.style.setProperty('--team-primary', colors[0]);
+        el.style.setProperty('--team-secondary', colors[1]);
     }
     function pitcherId(side, slug) { return side + '-pitcher-' + slug; }
     function slugify(value) { return normalizeName(value).slice(0, 40) || 'starter'; }
@@ -886,6 +940,15 @@
         setLiveInputsForMatchup(away, home);
         renderPitcherOptions('away', away, state.activeLiveContext);
         renderPitcherOptions('home', home, state.activeLiveContext);
+        renderTeamIdentity('awayPickerIdentity', away, 'Team A');
+        renderTeamIdentity('homePickerIdentity', home, 'Team B');
+        setLogo('awayHeaderLogo', away, 'header-logo');
+        setLogo('homeHeaderLogo', home, 'header-logo');
+        setLogo('awayScoreLogo', away, 'score-logo');
+        setLogo('homeScoreLogo', home, 'score-logo');
+        applyAccent('awayPickerIdentity', away);
+        applyAccent('homePickerIdentity', home);
+        applyAccent('resultCard', away);
         setText('awayTeamMeta', teamMeta(away));
         setText('homeTeamMeta', teamMeta(home));
         setText('selectedMatchupTitle', away && home ? away.name + ' vs ' + home.name : 'Choose two teams');
@@ -1009,27 +1072,27 @@
         if (!result) {
             var shell = byId('projectionShell');
             if (shell) shell.setAttribute('data-projection-state', 'not-connected');
-            setText('projectedScoreValue', 'Awaiting matchup');
+            setText('projectedScoreValue', 'Run simulation');
             setText('winProbabilityValue', 'Select teams');
             setText('expectedRunsValue', 'Choose starters');
-            setText('totalRangeValue', 'Pending');
-            setText('runEnvironmentValue', 'Pending');
-            setText('simulationConfidenceValue', 'Pending');
-            setText('eraAdjustmentValue', 'Pending');
-            setText('simulationModeValue', 'Ready');
+            setText('totalRangeValue', 'Run to calculate');
+            setText('runEnvironmentValue', 'Run to calculate');
+            setText('simulationConfidenceValue', 'Run to calculate');
+            setText('eraAdjustmentValue', 'Run to calculate');
+            setText('simulationModeValue', 'Ready to run');
             setText('dataModeValue', dataModeLabel());
             setText('awayProbabilityLabel', 'Team A');
             setText('homeProbabilityLabel', 'Team B');
-            setText('awayProbabilityValue', 'Ready');
-            setText('homeProbabilityValue', 'Ready');
+            setText('awayProbabilityValue', '--');
+            setText('homeProbabilityValue', '--');
             setText('winnerBadge', 'Run a simulation');
             setText('awayScoreLabel', 'Team A');
             setText('homeScoreLabel', 'Team B');
-            setText('awayScoreBig', 'Ready');
-            setText('homeScoreBig', 'Ready');
-            setText('awayExpectedTile', 'Choose team and starter');
-            setText('homeExpectedTile', 'Choose team and starter');
-            setText('keyExplanationValue', 'Select a matchup and run the simulator to generate a projected winner, score range, win probability, and notes.');
+            setText('awayScoreBig', '--');
+            setText('homeScoreBig', '--');
+            setText('awayExpectedTile', 'Starter selected above');
+            setText('homeExpectedTile', 'Starter selected above');
+            setText('keyExplanationValue', 'Your selected matchup and starters are ready. Run the simulator to generate projected score range, win probability, expected runs, and matchup notes.');
             var emptyCard = byId('resultCard');
             if (emptyCard) emptyCard.setAttribute('data-result-state', 'empty');
             setText('projectionNotice', 'Simulation-based estimate mode is ready. Select two teams and click Run Simulation.');
