@@ -7959,19 +7959,9 @@
         }
         // Share + Embed always render, even for logged-out viewers, so any
         // visitor can broadcast or embed a public profile.
-        const pendingPublic = !!(p && p.public_pending_picks_enabled);
-        const pendingDisabledTitle = 'Pending picks are private';
-        const pendingControls = isOwnProfile
-            ? '<button class="btn btn-secondary" onclick="copyPendingPicksLink()" title="' + (pendingPublic ? 'Copy pending picks link' : pendingDisabledTitle) + '"' + (pendingPublic ? '' : ' disabled') + '><i class="fas fa-link" style="margin-right:6px;"></i>Share Pending Picks</button>' +
-              '<button class="btn btn-secondary" onclick="showEmbedModal(\'pending\')" title="' + (pendingPublic ? 'Copy pending picks embed' : pendingDisabledTitle) + '"' + (pendingPublic ? '' : ' disabled') + '><i class="fas fa-code" style="margin-right:6px;"></i>Embed Pending Picks</button>'
-            : (pendingPublic
-                ? '<button class="btn btn-secondary" onclick="copyPendingPicksLink()" title="Copy pending picks link"><i class="fas fa-link" style="margin-right:6px;"></i>Share Pending Picks</button>' +
-                  '<button class="btn btn-secondary" onclick="showEmbedModal(\'pending\')" title="Copy pending picks embed"><i class="fas fa-code" style="margin-right:6px;"></i>Embed Pending Picks</button>'
-                : '');
         const shareActions =
-            '<button class="btn btn-secondary" onclick="openShareModal()" title="Share this profile" data-tmr-share-btn><i class="fas fa-share-alt" style="margin-right:6px;"></i>Share Profile</button>' +
-            '<button class="btn btn-secondary" onclick="showEmbedModal(\'stats\')" title="Embed verified stats" data-tmr-embed-btn><i class="fas fa-code" style="margin-right:6px;"></i>Embed Stats</button>' +
-            pendingControls;
+            '<button class="btn btn-secondary" onclick="openShareModal()" title="Share this profile" data-tmr-share-btn><i class="fas fa-share-alt" style="margin-right:6px;"></i>Share</button>' +
+            '<button class="btn btn-secondary" onclick="showEmbedModal()" title="Embed this profile on your site" data-tmr-embed-btn><i class="fas fa-code" style="margin-right:6px;"></i>Embed</button>';
         const actions = '<div class="profile-actions">' + primaryActions + shareActions + '</div>';
 
         // Headline (Twitter-style 140-char tagline). Always rendered; empty
@@ -9996,21 +9986,20 @@
         lg: { w: 800, h: 320, label: 'Large (800 × 320)' }
     };
 
-    function tmrEmbedIframeUrl(user, size, type) {
+    function tmrEmbedIframeUrl(user, size) {
         // Direct query-string form (no 404 redirect, no flicker inside an
         // iframe). The clean /embed/<username> URL still works for direct
         // browser navigation -- 404.html catches it and forwards here.
-        return 'https://trustmyrecord.com/embed/?u=' + encodeURIComponent(user) + '&type=' + encodeURIComponent(type || 'stats') + '&size=' + (size || 'md') + '&theme=dark';
+        return 'https://trustmyrecord.com/embed/?u=' + encodeURIComponent(user) + '&size=' + (size || 'md') + '&theme=dark';
     }
 
-    function tmrBuildEmbedCode(user, size, type) {
+    function tmrBuildEmbedCode(user, size) {
         const dim = TMR_EMBED_SIZES[size] || TMR_EMBED_SIZES.md;
-        const embedType = type || 'stats';
-        const url = tmrEmbedIframeUrl(user, size, embedType);
-        return '<!-- TrustMyRecord ' + (embedType === 'pending' ? 'pending picks' : 'verified stats') + ' widget -->\n'
+        const url = tmrEmbedIframeUrl(user, size);
+        return '<!-- TrustMyRecord verified profile widget -->\n'
             + '<iframe\n'
             + '  src="' + url + '"\n'
-            + '  title="TrustMyRecord ' + (embedType === 'pending' ? 'pending picks' : 'verified stats') + ' for ' + user + '"\n'
+            + '  title="TrustMyRecord verified profile for ' + user + '"\n'
             + '  width="' + dim.w + '"\n'
             + '  height="' + dim.h + '"\n'
             + '  frameborder="0"\n'
@@ -10036,54 +10025,12 @@
         ].join('\n');
     }
 
-    function buildPendingPicksUrl(user) {
-        return 'https://trustmyrecord.com/my-pending-picks/?user=' + encodeURIComponent(user || profileUsername || '');
-    }
-
-    function copyRawText(text, successMessage) {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(function() {
-                showToast(successMessage || 'Copied!', 'success');
-            }).catch(function() {
-                copyRawTextFallback(text, successMessage);
-            });
-            return;
-        }
-        copyRawTextFallback(text, successMessage);
-    }
-
-    function copyRawTextFallback(text, successMessage) {
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        ta.remove();
-        showToast(successMessage || 'Copied!', 'success');
-    }
-
-    function copyPendingPicksLink() {
-        const user = profileUsername || (profileData && profileData.username) || '';
-        if (!profileData || !profileData.public_pending_picks_enabled) {
-            showToast('Pending picks are private', 'info');
-            return;
-        }
-        copyRawText(buildPendingPicksUrl(user), 'Pending picks link copied!');
-    }
-
-    function showEmbedModal(type) {
+    function showEmbedModal() {
         const existing = document.getElementById('embedModal');
         if (existing) existing.remove();
 
         const user = profileUsername || (profileData && profileData.username) || '';
         if (!user) { showToast('Profile not loaded yet', 'error'); return; }
-        const embedType = type === 'pending' ? 'pending' : 'stats';
-        if (embedType === 'pending' && (!profileData || !profileData.public_pending_picks_enabled)) {
-            showToast('Pending picks are private', 'info');
-            return;
-        }
         const profileShareUrl = (typeof buildShareUrl === 'function') ? buildShareUrl('trustmyrecord') : 'https://trustmyrecord.com/profile/?user=' + encodeURIComponent(user);
 
         const modal = document.createElement('div');
@@ -10100,10 +10047,10 @@
 
         modal.innerHTML = '<div style="background:#0b1422;border:1px solid rgba(148,163,184,0.22);border-radius:18px;padding:24px;max-width:720px;width:min(100%,720px);max-height:90vh;overflow-y:auto;box-shadow:0 24px 70px rgba(0,0,0,0.55);color:#eef4fb;">'
             + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
-            +   '<h2 style="font-size:1.15rem;font-weight:800;margin:0;">' + (embedType === 'pending' ? 'Embed pending picks' : 'Embed verified stats') + '</h2>'
+            +   '<h2 style="font-size:1.15rem;font-weight:800;margin:0;">Embed verified profile</h2>'
             +   '<button type="button" aria-label="Close" onclick="document.getElementById(\'embedModal\').remove()" style="background:transparent;border:0;color:#97a8bc;font-size:1.4rem;cursor:pointer;padding:4px 8px;line-height:1;">&times;</button>'
             + '</div>'
-            + '<p style="color:#97a8bc;font-size:.86rem;margin:0 0 16px 0;">Copy a live <strong style="color:#2dd4bf;">@' + user + '</strong> ' + (embedType === 'pending' ? 'pending picks' : 'verified stats') + ' embed.</p>'
+            + '<p style="color:#97a8bc;font-size:.86rem;margin:0 0 16px 0;">Drop a live auto-updating <strong style="color:#2dd4bf;">@' + user + '</strong> badge on any website. Pick a size, copy the snippet.</p>'
 
             // Size selector
             + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Size</div>'
@@ -10120,7 +10067,7 @@
             // Iframe snippet
             + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Iframe snippet</div>'
             + '<textarea id="embedCodeArea" readonly style="width:100%;height:170px;padding:12px;border-radius:10px;border:1px solid rgba(148,163,184,0.22);background:#070d18;color:#2dd4bf;font-family:ui-monospace,Menlo,monospace;font-size:.76rem;resize:vertical;margin-bottom:8px;outline:none;"></textarea>'
-            + '<div style="display:flex;justify-content:flex-end;margin-bottom:16px;"><button class="btn btn-primary" onclick="copyTextValue(\'embedCodeArea\', \'' + (embedType === 'pending' ? 'Pending picks embed copied!' : 'Stats embed copied!') + '\')"><i class="fas fa-copy" style="margin-right:6px;"></i>' + (embedType === 'pending' ? 'Copy pending picks embed' : 'Copy stats embed') + '</button></div>'
+            + '<div style="display:flex;justify-content:flex-end;margin-bottom:16px;"><button class="btn btn-primary" onclick="copyTextValue(\'embedCodeArea\', \'Iframe code copied!\')"><i class="fas fa-copy" style="margin-right:6px;"></i>Copy iframe</button></div>'
 
             // Auto-resize script (advanced)
             + '<details style="margin-bottom:14px;">'
@@ -10151,13 +10098,13 @@
         const refresh = () => {
             const dim = TMR_EMBED_SIZES[currentSize];
             // Snippets
-            document.getElementById('embedCodeArea').value = tmrBuildEmbedCode(user, currentSize, embedType);
+            document.getElementById('embedCodeArea').value = tmrBuildEmbedCode(user, currentSize);
             document.getElementById('scriptEmbedCodeArea').value = tmrBuildScriptCode(user);
             // Live preview iframe (rebuild so size attrs apply cleanly)
             const slot = document.getElementById('tmrEmbedPreviewSlot');
             slot.innerHTML = '';
             const ifr = document.createElement('iframe');
-            ifr.src = tmrEmbedIframeUrl(user, currentSize, embedType);
+            ifr.src = tmrEmbedIframeUrl(user, currentSize);
             ifr.title = 'TrustMyRecord profile preview for ' + user;
             ifr.width = String(dim.w);
             ifr.height = String(dim.h);
@@ -10202,8 +10149,6 @@
         showToast(successMessage || 'Copied!', 'success');
     }
 
-    window.copyPendingPicksLink = copyPendingPicksLink;
-
     function profileEditString(value) {
         return String(value == null ? '' : value).trim();
     }
@@ -10244,13 +10189,6 @@
             '<label style="' + ls + '">Headline (one line, 140 chars)</label><input id="eHeadline" maxlength="140" placeholder="One-line public profile headline" value="' + ((profileData.headline || '').replace(/"/g,'&quot;')) + '" style="' + is + '">' +
             '<label style="' + ls + '">Bio</label><textarea id="eBio" rows="3" style="' + is + 'resize:vertical;">' + (profileData.bio || '') + '</textarea>' +
             '<label style="' + ls + '">Location</label><input id="eLoc" value="' + (profileData.location || '') + '" style="' + is + '">' +
-            '<div style="border-top:1px solid #d8dde6;margin:20px 0 16px;padding-top:16px;"><h3 style="font-size:1rem;font-weight:800;margin:0 0 10px;color:#162231;">Public Sharing</h3>' +
-            '<label style="display:flex;align-items:flex-start;gap:10px;color:#162231;font-weight:800;font-size:.9rem;margin-bottom:8px;"><input id="ePublicPending" type="checkbox" ' + (profileData.public_pending_picks_enabled ? 'checked' : '') + ' style="width:18px;height:18px;margin-top:1px;"> <span>Show pending picks publicly</span></label>' +
-            '<p style="font-size:.82rem;color:#637389;line-height:1.45;margin:0 0 12px;">Turn this on if you want visitors to see your ungraded pending picks before they are final. Your graded record is always public.</p>' +
-            '<div style="display:flex;flex-wrap:wrap;gap:8px;"><button type="button" class="btn btn-secondary" onclick="copyRawText((typeof buildShareUrl === \'function\' ? buildShareUrl(\'trustmyrecord\') : \'https://trustmyrecord.com/profile/?user=\' + encodeURIComponent(profileUsername || \'\')), \'Profile link copied!\')" style="padding:8px 12px;font-size:.8rem;">Copy profile link</button>' +
-            '<button type="button" class="btn btn-secondary" onclick="copyRawText(tmrBuildEmbedCode(profileUsername || (profileData && profileData.username) || \'\', \'md\', \'stats\'), \'Stats embed copied!\')" style="padding:8px 12px;font-size:.8rem;">Copy stats embed</button>' +
-            '<button type="button" class="btn btn-secondary" onclick="copyPendingPicksLink()" ' + (profileData.public_pending_picks_enabled ? '' : 'disabled title="Pending picks are private"') + ' style="padding:8px 12px;font-size:.8rem;">Copy pending picks link</button>' +
-            '<button type="button" class="btn btn-secondary" onclick="copyRawText(tmrBuildEmbedCode(profileUsername || (profileData && profileData.username) || \'\', \'md\', \'pending\'), \'Pending picks embed copied!\')" ' + (profileData.public_pending_picks_enabled ? '' : 'disabled title="Pending picks are private"') + ' style="padding:8px 12px;font-size:.8rem;">Copy pending picks embed</button></div></div>' +
             '<div style="border-top:1px solid #353a4d;margin:20px 0 16px;padding-top:16px;"><h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;color:#00aeff;">Favorite Teams</h3></div>' +
             '<label style="' + ls + '">NFL Team</label><input id="eFavNFL" value="' + ((profileData._fav_teams && profileData._fav_teams.NFL) || '') + '" placeholder="Favorite NFL team" style="' + is + '">' +
             '<label style="' + ls + '">NBA Team</label><input id="eFavNBA" value="' + ((profileData._fav_teams && profileData._fav_teams.NBA) || '') + '" placeholder="Favorite NBA team" style="' + is + '">' +
@@ -10293,10 +10231,6 @@
                 profileEditSetIfChanged(updates, 'bio', document.getElementById('eBio').value.trim(), profileData.bio || '');
                 profileEditSetIfChanged(updates, 'location', document.getElementById('eLoc').value.trim(), profileData.location || '');
                 profileEditSetIfChanged(updates, 'headline', (document.getElementById('eHeadline') ? document.getElementById('eHeadline').value.trim() : ''), profileData.headline || '');
-                const publicPendingEl = document.getElementById('ePublicPending');
-                if (publicPendingEl && publicPendingEl.checked !== !!profileData.public_pending_picks_enabled) {
-                    updates.public_pending_picks_enabled = publicPendingEl.checked;
-                }
                 if (pendingAvatarData && pendingAvatarData !== profileData.avatar_url) updates.avatar_url = pendingAvatarData;
 
                 // Try backend first
@@ -10401,7 +10335,7 @@
                 }
                 analyticsTrack('profile_updated_manual', {
                     username: profileUsername || '',
-                    fields_updated: 'display_name,bio,location,teams,gamer_profile,avatar,public_sharing'
+                    fields_updated: 'display_name,bio,location,teams,gamer_profile,avatar'
                 });
                 showToast('Profile updated!', 'success'); modal.remove();
                 profileData = { ...profileData, ...updates };

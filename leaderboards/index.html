@@ -772,7 +772,7 @@
                         <div class="card-head">
                             <div>
                                 <h2>Board filters</h2>
-                                <p>Refine the leaderboard by sport, search, and sorting logic.</p>
+                                <p>Refine the leaderboard by sport, sorting logic, and minimum proof threshold.</p>
                             </div>
                             <button type="button" class="mini-link" data-action="reset-filters">Reset</button>
                         </div>
@@ -801,12 +801,22 @@
                                     <option value="units">Net units</option>
                                     <option value="roi">ROI</option>
                                     <option value="winRate">Win rate</option>
-                                    <option value="totalPicks">Pick count</option>
+                                    <option value="totalPicks">Sample size</option>
                                     <option value="streak">Current streak</option>
                                 </select>
                             </div>
+                            <div class="field">
+                                <label for="sampleFilter">Minimum picks</label>
+                                <select id="sampleFilter">
+                                    <option value="20">20 picks</option>
+                                    <option value="25">25 picks</option>
+                                    <option value="50">50 picks</option>
+                                    <option value="100">100 picks</option>
+                                    <option value="250">250 picks</option>
+                                </select>
+                            </div>
                         </div>
-                        <p class="filters-foot">Official handicapper rankings require 20 graded picks, recent graded activity, and positive net units. Sorts that need data the platform does not yet expose for a given capper keep that capper visible and show a placeholder cell instead of fabricating a number.</p>
+                        <p class="filters-foot">Sorts that need data the platform does not yet expose for a given capper keep that capper visible and show a placeholder cell instead of fabricating a number.</p>
                     </div>
 
                     <div id="capperPreviewCard" class="preview-card" style="display:none;">
@@ -883,9 +893,9 @@
                         </div>
                     </div>
                     <div class="card" style="margin-bottom:0;">
-                        <div class="card-head"><div><h2>Public Records</h2><p>Settled public pick records by volume.</p></div></div>
+                        <div class="card-head"><div><h2>Sample-size leaders</h2><p>High-volume records with real sample.</p></div></div>
                         <div id="volumeRail" class="rail-list">
-                            <div class="loading">Loading public records...</div>
+                            <div class="loading">Loading volume leaders...</div>
                         </div>
                     </div>
                 </aside>
@@ -1034,7 +1044,7 @@
     </main>
 
 <script src="/static/js/config.js?v=20260330"></script>
-    <script src="/static/js/backend-api.js?v=20260504leaderboard1"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
 <script src="/static/js/auth-persistent.js?v=20260424a"></script>
 <script src="/static/js/analytics.js?v=20260417"></script>
     <script>
@@ -1163,18 +1173,14 @@
             const totalPicks = num(entry.total_picks != null ? entry.total_picks : entry.totalPicks != null ? entry.totalPicks : wins + losses + pushes);
             const roi = pct(entry.roi);
             const units = num(entry.net_units != null ? entry.net_units : entry.units);
-            const winRate = pct(entry.win_percentage != null ? entry.win_percentage : entry.win_rate != null ? entry.win_rate : entry.winRate);
+            const winRate = pct(entry.win_percentage != null ? entry.win_percentage : entry.winRate);
             const streak = num(entry.current_streak != null ? entry.current_streak : entry.currentStreak);
-            const sports = Array.isArray(entry.primary_sports) ? entry.primary_sports
-                : Array.isArray(entry.sports) ? entry.sports
-                : entry.sport || entry.primary_sport ? [entry.sport || entry.primary_sport] : [];
             return {
                 raw: entry,
                 username: username,
                 displayName: entry.display_name || entry.displayName || username,
                 avatarUrl: entry.avatar_url || entry.avatarUrl || '',
-                sport: sports.length ? sports.join(', ') : 'All',
-                sports: sports,
+                sport: entry.sport || entry.primary_sport || 'All',
                 wins: wins, losses: losses, pushes: pushes,
                 totalPicks: totalPicks,
                 roi: roi, units: units, winRate: winRate, streak: streak
@@ -1202,17 +1208,17 @@
             const body = document.getElementById('leaderboardBody');
             const count = document.getElementById('resultCount');
 
-            count.textContent = entries.length + ' ranked cappers';
+            count.textContent = entries.length + ' cappers';
             if (!entries.length) {
                 wrap.style.display = 'none';
                 state.style.display = 'block';
                 setStateAsEmpty(state, emptyStateHtml({
                     icon: '★',
-                    title: 'No eligible ranked handicappers yet',
-                    body: 'Rankings appear after users submit enough graded picks. This official leaderboard stays empty until the integrity threshold is met; use the handicapper directory to discover real public users with submitted picks.',
+                    title: 'No ranked handicappers yet',
+                    body: 'Lock graded picks to build a public record. Ranked handicappers require 20 graded picks, recent graded activity, and positive net units.',
                     ctas: [
-                        { label: 'Browse Handicappers', href: '/handicappers/', primary: true },
-                        { label: 'Submit Picks', href: '/sportsbook/' }
+                        { label: 'Lock Your First Pick', href: '/sportsbook/', primary: true },
+                        { label: 'Invite A Rival', href: '/arena/' }
                     ]
                 }));
                 return;
@@ -1271,7 +1277,7 @@
                 return '<a class="rail-item" href="/profile/?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="volume_rail">'
                     + '<strong>' + escapeHtml(entry.displayName) + '</strong>'
                     + '<span>' + entry.totalPicks + ' picks • ' + signed(entry.roi, '%') + ' ROI • ' + signed(entry.units, 'u') + '</span>'
-                    + '<span class="badge gold">Public record</span>'
+                    + '<span class="badge gold">Verified sample</span>'
                     + '</a>';
             }).join('');
         }
@@ -1390,13 +1396,12 @@
             const search = String(document.getElementById('capperSearch').value || '').trim().toLowerCase();
             const sport = document.getElementById('sportFilter').value;
             const sort = document.getElementById('sortFilter').value;
+            const minSample = num(document.getElementById('sampleFilter').value);
 
             filteredLeaderboard = fullLeaderboard.filter(function(entry) {
                 const matchesSearch = !search || entry.username.toLowerCase().indexOf(search) !== -1 || entry.displayName.toLowerCase().indexOf(search) !== -1;
-                const matchesSport = sport === 'all' || (entry.sports || []).some(function(item) {
-                    return String(item || '').toLowerCase() === String(sport).toLowerCase();
-                });
-                return matchesSearch && matchesSport;
+                const matchesSport = sport === 'all' || String(entry.sport || '').toLowerCase() === String(sport).toLowerCase();
+                return matchesSearch && matchesSport && entry.totalPicks >= minSample;
             });
 
             filteredLeaderboard.sort(function(a, b) {
@@ -1410,7 +1415,7 @@
             renderLeaderboard(filteredLeaderboard);
             trackHub('handicapper_filters_applied', {
                 search_query: search || '', sport: sport, sort_by: sort,
-                min_picks: 1, visible_count: filteredLeaderboard.length
+                min_sample: minSample, visible_count: filteredLeaderboard.length
             });
         }
 
@@ -1418,30 +1423,14 @@
             document.getElementById('capperSearch').value = '';
             document.getElementById('sportFilter').value = 'all';
             document.getElementById('sortFilter').value = 'units';
+            document.getElementById('sampleFilter').value = '20';
             applyHandicapperFilters();
-        }
-
-        async function fetchHandicapperLeaderboard() {
-            const endpoint = '/users/leaderboard?sortBy=net_units&limit=100';
-            const baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.api && CONFIG.api.baseUrl)
-                ? CONFIG.api.baseUrl
-                : 'https://trustmyrecord-api.onrender.com/api';
-            const url = baseUrl + endpoint;
-            const response = await fetch(url, {
-                headers: { 'Accept': 'application/json' },
-                cache: 'no-store'
-            });
-            if (!response.ok) {
-                throw new Error('Leaderboard request failed: HTTP ' + response.status);
-            }
-            const data = await response.json();
-            return data;
         }
 
         async function loadHandicappers() {
             const state = document.getElementById('leaderboardState');
             try {
-                const data = await fetchHandicapperLeaderboard();
+                const data = await window.api.getLeaderboard({ sortBy: 'net_units', limit: 100 });
                 const rawEntries = Array.isArray(data) ? data
                     : Array.isArray(data && data.leaderboard) ? data.leaderboard
                     : Array.isArray(data && data.users) ? data.users
@@ -1867,7 +1856,7 @@
         }
 
         function bindHandicapperFilters() {
-            ['capperSearch', 'sportFilter', 'sortFilter'].forEach(function(id) {
+            ['capperSearch', 'sportFilter', 'sortFilter', 'sampleFilter'].forEach(function(id) {
                 const el = document.getElementById(id);
                 if (!el) return;
                 el.addEventListener(id === 'capperSearch' ? 'input' : 'change', applyHandicapperFilters);
