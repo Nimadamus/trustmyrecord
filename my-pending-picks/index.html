@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Pending Picks | TrustMyRecord</title>
+    <title>Pending Picks | TrustMyRecord</title>
     <meta name="robots" content="noindex,nofollow">
     <link rel="canonical" href="https://trustmyrecord.com/my-pending-picks/">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -257,7 +257,7 @@
         <header class="pending-head">
             <div>
                 <p class="pending-kicker">Private ledger</p>
-                <h1>My Pending Picks</h1>
+                <h1>Pending Picks</h1>
                 <p class="pending-subtitle">Locked picks waiting for final grading.</p>
             </div>
             <nav class="pending-actions" aria-label="Pending picks actions">
@@ -378,6 +378,12 @@
             if (n === 0) return '0';
             return n > 0 ? '+' + n : String(n);
         }
+        function fmtPickLine(pick) {
+            if (window.TMR && typeof window.TMR.formatPickLine === 'function') {
+                return window.TMR.formatPickLine(pick);
+            }
+            return fmtLine(pick && pick.line_snapshot);
+        }
         function fmtUnits(value) {
             var n = Number(value);
             if (!Number.isFinite(n)) return '-';
@@ -403,7 +409,7 @@
                 + '<td>' + esc(fmtDate(pick.commence_time)) + '<span class="pick-sub">' + esc(matchup(pick)) + '</span></td>'
                 + '<td><span class="league-chip">' + esc(sportLabel(pick.sport_key)) + '</span></td>'
                 + '<td><span class="pick-main">' + esc(pickLabel) + '</span><span class="pick-sub">' + esc(marketLabel(pick.market_type)) + '</span></td>'
-                + '<td>' + esc(fmtLine(pick.line_snapshot)) + '</td>'
+                + '<td>' + esc(fmtPickLine(pick)) + '</td>'
                 + '<td>' + esc(fmtOdds(pick.odds_snapshot)) + '</td>'
                 + '<td>' + esc(fmtUnits(pick.units)) + '</td>'
                 + '<td>' + esc(fmtDate(pick.locked_at || pick.created_at)) + '</td>'
@@ -418,7 +424,7 @@
                 + cardRow('Date of Game', esc(fmtDate(pick.commence_time)) + '<span class="pick-sub">' + esc(matchup(pick)) + '</span>')
                 + cardRow('League', '<span class="league-chip">' + esc(sportLabel(pick.sport_key)) + '</span>')
                 + cardRow('Pick', '<span class="pick-main">' + esc(pickText(pick)) + '</span><span class="pick-sub">' + esc(marketLabel(pick.market_type)) + '</span>')
-                + cardRow('Line', esc(fmtLine(pick.line_snapshot)))
+                + cardRow('Line', esc(fmtPickLine(pick)))
                 + cardRow('Odds', esc(fmtOdds(pick.odds_snapshot)))
                 + cardRow('Units', esc(fmtUnits(pick.units)))
                 + cardRow('Time Submitted', esc(fmtDate(pick.locked_at || pick.created_at)))
