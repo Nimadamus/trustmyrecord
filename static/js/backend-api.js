@@ -423,6 +423,15 @@ class TrustMyRecordAPI {
         return this.request(`/users/${encodeURIComponent(username)}`);
     }
 
+    async getUserPublicStats(username) {
+        return this.request(`/users/${encodeURIComponent(username)}/public-stats`);
+    }
+
+    async getPublicPendingPicks(username, options = {}) {
+        const { limit = 100, offset = 0 } = options || {};
+        return this.request(`/users/${encodeURIComponent(username)}/pending?limit=${limit}&offset=${offset}`);
+    }
+
     async updateProfile(updates) {
         return this.request('/users/profile', {
             method: 'PUT',
