@@ -9969,13 +9969,14 @@
                 <div class="option-group">
                     <label>Units</label>
                     <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
-<input type="number" id="unitsInput" min="1" max="5" step="1" value="1" inputmode="numeric" pattern="[1-5]" oninput="this.value=this.value.replace(/[^1-5]/g,'').slice(0,1)" style="width: 90px; padding: 12px 14px; background: var(--card-bg); border: 2px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 18px; font-weight: 700; text-align: center; font-family: 'Barlow', sans-serif;" />
+<input type="number" id="unitsInput" min="0.5" max="5" step="0.5" value="1" inputmode="decimal" oninput="if (window.TMR && typeof window.TMR.updateStakeModePreview === 'function') window.TMR.updateStakeModePreview()" style="width: 90px; padding: 12px 14px; background: var(--card-bg); border: 2px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 18px; font-weight: 700; text-align: center; font-family: 'Barlow', sans-serif;" />
                         <div id="unitsModeToggle" style="display: flex; border-radius: 10px; overflow: hidden; border: 2px solid var(--glass-border);">
                             <button type="button" id="modeRisk" class="units-mode-btn active" onclick="setUnitsMode('risk')" style="padding: 12px 18px; background: var(--gradient-gold); border: none; color: var(--dark-bg); font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s;">RISK</button>
                             <button type="button" id="modeToWin" class="units-mode-btn" onclick="setUnitsMode('towin')" style="padding: 12px 18px; background: var(--card-bg); border: none; color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s;">TO WIN</button>
                         </div>
                     </div>
-                    <p id="unitsExplanation" class="ticket-input-help">Whole units only. Choose between 1 and 5. Winnings calculated from odds.</p>
+                    <p id="unitsExplanation" class="ticket-input-help">Enter risk units or target win units. Choose between 0.5 and 5.</p>
+                    <p id="unitsStakePreview" class="ticket-input-help">Risk / To Win preview updates after odds are entered.</p>
                 </div>
 
                 <div class="option-group">

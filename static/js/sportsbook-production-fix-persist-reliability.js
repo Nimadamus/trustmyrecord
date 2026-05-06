@@ -183,6 +183,63 @@
         };
     }
 
+    function normalizeStakeMode(mode) {
+        return String(mode || '').toLowerCase() === 'to_win' || String(mode || '').toLowerCase() === 'towin' ? 'to_win' : 'risk';
+    }
+
+    function getSelectedStakeMode() {
+        return normalizeStakeMode(window.TMR && window.TMR.selectedUnitsMode ? window.TMR.selectedUnitsMode : 'risk');
+    }
+
+    function setStakeMode(mode) {
+        const nextMode = normalizeStakeMode(mode);
+        window.TMR = window.TMR || {};
+        window.TMR.selectedUnitsMode = nextMode;
+
+        const buttonPairs = [
+            { id: 'modeRisk', mode: 'risk' },
+            { id: 'modeToWin', mode: 'to_win' },
+            { id: 'modeRiskTicket', mode: 'risk' },
+            { id: 'modeToWinTicket', mode: 'to_win' }
+        ];
+        buttonPairs.forEach(function(entry) {
+            const button = document.getElementById(entry.id);
+            if (!button) return;
+            const active = entry.mode === nextMode;
+            button.classList.toggle('active', active);
+            button.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+
+        const hiddenTicketMode = document.getElementById('ttSlipStakeMode');
+        if (hiddenTicketMode) hiddenTicketMode.value = nextMode;
+
+        const explanation = document.getElementById('unitsExplanation');
+        if (explanation) {
+            explanation.textContent = nextMode === 'to_win'
+                ? 'Enter target profit units. Risk is calculated from the odds.'
+                : 'Enter units risked. To-win amount is calculated from the odds.';
+        }
+
+        updateStakeModePreview();
+        return nextMode;
+    }
+
+    function updateStakeModePreview() {
+        const input = document.getElementById('unitsInput');
+        const oddsInput = document.getElementById('pickOddsInput');
+        const amount = input ? parseFloat(input.value || '1') : 1;
+        const odds = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
+        const values = calculateStakeValues(getSelectedStakeMode(), amount, odds);
+        const previewText = values.risk_units > 0 && values.win_units > 0
+            ? 'Risk ' + values.risk_units + ' units to win ' + values.win_units + ' units'
+            : 'Risk / To Win preview updates after odds are entered.';
+
+        ['unitsStakePreview', 'ttSlipStakePreview'].forEach(function(id) {
+            const preview = document.getElementById(id);
+            if (preview) preview.textContent = previewText;
+        });
+    }
+
     function formatStakeDisplay(pick) {
         pick = pick || {};
         const odds = Number(pick.odds_snapshot != null ? pick.odds_snapshot : (pick.odds != null ? pick.odds : pick.price));
@@ -204,6 +261,8 @@
     window.TMR = window.TMR || {};
     if (typeof window.TMR.calculateStakeValues !== 'function') window.TMR.calculateStakeValues = calculateStakeValues;
     if (typeof window.TMR.formatStakeDisplay !== 'function') window.TMR.formatStakeDisplay = formatStakeDisplay;
+    if (typeof window.TMR.updateStakeModePreview !== 'function') window.TMR.updateStakeModePreview = updateStakeModePreview;
+    if (typeof window.setUnitsMode !== 'function') window.setUnitsMode = setStakeMode;
 
     function normalizePick(pick) {
         return Object.assign({}, pick, {
@@ -967,11 +1026,7 @@
 
         const unitsInput = document.getElementById('unitsInput');
         if (unitsInput) {
-            const row = unitsInput.parentElement;
-            if (row && !row.classList.contains('tmr-units-row')) {
-                row.classList.add('tmr-units-row');
-            }
-            unitsInput.style.width = '';
+            ensureStakeModeControls(unitsInput);
         }
 
         const reasoning = document.getElementById('pickReasoning');
@@ -989,6 +1044,88 @@
             if (text) text.textContent = 'SUBMIT';
             else submitBtn.textContent = 'SUBMIT';
         }
+    }
+
+    function ensureStakeModeControls(unitsInput) {
+        unitsInput = unitsInput || document.getElementById('unitsInput');
+        if (!unitsInput) return;
+
+        unitsInput.setAttribute('min', '0.5');
+        unitsInput.setAttribute('max', '5');
+        unitsInput.setAttribute('step', '0.5');
+        unitsInput.setAttribute('inputmode', 'decimal');
+        unitsInput.removeAttribute('pattern');
+        unitsInput.oninput = function() {
+            updateStakeModePreview();
+        };
+        unitsInput.style.width = '';
+
+        let row = unitsInput.parentElement;
+        if (!row || !row.classList || !row.classList.contains('tmr-units-row')) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'tmr-units-row';
+            wrapper.style.display = 'flex';
+            wrapper.style.alignItems = 'center';
+            wrapper.style.gap = '12px';
+            wrapper.style.marginTop = '8px';
+            if (row) {
+                row.insertBefore(wrapper, unitsInput);
+            }
+            wrapper.appendChild(unitsInput);
+            row = wrapper;
+        } else {
+            row.classList.add('tmr-units-row');
+        }
+
+        let toggle = document.getElementById('unitsModeToggle');
+        if (!toggle) {
+            toggle = document.createElement('div');
+            toggle.id = 'unitsModeToggle';
+            toggle.setAttribute('role', 'group');
+            toggle.setAttribute('aria-label', 'Stake mode');
+            toggle.innerHTML =
+                '<button type="button" id="modeRisk" class="units-mode-btn" data-stake-mode="risk">Risk</button>' +
+                '<button type="button" id="modeToWin" class="units-mode-btn" data-stake-mode="to_win">To Win</button>';
+        }
+        if (toggle.parentElement !== row) row.appendChild(toggle);
+        toggle.style.display = 'flex';
+
+        [
+            { id: 'modeRisk', mode: 'risk', label: 'Risk' },
+            { id: 'modeToWin', mode: 'to_win', label: 'To Win' }
+        ].forEach(function(entry) {
+            let button = document.getElementById(entry.id);
+            if (!button) {
+                button = document.createElement('button');
+                button.type = 'button';
+                button.id = entry.id;
+                button.className = 'units-mode-btn';
+                toggle.appendChild(button);
+            }
+            button.type = 'button';
+            button.textContent = entry.label;
+            button.setAttribute('data-stake-mode', entry.mode);
+            button.onclick = function() {
+                setStakeMode(entry.mode);
+            };
+        });
+
+        const group = unitsInput.closest('.option-group');
+        let explanation = document.getElementById('unitsExplanation');
+        if (!explanation && group) {
+            explanation = document.createElement('p');
+            explanation.id = 'unitsExplanation';
+            explanation.className = 'ticket-input-help';
+            group.appendChild(explanation);
+        }
+        if (group && !document.getElementById('unitsStakePreview')) {
+            const preview = document.createElement('p');
+            preview.id = 'unitsStakePreview';
+            preview.className = 'ticket-input-help';
+            group.appendChild(preview);
+        }
+
+        setStakeMode(getSelectedStakeMode());
     }
 
     function getLineInputLabel(option) {
@@ -2393,6 +2530,8 @@
         const bookInput = document.getElementById('pickBookInput');
         const reasoningInput = document.getElementById('pickReasoning');
 
+        ensureStakeModeControls(unitsInput);
+
         const oddsValue = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
         const lineValue = lineInput && lineInput.value !== '' ? parseFloat(lineInput.value) : null;
         const unitsRaw = unitsInput ? parseFloat(unitsInput.value || '1') : 1;
@@ -2427,6 +2566,7 @@
             try { window.api.loadTokens(); } catch (error) {}
         }
 
+        const stakeMode = getSelectedStakeMode();
         let finalPayload = null;
         try {
             const api = await getApiClientOrFallback();
@@ -2443,8 +2583,8 @@
                 line_snapshot: lineValue,
                 odds_snapshot: oddsValue,
                 units: unitsValue,
-                stake_mode: (window.TMR && (window.TMR.selectedUnitsMode === 'to_win' || window.TMR.selectedUnitsMode === 'towin')) ? 'to_win' : 'risk',
-                units_mode: (window.TMR && (window.TMR.selectedUnitsMode === 'to_win' || window.TMR.selectedUnitsMode === 'towin')) ? 'to_win' : 'risk',
+                stake_mode: stakeMode,
+                units_mode: stakeMode,
                 book_title: bookInput ? bookInput.value.trim() : option.book_title,
                 book_key: option.book_key,
                 market_key: option.market_key,
