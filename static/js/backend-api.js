@@ -420,7 +420,7 @@ class TrustMyRecordAPI {
     // ==================== USER ROUTES ====================
 
     async getUserProfile(username) {
-        return this.request(`/users/${username}`);
+        return this.request(`/users/${encodeURIComponent(username)}`);
     }
 
     async updateProfile(updates) {
