@@ -66,6 +66,13 @@ async function selectSport(dom, sport = 'NBA') {
   await new Promise((resolve) => setTimeout(resolve, 30));
 }
 
+function selectFirstMatchup(doc) {
+  const matchup = doc.querySelector('#matchupFilter');
+  const value = Array.from(matchup.options).find((option) => option.value)?.value;
+  assert(value, 'matchup selector should include a current-slate matchup');
+  changeSelect(doc, '#matchupFilter', value);
+}
+
 function changeSelect(doc, selector, value) {
   const el = doc.querySelector(selector);
   el.value = value;
@@ -87,9 +94,9 @@ function changeSelect(doc, selector, value) {
           away_abbr: 'ORL',
           bet_type: 'MONEYLINE',
           trend_type: 'RECORD',
-          claim: 'The Pistons are 9-1 in their last 10 after a win',
-          sample: 10,
-          dominance: 0.9,
+          claim: 'The Pistons are 1-1 in their last 2 after a win',
+          sample: 2,
+          dominance: 0.5,
           unit_basis: '1 unit flat stake',
           source_rows: [
             {
@@ -130,6 +137,8 @@ function changeSelect(doc, selector, value) {
   const doc = dom.window.document;
 
   assert(doc.querySelector('#marketType'), 'market type filter should render');
+  assert(doc.querySelector('#matchupFilter'), 'matchup selector should render before market type');
+  assert(doc.body.textContent.indexOf('Choose Matchup') < doc.body.textContent.indexOf('Choose Market Type'), 'matchup step should appear before market step');
   assert(doc.querySelector('#trendFactor'), 'trend factor filter should render');
   assert(doc.querySelector('#minSample'), 'sample size filter should render');
   assert(doc.querySelector('#minWinPct'), 'win percentage threshold filter should render');
@@ -138,7 +147,13 @@ function changeSelect(doc, selector, value) {
   assert(doc.querySelector('#sortBy'), 'sort filter should render');
 
   await selectSport(dom);
-  assert.strictEqual(doc.querySelector('#teamFilter').value, 'all', 'team filter initializes after sport load');
+  selectFirstMatchup(doc);
+  assert.strictEqual(doc.querySelector('#teamFilter').value, 'both', 'team filter initializes to both teams after matchup selection');
+  assert.deepStrictEqual(
+    Array.from(doc.querySelector('#teamFilter').options).map((option) => option.textContent),
+    ['Both teams', 'ORL (away)', 'DET (home)'],
+    'team selector should only show the selected matchup teams and both teams'
+  );
   doc.querySelector('#runTrendspotter').click();
   await new Promise((resolve) => setTimeout(resolve, 10));
   assert.strictEqual(doc.querySelectorAll('.ts-result-item').length, 2, 'sport filter should render sport trends');
@@ -208,6 +223,7 @@ function changeSelect(doc, selector, value) {
   };
   const corruptedDom = await bootWithData(corruptedData);
   await selectSport(corruptedDom);
+  assert.strictEqual(corruptedDom.window.document.querySelector('#matchupFilter').disabled, true, 'invalid trends should not create matchup options');
   corruptedDom.window.document.querySelector('#runTrendspotter').click();
   assert.strictEqual(corruptedDom.window.document.querySelectorAll('.ts-result-item').length, 0, 'incomplete trends must not render results');
 
@@ -231,8 +247,10 @@ function changeSelect(doc, selector, value) {
   await selectSport(archivedDom);
   archivedDom.window.document.querySelector('#runTrendspotter').click();
   assert.strictEqual(archivedDom.window.document.querySelectorAll('.ts-result-item').length, 0, 'archived artifacts must not render in current slate mode');
-  assert.match(archivedDom.window.document.querySelector('.ts-no-results').textContent, /No verified current slate trends/);
+  assert.strictEqual(archivedDom.window.document.querySelector('#matchupFilter').disabled, true, 'archived matchups should not populate current slate selector');
   changeSelect(archivedDom.window.document, '#researchMode', 'archived');
+  selectFirstMatchup(archivedDom.window.document);
+  archivedDom.window.document.querySelector('#runTrendspotter').click();
   assert.strictEqual(archivedDom.window.document.querySelectorAll('.ts-result-item').length, 1, 'archived research should render only in archived mode');
   assert.match(archivedDom.window.document.querySelector('.ts-result-item').textContent, /Archived Research/);
   assert.match(archivedDom.window.document.querySelector('.ts-result-item').textContent, /before current date/);
