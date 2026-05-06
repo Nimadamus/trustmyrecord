@@ -687,7 +687,7 @@
             <div class="hm-section-head">
                 <div>
                     <h2>Leaderboard</h2>
-                    <p>Leaders require at least 20 graded picks and positive net units. Thin samples stay out of promoted rankings.</p>
+                    <p>Leaders require at least 20 graded picks, recent graded activity, and positive net units. Thin samples stay out of promoted rankings.</p>
                 </div>
                 <span class="hm-production-note">Showing <strong id="hmVisibleMembers">0</strong> filtered members</span>
             </div>
@@ -1387,7 +1387,9 @@
         }
 
         function isQualifiedTopPerformer(member) {
-            return gradedCount(member) >= MIN_TOP_PERFORMER_GRADED_PICKS;
+            return gradedCount(member) >= MIN_TOP_PERFORMER_GRADED_PICKS
+                && Number(member?.stats?.units || 0) > 0
+                && getActivityTime(member) > Date.now() - (30 * 24 * 60 * 60 * 1000);
         }
 
         function compareBy(...getters) {
@@ -1497,7 +1499,7 @@
             const winRateLeader = qualifiedWinRateLeader(qualified);
             const mostVerified = bestBy(qualified, member => gradedCount(member) > 0, compareBy(gradedCount, member => Number(member.stats.units || 0)));
             const newestActive = bestBy(qualified, member => getActivityTime(member) > 0, getActivityTime);
-            const minLabel = 'Minimum ' + MIN_TOP_PERFORMER_GRADED_PICKS + ' graded picks required.';
+            const minLabel = 'Minimum ' + MIN_TOP_PERFORMER_GRADED_PICKS + ' graded picks, recent activity, and positive net units required.';
 
             els.featured.innerHTML = [
                 renderLeaderCard('Units Leader', unitsLeader, member => formatUnits(member.stats.units, true), member => member.stats.units, 'No positive units leader yet', minLabel),
