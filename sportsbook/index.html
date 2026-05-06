@@ -379,25 +379,41 @@
         if (slip) slip.classList.remove('has-selection');
     });
 
-    // Core function - Units Mode Toggle (Sportsbook default vs To Win)
-    window.TMR.selectedUnitsMode = 'sportsbook';
+    // Core function - Units Mode Toggle (Risk vs To Win)
+    window.TMR.selectedUnitsMode = 'risk';
     window.setUnitsMode = function(mode) {
+        mode = mode === 'to_win' || mode === 'towin' ? 'to_win' : 'risk';
         window.TMR.selectedUnitsMode = mode;
         var riskBtn = document.getElementById('modeRisk');
         var toWinBtn = document.getElementById('modeToWin');
+        var ticketRiskBtn = document.getElementById('modeRiskTicket');
+        var ticketToWinBtn = document.getElementById('modeToWinTicket');
+        var ticketModeInput = document.getElementById('ttSlipStakeMode');
         var explanation = document.getElementById('unitsExplanation');
-        if (mode !== 'to_win') {
-            window.TMR.selectedUnitsMode = 'sportsbook';
+        function setTicketActive(btn, active) {
+            if (!btn) return;
+            btn.classList.toggle('active', active);
+            btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+            btn.style.borderColor = active ? 'rgba(120,255,181,0.42)' : 'rgba(255,255,255,0.16)';
+            btn.style.background = active ? 'rgba(47,143,83,0.34)' : 'rgba(255,255,255,0.05)';
+            btn.style.color = active ? '#f8fafc' : '#cbd5e1';
+        }
+        if (mode === 'risk') {
             if (riskBtn) { riskBtn.style.background = 'var(--gradient-gold)'; riskBtn.style.color = 'var(--dark-bg)'; }
             if (toWinBtn) { toWinBtn.style.background = 'var(--card-bg)'; toWinBtn.style.color = 'var(--text-primary)'; }
-            if (explanation) explanation.textContent = 'Sportsbook units: positive odds risk the entered units; negative odds win the entered units.';
+            if (explanation) explanation.textContent = 'Enter units you want to RISK (0.5 - 5). Winnings calculated from odds.';
+            setTicketActive(ticketRiskBtn, true);
+            setTicketActive(ticketToWinBtn, false);
         } else {
-            window.TMR.selectedUnitsMode = 'to_win';
             if (toWinBtn) { toWinBtn.style.background = 'var(--gradient-gold)'; toWinBtn.style.color = 'var(--dark-bg)'; }
             if (riskBtn) { riskBtn.style.background = 'var(--card-bg)'; riskBtn.style.color = 'var(--text-primary)'; }
             if (explanation) explanation.textContent = 'Enter units you want to WIN (0.5 - 5). Risk calculated from odds.';
+            setTicketActive(ticketRiskBtn, false);
+            setTicketActive(ticketToWinBtn, true);
         }
-        console.log('[TMR] Units mode set to:', window.TMR.selectedUnitsMode);
+        if (ticketModeInput) ticketModeInput.value = mode;
+        if (window.TMR && typeof window.TMR.updateStakeModePreview === 'function') window.TMR.updateStakeModePreview();
+        console.log('[TMR] Units mode set to:', mode);
     };
 
     // Core function - Get Units Value from input
@@ -408,6 +424,71 @@
         if (val > 5) val = 5;
         val = Math.round(val * 2) / 2;
         return val;
+    };
+
+    window.TMR.roundStakeUnits = function(value) {
+        var n = Number(value);
+        if (!Number.isFinite(n)) return 0;
+        return Math.round(n * 100) / 100;
+    };
+
+    window.TMR.calculateStakeValues = function(mode, amount, odds) {
+        var stakeMode = mode === 'to_win' || mode === 'towin' ? 'to_win' : 'risk';
+        var units = Number(amount);
+        var price = Number(odds);
+        if (!Number.isFinite(units) || units <= 0 || !Number.isFinite(price) || price === 0) {
+            return { risk_units: 0, win_units: 0 };
+        }
+        if (stakeMode === 'to_win') {
+            return {
+                risk_units: window.TMR.roundStakeUnits(price < 0 ? units * Math.abs(price) / 100 : units * 100 / price),
+                win_units: window.TMR.roundStakeUnits(units)
+            };
+        }
+        return {
+            risk_units: window.TMR.roundStakeUnits(units),
+            win_units: window.TMR.roundStakeUnits(price < 0 ? units * 100 / Math.abs(price) : units * price / 100)
+        };
+    };
+
+    window.TMR.formatStakeDisplay = function(pick) {
+        pick = pick || {};
+        var odds = Number(pick.odds_snapshot != null ? pick.odds_snapshot : (pick.odds != null ? pick.odds : pick.price));
+        var risk = Number(pick.risk_units != null ? pick.risk_units : pick.riskUnits);
+        var win = Number(pick.win_units != null ? pick.win_units : (pick.to_win_units != null ? pick.to_win_units : pick.toWinUnits));
+        if ((!Number.isFinite(risk) || risk <= 0 || !Number.isFinite(win) || win <= 0) && Number.isFinite(odds)) {
+            var mode = String(pick.stake_mode || pick.units_mode || pick.unitsMode || 'risk').toLowerCase();
+            var amount = Number(pick.units != null ? pick.units : 1);
+            var values = window.TMR.calculateStakeValues(mode, amount, odds);
+            risk = values.risk_units;
+            win = values.win_units;
+        }
+        if (!Number.isFinite(risk) || risk <= 0 || !Number.isFinite(win) || win <= 0) return '';
+        function fmt(n) {
+            n = window.TMR.roundStakeUnits(n);
+            return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+        }
+        return 'Risk ' + fmt(risk) + ' units to win ' + fmt(win) + ' units';
+    };
+
+    window.TMR.updateStakeModePreview = function() {
+        var unitsEl = document.getElementById('ttSlipUnits') || document.getElementById('unitsInput');
+        var oddsEl = document.getElementById('pickOddsInput');
+        var preview = document.getElementById('ttSlipStakePreview') || document.getElementById('unitsStakePreview');
+        var hiddenUnits = document.getElementById('unitsInput');
+        var amount = unitsEl ? parseFloat(unitsEl.value || '1') : 1;
+        var odds = oddsEl ? parseFloat(oddsEl.value || '') : NaN;
+        if (!Number.isFinite(amount) || amount <= 0) amount = 1;
+        if (amount < 0.5) amount = 0.5;
+        if (amount > 5) amount = 5;
+        amount = Math.round(amount * 2) / 2;
+        if (unitsEl && String(unitsEl.value) !== String(amount)) unitsEl.value = String(amount);
+        if (hiddenUnits) hiddenUnits.value = String(amount);
+        if (!preview) return;
+        var values = window.TMR.calculateStakeValues(window.TMR.selectedUnitsMode || 'risk', amount, odds);
+        preview.textContent = values.risk_units && values.win_units
+            ? window.TMR.formatStakeDisplay({ risk_units: values.risk_units, win_units: values.win_units, odds: odds })
+            : 'Risk and win units will calculate from the odds.';
     };
 
     // Core function - Select Sport and Show Games (ESPN free API, no server needed)
@@ -1649,9 +1730,11 @@
             line_snapshot: newPick.line_snapshot,
             odds_snapshot: newPick.odds_snapshot,
             units: newPick.units,
-            // Default sportsbook units: positive odds risk entered units,
-            // negative odds win entered units. Only explicit to_win changes it.
-            units_mode: (window.TMR && window.TMR.selectedUnitsMode) || 'sportsbook',
+            // Send the user's stake convention so the backend can convert
+            // RISK -> TO-WIN before storing. The grader's result-units math
+            // assumes TO-WIN; without this flag a -110 RISK 3u win was
+            // overpaying by 0.27u and losses overcharging by 0.30u.
+            units_mode: (window.TMR && window.TMR.selectedUnitsMode) || 'risk',
             home_team: newPick.home_team,
             away_team: newPick.away_team,
             commence_time: newPick.commence_time,
@@ -1827,6 +1910,7 @@
             var units = p.units || 1;
             var resultUnits = p.result_units;
             var pickDisplay = formatPickDisplay(p);
+            var stakeText = (window.TMR && typeof window.TMR.formatStakeDisplay === 'function') ? window.TMR.formatStakeDisplay(p) : (units + 'u');
             var matchup = (p.away_team || '') + ' @ ' + (p.home_team || '');
             var sportLabel = sportDisplayMap[p.sport_key] || p.sport_display || p.sport_key || '';
             var resultText = '';
@@ -1838,7 +1922,7 @@
             html += '<div>';
             html += '<div style="font-size:16px;font-weight:bold;color:var(--text-primary);">' + pickDisplay + '</div>';
             html += '<div style="color:var(--text-muted);font-size:13px;margin-top:3px;">' + matchup + '</div>';
-            html += '<div style="color:var(--primary);font-size:13px;margin-top:3px;">' + (odds > 0 ? '+' : '') + odds + ' | ' + units + 'u | ' + sportLabel + resultText + '</div>';
+            html += '<div style="color:var(--primary);font-size:13px;margin-top:3px;">' + (odds > 0 ? '+' : '') + odds + ' | ' + stakeText + ' | ' + sportLabel + resultText + '</div>';
             html += '</div>';
             html += '<div style="text-align:right;">';
             html += '<span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:bold;background:' + badgeBg + ';color:' + badgeColor + ';">' + status.toUpperCase() + '</span>';
@@ -10369,6 +10453,25 @@ window.toggleSportFamily = function (family) {
             if (!Number.isFinite(n)) return '';
             return (Number.isInteger(n) ? String(n) : n.toFixed(1)) + 'u';
         }
+        function fmtStake(p) {
+            if (window.TMR && typeof window.TMR.formatStakeDisplay === 'function') return window.TMR.formatStakeDisplay(p);
+            var odds = Number(p && (p.odds_snapshot != null ? p.odds_snapshot : p.odds));
+            var risk = Number(p && p.risk_units);
+            var win = Number(p && (p.win_units != null ? p.win_units : p.to_win_units));
+            if ((!Number.isFinite(risk) || !Number.isFinite(win)) && Number.isFinite(odds)) {
+                var mode = String(p && (p.stake_mode || p.units_mode) || 'risk').toLowerCase();
+                var amount = Number(p && p.units);
+                if (mode === 'to_win' || mode === 'towin') {
+                    win = amount;
+                    risk = odds < 0 ? amount * Math.abs(odds) / 100 : amount * 100 / odds;
+                } else {
+                    risk = amount;
+                    win = odds < 0 ? amount * 100 / Math.abs(odds) : amount * odds / 100;
+                }
+            }
+            function clean(n) { n = Math.round(Number(n) * 100) / 100; return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, ''); }
+            return Number.isFinite(risk) && Number.isFinite(win) ? ('Risk ' + clean(risk) + ' units to win ' + clean(win) + ' units') : fmtUnits(p && p.units);
+        }
         function fmtPickDisplay(p) {
             if (window.TMR && typeof window.TMR.formatPickDisplay === 'function') return window.TMR.formatPickDisplay(p);
             var market = String(p && p.market_type || '').toLowerCase();
@@ -10422,7 +10525,7 @@ window.toggleSportFamily = function (family) {
             var selection = fmtPickDisplay(p);
             var market = fmtMarket(p.market_type);
             var odds = Number(p.odds_snapshot);
-            var unitsText = fmtUnits(p.units);
+            var unitsText = fmtStake(p);
             if (!sport || !selection || /^pick$/i.test(selection) || !market || !Number.isFinite(odds) || !unitsText) {
                 console.warn('[TMR] Skipping malformed awaiting-grade pick', p);
                 return null;
@@ -10849,13 +10952,25 @@ window.toggleSportFamily = function (family) {
             '<div class="sportsbook-ticket-preview-row"><span>Selection</span><strong>' + safeSelection + '</strong></div>' +
             '<div class="sportsbook-ticket-preview-row"><span>Odds</span><strong>' + oddsTxt + '</strong></div>' +
             '<div class="sportsbook-ticket-preview-row"><span>Sportsbook</span><strong>' + safeBook + '</strong></div>' +
+            '<div class="sportsbook-ticket-preview-row tmr-ticket-stake-mode-row" style="align-items:center;display:grid;grid-template-columns:1fr;gap:8px;">' +
+                '<span style="font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#f2c94c;">Stake Mode</span>' +
+                '<div id="ttSlipStakeModeToggle" class="tmr-ticket-stake-mode-toggle" role="group" aria-label="Stake mode" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
+                    '<button type="button" id="modeRiskTicket" class="tmr-ticket-stake-mode-btn active" aria-pressed="true" onclick="setUnitsMode(\'risk\')" style="padding:9px 10px;border-radius:8px;border:1px solid rgba(120,255,181,0.34);background:rgba(47,143,83,0.34);color:#f8fafc;font-size:12px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;">Risk</button>' +
+                    '<button type="button" id="modeToWinTicket" class="tmr-ticket-stake-mode-btn" aria-pressed="false" onclick="setUnitsMode(\'to_win\')" style="padding:9px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.16);background:rgba(255,255,255,0.05);color:#cbd5e1;font-size:12px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;">To Win</button>' +
+                '</div>' +
+                '<input type="hidden" id="ttSlipStakeMode" value="risk">' +
+            '</div>' +
             '<div class="sportsbook-ticket-preview-row" style="align-items:center;">' +
                 '<span><label for="ttSlipUnits" style="cursor:pointer;">Units</label></span>' +
-                '<strong><input id="ttSlipUnits" type="number" min="0.5" max="5" step="0.5" value="1" aria-label="Units to risk"' +
+                '<strong><input id="ttSlipUnits" type="number" min="0.5" max="5" step="0.5" value="1" aria-label="Stake units" oninput="window.TMR && window.TMR.updateStakeModePreview && window.TMR.updateStakeModePreview()"' +
                     ' style="width:64px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:4px 8px;color:#f8fafc;font-weight:800;text-align:right;"></strong>' +
             '</div>' +
+            '<div id="ttSlipStakePreview" class="sportsbook-ticket-preview-note" style="margin-top:-2px;color:#dbeafe;">Risk 1 units to win 0.91 units</div>' +
             '<div class="sportsbook-ticket-preview-note">Real DraftKings line. Tap Lock Pick to add it to your public record.</div>' +
             '<button type="button" id="ttSlipSubmit" class="sportsbook-ticket-preview-submit">Lock Pick</button>';
+
+        if (typeof window.setUnitsMode === 'function') window.setUnitsMode(window.TMR.selectedUnitsMode || 'risk');
+        if (window.TMR && typeof window.TMR.updateStakeModePreview === 'function') window.TMR.updateStakeModePreview();
 
         // Mirror into the existing #pickDetails state + form fields so the
         // existing lockInPick path (with full save + grading + analytics
@@ -10897,8 +11012,11 @@ window.toggleSportFamily = function (family) {
                 if (!Number.isFinite(u) || u <= 0) u = 1;
                 if (u < 0.5) u = 0.5;
                 if (u > 5)   u = 5;
+                u = Math.round(u * 2) / 2;
                 var hiddenUnits = document.getElementById('unitsInput');
                 if (hiddenUnits) hiddenUnits.value = String(u);
+                var modeEl = document.getElementById('ttSlipStakeMode');
+                if (window.TMR) window.TMR.selectedUnitsMode = (modeEl && modeEl.value === 'to_win') ? 'to_win' : 'risk';
                 if (typeof window.lockInPick !== 'function') {
                     console.warn('[TMR][TT] window.lockInPick missing');
                     alert('Pick locking is unavailable on this page.');
@@ -17739,29 +17857,14 @@ function updateProfileStatsDisplay(stats) {
     const winRate = graded > 0 ? ((wins / graded) * 100).toFixed(1) : null;
 
     // Calculate ROI
-    const totalRisked = allPicks.reduce((sum, p) => {
-        return (p.status === 'won' || p.status === 'lost' || p.status === 'push')
-            ? sum + calculateRiskedUnits(p)
-            : sum;
-    }, 0);
+    const totalRisked = graded;
     const roi = totalRisked > 0 ? ((totalUnits / totalRisked) * 100).toFixed(1) : null;
 
-    // Calculate streak
-    let streak = 0;
-    let streakType = '';
-    const sortedPicks = [...allPicks].reverse();
-    for (const p of sortedPicks) {
-        const result = p.status || p.result;
-        if (!result || result === 'pending') continue;
-        if (streakType === '') {
-            streakType = result;
-            streak = 1;
-        } else if (result === streakType) {
-            streak++;
-        } else {
-            break;
-        }
-    }
+    const canonicalStreak = window.TMR && typeof window.TMR.calculateStreaks === 'function'
+        ? window.TMR.calculateStreaks(allPicks)
+        : { currentStreak: 0, currentType: 'none' };
+    const streak = Math.abs(Number(canonicalStreak.currentStreak || 0));
+    const streakType = canonicalStreak.currentStreak > 0 ? 'won' : canonicalStreak.currentStreak < 0 ? 'lost' : '';
 
     // Helper to update stat box
     function updateStatBox(id, boxId, value, format = 'default') {
@@ -18672,17 +18775,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Calculate streak
             let currentStreak = 0;
             let streakType = '';
-            const gradedPicks = picks.filter(p => p.status !== 'pending');
-            for (let i = 0; i < gradedPicks.length; i++) {
-                if (i === 0) {
-                    currentStreak = 1;
-                    streakType = gradedPicks[i].status;
-                } else if (gradedPicks[i].status === streakType) {
-                    currentStreak++;
-                } else {
-                    break;
-                }
-            }
+            const canonicalStreak = window.TMR && typeof window.TMR.calculateStreaks === 'function'
+                ? window.TMR.calculateStreaks(picks)
+                : { currentStreak: 0 };
+            currentStreak = Math.abs(Number(canonicalStreak.currentStreak || 0));
+            streakType = canonicalStreak.currentStreak > 0 ? 'won' : canonicalStreak.currentStreak < 0 ? 'lost' : '';
 
             const triviaPoints = triviaScores.reduce((sum, score) => sum + (score.points || 0), 0);
             const pollVoteCount = Object.keys(pollVotes).length;
@@ -21402,7 +21499,7 @@ document.addEventListener('DOMContentLoaded', function() {
             odds: summaryOdds,
             confidence: selectedConfidence,
             units: getUnitsValue(),
-            unitsMode: window.TMR.selectedUnitsMode || 'sportsbook',
+            unitsMode: window.TMR.selectedUnitsMode || 'risk',
             reasoning: reasoning,
             timestamp: new Date().toISOString(),
             status: 'pending'
@@ -21450,7 +21547,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         line_snapshot: newPick.line_snapshot,
                         odds_snapshot: newPick.odds_snapshot,
                         units: newPick.units,
-                        units_mode: (window.TMR && window.TMR.selectedUnitsMode) || 'sportsbook'
+                        units_mode: (window.TMR && window.TMR.selectedUnitsMode) || 'risk'
                     }).then(function(result) {
                         console.log('Pick saved to backend:', result);
                         newPick.id = result.pick ? result.pick.id : result.id;
@@ -21501,7 +21598,7 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedGame = null;
         selectedConfidence = 3;
         selectedUnits = 1;
-        window.TMR.selectedUnitsMode = 'sportsbook';
+        window.TMR.selectedUnitsMode = 'risk';
         window.TMR.currentSelectedPick = null;
 
         document.querySelectorAll('.sport-card').forEach(c => c.classList.remove('selected'));
@@ -21785,32 +21882,19 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Calculate units won/lost for a pick
-    function roundUnitDisplay(value) {
-        const n = Number(value);
-        if (!Number.isFinite(n)) return 0;
-        const sign = n < 0 ? -1 : 1;
-        return sign * (Math.round((Math.abs(n) + Number.EPSILON) * 100) / 100);
-    }
-
     function calculatePickUnits(pick) {
         if (pick.result_units != null && pick.status !== 'pending') return pick.result_units;
         const units = parseFloat(pick.units) || 1;
         const odds = parseFloat(pick.odds_snapshot || pick.odds) || -110;
 
         if (pick.status === 'won') {
-            return odds < 0 ? roundUnitDisplay(units) : roundUnitDisplay(units * odds / 100);
+            return odds < 0 ? units : parseFloat((units * odds / 100).toFixed(2));
         } else if (pick.status === 'lost') {
-            return odds < 0 ? roundUnitDisplay(-(units * Math.abs(odds) / 100)) : roundUnitDisplay(-units);
-        } else if (pick.status === 'push' || pick.status === 'void') {
+            return odds < 0 ? parseFloat((-(units * Math.abs(odds) / 100)).toFixed(2)) : -units;
+        } else if (pick.status === 'push') {
             return 0;
         }
         return 0;
-    }
-
-    function calculateRiskedUnits(pick) {
-        const units = parseFloat(pick.units) || 1;
-        const odds = parseFloat(pick.odds_snapshot || pick.odds) || -110;
-        return odds < 0 ? units * Math.abs(odds) / 100 : units;
     }
 
     // Calculate implied probability from odds
@@ -21832,36 +21916,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Calculate streaks (current and best)
     function calculateStreaks(picks) {
-        const graded = picks.filter(p => p.status === 'won' || p.status === 'lost')
-            .sort((a, b) => new Date(b.locked_at || b.timestamp || 0) - new Date(a.locked_at || a.timestamp || 0));
-
-        let currentStreak = 0, currentType = '', bestWin = 0, bestLoss = 0;
-        let tempStreak = 0, tempType = '';
-
-        for (let i = 0; i < graded.length; i++) {
-            const status = graded[i].status;
-            if (i === 0 || status === tempType) {
-                tempStreak++;
-                tempType = status;
-            } else {
-                if (tempType === 'won' && tempStreak > bestWin) bestWin = tempStreak;
-                if (tempType === 'lost' && tempStreak > bestLoss) bestLoss = tempStreak;
-                tempStreak = 1;
-                tempType = status;
-            }
-            if (i === 0) { currentStreak = tempStreak; currentType = tempType; }
-        }
-        // Check last streak
-        if (tempType === 'won' && tempStreak > bestWin) bestWin = tempStreak;
-        if (tempType === 'lost' && tempStreak > bestLoss) bestLoss = tempStreak;
-
-        // Update current streak count
-        for (let i = 0; i < graded.length; i++) {
-            if (graded[i].status === graded[0]?.status) currentStreak = i + 1;
-            else break;
-        }
-
-        return { current: currentStreak, currentType: graded[0]?.status || '', bestWin, bestLoss };
+        const canonical = window.TMR && typeof window.TMR.calculateStreaks === 'function'
+            ? window.TMR.calculateStreaks(picks || [])
+            : { currentStreak: 0, longestWinStreak: 0, longestLossStreak: 0 };
+        return {
+            current: Math.abs(Number(canonical.currentStreak || 0)),
+            currentType: canonical.currentStreak > 0 ? 'won' : canonical.currentStreak < 0 ? 'lost' : '',
+            bestWin: canonical.longestWinStreak || 0,
+            bestLoss: canonical.longestLossStreak || 0
+        };
     }
 
     // Main function to load advanced stats page
@@ -21882,7 +21945,7 @@ document.addEventListener('DOMContentLoaded', function() {
         picks.forEach(pick => {
             unitsProfit += calculatePickUnits(pick);
             if (pick.status !== 'pending' && pick.status) {
-                totalRisked += calculateRiskedUnits(pick);
+                totalRisked += parseFloat(pick.units) || 1;
             }
             const odds = parseFloat(pick.odds);
             if (!isNaN(odds)) { oddsSum += odds; oddsCount++; }
@@ -21970,8 +22033,8 @@ document.addEventListener('DOMContentLoaded', function() {
         picks.forEach(p => {
             const sport = (p.sport || 'OTHER').toUpperCase();
             if (!stats[sport]) stats[sport] = { w: 0, l: 0, p: 0, units: 0, risked: 0 };
-            if (p.status === 'won') { stats[sport].w++; stats[sport].units += calculatePickUnits(p); stats[sport].risked += calculateRiskedUnits(p); }
-            else if (p.status === 'lost') { stats[sport].l++; stats[sport].units += calculatePickUnits(p); stats[sport].risked += calculateRiskedUnits(p); }
+            if (p.status === 'won') { stats[sport].w++; stats[sport].units += calculatePickUnits(p); stats[sport].risked += parseFloat(p.units)||1; }
+            else if (p.status === 'lost') { stats[sport].l++; stats[sport].units += calculatePickUnits(p); stats[sport].risked += parseFloat(p.units)||1; }
             else if (p.status === 'push') stats[sport].p++;
         });
 
@@ -22007,8 +22070,8 @@ document.addEventListener('DOMContentLoaded', function() {
             let type = (p.betType || 'OTHER').toUpperCase();
             if (type === 'MONEYLINE') type = 'ML';
             if (!stats[type]) stats[type] = { w: 0, l: 0, p: 0, units: 0, risked: 0 };
-            if (p.status === 'won') { stats[type].w++; stats[type].units += calculatePickUnits(p); stats[type].risked += calculateRiskedUnits(p); }
-            else if (p.status === 'lost') { stats[type].l++; stats[type].units += calculatePickUnits(p); stats[type].risked += calculateRiskedUnits(p); }
+            if (p.status === 'won') { stats[type].w++; stats[type].units += calculatePickUnits(p); stats[type].risked += parseFloat(p.units)||1; }
+            else if (p.status === 'lost') { stats[type].l++; stats[type].units += calculatePickUnits(p); stats[type].risked += parseFloat(p.units)||1; }
             else if (p.status === 'push') stats[type].p++;
         });
 
@@ -22076,7 +22139,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const avgUnits = graded.reduce(function(total, pick) { return total + (parseFloat(pick.units) || 1); }, 0) / graded.length;
         const netUnits = graded.reduce(function(total, pick) { return total + myRecordPickPL(pick); }, 0);
         const totalRisked = graded.reduce(function(total, pick) {
-            return total + calculateRiskedUnits(pick);
+            return total + (parseFloat(pick.units) || 1);
         }, 0);
         const roi = totalRisked > 0 ? (netUnits / totalRisked) * 100 : 0;
         const effectiveUnits = avgUnits > 0 ? (netUnits / avgUnits) * 3 : 0;
@@ -22521,7 +22584,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let units = 0, risked = 0;
         picks.forEach(p => {
             units += calculatePickUnits(p);
-            if (p.status !== 'pending') risked += calculateRiskedUnits(p);
+            if (p.status !== 'pending') risked += parseFloat(p.units) || 1;
         });
 
         const winRate = graded > 0 ? (wins / graded * 100).toFixed(1) : 0;
@@ -22565,10 +22628,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const matchup = (pick.away_team || '') + ' vs ' + (pick.home_team || '');
             const pickDisplay = (window.TMR && typeof window.TMR.formatPickDisplay === 'function') ? window.TMR.formatPickDisplay(pick) : (pick.selection + (pick.line_snapshot ? ' ' + pick.line_snapshot : ''));
             const odds = pick.odds_snapshot || -110;
+            const stakeText = (window.TMR && typeof window.TMR.formatStakeDisplay === 'function') ? window.TMR.formatStakeDisplay(pick) : ((pick.units || 1) + 'u');
             return `
                 <div class="pending-pick-item">
                     <div class="pick-game">${matchup}</div>
-                    <div class="pick-info">${pickDisplay} (${odds > 0 ? '+' : ''}${odds}) - ${pick.units || 1}u</div>
+                    <div class="pick-info">${pickDisplay} (${odds > 0 ? '+' : ''}${odds}) - ${stakeText}</div>
                 </div>
             `;
         }).join('');
@@ -24478,7 +24542,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     </style>
 
-    <script src="/static/js/platform-production-fix.js?v=20260415d"></script>
+    <script src="/static/js/streaks.js?v=20260506streak1"></script>
+    <script src="/static/js/platform-production-fix.js?v=20260506streak1"></script>
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260505finalnocommandlogos">
     <script defer src="/static/js/tmr-sitewide.js?v=20260505finalnocommandlogos"></script>
     <style>
