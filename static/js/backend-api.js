@@ -1,4 +1,4 @@
-﻿/**
+/**
  * TrustMyRecord Backend API Client
  * Connects frontend to Node.js/Express backend
  */
@@ -1040,6 +1040,45 @@ if (typeof window !== 'undefined') {
         if (isSpread) return window.TMR.formatLine(num, { signed: true }) || '-';
         if (isTotal) return window.TMR.formatLine(Math.abs(num)) || '-';
         return window.TMR.formatLine(num) || '-';
+    };
+
+    window.TMR.formatPickSelection = function (pick) {
+        pick = pick || {};
+        const market = String(pick.market_type || pick.marketType || pick.bet_type || pick.betType || '').toLowerCase();
+        const rawSelection = String(pick.selection_label || pick.selection || pick.pick || pick.side || pick.team || 'Pick').trim();
+        const selection = rawSelection.replace(/\s+/g, ' ');
+        const lineValue = pick.line_snapshot != null ? pick.line_snapshot : (pick.line != null ? pick.line : pick.point);
+        const hasLine = lineValue != null && lineValue !== '' && Number.isFinite(Number(lineValue));
+        const signedLine = hasLine ? window.TMR.formatLine(lineValue, { signed: true }) : '';
+        const plainLine = hasLine ? window.TMR.formatLine(Math.abs(Number(lineValue))) : '';
+        const escapedPlainLine = plainLine ? plainLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
+        const awayTeam = String(pick.away_team || (pick.game && pick.game.away_team) || '').trim();
+        const homeTeam = String(pick.home_team || (pick.game && pick.game.home_team) || '').trim();
+        const matchup = awayTeam && homeTeam ? awayTeam + ' @ ' + homeTeam : '';
+        const hasTotalSide = /\b(over|under)\b/i.test(selection);
+        const hasMatchup = matchup && selection.indexOf(matchup) !== -1;
+        const isMoneyline = market === 'h2h' || market === 'moneyline' || market.endsWith('_h2h');
+        const isSpread = market === 'spreads' || market === 'spread' || market.endsWith('_spreads') || market.includes('run_line') || market.includes('puck_line');
+        const isTeamTotal = market === 'team_totals' || market === 'team_total';
+        const isTotal = isTeamTotal || market === 'totals' || market === 'total' || market.endsWith('_totals');
+
+        if (!selection) return 'Pick';
+        if (isMoneyline) return /\b(ml|moneyline)\b/i.test(selection) ? selection : selection + ' ML';
+
+        let cleaned = selection;
+        if (signedLine) cleaned = cleaned.replace(new RegExp('\\s+' + signedLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'), '').trim();
+        if (escapedPlainLine) cleaned = cleaned.replace(new RegExp('\\s+[+-]?' + escapedPlainLine + '$'), '').trim();
+
+        if (isTeamTotal && hasTotalSide && !/\bteam\s+total\b/i.test(cleaned)) {
+            return cleaned.replace(/\b(over|under)\b/i, 'Team Total $1');
+        }
+
+        if (isTotal && hasTotalSide) {
+            return matchup && !hasMatchup ? matchup + ' ' + cleaned : cleaned;
+        }
+
+        if (isSpread) return cleaned || selection;
+        return cleaned || selection;
     };
 
     window.TMR.formatPickDisplay = function (pick) {
