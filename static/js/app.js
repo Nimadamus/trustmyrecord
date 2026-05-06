@@ -413,7 +413,7 @@ const App = {
         if (!container) return;
 
         try {
-            const data = await api.getLeaderboard('roi', { limit: 5 });
+            const data = await api.getLeaderboard('net_units', { limit: 5 });
             container.innerHTML = '';
             data.leaderboard.forEach((user, index) => {
                 container.appendChild(this.createLeaderboardItem(user, index + 1));
@@ -432,7 +432,7 @@ const App = {
                 <img src="${user.avatar_url || '/static/images/default-avatar.png'}" class="w-8 h-8 rounded-full">
                 <span class="font-medium">${user.username}</span>
             </div>
-            <span class="text-green-400 font-semibold">${user.roi.toFixed(1)}% ROI</span>
+            <span class="${Number(user.net_units || 0) >= 0 ? 'text-green-400' : 'text-red-400'} font-semibold">${Number(user.net_units || 0) > 0 ? '+' : ''}${Number(user.net_units || 0).toFixed(1)}u</span>
         `;
         return div;
     },
@@ -452,7 +452,7 @@ const App = {
         });
 
         // Load initial
-        this.loadFullLeaderboard('roi');
+        this.loadFullLeaderboard('net_units');
     },
 
     initPicksPage() {
