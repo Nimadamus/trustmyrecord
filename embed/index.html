@@ -120,6 +120,16 @@
             text-transform: uppercase;
             letter-spacing: 0.08em;
         }
+        .tmr-last-active {
+            margin-top: 4px;
+            font-size: 0.68rem;
+            color: var(--muted);
+            line-height: 1.35;
+        }
+        .tmr-last-active strong {
+            color: var(--text);
+            font-weight: 800;
+        }
         .tmr-brand {
             font-size: 0.66rem;
             font-weight: 800;
@@ -384,6 +394,18 @@
                 + '</div>';
         }
 
+        function formatLastActive(value) {
+            if (!value) return 'Not available';
+            var date = new Date(value);
+            if (!Number.isFinite(date.getTime())) return 'Not available';
+            var diff = Date.now() - date.getTime();
+            var day = 24 * 60 * 60 * 1000;
+            if (diff < day) return 'Today';
+            if (diff < day * 2) return 'Yesterday';
+            if (diff < day * 30) return Math.floor(diff / day) + ' days ago';
+            return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        }
+
         function fmtDate(value) {
             if (!value) return 'TBD';
             var d = new Date(value);
@@ -492,6 +514,7 @@
                 var record      = summary.record || (Number(summary.wins || 0) + '-' + Number(summary.losses || 0) + '-' + Number(summary.pushes || 0));
                 var totalPicks  = Number(summary.graded_picks || 0);
                 var verified    = ['verified','trusted','premium'].includes(String(profile.verification_status || '').toLowerCase());
+                var lastActive  = formatLastActive(profile.last_login_date || profile.lastLoginDate || profile.last_active_date || profile.lastActiveDate || profile.last_login_at || profile.lastLoginAt || profile.last_active_at || profile.lastActiveAt);
                 var updatedAt   = summary.last_updated_at ? new Date(summary.last_updated_at) : null;
                 var updatedText = updatedAt && !isNaN(updatedAt.getTime())
                     ? updatedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -507,6 +530,7 @@
                     +     '<div class="tmr-handle">@' + escapeHtml(handle)
                     +       (verified ? ' <span class="tmr-verified"><i>✓</i> Verified</span>' : '')
                     +     '</div>'
+                    +     '<div class="tmr-last-active">Last active: <strong>' + escapeHtml(lastActive) + '</strong></div>'
                     +   '</div>'
                     +   '<div class="tmr-brand"><strong>Trust</strong>MyRecord</div>'
                     + '</div>'
