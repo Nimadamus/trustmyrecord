@@ -677,8 +677,8 @@
                 <div class="hm-count"><strong id="hmTotalMembers">0</strong><span>Total Members</span><small>Production accounts only</small></div>
                 <div class="hm-count"><strong id="hmActiveMembers">0</strong><span>Active Pick Makers</span><small>Members with real picks</small></div>
                 <div class="hm-count"><strong id="hmTotalPicks">0</strong><span>Total Verified Picks</span><small>Graded picks only</small></div>
-                <div class="hm-count"><strong id="hmBestWinRate" class="is-muted" title="Minimum 10 graded picks required">--</strong><span>Best Win Percentage</span><small id="hmBestWinRateUser">Not enough graded picks yet</small></div>
-                <div class="hm-count"><strong id="hmTopUnits" class="is-muted" title="Minimum 10 graded picks required">--</strong><span>Units Leader</span><small id="hmTopUnitsUser">No positive units leader yet</small></div>
+                <div class="hm-count"><strong id="hmBestWinRate" class="is-muted" title="Minimum 20 graded picks required">--</strong><span>Best Win Percentage</span><small id="hmBestWinRateUser">Not enough graded picks yet</small></div>
+                <div class="hm-count"><strong id="hmTopUnits" class="is-muted" title="Minimum 20 graded picks required">--</strong><span>Units Leader</span><small id="hmTopUnitsUser">No positive units leader yet</small></div>
                 <div class="hm-count"><strong id="hmRecentActivity" class="is-muted" title="Not enough graded picks yet">--</strong><span>Most Recent Pick Activity</span><small id="hmRecentActivityUser">No pick activity yet</small></div>
             </div>
         </section>
@@ -687,7 +687,7 @@
             <div class="hm-section-head">
                 <div>
                     <h2>Leaderboard</h2>
-                    <p>Leaders require at least 10 graded picks. Thin samples stay out of promoted rankings.</p>
+                    <p>Leaders require at least 20 graded picks and positive net units. Thin samples stay out of promoted rankings.</p>
                 </div>
                 <span class="hm-production-note">Showing <strong id="hmVisibleMembers">0</strong> filtered members</span>
             </div>
@@ -779,7 +779,7 @@
 
         let members = [];
         let visibleMembers = [];
-        const MIN_TOP_PERFORMER_GRADED_PICKS = 10;
+        const MIN_TOP_PERFORMER_GRADED_PICKS = 20;
         const social = window.socialSystem || (typeof SocialSystem !== 'undefined' ? new SocialSystem() : null);
         const DIRECTORY_API_BASE = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
         const DIRECTORY_TIMEOUT_MS = 9000;
@@ -1213,7 +1213,7 @@
             const requests = [
                 directoryRequest('/users?limit=250&offset=0'),
                 directoryRequest('/users?query=&limit=250&offset=0'),
-                directoryRequest('/users/leaderboard?sortBy=units&limit=250')
+                directoryRequest('/users/leaderboard?sortBy=net_units&limit=250')
             ];
             const settled = await Promise.allSettled(requests);
             const responses = settled
