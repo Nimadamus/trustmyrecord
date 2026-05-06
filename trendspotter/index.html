@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/trendspotter.css?v=20260506freshness1">
+  <link rel="stylesheet" href="/static/css/trendspotter.css?v=20260506workflow1">
 </head>
 <body>
   <header class="ts-topbar">
@@ -34,7 +34,7 @@
       <div class="ts-hero-copy">
         <p class="ts-kicker">Verified betting research</p>
         <h1 id="trendspotter-title">Trendspotter</h1>
-        <p class="ts-lead">Choose the market you want to research, choose the situation or angle, then inspect only trends backed by source games.</p>
+        <p class="ts-lead">Choose a sport, lock the research to one current-slate matchup, then inspect only trends backed by source games for that game context.</p>
         <div class="ts-feature-row" aria-label="Trendspotter guardrails">
           <span>Verified source games</span>
           <span>No fake confidence</span>
@@ -65,10 +65,12 @@
 
     <section class="ts-how" aria-label="Trendspotter workflow">
       <article><span>Step 1</span><strong>Select sport</strong></article>
-      <article><span>Step 2</span><strong>Select market type</strong></article>
-      <article><span>Step 3</span><strong>Select trend factor</strong></article>
-      <article><span>Step 4</span><strong>Add optional filters</strong></article>
-      <article><span>Step 5</span><strong>Generate trend list</strong></article>
+      <article><span>Step 2</span><strong>Choose matchup</strong></article>
+      <article><span>Step 3</span><strong>Choose team or side</strong></article>
+      <article><span>Step 4</span><strong>Choose market type</strong></article>
+      <article><span>Step 5</span><strong>Choose trend factor</strong></article>
+      <article><span>Step 6</span><strong>Optional filters</strong></article>
+      <article><span>Step 7</span><strong>Trend results</strong></article>
     </section>
 
     <section class="ts-step" id="sportStep" aria-labelledby="sportStepTitle">
@@ -81,9 +83,28 @@
       <p class="ts-loading-line is-hidden" id="loadingMessage" aria-live="polite"></p>
     </section>
 
-    <section class="ts-step" aria-labelledby="marketStepTitle">
+    <section class="ts-step" aria-labelledby="matchupStepTitle">
       <div class="ts-step-head">
         <span>Step 2</span>
+        <h2 id="matchupStepTitle">Choose Matchup</h2>
+        <p>Select a specific current-slate game before researching trends.</p>
+      </div>
+      <select class="ts-select" id="matchupFilter" aria-label="Current slate matchup"></select>
+      <p class="ts-data-note" id="matchupDataSource">Matchups load after sport selection.</p>
+    </section>
+
+    <section class="ts-step" aria-labelledby="teamStepTitle">
+      <div class="ts-step-head">
+        <span>Step 3</span>
+        <h2 id="teamStepTitle">Choose Team or Side</h2>
+        <p>After a matchup is selected, this only shows the two teams in that game plus both teams.</p>
+      </div>
+      <select class="ts-select" id="teamFilter"></select>
+    </section>
+
+    <section class="ts-step" aria-labelledby="marketStepTitle">
+      <div class="ts-step-head">
+        <span>Step 4</span>
         <h2 id="marketStepTitle">Choose Market Type</h2>
         <p>Choose the market you want to research.</p>
       </div>
@@ -92,7 +113,7 @@
 
     <section class="ts-step" aria-labelledby="factorStepTitle">
       <div class="ts-step-head">
-        <span>Step 3</span>
+        <span>Step 5</span>
         <h2 id="factorStepTitle">Choose Trend Factor</h2>
         <p>Choose the situation or angle.</p>
       </div>
@@ -101,9 +122,9 @@
 
     <section class="ts-step" aria-labelledby="optionalStepTitle">
       <div class="ts-step-head">
-        <span>Step 4</span>
+        <span>Step 6</span>
         <h2 id="optionalStepTitle">Optional Filters</h2>
-        <p>Refine the trend list by sample, date range, team, opponent, location, and sort order.</p>
+        <p>Refine the trend list by sample, date range, location, and sort order. Team and opponent context stay locked to the selected matchup.</p>
       </div>
       <div class="ts-filter-grid">
         <label>
@@ -130,11 +151,7 @@
           <input class="ts-input" id="dateEnd" type="date">
         </label>
         <label>
-          <span>Team selector</span>
-          <select class="ts-select" id="teamFilter"></select>
-        </label>
-        <label>
-          <span>Opponent selector</span>
+          <span>Opponent context</span>
           <select class="ts-select" id="opponentFilter"></select>
         </label>
         <label>
@@ -147,20 +164,20 @@
         </label>
         <label class="ts-check-row">
           <input id="currentMatchupOnly" type="checkbox">
-          <span>Current matchup only</span>
+          <span>Selected matchup only</span>
         </label>
       </div>
     </section>
 
     <section class="ts-step" id="runStep" aria-labelledby="runStepTitle">
       <div class="ts-step-head">
-        <span>Step 5</span>
-        <h2 id="runStepTitle">Generate Trend List</h2>
+        <span>Step 7</span>
+        <h2 id="runStepTitle">Trend Results</h2>
       </div>
       <div class="ts-run-panel">
         <div>
           <p class="ts-selection-label">Current research query</p>
-          <strong id="selectionSummary">Select a sport, market type, and trend factor.</strong>
+          <strong id="selectionSummary">Select a sport and matchup before generating trends.</strong>
         </div>
         <button class="ts-run-button" id="runTrendspotter" type="button" disabled>Generate Trends</button>
       </div>
@@ -190,6 +207,6 @@
   </div>
 
   <script src="/static/js/config.js?v=20260330"></script>
-  <script src="/static/js/trendspotter.js?v=20260506freshness1"></script>
+  <script src="/static/js/trendspotter.js?v=20260506workflow1"></script>
 </body>
 </html>
