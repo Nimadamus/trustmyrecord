@@ -1,5 +1,82 @@
 # TrustMyRecord Fix Tracker
 
+## 2026-05-06 - Profile Embeds, Public Stats Embed, Pending Picks Embed, Pending Picks Sharing
+
+Status: VERIFIED LIVE for desktop/live/API checks. Mobile screenshot QA is NOT VERIFIED and remains a separate remaining risk because Playwright and direct headless Chrome screenshot attempts failed in this Windows sandbox.
+
+Scope:
+- Public profile sharing controls.
+- Public stats embed.
+- Pending picks share/embed controls.
+- Per-user pending picks privacy toggle.
+- Public pending picks visibility enforcement.
+
+Files changed:
+- Backend: `routes/users.js`, `scripts/init-db.js`, `database/migration_public_pending_picks_privacy.sql`.
+- Frontend: `profile/index.html`, `embed/index.html`, `my-pending-picks/index.html`, `static/js/backend-api.js`.
+- Tracker: `TRUSTMYRECORD_FIX_TRACKER.md`.
+
+Database/model change:
+- Added `public_pending_picks_enabled BOOLEAN NOT NULL DEFAULT false`.
+- Existing and new users default to pending picks private.
+
+Commit hash:
+- Backend route deployment: `7e167408cc968d2b2af7f29ebdd40a1079bbad8f`.
+- Backend init-db migration wiring: `4d2adf8f27603b5fcbfec79afbfd271247156277`.
+- Backend migration file: `6ba56e0ae64c5cd5df09efb59276916de3124bc6`.
+- Frontend API helper publish: `ebcfedb5c47808eaebb4778f26980f0bfd1d526b`.
+- Frontend embed page publish: `78c4c7607146062ba9d68ad684675f94c9366a37`.
+- Frontend public pending page publish: `65a465524cc330f1c379903965762391d7d3ae8a`.
+- Frontend profile controls publish: `58e74a829b4376aa35bd1389c586900b12f6cd40`.
+- Frontend republish after CDN verification gap: `ebcfedb5c47808eaebb4778f26980f0bfd1d526b`, `58e74a829b4376aa35bd1389c586900b12f6cd40`.
+
+Push status:
+- Backend changes pushed to production branch `master` through GitHub Contents API.
+- Frontend changes pushed to production branch `main` through GitHub Contents API.
+
+Deploy status:
+- Backend routes are live on `https://trustmyrecord-api.onrender.com`.
+- Frontend files are live on `https://trustmyrecord.com` after CDN polling confirmed the new strings and API helpers.
+
+Live URLs verified:
+- `https://trustmyrecord.com/profile/?user=BetLegend`
+- `https://trustmyrecord.com/embed/?u=BetLegend&type=stats`
+- `https://trustmyrecord.com/embed/?u=BetLegend&type=pending`
+- `https://trustmyrecord.com/my-pending-picks/?user=BetLegend`
+- `https://trustmyrecord-api.onrender.com/api/users/BetLegend/public-stats`
+- `https://trustmyrecord-api.onrender.com/api/users/BetLegend/pending`
+- `https://trustmyrecord-api.onrender.com/api/picks/pending`
+
+Authenticated API endpoints verified:
+- `POST /api/auth/signup`
+- `POST /api/auth/login`
+- `GET /api/users/{username}`
+- `PUT /api/users/profile`
+- `GET /api/users/{username}/pending`
+- `GET /api/users/{username}/public-stats`
+- `GET /api/picks/pending`
+
+Verification result:
+- Production smoke user defaulted `public_pending_picks_enabled` to `false`.
+- Public pending picks endpoint returned `This capper has chosen not to make pending picks public.` while sharing was OFF.
+- Owner-authenticated pending route worked while sharing was OFF.
+- `PUT /api/users/profile` persisted sharing ON.
+- Public pending route became accessible after sharing was ON.
+- `PUT /api/users/profile` persisted sharing back OFF.
+- Public stats endpoint loaded without authentication.
+- Pending embed page and public pending page route load publicly and call the gated public pending API.
+- Logged-out private owner endpoint `/api/picks/pending` still returns `401 Authentication required`.
+- Public stats and public pending payload scans did not expose email, password/auth fields, provider IDs, admin fields, internal metadata, database/user_id fields, or owner-only pending fields.
+
+No unrelated files changed:
+- No intentional changes to sportsbook, arena, leaderboard, grading, autograder, canonical stats, or profile analytics grading files for this workstream.
+
+Mobile QA:
+- NOT VERIFIED. Playwright failed with browser spawn EPERM. Direct headless Chrome screenshot attempts failed/stalled under Windows access restrictions. The stuck test Chrome process was stopped; the normal user Chrome process was left alone.
+
+Remaining risk:
+- A human or working browser automation environment still needs mobile visual QA for the profile page, stats embed, pending embed, pending picks page, and share/embed modals.
+
 ## 2026-05-06 - Profile Stats, Streak Accuracy, Drawdown Accuracy, Leaderboard Summary Accuracy
 
 Status: VERIFIED LIVE.
