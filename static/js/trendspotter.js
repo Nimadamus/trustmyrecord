@@ -49,7 +49,7 @@
     { id: "sample", label: "Sample size" },
     { id: "win_pct", label: "Win percentage" },
     { id: "roi", label: "ROI if available" },
-    { id: "confidence", label: "Confidence/strength if available" },
+    { id: "confidence", label: "Trend strength" },
     { id: "recency", label: "Recency" },
     { id: "market", label: "Market type" }
   ];
@@ -245,8 +245,8 @@
   function metricForSort(trend, sortId) {
     if (sortId === "sample") return Number(trend.sample) || 0;
     if (sortId === "win_pct") return numberValue(trend.win_percentage || trend.win_pct || trend.dominance) || 0;
-    if (sortId === "roi") return numberValue(trend.roi || trend.units || trend.profit_units) || -Infinity;
-    if (sortId === "confidence") return numberValue(trend.confidence_score || trend.strength_rating || trend.mind_blowing_score) || -Infinity;
+    if (sortId === "roi") return verifiedRoi(trend).value == null ? -Infinity : verifiedRoi(trend).value;
+    if (sortId === "confidence") return strengthRating(trend).score;
     if (sortId === "recency") return Date.parse(dateBounds(trend).last || trend.slate_date || "") || 0;
     if (sortId === "market") return normalize(trend.bet_type);
     return -(Number(trend.rank) || 999999);
@@ -370,6 +370,116 @@
     return source ? source : "Verified artifact";
   }
 
+  function sourceRows(trend) {
+    if (Array.isArray(trend.source_rows) && trend.source_rows.length) return trend.source_rows;
+    if (Array.isArray(trend.included_games) && trend.included_games.length) return trend.included_games;
+    return [];
+  }
+
+  function excludedRows(trend) {
+    if (Array.isArray(trend.excluded_games)) return trend.excluded_games;
+    if (Array.isArray(trend.exclusion_log)) return trend.exclusion_log;
+    return [];
+  }
+
+  function rowOdds(row) {
+    return numberValue(row && (row.odds || row.price || row.moneyline));
+  }
+
+  function rowMarketResult(row) {
+    return normalize(row && (row.market_result || row.result || row.bet_result));
+  }
+
+  function verifiedOddsSummary(trend) {
+    var odds = sourceRows(trend).map(rowOdds).filter(function (value) { return value !== null; });
+    if (!odds.length) {
+      var direct = numberValue(trend.average_odds || trend.avg_odds);
+      if (direct !== null && (trend.odds_verified || trend.verified_odds)) odds = [direct];
+    }
+    if (!odds.length) return null;
+    var avg = odds.reduce(function (sum, value) { return sum + value; }, 0) / odds.length;
+    var min = Math.min.apply(Math, odds);
+    var max = Math.max.apply(Math, odds);
+    return {
+      average: Math.round(avg),
+      range: min === max ? String(min) : min + " to " + max,
+      count: odds.length
+    };
+  }
+
+  function americanProfit(odds) {
+    if (odds > 0) return odds / 100;
+    if (odds < 0) return 100 / Math.abs(odds);
+    return null;
+  }
+
+  function verifiedRoi(trend) {
+    if (trend.roi_verified && trend.roi !== undefined && trend.roi !== null) {
+      return { value: Number(trend.roi), label: String(trend.roi) + "%", basis: trend.roi_basis || "verified artifact ROI" };
+    }
+    var rows = sourceRows(trend);
+    if (!rows.length) return { value: null };
+    var hasUnitBasis = Boolean(trend.unit_basis || trend.stake_basis || rows.every(function (row) { return row.unit_basis || row.stake_units || row.stake; }));
+    if (!hasUnitBasis) return { value: null };
+    var profit = 0;
+    var stake = 0;
+    for (var i = 0; i < rows.length; i += 1) {
+      var odds = rowOdds(rows[i]);
+      var result = rowMarketResult(rows[i]);
+      var units = Number(rows[i].stake_units || rows[i].stake || 1);
+      if (odds === null || !Number.isFinite(units) || units <= 0 || !["WIN", "W", "LOSS", "L"].includes(result)) {
+        return { value: null };
+      }
+      var winProfit = americanProfit(odds);
+      if (winProfit === null) return { value: null };
+      stake += units;
+      profit += (result === "WIN" || result === "W") ? winProfit * units : -units;
+    }
+    if (!stake) return { value: null };
+    var roi = (profit / stake) * 100;
+    return {
+      value: Number(roi.toFixed(2)),
+      label: roi.toFixed(1) + "%",
+      units: (profit >= 0 ? "+" : "") + profit.toFixed(2) + "u",
+      basis: trend.unit_basis || trend.stake_basis || "1 verified unit per source row"
+    };
+  }
+
+  function strengthRating(trend) {
+    var sample = Number(trend.sample) || 0;
+    var pct = numberValue(trend.win_percentage || trend.win_pct || trend.dominance);
+    if (pct !== null && pct <= 1) pct *= 100;
+    var bounds = dateBounds(trend);
+    var recencyDays = bounds.last ? Math.max(0, (Date.now() - Date.parse(bounds.last)) / 86400000) : null;
+    var rows = sourceRows(trend);
+    var sourceComplete = rows.length ? rows.every(function (row) {
+      return row.date && (row.opponent || row.raw_game_log) && (row.market_result || row.result || row.bet_result);
+    }) : Boolean(Array.isArray(trend.game_log) && trend.game_log.length);
+    var text = trendText(trend);
+    var marketSpecific = normalize(trend.bet_type) !== "MONEYLINE" || text.indexOf("FAVORITE") !== -1 || text.indexOf("UNDERDOG") !== -1;
+    var locationSpecific = ["HOME", "AWAY"].includes(normalize(trend.side)) || Boolean(locationLabel(trend));
+    var opponentSpecific = text.indexOf("VS ") !== -1 || text.indexOf("OPPONENT") !== -1 || text.indexOf(".500") !== -1 || text.indexOf("DIVISION") !== -1 || text.indexOf("CONFERENCE") !== -1;
+    var score = 0;
+    score += sample >= 50 ? 25 : sample >= 25 ? 20 : sample >= 10 ? 12 : 4;
+    score += pct >= 80 ? 25 : pct >= 70 ? 20 : pct >= 60 ? 12 : 4;
+    score += recencyDays === null ? 4 : recencyDays <= 45 ? 15 : recencyDays <= 120 ? 10 : 4;
+    score += sourceComplete ? 15 : 5;
+    score += marketSpecific ? 8 : 3;
+    score += locationSpecific ? 6 : 2;
+    score += opponentSpecific ? 6 : 2;
+    var label = score >= 78 ? "Strong" : score >= 58 ? "Solid" : "Developing";
+    var reason = [
+      sample + " verified games",
+      pct ? pct.toFixed(pct % 1 === 0 ? 0 : 1) + "% hit rate" : "hit rate unavailable",
+      recencyDays === null ? "recency unavailable" : (recencyDays <= 45 ? "recent sample" : "older sample"),
+      sourceComplete ? "complete source rows" : "basic source log",
+      marketSpecific ? "market-specific" : "general market",
+      locationSpecific ? "home/away-specific" : "all locations",
+      opponentSpecific ? "opponent/context-specific" : "general context"
+    ].join(", ");
+    return { score: score, label: label, reason: reason };
+  }
+
   function explanation(trend) {
     if (trend.why_it_matters) return trend.why_it_matters;
     var record = recordText(trend);
@@ -384,8 +494,9 @@
     var pct = pctText(trend);
     var record = recordText(trend);
     var detailId = "trend-" + Math.abs(hashCode(trendId(trend)));
-    var confidence = trend.confidence_score || trend.strength_rating || (trend.internal_scoring && trend.internal_scoring.score) || trend.mind_blowing_score;
-    var roi = trend.roi || trend.units || trend.profit_units;
+    var odds = verifiedOddsSummary(trend);
+    var roi = verifiedRoi(trend);
+    var strength = strengthRating(trend);
     return [
       "<article class=\"ts-result-item\" data-trend-id=\"" + escapeHtml(trendId(trend)) + "\">",
       "  <div class=\"ts-result-label-row\">",
@@ -404,13 +515,14 @@
       supportedValue("Date range", trend.date_range),
       supportedValue("Home/away", labelize(trend.side || locationLabel(trend))),
       supportedValue("Favorite/underdog", trend.favorite_underdog || trend.price_role),
-      supportedValue("Average line/odds", trend.average_line || trend.average_odds),
-      supportedValue("ROI / units", roi),
-      supportedValue("Confidence / strength", confidence),
+      supportedValue("Average odds", odds ? odds.average + " (range " + odds.range + ")" : ""),
+      supportedValue("ROI / units", roi.value == null ? "" : roi.label + (roi.units ? " / " + roi.units : "")),
+      supportedValue("Trend Strength", strength.label),
       supportedValue("Source data", sourceSummary(trend)),
       supportedValue("Last verified", trend.last_verified_at || trend.generated_at || cache[state.sport] && cache[state.sport].generated_at),
       "  </dl>",
       "  <p class=\"ts-explanation\">" + escapeHtml(explanation(trend)) + "</p>",
+      "  <p class=\"ts-strength-reason\"><strong>Strength reason:</strong> " + escapeHtml(strength.reason) + "</p>",
       "  <div class=\"ts-card-actions\">",
       "    <button class=\"ts-link-button\" type=\"button\" data-source-id=\"" + escapeHtml(trendId(trend)) + "\">Verified source</button>",
       "    <button class=\"ts-link-button\" type=\"button\" data-detail-toggle=\"" + escapeHtml(detailId) + "\">View Details</button>",
@@ -436,27 +548,26 @@
       supportedValue("Sample size", trend.sample),
       supportedValue("Record", recordText(trend)),
       supportedValue("Win percentage", pctText(trend)),
-      supportedValue("ROI", trend.roi),
-      supportedValue("Units", trend.units || trend.profit_units),
-      supportedValue("Average odds", trend.average_odds),
+      supportedValue("ROI", verifiedRoi(trend).value == null ? "" : verifiedRoi(trend).label),
+      supportedValue("Units", verifiedRoi(trend).units),
+      supportedValue("Average odds", verifiedOddsSummary(trend) ? verifiedOddsSummary(trend).average + " (range " + verifiedOddsSummary(trend).range + ")" : ""),
       supportedValue("Recent form split", trend.recent_form_split),
       supportedValue("Home/away split", trend.home_away_split),
       supportedValue("Market breakdown", trend.market_breakdown || labelize(trend.bet_type)),
-      supportedValue("Confidence notes", confidenceNotes(trend)),
+      supportedValue("Strength formula", strengthFormulaText()),
+      supportedValue("Strength reason", strengthRating(trend).reason),
       supportedValue("Data freshness", cache[state.sport] && cache[state.sport].generated_at),
       "  </dl>",
       "  <h4>Included games</h4>",
       gamesTable(trend),
-      "  <p class=\"ts-muted-line\">Excluded games are not included in the current verified artifact unless a future artifact adds an exclusion log.</p>",
+      "  <h4>Excluded games</h4>",
+      excludedTable(trend),
       "</section>"
     ].join("");
   }
 
-  function confidenceNotes(trend) {
-    if (trend.confidence_note) return trend.confidence_note;
-    if (trend.internal_scoring && trend.internal_scoring.source) return trend.internal_scoring.source;
-    if (trend.mind_blowing_score !== undefined) return "Internal Trendspotter score from verified artifact fields.";
-    return "No verified confidence or strength score is available for this trend.";
+  function strengthFormulaText() {
+    return "Sample size + hit rate + recency + source completeness + market specificity + home/away specificity + opponent/context specificity.";
   }
 
   function queryText() {
@@ -474,14 +585,26 @@
   }
 
   function gamesTable(trend) {
-    var rows = (trend.game_log || []).map(function (game, index) {
+    var rowsData = sourceRows(trend);
+    var rows = rowsData.length ? rowsData.map(function (row) {
+      return [
+        "<tr>",
+        "<td>" + escapeHtml(row.date || "Unavailable") + "</td>",
+        "<td>" + escapeHtml(row.opponent || row.raw_game_log || "Unavailable") + "</td>",
+        "<td>" + escapeHtml(labelize(row.market_result || row.result || row.bet_result || trend.bet_type)) + "</td>",
+        "<td>" + escapeHtml(row.odds || row.price || row.moneyline || row.line || row.total_line || "odds unavailable from source data") + "</td>",
+        "<td><a href=\"" + escapeHtml(row.source_url || trend.source_url) + "\" target=\"_blank\" rel=\"noopener\">Schedule / box score source</a></td>",
+        "<td>" + escapeHtml(row.why_counted || "Counted because it appears in the verified source rows for this trend condition.") + "</td>",
+        "</tr>"
+      ].join("");
+    }).join("") : (trend.game_log || []).map(function (game, index) {
       var date = Array.isArray(trend.game_dates) ? trend.game_dates[index] : (String(game).match(/\d{4}-\d{2}-\d{2}/) || [""])[0];
       return [
         "<tr>",
         "<td>" + escapeHtml(date || "Unavailable") + "</td>",
         "<td>" + escapeHtml(game) + "</td>",
         "<td>" + escapeHtml(labelize(trend.bet_type)) + "</td>",
-        "<td>" + escapeHtml(trend.average_line || trend.average_odds || "Unavailable") + "</td>",
+        "<td>odds unavailable from source data</td>",
         "<td><a href=\"" + escapeHtml(trend.source_url) + "\" target=\"_blank\" rel=\"noopener\">Schedule / box score source</a></td>",
         "<td>" + escapeHtml("Counted because it appears in the verified game log for this trend condition.") + "</td>",
         "</tr>"
@@ -490,6 +613,29 @@
     return [
       "<div class=\"ts-table-wrap\"><table class=\"ts-games-table\">",
       "<thead><tr><th>Date</th><th>Opponent / result</th><th>Market result</th><th>Line / odds</th><th>Source reference</th><th>Why counted</th></tr></thead>",
+      "<tbody>" + rows + "</tbody>",
+      "</table></div>"
+    ].join("");
+  }
+
+  function excludedTable(trend) {
+    var rowsData = excludedRows(trend);
+    if (!rowsData.length) {
+      return "<p class=\"ts-muted-line\">No excluded-game rows are available in this verified artifact.</p>";
+    }
+    var rows = rowsData.map(function (row) {
+      return [
+        "<tr>",
+        "<td>" + escapeHtml(row.date || "Unavailable") + "</td>",
+        "<td>" + escapeHtml(row.opponent || row.raw_game_log || "Unavailable") + "</td>",
+        "<td>" + escapeHtml(row.reason || row.exclusion_reason || "Unavailable") + "</td>",
+        "<td>" + escapeHtml(row.source_url || trend.source_url || "Verified artifact") + "</td>",
+        "</tr>"
+      ].join("");
+    }).join("");
+    return [
+      "<div class=\"ts-table-wrap\"><table class=\"ts-games-table\">",
+      "<thead><tr><th>Date</th><th>Game</th><th>Why excluded</th><th>Source reference</th></tr></thead>",
       "<tbody>" + rows + "</tbody>",
       "</table></div>"
     ].join("");
@@ -527,8 +673,12 @@
       supportedValue("Source data", sourceSummary(trend)),
       supportedValue("Last verified", trend.last_verified_at || cache[state.sport] && cache[state.sport].generated_at),
       supportedValue("Why games counted", "Each row is present in the verified artifact game_log for the trend condition."),
+      supportedValue("Odds status", verifiedOddsSummary(trend) ? "Verified row-level odds available." : "Odds unavailable from source data."),
+      supportedValue("ROI status", verifiedRoi(trend).value == null ? "ROI hidden because verified odds/results/unit basis are incomplete." : "ROI calculated from verified odds, results, and unit basis."),
       "  </dl>",
-      gamesTable(trend)
+      gamesTable(trend),
+      "<h4>Excluded games</h4>",
+      excludedTable(trend)
     ].join("");
     els.sourceModal.classList.remove("is-hidden");
     els.sourceModal.setAttribute("aria-hidden", "false");
