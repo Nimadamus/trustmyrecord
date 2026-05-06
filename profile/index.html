@@ -5835,29 +5835,32 @@
             try { renderProfileHeader(profileData); } catch (e) { console.warn('[Profile] Secondary header refresh failed:', e); }
         };
 
-        // Load favorite teams and gamer profile from backend after the critical
-        // profile card is visible. These enrich the card but must never block it.
-        try {
-            const teamsData = await withTimeout(api.request('/gaming/teams/' + encodeURIComponent(profileUsername)), 4500, 'Favorite teams request');
-            if (teamsData && Array.isArray(teamsData.favorite_teams)) {
-                const teamRows = teamsData.favorite_teams.filter(t => t && t.team_name);
-                profileData._fav_teams = {};
-                teamRows.forEach(t => {
-                    if (t.sport) profileData._fav_teams[t.sport] = t.team_name;
-                });
-                profileData.favorite_teams = teamRows.map(t => t.team_name).filter(Boolean);
-                if (!Array.isArray(profileData.favorite_sports) || profileData.favorite_sports.length === 0) {
-                    profileData.favorite_sports = Array.from(new Set(teamRows.map(t => t.sport).filter(Boolean)));
+        // Owner-only setup enrichments. Public profiles should not make these
+        // optional gaming calls because they are not needed for the public card
+        // and a backend miss would show as a failed profile-adjacent request.
+        if (isOwnProfile) {
+            try {
+                const teamsData = await withTimeout(api.request('/gaming/teams/' + encodeURIComponent(profileUsername)), 4500, 'Favorite teams request');
+                if (teamsData && Array.isArray(teamsData.favorite_teams)) {
+                    const teamRows = teamsData.favorite_teams.filter(t => t && t.team_name);
+                    profileData._fav_teams = {};
+                    teamRows.forEach(t => {
+                        if (t.sport) profileData._fav_teams[t.sport] = t.team_name;
+                    });
+                    profileData.favorite_teams = teamRows.map(t => t.team_name).filter(Boolean);
+                    if (!Array.isArray(profileData.favorite_sports) || profileData.favorite_sports.length === 0) {
+                        profileData.favorite_sports = Array.from(new Set(teamRows.map(t => t.sport).filter(Boolean)));
+                    }
+                    renderUpdatedHeader();
                 }
-                renderUpdatedHeader();
-            }
-        } catch(e) { profileData._fav_teams = {}; }
+            } catch(e) { profileData._fav_teams = {}; }
 
-        try {
-            const gamerData = await withTimeout(api.request('/gaming/profile/' + encodeURIComponent(profileUsername)), 4500, 'Gamer profile request');
-            if (gamerData && gamerData.gamer_profile) profileData._gamer = gamerData.gamer_profile;
-            else profileData._gamer = {};
-        } catch(e) { profileData._gamer = {}; }
+            try {
+                const gamerData = await withTimeout(api.request('/gaming/profile/' + encodeURIComponent(profileUsername)), 4500, 'Gamer profile request');
+                if (gamerData && gamerData.gamer_profile) profileData._gamer = gamerData.gamer_profile;
+                else profileData._gamer = {};
+            } catch(e) { profileData._gamer = {}; }
+        }
 
         try {
             await withTimeout(refreshLeaderboardRank(), 4500, 'Leaderboard request');
