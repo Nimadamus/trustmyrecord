@@ -28,6 +28,9 @@ function makeTrend(overrides = {}) {
     source_url: 'https://www.espn.com/nba/team/schedule/_/name/orl',
     game_dates: ['2026-04-05'],
     game_log: ['2026-04-05  @ New Orleans Pelicans            112-108  W'],
+    is_current: true,
+    is_archived: false,
+    artifact_slate_date: '2026-05-06',
     ...overrides,
   };
 }
@@ -130,6 +133,7 @@ function changeSelect(doc, selector, value) {
   assert(doc.querySelector('#trendFactor'), 'trend factor filter should render');
   assert(doc.querySelector('#minSample'), 'sample size filter should render');
   assert(doc.querySelector('#minWinPct'), 'win percentage threshold filter should render');
+  assert(doc.querySelector('#researchMode'), 'research mode filter should render');
   assert(doc.querySelector('#currentMatchupOnly'), 'current matchup toggle should render');
   assert(doc.querySelector('#sortBy'), 'sort filter should render');
 
@@ -138,6 +142,7 @@ function changeSelect(doc, selector, value) {
   doc.querySelector('#runTrendspotter').click();
   await new Promise((resolve) => setTimeout(resolve, 10));
   assert.strictEqual(doc.querySelectorAll('.ts-result-item').length, 2, 'sport filter should render sport trends');
+  assert.match(doc.querySelector('.ts-result-item').textContent, /Current Slate/, 'current trends should be visibly labeled');
   assert.strictEqual(doc.querySelectorAll('.ts-rank').length, 0, 'rank numbers should be removed from cards');
 
   assert(!doc.querySelector('.ts-result-item').textContent.includes('ROI / units'), 'ROI hidden when odds/results/unit basis are unavailable');
@@ -205,6 +210,33 @@ function changeSelect(doc, selector, value) {
   await selectSport(corruptedDom);
   corruptedDom.window.document.querySelector('#runTrendspotter').click();
   assert.strictEqual(corruptedDom.window.document.querySelectorAll('.ts-result-item').length, 0, 'incomplete trends must not render results');
+
+  const archivedDom = await bootWithData({
+    NBA: {
+      status: 'archived',
+      is_current: false,
+      is_archived: true,
+      artifact_slate_date: '2026-04-29',
+      staleness_reason: 'Artifact slate date 2026-04-29 is before current date 2026-05-06.',
+      trends: [
+        makeTrend({
+          is_current: false,
+          is_archived: true,
+          artifact_slate_date: '2026-04-29',
+          staleness_reason: 'Artifact slate date 2026-04-29 is before current date 2026-05-06.',
+        }),
+      ],
+    },
+  });
+  await selectSport(archivedDom);
+  archivedDom.window.document.querySelector('#runTrendspotter').click();
+  assert.strictEqual(archivedDom.window.document.querySelectorAll('.ts-result-item').length, 0, 'archived artifacts must not render in current slate mode');
+  assert.match(archivedDom.window.document.querySelector('.ts-no-results').textContent, /No verified current slate trends/);
+  changeSelect(archivedDom.window.document, '#researchMode', 'archived');
+  assert.strictEqual(archivedDom.window.document.querySelectorAll('.ts-result-item').length, 1, 'archived research should render only in archived mode');
+  assert.match(archivedDom.window.document.querySelector('.ts-result-item').textContent, /Archived Research/);
+  assert.match(archivedDom.window.document.querySelector('.ts-result-item').textContent, /before current date/);
+
   assert(css.includes('@media (max-width: 860px)'), 'mobile layout media query should exist');
   assert.strictEqual(dom.consoleErrors.length, 0, `no console errors expected: ${dom.consoleErrors.join('; ')}`);
 
