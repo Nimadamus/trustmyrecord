@@ -129,6 +129,8 @@ function changeSelect(doc, selector, value) {
   assert(doc.querySelector('#marketType'), 'market type filter should render');
   assert(doc.querySelector('#trendFactor'), 'trend factor filter should render');
   assert(doc.querySelector('#minSample'), 'sample size filter should render');
+  assert(doc.querySelector('#minWinPct'), 'win percentage threshold filter should render');
+  assert(doc.querySelector('#currentMatchupOnly'), 'current matchup toggle should render');
   assert(doc.querySelector('#sortBy'), 'sort filter should render');
 
   await selectSport(dom);
@@ -136,8 +138,7 @@ function changeSelect(doc, selector, value) {
   doc.querySelector('#runTrendspotter').click();
   await new Promise((resolve) => setTimeout(resolve, 10));
   assert.strictEqual(doc.querySelectorAll('.ts-result-item').length, 2, 'sport filter should render sport trends');
-  assert.match(doc.querySelector('.ts-rank').textContent, /Trend Rank #4/, 'rank must be clearly labeled');
-  assert.notStrictEqual(doc.querySelector('.ts-rank').textContent.trim(), '#4', 'rank must not be an unlabeled number');
+  assert.strictEqual(doc.querySelectorAll('.ts-rank').length, 0, 'rank numbers should be removed from cards');
 
   assert(!doc.querySelector('.ts-result-item').textContent.includes('ROI / units'), 'ROI hidden when odds/results/unit basis are unavailable');
   assert.match(doc.querySelector('.ts-result-item').textContent, /Trend Strength/, 'transparent strength should render');
@@ -157,6 +158,16 @@ function changeSelect(doc, selector, value) {
 
   doc.querySelector('#minSample').value = '0';
   doc.querySelector('#minSample').dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+  doc.querySelector('#minWinPct').value = '88';
+  doc.querySelector('#minWinPct').dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+  assert.strictEqual(doc.querySelectorAll('.ts-result-item').length, 0, 'win percentage threshold should filter cards');
+  doc.querySelector('#minWinPct').value = '0';
+  doc.querySelector('#minWinPct').dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+  doc.querySelector('#currentMatchupOnly').checked = true;
+  doc.querySelector('#currentMatchupOnly').dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+  assert.strictEqual(doc.querySelectorAll('.ts-result-item').length, 1, 'current matchup toggle should preserve valid matchup cards');
+  doc.querySelector('#currentMatchupOnly').checked = false;
+  doc.querySelector('#currentMatchupOnly').dispatchEvent(new dom.window.Event('change', { bubbles: true }));
   changeSelect(doc, '#sortBy', 'sample');
   assert.strictEqual(doc.querySelectorAll('.ts-result-item').length, 1, 'sorting should preserve filtered cards');
 
