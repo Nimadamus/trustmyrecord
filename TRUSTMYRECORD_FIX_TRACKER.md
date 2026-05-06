@@ -105,7 +105,7 @@ Remaining issue:
 
 ## 2026-05-06 - Leaderboard Summary API Regression Fix
 
-Status: VERIFIED LIVE
+Status: SUPERSEDED BY SPLIT TRACKING ENTRIES
 
 Files changed:
 - `routes/users.js`
@@ -149,3 +149,84 @@ Verification result:
 Remaining issue:
 - Browser console/DevTools verification still cannot be completed from this environment; Chrome or Edge should be checked manually for console errors.
 - Production is currently using the safe fallback summary path, now cached. The primary SQL path should still be cleaned up in a separate backend reliability pass so fallback is not the normal path.
+
+## 2026-05-06 - Handicappers Frontend Deployment
+
+Status: VERIFIED LIVE
+
+Files changed:
+- `handicappers/index.html`
+- `TRUSTMYRECORD_FIX_TRACKER.md`
+
+Commit hash:
+- Frontend optimization: `bef231ee61c9821b0cfe1b60db5866488d99d648`
+- Tracker split-status receipt: pending commit/push at time of local tracker edit.
+
+Push status:
+- Frontend optimization is present in production branch history.
+- Tracker split-status receipt push pending.
+
+Deploy status:
+- GitHub Pages deployment completed for production `main`.
+- Live `/handicappers/` returns `200`.
+
+Live URLs checked:
+- `https://trustmyrecord.com/handicappers/`
+- `https://trustmyrecord.com/profile/?user=BetLegend`
+
+Verification result:
+- `https://trustmyrecord.com/handicappers/` returned `200`.
+- Live page source includes `/users/handicappers/summary`.
+- Live page source does not include old `Pulling public profiles and performance stats` copy.
+- Live page source includes Load More controls.
+- `https://trustmyrecord.com/profile/?user=BetLegend` returned `200`.
+
+Remaining issue:
+- Browser console/DevTools verification still cannot be completed from this environment; Chrome or Edge should be checked manually for console errors.
+
+## 2026-05-06 - Primary SQL Summary Path Cleanup
+
+Status: OPEN
+
+Files changed:
+- `routes/users.js`
+- `tests/handicappers-summary-route-test.js`
+- `tests/handicappers-summary-fallback-cache-test.js`
+- `TRUSTMYRECORD_FIX_TRACKER.md`
+
+Commit hash:
+- Backend fallback cache/header fix: `537c43a113d056ddaf48c711a993611c17f4d214`
+- Backend summary smoke test: `13e4a32493fb69d34b5ba1eee060fecfaf24e8f0`
+- Backend fallback cache smoke test: `99d8870f1884bda7f6b9600008c6959d839a1557`
+- Tracker split-status receipt: pending commit/push at time of local tracker edit.
+
+Push status:
+- Backend commits are pushed to `trustmyrecord-backend` production branch `master`.
+- Tracker split-status receipt push pending.
+
+Deploy status:
+- Live endpoint returns `200`.
+- Safe fallback path remains deployed and cached.
+
+Live endpoint checked:
+- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=10&sort=units`
+
+Live JSON shape:
+- Top-level keys: `members`, `pagination`, `summary`, `cache`.
+- Member keys include: `username`, `record`, `units`, `roi`, `win_percentage`, `graded_pick_count`, `streak`, `sports`, `last_pick`, `active_status`, `profile_url`.
+- Pagination returned `limit: 10`, `offset: 0`, `total: 3`, `has_more: false`.
+- Summary returned `total_members: 3`, `active_members: 3`, `total_graded_picks: 30`.
+- Members returned: `Flintlocktropicks`, `BetLegend`, `mikeybalhansports`.
+
+Verification result:
+- Exact endpoint returned HTTP `200`.
+- Response header returned `X-TMR-Cache: HIT`.
+- Response body included `cache.ttl_seconds` and did not include `cache.fallback`, which indicates the checked response came from cached primary-summary payload rather than cached fallback.
+- No zero-pick users were present in the checked response.
+- No fake/test users were present in the checked response.
+
+Remaining issue:
+- Keep this workstream open until the primary SQL path is proven as the normal path across cold-cache requests, pagination, search, sport filters, and sort variants.
+- Verify summary stats against `/api/users/:username/metrics` for record, units, ROI, current streak, worst streak, peak, and drawdown.
+- Confirm hard refresh does not reintroduce stale stats after cache invalidation.
+- Browser console/DevTools verification still needs a manual Chrome or Edge check.
