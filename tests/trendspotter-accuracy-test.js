@@ -1,13 +1,14 @@
 const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
-const { JSDOM } = require('jsdom');
+const { JSDOM, VirtualConsole } = require('jsdom');
 
 const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'trendspotter', 'index.html'), 'utf8')
   .replace(/<script src="\/static\/js\/config\.js[^>]*><\/script>/, '')
   .replace(/<script src="\/static\/js\/trendspotter\.js[^>]*><\/script>/, '');
 const js = fs.readFileSync(path.join(root, 'static', 'js', 'trendspotter.js'), 'utf8');
+const css = fs.readFileSync(path.join(root, 'static', 'css', 'trendspotter.css'), 'utf8');
 
 function makeTrend(overrides = {}) {
   return {
@@ -32,11 +33,17 @@ function makeTrend(overrides = {}) {
 }
 
 async function bootWithData(dataBySport) {
+  const consoleErrors = [];
+  const virtualConsole = new VirtualConsole();
+  virtualConsole.on('error', (msg) => consoleErrors.push(String(msg)));
+  virtualConsole.on('jsdomError', (err) => consoleErrors.push(err.message));
   const dom = new JSDOM(html, {
     url: 'https://trustmyrecord.com/trendspotter/',
     runScripts: 'dangerously',
     pretendToBeVisual: true,
+    virtualConsole,
   });
+  dom.consoleErrors = consoleErrors;
   dom.window.CONFIG = { api: { baseUrl: 'https://trustmyrecord-api.onrender.com/api' } };
   dom.window.fetch = async (url) => {
     const sport = new URL(url).searchParams.get('sport');
@@ -80,6 +87,37 @@ function changeSelect(doc, selector, value) {
           claim: 'The Pistons are 9-1 in their last 10 after a win',
           sample: 10,
           dominance: 0.9,
+          unit_basis: '1 unit flat stake',
+          source_rows: [
+            {
+              date: '2026-04-05',
+              opponent: 'vs Orlando Magic',
+              market_result: 'WIN',
+              odds: -120,
+              unit_basis: '1 unit flat stake',
+              raw_game_log: '2026-04-05 vs Orlando Magic 110-101 W',
+              why_counted: 'Matched after-win moneyline selector.',
+              source_url: 'https://www.espn.com/nba/team/schedule/_/name/det',
+            },
+            {
+              date: '2026-04-02',
+              opponent: '@ Boston Celtics',
+              market_result: 'LOSS',
+              odds: 140,
+              unit_basis: '1 unit flat stake',
+              raw_game_log: '2026-04-02 @ Boston Celtics 101-106 L',
+              why_counted: 'Matched after-win moneyline selector.',
+              source_url: 'https://www.espn.com/nba/team/schedule/_/name/det',
+            },
+          ],
+          excluded_games: [
+            {
+              date: '2026-03-29',
+              opponent: 'vs Miami Heat',
+              reason: 'missing odds',
+              source_url: 'https://www.espn.com/nba/team/schedule/_/name/det',
+            },
+          ],
         }),
       ],
     },
@@ -101,6 +139,10 @@ function changeSelect(doc, selector, value) {
   assert.match(doc.querySelector('.ts-rank').textContent, /Trend Rank #4/, 'rank must be clearly labeled');
   assert.notStrictEqual(doc.querySelector('.ts-rank').textContent.trim(), '#4', 'rank must not be an unlabeled number');
 
+  assert(!doc.querySelector('.ts-result-item').textContent.includes('ROI / units'), 'ROI hidden when odds/results/unit basis are unavailable');
+  assert.match(doc.querySelector('.ts-result-item').textContent, /Trend Strength/, 'transparent strength should render');
+  assert.match(doc.querySelector('.ts-result-item').textContent, /Strength reason/, 'strength reason should render');
+
   changeSelect(doc, '#marketType', 'team_total');
   assert.strictEqual(doc.querySelectorAll('.ts-result-item').length, 1, 'market type filter should update cards');
   assert.match(doc.querySelector('.ts-claim').textContent, /Magic have scored/);
@@ -118,14 +160,22 @@ function changeSelect(doc, selector, value) {
   changeSelect(doc, '#sortBy', 'sample');
   assert.strictEqual(doc.querySelectorAll('.ts-result-item').length, 1, 'sorting should preserve filtered cards');
 
+  changeSelect(doc, '#trendFactor', 'all');
+  changeSelect(doc, '#marketType', 'moneyline');
+  assert.strictEqual(doc.querySelectorAll('.ts-result-item').length, 1, 'moneyline filter should isolate verified ROI test trend');
+  assert.match(doc.querySelector('.ts-result-item').textContent, /Average odds/, 'average odds shown when row odds are verified');
+  assert.match(doc.querySelector('.ts-result-item').textContent, /ROI \/ units/, 'ROI shown only with verified odds/results/unit basis');
+
   doc.querySelector('[data-source-id]').click();
   assert(!doc.querySelector('#sourceModal').classList.contains('is-hidden'), 'verified source should open supporting data');
-  assert.match(doc.querySelector('#sourceModalBody').textContent, /New Orleans Pelicans/);
+  assert.match(doc.querySelector('#sourceModalBody').textContent, /Orlando Magic/);
   assert.match(doc.querySelector('#sourceModalBody').textContent, /Why counted/);
+  assert.match(doc.querySelector('#sourceModalBody').textContent, /missing odds/, 'excluded games should display when available');
 
   doc.querySelector('[data-detail-toggle]').click();
   assert(!doc.querySelector('.ts-detail-panel').classList.contains('is-hidden'), 'detail panel should expand');
   assert.match(doc.querySelector('.ts-detail-panel').textContent, /Exact query\/filter/);
+  assert.match(doc.querySelector('.ts-detail-panel').textContent, /Strength formula/);
 
   const corruptedData = {
     NBA: {
@@ -141,6 +191,8 @@ function changeSelect(doc, selector, value) {
   await selectSport(corruptedDom);
   corruptedDom.window.document.querySelector('#runTrendspotter').click();
   assert.strictEqual(corruptedDom.window.document.querySelectorAll('.ts-result-item').length, 0, 'incomplete trends must not render results');
+  assert(css.includes('@media (max-width: 860px)'), 'mobile layout media query should exist');
+  assert.strictEqual(dom.consoleErrors.length, 0, `no console errors expected: ${dom.consoleErrors.join('; ')}`);
 
   console.log('Trendspotter accuracy frontend tests passed.');
 })().catch((error) => {
