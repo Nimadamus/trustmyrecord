@@ -88,6 +88,8 @@
         period_1_totals: '1st Period Total',
         alt_spreads: 'Alt Spread',
         alt_totals: 'Alt Total',
+        alternate_totals: 'Alt Total',
+        alternate_spreads: 'Alt Spread',
         h2h_3_way: '3-Way Moneyline',
         draw_no_bet: 'Draw No Bet',
         double_chance: 'Double Chance',
