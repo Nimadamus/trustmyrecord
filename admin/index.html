@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autograder Status | TrustMyRecord</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; background: #0b1117; color: #e8eef5; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 18px 48px; }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+    h1 { margin: 0; font-size: 26px; line-height: 1.2; letter-spacing: 0; }
+    .muted { color: #9bacbd; font-size: 13px; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+    .panel { background: #121a23; border: 1px solid #263546; border-radius: 8px; padding: 14px; }
+    .stat { min-height: 76px; }
+    .stat .label { color: #9bacbd; font-size: 12px; text-transform: uppercase; }
+    .stat .value { margin-top: 8px; font-size: 24px; font-weight: 750; }
+    .ok { color: #4ade80; }
+    .bad { color: #fb7185; }
+    .warn { color: #fbbf24; }
+    button { border: 1px solid #3b5066; background: #1a2633; color: #f4f7fb; border-radius: 7px; padding: 10px 14px; font-weight: 700; cursor: pointer; }
+    button.primary { background: #d9a441; border-color: #d9a441; color: #111827; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    input { width: min(520px, 100%); background: #0d141c; border: 1px solid #304155; border-radius: 7px; color: #e8eef5; padding: 10px 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; border-bottom: 1px solid #243242; padding: 10px 8px; vertical-align: top; }
+    th { color: #9bacbd; font-size: 12px; text-transform: uppercase; }
+    pre { white-space: pre-wrap; word-break: break-word; margin: 0; color: #c7d2de; }
+    .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 860px) { .grid, .two { grid-template-columns: 1fr; } .top { align-items: flex-start; flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="top">
+      <div>
+        <h1>Autograder Status</h1>
+        <div class="muted" id="updated">Waiting for status...</div>
+      </div>
+      <div class="actions">
+        <button id="refreshBtn">Refresh</button>
+        <button class="primary" id="runBtn">Run Autograder Now</button>
+      </div>
+    </div>
+
+    <section class="panel" style="margin-bottom:12px">
+      <div class="actions">
+        <input id="adminToken" type="password" autocomplete="off" placeholder="Optional ADMIN_TOKEN. Founder login token is used automatically when available.">
+        <button id="saveTokenBtn">Save Token</button>
+      </div>
+      <div class="muted" style="margin-top:8px">Manual runs use the same backend grading path as the scheduled cron.</div>
+    </section>
+
+    <section class="grid">
+      <div class="panel stat"><div class="label">Health</div><div class="value" id="health">-</div></div>
+      <div class="panel stat"><div class="label">Pending</div><div class="value" id="pending">-</div></div>
+      <div class="panel stat"><div class="label">Pending Completed</div><div class="value" id="pendingCompleted">-</div></div>
+      <div class="panel stat"><div class="label">Graded 24h</div><div class="value" id="graded24">-</div></div>
+    </section>
+
+    <section class="two">
+      <div class="panel">
+        <h2 style="margin-top:0;font-size:16px">Schedule</h2>
+        <pre id="schedule">-</pre>
+      </div>
+      <div class="panel">
+        <h2 style="margin-top:0;font-size:16px">Last Run</h2>
+        <pre id="lastRun">-</pre>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top:12px">
+      <h2 style="margin-top:0;font-size:16px">Skipped Reasons</h2>
+      <pre id="reasons">-</pre>
+    </section>
+
+    <section class="panel" style="margin-top:12px">
+      <h2 style="margin-top:0;font-size:16px">Skipped Pick Samples</h2>
+      <div style="overflow:auto">
+        <table>
+          <thead><tr><th>Pick</th><th>Game</th><th>Market</th><th>Reason</th><th>Retries</th><th>Attempted</th></tr></thead>
+          <tbody id="skippedRows"><tr><td colspan="6" class="muted">No data loaded.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top:12px">
+      <h2 style="margin-top:0;font-size:16px">Run Output</h2>
+      <pre id="output">-</pre>
+    </section>
+  </main>
+
+  <script src="/static/js/config.js"></script>
+  <script>
+    const API_BASE = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    const tokenInput = document.getElementById('adminToken');
+    const savedAdminToken = localStorage.getItem('tmr_admin_token') || '';
+    tokenInput.value = savedAdminToken;
+
+    function authHeaders() {
+      const headers = { 'content-type': 'application/json' };
+      const adminToken = tokenInput.value.trim();
+      const bearer = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken') || localStorage.getItem('access_token') || localStorage.getItem('token') || localStorage.getItem('tmr_token');
+      if (adminToken) headers['x-admin-token'] = adminToken;
+      if (bearer) headers.Authorization = 'Bearer ' + bearer;
+      return headers;
+    }
+
+    function fmt(value) {
+      if (!value) return '-';
+      const d = new Date(value);
+      return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString();
+    }
+
+    function pretty(value) {
+      return JSON.stringify(value || {}, null, 2);
+    }
+
+    async function request(path, options) {
+      const response = await fetch(API_BASE + path, { ...options, headers: authHeaders() });
+      const text = await response.text();
+      let data;
+      try { data = text ? JSON.parse(text) : {}; } catch (_) { data = { raw: text }; }
+      if (!response.ok) throw new Error((data && data.error) || ('HTTP ' + response.status));
+      return data;
+    }
+
+    async function loadStatus() {
+      const data = await request('/admin/autograder/status');
+      document.getElementById('updated').textContent = 'Updated ' + new Date().toLocaleString();
+      document.getElementById('health').textContent = data.ok ? 'OK' : 'Attention';
+      document.getElementById('health').className = 'value ' + (data.ok ? 'ok' : 'bad');
+      document.getElementById('pending').textContent = data.counts.pending ?? 0;
+      document.getElementById('pendingCompleted').textContent = data.counts.pending_completed ?? 0;
+      document.getElementById('pendingCompleted').className = 'value ' + (Number(data.counts.pending_completed || 0) > 0 ? 'warn' : 'ok');
+      document.getElementById('graded24').textContent = data.counts.graded_24h ?? 0;
+      document.getElementById('schedule').textContent = pretty({ cron: data.schedule.cron, next_run_at: fmt(data.schedule.next_run_at) });
+      document.getElementById('lastRun').textContent = pretty({
+        last_run_at: fmt(data.run.last_run_at),
+        last_success_at: fmt(data.run.last_success_at),
+        last_error: data.run.last_error,
+        total_runs: data.run.total_runs,
+        total_graded: data.run.total_graded,
+        last_receipt: data.run.last_receipt,
+        stats: data.stats,
+      });
+      document.getElementById('reasons').textContent = pretty(data.skipped_reasons);
+      const rows = document.getElementById('skippedRows');
+      const samples = data.skipped_samples || [];
+      rows.innerHTML = samples.length ? samples.map((row) => `
+        <tr>
+          <td>#${row.pick_id}<br><span class="muted">${row.sport_key || ''}</span></td>
+          <td>${row.away_team || '?'} @ ${row.home_team || '?'}<br><span class="muted">${fmt(row.commence_time)}</span></td>
+          <td>${row.market_type || '-'}<br><span class="muted">${row.selection || ''}</span></td>
+          <td>${row.grader_last_error || '-'}</td>
+          <td>${row.grader_retries || 0}</td>
+          <td>${fmt(row.grader_last_attempt_at)}</td>
+        </tr>`).join('') : '<tr><td colspan="6" class="muted">No skipped pending picks with logged reasons.</td></tr>';
+      return data;
+    }
+
+    document.getElementById('saveTokenBtn').addEventListener('click', () => {
+      localStorage.setItem('tmr_admin_token', tokenInput.value.trim());
+      document.getElementById('output').textContent = 'Admin token saved in this browser.';
+    });
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      loadStatus().catch((error) => { document.getElementById('output').textContent = error.message; });
+    });
+    document.getElementById('runBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('runBtn');
+      btn.disabled = true;
+      document.getElementById('output').textContent = 'Running...';
+      try {
+        const result = await request('/admin/run-autograder-now', { method: 'POST', body: '{}' });
+        document.getElementById('output').textContent = pretty(result);
+        await loadStatus();
+      } catch (error) {
+        document.getElementById('output').textContent = error.message;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+    loadStatus().catch((error) => { document.getElementById('output').textContent = error.message; });
+  </script>
+</body>
+</html>
