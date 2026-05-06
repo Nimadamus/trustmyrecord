@@ -259,10 +259,10 @@
     }
 
     window.TMR = window.TMR || {};
-    if (typeof window.TMR.calculateStakeValues !== 'function') window.TMR.calculateStakeValues = calculateStakeValues;
-    if (typeof window.TMR.formatStakeDisplay !== 'function') window.TMR.formatStakeDisplay = formatStakeDisplay;
-    if (typeof window.TMR.updateStakeModePreview !== 'function') window.TMR.updateStakeModePreview = updateStakeModePreview;
-    if (typeof window.setUnitsMode !== 'function') window.setUnitsMode = setStakeMode;
+    window.TMR.calculateStakeValues = calculateStakeValues;
+    window.TMR.formatStakeDisplay = formatStakeDisplay;
+    window.TMR.updateStakeModePreview = updateStakeModePreview;
+    window.setUnitsMode = setStakeMode;
 
     function normalizePick(pick) {
         return Object.assign({}, pick, {
@@ -1077,6 +1077,15 @@
             row.classList.add('tmr-units-row');
         }
 
+        let visibleLabel = document.getElementById('unitsModeVisibleLabel');
+        if (!visibleLabel) {
+            visibleLabel = document.createElement('div');
+            visibleLabel.id = 'unitsModeVisibleLabel';
+            visibleLabel.className = 'tmr-units-mode-label';
+            visibleLabel.textContent = 'Risk / To Win selector';
+        }
+        if (visibleLabel.parentElement !== row) row.insertBefore(visibleLabel, unitsInput);
+
         let toggle = document.getElementById('unitsModeToggle');
         if (!toggle) {
             toggle = document.createElement('div');
@@ -1265,6 +1274,7 @@
             '#picks #pickLineInput:focus,#picks #pickOddsInput:focus,#picks #unitsInput:focus,#picks #pickReasoning:focus{outline:none;border-color:rgba(120,255,181,0.34)!important;box-shadow:0 0 0 3px rgba(47,143,83,0.15)!important;}',
             '#picks #pickReasoning{min-height:110px;padding:14px 16px;font-size:15px;resize:vertical;}',
             '#picks #unitsModeToggle{border:1px solid rgba(255,255,255,0.08)!important;border-radius:12px!important;background:#14181f!important;}',
+            '#picks .tmr-units-mode-label{flex:1 0 100%;font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#f2c94c;}',
             '#picks .submit-pick-btn{width:100%;padding:16px 20px;border-radius:16px;border:1px solid rgba(120,255,181,0.26);background:linear-gradient(180deg,#2f8f53,#257444);color:#f8fff9;font-size:15px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;box-shadow:0 16px 30px rgba(0,0,0,0.2);}',
             '#picks .submit-pick-btn:hover{transform:translateY(-1px);background:linear-gradient(180deg,#38a35f,#2a7c49);}',
             '#picks #pickConfirmation > div{background:linear-gradient(180deg,rgba(35,63,42,0.98),rgba(19,31,23,0.98))!important;border:1px solid rgba(120,255,181,0.26)!important;border-radius:20px!important;box-shadow:0 20px 40px rgba(0,0,0,0.22)!important;}',
@@ -1306,6 +1316,7 @@
             ,'#pickDetails .option-group input[readonly]{background:rgba(255,255,255,0.03)!important;color:#cbd5e1!important;cursor:default;}'
             ,'#pickDetails .option-group input:focus{outline:none!important;border-color:rgba(120,255,181,0.34)!important;box-shadow:0 0 0 3px rgba(47,143,83,0.18)!important;}'
             ,'#pickDetails .tmr-units-row{display:flex!important;flex-wrap:wrap;align-items:stretch;gap:10px!important;margin-top:8px;}'
+            ,'#pickDetails .tmr-units-mode-label{flex:1 0 100%;font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#f2c94c;}'
             ,'#pickDetails .tmr-units-row #unitsInput{flex:1 1 120px;min-width:0;width:auto!important;font-size:18px!important;font-weight:800;text-align:center;}'
             ,'#pickDetails .tmr-units-row #unitsModeToggle{flex:1 1 220px;display:flex;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);min-width:0;}'
             ,'#pickDetails .tmr-units-row #unitsModeToggle .units-mode-btn{flex:1;padding:12px 14px;font-size:13px;border-radius:0;}'
@@ -2400,6 +2411,7 @@
         const summaryText = state.selectedOption.selection_label || state.selectedOption.selection || 'Pick';
         updateText('summaryPick', lineValue && summaryText.indexOf(lineValue) === -1 ? (summaryText + ' (' + lineValue + ')') : summaryText);
         updateText('summaryOdds', oddsValue || 'Manual');
+        updateStakeModePreview();
     }
 
     // Inline error rendering for the pick slip. Replaces the legacy alert()
@@ -2529,7 +2541,6 @@
         const unitsInput = document.getElementById('unitsInput');
         const bookInput = document.getElementById('pickBookInput');
         const reasoningInput = document.getElementById('pickReasoning');
-
         ensureStakeModeControls(unitsInput);
 
         const oddsValue = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
