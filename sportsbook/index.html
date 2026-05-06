@@ -640,7 +640,7 @@
 
     // Build team-logo markup for every sportsbook board path. The odds feed
     // often omits logo URLs, so resolve by team name before falling to initials.
-    window.TMR._teamLogo = function(logoUrl, abbr, fullName, sportKey) {
+    var legacyTeamLogoRenderer = function(logoUrl, abbr, fullName, sportKey) {
         var safeAttr = function(s) { return ('' + (s == null ? '' : s)).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
         var resolvedSportKey = sportKey || (window.TMR.sportKeyMap && window.TMR.sportKeyMap[window.TMR.selectedSport]) || '';
         var resolvedLogoUrl = logoUrl || '';
@@ -668,6 +668,17 @@
         }
         return '<div class="team-logo team-logo--fallback" aria-hidden="true">' + initialsHtml + '</div>';
     };
+    window.TMR._teamLogo = legacyTeamLogoRenderer;
+    try {
+        Object.defineProperty(window.TMR, '_teamLogo', {
+            configurable: false,
+            enumerable: true,
+            get: function() { return legacyTeamLogoRenderer; },
+            set: function() {}
+        });
+    } catch (error) {
+        window.TMR._teamLogo = legacyTeamLogoRenderer;
+    }
 
     window.TMR.renderMarketSubtabs = function(sport, games) {
         var host = document.getElementById('marketSubtabs');
