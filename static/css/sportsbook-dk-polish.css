@@ -210,6 +210,109 @@
     #picks .sportsbook-period-tab { height: 38px !important; padding: 8px 14px !important; }
 }
 
+/* May 6 2026 board cleanup: Team Totals no longer carries a duplicate
+   middle team/book column. Keep the left matchup as the only team label
+   and let the Over/Under prices breathe. */
+#picks .sb-tt-row {
+    grid-template-columns: minmax(230px, 1.2fr) repeat(2, minmax(180px, 1fr)) 150px !important;
+}
+#picks .sb-tt-row .sb-board-col[data-col="tt-over"],
+#picks .sb-tt-row .sb-board-col[data-col="tt-under"] {
+    min-width: 0 !important;
+}
+#picks .sb-tt-row .sb-board-action {
+    grid-column: auto !important;
+}
+
+/* Premium odds-button hierarchy. Top line is the market/line; bottom line
+   is the price, color-coded by American odds sign. */
+#picks .sb-odds {
+    min-height: 58px !important;
+    height: auto !important;
+    padding: 10px 16px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    background: linear-gradient(180deg, #0c1830 0%, #071225 100%) !important;
+    border-color: rgba(148, 163, 184, 0.24) !important;
+    color: #f8fafc !important;
+    box-shadow: none !important;
+}
+#picks .sb-odds:hover:not(:disabled) {
+    background: linear-gradient(180deg, #10203c 0%, #0a1830 100%) !important;
+    border-color: rgba(45, 212, 191, 0.56) !important;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24) !important;
+}
+#picks .sb-odds-line,
+#picks .sb-odds:hover .sb-odds-line {
+    color: #f8fafc !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.05 !important;
+}
+#picks .sb-odds-price {
+    color: #fca5a5 !important;
+    font-size: 18px !important;
+    font-weight: 950 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.05 !important;
+}
+#picks .sb-odds-price.is-plus {
+    color: #65d996 !important;
+}
+#picks .sb-odds-price.is-minus {
+    color: #fca5a5 !important;
+}
+#picks .sb-odds.is-selected,
+#picks .sb-odds[aria-pressed="true"] {
+    background: linear-gradient(180deg, rgba(45, 212, 191, 0.24), rgba(12, 42, 48, 0.92)) !important;
+    border-color: #2dd4bf !important;
+    box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.85) inset, 0 10px 22px rgba(0, 0, 0, 0.28) !important;
+}
+
+/* Legacy market-board buttons used by the expanded MLB 5-inning board. */
+#picks .games-board-wrap .odds-btn {
+    background: linear-gradient(180deg, #0c1830 0%, #071225 100%) !important;
+    border-color: rgba(148, 163, 184, 0.24) !important;
+    padding: 10px 14px !important;
+}
+#picks .games-board-wrap .odds-btn:hover:not(.no-odds-btn) {
+    background: linear-gradient(180deg, #10203c 0%, #0a1830 100%) !important;
+    border-color: rgba(45, 212, 191, 0.56) !important;
+    transform: translateY(-1px);
+}
+#picks .games-board-wrap .odds-line {
+    color: #f8fafc !important;
+    font-weight: 800 !important;
+}
+#picks .games-board-wrap .odds-value {
+    color: #fca5a5 !important;
+    font-weight: 950 !important;
+}
+#picks .games-board-wrap .odds-value.positive {
+    color: #65d996 !important;
+}
+
+@media (max-width: 760px) {
+    #picks .sb-tt-row {
+        grid-template-columns: 1fr 1fr !important;
+        grid-template-areas:
+            "match match"
+            "over under"
+            "action action" !important;
+    }
+    #picks .sb-tt-row .sb-board-matchup { grid-area: match !important; }
+    #picks .sb-tt-row .sb-board-col[data-col="tt-over"] { grid-area: over !important; }
+    #picks .sb-tt-row .sb-board-col[data-col="tt-under"] { grid-area: under !important; }
+    #picks .sb-tt-row .sb-board-action { grid-area: action !important; }
+    #picks .sb-odds {
+        min-height: 54px !important;
+        padding: 9px 10px !important;
+    }
+}
+
 /* CRITICAL fix Apr 30 2026: while the lobby (#sportSelection) is active,
    HIDE the secondary .picks-board-row pane entirely. The lobby has its
    own board (#lobbyBoardRows) and its own pick slip aside

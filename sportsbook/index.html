@@ -10100,6 +10100,10 @@ window.toggleSportFamily = function (family) {
     function oddsButton(line, price, ctx) {
         var lineTxt = (line == null || line === '') ? '—' : line;
         var priceTxt = (price == null || price === '') ? '—' : price;
+        var priceNum = parseFloat(String(priceTxt).replace('+', ''));
+        var priceClass = Number.isFinite(priceNum)
+            ? (priceNum > 0 ? ' is-plus' : ' is-minus')
+            : '';
         // ctx = { gameIndex, betType, team, line, odds, awayTeam, homeTeam }
         // Without ctx, the button renders as a dead placeholder (used when
         // a market is missing). With ctx, it routes through the canonical
@@ -10125,7 +10129,7 @@ window.toggleSportFamily = function (family) {
             + "'" + _sbEsc(ctx.homeTeam) + "')";
         return '<button type="button" class="sb-odds" tabindex="0" onclick="' + onclick + '">' +
                '<span class="sb-odds-line">' + lineTxt + '</span>' +
-               '<span class="sb-odds-price">' + priceTxt + '</span>' +
+               '<span class="sb-odds-price' + priceClass + '">' + priceTxt + '</span>' +
                '</button>';
     }
     function oddsStack(topBtn, bottomBtn) {
@@ -10728,6 +10732,10 @@ window.toggleSportFamily = function (family) {
             ? (side === 'over' ? 'O ' : 'U ') + line
             : '—';
         var oddsTxt = hasReal ? _ttFmtOdds(odds) : '—';
+        var oddsNum = Number(odds);
+        var oddsClass = hasReal && Number.isFinite(oddsNum)
+            ? (oddsNum > 0 ? ' is-plus' : ' is-minus')
+            : '';
         var betType = side === 'over' ? 'teamover' : 'teamunder';
         if (!hasReal) {
             return '<button type="button" class="sb-odds" disabled aria-disabled="true">' +
@@ -10748,7 +10756,7 @@ window.toggleSportFamily = function (family) {
                ' data-home="' + _ttHtmlEsc(homeTeam) + '"' +
                ' onclick="window.TMR &amp;&amp; window.TMR._ttDirectClick &amp;&amp; window.TMR._ttDirectClick(this, event)">' +
                '<span class="sb-odds-line">' + _ttHtmlEsc(lineTxt) + '</span>' +
-               '<span class="sb-odds-price">' + _ttHtmlEsc(oddsTxt) + '</span></button>';
+               '<span class="sb-odds-price' + oddsClass + '">' + _ttHtmlEsc(oddsTxt) + '</span></button>';
     }
 
     // Direct click path — invoked by inline onclick on every team-total
@@ -11196,19 +11204,7 @@ window.toggleSportFamily = function (family) {
                 var awayUnder = split.away.under || {};
                 var homeOver = split.home.over || {};
                 var homeUnder = split.home.under || {};
-                var awayBookLabel = (awayOver.book || awayUnder.book || '').toString();
-                var homeBookLabel = (homeOver.book || homeUnder.book || '').toString();
                 html +=
-                    '<div class="sb-board-col" data-col="team">' +
-                        '<div class="sb-tt-team-stack">' +
-                            '<div class="sb-tt-team-cell"><b>' + _ttHtmlEsc(game.away_team) + '</b>' +
-                                (awayBookLabel ? '<small>' + _ttHtmlEsc(awayBookLabel) + '</small>' : '') +
-                            '</div>' +
-                            '<div class="sb-tt-team-cell"><b>' + _ttHtmlEsc(game.home_team) + '</b>' +
-                                (homeBookLabel ? '<small>' + _ttHtmlEsc(homeBookLabel) + '</small>' : '') +
-                            '</div>' +
-                        '</div>' +
-                    '</div>' +
                     '<div class="sb-board-col" data-col="tt-over">' +
                         '<div class="sb-odds-stack">' +
                             _ttButton(idx, 'over', game.away_team, awayOver.line, awayOver.odds, game.away_team, game.home_team) +
@@ -28252,7 +28248,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     </style>
     <link rel="stylesheet" href="/static/css/sportsbook-pro.css?v=20260430pickslipexp1">
-    <link rel="stylesheet" href="/static/css/sportsbook-dk-polish.css?v=20260430hidedup1">
+    <link rel="stylesheet" href="/static/css/sportsbook-dk-polish.css?v=20260506boardclean1">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=20260505nocommandfinal">
     <style id="tmr-redesign-tail-guard">
