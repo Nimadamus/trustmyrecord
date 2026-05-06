@@ -1013,6 +1013,35 @@ if (typeof window !== 'undefined') {
         };
     }
 
+    window.TMR.formatPickLine = function (pick) {
+        pick = pick || {};
+        const market = String(pick.market_type || pick.marketType || pick.bet_type || pick.betType || '').toLowerCase();
+        const rawLine = pick.line_snapshot != null ? pick.line_snapshot : (pick.line != null ? pick.line : pick.point);
+        if (rawLine == null || rawLine === '') return '-';
+
+        const num = Number(rawLine);
+        if (!Number.isFinite(num)) return String(rawLine).trim();
+
+        const isSpread = market === 'spreads'
+            || market === 'spread'
+            || market.endsWith('_spreads')
+            || market.includes('run_line')
+            || market.includes('puck_line');
+        const isTotal = market === 'totals'
+            || market === 'total'
+            || market.endsWith('_totals')
+            || market === 'team_totals'
+            || market === 'team_total';
+        const isMoneyline = market === 'h2h'
+            || market === 'moneyline'
+            || market.endsWith('_h2h');
+
+        if (isMoneyline) return '-';
+        if (isSpread) return window.TMR.formatLine(num, { signed: true }) || '-';
+        if (isTotal) return window.TMR.formatLine(Math.abs(num)) || '-';
+        return window.TMR.formatLine(num) || '-';
+    };
+
     window.TMR.formatPickDisplay = function (pick) {
         pick = pick || {};
         const market = String(pick.market_type || pick.marketType || pick.bet_type || pick.betType || '').toLowerCase();
