@@ -160,11 +160,11 @@ Files changed:
 
 Commit hash:
 - Frontend optimization: `bef231ee61c9821b0cfe1b60db5866488d99d648`
-- Tracker split-status receipt: pending commit/push at time of local tracker edit.
+- Tracker split-status receipt: `7b615dde82044e4d84d676ba57865ee4f98d06f2`
 
 Push status:
 - Frontend optimization is present in production branch history.
-- Tracker split-status receipt push pending.
+- Tracker split-status receipt pushed to production branch `main`.
 
 Deploy status:
 - GitHub Pages deployment completed for production `main`.
@@ -200,11 +200,12 @@ Commit hash:
 - Backend fallback cache smoke test: `99d8870f1884bda7f6b9600008c6959d839a1557`
 - Backend canonical profile analytics unification: `9b2da6caff8550e33c399205f65af7675f4a2e9e`
 - Backend live profile stats verification receipt: `09e13d619f087f69a6606b16b6f6754ade3a10dc`
-- Tracker primary SQL verification receipt: pending commit/push at time of local tracker edit.
+- Tracker primary SQL verification receipt: `67756f04be2298c671e8530601fc05b814f157ae`
+- Tracker live metric correction receipt: `b0eb84563e59ae4047c5c117e876a87d8615be35`
 
 Push status:
 - Backend commits are pushed to `trustmyrecord-backend` production branch `master`.
-- Tracker primary SQL verification receipt push pending.
+- Tracker primary SQL verification receipts are pushed to production branch `main`.
 
 Deploy status:
 - Live endpoint returns `200`.
