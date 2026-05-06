@@ -386,6 +386,15 @@ button { font: inherit; }
   line-height: 1.5;
 }
 
+.ts-no-results strong,
+.ts-no-results span {
+  display: block;
+}
+
+.ts-no-results span {
+  margin-top: 6px;
+}
+
 .ts-loading-line {
   margin-top: 14px;
   border-color: rgba(34, 211, 238, .36);
@@ -463,6 +472,34 @@ button { font: inherit; }
   padding: 6px 9px;
   border-radius: 999px;
   background: linear-gradient(135deg, var(--ts-teal), var(--ts-cyan));
+}
+
+.ts-status-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid rgba(148, 163, 184, .26);
+  border-radius: 999px;
+  color: var(--ts-muted-2);
+  background: rgba(148, 163, 184, .08);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.ts-status-label.is-current {
+  border-color: rgba(45, 212, 191, .52);
+  color: #bbfff4;
+  background: rgba(45, 212, 191, .12);
+}
+
+.ts-status-label.is-archived,
+.ts-status-label.is-stale {
+  border-color: rgba(245, 165, 36, .42);
+  color: #f8d69b;
+  background: rgba(245, 165, 36, .1);
 }
 
 .ts-applies-box {
