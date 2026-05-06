@@ -5049,7 +5049,7 @@
     </script>
     <script src="/static/js/config.js?v=20260330"></script>
     <script src="/static/js/analytics.js?v=20260405"></script>
-    <script src="/static/js/backend-api.js?v=20260505pickcontext1"></script>
+    <script src="/static/js/backend-api.js?v=20260505profilefast1"></script>
     <script src="/static/js/nav-badges.js"></script>
     <script src="/static/js/auth-persistent.js?v=20260424a"></script>
     <script src="/static/js/auto-grader-fixed.js?v=20260405b"></script>
@@ -5698,6 +5698,34 @@
         analyticsTrack('pick_history_viewed', context || {});
     }
 
+    function withTimeout(promise, ms, label) {
+        let timeoutId;
+        const timeout = new Promise((_, reject) => {
+            timeoutId = setTimeout(() => {
+                const error = new Error((label || 'Request') + ' timed out');
+                error.code = 'TMR_TIMEOUT';
+                reject(error);
+            }, ms);
+        });
+        return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+    }
+
+    function setProfileHeaderFallback(message) {
+        const el = document.getElementById('profileHeader');
+        if (!el) return;
+        el.innerHTML = '<div class="error-message"><h3>Profile unavailable</h3><p>' + escapeHtml(message || 'This profile could not be loaded right now.') + '</p></div>';
+    }
+
+    function setAdvancedMetricsEmpty(message) {
+        const statusEl = document.getElementById('profileAdvancedMetricsStatus');
+        if (statusEl) statusEl.textContent = message || 'No verified metrics yet';
+        document.querySelectorAll('.profile-advanced-metric__value').forEach(function(el) {
+            if (!el || !el.id || el.textContent.trim()) return;
+            el.textContent = 'Not enough data yet';
+            el.className = 'profile-advanced-metric__value is-empty';
+        });
+    }
+
     function applyProfileDeepLinkView() {
         let target = null;
         if (profileView === 'picks' || profileView === 'ledger' || profileView === 'history') {
@@ -5737,11 +5765,6 @@
     // ======================== INIT ========================
     async function init() {
         try {
-            // Wait for backend detection to finish
-            if (typeof api !== 'undefined' && api.ready) {
-                try { await api.ready; } catch (e) { /* detection failed */ }
-            }
-
             if (!api || typeof api.getUserProfile !== 'function') {
                 throw new Error('Profile service is unavailable. Please refresh and try again.');
             }
@@ -5762,7 +5785,7 @@
             isOwnProfile = currentUser && currentUser.username && currentUser.username.toLowerCase() === profileUsername.toLowerCase();
             await loadProfile();
         } catch (e) {
-            document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>Error</h3><p>' + e.message + '</p></div>';
+            setProfileHeaderFallback(e.message);
         }
     }
 
@@ -5773,8 +5796,11 @@
                 throw new Error('Profile service is unavailable.');
             }
 
-            const data = await api.getUserProfile(profileUsername);
+            const data = await withTimeout(api.getUserProfile(profileUsername), 9000, 'Profile request');
             profileData = data.user || data;
+            if (!profileData) {
+                throw new Error('User not found.');
+            }
             // Expose globally so inline onclick handlers (affiliation CTA, etc)
             // can read the username for per-user localStorage keys.
             window.profileData = profileData;
@@ -5784,47 +5810,76 @@
                 isFollowingProfile = !!profileData.is_following;
             }
 
-            // Load favorite teams and gamer profile from backend
-            try {
-                const teamsData = await api.request('/gaming/teams/' + profileUsername);
-                if (teamsData && Array.isArray(teamsData.favorite_teams)) {
-                    const teamRows = teamsData.favorite_teams.filter(t => t && t.team_name);
-                    profileData._fav_teams = {};
-                    teamRows.forEach(t => {
-                        if (t.sport) profileData._fav_teams[t.sport] = t.team_name;
-                    });
-                    profileData.favorite_teams = teamRows.map(t => t.team_name).filter(Boolean);
-                    if (!Array.isArray(profileData.favorite_sports) || profileData.favorite_sports.length === 0) {
-                        profileData.favorite_sports = Array.from(new Set(teamRows.map(t => t.sport).filter(Boolean)));
-                    }
-                }
-            } catch(e) { profileData._fav_teams = {}; }
-
-            try {
-                const gamerData = await api.request('/gaming/profile/' + profileUsername);
-                if (gamerData && gamerData.gamer_profile) profileData._gamer = gamerData.gamer_profile;
-                else profileData._gamer = {};
-            } catch(e) { profileData._gamer = {}; }
-
-            if (!profileData) {
-                throw new Error('User not found.');
-            }
+            renderProfileHeader(profileData);
+            loadProfileSecondaryData();
+            loadAllPicks().catch(function(error) {
+                console.warn('[Profile] Secondary pick history unavailable:', error);
+                renderEmptyProfileHistory();
+            });
+            loadAdvancedMetrics(profileData.username || profileUsername || '');
+            analyticsTrackPickHistoryView({
+                view_type: isOwnProfile ? 'own' : 'public',
+                username: profileData.username || profileUsername || '',
+                display_name: profileData.display_name || profileData.username || ''
+            });
         } catch (error) {
             console.error('[Profile] Profile load failed:', error);
             document.querySelectorAll('.summary-bar, .picks-section, .analytics-section').forEach(el => el.style.display = 'none');
-            document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>User Not Found</h3><p>User "' + profileUsername + '" not found or could not be loaded.</p><a href="/" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
-            return;
+            setProfileHeaderFallback('User "' + profileUsername + '" not found or could not be loaded.');
         }
+    }
 
-        await refreshLeaderboardRank();
-        await loadAllPicks();
-        renderProfileHeader(profileData);
-        loadAdvancedMetrics(profileData.username || profileUsername || '');
-        analyticsTrackPickHistoryView({
-            view_type: isOwnProfile ? 'own' : 'public',
-            username: profileData.username || profileUsername || '',
-            display_name: profileData.display_name || profileData.username || ''
-        });
+    async function loadProfileSecondaryData() {
+        if (!profileData || !profileUsername) return;
+        const renderUpdatedHeader = function() {
+            try { renderProfileHeader(profileData); } catch (e) { console.warn('[Profile] Secondary header refresh failed:', e); }
+        };
+
+        // Load favorite teams and gamer profile from backend after the critical
+        // profile card is visible. These enrich the card but must never block it.
+        try {
+            const teamsData = await withTimeout(api.request('/gaming/teams/' + encodeURIComponent(profileUsername)), 4500, 'Favorite teams request');
+            if (teamsData && Array.isArray(teamsData.favorite_teams)) {
+                const teamRows = teamsData.favorite_teams.filter(t => t && t.team_name);
+                profileData._fav_teams = {};
+                teamRows.forEach(t => {
+                    if (t.sport) profileData._fav_teams[t.sport] = t.team_name;
+                });
+                profileData.favorite_teams = teamRows.map(t => t.team_name).filter(Boolean);
+                if (!Array.isArray(profileData.favorite_sports) || profileData.favorite_sports.length === 0) {
+                    profileData.favorite_sports = Array.from(new Set(teamRows.map(t => t.sport).filter(Boolean)));
+                }
+                renderUpdatedHeader();
+            }
+        } catch(e) { profileData._fav_teams = {}; }
+
+        try {
+            const gamerData = await withTimeout(api.request('/gaming/profile/' + encodeURIComponent(profileUsername)), 4500, 'Gamer profile request');
+            if (gamerData && gamerData.gamer_profile) profileData._gamer = gamerData.gamer_profile;
+            else profileData._gamer = {};
+        } catch(e) { profileData._gamer = {}; }
+
+        try {
+            await withTimeout(refreshLeaderboardRank(), 4500, 'Leaderboard request');
+            renderUpdatedHeader();
+        } catch(e) {
+            console.warn('[Profile] Leaderboard rank unavailable:', e && e.message ? e.message : e);
+        }
+    }
+
+    function renderEmptyProfileHistory() {
+        allLoadedPicks = [];
+        try {
+            const stats = computeUnifiedStats([]);
+            renderCoreHandicapperStatsFromPicks([]);
+            renderSummaryBar(stats);
+            renderPicksTable([]);
+            renderAnalytics(stats);
+            renderCapperMetrics([]);
+            applyProfileDeepLinkView();
+        } catch (e) {
+            console.warn('[Profile] Empty pick history render failed:', e);
+        }
     }
 
     // ======================== ADVANCED METRICS ========================
@@ -5833,20 +5888,25 @@
     // null for stays as the '—' placeholder per the no-fake-data rule.
     async function loadAdvancedMetrics(username) {
         if (!username || !api || typeof api.request !== 'function') {
-            const statusEl = document.getElementById('profileAdvancedMetricsStatus');
-            if (statusEl) statusEl.textContent = 'Metrics unavailable';
+            setAdvancedMetricsEmpty('Metrics unavailable');
             return;
         }
         let data;
         try {
-            data = await api.request('/users/' + encodeURIComponent(username) + '/metrics');
+            data = await withTimeout(
+                api.request('/users/' + encodeURIComponent(username) + '/metrics'),
+                10000,
+                'Metrics request'
+            );
         } catch (err) {
             console.warn('[Profile] /metrics aggregator unavailable:', err && err.message ? err.message : err);
-            const statusEl = document.getElementById('profileAdvancedMetricsStatus');
-            if (statusEl) statusEl.textContent = 'Metrics unavailable';
+            setAdvancedMetricsEmpty(err && err.code === 'TMR_TIMEOUT' ? 'Metrics still processing' : 'Metrics unavailable');
             return;
         }
-        if (!data) return;
+        if (!data) {
+            setAdvancedMetricsEmpty('No verified metrics yet');
+            return;
+        }
         try { renderProfileAdvancedMetricsStrip(data); } catch (e) { console.warn('[Profile] advanced strip render failed:', e); }
         const set = (id, value, opts) => {
             const el = document.getElementById(id);
@@ -6133,6 +6193,7 @@
     async function bootstrapProfileAdvancedMetricsStrip() {
         const section = document.getElementById('profileAdvancedMetricsSection');
         if (!section || section.dataset.metricsBootstrapped === '1') return;
+        if (!window.profileData) return;
         const params = new URLSearchParams(window.location.search || '');
         const username = params.get('user') || params.get('username') || profileUsername;
         if (!username) return;
@@ -6145,21 +6206,24 @@
                 await new Promise(resolve => setTimeout(resolve, 150));
             }
             if (window.api && typeof window.api.request === 'function') {
-                data = await window.api.request('/users/' + encodeURIComponent(username) + '/metrics');
+                data = await withTimeout(window.api.request('/users/' + encodeURIComponent(username) + '/metrics'), 10000, 'Metrics request');
             }
         } catch (err) {
             console.warn('[Profile] independent metrics API unavailable:', err && err.message ? err.message : err);
         }
         if (!data) {
             try {
-                const resp = await fetch('https://trustmyrecord-api.onrender.com/api/users/' + encodeURIComponent(username) + '/metrics', { cache: 'no-store' });
+                const resp = await fetch('https://trustmyrecord-api.onrender.com/api/users/' + encodeURIComponent(username) + '/metrics', {
+                    cache: 'no-store',
+                    signal: AbortSignal.timeout(10000)
+                });
                 if (resp.ok) data = await resp.json();
             } catch (err) {
                 console.warn('[Profile] direct metrics fetch unavailable:', err && err.message ? err.message : err);
             }
         }
         if (data) renderProfileAdvancedMetricsStrip(data);
-        else if (statusEl) statusEl.textContent = 'Metrics unavailable';
+        else setAdvancedMetricsEmpty(statusEl && statusEl.textContent === 'Loading verified metrics...' ? 'Metrics unavailable' : statusEl.textContent);
     }
 
     if (document.readyState === 'loading') {
@@ -6960,7 +7024,7 @@
             let hasMore = true, offset = 0;
             while (hasMore) {
                 try {
-                    const data = await api.getPicks({ userId: profileUserId, limit: 100, offset });
+                    const data = await withTimeout(api.getPicks({ userId: profileUserId, limit: 100, offset }), 7000, 'Pick history request');
                     const batch = data.picks || [];
                     picks = picks.concat(batch);
                     hasMore = data.pagination ? data.pagination.hasMore : (batch.length === 100);
@@ -6976,7 +7040,7 @@
             let hasMoreByUsername = true, usernameOffset = 0;
             while (hasMoreByUsername) {
                 try {
-                    const data = await api.request('/picks?username=' + encodeURIComponent(profileData.username) + '&limit=100&offset=' + usernameOffset);
+                    const data = await withTimeout(api.request('/picks?username=' + encodeURIComponent(profileData.username) + '&limit=100&offset=' + usernameOffset), 7000, 'Pick history request');
                     const batch = data && Array.isArray(data.picks) ? data.picks : [];
                     picks = picks.concat(batch);
                     hasMoreByUsername = data && data.pagination ? data.pagination.hasMore : (batch.length === 100);
