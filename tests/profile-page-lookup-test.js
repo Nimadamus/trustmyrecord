@@ -90,19 +90,32 @@ async function main() {
   assert.strictEqual(picksResponse.status, 200, 'BetLegend pick ledger should load');
   const picksData = await picksResponse.json();
   const stats = calculateLedgerStats(picksData.picks || []);
-  assert.strictEqual(stats.graded, 19, 'BetLegend graded pick count should come from the ledger');
+  assert(stats.graded > 0, 'BetLegend graded pick count should come from the ledger');
   assert.notStrictEqual(stats.record, '0-0-0', 'BetLegend record must not be zero when graded picks exist');
   assert(stats.winRate != null, 'BetLegend win rate must be calculable when wins/losses exist');
-  assert.strictEqual(stats.record, '10-9-0', 'BetLegend visible record should be calculated from the ledger');
 
-  const leaderboardResponse = await fetch('https://trustmyrecord-api.onrender.com/api/users/leaderboard?sortBy=roi&limit=250');
+  const profileResponse = await fetch('https://trustmyrecord-api.onrender.com/api/users/BetLegend');
+  assert.strictEqual(profileResponse.status, 200, 'BetLegend profile API should load');
+  const profileData = await profileResponse.json();
+  const profileUser = profileData.user || {};
+  assert.strictEqual(Number(profileUser.graded_picks), stats.graded, 'profile graded picks should match ledger');
+  assert.strictEqual(`${profileUser.wins}-${profileUser.losses}-${profileUser.pushes}`, stats.record, 'profile record should match ledger');
+  assert.strictEqual(Math.round(Number(profileUser.win_rate) * 10), Math.round(stats.winRate * 10), 'profile win rate should match ledger');
+
+  const leaderboardResponse = await fetch('https://trustmyrecord-api.onrender.com/api/users/leaderboard?sortBy=net_units&limit=250');
   assert.strictEqual(leaderboardResponse.status, 200, 'leaderboard should load');
   const leaderboardData = await leaderboardResponse.json();
   const leaderboardUser = (leaderboardData.leaderboard || []).find((user) => profileLookupKey(user.username) === 'betlegend');
-  assert(leaderboardUser, 'BetLegend should exist on the leaderboard');
-  assert.strictEqual(Number(leaderboardUser.total_picks), stats.graded, 'leaderboard graded picks should match ledger');
-  assert.strictEqual(`${leaderboardUser.wins}-${leaderboardUser.losses}-${leaderboardUser.pushes}`, stats.record, 'leaderboard record should match ledger');
-  assert.strictEqual(Math.round(Number(leaderboardUser.win_rate) * 10), Math.round(stats.winRate * 10), 'leaderboard win rate should match ledger');
+  if (Number(profileUser.net_units) <= 0) {
+    assert(!leaderboardUser, 'negative-unit BetLegend should not receive a public leaderboard rank');
+    assert.strictEqual(profileUser.leaderboard_rank, null, 'negative-unit BetLegend profile rank should be hidden');
+    assert.strictEqual(profileUser.ranking_status, 'Not ranked yet', 'negative-unit BetLegend should show Not ranked yet');
+  } else {
+    assert(leaderboardUser, 'positive eligible BetLegend should exist on the leaderboard');
+    assert.strictEqual(Number(leaderboardUser.total_picks), stats.graded, 'leaderboard graded picks should match ledger');
+    assert.strictEqual(`${leaderboardUser.wins}-${leaderboardUser.losses}-${leaderboardUser.pushes}`, stats.record, 'leaderboard record should match ledger');
+    assert.strictEqual(Math.round(Number(leaderboardUser.win_rate) * 10), Math.round(stats.winRate * 10), 'leaderboard win rate should match ledger');
+  }
 
   console.log('profile-page-lookup-test: ok');
 }
