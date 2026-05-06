@@ -1836,13 +1836,21 @@
                 if (!sport) return showMsg('Pick a sport.', 'error');
                 if (!window.api || typeof window.api.request !== 'function') return showMsg('Save service unavailable. Refresh and try again.', 'error');
                 try {
-                    await window.api.request('/users/profile', {
-                        method: 'PUT',
-                        body: { favorite_sports: [sport], favorite_teams: teams }
-                    });
+                    var currentSports = Array.isArray(window.profileData.favorite_sports) ? window.profileData.favorite_sports : [];
+                    var currentTeams = Array.isArray(window.profileData.favorite_teams) ? window.profileData.favorite_teams : [];
+                    var nextSports = [sport];
+                    var changed = JSON.stringify(currentSports) !== JSON.stringify(nextSports) ||
+                        JSON.stringify(currentTeams) !== JSON.stringify(teams);
+                    if (changed) {
+                        await window.api.request('/users/profile', {
+                            method: 'PUT',
+                            body: { favorite_sports: nextSports, favorite_teams: teams }
+                        });
+                    }
                     showMsg('Saved. Your team badge will show up next to your name everywhere.', 'success');
-                    window.profileData.favorite_sports = [sport];
+                    window.profileData.favorite_sports = nextSports;
                     window.profileData.favorite_teams  = teams;
+                    try { if (typeof renderProfileHeader === 'function') renderProfileHeader(window.profileData); } catch (_) {}
                     setTimeout(function() { if (promptEl) promptEl.hidden = true; }, 1200);
                 } catch (err) {
                     showMsg(err && err.message ? err.message : 'Save failed.', 'error');
@@ -1864,6 +1872,10 @@
                     var dataUri = await resizeImage(file, 256, 0.85);
                     if (!dataUri || dataUri.length > 180000) {
                         avatarHint.textContent = 'Image too complex after resize. Try a smaller one.'; avatarHint.style.color = '#ffd0d6'; return;
+                    }
+                    if (window.profileData && window.profileData.avatar_url === dataUri) {
+                        avatarHint.textContent = 'Saved.'; avatarHint.style.color = '#bef0ce';
+                        return;
                     }
                     await window.api.request('/users/profile', { method: 'PUT', body: { avatar_url: dataUri } });
                     avatarHint.textContent = 'Saved.'; avatarHint.style.color = '#bef0ce';
@@ -10137,12 +10149,20 @@
         showToast(successMessage || 'Copied!', 'success');
     }
 
-    // Alias so other UI (e.g. the "Add a headline" empty-state link) can open the editor.
-    window.openProfileEditor = function() { openEditModal(); };
-    window.openEditModal = function() { openEditModal(); };
+    function profileEditString(value) {
+        return String(value == null ? '' : value).trim();
+    }
+
+    function profileEditSetIfChanged(target, key, next, current) {
+        if (profileEditString(next) !== profileEditString(current)) target[key] = next;
+    }
 
     function openEditModal() {
         const m = document.getElementById('editModal'); if (m) m.remove();
+        if (!profileData || typeof profileData !== 'object') {
+            showToast('Profile is still loading. Try again in a moment.', 'info');
+            return;
+        }
         analyticsTrack('profile_edit_modal_opened', {
             username: profileUsername || ''
         });
@@ -10206,28 +10226,29 @@
         document.getElementById('editForm').addEventListener('submit', async e => {
             e.preventDefault();
             try {
-                const updates = {
-                    display_name: document.getElementById('eDN').value.trim(),
-                    bio: document.getElementById('eBio').value.trim(),
-                    location: document.getElementById('eLoc').value.trim(),
-                    headline: (document.getElementById('eHeadline') ? document.getElementById('eHeadline').value.trim() : '')
-                };
-                if (pendingAvatarData) updates.avatar_url = pendingAvatarData;
+                const updates = {};
+                profileEditSetIfChanged(updates, 'display_name', document.getElementById('eDN').value.trim(), profileData.display_name || profileData.username || '');
+                profileEditSetIfChanged(updates, 'bio', document.getElementById('eBio').value.trim(), profileData.bio || '');
+                profileEditSetIfChanged(updates, 'location', document.getElementById('eLoc').value.trim(), profileData.location || '');
+                profileEditSetIfChanged(updates, 'headline', (document.getElementById('eHeadline') ? document.getElementById('eHeadline').value.trim() : ''), profileData.headline || '');
+                if (pendingAvatarData && pendingAvatarData !== profileData.avatar_url) updates.avatar_url = pendingAvatarData;
 
                 // Try backend first
                 if (api && typeof api.updateProfile === 'function') {
-                    try {
-                        const profileResult = await api.updateProfile(updates);
-                        if (profileResult && profileResult.user) {
-                            profileData = { ...profileData, ...profileResult.user };
-                            window.profileData = profileData;
-                            if (currentUser && profileResult.user.username === currentUser.username) {
-                                currentUser = { ...currentUser, ...profileResult.user };
-                                window.currentUser = currentUser;
+                    if (Object.keys(updates).length) {
+                        try {
+                            const profileResult = await api.updateProfile(updates);
+                            if (profileResult && profileResult.user) {
+                                profileData = { ...profileData, ...profileResult.user };
+                                window.profileData = profileData;
+                                if (currentUser && profileResult.user.username === currentUser.username) {
+                                    currentUser = { ...currentUser, ...profileResult.user };
+                                    window.currentUser = currentUser;
+                                }
                             }
+                        } catch(err) {
+                            throw new Error((err && err.message) || 'Profile update failed. Please try again.');
                         }
-                    } catch(err) {
-                        throw new Error((err && err.message) || 'Profile update failed. Please try again.');
                     }
 
                     // Save favorite teams
@@ -10241,7 +10262,14 @@
                         if (nba) teams.push({ sport: 'NBA', team_name: nba });
                         if (mlb) teams.push({ sport: 'MLB', team_name: mlb });
                         if (nhl) teams.push({ sport: 'NHL', team_name: nhl });
-                        if (teams.length > 0) await api.request('/gaming/teams', { method: 'PUT', body: { teams } });
+                        const currentTeams = profileData._fav_teams && typeof profileData._fav_teams === 'object' ? profileData._fav_teams : {};
+                        const nextTeamsObject = {};
+                        teams.forEach(function(team) { nextTeamsObject[team.sport] = team.team_name; });
+                        if (teams.length > 0 && JSON.stringify(currentTeams) !== JSON.stringify(nextTeamsObject)) {
+                            await api.request('/gaming/teams', { method: 'PUT', body: { teams } });
+                            profileData._fav_teams = nextTeamsObject;
+                            window.profileData = profileData;
+                        }
                     } catch(err) { console.warn('Failed to save teams:', err); }
 
                     // Save gamer profile
@@ -10253,8 +10281,14 @@
                             favorite_game: document.getElementById('eGamerFavGame').value.trim() || null,
                             skill_tier: document.getElementById('eGamerSkill').value || null
                         };
-                        if (Object.values(gamerData).some(v => v)) {
+                        const currentGamer = profileData._gamer && typeof profileData._gamer === 'object' ? profileData._gamer : {};
+                        const gamerChanged = Object.keys(gamerData).some(function(key) {
+                            return profileEditString(gamerData[key]) !== profileEditString(currentGamer[key]);
+                        });
+                        if (Object.values(gamerData).some(v => v) && gamerChanged) {
                             await api.request('/gaming/profile', { method: 'PUT', body: gamerData });
+                            profileData._gamer = gamerData;
+                            window.profileData = profileData;
                         }
                     } catch(err) { console.warn('Failed to save gamer profile:', err); }
                 }
@@ -10265,34 +10299,56 @@
                     if (updates.bio !== undefined) localUpdates.bio = updates.bio;
                     if (updates.location !== undefined) localUpdates.location = updates.location;
                     if (updates.avatar_url) localUpdates.avatar = updates.avatar_url;
-                    auth.updateProfile(localUpdates);
                     // Store teams and gamer locally too
-                    localUpdates._fav_teams = {};
+                    const nextLocalTeams = {};
                     const nfl = document.getElementById('eFavNFL').value.trim();
                     const nba = document.getElementById('eFavNBA').value.trim();
                     const mlb = document.getElementById('eFavMLB').value.trim();
                     const nhl = document.getElementById('eFavNHL').value.trim();
-                    if (nfl) localUpdates._fav_teams.NFL = nfl;
-                    if (nba) localUpdates._fav_teams.NBA = nba;
-                    if (mlb) localUpdates._fav_teams.MLB = mlb;
-                    if (nhl) localUpdates._fav_teams.NHL = nhl;
-                    localUpdates._gamer = {
+                    if (nfl) nextLocalTeams.NFL = nfl;
+                    if (nba) nextLocalTeams.NBA = nba;
+                    if (mlb) nextLocalTeams.MLB = mlb;
+                    if (nhl) nextLocalTeams.NHL = nhl;
+                    if (JSON.stringify(auth.currentUser._fav_teams || {}) !== JSON.stringify(nextLocalTeams)) {
+                        localUpdates._fav_teams = nextLocalTeams;
+                    }
+                    const nextLocalGamer = {
                         psn_username: document.getElementById('eGamerPSN').value.trim(),
                         xbox_gamertag: document.getElementById('eGamerXbox').value.trim(),
                         preferred_console: document.getElementById('eGamerConsole').value,
                         favorite_game: document.getElementById('eGamerFavGame').value.trim(),
                         skill_tier: document.getElementById('eGamerSkill').value
                     };
-                    auth.updateProfile(localUpdates);
+                    const currentLocalGamer = auth.currentUser._gamer || {};
+                    const localGamerChanged = Object.keys(nextLocalGamer).some(function(key) {
+                        return profileEditString(nextLocalGamer[key]) !== profileEditString(currentLocalGamer[key]);
+                    });
+                    if (localGamerChanged) localUpdates._gamer = nextLocalGamer;
+                    if (auth.currentUser.backendUser) {
+                        if (Object.keys(localUpdates).length) {
+                            auth.currentUser = { ...auth.currentUser, ...localUpdates };
+                            if (typeof auth.persistSession === 'function') auth.persistSession();
+                        }
+                    } else if (Object.keys(localUpdates).length) {
+                        auth.updateProfile(localUpdates);
+                    }
                 }
                 analyticsTrack('profile_updated_manual', {
                     username: profileUsername || '',
                     fields_updated: 'display_name,bio,location,teams,gamer_profile,avatar'
                 });
-                showToast('Profile updated!', 'success'); modal.remove(); await loadProfile();
+                showToast('Profile updated!', 'success'); modal.remove();
+                profileData = { ...profileData, ...updates };
+                window.profileData = profileData;
+                renderProfileHeader(profileData);
+                await loadProfile();
             } catch(err) { showToast(err.message, 'error'); }
         });
     }
+
+    // Aliases for inline handlers. Assign direct references, not self-calling wrappers.
+    window.openProfileEditor = openEditModal;
+    window.openEditModal = openEditModal;
 
     document.addEventListener('DOMContentLoaded', () => {
         const btn = document.getElementById('loadMoreBtn');
