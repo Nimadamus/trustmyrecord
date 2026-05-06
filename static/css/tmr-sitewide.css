@@ -475,6 +475,7 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
     background: rgba(255, 255, 255, 0.04);
 }
 
+.tmr-community-menu,
 .tmr-support-menu {
     position: relative;
     display: inline-flex;
@@ -483,6 +484,7 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
     flex-shrink: 0;
 }
 
+.tmr-community-menu__trigger,
 .tmr-support-menu__trigger {
     display: inline-flex;
     align-items: center;
@@ -500,6 +502,7 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
     white-space: nowrap;
 }
 
+.tmr-community-menu__trigger::after,
 .tmr-support-menu__trigger::after {
     content: "";
     width: 0;
@@ -511,6 +514,9 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
     opacity: 0.82;
 }
 
+.tmr-community-menu__trigger:hover,
+.tmr-community-menu.is-open .tmr-community-menu__trigger,
+.tmr-community-menu.is-current .tmr-community-menu__trigger,
 .tmr-support-menu__trigger:hover,
 .tmr-support-menu.is-open .tmr-support-menu__trigger {
     color: #ffffff;
@@ -518,6 +524,7 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
     background: rgba(45, 212, 191, 0.18);
 }
 
+.tmr-community-menu__panel,
 .tmr-support-menu__panel {
     position: absolute;
     top: calc(100% + 9px);
@@ -536,6 +543,16 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
     transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease;
 }
 
+.tmr-community-menu__panel {
+    right: auto;
+    left: 50%;
+    min-width: 190px;
+    transform: translate(-50%, -4px);
+}
+
+.tmr-community-menu.is-open .tmr-community-menu__panel,
+.tmr-community-menu:focus-within .tmr-community-menu__panel,
+.tmr-community-menu:hover .tmr-community-menu__panel,
 .tmr-support-menu.is-open .tmr-support-menu__panel,
 .tmr-support-menu:focus-within .tmr-support-menu__panel,
 .tmr-support-menu:hover .tmr-support-menu__panel {
@@ -545,6 +562,13 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
     pointer-events: auto;
 }
 
+.tmr-community-menu.is-open .tmr-community-menu__panel,
+.tmr-community-menu:focus-within .tmr-community-menu__panel,
+.tmr-community-menu:hover .tmr-community-menu__panel {
+    transform: translate(-50%, 0);
+}
+
+.tmr-community-menu__panel a,
 .tmr-support-menu__panel a {
     display: flex;
     align-items: center;
@@ -558,6 +582,8 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
     text-transform: none;
 }
 
+.tmr-community-menu__panel a:hover,
+.tmr-community-menu__panel a[aria-current="page"],
 .tmr-support-menu__panel a:hover {
     color: var(--tmr-teal);
     background: rgba(255, 255, 255, 0.06);
@@ -694,7 +720,8 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
         grid-template-columns: minmax(0, 1fr) auto;
         grid-template-areas:
             "brand actions"
-            "links support";
+            "links support"
+            "links community";
         row-gap: 10px;
         align-items: center;
         padding: 12px 0;
@@ -711,9 +738,14 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
         padding-bottom: 2px;
     }
 
+    .tmr-community-menu,
     .tmr-support-menu {
         grid-area: support;
         justify-content: flex-start;
+    }
+
+    .tmr-community-menu {
+        grid-area: community;
     }
 
     .tmr-global-nav__actions {
@@ -2026,6 +2058,7 @@ html body.tmr-site-shell {
             "brand"
             "actions"
             "links"
+            "community"
             "support";
         gap: 12px;
         padding: 14px 0;
@@ -2048,11 +2081,13 @@ html body.tmr-site-shell {
         flex-wrap: wrap;
     }
 
+    .tmr-community-menu,
     .tmr-support-menu {
         width: 100%;
         justify-content: flex-start;
     }
 
+    .tmr-community-menu__panel,
     .tmr-support-menu__panel {
         position: static;
         display: none;
@@ -2064,6 +2099,8 @@ html body.tmr-site-shell {
         pointer-events: auto;
     }
 
+    .tmr-community-menu.is-open .tmr-community-menu__panel,
+    .tmr-community-menu:focus-within .tmr-community-menu__panel,
     .tmr-support-menu.is-open .tmr-support-menu__panel,
     .tmr-support-menu:focus-within .tmr-support-menu__panel {
         display: grid;
@@ -3796,8 +3833,8 @@ body.tmr-site-shell .friends-top-strip {
 @media (min-width: 641px) {
     body.tmr-site-shell .tmr-global-nav__inner {
         width: min(1480px, calc(100% - 32px)) !important;
-        grid-template-columns: minmax(205px, max-content) minmax(0, 1fr) max-content max-content !important;
-        grid-template-areas: "brand links support actions" !important;
+        grid-template-columns: minmax(205px, max-content) minmax(0, 1fr) max-content max-content max-content !important;
+        grid-template-areas: "brand links community support actions" !important;
         align-items: center !important;
         column-gap: clamp(10px, 1vw, 18px) !important;
     }
@@ -3817,9 +3854,12 @@ body.tmr-site-shell .friends-top-strip {
         min-width: 0 !important;
         justify-content: center !important;
         gap: clamp(10px, 1vw, 20px) !important;
+        flex-wrap: nowrap !important;
+        row-gap: 0 !important;
         padding: 0 !important;
         overflow: visible !important;
         scrollbar-width: auto !important;
+        white-space: nowrap !important;
     }
 
     body.tmr-site-shell .tmr-global-nav__links a {
@@ -3832,6 +3872,11 @@ body.tmr-site-shell .friends-top-strip {
         min-height: 34px !important;
         padding: 7px clamp(7px, 0.52vw, 10px) !important;
         letter-spacing: 0.045em !important;
+    }
+
+    body.tmr-site-shell .tmr-community-menu {
+        grid-area: community !important;
+        z-index: 100001 !important;
     }
 
     body.tmr-site-shell .tmr-support-menu {
@@ -3867,18 +3912,26 @@ body.tmr-site-shell .friends-top-strip {
         grid-template-columns: minmax(0, 1fr) max-content !important;
         grid-template-areas:
             "brand actions"
-            "links support" !important;
+            "links support"
+            "links community" !important;
         row-gap: 8px !important;
         min-height: 82px !important;
         padding: 10px 0 !important;
     }
 
+    body.tmr-site-shell .tmr-community-menu,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-community-menu,
     body.tmr-site-shell .tmr-support-menu,
     body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-support-menu {
         grid-area: support !important;
         justify-self: end !important;
         display: inline-flex !important;
         z-index: 100001 !important;
+    }
+
+    body.tmr-site-shell .tmr-community-menu,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-community-menu {
+        grid-area: community !important;
     }
 
     body.tmr-site-shell .tmr-member-search,
@@ -3889,8 +3942,8 @@ body.tmr-site-shell .friends-top-strip {
     body.tmr-site-shell .tmr-global-nav__links,
     body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links {
         justify-content: center !important;
-        flex-wrap: wrap !important;
-        row-gap: 6px !important;
+        flex-wrap: nowrap !important;
+        row-gap: 0 !important;
         overflow: visible !important;
     }
 }
@@ -3905,11 +3958,11 @@ body.tmr-site-shell .tmr-global-nav__links a[href*="trendspotter"] {
     body.tmr-site-shell .tmr-global-nav__links,
     body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links {
         min-width: 0 !important;
-        flex-wrap: wrap !important;
-        row-gap: 6px !important;
+        flex-wrap: nowrap !important;
+        row-gap: 0 !important;
         column-gap: 8px !important;
         overflow: visible !important;
-        white-space: normal !important;
+        white-space: nowrap !important;
     }
 
     body.tmr-site-shell .tmr-global-nav__links a,
