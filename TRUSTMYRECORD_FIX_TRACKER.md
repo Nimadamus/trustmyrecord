@@ -244,3 +244,13 @@ Verification result:
 Remaining issue:
 - Browser console/DevTools verification still needs a manual Chrome or Edge check.
 - The fallback path remains in place intentionally as a safety mechanism and should log when used.
+
+### Final verification receipt - 2026-05-06T03:14:34.9535085-07:00
+
+Status: VERIFIED LIVE by cache-busted production API and public page source fetch. Playwright rendered-browser launch was attempted for hard-refresh DOM proof but failed with spawn EPERM in this sandbox; live frontend display depends on the verified API values below.
+
+Live values verified after deploy:
+- BetLegend metrics API: current streak L3, worst streak L6, peak +10.16u, max drawdown -19.15u.
+- BetLegend profile API: current streak L3, best streak W5.
+- Handicappers summary API: Flintlocktropicks L2, BetLegend L3, mikeybalhansports L2.
+- Public discovery checked response excludes fake/test accounts.
