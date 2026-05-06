@@ -37,7 +37,7 @@
 
         try {
             const [capperData, triviaData, pollsData] = await Promise.all([
-                api.getLeaderboard({ sortBy: 'roi', limit: 25 }),
+                api.getLeaderboard({ sortBy: 'net_units', limit: 25 }),
                 api.request('/trivia/leaderboard?period=all&limit=25'),
                 api.request('/polls/leaderboard?period=all&limit=25')
             ]);
@@ -189,7 +189,10 @@
         if (!leaderboardData) return;
 
         const sorted = leaderboardData.users.slice().sort(function(a, b) {
-            return b.picks.winRate - a.picks.winRate;
+            return (b.picks.units - a.picks.units) ||
+                ((b.picks.roi || 0) - (a.picks.roi || 0)) ||
+                (b.picks.winRate - a.picks.winRate) ||
+                (b.picks.total - a.picks.total);
         });
 
         let html = '<div class="leaderboard-table"><div class="lb-table-header">' +
