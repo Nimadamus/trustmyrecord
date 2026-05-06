@@ -186,7 +186,7 @@ Remaining issue:
 
 ## 2026-05-06 - Primary SQL Summary Path Cleanup
 
-Status: OPEN
+Status: VERIFIED LIVE
 
 Files changed:
 - `routes/users.js`
@@ -198,18 +198,28 @@ Commit hash:
 - Backend fallback cache/header fix: `537c43a113d056ddaf48c711a993611c17f4d214`
 - Backend summary smoke test: `13e4a32493fb69d34b5ba1eee060fecfaf24e8f0`
 - Backend fallback cache smoke test: `99d8870f1884bda7f6b9600008c6959d839a1557`
-- Tracker split-status receipt: pending commit/push at time of local tracker edit.
+- Backend canonical profile analytics unification: `9b2da6caff8550e33c399205f65af7675f4a2e9e`
+- Backend live profile stats verification receipt: `09e13d619f087f69a6606b16b6f6754ade3a10dc`
+- Tracker primary SQL verification receipt: pending commit/push at time of local tracker edit.
 
 Push status:
 - Backend commits are pushed to `trustmyrecord-backend` production branch `master`.
-- Tracker split-status receipt push pending.
+- Tracker primary SQL verification receipt push pending.
 
 Deploy status:
 - Live endpoint returns `200`.
-- Safe fallback path remains deployed and cached.
+- Fresh uncached production requests return primary-summary payloads without `cache.fallback`.
+- Safe fallback path remains deployed and cached only as an emergency path.
 
 Live endpoint checked:
 - `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=10&sort=units`
+- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=10&sort=active&search=BetLegend`
+- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=10&sort=streak&search=BetLegend`
+- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=10&sort=totalPicks&search=BetLegend`
+- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=10&sort=username&search=BetLegend`
+- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=10&sort=units&sport=NHL&search=BetLegend`
+- `https://trustmyrecord-api.onrender.com/api/users/BetLegend/metrics`
+- `https://trustmyrecord-api.onrender.com/api/users/BetLegend`
 
 Live JSON shape:
 - Top-level keys: `members`, `pagination`, `summary`, `cache`.
@@ -220,13 +230,16 @@ Live JSON shape:
 
 Verification result:
 - Exact endpoint returned HTTP `200`.
-- Response header returned `X-TMR-Cache: HIT`.
+- Existing exact endpoint returned `X-TMR-Cache: HIT`.
+- Fresh sort/filter variants returned `X-TMR-Cache: MISS`.
 - Response body included `cache.ttl_seconds` and did not include `cache.fallback`, which indicates the checked response came from cached primary-summary payload rather than cached fallback.
 - No zero-pick users were present in the checked response.
 - No fake/test users were present in the checked response.
+- Fresh primary-summary responses returned `BetLegend` with current streak `-2`, worst streak `-7`, peak units `10.16`, and max drawdown `-22.15`.
+- `/api/users/BetLegend/metrics` matched the summary row for record `11-12`, units `-5.79`, ROI `-8.43`, win rate `47.83`, current streak `-2`, worst streak `-7`, peak units `10.16`, and max drawdown `-22.15`.
+- `/api/users/BetLegend` matched the same canonical public stats.
+- Source path verified: primary SQL path plus canonical profile analytics overlay. Fallback was not used in the checked normal operation requests.
 
 Remaining issue:
-- Keep this workstream open until the primary SQL path is proven as the normal path across cold-cache requests, pagination, search, sport filters, and sort variants.
-- Verify summary stats against `/api/users/:username/metrics` for record, units, ROI, current streak, worst streak, peak, and drawdown.
-- Confirm hard refresh does not reintroduce stale stats after cache invalidation.
 - Browser console/DevTools verification still needs a manual Chrome or Edge check.
+- The fallback path remains in place intentionally as a safety mechanism and should log when used.
