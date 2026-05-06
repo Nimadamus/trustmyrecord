@@ -7881,6 +7881,11 @@
         const joinDate = p.created_at
             ? new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
             : 'N/A';
+        const lastLoginRaw = p.last_login_date || p.lastLoginDate || p.last_active_date || p.lastActiveDate || p.last_login_at || p.lastLoginAt || p.last_active_at || p.lastActiveAt || null;
+        const lastLoginParsed = lastLoginRaw ? new Date(lastLoginRaw) : null;
+        const lastLoginDate = lastLoginParsed && !isNaN(lastLoginParsed.getTime())
+            ? lastLoginParsed.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+            : 'Not available';
         const name = p.display_name || p.username;
         const letter = (p.username || '?').charAt(0).toUpperCase();
         const rankText = p.ranking_status || (currentLeaderboardRank != null ? 'Ranked #' + currentLeaderboardRank : 'Unranked');
@@ -7911,6 +7916,7 @@
         const trustPills = '<div class="profile-trust-row">' +
             '<span class="profile-trust-pill"><i class="fas fa-check-circle"></i> Status <strong>' + verifiedText + '</strong></span>' +
             '<span class="profile-trust-pill"><i class="fas fa-user"></i> Member since <strong>' + joinDate + '</strong></span>' +
+            '<span class="profile-trust-pill profile-last-active-pill" data-profile-last-active="1"><i class="fas fa-calendar-check"></i> Last active: <strong>' + lastLoginDate + '</strong></span>' +
             '<span class="profile-trust-pill"><i class="fas fa-database"></i> Ledger <strong>' + gradedProfilePicks + ' graded picks</strong></span>' +
             (p.__recoveredFromLocal ? '<span class="profile-trust-pill"><i class="fas fa-rotate-left"></i> Legacy recovery <strong>Browser ledger restored</strong></span>' : '') +
             '</div>';
