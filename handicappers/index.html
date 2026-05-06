@@ -657,9 +657,9 @@
             <div class="hm-counts" aria-label="Directory summary">
                 <div class="hm-count"><strong id="hmTotalMembers">0</strong><span>Total Members</span><small>Production accounts only</small></div>
                 <div class="hm-count"><strong id="hmActiveMembers">0</strong><span>Active Pick Makers</span><small>Members with real picks</small></div>
-                <div class="hm-count"><strong id="hmTotalPicks">0</strong><span>Total Verified Picks</span><small>Stored pick rows</small></div>
-                <div class="hm-count"><strong id="hmBestRecord" class="is-muted" title="Not enough graded picks yet">--</strong><span>Best Current Record</span><small id="hmBestRecordUser">No qualified records yet</small></div>
-                <div class="hm-count"><strong id="hmTopUnits" class="is-muted" title="Not enough graded picks yet">--</strong><span>Top Units Leader</span><small id="hmTopUnitsUser">No qualified records yet</small></div>
+                <div class="hm-count"><strong id="hmTotalPicks">0</strong><span>Total Verified Picks</span><small>Graded picks only</small></div>
+                <div class="hm-count"><strong id="hmBestWinRate" class="is-muted" title="Minimum 10 graded picks required">--</strong><span>Best Win Percentage</span><small id="hmBestWinRateUser">Not enough graded picks yet</small></div>
+                <div class="hm-count"><strong id="hmTopUnits" class="is-muted" title="Minimum 10 graded picks required">--</strong><span>Units Leader</span><small id="hmTopUnitsUser">No positive units leader yet</small></div>
                 <div class="hm-count"><strong id="hmRecentActivity" class="is-muted" title="Not enough graded picks yet">--</strong><span>Most Recent Pick Activity</span><small id="hmRecentActivityUser">No pick activity yet</small></div>
             </div>
         </section>
@@ -667,7 +667,7 @@
         <section aria-label="Featured leaders">
             <div class="hm-section-head">
                 <div>
-                    <h2>Top Performers</h2>
+                    <h2>Leaderboard</h2>
                     <p>Leaders require at least 10 graded picks. Thin samples stay out of promoted rankings.</p>
                 </div>
                 <span class="hm-production-note">Showing <strong id="hmVisibleMembers">0</strong> filtered members</span>
@@ -750,8 +750,8 @@
             active: document.getElementById('hmActiveMembers'),
             visible: document.getElementById('hmVisibleMembers'),
             totalPicks: document.getElementById('hmTotalPicks'),
-            bestRecord: document.getElementById('hmBestRecord'),
-            bestRecordUser: document.getElementById('hmBestRecordUser'),
+            bestWinRate: document.getElementById('hmBestWinRate'),
+            bestWinRateUser: document.getElementById('hmBestWinRateUser'),
             topUnits: document.getElementById('hmTopUnits'),
             topUnitsUser: document.getElementById('hmTopUnitsUser'),
             recentActivity: document.getElementById('hmRecentActivity'),
@@ -857,6 +857,8 @@
                 /^usrtest\d+$/,
                 /^tmr(?:pick|profile)[_-]?\d+$/,
                 /^claudetest\d+$/,
+                /^codexqa\d+$/,
+                /(?:^|[_-])(qa|generated|fake|junk|internal)(?:[_-]|\d|$)/,
                 /^(?:errtest|multitest|loginprobe|uilogin|domlogin)[_-]?\d+$/,
                 /^remember(?:poll|flow)?(?:[_-]?\d+)+$/,
                 /^(?:diag|pickdiag|inspectopt|d404)\d*/
@@ -1367,58 +1369,122 @@
             return gradedCount(member) >= MIN_TOP_PERFORMER_GRADED_PICKS;
         }
 
-        function bestBy(list, predicate, score) {
-            return list
+        function compareBy(...getters) {
+            return (a, b) => {
+                for (const getter of getters) {
+                    const diff = Number(getter(b) || 0) - Number(getter(a) || 0);
+                    if (diff !== 0) return diff;
+                }
+                return String(a.username || '').localeCompare(String(b.username || ''));
+            };
+        }
+
+        function bestBy(list, predicate, sorterOrScore) {
+            const sorted = list
                 .filter(predicate)
+                .slice();
+            if (typeof sorterOrScore === 'function' && sorterOrScore.length >= 2) {
+                sorted.sort(sorterOrScore);
+            } else {
+                sorted.sort((a, b) => Number(sorterOrScore(b) || 0) - Number(sorterOrScore(a) || 0));
+            }
+            return sorted[0] || null;
+        }
+
+        function positiveMetric(member, metric) {
+            return Number(member?.stats?.[metric] || 0) > 0;
+        }
+
+        function qualifiedWinRateLeader(list) {
+            return bestBy(
+                list,
+                member => member.stats.winRate != null && (Number(member.stats.wins || 0) + Number(member.stats.losses || 0)) > 0,
+                compareBy(
+                    member => Number(member.stats.winRate || 0),
+                    member => gradedCount(member),
+                    member => Number(member.stats.units || 0)
+                )
+            );
+        }
+
+        function qualifiedUnitsLeader(list) {
+            return bestBy(
+                list,
+                member => positiveMetric(member, 'units'),
+                compareBy(
+                    member => Number(member.stats.units || 0),
+                    member => Number(member.stats.roi || 0),
+                    member => gradedCount(member)
+                )
+            );
+        }
+
+        function qualifiedRoiLeader(list) {
+            return list
+                .filter(member => member.stats.roi != null && Number(member.stats.roi) > 0)
                 .slice()
-                .sort((a, b) => score(b) - score(a))[0] || null;
+                .sort(compareBy(
+                    member => Number(member.stats.roi || 0),
+                    member => Number(member.stats.units || 0),
+                    member => gradedCount(member)
+                ))[0] || null;
+        }
+
+        function renderLeaderCard(label, member, formatter, metricGetter, emptyTitle, emptyMeta) {
+            if (!member) {
+                return '<div class="hm-leader-card hm-leader-card--empty">' +
+                    '<b>' + escapeHtml(label) + '</b>' +
+                    '<strong>' + escapeHtml(emptyTitle) + '</strong>' +
+                    '<span>' + escapeHtml(emptyMeta) + '</span>' +
+                '</div>';
+            }
+            const metricValue = typeof metricGetter === 'function' ? metricGetter(member) : null;
+            const metricClass = statClass(metricValue);
+            return '<div class="hm-leader-card">' +
+                '<b>' + escapeHtml(label) + '</b>' +
+                '<strong>' + escapeHtml(member.displayName) + '</strong>' +
+                '<span class="' + metricClass + '">@' + escapeHtml(member.username) + ' · ' + escapeHtml(formatter(member)) + '</span>' +
+                '<span>' + gradedCount(member) + ' graded picks</span>' +
+            '</div>';
         }
 
         function renderSummary() {
             const pickedMembers = members.filter(member => Number(member.stats.totalPicks || 0) > 0);
             const gradedMembers = members.filter(member => gradedCount(member) > 0);
             const qualifiedMembers = gradedMembers.filter(isQualifiedTopPerformer);
-            const totalPicks = members.reduce((sum, member) => sum + Number(member.stats.totalPicks || 0), 0);
-            const bestRecord = bestBy(qualifiedMembers, member => (member.stats.wins + member.stats.losses) > 0, member => Number(member.stats.winRate || 0));
-            const topUnits = bestBy(qualifiedMembers, () => true, member => Number(member.stats.units || 0));
+            const totalGradedPicks = members.reduce((sum, member) => sum + gradedCount(member), 0);
+            const bestWinRate = qualifiedWinRateLeader(qualifiedMembers);
+            const topUnits = qualifiedUnitsLeader(qualifiedMembers);
             const recent = bestBy(pickedMembers, () => true, getActivityTime);
 
             setText(els.total, String(members.length));
             setText(els.active, String(pickedMembers.length));
-            setText(els.totalPicks, String(totalPicks));
-            setText(els.bestRecord, leaderValue(bestRecord, member => formatRecord(member.stats)));
-            setText(els.bestRecordUser, bestRecord ? '@' + bestRecord.username + ' · ' + formatPercent(bestRecord.stats.winRate, true) : 'No qualified records yet');
-            setMetricText(els.topUnits, leaderValue(topUnits, member => formatUnits(member.stats.units, true)), topUnits ? topUnits.stats.units : null);
-            setText(els.topUnitsUser, topUnits ? '@' + topUnits.username : 'No qualified records yet');
+            setText(els.totalPicks, String(totalGradedPicks));
+            setMetricText(els.bestWinRate, bestWinRate ? formatPercent(bestWinRate.stats.winRate, true) : 'Not enough graded picks yet', bestWinRate ? Number(bestWinRate.stats.winRate) - 50 : null);
+            setText(els.bestWinRateUser, bestWinRate ? '@' + bestWinRate.username + ' · ' + gradedCount(bestWinRate) + ' graded picks' : 'Not enough graded picks yet');
+            setMetricText(els.topUnits, topUnits ? formatUnits(topUnits.stats.units, true) : 'No positive units leader yet', topUnits ? topUnits.stats.units : null);
+            setText(els.topUnitsUser, topUnits ? '@' + topUnits.username + ' · ' + gradedCount(topUnits) + ' graded picks' : 'No positive units leader yet');
             setText(els.recentActivity, leaderValue(recent, member => formatLastActive(member.stats.lastActivity || member.lastActive)));
             setText(els.recentActivityUser, recent ? '@' + recent.username : 'No pick activity yet');
             renderFeaturedLeaders();
         }
 
         function renderFeaturedLeaders() {
-            const withPicks = members.filter(member => Number(member.stats.totalPicks || 0) > 0);
             const qualified = members.filter(isQualifiedTopPerformer);
-            const cards = [
-                ['Units Leader', bestBy(qualified, () => true, member => Number(member.stats.units || 0)), member => formatUnits(member.stats.units, true), member => member.stats.units],
-                ['Best ROI', bestBy(qualified, member => member.stats.roi != null, member => Number(member.stats.roi || 0)), member => formatPercent(member.stats.roi, true), member => member.stats.roi],
-                ['Most Picks', bestBy(qualified, () => true, member => Number(member.stats.totalPicks || 0)), member => member.stats.totalPicks + ' picks', () => null],
-                ['Best Win Rate', bestBy(qualified, member => member.stats.winRate != null, member => Number(member.stats.winRate || 0)), member => formatPercent(member.stats.winRate, true), member => member.stats.winRate == null ? null : Number(member.stats.winRate) - 50],
-                ['Newest Active Capper', bestBy(withPicks, member => gradedCount(member) > 0, getActivityTime), member => formatLastActive(member.stats.lastActivity || member.lastActive), () => null]
-            ].filter(([, member]) => !!member);
+            const unitsLeader = qualifiedUnitsLeader(qualified);
+            const roiLeader = qualifiedRoiLeader(qualified);
+            const winRateLeader = qualifiedWinRateLeader(qualified);
+            const mostVerified = bestBy(qualified, member => gradedCount(member) > 0, compareBy(gradedCount, member => Number(member.stats.units || 0)));
+            const newestActive = bestBy(qualified, member => getActivityTime(member) > 0, getActivityTime);
+            const minLabel = 'Minimum ' + MIN_TOP_PERFORMER_GRADED_PICKS + ' graded picks required.';
 
-            if (!cards.length) {
-                els.featured.innerHTML = '<div class="hm-leader-card hm-leader-card--empty"><b>Verified rankings are warming up</b><strong>Not enough qualified data yet</strong><span>Once users have at least ' + MIN_TOP_PERFORMER_GRADED_PICKS + ' graded picks, the leaderboard will populate automatically.</span></div>';
-                return;
-            }
-
-            els.featured.innerHTML = cards.map(([label, member, formatter, metricGetter]) => {
-                const metricClass = statClass(metricGetter(member));
-                return '<div class="hm-leader-card">' +
-                    '<b>' + escapeHtml(label) + '</b>' +
-                    '<strong>' + escapeHtml(member.displayName) + '</strong>' +
-                    '<span class="' + metricClass + '">@' + escapeHtml(member.username) + ' · ' + escapeHtml(formatter(member)) + '</span>' +
-                '</div>';
-            }).join('');
+            els.featured.innerHTML = [
+                renderLeaderCard('Units Leader', unitsLeader, member => formatUnits(member.stats.units, true), member => member.stats.units, 'No positive units leader yet', minLabel),
+                renderLeaderCard('Best ROI', roiLeader, member => formatPercent(member.stats.roi, true), member => member.stats.roi, 'No positive ROI leader yet', minLabel),
+                renderLeaderCard('Best Win Percentage', winRateLeader, member => formatPercent(member.stats.winRate, true), member => member.stats.winRate == null ? null : Number(member.stats.winRate) - 50, 'Not enough graded picks yet', minLabel),
+                renderLeaderCard('Most Verified Picks', mostVerified, member => gradedCount(member) + ' graded picks', () => null, 'Not enough graded picks yet', minLabel),
+                renderLeaderCard('Newest Active Capper', newestActive, member => formatLastActive(member.stats.lastActivity || member.lastActive), () => null, 'No qualifying activity yet', minLabel)
+            ].join('');
         }
 
         function fillSports() {
@@ -1437,9 +1503,7 @@
                     member.username.toLowerCase().includes(q) ||
                     member.displayName.toLowerCase().includes(q);
                 const matchesSport = sport === 'all' || (member.stats.sports || []).includes(sport);
-                const hasActivity = Number(member.stats.totalPicks || 0) > 0 || gradedCount(member) > 0;
-                const explicitLookup = q.length > 0 || sport !== 'all';
-                return matchesSearch && matchesSport && (explicitLookup || hasActivity);
+                return matchesSearch && matchesSport;
             });
 
             const byNumber = getter => (a, b) => getter(b) - getter(a);
