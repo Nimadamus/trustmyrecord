@@ -301,8 +301,8 @@
             var u  = (qs.get('u') || qs.get('user') || '').trim();
             if (u) return u;
             var path = (window.location.pathname || '').replace(/\/+$/, '');
-            // Match /embed/<username> (catches both /embed/foo and /embed/foo/)
-            var m = path.match(/\/embed\/+([^\/?#]+)$/i);
+            // Match /embed/<username>, /embed/<username>/stats, or /embed/<username>/pending.
+            var m = path.match(/\/embed\/+([^\/?#]+)(?:\/(?:stats|pending))?$/i);
             if (m) {
                 try { return decodeURIComponent(m[1]); } catch (_) { return m[1]; }
             }
@@ -313,6 +313,8 @@
         var username = resolveUsername();
         var size     = (qs.get('size') || 'md').toLowerCase();
         var theme    = (qs.get('theme') || 'dark').toLowerCase();
+        var type     = (qs.get('type') || (window.location.pathname.match(/\/pending\/?$/i) ? 'pending' : 'stats')).toLowerCase();
+        if (!['stats','pending'].includes(type)) type = 'stats';
         if (!['sm','md','lg'].includes(size)) size = 'md';
 
         document.body.classList.remove('tmr-size-sm','tmr-size-md','tmr-size-lg');
@@ -346,6 +348,10 @@
             return siteBase + '/profile/?user=' + encodeURIComponent(username)
                  + '&utm_source=embed&utm_medium=widget&utm_campaign=user_profile&utm_content=' + encodeURIComponent(username);
         }
+        function pendingLink() {
+            return siteBase + '/my-pending-picks/?user=' + encodeURIComponent(username)
+                 + '&view=pending&utm_source=embed&utm_medium=widget&utm_campaign=pending_picks&utm_content=' + encodeURIComponent(username);
+        }
 
         async function fetchJson(url) {
             var sep = url.indexOf('?') === -1 ? '?' : '&';
@@ -378,36 +384,118 @@
                 + '</div>';
         }
 
+        function fmtDate(value) {
+            if (!value) return 'TBD';
+            var d = new Date(value);
+            if (isNaN(d.getTime())) return 'TBD';
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+        function fmtOdds(value) {
+            var n = Number(value);
+            if (!Number.isFinite(n)) return '-';
+            return n > 0 ? '+' + n : String(n);
+        }
+        function fmtLine(value) {
+            if (value == null || value === '') return '';
+            var n = Number(value);
+            if (!Number.isFinite(n)) return String(value);
+            return n > 0 ? '+' + n : String(n);
+        }
+        function fmtUnitsPlain(value) {
+            var n = Number(value);
+            if (!Number.isFinite(n)) return '-';
+            return (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')) + 'u';
+        }
+        function pendingPickLabel(pick) {
+            var selection = String(pick.selection || 'Pick').trim();
+            var line = fmtLine(pick.line_snapshot);
+            if (!line) return selection;
+            return new RegExp('(?:^|\\s)' + line.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$').test(selection)
+                ? selection
+                : selection + ' ' + line;
+        }
+        function renderPendingPickRow(pick) {
+            return '<div class="tmr-pick-row">'
+                + '<div class="tmr-pick-name">' + escapeHtml(pendingPickLabel(pick)) + '</div>'
+                + '<div class="tmr-pick-meta">' + escapeHtml(sportShort(pick.sport_key)) + ' · ' + escapeHtml(fmtOdds(pick.odds_snapshot)) + ' · ' + escapeHtml(fmtUnitsPlain(pick.units)) + '</div>'
+                + '<div class="tmr-pick-result" style="color:#f4c95d">Pending</div>'
+                + '</div>';
+        }
+
+        async function loadPending() {
+            var pendingResp;
+            try {
+                pendingResp = await fetchJson(apiBase + '/users/' + encodeURIComponent(username) + '/pending');
+            } catch (e) {
+                card.innerHTML = '<div class="tmr-error">Pending picks unavailable.</div>';
+                return;
+            }
+            var profile = (pendingResp && pendingResp.user) || {};
+            var picks = Array.isArray(pendingResp && pendingResp.picks) ? pendingResp.picks : [];
+            var displayName = profile.display_name || profile.username || username;
+            var handle = profile.username || username;
+            var initial = String(handle).charAt(0).toUpperCase() || '?';
+            var verified = ['verified','trusted','premium'].includes(String(profile.verification_status || '').toLowerCase());
+            var summary = pendingResp.summary || {};
+
+            if (pendingResp.public_pending_picks_enabled === false) {
+                card.innerHTML = '<div class="tmr-head">'
+                    + '<div class="tmr-avatar">' + escapeHtml(initial) + '</div>'
+                    + '<div class="tmr-identity"><div class="tmr-name">' + escapeHtml(displayName) + '</div><div class="tmr-handle">@' + escapeHtml(handle) + '</div></div>'
+                    + '<div class="tmr-brand"><strong>Trust</strong>MyRecord</div>'
+                    + '</div><div class="tmr-error">This capper has chosen not to make pending picks public.</div>';
+                return;
+            }
+
+            var html = ''
+                + '<div class="tmr-head">'
+                + '<div class="tmr-avatar">' + (profile.avatar_url ? '<img src="' + escapeHtml(profile.avatar_url) + '" alt="' + escapeHtml(displayName) + '">' : escapeHtml(initial)) + '</div>'
+                + '<div class="tmr-identity"><div class="tmr-name">' + escapeHtml(displayName) + '</div><div class="tmr-handle">@' + escapeHtml(handle) + (verified ? ' <span class="tmr-verified"><i>✓</i> Verified</span>' : '') + '</div></div>'
+                + '<div class="tmr-brand"><strong>Trust</strong>MyRecord</div>'
+                + '</div>'
+                + '<div class="tmr-grid">'
+                + '<div class="tmr-stat"><div class="tmr-stat-label">Pending</div><div class="tmr-stat-value">' + escapeHtml(String(summary.total_pending || picks.length)) + '</div></div>'
+                + '<div class="tmr-stat"><div class="tmr-stat-label">Open Units</div><div class="tmr-stat-value">' + escapeHtml(fmtUnitsPlain(summary.total_pending_units || 0)) + '</div></div>'
+                + '<div class="tmr-stat"><div class="tmr-stat-label">Next Start</div><div class="tmr-stat-value">' + escapeHtml(fmtDate(summary.earliest_upcoming_game)) + '</div></div>'
+                + '<div class="tmr-stat"><div class="tmr-stat-label">Status</div><div class="tmr-stat-value" style="color:#f4c95d">Ungraded</div></div>'
+                + '</div>'
+                + '<div class="tmr-picks" style="display:block;">' + (picks.length ? picks.slice(0, size === 'lg' ? 6 : 3).map(renderPendingPickRow).join('') : '<div style="color:var(--muted);font-size:.72rem;padding:8px 0;">No pending picks right now</div>') + '</div>'
+                + '<div class="tmr-foot"><span>Pending picks · ' + escapeHtml(new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })) + '</span><a class="tmr-cta" href="' + pendingLink() + '" target="_blank" rel="noopener">View pending picks →</a></div>';
+            card.innerHTML = html;
+        }
+
         async function load() {
             if (!username) {
                 card.innerHTML = '<div class="tmr-error">Missing username. Use <code>/embed/&lt;username&gt;</code> or <code>?u=username</code>.</div>';
                 return;
             }
+            if (type === 'pending') {
+                await loadPending();
+                return;
+            }
             try {
-                var profileResp, advancedResp;
+                var publicStatsResp;
                 try {
-                    [profileResp, advancedResp] = await Promise.all([
-                        fetchJson(apiBase + '/users/' + encodeURIComponent(username)),
-                        fetchJson(apiBase + '/users/' + encodeURIComponent(username) + '/stats/advanced')
-                    ]);
+                    publicStatsResp = await fetchJson(apiBase + '/users/' + encodeURIComponent(username) + '/public-stats');
                 } catch (e) {
                     card.innerHTML = '<div class="tmr-error">Profile not found.</div>';
                     return;
                 }
 
-                var profile     = (profileResp && profileResp.user) || profileResp || {};
-                var summary     = (advancedResp && advancedResp.summary) || {};
-                var recentForm  = (advancedResp && advancedResp.recentForm) || [];
-                // recentForm rows already carry selection/market_type/sport/status/result_units,
-                // so the lg-size "last 5 picks" list pulls from the same payload -- one API call.
-                var picks       = recentForm.slice(0, 5);
+                var profile     = (publicStatsResp && publicStatsResp.user) || {};
+                var summary     = (publicStatsResp && publicStatsResp.stats) || {};
+                var sports      = Array.isArray(summary.sport_breakdown) ? summary.sport_breakdown : [];
 
                 var displayName = profile.display_name || profile.username || username;
                 var handle      = profile.username || username;
                 var initial     = String(handle).charAt(0).toUpperCase() || '?';
-                var record      = Number(summary.wins || 0) + '-' + Number(summary.losses || 0) + '-' + Number(summary.pushes || 0);
-                var totalPicks  = Number(summary.total_picks || 0);
+                var record      = summary.record || (Number(summary.wins || 0) + '-' + Number(summary.losses || 0) + '-' + Number(summary.pushes || 0));
+                var totalPicks  = Number(summary.graded_picks || 0);
                 var verified    = ['verified','trusted','premium'].includes(String(profile.verification_status || '').toLowerCase());
+                var updatedAt   = summary.last_updated_at ? new Date(summary.last_updated_at) : null;
+                var updatedText = updatedAt && !isNaN(updatedAt.getTime())
+                    ? updatedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                    : 'No graded picks';
 
                 var html = ''
                     + '<div class="tmr-head">'
@@ -425,29 +513,29 @@
 
                     + '<div class="tmr-grid">'
                     +   '<div class="tmr-stat"><div class="tmr-stat-label">Record</div><div class="tmr-stat-value">' + escapeHtml(record) + '</div></div>'
-                    +   '<div class="tmr-stat"><div class="tmr-stat-label">Win Rate</div><div class="tmr-stat-value">' + escapeHtml(Number(summary.win_rate || 0).toFixed(1) + '%') + '</div></div>'
+                    +   '<div class="tmr-stat"><div class="tmr-stat-label">Win Rate</div><div class="tmr-stat-value">' + escapeHtml(Number(summary.win_percentage || 0).toFixed(1) + '%') + '</div></div>'
                     +   '<div class="tmr-stat"><div class="tmr-stat-label">Net Units</div><div class="tmr-stat-value ' + statClass(summary.net_units) + '">' + escapeHtml(fmtUnits(summary.net_units)) + '</div></div>'
                     +   '<div class="tmr-stat"><div class="tmr-stat-label">ROI</div><div class="tmr-stat-value ' + statClass(summary.roi) + '">' + escapeHtml(fmtPct(summary.roi)) + '</div></div>'
                     + '</div>'
 
                     + '<div class="tmr-recent">'
-                    +   '<div class="tmr-recent-label">Recent Form' + (totalPicks ? ' &middot; ' + totalPicks + ' picks' : '') + '</div>'
-                    +   (recentForm.length
-                        ? '<div class="tmr-form">' + recentForm.slice(0, 12).map(function(it){
-                            var s = String(it.status || '').toLowerCase();
-                            var lbl = s === 'won' ? 'W' : s === 'lost' ? 'L' : 'P';
-                            var bg  = s === 'won' ? 'var(--good)' : s === 'lost' ? 'var(--bad)' : 'var(--neutral)';
-                            return '<div class="tmr-form-box" style="background:' + bg + '">' + lbl + '</div>';
+                    +   '<div class="tmr-recent-label">Sport Breakdown' + (totalPicks ? ' &middot; ' + totalPicks + ' graded picks' : '') + '</div>'
+                    +   (sports.length
+                        ? '<div class="tmr-form">' + sports.slice(0, 6).map(function(it){
+                            var label = String(it.sport || '').slice(0, 5) || 'Sport';
+                            return '<div class="tmr-form-box" title="' + escapeHtml(it.record || '') + '" style="background:var(--neutral);font-size:.52rem;">' + escapeHtml(label) + '</div>';
                           }).join('') + '</div>'
                         : '<div style="color:var(--muted);font-size:.72rem;">No graded picks yet</div>')
                     + '</div>'
 
                     + (size === 'lg'
-                        ? '<div class="tmr-picks">' + (picks.length ? picks.slice(0,5).map(renderPickRow).join('') : '<div style="color:var(--muted);font-size:.72rem;padding:6px 0;">No graded picks yet</div>') + '</div>'
+                        ? '<div class="tmr-picks">' + (sports.length ? sports.slice(0,5).map(function(it) {
+                            return '<div class="tmr-pick-row"><div class="tmr-pick-name">' + escapeHtml(it.sport || 'Sport') + '</div><div class="tmr-pick-meta">' + escapeHtml(it.record || '0-0-0') + '</div><div class="tmr-pick-result ' + statClass(it.net_units) + '">' + escapeHtml(fmtUnits(it.net_units)) + '</div></div>';
+                          }).join('') : '<div style="color:var(--muted);font-size:.72rem;padding:6px 0;">No graded picks yet</div>') + '</div>'
                         : '')
 
                     + '<div class="tmr-foot">'
-                    +   '<span>Live · ' + escapeHtml(new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })) + '</span>'
+                    +   '<span>Updated · ' + escapeHtml(updatedText) + ' · Streak ' + escapeHtml(summary.current_streak_label || 'None') + '</span>'
                     +   '<a class="tmr-cta" href="' + profileLink() + '" target="_blank" rel="noopener">View full verified profile →</a>'
                     + '</div>';
 
