@@ -102,3 +102,50 @@ Remaining issue:
 - Fix the live backend summary API `500` before this workstream can be marked `VERIFIED LIVE`.
 - After the summary endpoint returns `200`, repeat authenticated pick submission or grading invalidation and confirm `X-TMR-Cache` transitions from a miss/rebuild to hit.
 - Manually check Chrome or Edge DevTools console for errors related to `leaderboardCache`, `routes/picks`, `routes/users`, `autoGrader`, profile stats, and the handicappers page.
+
+## 2026-05-06 - Leaderboard Summary API Regression Fix
+
+Status: VERIFIED LIVE
+
+Files changed:
+- `routes/users.js`
+- `tests/handicappers-summary-route-test.js`
+- `tests/handicappers-summary-fallback-cache-test.js`
+- `TRUSTMYRECORD_FIX_TRACKER.md`
+
+Commit hash:
+- Backend fallback cache/header fix: `537c43a113d056ddaf48c711a993611c17f4d214`
+- Backend summary smoke test: `13e4a32493fb69d34b5ba1eee060fecfaf24e8f0`
+- Backend fallback cache smoke test: `99d8870f1884bda7f6b9600008c6959d839a1557`
+- Tracker receipt: pending commit/push at time of local tracker edit.
+
+Push status:
+- Backend commits pushed to `trustmyrecord-backend` production branch `master`.
+- Tracker receipt push pending.
+
+Deploy status:
+- Live backend endpoint returns `200`.
+- Live `/handicappers/` page still points at `/users/handicappers/summary`.
+
+Live URLs checked:
+- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=50&offset=0`
+- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=1&offset=0`
+- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=1&offset=1`
+- `https://trustmyrecord-api.onrender.com/api/users/handicappers/summary?limit=1&offset=2`
+- `https://trustmyrecord.com/handicappers/`
+- `https://trustmyrecord.com/profile/?user=BetLegend`
+
+Verification result:
+- Exact live summary endpoint returned `200`.
+- First exact summary request returned `X-TMR-Cache: MISS` and `Cache-Control: public, max-age=60, stale-while-revalidate=120`.
+- Second exact summary request returned `X-TMR-Cache: HIT`.
+- Summary response returned three qualified public members: `Flintlocktropicks`, `BetLegend`, `mikeybalhansports`.
+- No zero-activity users were present in the checked response.
+- No fake/test users were present in the checked response.
+- Pagination was verified with `limit=1` offsets `0`, `1`, and `2`; `has_more` correctly turns false on the final page.
+- Hard-refresh style fetch for `https://trustmyrecord.com/handicappers/` returned `200`, includes the summary API call, and does not include the old `Pulling public profiles and performance stats` copy.
+- Hard-refresh style fetch for `https://trustmyrecord.com/profile/?user=BetLegend` returned `200`.
+
+Remaining issue:
+- Browser console/DevTools verification still cannot be completed from this environment; Chrome or Edge should be checked manually for console errors.
+- Production is currently using the safe fallback summary path, now cached. The primary SQL path should still be cleaned up in a separate backend reliability pass so fallback is not the normal path.
