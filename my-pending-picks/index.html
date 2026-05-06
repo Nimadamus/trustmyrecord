@@ -321,7 +321,7 @@
     </main>
 
     <script src="/static/js/config.js?v=20260430a"></script>
-    <script src="/static/js/backend-api.js?v=20260505pickcontext1"></script>
+    <script src="/static/js/backend-api.js?v=20260505pendingline2"></script>
     <script>
     (function () {
         var authState = document.getElementById('authState');
@@ -382,7 +382,28 @@
             if (window.TMR && typeof window.TMR.formatPickLine === 'function') {
                 return window.TMR.formatPickLine(pick);
             }
-            return fmtLine(pick && pick.line_snapshot);
+            pick = pick || {};
+            var market = String(pick.market_type || pick.marketType || pick.bet_type || pick.betType || '').toLowerCase();
+            var value = pick.line_snapshot != null ? pick.line_snapshot : (pick.line != null ? pick.line : pick.point);
+            if (value == null || value === '') return '-';
+            var n = Number(value);
+            if (!Number.isFinite(n)) return String(value);
+            var isSpread = market === 'spreads'
+                || market === 'spread'
+                || market.indexOf('spread') !== -1
+                || market.indexOf('run_line') !== -1
+                || market.indexOf('puck_line') !== -1;
+            var isTotal = market === 'totals'
+                || market === 'total'
+                || market.indexOf('total') !== -1;
+            var isMoneyline = market === 'h2h'
+                || market === 'moneyline'
+                || market.indexOf('moneyline') !== -1
+                || /_h2h$/.test(market);
+            if (isMoneyline) return '-';
+            if (isTotal) return fmtLine(Math.abs(n)).replace(/^\+/, '');
+            if (isSpread) return fmtLine(n);
+            return fmtLine(n).replace(/^\+/, '');
         }
         function fmtUnits(value) {
             var n = Number(value);
