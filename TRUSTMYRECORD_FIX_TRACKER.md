@@ -245,6 +245,42 @@ Remaining issue:
 - Browser console/DevTools verification still needs a manual Chrome or Edge check.
 - The fallback path remains in place intentionally as a safety mechanism and should log when used.
 
+## 2026-05-06 - Backend Checkout Hygiene
+
+Status: BLOCKED / UNSAFE CHECKOUT
+
+Dirty/stale checkout:
+- `C:\Users\Nima\trustmyrecord-backend`
+
+Reason:
+- Local `master` is behind `origin/master` by 99 commits.
+- The checkout has many modified and untracked files.
+- The dirty state is not tracker-only; it includes backend routes, services, scripts, schema files, tests, and config files.
+- Future commits from this checkout could accidentally include stale or unrelated changes and overwrite production fixes.
+
+Resolution:
+- Do not use `C:\Users\Nima\trustmyrecord-backend` for future production backend work until it is reviewed and cleaned, stashed, committed intentionally, or reset with explicit approval.
+- Leave the dirty/stale checkout untouched as a backup until recovery decisions are made.
+- Future backend production work must use a fresh clean clone or clean worktree from current `origin/master`.
+
+Clean checkout created:
+- `C:\Users\Nima\trustmyrecord-backend-clean2`
+
+Clean checkout verification:
+- Branch: `master`
+- Status: up to date with `origin/master`
+- Working tree: clean
+- Recent head: `b2a3f90 Record final live profile analytics verification`
+- Remote URL: `https://github.com/Nimadamus/trustmyrecord-backend.git`
+
+Verification result:
+- `git status` returned `nothing to commit, working tree clean`.
+- `git branch --show-current` returned `master`.
+- `git log --oneline -5` returned current production history.
+
+Remaining issue:
+- The old dirty/stale backend checkout remains unsafe and should not be used for future production work.
+
 ### Final verification receipt - 2026-05-06T03:14:34.9535085-07:00
 
 Status: VERIFIED LIVE by cache-busted production API and public page source fetch. Playwright rendered-browser launch was attempted for hard-refresh DOM proof but failed with spawn EPERM in this sandbox; live frontend display depends on the verified API values below.
