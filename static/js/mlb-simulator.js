@@ -3,6 +3,7 @@
 
     var UI_BUILD = 'standalone-box-score-20260505';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
+    var HISTORICAL_PROFILE_SOURCE = window.HISTORICAL_MLB_TEAM_PROFILES || null;
 
     var CURRENT_TEAMS = [
         ['current-ari', 'Arizona Diamondbacks', 'ARI', 'NL', 'West', 102, 99, 98, 98, 1.03],
@@ -60,6 +61,23 @@
         ['classic-2023-tex', '2023 Texas Rangers', 'TEX', 2023, 115, 101, 102, 99, 1.08]
     ];
 
+    if (HISTORICAL_PROFILE_SOURCE && Array.isArray(HISTORICAL_PROFILE_SOURCE.teams)) {
+        HISTORICAL_TEAMS = HISTORICAL_PROFILE_SOURCE.teams.map(function (team) {
+            return [
+                team.id,
+                team.name,
+                team.abbreviation,
+                team.season,
+                team.profile.offense,
+                team.profile.run_prevention,
+                team.profile.starting_pitching,
+                team.profile.bullpen,
+                team.profile.volatility,
+                team
+            ];
+        });
+    }
+
     var CURRENT_PITCHERS = {
         ARI: [['gallen', 'Zac Gallen', 112, 3.45], ['kelly', 'Merrill Kelly', 106, 3.75], ['nelson', 'Ryne Nelson', 100, 4.15], ['pfaadt', 'Brandon Pfaadt', 99, 4.25], ['rodriguez', 'Eduardo Rodriguez', 102, 4.05]],
         ATL: [['elder', 'Bryce Elder', 101, 4.10], ['fuentes', 'Didier Fuentes', 96, 4.45], ['holmes', 'Grant Holmes', 98, 4.30], ['lopez', 'Reynaldo Lopez', 108, 3.65], ['perez', 'Martin Perez', 97, 4.35]],
@@ -116,6 +134,32 @@
         'classic-2023-tex': [['eovaldi', 'Nathan Eovaldi', 111, 3.63], ['montgomery', 'Jordan Montgomery', 110, 2.79], ['gray', 'Jon Gray', 101, 4.12], ['heaney', 'Andrew Heaney', 98, 4.15], ['dunning', 'Dane Dunning', 102, 3.70]]
     };
 
+    function historicalPitcherQuality(team, pitcher) {
+        var leagueEra = Number(team && team.leagueContext && team.leagueContext.era);
+        var base = Number(team && team.startingPitching) || Number(team && team.profile && team.profile.starting_pitching) || 100;
+        var era = Number(pitcher && pitcher.era);
+        var durability = Number(pitcher && pitcher.durability);
+        var eraLift = Number.isFinite(leagueEra) && Number.isFinite(era) ? (leagueEra - era) * 7 : 0;
+        var workloadLift = Number.isFinite(durability) ? (durability - 80) * 0.15 : 0;
+        return Math.round(clamp(base + eraLift + workloadLift, 70, 135));
+    }
+
+    if (HISTORICAL_PROFILE_SOURCE && Array.isArray(HISTORICAL_PROFILE_SOURCE.teams)) {
+        HISTORICAL_PITCHERS = {};
+        HISTORICAL_PROFILE_SOURCE.teams.forEach(function (team) {
+            HISTORICAL_PITCHERS[team.id] = (team.pitchers || []).map(function (pitcher) {
+                return [
+                    pitcher.id,
+                    pitcher.name,
+                    historicalPitcherQuality(team, pitcher),
+                    Number(pitcher.era).toFixed(2),
+                    pitcher.winLoss || (Number.isFinite(pitcher.wins) && Number.isFinite(pitcher.losses) ? pitcher.wins + '-' + pitcher.losses : ''),
+                    pitcher
+                ];
+            });
+        });
+    }
+
     function makeCurrent(row) {
         return {
             id: row[0], era: 'current', name: row[1], abbreviation: row[2], league: row[3], division: row[4],
@@ -124,9 +168,18 @@
     }
 
     function makeHistorical(row) {
+        var profile = row[9] || {};
         return {
             id: row[0], era: 'historical', name: row[1], abbreviation: row[2], season: row[3], league: 'Classic', division: 'Curated',
-            offense: row[4], runPrevention: row[5], startingPitching: row[6], bullpen: row[7], volatility: row[8]
+            offense: row[4], runPrevention: row[5], startingPitching: row[6], bullpen: row[7], volatility: row[8],
+            record: profile.record || null,
+            runsScored: profile.runsScored || null,
+            runsAllowed: profile.runsAllowed || null,
+            runDifferential: profile.runDifferential || null,
+            leagueContext: profile.leagueContext || null,
+            eraContext: profile.eraContext || null,
+            hitters: profile.hitters || [],
+            profileData: profile
         };
     }
 
@@ -267,7 +320,11 @@
     }
     function teamMeta(team) {
         if (!team) return 'No team selected';
-        return team.era === 'historical' ? [team.abbreviation, team.season, 'Historical'].join(' / ') : [team.abbreviation, team.league, team.division].join(' / ');
+        if (team.era !== 'historical') return [team.abbreviation, team.league, team.division].join(' / ');
+        var meta = [team.abbreviation, team.season, 'Historical'].join(' / ');
+        if (team.record && team.record.text) meta += ' | Record: ' + team.record.text;
+        if (team.runsScored != null && team.runsAllowed != null) meta += ' | RS/RA: ' + team.runsScored + '/' + team.runsAllowed;
+        return meta;
     }
     function teamColors(team) {
         return team && TEAM_COLORS[team.abbreviation] || ['#2dd4bf', '#60a5fa'];
@@ -342,14 +399,23 @@
         var rows = HISTORICAL_PITCHERS[team.id] || [];
         rows = rows.slice();
         return rows.map(function (row) {
+            var profile = row[5] || {};
             return {
                 id: pitcherId(side, team.id + '-' + row[0]),
                 name: row[1],
                 quality: row[2],
                 era: row[3],
+                record: row[4] || profile.winLoss || '',
+                throws: profile.throws || null,
+                inningsPitched: profile.inningsPitched || null,
+                gamesStarted: profile.gamesStarted || null,
+                whip: profile.whip || null,
+                strikeouts: profile.strikeouts || null,
+                walks: profile.walks || null,
+                durability: profile.durability || null,
                 source: 'Historical simulator input',
                 verified: false,
-                note: 'Curated historical simulator input; not live verified starter data'
+                note: row[4] ? 'Historical season record ' + row[4] : 'Curated historical simulator input; not live verified starter data'
             };
         });
     }
@@ -367,8 +433,10 @@
         return 'Starter list is for simulation selection and may not reflect today\'s confirmed starter.';
     }
     function pitcherRecord(pitcher) {
+        if (pitcher && pitcher.record) return pitcher.record;
         var match = String(pitcher && pitcher.note ? pitcher.note : '').match(/(\d+\s*-\s*\d+)/);
-        return match ? match[1].replace(/\s+/g, '') : 'N/A';
+        if (match) return match[1].replace(/\s+/g, '');
+        return pitcher && pitcher.source === 'Historical simulator input' ? 'Record unavailable' : 'N/A';
     }
     function pitcherOptionLabel(pitcher) {
         return pitcher.name + ', ERA ' + (pitcher.era != null ? pitcher.era : 'N/A') + ', W-L ' + pitcherRecord(pitcher);
@@ -444,8 +512,8 @@
             else awayScore += 1;
         }
         var combined = awayScore + homeScore;
-        if (combined > 30) {
-            var excess = combined - 30;
+        if (combined > 24) {
+            var excess = combined - 24;
             while (excess > 0) {
                 if (awayScore >= homeScore && awayScore > 0) awayScore -= 1;
                 else if (homeScore > 0) homeScore -= 1;
@@ -458,28 +526,28 @@
         }
         awayScore = clamp(awayScore, 0, 20);
         homeScore = clamp(homeScore, 0, 20);
-        while (awayScore + homeScore > 30) {
+        while (awayScore + homeScore > 24) {
             if (awayScore >= homeScore && awayScore > 0) awayScore -= 1;
             else if (homeScore > 0) homeScore -= 1;
             else break;
         }
         if (awayScore === homeScore) {
             if (homeWin >= awayWin) {
-                if (homeScore < 20 && awayScore + homeScore < 30) homeScore += 1;
+                if (homeScore < 20 && awayScore + homeScore < 24) homeScore += 1;
                 else if (awayScore > 0) awayScore -= 1;
             } else {
-                if (awayScore < 20 && awayScore + homeScore < 30) awayScore += 1;
+                if (awayScore < 20 && awayScore + homeScore < 24) awayScore += 1;
                 else if (homeScore > 0) homeScore -= 1;
             }
         }
         if (homeWin >= awayWin && homeScore <= awayScore) {
-            if (homeScore < 20 && homeScore + awayScore < 30) homeScore = awayScore + 1;
+            if (homeScore < 20 && homeScore + awayScore < 24) homeScore = awayScore + 1;
             else awayScore = Math.max(0, homeScore - 1);
         } else if (awayWin > homeWin && awayScore <= homeScore) {
-            if (awayScore < 20 && homeScore + awayScore < 30) awayScore = homeScore + 1;
+            if (awayScore < 20 && homeScore + awayScore < 24) awayScore = homeScore + 1;
             else homeScore = Math.max(0, awayScore - 1);
         }
-        while (awayScore + homeScore > 30) {
+        while (awayScore + homeScore > 24) {
             if (homeWin >= awayWin && awayScore > 0) awayScore -= 1;
             else if (awayWin > homeWin && homeScore > 0) homeScore -= 1;
             else break;
