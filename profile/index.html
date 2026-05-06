@@ -7416,6 +7416,20 @@
         return m || 'other';
     }
 
+    function marketSlug(value) {
+        return String(value || '')
+            .trim()
+            .toLowerCase()
+            .replace(/&/g, 'and')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    }
+
+    function buildProfileMarketUrl(marketType) {
+        const user = (profileData && profileData.username) || profileUsername || urlParams.get('user') || '';
+        return '/profile-market.html?user=' + encodeURIComponent(user) + '&market=' + encodeURIComponent(marketSlug(marketType));
+    }
+
     function capMarketLabel(key) {
         return {
             moneyline:'Moneyline', spread:'Spread', total:'Totals', team_total:'Team Totals',
@@ -7613,14 +7627,7 @@
             ['NHL', p => pmSportLabel(p.sport_key) === 'NHL'],
             ['NCAAB', p => pmSportLabel(p.sport_key) === 'NCAAB']
         ]);
-        renderCapBreakdown('capTableMarket', rows, [
-            ['Team Totals', p => normalizeCapMarket(p.market_type) === 'team_total'],
-            ['Totals', p => normalizeCapMarket(p.market_type) === 'total'],
-            ['Moneyline', p => normalizeCapMarket(p.market_type) === 'moneyline'],
-            ['Spread', p => normalizeCapMarket(p.market_type) === 'spread'],
-            ['First Five', p => normalizeCapMarket(p.market_type) === 'first_five'],
-            ['Props', p => normalizeCapMarket(p.market_type) === 'props']
-        ]);
+        renderCapBreakdown('capTableMarket', rows, buildCapMarketBuckets(rows));
         renderCapBreakdown('capTableUnits', rows, [1,2,3,4,5].map(n => [n + 'u Picks', p => Math.round(capUnits(p)) === n]));
         renderCapBreakdown('capTableOdds', rows, [
             ['Heavy Favorite', p => capOdds(p) < -200],
@@ -7644,16 +7651,30 @@
             el.innerHTML = '<div class="capper-empty">No graded picks yet.</div>';
             return;
         }
-        const body = buckets.map(([label, pred]) => {
+        const body = buckets.map(([label, pred, href]) => {
             const s = calcCapStats(rows.filter(p => pred(p)));
             const sportKeys = { MLB: 'baseball_mlb', NFL: 'americanfootball_nfl', NBA: 'basketball_nba', NHL: 'icehockey_nhl', NCAAB: 'basketball_ncaab', NCAAF: 'americanfootball_ncaaf' };
             const sportKey = id === 'capTableSport' ? sportKeys[label] : '';
             const categoryLabel = sportKey
                 ? '<a class="profile-sport-filter-link" href="' + escapeHtml(buildProfileSportFilterUrl(sportKey)) + '" onclick="return setProfileSportFilter(\'' + escapeHtml(sportKey) + '\', { updateUrl: true, scroll: true, clearOtherFilters: true });" title="View only ' + escapeHtml(label) + ' picks">' + escapeHtml(label) + '</a>'
-                : escapeHtml(label);
-            return '<tr><td>' + categoryLabel + '</td><td>' + s.picks + '</td><td>' + s.record + '</td><td class="' + (s.picks ? capValueClass(s.winRate - 50) : 'capper-neutral') + '">' + s.winRate.toFixed(1) + '%</td><td class="' + capValueClass(s.units) + '">' + capUnitsText(s.units) + '</td><td class="' + capValueClass(s.roi) + '">' + s.roi.toFixed(1) + '%</td></tr>';
+                : (href ? '<a class="profile-sport-filter-link" href="' + escapeHtml(href) + '" title="View ' + escapeHtml(label) + ' market breakdown">' + escapeHtml(label) + '<span class="profile-sport-view-indicator">View Breakdown</span></a>' : escapeHtml(label));
+            return '<tr' + (href ? ' class="profile-market-breakdown-row" data-href="' + escapeHtml(href) + '" onclick="if(!event.target.closest(\'a\')) window.location.href=this.dataset.href"' : '') + '><td>' + categoryLabel + '</td><td>' + s.picks + '</td><td>' + s.record + '</td><td class="' + (s.picks ? capValueClass(s.winRate - 50) : 'capper-neutral') + '">' + s.winRate.toFixed(1) + '%</td><td class="' + capValueClass(s.units) + '">' + capUnitsText(s.units) + '</td><td class="' + capValueClass(s.roi) + '">' + s.roi.toFixed(1) + '%</td></tr>';
         }).join('');
         el.innerHTML = '<table class="capper-table"><thead><tr><th>Category</th><th>Picks</th><th>Record</th><th>Win Rate</th><th>Units</th><th>ROI</th></tr></thead><tbody>' + body + '</tbody></table>';
+    }
+
+    function buildCapMarketBuckets(rows) {
+        const markets = Array.from(new Set((rows || [])
+            .filter(isCapGraded)
+            .map(p => String(p.market_type || '').trim())
+            .filter(Boolean)));
+        return markets
+            .map(marketType => [
+                marketTypeLabel(marketType),
+                p => String(p.market_type || '') === marketType,
+                buildProfileMarketUrl(marketType)
+            ])
+            .sort((a, b) => a[0].localeCompare(b[0]));
     }
 
     function renderPendingSummary(rows) {
@@ -9592,7 +9613,7 @@
             const t = Number(i.total_picks) || (w + l + p);
             const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
             const units = Number(i.net_units) || 0;
-            return bRowExtended(marketTypeLabel(i.market_type), w + '-' + l + '-' + p + ' (' + t + ' picks)', wr, units);
+            return bRowExtended(marketTypeLabel(i.market_type), w + '-' + l + '-' + p + ' (' + t + ' picks)', wr, units, buildProfileMarketUrl(i.market_type));
         }).join('');
     }
 
@@ -12001,9 +12022,13 @@
     transition: background .16s ease, border-color .16s ease, transform .16s ease;
   }
   body.profile-page .breakdown-row.is-clickable:hover,
+  body.profile-page .profile-market-breakdown-row:hover td,
   body.profile-page .tmrx-table tbody tr:hover td {
     background: rgba(34, 211, 238, .07) !important;
     border-color: rgba(34, 211, 238, .28);
+  }
+  body.profile-page .profile-market-breakdown-row {
+    cursor: pointer;
   }
   body.profile-page .breakdown-row-indicator,
   body.profile-page .profile-sport-view-indicator {
