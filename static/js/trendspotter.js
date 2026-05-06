@@ -26,8 +26,8 @@
     { id: "back_to_back", label: "Back-to-back", terms: ["BACK-TO-BACK", "B2B", "BACK TO BACK"] },
     { id: "rematch", label: "Same opponent rematch", terms: ["REMATCH", "SAME OPPONENT"] },
     { id: "game_2_set", label: "Game 2 of same-opponent set", terms: ["GAME 2", "SECOND GAME"] },
-    { id: "after_win", label: "After win", terms: ["AFTER A WIN", "AFTER WIN", "COMING OFF A WIN"] },
-    { id: "after_loss", label: "After loss", terms: ["AFTER A LOSS", "AFTER LOSS", "COMING OFF A LOSS"] },
+    { id: "after_win", label: "After win", terms: ["AFTER A WIN", "AFTER WIN", "AFTER BEATING", "AFTER DEFEATING", "COMING OFF A WIN"] },
+    { id: "after_loss", label: "After loss", terms: ["AFTER A LOSS", "AFTER LOSS", "AFTER LOSING", "AFTER FALLING TO", "COMING OFF A LOSS"] },
     { id: "favorite", label: "As favorite", terms: ["FAVORITE", "FAVORED"] },
     { id: "underdog", label: "As underdog", terms: ["UNDERDOG", "DOG"] },
     { id: "over_500", label: "Against teams over .500", terms: ["OVER .500", "ABOVE .500"] },
@@ -53,27 +53,38 @@
     { id: "recency", label: "Recency" },
     { id: "market", label: "Market type" }
   ];
+  var SPORT_BOARD_KEYS = {
+    MLB: "baseball_mlb",
+    NBA: "basketball_nba",
+    NHL: "icehockey_nhl",
+    NFL: "americanfootball_nfl",
+    NCAAB: "basketball_ncaab",
+    NCAAF: "americanfootball_ncaaf"
+  };
 
   var state = {
     sport: "",
+    matchup: "",
     market: "all",
     factor: "all",
     minSample: 0,
     minWinPct: 0,
     dateStart: "",
     dateEnd: "",
-    team: "all",
+    team: "both",
     opponent: "all",
     location: "all",
     researchMode: "current",
     sort: "rank",
-    currentMatchupOnly: false,
+    currentMatchupOnly: true,
     generated: false
   };
   var cache = {};
 
   var els = {
     sportOptions: document.getElementById("sportOptions"),
+    matchupFilter: document.getElementById("matchupFilter"),
+    matchupDataSource: document.getElementById("matchupDataSource"),
     marketType: document.getElementById("marketType"),
     trendFactor: document.getElementById("trendFactor"),
     minSample: document.getElementById("minSample"),
@@ -128,6 +139,57 @@
     return data && Array.isArray(data.trends) ? data.trends.filter(isRenderableTrend) : [];
   }
 
+  function matchupKey(matchup) {
+    if (!matchup) return "";
+    return [
+      matchup.sport,
+      matchup.matchup,
+      matchup.away_abbr,
+      matchup.home_abbr,
+      matchup.slate_date || matchup.artifact_slate_date || ""
+    ].map(normalize).join("|");
+  }
+
+  function matchupFromTrend(trend) {
+    return {
+      sport: trend.sport,
+      matchup: trend.matchup,
+      away_abbr: trend.away_abbr,
+      home_abbr: trend.home_abbr,
+      slate_date: trend.slate_date || trend.artifact_slate_date || "",
+      game_time: trend.game_time || "",
+      trend_count: 0,
+      source: "verified_trendspotter_artifact"
+    };
+  }
+
+  function matchupsForSport(sport) {
+    var data = cache[sport] || {};
+    var listed = Array.isArray(data.matchups) ? data.matchups : [];
+    var liveSlate = Array.isArray(data.live_matchups) ? data.live_matchups : [];
+    var derived = trendsForSport(sport).map(matchupFromTrend);
+    var verifiedSlate = data.is_archived === true && state.researchMode === "current" ? [] : listed.concat(derived);
+    var byKey = new Map();
+    verifiedSlate.concat(liveSlate).forEach(function (matchup) {
+      if (!matchup || !matchup.matchup || !matchup.away_abbr || !matchup.home_abbr) return;
+      var key = matchupKey(matchup);
+      var current = byKey.get(key) || {};
+      byKey.set(key, Object.assign({}, current, matchup, {
+        key: key,
+        trend_count: Math.max(Number(current.trend_count) || 0, Number(matchup.trend_count) || 0)
+      }));
+    });
+    return Array.from(byKey.values()).sort(function (a, b) {
+      return String(a.game_time || a.matchup).localeCompare(String(b.game_time || b.matchup));
+    });
+  }
+
+  function selectedMatchup() {
+    return matchupsForSport(state.sport).find(function (matchup) {
+      return matchup.key === state.matchup;
+    }) || null;
+  }
+
   function allCachedTrends() {
     return Object.keys(cache).reduce(function (items, sport) {
       return items.concat(trendsForSport(sport));
@@ -151,6 +213,68 @@
       trend.market,
       trend.recommendation
     ].join(" "));
+  }
+
+  function selectedMatchupMatches(trend) {
+    var matchup = selectedMatchup();
+    if (!matchup) return false;
+    var team = normalize(trend.team_abbr);
+    var opponent = normalize(trend.opponent_abbr);
+    var home = normalize(matchup.home_abbr);
+    var away = normalize(matchup.away_abbr);
+    return normalize(trend.matchup) === normalize(matchup.matchup) &&
+      normalize(trend.home_abbr) === home &&
+      normalize(trend.away_abbr) === away &&
+      [home, away].includes(team) &&
+      [home, away].includes(opponent) &&
+      team !== opponent;
+  }
+
+  function sampleRows(trend) {
+    if (Array.isArray(trend.source_rows) && trend.source_rows.length) return trend.source_rows;
+    if (Array.isArray(trend.included_games) && trend.included_games.length) return trend.included_games;
+    return [];
+  }
+
+  function calculatedRecord(trend) {
+    var rows = sampleRows(trend);
+    if (!rows.length) return null;
+    var wins = 0;
+    var losses = 0;
+    var pushes = 0;
+    rows.forEach(function (row) {
+      var result = rowMarketResult(row) || normalize(row && row.game_result);
+      if (["WIN", "W"].includes(result)) wins += 1;
+      else if (["LOSS", "L"].includes(result)) losses += 1;
+      else if (["PUSH", "P"].includes(result)) pushes += 1;
+    });
+    return { wins: wins, losses: losses, pushes: pushes, sample: rows.length };
+  }
+
+  function recordPctSampleValid(trend) {
+    var sample = Number(trend.sample);
+    if (!Number.isFinite(sample) || sample <= 0) return false;
+    var rowsRecord = calculatedRecord(trend);
+    if (!rowsRecord) return true;
+    if (rowsRecord.sample !== sample) return false;
+    var decided = rowsRecord.wins + rowsRecord.losses;
+    if (!decided) return false;
+    var pct = numberValue(trend.win_percentage || trend.win_pct || trend.dominance);
+    if (trend.win_percentage !== undefined || trend.win_pct !== undefined) {
+      if (pct !== null && pct > 1) pct /= 100;
+      if (pct !== null && Math.abs(pct - (rowsRecord.wins / sample)) > 0.011) return false;
+    } else if (pct !== null) {
+      if (pct > 1) pct /= 100;
+      if (Math.abs(pct - (Math.max(rowsRecord.wins, rowsRecord.losses) / sample)) > 0.011) return false;
+    }
+    var record = recordText(trend);
+    if (record) {
+      var match = String(record).match(/(\d+)\s*-\s*(\d+)(?:\s*-\s*(\d+))?/);
+      if (match && (Number(match[1]) !== rowsRecord.wins || Number(match[2]) !== rowsRecord.losses || Number(match[3] || 0) !== rowsRecord.pushes)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   function marketMatches(trend, marketId) {
@@ -187,7 +311,34 @@
     return Number.isFinite(parsed) ? parsed : null;
   }
 
+  function parsedClaimRecord(trend) {
+    var claim = String(trend && trend.claim || "");
+    var record = claim.match(/\b(\d+)\s*-\s*(\d+)(?:\s*-\s*(\d+))?\b/);
+    if (record) {
+      return {
+        wins: Number(record[1]),
+        losses: Number(record[2]),
+        pushes: Number(record[3] || 0),
+        sample: Number(record[1]) + Number(record[2]) + Number(record[3] || 0)
+      };
+    }
+    var count = claim.match(/\bin\s+(\d+)\s+of\s+(?:their\s+)?(?:last\s+)?(\d+)\b/i);
+    if (count) {
+      return {
+        wins: Number(count[1]),
+        losses: Math.max(0, Number(count[2]) - Number(count[1])),
+        pushes: 0,
+        sample: Number(count[2])
+      };
+    }
+    return null;
+  }
+
   function pctText(trend) {
+    var parsedRecord = parsedClaimRecord(trend);
+    if (parsedRecord && parsedRecord.sample > 0) {
+      return ((parsedRecord.wins / parsedRecord.sample) * 100).toFixed(1).replace(/\.0$/, "") + "%";
+    }
     var dominance = numberValue(trend.win_percentage || trend.win_pct || trend.dominance);
     if (dominance === null) return "";
     if (dominance <= 1) dominance *= 100;
@@ -196,6 +347,8 @@
 
   function recordText(trend) {
     if (trend.record) return trend.record;
+    var parsedRecord = parsedClaimRecord(trend);
+    if (parsedRecord) return parsedRecord.wins + "-" + parsedRecord.losses + (parsedRecord.pushes ? "-" + parsedRecord.pushes : "");
     var wins = numberValue(trend.wins);
     var losses = numberValue(trend.losses);
     var pushes = numberValue(trend.pushes);
@@ -237,19 +390,21 @@
     var minSample = Math.max(0, Number(state.minSample) || 0);
     var minWinPct = Math.max(0, Number(state.minWinPct) || 0);
     var results = trendsForSport(state.sport).filter(function (trend) {
+      if (!state.matchup || !selectedMatchupMatches(trend)) return false;
       if (state.researchMode === "current" && !trendIsCurrent(trend)) return false;
       if (state.researchMode === "archived" && !trendIsArchived(trend)) return false;
       if (!marketMatches(trend, state.market)) return false;
       if (!factorMatches(trend, state.factor)) return false;
+      if (!recordPctSampleValid(trend)) return false;
       if ((Number(trend.sample) || 0) < minSample) return false;
       var pct = numberValue(trend.win_percentage || trend.win_pct || trend.dominance);
       if (pct !== null && pct <= 1) pct *= 100;
       if (minWinPct && (pct === null || pct < minWinPct)) return false;
-      if (state.team !== "all" && normalize(trend.team_abbr) !== normalize(state.team)) return false;
+      if (state.team !== "both" && normalize(trend.team_abbr) !== normalize(state.team)) return false;
       if (state.opponent !== "all" && normalize(trend.opponent_abbr) !== normalize(state.opponent)) return false;
       if (state.location === "home" && normalize(trend.team_abbr) !== normalize(trend.home_abbr)) return false;
       if (state.location === "away" && normalize(trend.team_abbr) !== normalize(trend.away_abbr)) return false;
-      if (state.currentMatchupOnly && !currentMatchupMatches(trend)) return false;
+      if (!currentMatchupMatches(trend)) return false;
       return passesDateFilter(trend);
     });
     return results.sort(sorter);
@@ -319,6 +474,8 @@
     els.sortBy.innerHTML = SORTS.map(function (item) {
       return optionHtml(item.id, item.label, state.sort === item.id);
     }).join("");
+    els.currentMatchupOnly.checked = true;
+    els.currentMatchupOnly.disabled = true;
   }
 
   function renderSportOptions() {
@@ -335,32 +492,75 @@
     }).join("");
   }
 
+  function renderMatchupFilter() {
+    var matchups = matchupsForSport(state.sport);
+    if (!state.sport) {
+      els.matchupFilter.innerHTML = optionHtml("", "Select a sport first", true);
+      els.matchupFilter.disabled = true;
+      els.matchupDataSource.textContent = "Matchups load after sport selection.";
+      return;
+    }
+    if (!matchups.length) {
+      els.matchupFilter.innerHTML = optionHtml("", "No verified slate matchups available", true);
+      els.matchupFilter.disabled = true;
+      els.matchupDataSource.textContent = "No verified Trendspotter slate artifact contains matchup data for " + state.sport + ".";
+      return;
+    }
+    if (!matchups.some(function (matchup) { return matchup.key === state.matchup; })) {
+      state.matchup = "";
+    }
+    els.matchupFilter.disabled = false;
+    els.matchupFilter.innerHTML = optionHtml("", "Choose a current-slate matchup", !state.matchup) + matchups.map(function (matchup) {
+      var label = matchup.matchup + (matchup.game_time ? " / " + matchup.game_time : "") + (matchup.trend_count ? " / " + matchup.trend_count + " verified trend" + (Number(matchup.trend_count) === 1 ? "" : "s") : "");
+      return optionHtml(matchup.key, label, state.matchup === matchup.key);
+    }).join("");
+    var data = cache[state.sport] || {};
+    var source = data.matchup_source || "Verified Trendspotter artifact slate matchups";
+    var date = data.artifact_slate_date ? " Slate date: " + data.artifact_slate_date + "." : "";
+    els.matchupDataSource.textContent = source + "." + date;
+  }
+
   function renderTeamFilters() {
-    var trends = trendsForSport(state.sport);
-    var teams = unique(trends.map(function (trend) { return trend.team_abbr; }));
-    var opponents = unique(trends.map(function (trend) { return trend.opponent_abbr; }));
-    els.teamFilter.innerHTML = optionHtml("all", "Any team", state.team === "all") + teams.map(function (team) {
-      return optionHtml(team, team, state.team === team);
-    }).join("");
-    els.opponentFilter.innerHTML = optionHtml("all", "Any opponent", state.opponent === "all") + opponents.map(function (opponent) {
-      return optionHtml(opponent, opponent, state.opponent === opponent);
-    }).join("");
+    var matchup = selectedMatchup();
+    if (!matchup) {
+      els.teamFilter.innerHTML = optionHtml("both", "Choose matchup first", true);
+      els.teamFilter.disabled = true;
+      els.opponentFilter.innerHTML = optionHtml("all", "Locked after matchup selection", true);
+      els.opponentFilter.disabled = true;
+      return;
+    }
+    var away = matchup.away_abbr;
+    var home = matchup.home_abbr;
+    if (![away, home, "both"].includes(state.team)) state.team = "both";
+    els.teamFilter.disabled = false;
+    els.teamFilter.innerHTML = [
+      optionHtml("both", "Both teams", state.team === "both"),
+      optionHtml(away, away + " (away)", state.team === away),
+      optionHtml(home, home + " (home)", state.team === home)
+    ].join("");
+    els.opponentFilter.disabled = true;
+    els.opponentFilter.innerHTML = optionHtml("all", "Locked to " + away + " and " + home, true);
   }
 
   function updateSummary() {
+    var matchup = selectedMatchup();
+    var teamLabel = state.team === "both" ? "Both teams" : state.team;
     var parts = [
       state.researchMode === "current" ? "Current Slate" : "Archived Research",
       state.sport || "Select sport",
+      matchup ? matchup.matchup : "Select matchup",
+      teamLabel || "Both teams",
       MARKET_TYPES.find(function (item) { return item.id === state.market; }).label,
       FACTORS.find(function (item) { return item.id === state.factor; }).label
     ];
     els.selectionSummary.textContent = parts.join(" / ");
-    els.runButton.disabled = !state.sport;
+    els.runButton.disabled = !state.sport || !state.matchup;
   }
 
   async function loadSport(sport) {
     if (!sport || cache[sport]) {
       renderSportOptions();
+      renderMatchupFilter();
       renderTeamFilters();
       updateSummary();
       return;
@@ -373,24 +573,64 @@
         cache: "no-store"
       });
       cache[sport] = await response.json().catch(function () { return { status: "missing", trends: [] }; });
+      if (!matchupsForSport(sport).length || cache[sport].is_archived === true) {
+        await loadSlateMatchups(sport);
+      }
     } catch (error) {
       cache[sport] = { status: "error", trends: [], unavailable_data: [error.message] };
     } finally {
       els.loadingMessage.classList.add("is-hidden");
       renderSportOptions();
+      renderMatchupFilter();
       renderTeamFilters();
       updateSummary();
       if (state.generated) renderResults();
     }
   }
 
+  async function loadSlateMatchups(sport) {
+    var boardKey = SPORT_BOARD_KEYS[sport];
+    if (!boardKey) return;
+    try {
+      var response = await fetch(apiBase() + "/games/board/" + encodeURIComponent(boardKey), {
+        headers: { "Accept": "application/json" },
+        cache: "no-store"
+      });
+      var data = await response.json().catch(function () { return {}; });
+      var games = Array.isArray(data.games) ? data.games : Array.isArray(data) ? data : [];
+      cache[sport] = cache[sport] || {};
+      cache[sport].live_matchups = games.filter(function (game) {
+        return game && game.away_team && game.home_team;
+      }).map(function (game) {
+        return {
+          sport: sport,
+          matchup: game.away_team + " @ " + game.home_team,
+          away_abbr: game.away_team,
+          home_abbr: game.home_team,
+          slate_date: String(game.commence_time || "").slice(0, 10),
+          game_time: game.commence_time || "",
+          source: data.diagnostics && data.diagnostics.source ? data.diagnostics.source : "market_board_schedule",
+          trend_count: 0
+        };
+      });
+      if (cache[sport].live_matchups.length) {
+        cache[sport].matchup_source = "Live schedule board matchups from the TrustMyRecord games board; verified trend results still require matching Trendspotter artifact rows";
+      }
+    } catch (error) {
+      cache[sport] = cache[sport] || {};
+      cache[sport].live_matchup_error = error.message;
+    }
+  }
+
   function selectSport(sport) {
     state.sport = sport;
-    state.team = "all";
+    state.matchup = "";
+    state.team = "both";
     state.opponent = "all";
     state.generated = false;
     clearResults();
     renderSportOptions();
+    renderMatchupFilter();
     renderTeamFilters();
     updateSummary();
     loadSport(sport);
@@ -645,8 +885,10 @@
   }
 
   function queryText() {
+    var matchup = selectedMatchup();
     return [
       "sport=" + state.sport,
+      "matchup=" + (matchup ? matchup.matchup : "none"),
       "market=" + MARKET_TYPES.find(function (item) { return item.id === state.market; }).label,
       "factor=" + FACTORS.find(function (item) { return item.id === state.factor; }).label,
       "mode=" + (state.researchMode === "current" ? "Current Slate" : "Archived Research"),
@@ -655,7 +897,7 @@
       "team=" + state.team,
       "opponent=" + state.opponent,
       "location=" + state.location,
-      "current_matchup_only=" + (state.currentMatchupOnly ? "yes" : "no"),
+      "selected_matchup_only=yes",
       "date_start=" + (state.dateStart || "any"),
       "date_end=" + (state.dateEnd || "any")
     ].join(" | ");
@@ -721,11 +963,16 @@
   function renderResults() {
     state.generated = true;
     var results = filteredResults();
-    els.resultsTitle.textContent = (state.sport || "Verified") + " trend results";
+    var matchup = selectedMatchup();
+    els.resultsTitle.textContent = matchup ? matchup.matchup + " trend results" : (state.sport || "Verified") + " trend results";
     els.resultCount.textContent = results.length + " trend" + (results.length === 1 ? "" : "s");
     els.resultsSection.classList.remove("is-hidden");
     if (!state.sport) {
       els.resultsList.innerHTML = "<div class=\"ts-no-results\">Select a sport before generating trends.</div>";
+      return;
+    }
+    if (!state.matchup) {
+      els.resultsList.innerHTML = "<div class=\"ts-no-results\">Select a matchup before generating trends.</div>";
       return;
     }
     if (!results.length) {
@@ -791,6 +1038,14 @@
   function onFilterChange(event) {
     var target = event.target;
     if (target === els.marketType) state.market = target.value;
+    if (target === els.matchupFilter) {
+      state.matchup = target.value;
+      state.team = "both";
+      state.opponent = "all";
+      state.generated = false;
+      clearResults();
+      renderTeamFilters();
+    }
     if (target === els.trendFactor) state.factor = target.value;
     if (target === els.minSample) state.minSample = target.value;
     if (target === els.minWinPct) state.minWinPct = target.value;
@@ -799,9 +1054,13 @@
     if (target === els.teamFilter) state.team = target.value;
     if (target === els.opponentFilter) state.opponent = target.value;
     if (target === els.locationFilter) state.location = target.value;
-    if (target === els.researchMode) state.researchMode = target.value;
+    if (target === els.researchMode) {
+      state.researchMode = target.value;
+      renderMatchupFilter();
+      renderTeamFilters();
+    }
     if (target === els.sortBy) state.sort = target.value;
-    if (target === els.currentMatchupOnly) state.currentMatchupOnly = target.checked;
+    if (target === els.currentMatchupOnly) state.currentMatchupOnly = true;
     updateSummary();
     if (state.generated) renderResults();
   }
@@ -829,7 +1088,7 @@
     }
   });
 
-  [els.marketType, els.trendFactor, els.minSample, els.minWinPct, els.dateStart, els.dateEnd, els.teamFilter, els.opponentFilter, els.locationFilter, els.researchMode, els.sortBy, els.currentMatchupOnly].forEach(function (el) {
+  [els.matchupFilter, els.marketType, els.trendFactor, els.minSample, els.minWinPct, els.dateStart, els.dateEnd, els.teamFilter, els.opponentFilter, els.locationFilter, els.researchMode, els.sortBy, els.currentMatchupOnly].forEach(function (el) {
     el.addEventListener("change", onFilterChange);
     el.addEventListener("input", onFilterChange);
   });
@@ -837,6 +1096,7 @@
 
   renderSelects();
   renderSportOptions();
+  renderMatchupFilter();
   renderTeamFilters();
   updateSummary();
 })();
