@@ -168,14 +168,27 @@
     function getCurrentSport() {
         try {
             var s = (window.TMR && window.TMR.selectedSport) ? String(window.TMR.selectedSport) : null;
-            if (s) return s.toLowerCase();
+            if (s) return normalizeSport(s);
         } catch (e) {}
         // Fallback: read the active sport tab
         try {
             var active = document.querySelector('.sportsbook-sport-tab.is-active, .sportsbook-rail-board.is-active');
-            if (active && active.dataset && active.dataset.sport) return active.dataset.sport.toLowerCase();
+            if (active && active.dataset && active.dataset.sport) return normalizeSport(active.dataset.sport);
         } catch (e) {}
         return 'nba';
+    }
+
+    function normalizeSport(sport) {
+        var key = String(sport || '').toLowerCase().trim();
+        if (key === 'basketball_nba') return 'nba';
+        if (key === 'baseball_mlb') return 'mlb';
+        if (key === 'icehockey_nhl') return 'nhl';
+        if (key === 'americanfootball_nfl') return 'nfl';
+        if (key.indexOf('nba') !== -1) return 'nba';
+        if (key.indexOf('mlb') !== -1 || key.indexOf('baseball') !== -1) return 'mlb';
+        if (key.indexOf('nhl') !== -1 || key.indexOf('hockey') !== -1) return 'nhl';
+        if (key.indexOf('nfl') !== -1 || key.indexOf('football') !== -1) return 'nfl';
+        return key;
     }
 
     function lookupLogoUrl(name, sport) {
@@ -200,8 +213,7 @@
     function enhanceTeam(teamEl, sport) {
         if (!teamEl || teamEl.dataset.tmrLogoEnhanced) return;
         var nameEl = teamEl.querySelector('b');
-        var tagEl = teamEl.querySelector('.sb-team-tag');
-        if (!nameEl || !tagEl) return;
+        if (!nameEl) return;
         var name = (nameEl.textContent || '').trim();
         if (!name) return;
         var url = lookupLogoUrl(name, sport);
@@ -210,6 +222,33 @@
             teamEl.dataset.tmrLogoEnhanced = 'no-match';
             return;
         }
+
+        var logoEl = teamEl.querySelector('.team-logo');
+        if (logoEl) {
+            var existingImg = logoEl.querySelector('.team-logo__img');
+            if (existingImg && existingImg.getAttribute('src') === url) {
+                logoEl.classList.remove('team-logo--fallback');
+                teamEl.dataset.tmrLogoEnhanced = '1';
+                return;
+            }
+            var logoImg = existingImg || document.createElement('img');
+            logoImg.className = 'team-logo__img';
+            logoImg.src = url;
+            logoImg.alt = '';
+            logoImg.loading = 'lazy';
+            logoImg.decoding = 'async';
+            logoImg.onerror = function () {
+                logoEl.classList.add('team-logo--fallback');
+                logoImg.remove();
+            };
+            logoEl.classList.remove('team-logo--fallback');
+            if (!existingImg) logoEl.insertBefore(logoImg, logoEl.firstChild);
+            teamEl.dataset.tmrLogoEnhanced = '1';
+            return;
+        }
+
+        var tagEl = teamEl.querySelector('.sb-team-tag');
+        if (!tagEl) return;
         var img = document.createElement('img');
         img.className = 'tmr-team-logo';
         img.src = url;
