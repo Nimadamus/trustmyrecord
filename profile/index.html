@@ -5086,7 +5086,8 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const pathProfileMatch = (window.location.pathname || '').match(/\/profile\/([^/?#]+)/i);
-    let profileUsername = (urlParams.get('user') || urlParams.get('username') || (pathProfileMatch ? decodeURIComponent(pathProfileMatch[1]) : '') || '').trim() || null;
+    const requestedProfileLookup = (urlParams.get('user') || urlParams.get('username') || (pathProfileMatch ? decodeURIComponent(pathProfileMatch[1]) : '') || '').trim();
+    let profileUsername = normalizeProfileLookup(requestedProfileLookup) || null;
     const profileView = (urlParams.get('view') || '').trim().toLowerCase();
     const SPORT_QUERY_ALIASES = {
         mlb: 'baseball_mlb',
@@ -5713,7 +5714,70 @@
     function setProfileHeaderFallback(message) {
         const el = document.getElementById('profileHeader');
         if (!el) return;
-        el.innerHTML = '<div class="error-message"><h3>Profile unavailable</h3><p>' + escapeHtml(message || 'This profile could not be loaded right now.') + '</p></div>';
+        const myProfileUrl = buildMyProfileUrl();
+        el.innerHTML = '<div class="error-message"><h3>Profile not found.</h3><p>' + escapeHtml(message || 'This profile could not be loaded right now.') + '</p>' +
+            (myProfileUrl ? '<a class="btn btn-primary" href="' + escapeHtml(myProfileUrl) + '" style="margin-top:14px;">Go to my profile</a>' : '') +
+            '</div>';
+    }
+
+    function normalizeProfileLookup(value) {
+        return String(value == null ? '' : value).trim().replace(/^@+/, '').trim();
+    }
+
+    function profileLookupKey(value) {
+        return normalizeProfileLookup(value).toLowerCase();
+    }
+
+    function profileLookupSlug(value) {
+        return profileLookupKey(value).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+
+    function profileLookupMatchesUser(value, user) {
+        const key = profileLookupKey(value);
+        if (!key || !user) return false;
+        return [user.username, user.displayName, user.display_name, user.handle, user.slug].some(function(candidate) {
+            return profileLookupKey(candidate) === key || profileLookupSlug(candidate) === key;
+        });
+    }
+
+    function buildMyProfileUrl() {
+        const user = currentUser || (typeof auth !== 'undefined' && auth.getCurrentUser ? auth.getCurrentUser() : null);
+        const username = normalizeProfileLookup(user && (user.username || user.handle || user.displayName || user.display_name));
+        return username ? '/profile/?user=' + encodeURIComponent(username) : '';
+    }
+
+    function profileLookupCandidates() {
+        const candidates = [];
+        const add = function(value) {
+            const cleaned = normalizeProfileLookup(value);
+            if (!cleaned) return;
+            if (!candidates.some(function(existing) { return profileLookupKey(existing) === profileLookupKey(cleaned); })) {
+                candidates.push(cleaned);
+            }
+        };
+        add(requestedProfileLookup);
+        add(profileUsername);
+        if (profileUsername) add(profileUsername.toLowerCase());
+        if (currentUser && profileLookupMatchesUser(requestedProfileLookup || profileUsername, currentUser)) {
+            add(currentUser.username || currentUser.handle || currentUser.displayName || currentUser.display_name);
+        }
+        return candidates;
+    }
+
+    async function fetchProfileWithFallbacks() {
+        let lastError = null;
+        const candidates = profileLookupCandidates();
+        for (const candidate of candidates) {
+            try {
+                const data = await withTimeout(api.getUserProfile(candidate), 9000, 'Profile request');
+                profileUsername = normalizeProfileLookup((data && data.user && data.user.username) || (data && data.username) || candidate);
+                return data;
+            } catch (error) {
+                lastError = error;
+                console.warn('[Profile] Profile lookup failed for "' + candidate + '":', error && error.message ? error.message : error);
+            }
+        }
+        throw lastError || new Error('Profile not found');
     }
 
     function setAdvancedMetricsEmpty(message) {
@@ -5796,7 +5860,7 @@
                 throw new Error('Profile service is unavailable.');
             }
 
-            const data = await withTimeout(api.getUserProfile(profileUsername), 9000, 'Profile request');
+            const data = await fetchProfileWithFallbacks();
             profileData = data.user || data;
             if (!profileData) {
                 throw new Error('User not found.');
@@ -5825,7 +5889,7 @@
         } catch (error) {
             console.error('[Profile] Profile load failed:', error);
             document.querySelectorAll('.summary-bar, .picks-section, .analytics-section').forEach(el => el.style.display = 'none');
-            setProfileHeaderFallback('User "' + profileUsername + '" not found or could not be loaded.');
+            setProfileHeaderFallback('We could not find a profile for "' + (requestedProfileLookup || profileUsername || 'this user') + '".');
         }
     }
 
