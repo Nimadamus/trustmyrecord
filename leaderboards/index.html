@@ -798,15 +798,15 @@
                             <div class="field">
                                 <label for="sortFilter">Sort by</label>
                                 <select id="sortFilter">
-                                    <option value="roi">ROI</option>
                                     <option value="units">Net units</option>
+                                    <option value="roi">ROI</option>
                                     <option value="winRate">Win rate</option>
                                     <option value="totalPicks">Pick count</option>
                                     <option value="streak">Current streak</option>
                                 </select>
                             </div>
                         </div>
-                        <p class="filters-foot">Sorts that need data the platform does not yet expose for a given capper keep that capper visible and show a placeholder cell instead of fabricating a number.</p>
+                        <p class="filters-foot">Official handicapper rankings require 20 graded picks, recent graded activity, and positive net units. Sorts that need data the platform does not yet expose for a given capper keep that capper visible and show a placeholder cell instead of fabricating a number.</p>
                     </div>
 
                     <div id="capperPreviewCard" class="preview-card" style="display:none;">
@@ -1226,7 +1226,7 @@
                 const statClass = function(value) { return value > 0 ? 'pos' : value < 0 ? 'neg' : 'neutral'; };
                 const streakLabel = entry.streak > 0 ? 'W' + entry.streak : entry.streak < 0 ? 'L' + Math.abs(entry.streak) : '0';
                 return '<tr>'
-                    + '<td><span class="rank ' + rankClass + '">#' + (index + 1) + '</span></td>'
+                    + '<td><span class="rank ' + rankClass + '">#' + (entry.raw.rank || index + 1) + '</span></td>'
                     + '<td><div class="person">' + avatarHtml(entry.displayName, entry.avatarUrl)
                     +     '<div class="person-meta">'
                     +       '<a class="person-name" href="/profile/?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">' + escapeHtml(entry.displayName) + '</a>'
@@ -1417,12 +1417,12 @@
         function resetHandicapperFilters() {
             document.getElementById('capperSearch').value = '';
             document.getElementById('sportFilter').value = 'all';
-            document.getElementById('sortFilter').value = 'roi';
+            document.getElementById('sortFilter').value = 'units';
             applyHandicapperFilters();
         }
 
         async function fetchHandicapperLeaderboard() {
-            const endpoint = '/users/leaderboard?sortBy=roi&limit=100&minPicks=1';
+            const endpoint = '/users/leaderboard?sortBy=net_units&limit=100';
             const baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.api && CONFIG.api.baseUrl)
                 ? CONFIG.api.baseUrl
                 : 'https://trustmyrecord-api.onrender.com/api';
@@ -1448,7 +1448,7 @@
                     : [];
 
                 fullLeaderboard = rawEntries.map(normalizeEntry).filter(function(entry) {
-                    return entry.username && entry.totalPicks >= 1;
+                    return entry.username && entry.totalPicks >= 20 && entry.units > 0;
                 });
 
                 setQuickStats(fullLeaderboard);
