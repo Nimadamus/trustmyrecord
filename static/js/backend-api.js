@@ -1,4 +1,4 @@
-/**
+﻿/**
  * TrustMyRecord Backend API Client
  * Connects frontend to Node.js/Express backend
  */
@@ -439,7 +439,7 @@ class TrustMyRecordAPI {
         const normalizedOptions = typeof options === 'string'
             ? { ...legacyOptions, sortBy: options }
             : (options || {});
-        const { sport, sortBy = 'roi', limit = 50 } = normalizedOptions;
+        const { sport, sortBy = 'net_units', limit = 50 } = normalizedOptions;
         let url = `/users/leaderboard?sortBy=${sortBy}&limit=${limit}`;
         if (sport) url += `&sport=${sport}`;
         return this.request(url);
