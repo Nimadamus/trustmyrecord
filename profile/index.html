@@ -5344,6 +5344,49 @@
         };
     }
 
+    function getProfileLedgerStats() {
+        return profileData && profileData.__ledgerStats ? profileData.__ledgerStats : null;
+    }
+
+    function getProfileDeclaredGradedCount(profile) {
+        if (!profile) return 0;
+        const candidates = [profile.graded_picks, profile.total_picks, profile.totalPicks];
+        for (const value of candidates) {
+            const n = Number(value);
+            if (Number.isFinite(n) && n >= 0) return n;
+        }
+        return 0;
+    }
+
+    function applyVerifiedLedgerStatsToProfile(picks) {
+        if (!profileData) return null;
+        const stats = computeCoreLedgerStatsFromPicks(picks);
+        profileData.__ledgerStats = stats;
+        profileData.graded_picks = stats.graded;
+        profileData.total_picks = stats.graded;
+        profileData.wins = stats.wins;
+        profileData.losses = stats.losses;
+        profileData.pushes = stats.pushes;
+        profileData.win_rate = stats.decisions ? stats.winRate : null;
+        profileData.net_units = stats.netUnits;
+        profileData.roi = stats.graded ? stats.roi : null;
+        return stats;
+    }
+
+    function renderProfileStatsLoadError(message) {
+        const statusText = message || 'Verified pick stats could not be loaded. Refresh or try again shortly.';
+        if (profileData) profileData.__statsLoadError = statusText;
+        try { renderProfileHeader(profileData || {}); } catch (e) {}
+        const statusEl = document.getElementById('profileAdvancedMetricsStatus');
+        if (statusEl) statusEl.textContent = 'Verified stats unavailable';
+        const countEl = document.getElementById('picksCount');
+        if (countEl) countEl.textContent = statusText;
+        const wrapper = document.getElementById('picksTableWrapper');
+        if (wrapper) wrapper.style.display = 'none';
+        const tableBody = document.getElementById('picksTableBody');
+        if (tableBody) tableBody.innerHTML = '';
+    }
+
     function renderCoreHandicapperStatsFromPicks(picks) {
         const stats = computeCoreLedgerStatsFromPicks(picks);
         const fmtSigned = function(value, suffix, decimals) {
@@ -5366,8 +5409,8 @@
             });
         };
         const winRateSigned = stats.decisions ? stats.winRate - 50 : 0;
-        setBoth('tmrxRecord', stats.record, winRateSigned);
-        setBoth('tmrxWinRate', stats.winRate.toFixed(1) + '%', winRateSigned);
+        setBoth('tmrxRecord', stats.graded ? stats.record : '0-0-0', winRateSigned);
+        setBoth('tmrxWinRate', stats.decisions ? stats.winRate.toFixed(1) + '%' : 'N/A', stats.decisions ? winRateSigned : null);
         setBoth('tmrxNetUnits', fmtSigned(stats.netUnits, 'u', 2), stats.netUnits);
         setBoth('tmrxRoi', fmtSigned(stats.roi, '%', 2), stats.roi);
         setBoth('tmrxAvgOdds', fmtAmerican(stats.avgOdds));
@@ -5893,8 +5936,8 @@
             renderProfileHeader(profileData);
             loadProfileSecondaryData();
             loadAllPicks().catch(function(error) {
-                console.warn('[Profile] Secondary pick history unavailable:', error);
-                renderEmptyProfileHistory();
+                console.warn('[Profile] Verified pick history unavailable:', error);
+                renderProfileStatsLoadError('Verified pick stats could not be loaded from the public ledger, so record metrics are hidden instead of showing zeroes.');
             });
             if (profileData._fromSearchFallback) {
                 setAdvancedMetricsEmpty('Metrics unavailable');
@@ -7106,6 +7149,7 @@
     // ======================== LOAD ALL PICKS ========================
     async function loadAllPicks() {
         let picks = [];
+        let pickRequestSucceeded = false;
 
         if (api && typeof api.getPicks === 'function') {
             let hasMore = true, offset = 0;
@@ -7113,11 +7157,15 @@
                 try {
                     const data = await withTimeout(api.getPicks({ userId: profileUserId, limit: 100, offset }), 7000, 'Pick history request');
                     const batch = data.picks || [];
+                    pickRequestSucceeded = true;
                     picks = picks.concat(batch);
                     hasMore = data.pagination ? data.pagination.hasMore : (batch.length === 100);
                     offset += batch.length;
                     if (batch.length === 0) hasMore = false;
-                } catch (e) { hasMore = false; }
+                } catch (e) {
+                    if (!pickRequestSucceeded) console.warn('[Profile] Pick lookup by user id failed:', e && e.message ? e.message : e);
+                    hasMore = false;
+                }
             }
         } else {
             console.error('[Profile] API unavailable for picks loading.');
@@ -7129,6 +7177,7 @@
                 try {
                     const data = await withTimeout(api.request('/picks?username=' + encodeURIComponent(profileData.username) + '&limit=100&offset=' + usernameOffset), 7000, 'Pick history request');
                     const batch = data && Array.isArray(data.picks) ? data.picks : [];
+                    pickRequestSucceeded = true;
                     picks = picks.concat(batch);
                     hasMoreByUsername = data && data.pagination ? data.pagination.hasMore : (batch.length === 100);
                     usernameOffset += batch.length;
@@ -7172,10 +7221,17 @@
         picks.sort((a, b) => new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0));
         allLoadedPicks = picks;
 
+        const declaredGraded = getProfileDeclaredGradedCount(profileData);
+        if (!pickRequestSucceeded && declaredGraded > 0) {
+            throw new Error('Ledger request failed for a profile with ' + declaredGraded + ' declared graded picks.');
+        }
+
         // Hydrate the PickMonitor-style filterable table on the Picks tab.
         try { initPmPicksTable(picks); } catch (e) { console.warn('[pm-picks] init failed', e); }
         try { initCapperMonitor(picks); } catch (e) { console.warn('[capper-monitor] init failed', e); }
 
+        applyVerifiedLedgerStatsToProfile(picks);
+        try { renderProfileHeader(profileData); } catch (e) { console.warn('[Profile] Ledger-backed header refresh failed:', e); }
         const stats = computeUnifiedStats(picks);
         renderCoreHandicapperStatsFromPicks(picks);
         renderSummaryBar(stats);
@@ -7793,20 +7849,27 @@
         const name = p.display_name || p.username;
         const letter = (p.username || '?').charAt(0).toUpperCase();
         const rankText = currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked';
-        const gradedProfilePicks = Number(p.graded_picks || p.total_picks || p.totalPicks || 0);
+        const ledgerStats = getProfileLedgerStats();
+        const statsLoadError = p.__statsLoadError || '';
+        const profileHasRecordFields = [p.wins, p.losses, p.pushes].some(function(value) {
+            return value !== undefined && value !== null && value !== '';
+        });
+        const gradedProfilePicks = ledgerStats ? ledgerStats.graded : getProfileDeclaredGradedCount(p);
         const pendingProfilePicks = Number(p.pending_picks || p.pending || 0);
         const totalPicks = Number(p.total_locked_picks || p.locked_picks || (gradedProfilePicks + pendingProfilePicks) || 0);
         const verifiedText = String(p.verification_status || '').toLowerCase() === 'verified' ? 'Verified' : 'Unverified';
-        const winsValue = Number(p.wins || 0);
-        const lossesValue = Number(p.losses || 0);
-        const pushesValue = Number(p.pushes || 0);
-        const recordText = winsValue + '-' + lossesValue + '-' + pushesValue;
+        const winsValue = ledgerStats ? ledgerStats.wins : Number(p.wins || 0);
+        const lossesValue = ledgerStats ? ledgerStats.losses : Number(p.losses || 0);
+        const pushesValue = ledgerStats ? ledgerStats.pushes : Number(p.pushes || 0);
+        const canShowRecordStats = !!ledgerStats || profileHasRecordFields || gradedProfilePicks === 0;
+        const recordText = canShowRecordStats ? (winsValue + '-' + lossesValue + '-' + pushesValue) : (statsLoadError ? 'Unavailable' : 'Loading...');
         const winLossSample = winsValue + lossesValue;
-        const derivedWinRate = Number(p.win_rate || (winLossSample > 0
+        const derivedWinRate = ledgerStats ? ledgerStats.winRate : Number(p.win_rate || (winLossSample > 0
             ? (Number(p.wins || 0) / (Number(p.wins || 0) + Number(p.losses || 0))) * 100
             : 0));
-        const roiValue = Number(p.roi || 0);
-        const netUnitsValue = Number(p.net_units || 0);
+        const roiValue = ledgerStats ? ledgerStats.roi : Number(p.roi || 0);
+        const netUnitsValue = ledgerStats ? ledgerStats.netUnits : Number(p.net_units || 0);
+        const canShowFinancialStats = !!ledgerStats || profileHasRecordFields || gradedProfilePicks === 0;
         const signedClass = (value) => value > 0 ? ' is-positive' : value < 0 ? ' is-negative' : ' is-neutral';
         const fmtSigned = (value, suffix, decimals) => (value > 0 ? '+' : '') + value.toFixed(decimals == null ? 1 : decimals) + (suffix || '');
         const showEmptyLedgerNote = isOwnProfile && totalPicks === 0 && !p.__recoveredFromLocal;
@@ -7857,9 +7920,9 @@
         const rail = '<div class="profile-rail" aria-label="Pick monitor stats">' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Graded Picks</span><span class="profile-rail-value">' + gradedProfilePicks + '</span></div>' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Record</span><span class="profile-rail-value' + signedClass(winsValue - lossesValue) + '">' + recordText + '</span></div>' +
-            '<div class="profile-rail-card"><span class="profile-rail-label">Win Rate</span><span class="profile-rail-value' + (winLossSample > 0 ? signedClass(derivedWinRate - 50) : ' is-neutral') + '">' + (winLossSample > 0 ? derivedWinRate.toFixed(1) + '%' : 'N/A') + '</span></div>' +
-            '<div class="profile-rail-card"><span class="profile-rail-label">Units</span><span class="profile-rail-value' + signedClass(netUnitsValue) + '">' + fmtSigned(netUnitsValue, 'u', 2) + '</span></div>' +
-            '<div class="profile-rail-card"><span class="profile-rail-label">ROI</span><span class="profile-rail-value' + (gradedProfilePicks > 0 ? signedClass(roiValue) : ' is-neutral') + '">' + (gradedProfilePicks > 0 ? fmtSigned(roiValue, '%') : 'N/A') + '</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">Win Rate</span><span class="profile-rail-value' + (winLossSample > 0 ? signedClass(derivedWinRate - 50) : ' is-neutral') + '">' + (canShowRecordStats ? (winLossSample > 0 ? derivedWinRate.toFixed(1) + '%' : 'N/A') : (statsLoadError ? 'Unavailable' : 'Loading...')) + '</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">Units</span><span class="profile-rail-value' + (canShowFinancialStats ? signedClass(netUnitsValue) : ' is-neutral') + '">' + (canShowFinancialStats ? fmtSigned(netUnitsValue, 'u', 2) : (statsLoadError ? 'Unavailable' : 'Loading...')) + '</span></div>' +
+            '<div class="profile-rail-card"><span class="profile-rail-label">ROI</span><span class="profile-rail-value' + (canShowFinancialStats && gradedProfilePicks > 0 ? signedClass(roiValue) : ' is-neutral') + '">' + (canShowFinancialStats ? (gradedProfilePicks > 0 ? fmtSigned(roiValue, '%') : 'N/A') : (statsLoadError ? 'Unavailable' : 'Loading...')) + '</span></div>' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Rank</span><span class="profile-rail-value">' + rankText + '</span></div>' +
             '</div>';
         const overview = '<div class="profile-overview-grid">' +
