@@ -96,6 +96,11 @@
         return COLOR_NEUTRAL;
     }
 
+    function qualifiedCapperFromStatic(user) {
+        const picks = user && user.picks ? user.picks : {};
+        return Number(picks.total || 0) >= 20 && Number(picks.units || 0) > 0;
+    }
+
     function renderRow(rank, cols) {
         return '<div class="lb-row">' +
             '<div class="lb-col-rank">' + rankBadge(rank) + '</div>' +
@@ -188,7 +193,7 @@
 
         if (!leaderboardData) return;
 
-        const sorted = leaderboardData.users.slice().sort(function(a, b) {
+        const sorted = leaderboardData.users.filter(qualifiedCapperFromStatic).slice().sort(function(a, b) {
             return (b.picks.units - a.picks.units) ||
                 ((b.picks.roi || 0) - (a.picks.roi || 0)) ||
                 (b.picks.winRate - a.picks.winRate) ||
@@ -220,7 +225,7 @@
         });
 
         html += '</div></div>';
-        body.innerHTML = html;
+        body.innerHTML = sorted.length ? html : emptyState();
     }
 
     // 3. Trivia Champions
@@ -392,7 +397,7 @@
 
         if (!leaderboardData) return;
 
-        const sorted = leaderboardData.users.slice().sort(function(a, b) {
+        const sorted = leaderboardData.users.filter(qualifiedCapperFromStatic).slice().sort(function(a, b) {
             return b.picks.units - a.picks.units;
         });
 
@@ -418,7 +423,7 @@
         });
 
         html += '</div></div>';
-        body.innerHTML = html;
+        body.innerHTML = sorted.length ? html : emptyState();
     }
 
     function emptyState() {
