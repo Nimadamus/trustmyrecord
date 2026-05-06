@@ -31,18 +31,6 @@
         WTA: 'tennis_wta'
     };
 
-    const ESPN_SCOREBOARD_PATHS = {
-        baseball_mlb: 'baseball/mlb',
-        basketball_nba: 'basketball/nba',
-        basketball_wnba: 'basketball/wnba',
-        icehockey_nhl: 'hockey/nhl',
-        americanfootball_nfl: 'football/nfl',
-        americanfootball_ncaaf: 'football/college-football',
-        basketball_ncaab: 'basketball/mens-college-basketball',
-        soccer_epl: 'soccer/eng.1',
-        soccer_usa_mls: 'soccer/usa.1'
-    };
-
     const STATUS_MAP = {
         win: 'won',
         won: 'won',
@@ -171,12 +159,62 @@
         return MARKET_LABELS[marketType] || String(marketType || 'Pick').replace(/_/g, ' ');
     }
 
+    function roundStakeUnits(value) {
+        const n = Number(value);
+        return Number.isFinite(n) ? Math.round(n * 100) / 100 : 0;
+    }
+
+    function calculateStakeValues(mode, amount, odds) {
+        const stakeMode = String(mode || 'risk').toLowerCase() === 'to_win' || String(mode || '').toLowerCase() === 'towin' ? 'to_win' : 'risk';
+        const units = Number(amount);
+        const price = Number(odds);
+        if (!Number.isFinite(units) || units <= 0 || !Number.isFinite(price) || price === 0) {
+            return { risk_units: 0, win_units: 0 };
+        }
+        if (stakeMode === 'to_win') {
+            return {
+                risk_units: roundStakeUnits(price < 0 ? units * Math.abs(price) / 100 : units * 100 / price),
+                win_units: roundStakeUnits(units)
+            };
+        }
+        return {
+            risk_units: roundStakeUnits(units),
+            win_units: roundStakeUnits(price < 0 ? units * 100 / Math.abs(price) : units * price / 100)
+        };
+    }
+
+    function formatStakeDisplay(pick) {
+        pick = pick || {};
+        const odds = Number(pick.odds_snapshot != null ? pick.odds_snapshot : (pick.odds != null ? pick.odds : pick.price));
+        let risk = Number(pick.risk_units != null ? pick.risk_units : pick.riskUnits);
+        let win = Number(pick.win_units != null ? pick.win_units : (pick.to_win_units != null ? pick.to_win_units : pick.toWinUnits));
+        if ((!Number.isFinite(risk) || risk <= 0 || !Number.isFinite(win) || win <= 0) && Number.isFinite(odds)) {
+            const values = calculateStakeValues(pick.stake_mode || pick.units_mode || pick.unitsMode || 'risk', pick.units != null ? pick.units : 1, odds);
+            risk = values.risk_units;
+            win = values.win_units;
+        }
+        if (!Number.isFinite(risk) || risk <= 0 || !Number.isFinite(win) || win <= 0) return '';
+        const fmt = function(n) {
+            n = roundStakeUnits(n);
+            return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+        };
+        return 'Risk ' + fmt(risk) + ' units to win ' + fmt(win) + ' units';
+    }
+
+    window.TMR = window.TMR || {};
+    if (typeof window.TMR.calculateStakeValues !== 'function') window.TMR.calculateStakeValues = calculateStakeValues;
+    if (typeof window.TMR.formatStakeDisplay !== 'function') window.TMR.formatStakeDisplay = formatStakeDisplay;
+
     function normalizePick(pick) {
         return Object.assign({}, pick, {
             status: normalizeStatus(pick.status, pick.result),
             odds_snapshot: pick.odds_snapshot != null ? pick.odds_snapshot : pick.odds,
             line_snapshot: pick.line_snapshot != null ? pick.line_snapshot : pick.line,
-            units: pick.units != null ? parseFloat(pick.units) : 1
+            units: pick.units != null ? parseFloat(pick.units) : 1,
+            stake_mode: pick.stake_mode || pick.units_mode || 'risk',
+            risk_units: pick.risk_units != null ? parseFloat(pick.risk_units) : null,
+            to_win_units: pick.to_win_units != null ? parseFloat(pick.to_win_units) : (pick.win_units != null ? parseFloat(pick.win_units) : null),
+            win_units: pick.win_units != null ? parseFloat(pick.win_units) : (pick.to_win_units != null ? parseFloat(pick.to_win_units) : null)
         });
     }
 
@@ -600,146 +638,6 @@
         } catch (error) {}
     }
 
-    function formatEspnDate(daysOffset) {
-        const date = new Date();
-        date.setDate(date.getDate() + (daysOffset || 0));
-        const yyyy = date.getFullYear();
-        const mm = String(date.getMonth() + 1).padStart(2, '0');
-        const dd = String(date.getDate()).padStart(2, '0');
-        return '' + yyyy + mm + dd;
-    }
-
-    function parseAmericanOdds(value) {
-        if (value == null || value === '') return null;
-        const parsed = Number(String(value).replace(/[^0-9+\-.]/g, ''));
-        if (!Number.isFinite(parsed) || parsed === 0) return null;
-        return parsed;
-    }
-
-    function parseEspnBookmakers(oddsArray, homeTeam, awayTeam) {
-        if (!Array.isArray(oddsArray)) return [];
-        return oddsArray.map(function(odds) {
-            const provider = odds && odds.provider ? odds.provider : {};
-            const title = provider.displayName || provider.name || 'ESPN';
-            const key = String(title).toLowerCase().replace(/[^a-z0-9]+/g, '') || 'espn';
-            const markets = [];
-
-            const homeMl = parseAmericanOdds(odds && odds.moneyline && odds.moneyline.home && odds.moneyline.home.close && odds.moneyline.home.close.odds);
-            const awayMl = parseAmericanOdds(odds && odds.moneyline && odds.moneyline.away && odds.moneyline.away.close && odds.moneyline.away.close.odds);
-            if (homeMl != null && awayMl != null) {
-                markets.push({
-                    key: 'h2h',
-                    outcomes: [
-                        { name: homeTeam, price: homeMl },
-                        { name: awayTeam, price: awayMl }
-                    ]
-                });
-            }
-
-            const homeSpreadLine = odds && odds.pointSpread && odds.pointSpread.home && odds.pointSpread.home.close ? Number(odds.pointSpread.home.close.line) : null;
-            const awaySpreadLine = odds && odds.pointSpread && odds.pointSpread.away && odds.pointSpread.away.close ? Number(odds.pointSpread.away.close.line) : null;
-            const homeSpreadOdds = parseAmericanOdds(odds && odds.pointSpread && odds.pointSpread.home && odds.pointSpread.home.close && odds.pointSpread.home.close.odds);
-            const awaySpreadOdds = parseAmericanOdds(odds && odds.pointSpread && odds.pointSpread.away && odds.pointSpread.away.close && odds.pointSpread.away.close.odds);
-            if (Number.isFinite(homeSpreadLine) && Number.isFinite(awaySpreadLine) && homeSpreadOdds != null && awaySpreadOdds != null) {
-                markets.push({
-                    key: 'spreads',
-                    outcomes: [
-                        { name: homeTeam, point: homeSpreadLine, price: homeSpreadOdds },
-                        { name: awayTeam, point: awaySpreadLine, price: awaySpreadOdds }
-                    ]
-                });
-            }
-
-            let totalLine = null;
-            if (odds && odds.total && odds.total.over && odds.total.over.close) {
-                totalLine = Number(String(odds.total.over.close.line || '').replace(/[ou]/ig, ''));
-            }
-            if (!Number.isFinite(totalLine) && odds && odds.overUnder != null) {
-                totalLine = Number(odds.overUnder);
-            }
-            const overOdds = parseAmericanOdds(odds && odds.total && odds.total.over && odds.total.over.close && odds.total.over.close.odds);
-            const underOdds = parseAmericanOdds(odds && odds.total && odds.total.under && odds.total.under.close && odds.total.under.close.odds);
-            if (Number.isFinite(totalLine) && totalLine > 0 && overOdds != null && underOdds != null) {
-                markets.push({
-                    key: 'totals',
-                    outcomes: [
-                        { name: 'Over', point: totalLine, price: overOdds },
-                        { name: 'Under', point: totalLine, price: underOdds }
-                    ]
-                });
-            }
-
-            return markets.length ? { key: key, title: title, markets: markets } : null;
-        }).filter(Boolean);
-    }
-
-    async function fetchEspnScoreboardBoard(sportKey) {
-        const espnPath = ESPN_SCOREBOARD_PATHS[sportKey];
-        if (!espnPath) throw new Error('No ESPN fallback for ' + sportKey);
-
-        for (let day = 0; day <= 2; day += 1) {
-            const url = 'https://site.api.espn.com/apis/site/v2/sports/' + espnPath + '/scoreboard?dates=' + formatEspnDate(day);
-            const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
-            if (!response.ok) throw new Error('ESPN returned ' + response.status);
-            const payload = await response.json();
-            const games = ((payload && payload.events) || []).map(function(event) {
-                const comp = event && event.competitions && event.competitions[0];
-                const competitors = comp && Array.isArray(comp.competitors) ? comp.competitors : [];
-                const homeComp = competitors.find(function(c) { return c.homeAway === 'home'; });
-                const awayComp = competitors.find(function(c) { return c.homeAway === 'away'; });
-                const homeTeam = homeComp && homeComp.team && homeComp.team.displayName;
-                const awayTeam = awayComp && awayComp.team && awayComp.team.displayName;
-                const start = Date.parse((event && event.date) || (comp && comp.date) || '');
-                const status = (comp && comp.status && comp.status.type) || (event && event.status && event.status.type) || {};
-                const stateText = String(status.state || '').toLowerCase();
-                if (!homeTeam || !awayTeam || status.completed || stateText === 'in' || stateText === 'post' || !Number.isFinite(start) || start <= Date.now()) {
-                    return null;
-                }
-                const pickLogo = function(team) {
-                    if (!team) return '';
-                    if (team.logo) return team.logo;
-                    if (Array.isArray(team.logos) && team.logos[0] && team.logos[0].href) return team.logos[0].href;
-                    return '';
-                };
-                return {
-                    id: String((event && event.id) || ''),
-                    sport_key: sportKey,
-                    sport_title: sportKey === 'baseball_mlb' ? 'MLB' : sportKey,
-                    commence_time: new Date(start).toISOString(),
-                    home_team: homeTeam,
-                    away_team: awayTeam,
-                    home_logo: pickLogo(homeComp && homeComp.team),
-                    away_logo: pickLogo(awayComp && awayComp.team),
-                    home_abbr: homeComp && homeComp.team && homeComp.team.abbreviation,
-                    away_abbr: awayComp && awayComp.team && awayComp.team.abbreviation,
-                    bookmakers: parseEspnBookmakers((comp && comp.odds) || [], homeTeam, awayTeam),
-                    updated_at: new Date().toISOString()
-                };
-            }).filter(Boolean);
-
-            const boardGames = buildFallbackBoardGames(games, sportKey);
-            if (boardGames.length) {
-                return {
-                    sport_key: sportKey,
-                    games: boardGames,
-                    summary: {
-                        severity: 'warning',
-                        message: 'Showing ESPN scoreboard sportsbook lines while the advanced board feed refreshes.'
-                    }
-                };
-            }
-        }
-
-        return {
-            sport_key: sportKey,
-            games: [],
-            summary: {
-                severity: 'warning',
-                message: 'No ESPN sportsbook lines are posted yet.'
-            }
-        };
-    }
-
     async function fetchMarketBoardFast(sportKey, forceRefresh) {
         const boardFetchStartedAt = nowMs();
         if (!sportKey) throw new Error('Missing sport key');
@@ -961,7 +859,7 @@
             return sum + (pick.status === 'pending' ? 0 : (parseFloat(pick.result_units) || 0));
         }, 0);
         const risked = normalized.reduce(function(sum, pick) {
-            return sum + (pick.status === 'pending' ? 0 : (parseFloat(pick.units) || 0));
+            return sum + (pick.status === 'pending' ? 0 : (parseFloat(pick.risk_units) || parseFloat(pick.units) || 0));
         }, 0);
 
         return {
@@ -1150,7 +1048,6 @@
             '.tmr-team-row{display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:10px;color:#f8fafc;}',
             '.tmr-team-side{display:inline-flex;align-items:center;justify-content:center;min-width:54px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:10px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#aeb8c6;}',
             '.tmr-team-abbr{width:30px;height:30px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);font-size:11px;font-weight:900;letter-spacing:0.08em;color:#dbe7ef;flex-shrink:0;}',
-            '.tmr-team-abbr img{width:26px;height:26px;object-fit:contain;display:block;}',
             '.tmr-team-name{font-size:clamp(18px,2vw,22px);font-weight:800;letter-spacing:-0.03em;line-height:1.05;}',
             '.tmr-matchup-divider{display:flex;align-items:center;gap:10px;padding-left:66px;color:#6f7a89;font-size:10px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;}',
             '.tmr-matchup-divider::before,.tmr-matchup-divider::after{content:"";height:1px;flex:1;background:rgba(255,255,255,0.08);}',
@@ -1933,9 +1830,9 @@
                 '<div>' +
                 '<div class="tmr-market-topline"><span class="tmr-market-league">Game ' + boardNumber + ' • ' + escapeHtml(state.selectedSport || game.sport_title || 'Board') + '</span><span class="tmr-market-status">' + escapeHtml(formatStartsIn(game.commence_time)) + '</span></div>' +
                 '<div class="tmr-market-matchup">' +
-                '<div class="tmr-team-row"><span class="tmr-team-side">Away</span>' + renderTeamLogoBadge(game, 'away') + '<span class="tmr-team-name">' + escapeHtml(game.away_team) + '</span></div>' +
+                '<div class="tmr-team-row"><span class="tmr-team-side">Away</span><span class="tmr-team-abbr">' + escapeHtml(teamBadge(game.away_team)) + '</span><span class="tmr-team-name">' + escapeHtml(game.away_team) + '</span></div>' +
                 '<div class="tmr-matchup-divider">@</div>' +
-                '<div class="tmr-team-row"><span class="tmr-team-side">Home</span>' + renderTeamLogoBadge(game, 'home') + '<span class="tmr-team-name">' + escapeHtml(game.home_team) + '</span></div>' +
+                '<div class="tmr-team-row"><span class="tmr-team-side">Home</span><span class="tmr-team-abbr">' + escapeHtml(teamBadge(game.home_team)) + '</span><span class="tmr-team-name">' + escapeHtml(game.home_team) + '</span></div>' +
                 '</div>' +
                 '<div class="tmr-market-meta">' +
                 '<span class="tmr-market-chip accent">' + escapeHtml(new Date(game.commence_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + '</span>' +
@@ -1987,70 +1884,6 @@
             .map(function(part) { return part.charAt(0); })
             .join('')
             .toUpperCase() || '--';
-    }
-
-    function mlbLogoSlug(teamName) {
-        const normalized = String(teamName || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-        const slugs = {
-            'arizona diamondbacks': 'ari',
-            'athletics': 'ath',
-            'atlanta braves': 'atl',
-            'baltimore orioles': 'bal',
-            'boston red sox': 'bos',
-            'chicago cubs': 'chc',
-            'chicago white sox': 'chw',
-            'cincinnati reds': 'cin',
-            'cleveland guardians': 'cle',
-            'colorado rockies': 'col',
-            'detroit tigers': 'det',
-            'houston astros': 'hou',
-            'kansas city royals': 'kc',
-            'los angeles angels': 'laa',
-            'los angeles dodgers': 'lad',
-            'miami marlins': 'mia',
-            'milwaukee brewers': 'mil',
-            'minnesota twins': 'min',
-            'new york mets': 'nym',
-            'new york yankees': 'nyy',
-            'philadelphia phillies': 'phi',
-            'pittsburgh pirates': 'pit',
-            'san diego padres': 'sd',
-            'san francisco giants': 'sf',
-            'seattle mariners': 'sea',
-            'st louis cardinals': 'stl',
-            'tampa bay rays': 'tb',
-            'texas rangers': 'tex',
-            'toronto blue jays': 'tor',
-            'washington nationals': 'wsh'
-        };
-        return slugs[normalized] || '';
-    }
-
-    function getTeamLogoUrl(game, side) {
-        const prefix = side === 'home' ? 'home' : 'away';
-        const direct = game && (
-            game[prefix + '_logo'] ||
-            game[prefix + '_team_logo'] ||
-            game[prefix + '_logo_url'] ||
-            game[prefix + '_image']
-        );
-        if (direct) return direct;
-
-        const sportKey = String(game && game.sport_key || '').toLowerCase();
-        if (sportKey !== 'baseball_mlb') return '';
-
-        const abbr = String(game && (game[prefix + '_abbr'] || game[prefix + '_abbreviation']) || '').toLowerCase();
-        const slug = abbr || mlbLogoSlug(game && game[prefix + '_team']);
-        return slug ? 'https://a.espncdn.com/i/teamlogos/mlb/500/scoreboard/' + slug + '.png' : '';
-    }
-
-    function renderTeamLogoBadge(game, side) {
-        const teamName = game && game[(side === 'home' ? 'home' : 'away') + '_team'];
-        const logoUrl = getTeamLogoUrl(game, side);
-        if (logoUrl) {
-            return '<span class="tmr-team-abbr"><img src="' + escapeHtml(logoUrl) + '" alt="' + escapeHtml(teamName || 'Team') + ' logo" loading="lazy" decoding="async" onerror="this.replaceWith(document.createTextNode(\'' + escapeHtml(teamBadge(teamName)) + '\'))"></span>';
-        }
-        return '<span class="tmr-team-abbr">' + escapeHtml(teamBadge(teamName)) + '</span>';
     }
 
     function getOptionTag(option, game) {
@@ -2158,36 +1991,6 @@
         }
 
         try {
-            let espnFastFallback = null;
-            let espnFastFallbackRendered = false;
-            if (sportKey === 'baseball_mlb' && !cachedBoard && !staleBoard) {
-                espnFastFallback = fetchEspnScoreboardBoard(sportKey).catch(function(error) {
-                    recordBoardEvent('board_espn_fast_fallback_failed', {
-                        sport: sport,
-                        sport_key: sportKey,
-                        message: error && error.message ? error.message : String(error || 'Unknown error')
-                    });
-                    return null;
-                });
-                window.setTimeout(function() {
-                    if (requestId !== latestBoardRequestId || state.selectedSport !== sport) return;
-                    if (state.lastBoardRenderSport === sport && state.lastBoardRenderAt > Date.now() - 3000) return;
-                    espnFastFallback.then(function(fallback) {
-                        if (!fallback || !fallback.games || !fallback.games.length) return;
-                        if (requestId !== latestBoardRequestId || state.selectedSport !== sport) return;
-                        if (state.lastBoardRenderSport === sport && state.lastBoardRenderAt > Date.now() - 3000) return;
-                        espnFastFallbackRendered = true;
-                        renderBoardIfCurrent(requestId, sport, badge, fallback);
-                        recordBoardEvent('board_espn_fast_fallback_rendered', {
-                            sport: sport,
-                            sport_key: sportKey,
-                            game_count: fallback.games.length,
-                            elapsed_ms: elapsedMs(selectionStartedAt)
-                        });
-                    });
-                }, 1200);
-            }
-
             let response = normalizeBoardResponse(await fetchMarketBoardFast(sportKey, !cachedBoard), sport);
             if ((!response.games || response.games.length === 0) && !cachedBoard) {
                 recordBoardEvent('board_empty_initial', {
@@ -2213,22 +2016,6 @@
                     });
                 }
             }
-            if ((!response.games || response.games.length === 0) && sportKey === 'baseball_mlb') {
-                const espnResponse = espnFastFallback ? await espnFastFallback : await fetchEspnScoreboardBoard(sportKey);
-                if (espnResponse && espnResponse.games && espnResponse.games.length) {
-                    response = espnResponse;
-                    recordBoardEvent('board_empty_recovered_from_espn', {
-                        sport: sport,
-                        sport_key: sportKey,
-                        game_count: espnResponse.games.length
-                    });
-                }
-            }
-            if (espnFastFallbackRendered && response && response.games && response.games.length && response.summary && response.summary.message && response.summary.message.indexOf('ESPN scoreboard') !== -1) {
-                window.clearTimeout(slowMessageTimer);
-                window.clearTimeout(loadingTimeoutTimer);
-                return;
-            }
             renderBoardIfCurrent(requestId, sport, badge, response);
             recordBoardEvent('board_selection_complete', {
                 sport: sport,
@@ -2247,19 +2034,6 @@
                 message: error && error.message ? error.message : String(error || 'Unknown error')
             });
             try {
-                if (sportKey === 'baseball_mlb') {
-                    const espnResponse = await fetchEspnScoreboardBoard(sportKey);
-                    if (espnResponse && espnResponse.games && espnResponse.games.length) {
-                        if (requestId !== latestBoardRequestId || state.selectedSport !== sport) return;
-                        renderBoardIfCurrent(requestId, sport, badge, espnResponse);
-                        recordBoardEvent('board_primary_failed_recovered_from_espn', {
-                            sport: sport,
-                            sport_key: sportKey,
-                            game_count: espnResponse.games.length
-                        });
-                        return;
-                    }
-                }
                 let fallbackGames = null;
                 try {
                     fallbackGames = await directApiRequest('/games/odds/' + encodeURIComponent(sportKey), { timeoutMs: 8000 });
@@ -2622,11 +2396,10 @@
         const oddsValue = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
         const lineValue = lineInput && lineInput.value !== '' ? parseFloat(lineInput.value) : null;
         const unitsRaw = unitsInput ? parseFloat(unitsInput.value || '1') : 1;
-        // Frontend hard-cap: units must be a whole number in [1, 5]. Backend
-        // enforces the same range, but clamping here gives the user
-        // immediate feedback and prevents a wasted API round trip on a 6u
-        // typo.
-        const unitsValue = Math.max(1, Math.min(5, Math.round(Number.isFinite(unitsRaw) ? unitsRaw : 1)));
+        // Frontend hard-cap: stake amount must be in [0.5, 5], rounded to
+        // half units. The amount means risk units in Risk mode and desired
+        // win units in To Win mode.
+        const unitsValue = Math.max(0.5, Math.min(5, Math.round((Number.isFinite(unitsRaw) ? unitsRaw : 1) * 2) / 2));
         if (unitsInput && String(unitsValue) !== String(unitsInput.value)) {
             unitsInput.value = String(unitsValue);
         }
@@ -2664,11 +2437,14 @@
                 external_game_id: option.game_id,
                 sport_key: option.sport_key,
                 market_type: option.market_type,
+                bet_type: option.market_type === 'team_totals' ? 'team_total' : option.market_type,
                 selection: submittedSelection,
                 selection_label: option.selection_label || submittedSelection,
                 line_snapshot: lineValue,
                 odds_snapshot: oddsValue,
                 units: unitsValue,
+                stake_mode: (window.TMR && (window.TMR.selectedUnitsMode === 'to_win' || window.TMR.selectedUnitsMode === 'towin')) ? 'to_win' : 'risk',
+                units_mode: (window.TMR && (window.TMR.selectedUnitsMode === 'to_win' || window.TMR.selectedUnitsMode === 'towin')) ? 'to_win' : 'risk',
                 book_title: bookInput ? bookInput.value.trim() : option.book_title,
                 book_key: option.book_key,
                 market_key: option.market_key,
@@ -2678,6 +2454,7 @@
                 game_snapshot: buildSubmittedGameSnapshot(option),
                 reasoning: reasoningInput ? reasoningInput.value.trim() : ''
             };
+            Object.assign(payload, getTeamTotalSubmitMeta(option));
             finalPayload = payload;
             try { console.info('[TMR][lockInPick] final payload', payload); } catch (_) {}
             const response = await api.createPick(payload);
@@ -2750,6 +2527,27 @@
         return visible || team;
     }
 
+    function getTeamTotalSubmitMeta(option) {
+        if (!option || option.market_type !== 'team_totals') return {};
+        const visible = String(option.selection_label || option.selection || '').trim();
+        const parsed = visible.match(/^(.+?)\s+(Over|Under)\b/i);
+        const team = parsed ? parsed[1].trim() : String(option.selection || '').replace(/\s+\b(over|under)\b.*$/i, '').trim();
+        const side = parsed ? parsed[2].toLowerCase() : (/\bunder\b/i.test(visible) ? 'under' : (/\bover\b/i.test(visible) ? 'over' : ''));
+        const game = option.game || {};
+        const home = game.home_team || option.home_team || '';
+        const away = game.away_team || option.away_team || '';
+        const norm = function (value) { return String(value || '').trim().toLowerCase(); };
+        let opponent = '';
+        if (team && (norm(team) === norm(home) || norm(home).indexOf(norm(team)) !== -1 || norm(team).indexOf(norm(home)) !== -1)) opponent = away;
+        else if (team && (norm(team) === norm(away) || norm(away).indexOf(norm(team)) !== -1 || norm(team).indexOf(norm(away)) !== -1)) opponent = home;
+        return {
+            team_name: team || '',
+            opponent_name: opponent || '',
+            side: side || '',
+            league: option.sport_key || ''
+        };
+    }
+
     function buildSubmittedGameSnapshot(option) {
         const game = option && option.game ? option.game : {};
         return {
@@ -2764,83 +2562,6 @@
         };
     }
 
-    function trimPickLineValue(value) {
-        if (value == null || value === '') return '';
-        const n = Number(value);
-        let text = Number.isFinite(n) ? String(n) : String(value).trim();
-        if (text.indexOf('.') !== -1) text = text.replace(/0+$/, '').replace(/\.$/, '');
-        return text;
-    }
-
-    function formatPickLineValue(value, signed) {
-        const text = trimPickLineValue(value);
-        if (!text) return '';
-        const n = Number(text);
-        if (signed && Number.isFinite(n) && n > 0) return '+' + text;
-        return text;
-    }
-
-    function stripTrailingLine(text) {
-        return String(text || '').trim().replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '').trim();
-    }
-
-    function hasTrailingMl(text) {
-        return /\bML\b$/i.test(String(text || '').trim());
-    }
-
-    function lineAlreadyDisplayed(text, line, signed) {
-        const formatted = formatPickLineValue(line, signed);
-        if (!formatted) return true;
-        const escaped = formatted.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        return new RegExp('(?:^|\\s)' + escaped + '$').test(String(text || '').trim());
-    }
-
-    function isMoneylineMarket(market) {
-        return market === 'h2h' || market === 'moneyline' || market.indexOf('moneyline') !== -1 || /(^|_)h2h$/.test(market);
-    }
-
-    function isSpreadMarket(market) {
-        return market.indexOf('spread') !== -1 || market.indexOf('run_line') !== -1 || market.indexOf('puck_line') !== -1 || market.indexOf('runline') !== -1 || market.indexOf('puckline') !== -1;
-    }
-
-    function isTotalMarket(market) {
-        return market.indexOf('total') !== -1 || market.indexOf('over_under') !== -1;
-    }
-
-    function formatPickDisplayLabel(pick) {
-        if (window.TMR && typeof window.TMR.formatPickDisplay === 'function') {
-            return window.TMR.formatPickDisplay(pick).pickLabel;
-        }
-        pick = pick || {};
-        const market = String(pick.market_type || pick.market || pick.bet_type || pick.betType || '').toLowerCase();
-        const rawSelection = String(pick.selection_label || pick.selection || pick.pick || pick.team || 'Pick').trim();
-        const line = pick.line_snapshot != null ? pick.line_snapshot : (pick.line != null ? pick.line : pick.point);
-        const base = rawSelection || 'Pick';
-
-        if (isMoneylineMarket(market)) {
-            return hasTrailingMl(base) ? base : base + ' ML';
-        }
-
-        if (isSpreadMarket(market)) {
-            if (lineAlreadyDisplayed(base, line, true)) return base;
-            return stripTrailingLine(base) + ' ' + formatPickLineValue(line, true);
-        }
-
-        if (isTotalMarket(market)) {
-            const totalSide = /\bover\b/i.test(base) ? '' : (/\bunder\b/i.test(base) ? '' : (/\bover\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Over' : (/\bunder\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Under' : '')));
-            if (lineAlreadyDisplayed(base, line, false)) return base;
-            const lineText = formatPickLineValue(line, false);
-            return lineText ? stripTrailingLine(base) + totalSide + ' ' + lineText : base + totalSide;
-        }
-
-        if (line == null || line === '' || lineAlreadyDisplayed(base, line, false)) return base;
-        return stripTrailingLine(base) + ' ' + formatPickLineValue(line, false);
-    }
-
-    window.TMR = window.TMR || {};
-    window.TMR.formatPickDisplayLabel = formatPickDisplayLabel;
-    window.TMR.formatPickLabel = formatPickDisplayLabel;
-
     // Clear inline error whenever the user picks a new market.
     document.addEventListener('click', function (ev) {
         const btn = ev.target && ev.target.closest && ev.target.closest('.odds-btn, .market-card, [data-tt-direct-click], [data-bet-type]');
@@ -2850,8 +2571,9 @@
     function renderPickCard(pick) {
         const status = normalizeStatus(pick.status, pick.result);
         const statusColor = status === 'won' ? '#00c853' : status === 'lost' ? '#ff5252' : status === 'push' ? '#94a3b8' : '#f59e0b';
-        const recordText = formatPickDisplayLabel(pick);
+        const recordText = (window.TMR && typeof window.TMR.formatPickDisplay === 'function') ? window.TMR.formatPickDisplay(pick) : (pick.selection + (pick.line_snapshot != null ? ' ' + (function(l){if(l==null||l==='')return '';var n=Number(l);if(!Number.isFinite(n))return '';var s=String(n);if(s.indexOf('.')!==-1)s=s.replace(/0+$/,'').replace(/\.$/,'');return s;})(pick.line_snapshot) : ''));
         const marketText = getMarketLabel(pick.market_type);
+        const stakeText = formatStakeDisplay(pick);
         const dateText = new Date(pick.locked_at || pick.created_at || Date.now()).toLocaleString('en-US', {
             month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
         });
@@ -2861,6 +2583,7 @@
             '<div style="font-size:18px;font-weight:700;color:#fff;">' + escapeHtml(recordText) + '</div>' +
             '<div style="font-size:13px;color:#94a3b8;margin-top:4px;">' + escapeHtml((pick.away_team || '') + ' @ ' + (pick.home_team || '')) + '</div>' +
             '<div style="font-size:12px;color:#6c7380;margin-top:6px;">' + escapeHtml(marketText) + ' | ' + escapeHtml(dateText) + '</div>' +
+            (stakeText ? '<div style="font-size:12px;color:#dbeafe;margin-top:6px;font-weight:700;">' + escapeHtml(stakeText) + '</div>' : '') +
             '</div>' +
             '<div style="text-align:right;">' +
             '<div style="font-size:16px;font-weight:700;color:#fff;">' + (pick.odds_snapshot > 0 ? '+' : '') + escapeHtml(pick.odds_snapshot) + '</div>' +
@@ -3005,7 +2728,7 @@
                 losses: 0,
                 pushes: 0,
                 units: 0,
-                label: formatPickDisplayLabel(pick),
+                label: (window.TMR && typeof window.TMR.formatPickDisplay === 'function') ? window.TMR.formatPickDisplay(pick) : (pick.selection + (pick.line_snapshot != null ? ' ' + (function(l){if(l==null||l==='')return '';var n=Number(l);if(!Number.isFinite(n))return '';var s=String(n);if(s.indexOf('.')!==-1)s=s.replace(/0+$/,'').replace(/\.$/,'');return s;})(pick.line_snapshot) : '')),
                 matchup: (pick.away_team || '') + ' @ ' + (pick.home_team || ''),
                 market: getMarketLabel(pick.market_type)
             };
@@ -3181,18 +2904,17 @@
                 clearPickSlipError();
                 var board = state.currentBoard || [];
                 var tmrGames = (window.TMR && Array.isArray(window.TMR.currentGames)) ? window.TMR.currentGames : [];
-                // Team-totals legacy renderer (sportsbook/index.html
-                // _ttRenderRows) overwrites window.TMR.currentGames with the
-                // TT board but leaves state.currentBoard pointing at the
-                // previous Full-Game board. Index-based lookup against
-                // state.currentBoard then resolves to the WRONG game, so the
-                // team-name in the selection ("New York Mets Under 4.5")
+                // Team-totals legacy renderer (sportsbook/index.html _ttRenderRows)
+                // overwrites window.TMR.currentGames with the TT board but
+                // leaves state.currentBoard pointing at the previous Full-Game
+                // board. Index-based lookup against state.currentBoard then
+                // resolves to the wrong game, so the team-name in the selection
                 // fails backend validation against the wrong game's teams.
-                // Resolve by matching the click's awayTeam/homeTeam args
-                // against the candidate game; prefer the actively-rendered
-                // board (window.TMR.currentGames). Full-Game clicks never
-                // touch this bridge (they go through tmrSelectOption
-                // directly), so this only affects team-totals.
+                // Prefer the actively-rendered board and require home/away args
+                // to match; otherwise fall back to the other source.
+                // other source. Full-Game clicks never touch this bridge
+                // (they go through tmrSelectOption directly), so this only
+                // affects team-totals.
                 var matchesTeams = function (g) {
                     if (!g) return false;
                     var ht = String(g.home_team || '').trim().toLowerCase();
@@ -3202,14 +2924,15 @@
                     if (!argHome && !argAway) return true;
                     return (ht === argHome && at === argAway);
                 };
-                var game = null;
-                if (matchesTeams(tmrGames[gameIndex])) game = tmrGames[gameIndex];
-                else if (matchesTeams(board[gameIndex])) game = board[gameIndex];
+                var pickGame = null;
+                if (matchesTeams(tmrGames[gameIndex])) pickGame = tmrGames[gameIndex];
+                else if (matchesTeams(board[gameIndex])) pickGame = board[gameIndex];
                 else {
                     var foundInTmr = tmrGames.find(matchesTeams) || null;
                     var foundInBoard = board.find(matchesTeams) || null;
-                    game = foundInTmr || foundInBoard || tmrGames[gameIndex] || board[gameIndex] || null;
+                    pickGame = foundInTmr || foundInBoard || tmrGames[gameIndex] || board[gameIndex] || null;
                 }
+                var game = pickGame;
                 if (!game) {
                     var sportKeyMap = (window.TMR && window.TMR.sportKeyMap) || {};
                     var sportDisplay = (window.TMR && window.TMR.selectedSport) || state.selectedSport || '';
@@ -3313,6 +3036,66 @@
                         marketType = 'f5_h2h'; groupLabel = 'First 5';
                         selection = teamRaw;
                         selectionLabel = teamRaw + ' F5 ML';
+                        break;
+                    case 'firsthalfml':
+                        marketType = 'first_half_h2h'; groupLabel = 'First Half';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' 1H ML';
+                        break;
+                    case 'firsthalfspread':
+                        marketType = 'first_half_spreads'; groupLabel = 'First Half';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' 1H' + (lineDispSigned ? ' ' + lineDispSigned : '');
+                        break;
+                    case 'firsthalfover':
+                        marketType = 'first_half_totals'; groupLabel = 'First Half';
+                        selection = 'Over';
+                        selectionLabel = '1H Over' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
+                    case 'firsthalfunder':
+                        marketType = 'first_half_totals'; groupLabel = 'First Half';
+                        selection = 'Under';
+                        selectionLabel = '1H Under' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
+                    case 'secondhalfml':
+                        marketType = 'second_half_h2h'; groupLabel = 'Second Half';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' 2H ML';
+                        break;
+                    case 'secondhalfspread':
+                        marketType = 'second_half_spreads'; groupLabel = 'Second Half';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' 2H' + (lineDispSigned ? ' ' + lineDispSigned : '');
+                        break;
+                    case 'secondhalfover':
+                        marketType = 'second_half_totals'; groupLabel = 'Second Half';
+                        selection = 'Over';
+                        selectionLabel = '2H Over' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
+                    case 'secondhalfunder':
+                        marketType = 'second_half_totals'; groupLabel = 'Second Half';
+                        selection = 'Under';
+                        selectionLabel = '2H Under' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
+                    case 'period1ml':
+                        marketType = 'period_1_h2h'; groupLabel = '1st Period';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' 1P ML';
+                        break;
+                    case 'period1spread':
+                        marketType = 'period_1_spreads'; groupLabel = '1st Period';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' 1P' + (lineDispSigned ? ' ' + lineDispSigned : '');
+                        break;
+                    case 'period1over':
+                        marketType = 'period_1_totals'; groupLabel = '1st Period';
+                        selection = 'Over';
+                        selectionLabel = '1P Over' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
+                    case 'period1under':
+                        marketType = 'period_1_totals'; groupLabel = '1st Period';
+                        selection = 'Under';
+                        selectionLabel = '1P Under' + (lineDisp ? ' ' + lineDisp : '');
                         break;
                 }
 
