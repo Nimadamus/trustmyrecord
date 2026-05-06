@@ -5,24 +5,25 @@
     // every nav target should hit its directory route directly to avoid a
     // pointless redirect hop on every click.
     const sportsbookPicksHref = "/sportsbook/";
-    // Polls + Trivia live under Arena now (Apr 30, 2026). They're surfaced as
-    // sub-modes on the Arena landing alongside handicapping contests and
-    // PS5 sports gaming, so the top nav stays on a single line.
     const routes = [
-        ["/", "Home"],
         [sportsbookPicksHref, "Make Picks"],
         ["/trustmyrecord-tools/", "Tools"],
-        ["/feed/", "Feed"],
         ["/handicappers/", "Find Handicappers"],
+        ["/marketplace/", "Sell Your Picks"]
+    ];
+    const communityRoutes = [
+        ["/feed/", "Feed"],
         ["/arena/", "Arena"],
         ["/forum/", "Forums"],
-        ["/marketplace/", "Sell Your Picks"]
+        ["/polls/", "Polls"],
+        ["/trivia/", "Trivia"]
     ];
     const visibleRoutes = routes;
 
     // Pages that should highlight Arena in the top nav even though they
     // have their own URL.
-    const ARENA_GROUP = new Set(["arena.html", "challenges.html", "polls.html", "trivia.html"]);
+    const COMMUNITY_GROUP = new Set(["feed.html", "arena.html", "forum.html", "polls.html", "trivia.html", "hangout.html"]);
+    const ARENA_GROUP = new Set(["arena.html", "challenges.html"]);
 
     const routeMeta = {
         "sportsbook.html": ["Make Picks", "Lock picks before games start. Build a public, permanent record."],
@@ -285,7 +286,7 @@
             </button>
             <div class="tmr-global-nav__panel">
                 <div class="tmr-global-nav__links">
-                    ${visibleRoutes.slice(1).filter(([href]) => href !== "profile.html").map(([href, label]) => {
+                    ${visibleRoutes.filter(([href]) => href !== "profile.html").map(([href, label]) => {
                         const hrefPath = href.split("#")[0].toLowerCase();
                         const segs = hrefPath.split("/").filter(Boolean);
                         const hrefFile = segs.length
@@ -293,12 +294,28 @@
                                 ? segs[segs.length - 1]
                                 : segs[segs.length - 1] + ".html")
                             : "index.html";
-                        const isArenaLink = hrefFile === "arena.html";
                         const active = currentFile === hrefFile ||
-                            (isArenaLink && ARENA_GROUP.has(currentFile)) ||
                             (hrefFile === "trustmyrecord-tools.html" && location.pathname.indexOf("/trustmyrecord-tools/") === 0);
                         return `<a href="${href}"${active ? ' aria-current="page"' : ""}>${label}</a>`;
                     }).join("")}
+                </div>
+                <div class="tmr-community-menu${COMMUNITY_GROUP.has(currentFile) ? " is-current" : ""}">
+                    <button class="tmr-community-menu__trigger" type="button" aria-expanded="false" aria-haspopup="true">
+                        Community
+                    </button>
+                    <div class="tmr-community-menu__panel" role="menu" aria-label="Community links">
+                        ${communityRoutes.map(([href, label]) => {
+                            const hrefPath = href.split("#")[0].toLowerCase();
+                            const segs = hrefPath.split("/").filter(Boolean);
+                            const hrefFile = segs.length
+                                ? (segs[segs.length - 1].endsWith(".html")
+                                    ? segs[segs.length - 1]
+                                    : segs[segs.length - 1] + ".html")
+                                : "index.html";
+                            const active = currentFile === hrefFile || (hrefFile === "arena.html" && ARENA_GROUP.has(currentFile));
+                            return `<a href="${href}" role="menuitem"${active ? ' aria-current="page"' : ""}>${label}</a>`;
+                        }).join("")}
+                    </div>
                 </div>
                 <div class="tmr-support-menu">
                     <button class="tmr-support-menu__trigger" type="button" aria-expanded="false" aria-haspopup="true">
@@ -317,6 +334,8 @@
 
     const actions = nav.querySelector(".tmr-global-nav__actions");
     const toggleButton = nav.querySelector(".tmr-global-nav__toggle");
+    const communityMenu = nav.querySelector(".tmr-community-menu");
+    const communityTrigger = nav.querySelector(".tmr-community-menu__trigger");
     const supportMenu = nav.querySelector(".tmr-support-menu");
     const supportTrigger = nav.querySelector(".tmr-support-menu__trigger");
 
@@ -434,6 +453,21 @@
             event.preventDefault();
             const isOpen = supportMenu && supportMenu.classList.toggle("is-open");
             supportToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            if (isOpen && communityMenu && communityTrigger) {
+                communityMenu.classList.remove("is-open");
+                communityTrigger.setAttribute("aria-expanded", "false");
+            }
+            return;
+        }
+        const communityToggle = event.target.closest(".tmr-community-menu__trigger");
+        if (communityToggle) {
+            event.preventDefault();
+            const isOpen = communityMenu && communityMenu.classList.toggle("is-open");
+            communityToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            if (isOpen && supportMenu && supportTrigger) {
+                supportMenu.classList.remove("is-open");
+                supportTrigger.setAttribute("aria-expanded", "false");
+            }
             return;
         }
         const logoutButton = event.target.closest("[data-tmr-logout]");
@@ -448,9 +482,13 @@
             openSearchOverlay();
             return;
         }
-        const navLink = event.target.closest(".tmr-global-nav__links a, .tmr-global-nav__actions a, .tmr-support-menu__panel a");
+        const navLink = event.target.closest(".tmr-global-nav__links a, .tmr-global-nav__actions a, .tmr-community-menu__panel a, .tmr-support-menu__panel a");
         if (navLink) {
             setNavOpen(false);
+            if (communityMenu && communityTrigger) {
+                communityMenu.classList.remove("is-open");
+                communityTrigger.setAttribute("aria-expanded", "false");
+            }
             if (supportMenu && supportTrigger) {
                 supportMenu.classList.remove("is-open");
                 supportTrigger.setAttribute("aria-expanded", "false");
@@ -459,10 +497,14 @@
     });
 
     document.addEventListener("click", (event) => {
-        if (!supportMenu || !supportTrigger) return;
-        if (supportMenu.contains(event.target)) return;
-        supportMenu.classList.remove("is-open");
-        supportTrigger.setAttribute("aria-expanded", "false");
+        if (communityMenu && communityTrigger && !communityMenu.contains(event.target)) {
+            communityMenu.classList.remove("is-open");
+            communityTrigger.setAttribute("aria-expanded", "false");
+        }
+        if (supportMenu && supportTrigger && !supportMenu.contains(event.target)) {
+            supportMenu.classList.remove("is-open");
+            supportTrigger.setAttribute("aria-expanded", "false");
+        }
     });
 
     // Lightweight sitewide search overlay (Cmd+K / Ctrl+K to open)
