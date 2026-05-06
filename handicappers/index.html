@@ -671,10 +671,10 @@
             <div>
                 <p class="hm-kicker">Member Discovery</p>
                 <h1>Handicappers</h1>
-                <p>Discover production members with real locked-pick activity, compare verified records, follow cappers, and open public pick histories.</p>
+                <p>Discover members with real locked-pick activity, compare verified records, follow cappers, and open public pick histories.</p>
             </div>
             <div class="hm-counts" aria-label="Directory summary">
-                <div class="hm-count"><strong id="hmTotalMembers">0</strong><span>Total Members</span><small>Production accounts only</small></div>
+                <div class="hm-count"><strong id="hmTotalMembers">0</strong><span>Total Members</span><small>Public members only</small></div>
                 <div class="hm-count"><strong id="hmActiveMembers">0</strong><span>Active Pick Makers</span><small>Members with real picks</small></div>
                 <div class="hm-count"><strong id="hmTotalPicks">0</strong><span>Total Verified Picks</span><small>Graded picks only</small></div>
                 <div class="hm-count"><strong id="hmBestWinRate" class="is-muted" title="Minimum 20 graded picks required">--</strong><span>Best Win Percentage</span><small id="hmBestWinRateUser">Not enough graded picks yet</small></div>
@@ -727,7 +727,7 @@
         </div>
 
         <div class="hm-trust-notes">
-            <span class="hm-trust-note">Only real production members are shown. Test accounts and generated QA users are excluded.</span>
+            <span class="hm-trust-note">Only public members with real locked-pick activity are shown.</span>
             <span class="hm-trust-note">Stats are based on graded picks only. Pending picks are not included until graded.</span>
         </div>
 
@@ -867,6 +867,9 @@
             if (!username) return false;
 
             const testPatterns = [
+                /^pendingqa[_-]?\d{8,}$/,
+                /(?:^|[_-])(pendingqa|generated|demo|seed|bot|qa|test)(?:[_-]|\d|$)/,
+                /^(?:qa|test|generated|demo|seed|bot)[_-]?\d{8,}$/,
                 /(?:^|[_-])(test|demo|mock|seed|fixture|dummy)(?:[_-]|\d|$)/,
                 /test\d*$/,
                 /^prod[a-z0-9]*[_-]?\d+$/,
