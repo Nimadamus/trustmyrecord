@@ -65,6 +65,7 @@
     team: "all",
     opponent: "all",
     location: "all",
+    researchMode: "current",
     sort: "rank",
     currentMatchupOnly: false,
     generated: false
@@ -82,6 +83,7 @@
     teamFilter: document.getElementById("teamFilter"),
     opponentFilter: document.getElementById("opponentFilter"),
     locationFilter: document.getElementById("locationFilter"),
+    researchMode: document.getElementById("researchMode"),
     sortBy: document.getElementById("sortBy"),
     currentMatchupOnly: document.getElementById("currentMatchupOnly"),
     selectionSummary: document.getElementById("selectionSummary"),
@@ -235,6 +237,8 @@
     var minSample = Math.max(0, Number(state.minSample) || 0);
     var minWinPct = Math.max(0, Number(state.minWinPct) || 0);
     var results = trendsForSport(state.sport).filter(function (trend) {
+      if (state.researchMode === "current" && !trendIsCurrent(trend)) return false;
+      if (state.researchMode === "archived" && !trendIsArchived(trend)) return false;
       if (!marketMatches(trend, state.market)) return false;
       if (!factorMatches(trend, state.factor)) return false;
       if ((Number(trend.sample) || 0) < minSample) return false;
@@ -255,6 +259,26 @@
     if (trend.current_matchup_valid === false || trend.current_context_valid === false) return false;
     if (trend.current_matchup_valid === true || trend.current_context_valid === true) return true;
     return true;
+  }
+
+  function trendIsCurrent(trend) {
+    return trend && trend.is_current === true;
+  }
+
+  function trendIsArchived(trend) {
+    return trend && (trend.is_archived === true || trend.is_current === false);
+  }
+
+  function statusLabel(trend) {
+    if (trendIsCurrent(trend)) return "Current Slate";
+    if (trendIsArchived(trend)) return "Archived Research";
+    return "Stale Data";
+  }
+
+  function statusClass(trend) {
+    if (trendIsCurrent(trend)) return "is-current";
+    if (trendIsArchived(trend)) return "is-archived";
+    return "is-stale";
   }
 
   function metricForSort(trend, sortId) {
@@ -299,11 +323,13 @@
 
   function renderSportOptions() {
     els.sportOptions.innerHTML = supportedSports().map(function (sport) {
-      var count = trendsForSport(sport).length;
+      var trends = trendsForSport(sport);
+      var currentCount = trends.filter(trendIsCurrent).length;
+      var archiveCount = trends.filter(trendIsArchived).length;
       return [
         "<button class=\"ts-option" + (state.sport === sport ? " is-selected" : "") + "\" type=\"button\" data-sport=\"" + escapeHtml(sport) + "\">",
         "  <strong>" + escapeHtml(sport) + "</strong>",
-        "  <span>" + (count ? count + " verified trend" + (count === 1 ? "" : "s") + " loaded" : "Load verified data") + "</span>",
+        "  <span>" + (currentCount ? currentCount + " current trend" + (currentCount === 1 ? "" : "s") : archiveCount ? archiveCount + " archived trend" + (archiveCount === 1 ? "" : "s") : "No current artifact") + "</span>",
         "</button>"
       ].join("");
     }).join("");
@@ -323,6 +349,7 @@
 
   function updateSummary() {
     var parts = [
+      state.researchMode === "current" ? "Current Slate" : "Archived Research",
       state.sport || "Select sport",
       MARKET_TYPES.find(function (item) { return item.id === state.market; }).label,
       FACTORS.find(function (item) { return item.id === state.factor; }).label
@@ -540,6 +567,7 @@
       "<article class=\"ts-result-item\" data-trend-id=\"" + escapeHtml(trendId(trend)) + "\">",
       "  <div class=\"ts-result-label-row\">",
       "    <span class=\"ts-type-label\">" + escapeHtml(labelize(trend.bet_type)) + "</span>",
+      "    <span class=\"ts-status-label " + statusClass(trend) + "\">" + escapeHtml(statusLabel(trend)) + "</span>",
       "  </div>",
       "  <p class=\"ts-claim\">" + escapeHtml(trend.claim) + "</p>",
       "  <dl class=\"ts-result-meta\">",
@@ -558,6 +586,9 @@
       supportedValue("Trend Strength", strength.label),
       supportedValue("Source data", sourceSummary(trend)),
       supportedValue("Last verified", trend.last_verified_at || trend.generated_at || cache[state.sport] && cache[state.sport].generated_at),
+      supportedValue("Slate status", statusLabel(trend)),
+      supportedValue("Artifact slate date", trend.artifact_slate_date || cache[state.sport] && cache[state.sport].artifact_slate_date),
+      supportedValue("Staleness reason", trend.staleness_reason),
       "  </dl>",
       appliesBecauseHtml(trend),
       "  <p class=\"ts-explanation\">" + escapeHtml(explanation(trend)) + "</p>",
@@ -597,6 +628,9 @@
       supportedValue("Strength formula", strengthFormulaText()),
       supportedValue("Strength reason", strengthRating(trend).reason),
       supportedValue("Data freshness", cache[state.sport] && cache[state.sport].generated_at),
+      supportedValue("Slate status", statusLabel(trend)),
+      supportedValue("Artifact slate date", trend.artifact_slate_date || cache[state.sport] && cache[state.sport].artifact_slate_date),
+      supportedValue("Staleness reason", trend.staleness_reason),
       "  </dl>",
       "  <h4>Included games</h4>",
       gamesTable(trend),
@@ -615,6 +649,7 @@
       "sport=" + state.sport,
       "market=" + MARKET_TYPES.find(function (item) { return item.id === state.market; }).label,
       "factor=" + FACTORS.find(function (item) { return item.id === state.factor; }).label,
+      "mode=" + (state.researchMode === "current" ? "Current Slate" : "Archived Research"),
       "min_sample=" + (state.minSample || 0),
       "min_win_pct=" + (state.minWinPct || 0),
       "team=" + state.team,
@@ -694,7 +729,17 @@
       return;
     }
     if (!results.length) {
-      els.resultsList.innerHTML = "<div class=\"ts-no-results\">No verified trends match the selected filters yet.</div>";
+      var data = cache[state.sport] || {};
+      if (state.researchMode === "current") {
+        var hasCurrentTrends = trendsForSport(state.sport).some(trendIsCurrent);
+        if (hasCurrentTrends) {
+          els.resultsList.innerHTML = "<div class=\"ts-no-results\">No verified trends match the selected filters yet.</div>";
+        } else {
+          els.resultsList.innerHTML = "<div class=\"ts-no-results\"><strong>No verified current slate trends are available for this sport right now.</strong><span>" + escapeHtml(data.staleness_reason || ("No verified current " + state.sport + " Trendspotter artifact available.")) + "</span></div>";
+        }
+      } else {
+        els.resultsList.innerHTML = "<div class=\"ts-no-results\"><strong>No archived research matches the selected filters.</strong><span>Archived research appears only when the artifact is clearly labeled as archived or stale.</span></div>";
+      }
       return;
     }
     els.resultsList.innerHTML = results.map(renderTrend).join("");
@@ -714,6 +759,9 @@
       supportedValue("Source URL", trend.source_url),
       supportedValue("Source data", sourceSummary(trend)),
       supportedValue("Last verified", trend.last_verified_at || cache[state.sport] && cache[state.sport].generated_at),
+      supportedValue("Slate status", statusLabel(trend)),
+      supportedValue("Artifact slate date", trend.artifact_slate_date || cache[state.sport] && cache[state.sport].artifact_slate_date),
+      supportedValue("Staleness reason", trend.staleness_reason),
       supportedValue("Why games counted", "Each row is present in the verified artifact game_log for the trend condition."),
       supportedValue("Odds status", verifiedOddsSummary(trend) ? "Verified row-level odds available." : "Odds data unavailable from source."),
       supportedValue("ROI status", verifiedRoi(trend).value == null ? "ROI hidden because verified odds/results/unit basis are incomplete." : "ROI calculated from verified odds, results, and unit basis."),
@@ -751,6 +799,7 @@
     if (target === els.teamFilter) state.team = target.value;
     if (target === els.opponentFilter) state.opponent = target.value;
     if (target === els.locationFilter) state.location = target.value;
+    if (target === els.researchMode) state.researchMode = target.value;
     if (target === els.sortBy) state.sort = target.value;
     if (target === els.currentMatchupOnly) state.currentMatchupOnly = target.checked;
     updateSummary();
@@ -780,7 +829,7 @@
     }
   });
 
-  [els.marketType, els.trendFactor, els.minSample, els.minWinPct, els.dateStart, els.dateEnd, els.teamFilter, els.opponentFilter, els.locationFilter, els.sortBy, els.currentMatchupOnly].forEach(function (el) {
+  [els.marketType, els.trendFactor, els.minSample, els.minWinPct, els.dateStart, els.dateEnd, els.teamFilter, els.opponentFilter, els.locationFilter, els.researchMode, els.sortBy, els.currentMatchupOnly].forEach(function (el) {
     el.addEventListener("change", onFilterChange);
     el.addEventListener("input", onFilterChange);
   });
