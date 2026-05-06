@@ -1,4 +1,4 @@
-﻿// Advanced Statistics Engine for Trust My Record
+// Advanced Statistics Engine for Trust My Record
 // Calculates ROI, CLV, streaks, sport breakdowns, and all handicapping metrics
 
 class StatsEngine {
@@ -308,9 +308,20 @@ class StatsEngine {
      * Calculate current and best streaks
      */
     calculateStreaks(picks) {
-        const graded = picks
-            .filter(p => p.status !== 'pending')
-            .sort((a, b) => new Date(b.locked_at || b.created_at) - new Date(a.locked_at || a.created_at));
+        if (typeof window !== 'undefined' && window.TMR && typeof window.TMR.calculateStreaks === 'function') {
+            const streaks = window.TMR.calculateStreaks(picks || []);
+            return {
+                current: streaks.currentStreak,
+                best: streaks.longestWinStreak,
+                worst: streaks.longestLossStreak,
+                type: streaks.currentType,
+                sequence: streaks.sequence
+            };
+        }
+
+        const graded = (picks || [])
+            .filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed')
+            .sort((a, b) => new Date(a.commence_time || a.event_start_time || a.start_time || a.event_completed_at || a.completed_at || a.settled_at || a.graded_at || a.locked_at || a.created_at || 0) - new Date(b.commence_time || b.event_start_time || b.start_time || b.event_completed_at || b.completed_at || b.settled_at || b.graded_at || b.locked_at || b.created_at || 0));
 
         if (graded.length === 0) {
             return { current: 0, best: 0, worst: 0, type: 'none' };
@@ -322,31 +333,6 @@ class StatsEngine {
         let worstStreak = 0;
         let tempStreak = 0;
         let tempType = 'none';
-
-        // Calculate current streak (most recent results)
-        for (let i = 0; i < graded.length; i++) {
-            const pick = graded[i];
-            
-            if (i === 0) {
-                if (pick.status === 'won') {
-                    currentStreak = 1;
-                    currentType = 'win';
-                } else if (pick.status === 'lost') {
-                    currentStreak = -1;
-                    currentType = 'loss';
-                } else {
-                    continue;
-                }
-            } else {
-                if (pick.status === 'won' && currentType === 'win') {
-                    currentStreak++;
-                } else if (pick.status === 'lost' && currentType === 'loss') {
-                    currentStreak--;
-                } else {
-                    break;
-                }
-            }
-        }
 
         // Calculate best and worst streaks
         for (const pick of graded) {
@@ -367,8 +353,20 @@ class StatsEngine {
                 }
                 worstStreak = Math.max(worstStreak, tempStreak);
             } else {
-                tempStreak = 0;
-                tempType = 'none';
+                continue;
+            }
+        }
+
+        // Pushes are graded but ignored for current W/L streaks.
+        const latest = graded[graded.length - 1];
+        if (latest && latest.status !== 'push' && latest.status !== 'pushed') {
+            currentType = latest.status === 'won' ? 'win' : 'loss';
+            currentStreak = latest.status === 'won' ? 1 : -1;
+            for (let i = graded.length - 2; i >= 0; i--) {
+                const status = graded[i].status;
+                if (status === 'push' || status === 'pushed') continue;
+                if (status !== latest.status) break;
+                currentStreak += latest.status === 'won' ? 1 : -1;
             }
         }
 
