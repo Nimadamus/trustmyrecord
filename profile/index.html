@@ -8024,7 +8024,7 @@
         set('sidebarFollowers', String(Number((p && p.follower_count) || 0)));
         set('sidebarFollowing', String(Number((p && p.following_count) || 0)));
         set('sidebarTrackedPicks', String(totalPicks));
-        set('sidebarLeaderboard', currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked');
+        set('sidebarLeaderboard', p && p.ranking_status ? p.ranking_status : (currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked'));
 
         // Advanced Metrics top-line panel — populate from real fields where they exist;
         // never fabricate. Anything missing keeps its '—' placeholder.
