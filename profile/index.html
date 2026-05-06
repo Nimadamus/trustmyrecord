@@ -5812,6 +5812,14 @@
         const candidates = profileLookupCandidates();
         for (const candidate of candidates) {
             try {
+                const data = await withTimeout(api.getUserProfile(candidate), 9000, 'Profile request');
+                profileUsername = normalizeProfileLookup((data && data.user && data.user.username) || (data && data.username) || candidate);
+                return data;
+            } catch (error) {
+                lastError = error;
+                console.warn('[Profile] Profile lookup failed for "' + candidate + '":', error && error.message ? error.message : error);
+            }
+            try {
                 if (typeof api.searchUsers === 'function') {
                     const searchData = await withTimeout(api.searchUsers(candidate, { limit: 8 }), 9000, 'Profile search request');
                     const users = (searchData && searchData.users) || [];
@@ -5820,20 +5828,12 @@
                     });
                     if (match) {
                         profileUsername = normalizeProfileLookup(match.username || candidate);
-                        return { user: Object.assign({}, match, { _fromSearchFallback: true }) };
+                        return { user: match };
                     }
                 }
             } catch (error) {
                 lastError = error;
-                console.warn('[Profile] Profile search lookup failed for "' + candidate + '":', error && error.message ? error.message : error);
-            }
-            try {
-                const data = await withTimeout(api.getUserProfile(candidate), 9000, 'Profile request');
-                profileUsername = normalizeProfileLookup((data && data.user && data.user.username) || (data && data.username) || candidate);
-                return data;
-            } catch (error) {
-                lastError = error;
-                console.warn('[Profile] Profile lookup failed for "' + candidate + '":', error && error.message ? error.message : error);
+                console.warn('[Profile] Profile search fallback failed for "' + candidate + '":', error && error.message ? error.message : error);
             }
         }
         if (currentUser && profileLookupMatchesUser(requestedProfileLookup || profileUsername, currentUser)) {
@@ -5943,11 +5943,7 @@
                 console.warn('[Profile] Verified pick history unavailable:', error);
                 renderProfileStatsLoadError('Verified pick stats could not be loaded from the public ledger, so record metrics are hidden instead of showing zeroes.');
             });
-            if (profileData._fromSearchFallback) {
-                setAdvancedMetricsEmpty('Metrics unavailable');
-            } else {
-                loadAdvancedMetrics(profileData.username || profileUsername || '');
-            }
+            loadAdvancedMetrics(profileData.username || profileUsername || '');
             analyticsTrackPickHistoryView({
                 view_type: isOwnProfile ? 'own' : 'public',
                 username: profileData.username || profileUsername || '',
@@ -7511,7 +7507,9 @@
         const rows = getCapperFilteredPicks();
         const sorted = sortCapperRows(rows.slice(), capperFilters.sort);
         const stats = calcCapStats(rows);
-        const rankText = currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked';
+        const rankText = profileData && profileData.ranking_status
+            ? profileData.ranking_status
+            : (currentLeaderboardRank != null ? 'Ranked #' + currentLeaderboardRank : 'Unranked');
 
         // Pending picks count from the same filtered ledger.
         const pendingCount = rows.filter(p => capStatus(p) === 'pending').length;
@@ -7826,7 +7824,7 @@
         currentLeaderboardRank = null;
         if (!api || typeof api.getLeaderboard !== 'function' || !profileData || !profileData.username) return;
         try {
-            const data = await api.getLeaderboard({ sortBy: 'roi', limit: 250 });
+            const data = await api.getLeaderboard({ sortBy: 'net_units', limit: 250 });
             const pool = Array.isArray(data) ? data :
                 Array.isArray(data.users) ? data.users :
                 Array.isArray(data.leaderboard) ? data.leaderboard :
@@ -7852,7 +7850,7 @@
             : 'N/A';
         const name = p.display_name || p.username;
         const letter = (p.username || '?').charAt(0).toUpperCase();
-        const rankText = currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked';
+        const rankText = p.ranking_status || (currentLeaderboardRank != null ? 'Ranked #' + currentLeaderboardRank : 'Unranked');
         const ledgerStats = getProfileLedgerStats();
         const statsLoadError = p.__statsLoadError || '';
         const profileHasRecordFields = [p.wins, p.losses, p.pushes].some(function(value) {
