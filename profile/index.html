@@ -13,7 +13,6 @@
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260506navcommunity1">
 <script defer src="/static/js/tmr-sitewide.js?v=20260506navcommunity1"></script>
-<script src="/static/js/streaks.js?v=20260506streak1"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1112,8 +1111,8 @@
     body.tmr-social-profile .pick-result.loss,
     body.tmr-social-profile .result-loss,
     body.tmr-social-profile .pill.loss{
-      background:rgba(255,51,51,.16) !important;color:#ff3333 !important;
-      border:1px solid rgba(255,51,51,.36) !important;border-radius:6px !important;
+      background:rgba(239,68,68,.16) !important;color:#f87171 !important;
+      border:1px solid rgba(239,68,68,.3) !important;border-radius:6px !important;
     }
     body.tmr-social-profile .pick-result.pending,
     body.tmr-social-profile .result-pending,
@@ -2151,7 +2150,7 @@
                       </div>
 
                       <div class="tmrx-section">
-                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Streaks &amp; Rolling Form</div><div class="tmrx-section-sub">Last 25 / 50 / 100 graded picks. Pushes reset streaks.</div></div></div>
+                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Streaks &amp; Rolling Form</div><div class="tmrx-section-sub">Last 25 / 50 / 100 graded picks. Pushes don't break a streak.</div></div></div>
                         <div class="tmrx-table-shell">
                           <table class="tmrx-table" id="tmrxTableFormTop">
                             <thead><tr><th>Window</th><th class="num">Picks</th><th class="num">W-L</th><th class="num">Win %</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>
@@ -2202,10 +2201,10 @@
                           <table class="tmrx-table" id="tmrxTablePicks">
                             <thead><tr>
                               <th>Date</th><th>Sport</th><th>Game</th><th>Pick</th><th>Market</th>
-                              <th class="num">Odds</th><th class="num">Units</th>
+                              <th class="num">Line</th><th class="num">Odds</th><th class="num">Units</th>
                               <th>Result</th><th class="num">Net</th>
                             </tr></thead>
-                            <tbody><tr class="empty"><td colspan="9">Loading pick history&hellip;</td></tr></tbody>
+                            <tbody><tr class="empty"><td colspan="10">Loading pick history&hellip;</td></tr></tbody>
                           </table>
                         </div>
                       </div>
@@ -2288,8 +2287,8 @@
                             </div>
                             <div class="capper-history-scroll">
                                 <table class="capper-history-table">
-                                    <thead><tr><th>Date</th><th>Sport</th><th>Game</th><th>Pick</th><th>Odds</th><th>Units</th><th>Result</th><th>Profit/Loss</th></tr></thead>
-                                    <tbody id="capHistoryBody"><tr><td colspan="8">Loading picks...</td></tr></tbody>
+                                    <thead><tr><th>Date</th><th>Sport</th><th>Game</th><th>Pick</th><th>Line</th><th>Odds</th><th>Units</th><th>Result</th><th>Profit/Loss</th></tr></thead>
+                                    <tbody id="capHistoryBody"><tr><td colspan="9">Loading picks...</td></tr></tbody>
                                 </table>
                             </div>
                         </section>
@@ -2488,6 +2487,7 @@
                             <th>Game</th>
                             <th>Pick</th>
                             <th><button type="button" class="ledger-sort-button" data-sort-key="market" onclick="setTableSort('market')">Market</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="line" onclick="setTableSort('line')">Line</button></th>
                             <th><button type="button" class="ledger-sort-button" data-sort-key="odds" onclick="setTableSort('odds')">Odds</button></th>
                             <th><button type="button" class="ledger-sort-button" data-sort-key="units" onclick="setTableSort('units')">Units</button></th>
                             <th><button type="button" class="ledger-sort-button" data-sort-key="result" onclick="setTableSort('result')">Result</button></th>
@@ -2924,7 +2924,7 @@
                       </div>
 
                       <div class="tmrx-section">
-                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Streaks &amp; Rolling Form</div><div class="tmrx-section-sub">Last 25 / 50 / 100 graded picks. Pushes reset streaks.</div></div></div>
+                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Streaks &amp; Rolling Form</div><div class="tmrx-section-sub">Last 25 / 50 / 100 graded picks. Pushes don't break a streak.</div></div></div>
                         <div class="tmrx-table-shell">
                           <table class="tmrx-table" id="tmrxTableForm">
                             <thead><tr><th>Window</th><th class="num">Picks</th><th class="num">W-L</th><th class="num">Win %</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>
@@ -3126,7 +3126,7 @@
                             .pm-table tbody tr:last-child td { border-bottom: 0; }
                             .pm-table .pm-row__name { color: #f4f7fb; font-weight: 700; letter-spacing: .02em; }
                             .pm-table .pm-pos { color: #4ade80; font-weight: 700; }
-                            .pm-table .pm-neg { color: #ff3333; font-weight: 700; }
+                            .pm-table .pm-neg { color: #f87171; font-weight: 700; }
                             .pm-table .pm-table__empty td { padding: 22px 18px; color: #64748b; text-align: center; font-style: italic; }
 
                             /* ===== PickMonitor-style filterable picks table (Picks tab) ===== */
@@ -3186,7 +3186,7 @@
                                 font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
                             }
                             .pm-summary-value.pm-pos { color: #4ade80; }
-                            .pm-summary-value.pm-neg { color: #ff3333; }
+                            .pm-summary-value.pm-neg { color: #f87171; }
 
                             .pm-picks-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); }
                             .pm-picks-table {
@@ -3210,7 +3210,7 @@
                             .pm-picks-table .pm-cell-date { color: #94a3b8; }
                             .pm-picks-table .pm-cell-pick { color: #f4f7fb; font-weight: 700; max-width: 240px; overflow: hidden; text-overflow: ellipsis; }
                             .pm-picks-table .pm-pos { color: #4ade80; font-weight: 700; }
-                            .pm-picks-table .pm-neg { color: #ff3333; font-weight: 700; }
+                            .pm-picks-table .pm-neg { color: #f87171; font-weight: 700; }
                             .pm-picks-table .pm-pending { color: #fbbf24; }
                             .pm-result {
                                 display: inline-block;
@@ -3218,7 +3218,7 @@
                                 font: 800 10px/1 'Inter', sans-serif; letter-spacing: .08em; text-transform: uppercase;
                             }
                             .pm-result--won     { background: rgba(74,222,128,0.16);  color: #4ade80; border: 1px solid rgba(74,222,128,0.36); }
-                            .pm-result--lost    { background: rgba(255,51,51,0.16); color: #ff3333; border: 1px solid rgba(255,51,51,0.40); }
+                            .pm-result--lost    { background: rgba(248,113,113,0.16); color: #f87171; border: 1px solid rgba(248,113,113,0.36); }
                             .pm-result--push    { background: rgba(148,163,184,0.16); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.32); }
                             .pm-result--pending { background: rgba(251,191,36,0.14);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.36); }
                             .pm-picks-empty td { padding: 28px 16px; color: #64748b; text-align: center; font-style: italic; }
@@ -3778,7 +3778,7 @@
             letter-spacing: -0.02em;
         }
         .profile-rail-value.is-positive { color: #4ade80; }
-        .profile-rail-value.is-negative { color: #ff3333; }
+        .profile-rail-value.is-negative { color: #f87171; }
         .profile-rail-value.is-neutral { color: #f8fafc; }
 
         .capper-monitor {
@@ -3894,7 +3894,7 @@
             text-overflow: ellipsis;
         }
         .capper-pos { color: #4ade80 !important; }
-        .capper-neg { color: #ff3333 !important; }
+        .capper-neg { color: #f87171 !important; }
         .capper-neutral { color: #f8fafc !important; }
         /* Secondary KPI strip — 6 more stats LTR (Apr 30 2026 r3) */
         .capper-second-row {
@@ -4007,7 +4007,7 @@
             text-transform: uppercase;
         }
         .capper-result.won { background: rgba(74, 222, 128, 0.12); color: #4ade80; }
-        .capper-result.lost { background: rgba(255, 51, 51, 0.12); color: #ff3333; }
+        .capper-result.lost { background: rgba(248, 113, 113, 0.12); color: #f87171; }
         .capper-result.push { background: rgba(148, 163, 184, 0.12); color: #cbd5e1; }
         .capper-result.pending { background: rgba(103, 232, 249, 0.1); color: #67e8f9; }
 
@@ -5203,14 +5203,24 @@
         });
         const roi = totalRisked > 0 ? (netUnits / totalRisked) * 100 : 0;
 
-        // Streaks are calculated from chronological graded picks only.
-        // Pushes are graded but break/reset streaks; pending and void/canceled picks do not affect streaks.
-        const streakStats = window.TMR && typeof window.TMR.calculateStreaks === 'function'
-            ? window.TMR.calculateStreaks(graded)
-            : { currentStreak: 0, longestWinStreak: 0, longestLossStreak: 0 };
-        const currentStreak = streakStats.currentStreak;
-        const bestStreak = streakStats.longestWinStreak;
-        const worstStreak = streakStats.longestLossStreak;
+        // Streaks
+        const sorted = [...graded].sort((a, b) =>
+            new Date(a.locked_at || a.created_at || 0) - new Date(b.locked_at || b.created_at || 0));
+        let bestStreak = 0, worstStreak = 0, tempWin = 0, tempLoss = 0;
+        sorted.forEach(pick => {
+            if (pick.status === 'won') { tempWin++; tempLoss = 0; if (tempWin > bestStreak) bestStreak = tempWin; }
+            else if (pick.status === 'lost') { tempLoss++; tempWin = 0; if (tempLoss > worstStreak) worstStreak = tempLoss; }
+            else { tempWin = 0; tempLoss = 0; }
+        });
+        const reversed = [...sorted].reverse();
+        let cStreak = 0, cType = '';
+        for (const pick of reversed) {
+            if (pick.status === 'push' || pick.status === 'pushed') continue;
+            if (!cType) { cType = pick.status; cStreak = 1; }
+            else if (pick.status === cType) { cStreak++; }
+            else break;
+        }
+        const currentStreak = cType === 'won' ? cStreak : cType === 'lost' ? -cStreak : 0;
 
         // Averages
         const oddsArr = picks.filter(p => p.odds_snapshot != null).map(p => Number(p.odds_snapshot));
@@ -5290,12 +5300,36 @@
         }, 0);
 
         const chronological = graded.slice().sort(function(a, b) {
-            return new Date(a.graded_at || a.settled_at || a.event_completed_at || a.completed_at || a.locked_at || a.created_at || 0) -
-                new Date(b.graded_at || b.settled_at || b.event_completed_at || b.completed_at || b.locked_at || b.created_at || 0);
+            return new Date(a.locked_at || a.created_at || a.graded_at || 0) - new Date(b.locked_at || b.created_at || b.graded_at || 0);
         });
-        const streakStats = window.TMR && typeof window.TMR.calculateStreaks === 'function'
-            ? window.TMR.calculateStreaks(graded)
-            : { currentStreak: 0, longestWinStreak: 0, longestLossStreak: 0 };
+        let bestStreak = 0;
+        let currentWinRun = 0;
+        chronological.forEach(function(pick) {
+            const status = normalizeStatus(pick.status);
+            if (status === 'won') {
+                currentWinRun += 1;
+                bestStreak = Math.max(bestStreak, currentWinRun);
+            } else if (status === 'lost') {
+                currentWinRun = 0;
+            }
+        });
+
+        let streakType = '';
+        let streakCount = 0;
+        chronological.slice().reverse().some(function(pick) {
+            const status = normalizeStatus(pick.status);
+            if (status === 'push') return false;
+            if (!streakType) {
+                streakType = status;
+                streakCount = 1;
+                return false;
+            }
+            if (status === streakType) {
+                streakCount += 1;
+                return false;
+            }
+            return true;
+        });
 
         const lastGraded = chronological.length
             ? chronological[chronological.length - 1].graded_at || chronological[chronological.length - 1].locked_at || chronological[chronological.length - 1].created_at
@@ -5316,9 +5350,8 @@
             avgOdds,
             avgUnits,
             effectiveUnits,
-            currentStreak: streakStats.currentStreak,
-            bestStreak: streakStats.longestWinStreak,
-            worstStreak: streakStats.longestLossStreak,
+            currentStreak: streakType === 'won' ? streakCount : streakType === 'lost' ? -streakCount : 0,
+            bestStreak,
             lastGraded
         };
     }
@@ -5349,9 +5382,6 @@
         profileData.win_rate = stats.decisions ? stats.winRate : null;
         profileData.net_units = stats.netUnits;
         profileData.roi = stats.graded ? stats.roi : null;
-        profileData.current_streak = stats.currentStreak;
-        profileData.best_streak = stats.bestStreak;
-        profileData.worst_streak = stats.worstStreak || 0;
         return stats;
     }
 
@@ -6098,10 +6128,7 @@
         }
         // Drawdown card cells.
         const dd = data.drawdown || {};
-        if (dd.max_drawdown != null) {
-            const v = Number(dd.max_drawdown);
-            set('advMaxDrawdown', (v > 0 ? '-' + v.toFixed(2) : v.toFixed(2)) + 'u', { signed: v || -1 });
-        }
+        if (dd.max_drawdown != null) set('advMaxDrawdown', Number(dd.max_drawdown).toFixed(2) + 'u', { signed: -1 });
         if (dd.peak_units   != null) set('advPeakUnits',   Number(dd.peak_units).toFixed(2) + 'u',   { signed: 1 });
 
         // ===== Rolling form (last 25 / 50 / 100) =====
@@ -6648,7 +6675,7 @@
         }
         if (dd.max_drawdown != null) {
             const v = Number(dd.max_drawdown);
-            setAdv('max_drawdown', (v > 0 ? '-' + v.toFixed(2) : v.toFixed(2)) + 'u', v || -1);
+            setAdv('max_drawdown', '-' + v.toFixed(2) + 'u', -1);
         }
         if (dd.peak_units != null) {
             const v = Number(dd.peak_units);
@@ -6680,7 +6707,7 @@
                 const sx = i => padX + (i / xRng) * (W - padX * 2);
                 const sy = y => H - padY - ((y - yMin) / yRng) * (H - padY * 2);
                 const last = ys[ys.length - 1];
-                const stroke = last >= 0 ? '#22D3EE' : '#ff3333';
+                const stroke = last >= 0 ? '#22D3EE' : '#fca5a5';
                 const fillTop = last >= 0 ? 'rgba(34,211,238,0.40)' : 'rgba(252,165,165,0.30)';
                 const d = eq.map((p, i) => (i ? 'L' : 'M') + sx(i).toFixed(2) + ' ' + sy(Number(p.units) || 0).toFixed(2)).join(' ');
                 const zeroY = sy(0).toFixed(2);
@@ -6689,8 +6716,8 @@
                 const guideY2 = (H - padY).toFixed(2);
                 const svgMarkup =
                     '<defs><linearGradient id="tmrxEqGrad" x1="0" y1="0" x2="0" y2="1">' +
-                    '<stop offset="0" stop-color="' + (last >= 0 ? '#22D3EE' : '#ff3333') + '" stop-opacity=".40"/>' +
-                    '<stop offset="1" stop-color="' + (last >= 0 ? '#22D3EE' : '#ff3333') + '" stop-opacity="0"/>' +
+                    '<stop offset="0" stop-color="' + (last >= 0 ? '#22D3EE' : '#fca5a5') + '" stop-opacity=".40"/>' +
+                    '<stop offset="1" stop-color="' + (last >= 0 ? '#22D3EE' : '#fca5a5') + '" stop-opacity="0"/>' +
                     '</linearGradient></defs>' +
                     '<line x1="0" y1="' + guideY1 + '" x2="' + W + '" y2="' + guideY1 + '" stroke="#1F3350" stroke-dasharray="4 4"/>' +
                     '<line x1="0" y1="' + zeroY + '" x2="' + W + '" y2="' + zeroY + '" stroke="rgba(148,163,184,0.32)" stroke-dasharray="3 4"/>' +
@@ -6713,7 +6740,7 @@
         }
         if (dd.max_drawdown != null) {
             const v = Number(dd.max_drawdown);
-            setDd('tmrxDdMax', (v > 0 ? '-' + v.toFixed(2) : v.toFixed(2)) + 'u', v || -1);
+            setDd('tmrxDdMax', '-' + v.toFixed(2) + 'u', -1);
         }
         if (st.worst != null) {
             const v = Math.abs(Number(st.worst));
@@ -6872,6 +6899,7 @@
                 return '<tr><td>' + fmtDate(p.created_at || p.locked_at) + '</td><td>' + sportLabel(p.sport_key) + '</td><td colspan="6" class="zero" style="font-style:italic;">Pending — pick details revealed once graded</td><td>' + resultTag(p.status) + '</td><td class="num zero">—</td></tr>';
             }
             const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team) : '—';
+            const line = p.line_snapshot != null ? Number(p.line_snapshot).toFixed(1) : '—';
             const units = p.units != null ? Number(p.units).toFixed(1) + 'u' : '—';
             const result = String(p.status || 'pending').toLowerCase();
             const net = p.result_units != null ? Number(p.result_units) : null;
@@ -6883,6 +6911,7 @@
                 '<td>' + game + '</td>' +
                 '<td class="name">' + capEsc(formatPickDisplayValue(p)) + '</td>' +
                 '<td>' + marketLabel(p.market_type) + '</td>' +
+                '<td class="num">' + line + '</td>' +
                 '<td class="num">' + fmtAmericanOdds(p.odds_snapshot) + '</td>' +
                 '<td class="num">' + units + '</td>' +
                 '<td>' + resultTag(p.status) + '</td>' +
@@ -7015,8 +7044,8 @@
         const sy = y => h - padY - ((y - yMin) / yRng) * (h - padY * 2);
         const d  = equityCurve.map((p, i) => (i ? 'L' : 'M') + sx(i).toFixed(2) + ' ' + sy(Number(p.units) || 0).toFixed(2)).join(' ');
         const last = ys[ys.length - 1];
-        const stroke = last >= 0 ? '#4ade80' : '#ff3333';
-        const fillStop = last >= 0 ? 'rgba(74,222,128,0.18)' : 'rgba(255,51,51,0.18)';
+        const stroke = last >= 0 ? '#4ade80' : '#f87171';
+        const fillStop = last >= 0 ? 'rgba(74,222,128,0.18)' : 'rgba(248,113,113,0.18)';
         const zeroY = sy(0);
         const fill = d + ' L' + sx(xRng).toFixed(2) + ' ' + zeroY.toFixed(2) + ' L' + sx(0).toFixed(2) + ' ' + zeroY.toFixed(2) + ' Z';
         el.style.padding = '0';
@@ -7059,8 +7088,8 @@
         el.style.color = 'inherit'; el.style.font = 'inherit';
         el.style.letterSpacing = '0'; el.style.textTransform = 'none';
         el.innerHTML = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">'
-            + '<path d="' + fill + '" fill="rgba(255,51,51,0.18)" stroke="none"/>'
-            + '<path d="' + d + '" fill="none" stroke="#ff3333" stroke-width="2"/>'
+            + '<path d="' + fill + '" fill="rgba(248,113,113,0.18)" stroke="none"/>'
+            + '<path d="' + d + '" fill="none" stroke="#f87171" stroke-width="2"/>'
             + '<text x="' + (w - padX) + '" y="' + (padY - 4) + '" text-anchor="end" font-size="10" fill="#94a3b8">'
             + 'Max DD ' + maxDd.toFixed(2) + 'u</text>'
             + '</svg>';
@@ -7083,7 +7112,7 @@
             const x = padX + i * barW;
             const bh = (Math.abs(v) / maxAbs) * (h / 2 - padY);
             const y  = v >= 0 ? zeroY - bh : zeroY;
-            const c  = v > 0 ? '#4ade80' : v < 0 ? '#ff3333' : 'rgba(255,255,255,0.3)';
+            const c  = v > 0 ? '#4ade80' : v < 0 ? '#f87171' : 'rgba(255,255,255,0.3)';
             return '<rect x="' + (x + 1).toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + Math.max(1, barW - 2).toFixed(1) + '" height="' + Math.max(1, bh).toFixed(1) + '" fill="' + c + '"/>';
         }).join('');
         const wins = deltas.filter(v => v > 0).length;
@@ -7108,7 +7137,7 @@
         const rows = data.map(b => {
             const roi   = Number(b.roi) || 0;
             const pct   = Math.min(100, (Math.abs(roi) / maxAbs) * 100);
-            const color = roi >= 0 ? '#4ade80' : '#ff3333';
+            const color = roi >= 0 ? '#4ade80' : '#f87171';
             const label = formatBucketLabel(splitKey, b.key);
             const meta  = (Number(b.wins) || 0) + '-' + (Number(b.losses) || 0) + (b.pushes ? '-' + b.pushes : '');
             return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
@@ -7476,10 +7505,14 @@
         return american > 0 ? '+' + american : String(american);
     }
     function computeBestStreak(rows) {
-        const streaks = window.TMR && typeof window.TMR.calculateStreaks === 'function'
-            ? window.TMR.calculateStreaks(rows || [])
-            : { longestWinStreak: 0 };
-        return streaks.longestWinStreak;
+        const chrono = (rows || []).slice().sort((a, b) => capDateMs(a) - capDateMs(b));
+        let cur = 0, best = 0;
+        for (const p of chrono) {
+            const s = capStatus(p);
+            if (s === 'won') { cur++; if (cur > best) best = cur; }
+            else if (s === 'lost') { cur = 0; }
+        }
+        return best;
     }
 
     function renderCapperMonitor() {
@@ -7523,13 +7556,18 @@
         if (second) {
             const decided = stats.wins + stats.losses;
             const avgUnitsVal = stats.picks ? (rows.reduce((s, p) => s + capUnits(p), 0) / stats.picks) : 0;
-            const streakStats = window.TMR && typeof window.TMR.calculateStreaks === 'function'
-                ? window.TMR.calculateStreaks(rows || [])
-                : { currentStreak: 0, longestWinStreak: 0 };
-            const bestStreak = streakStats.longestWinStreak;
-            const currentStreak = window.TMR && typeof window.TMR.formatStreak === 'function'
-                ? window.TMR.formatStreak(streakStats.currentStreak)
-                : '0';
+            const bestStreak = computeBestStreak(rows);
+            const currentStreak = (function () {
+                const chrono = rows.slice().sort((a, b) => capDateMs(b) - capDateMs(a));
+                let n = 0, last = '';
+                for (const p of chrono) {
+                    const s = capStatus(p);
+                    if (s !== 'won' && s !== 'lost') continue;
+                    if (!last) last = s;
+                    if (s === last) n++; else break;
+                }
+                return last === 'won' ? n + 'W' : last === 'lost' ? n + 'L' : '0';
+            })();
             const sCards = [
                 ['Avg Odds',       formatAvgOddsForOverview(rows),       'capper-neutral', '\u{1F3AF}'],
                 ['Avg Units',      stats.picks ? avgUnitsVal.toFixed(2) + 'u' : 'N/A', 'capper-neutral', '\u{1F4D0}'],
@@ -7646,19 +7684,21 @@
         if (meta) meta.textContent = rows.length + ' picks';
         if (!tbody) return;
         if (!rows.length) {
-            tbody.innerHTML = '<tr><td colspan="8">No picks match these filters.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9">No picks match these filters.</td></tr>';
             return;
         }
         tbody.innerHTML = rows.slice(0, 100).map(p => {
             const status = capStatus(p);
             const pl = isCapGraded(p) ? capPL(p) : 0;
             const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team) : (p.game || p.game_name || '—');
+            const line = p.line_snapshot != null ? p.line_snapshot : (p.line != null ? p.line : '—');
             const odds = capOdds(p);
             return '<tr>'
                 + '<td>' + (p.locked_at ? new Date(p.locked_at).toLocaleDateString() : '—') + '</td>'
                 + '<td>' + pmSportLabel(p.sport_key) + '</td>'
                 + '<td>' + capEsc(String(game)) + '</td>'
                 + '<td>' + capEsc(formatPickDisplayValue(p)) + '</td>'
+                + '<td>' + line + '</td>'
                 + '<td>' + (Number.isFinite(odds) ? (odds > 0 ? '+' : '') + odds : '—') + '</td>'
                 + '<td>' + capUnits(p).toFixed(2) + 'u</td>'
                 + '<td><span class="capper-result ' + status + '">' + (status === 'won' ? 'Win' : status === 'lost' ? 'Loss' : status === 'push' ? 'Push' : 'Pending') + '</span></td>'
@@ -7919,9 +7959,19 @@
         }
         // Share + Embed always render, even for logged-out viewers, so any
         // visitor can broadcast or embed a public profile.
+        const pendingPublic = !!(p && p.public_pending_picks_enabled);
+        const pendingDisabledTitle = 'Pending picks are private';
+        const pendingControls = isOwnProfile
+            ? '<button class="btn btn-secondary" onclick="copyPendingPicksLink()" title="' + (pendingPublic ? 'Copy pending picks link' : pendingDisabledTitle) + '"' + (pendingPublic ? '' : ' disabled') + '><i class="fas fa-link" style="margin-right:6px;"></i>Share Pending Picks</button>' +
+              '<button class="btn btn-secondary" onclick="showEmbedModal(\'pending\')" title="' + (pendingPublic ? 'Copy pending picks embed' : pendingDisabledTitle) + '"' + (pendingPublic ? '' : ' disabled') + '><i class="fas fa-code" style="margin-right:6px;"></i>Embed Pending Picks</button>'
+            : (pendingPublic
+                ? '<button class="btn btn-secondary" onclick="copyPendingPicksLink()" title="Copy pending picks link"><i class="fas fa-link" style="margin-right:6px;"></i>Share Pending Picks</button>' +
+                  '<button class="btn btn-secondary" onclick="showEmbedModal(\'pending\')" title="Copy pending picks embed"><i class="fas fa-code" style="margin-right:6px;"></i>Embed Pending Picks</button>'
+                : '');
         const shareActions =
-            '<button class="btn btn-secondary" onclick="openShareModal()" title="Share this profile" data-tmr-share-btn><i class="fas fa-share-alt" style="margin-right:6px;"></i>Share</button>' +
-            '<button class="btn btn-secondary" onclick="showEmbedModal()" title="Embed this profile on your site" data-tmr-embed-btn><i class="fas fa-code" style="margin-right:6px;"></i>Embed</button>';
+            '<button class="btn btn-secondary" onclick="openShareModal()" title="Share this profile" data-tmr-share-btn><i class="fas fa-share-alt" style="margin-right:6px;"></i>Share Profile</button>' +
+            '<button class="btn btn-secondary" onclick="showEmbedModal(\'stats\')" title="Embed verified stats" data-tmr-embed-btn><i class="fas fa-code" style="margin-right:6px;"></i>Embed Stats</button>' +
+            pendingControls;
         const actions = '<div class="profile-actions">' + primaryActions + shareActions + '</div>';
 
         // Headline (Twitter-style 140-char tagline). Always rendered; empty
@@ -7974,7 +8024,7 @@
         set('sidebarFollowers', String(Number((p && p.follower_count) || 0)));
         set('sidebarFollowing', String(Number((p && p.following_count) || 0)));
         set('sidebarTrackedPicks', String(totalPicks));
-        set('sidebarLeaderboard', p && p.ranking_status ? p.ranking_status : (currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked'));
+        set('sidebarLeaderboard', currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked');
 
         // Advanced Metrics top-line panel — populate from real fields where they exist;
         // never fabricate. Anything missing keeps its '—' placeholder.
@@ -8243,6 +8293,7 @@
         const sport = fmtSport(p.sport_key);
         const sc = sport.toLowerCase().replace(/\s/g, '');
         const odds = formatOddsValue(p.odds_snapshot != null ? p.odds_snapshot : p.odds);
+        const line = formatLineValue(p.line_snapshot);
         const sel = formatPickDisplayValue(p);
         const matchup = (p.away_team && p.home_team) ? p.away_team + ' @ ' + p.home_team : (p.event_name || '--');
         const units = formatUnitsValue(p.units);
@@ -8271,6 +8322,7 @@
             '<td data-label="Game" class="col-game"><div class="ledger-pick-title">' + matchup + '</div><div class="ledger-game-meta">' + (p.event_name || 'Tracked pick') + '</div></td>' +
             '<td data-label="Pick" class="col-pick"><div class="ledger-pick-title">' + sel + '</div><div class="ledger-pick-meta">' + (p.notes || '') + '</div></td>' +
             '<td data-label="Market"><span class="ledger-type">' + market + '</span></td>' +
+            '<td data-label="Line">' + line + '</td>' +
             '<td data-label="Odds">' + odds + '</td>' +
             '<td data-label="Units">' + units + '</td>' +
             '<td data-label="Result"><span class="result-badge ' + status + '">' + status.toUpperCase() + '</span></td>' +
@@ -9944,20 +9996,21 @@
         lg: { w: 800, h: 320, label: 'Large (800 × 320)' }
     };
 
-    function tmrEmbedIframeUrl(user, size) {
+    function tmrEmbedIframeUrl(user, size, type) {
         // Direct query-string form (no 404 redirect, no flicker inside an
         // iframe). The clean /embed/<username> URL still works for direct
         // browser navigation -- 404.html catches it and forwards here.
-        return 'https://trustmyrecord.com/embed/?u=' + encodeURIComponent(user) + '&size=' + (size || 'md') + '&theme=dark';
+        return 'https://trustmyrecord.com/embed/?u=' + encodeURIComponent(user) + '&type=' + encodeURIComponent(type || 'stats') + '&size=' + (size || 'md') + '&theme=dark';
     }
 
-    function tmrBuildEmbedCode(user, size) {
+    function tmrBuildEmbedCode(user, size, type) {
         const dim = TMR_EMBED_SIZES[size] || TMR_EMBED_SIZES.md;
-        const url = tmrEmbedIframeUrl(user, size);
-        return '<!-- TrustMyRecord verified profile widget -->\n'
+        const embedType = type || 'stats';
+        const url = tmrEmbedIframeUrl(user, size, embedType);
+        return '<!-- TrustMyRecord ' + (embedType === 'pending' ? 'pending picks' : 'verified stats') + ' widget -->\n'
             + '<iframe\n'
             + '  src="' + url + '"\n'
-            + '  title="TrustMyRecord verified profile for ' + user + '"\n'
+            + '  title="TrustMyRecord ' + (embedType === 'pending' ? 'pending picks' : 'verified stats') + ' for ' + user + '"\n'
             + '  width="' + dim.w + '"\n'
             + '  height="' + dim.h + '"\n'
             + '  frameborder="0"\n'
@@ -9983,12 +10036,54 @@
         ].join('\n');
     }
 
-    function showEmbedModal() {
+    function buildPendingPicksUrl(user) {
+        return 'https://trustmyrecord.com/my-pending-picks/?user=' + encodeURIComponent(user || profileUsername || '');
+    }
+
+    function copyRawText(text, successMessage) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function() {
+                showToast(successMessage || 'Copied!', 'success');
+            }).catch(function() {
+                copyRawTextFallback(text, successMessage);
+            });
+            return;
+        }
+        copyRawTextFallback(text, successMessage);
+    }
+
+    function copyRawTextFallback(text, successMessage) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        showToast(successMessage || 'Copied!', 'success');
+    }
+
+    function copyPendingPicksLink() {
+        const user = profileUsername || (profileData && profileData.username) || '';
+        if (!profileData || !profileData.public_pending_picks_enabled) {
+            showToast('Pending picks are private', 'info');
+            return;
+        }
+        copyRawText(buildPendingPicksUrl(user), 'Pending picks link copied!');
+    }
+
+    function showEmbedModal(type) {
         const existing = document.getElementById('embedModal');
         if (existing) existing.remove();
 
         const user = profileUsername || (profileData && profileData.username) || '';
         if (!user) { showToast('Profile not loaded yet', 'error'); return; }
+        const embedType = type === 'pending' ? 'pending' : 'stats';
+        if (embedType === 'pending' && (!profileData || !profileData.public_pending_picks_enabled)) {
+            showToast('Pending picks are private', 'info');
+            return;
+        }
         const profileShareUrl = (typeof buildShareUrl === 'function') ? buildShareUrl('trustmyrecord') : 'https://trustmyrecord.com/profile/?user=' + encodeURIComponent(user);
 
         const modal = document.createElement('div');
@@ -10005,10 +10100,10 @@
 
         modal.innerHTML = '<div style="background:#0b1422;border:1px solid rgba(148,163,184,0.22);border-radius:18px;padding:24px;max-width:720px;width:min(100%,720px);max-height:90vh;overflow-y:auto;box-shadow:0 24px 70px rgba(0,0,0,0.55);color:#eef4fb;">'
             + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
-            +   '<h2 style="font-size:1.15rem;font-weight:800;margin:0;">Embed verified profile</h2>'
+            +   '<h2 style="font-size:1.15rem;font-weight:800;margin:0;">' + (embedType === 'pending' ? 'Embed pending picks' : 'Embed verified stats') + '</h2>'
             +   '<button type="button" aria-label="Close" onclick="document.getElementById(\'embedModal\').remove()" style="background:transparent;border:0;color:#97a8bc;font-size:1.4rem;cursor:pointer;padding:4px 8px;line-height:1;">&times;</button>'
             + '</div>'
-            + '<p style="color:#97a8bc;font-size:.86rem;margin:0 0 16px 0;">Drop a live auto-updating <strong style="color:#2dd4bf;">@' + user + '</strong> badge on any website. Pick a size, copy the snippet.</p>'
+            + '<p style="color:#97a8bc;font-size:.86rem;margin:0 0 16px 0;">Copy a live <strong style="color:#2dd4bf;">@' + user + '</strong> ' + (embedType === 'pending' ? 'pending picks' : 'verified stats') + ' embed.</p>'
 
             // Size selector
             + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Size</div>'
@@ -10025,7 +10120,7 @@
             // Iframe snippet
             + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Iframe snippet</div>'
             + '<textarea id="embedCodeArea" readonly style="width:100%;height:170px;padding:12px;border-radius:10px;border:1px solid rgba(148,163,184,0.22);background:#070d18;color:#2dd4bf;font-family:ui-monospace,Menlo,monospace;font-size:.76rem;resize:vertical;margin-bottom:8px;outline:none;"></textarea>'
-            + '<div style="display:flex;justify-content:flex-end;margin-bottom:16px;"><button class="btn btn-primary" onclick="copyTextValue(\'embedCodeArea\', \'Iframe code copied!\')"><i class="fas fa-copy" style="margin-right:6px;"></i>Copy iframe</button></div>'
+            + '<div style="display:flex;justify-content:flex-end;margin-bottom:16px;"><button class="btn btn-primary" onclick="copyTextValue(\'embedCodeArea\', \'' + (embedType === 'pending' ? 'Pending picks embed copied!' : 'Stats embed copied!') + '\')"><i class="fas fa-copy" style="margin-right:6px;"></i>' + (embedType === 'pending' ? 'Copy pending picks embed' : 'Copy stats embed') + '</button></div>'
 
             // Auto-resize script (advanced)
             + '<details style="margin-bottom:14px;">'
@@ -10056,13 +10151,13 @@
         const refresh = () => {
             const dim = TMR_EMBED_SIZES[currentSize];
             // Snippets
-            document.getElementById('embedCodeArea').value = tmrBuildEmbedCode(user, currentSize);
+            document.getElementById('embedCodeArea').value = tmrBuildEmbedCode(user, currentSize, embedType);
             document.getElementById('scriptEmbedCodeArea').value = tmrBuildScriptCode(user);
             // Live preview iframe (rebuild so size attrs apply cleanly)
             const slot = document.getElementById('tmrEmbedPreviewSlot');
             slot.innerHTML = '';
             const ifr = document.createElement('iframe');
-            ifr.src = tmrEmbedIframeUrl(user, currentSize);
+            ifr.src = tmrEmbedIframeUrl(user, currentSize, embedType);
             ifr.title = 'TrustMyRecord profile preview for ' + user;
             ifr.width = String(dim.w);
             ifr.height = String(dim.h);
@@ -10107,6 +10202,8 @@
         showToast(successMessage || 'Copied!', 'success');
     }
 
+    window.copyPendingPicksLink = copyPendingPicksLink;
+
     function profileEditString(value) {
         return String(value == null ? '' : value).trim();
     }
@@ -10147,6 +10244,13 @@
             '<label style="' + ls + '">Headline (one line, 140 chars)</label><input id="eHeadline" maxlength="140" placeholder="One-line public profile headline" value="' + ((profileData.headline || '').replace(/"/g,'&quot;')) + '" style="' + is + '">' +
             '<label style="' + ls + '">Bio</label><textarea id="eBio" rows="3" style="' + is + 'resize:vertical;">' + (profileData.bio || '') + '</textarea>' +
             '<label style="' + ls + '">Location</label><input id="eLoc" value="' + (profileData.location || '') + '" style="' + is + '">' +
+            '<div style="border-top:1px solid #d8dde6;margin:20px 0 16px;padding-top:16px;"><h3 style="font-size:1rem;font-weight:800;margin:0 0 10px;color:#162231;">Public Sharing</h3>' +
+            '<label style="display:flex;align-items:flex-start;gap:10px;color:#162231;font-weight:800;font-size:.9rem;margin-bottom:8px;"><input id="ePublicPending" type="checkbox" ' + (profileData.public_pending_picks_enabled ? 'checked' : '') + ' style="width:18px;height:18px;margin-top:1px;"> <span>Show pending picks publicly</span></label>' +
+            '<p style="font-size:.82rem;color:#637389;line-height:1.45;margin:0 0 12px;">Turn this on if you want visitors to see your ungraded pending picks before they are final. Your graded record is always public.</p>' +
+            '<div style="display:flex;flex-wrap:wrap;gap:8px;"><button type="button" class="btn btn-secondary" onclick="copyRawText((typeof buildShareUrl === \'function\' ? buildShareUrl(\'trustmyrecord\') : \'https://trustmyrecord.com/profile/?user=\' + encodeURIComponent(profileUsername || \'\')), \'Profile link copied!\')" style="padding:8px 12px;font-size:.8rem;">Copy profile link</button>' +
+            '<button type="button" class="btn btn-secondary" onclick="copyRawText(tmrBuildEmbedCode(profileUsername || (profileData && profileData.username) || \'\', \'md\', \'stats\'), \'Stats embed copied!\')" style="padding:8px 12px;font-size:.8rem;">Copy stats embed</button>' +
+            '<button type="button" class="btn btn-secondary" onclick="copyPendingPicksLink()" ' + (profileData.public_pending_picks_enabled ? '' : 'disabled title="Pending picks are private"') + ' style="padding:8px 12px;font-size:.8rem;">Copy pending picks link</button>' +
+            '<button type="button" class="btn btn-secondary" onclick="copyRawText(tmrBuildEmbedCode(profileUsername || (profileData && profileData.username) || \'\', \'md\', \'pending\'), \'Pending picks embed copied!\')" ' + (profileData.public_pending_picks_enabled ? '' : 'disabled title="Pending picks are private"') + ' style="padding:8px 12px;font-size:.8rem;">Copy pending picks embed</button></div></div>' +
             '<div style="border-top:1px solid #353a4d;margin:20px 0 16px;padding-top:16px;"><h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;color:#00aeff;">Favorite Teams</h3></div>' +
             '<label style="' + ls + '">NFL Team</label><input id="eFavNFL" value="' + ((profileData._fav_teams && profileData._fav_teams.NFL) || '') + '" placeholder="Favorite NFL team" style="' + is + '">' +
             '<label style="' + ls + '">NBA Team</label><input id="eFavNBA" value="' + ((profileData._fav_teams && profileData._fav_teams.NBA) || '') + '" placeholder="Favorite NBA team" style="' + is + '">' +
@@ -10189,6 +10293,10 @@
                 profileEditSetIfChanged(updates, 'bio', document.getElementById('eBio').value.trim(), profileData.bio || '');
                 profileEditSetIfChanged(updates, 'location', document.getElementById('eLoc').value.trim(), profileData.location || '');
                 profileEditSetIfChanged(updates, 'headline', (document.getElementById('eHeadline') ? document.getElementById('eHeadline').value.trim() : ''), profileData.headline || '');
+                const publicPendingEl = document.getElementById('ePublicPending');
+                if (publicPendingEl && publicPendingEl.checked !== !!profileData.public_pending_picks_enabled) {
+                    updates.public_pending_picks_enabled = publicPendingEl.checked;
+                }
                 if (pendingAvatarData && pendingAvatarData !== profileData.avatar_url) updates.avatar_url = pendingAvatarData;
 
                 // Try backend first
@@ -10293,7 +10401,7 @@
                 }
                 analyticsTrack('profile_updated_manual', {
                     username: profileUsername || '',
-                    fields_updated: 'display_name,bio,location,teams,gamer_profile,avatar'
+                    fields_updated: 'display_name,bio,location,teams,gamer_profile,avatar,public_sharing'
                 });
                 showToast('Profile updated!', 'success'); modal.remove();
                 profileData = { ...profileData, ...updates };
@@ -10423,7 +10531,7 @@
       .tmrx-table tbody tr:hover td { background: rgba(34,211,238,.04); }
       .tmrx-table .name { font-weight: 800; color: #f1f5fb; }
       .tmrx-table .pos { color: #86efac; }
-      .tmrx-table .neg { color: #ff3333; }
+      .tmrx-table .neg { color: #fca5a5; }
       .tmrx-table .zero { color: #94a3b8; }
       .tmrx-table .empty td { padding: 22px 16px; text-align: center; color: #64748b; font-style: italic; }
 
@@ -11237,7 +11345,7 @@
         border-left-color: #4ade80 !important;
       }
       body.profile-page.tmr-social-profile .picks-table tbody tr.row-lost td:first-child {
-        border-left-color: #ef4444 !important;
+        border-left-color: #fb7185 !important;
       }
       body.profile-page.tmr-social-profile .picks-table tbody tr.row-push td:first-child {
         border-left-color: #fbbf24 !important;
@@ -11507,7 +11615,7 @@
       }
       body.profile-page.tmr-social-profile .profile-rail-value.is-negative,
       body.profile-page.tmr-social-profile .profile-advanced-metric__value.is-neg {
-        color: #ef4444 !important;
+        color: #fb7185 !important;
       }
       body.profile-page.tmr-social-profile .profile-advanced-strip-section {
         padding-top: 22px !important;
@@ -11833,10 +11941,11 @@
         body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(3)::before { content: "Game"; }
         body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(4)::before { content: "Pick"; }
         body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(5)::before { content: "Market"; }
-        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(6)::before { content: "Odds"; }
-        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(7)::before { content: "Units"; }
-        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(8)::before { content: "Result"; }
-        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(9)::before { content: "Profit/Loss"; }
+        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(6)::before { content: "Line"; }
+        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(7)::before { content: "Odds"; }
+        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(8)::before { content: "Units"; }
+        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(9)::before { content: "Result"; }
+        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(10)::before { content: "Profit/Loss"; }
         body.profile-page.tmr-social-profile #tmrxTablePicks td.name {
           text-align: right !important;
         }
@@ -11883,20 +11992,6 @@
   body.profile-page .profile-rail-value.is-negative,
   body.profile-page .profile-advanced-metric__value.is-neg {
     color: #ff3333 !important;
-  }
-  body.profile-page .result-badge.lost,
-  body.profile-page .capper-result.lost,
-  body.profile-page .pm-result--lost,
-  body.profile-page .pick-result.loss,
-  body.profile-page .result-loss,
-  body.profile-page .pill.loss {
-    color: #ff3333 !important;
-    background: rgba(255, 51, 51, 0.14) !important;
-    border-color: rgba(255, 51, 51, 0.42) !important;
-  }
-  body.profile-page .picks-table tbody tr.row-lost td:first-child,
-  body.profile-page.tmr-social-profile .picks-table tbody tr.row-lost td:first-child {
-    border-left-color: #ff3333 !important;
   }
   body.profile-page .breakdown-row.is-clickable {
     cursor: pointer;
