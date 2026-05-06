@@ -1610,7 +1610,7 @@
                     const stats = await hydrateStats(user);
                     return normalizeMember(user, stats);
                 });
-                members = members.filter(member => member.username && isProductionDirectoryUser(member));
+                members = members.filter(member => member.username && isProductionDirectoryUser(member) && Number(member.stats?.totalPicks || 0) > 0);
                 renderSummary();
                 fillSports();
                 applyFilters();
