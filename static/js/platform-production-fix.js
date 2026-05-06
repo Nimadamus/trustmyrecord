@@ -7,7 +7,11 @@
         push: 'push',
         pushed: 'push',
         pending: 'pending',
-        void: 'void'
+        void: 'void',
+        voided: 'void',
+        cancel: 'cancelled',
+        canceled: 'cancelled',
+        cancelled: 'cancelled'
     };
 
     function normalizeStatus(status) {
@@ -36,6 +40,67 @@
         return 0;
     }
 
+    function localPickTimestamp(pick) {
+        const candidates = [
+            pick && pick.commence_time,
+            pick && pick.event_start_time,
+            pick && pick.start_time,
+            pick && pick.game && pick.game.commence_time,
+            pick && pick.game && pick.game.start_time,
+            pick && pick.finalized_at,
+            pick && pick.event_completed_at,
+            pick && pick.completed_at,
+            pick && pick.game_final_at,
+            pick && pick.settled_at,
+            pick && pick.graded_at,
+            pick && pick.locked_at,
+            pick && pick.created_at
+        ];
+        for (const value of candidates) {
+            const time = new Date(value || 0).getTime();
+            if (Number.isFinite(time) && time > 0) return time;
+        }
+        return 0;
+    }
+
+    function calculateCanonicalStreaks(picks) {
+        const ordered = (Array.isArray(picks) ? picks : [])
+            .filter(function(pick) {
+                return pick.status === 'won' || pick.status === 'lost' || pick.status === 'push';
+            })
+            .sort(function(a, b) {
+                return localPickTimestamp(a) - localPickTimestamp(b);
+            });
+        let longestWinStreak = 0;
+        let longestLossStreak = 0;
+        let winRun = 0;
+        let lossRun = 0;
+        ordered.forEach(function(pick) {
+            if (pick.status === 'won') {
+                winRun += 1;
+                lossRun = 0;
+                longestWinStreak = Math.max(longestWinStreak, winRun);
+            } else if (pick.status === 'lost') {
+                lossRun += 1;
+                winRun = 0;
+                longestLossStreak = Math.max(longestLossStreak, lossRun);
+            } else {
+                // Pushes are graded but neutral for active W/L streaks.
+            }
+        });
+        let currentStreak = 0;
+        const latest = ordered[ordered.length - 1];
+        if (latest && latest.status !== 'push') {
+            currentStreak = latest.status === 'won' ? 1 : -1;
+            for (let i = ordered.length - 2; i >= 0; i -= 1) {
+                if (ordered[i].status === 'push') continue;
+                if (ordered[i].status !== latest.status) break;
+                currentStreak += latest.status === 'won' ? 1 : -1;
+            }
+        }
+        return { currentStreak, longestWinStreak, longestLossStreak };
+    }
+
     function computeCanonicalRecordStats(picks) {
         const normalized = Array.isArray(picks) ? picks.map(normalizeRecordPick) : [];
         const graded = normalized.filter(function(pick) {
@@ -51,43 +116,9 @@
         const risked = graded.reduce(function(sum, pick) {
             return sum + (Number.isFinite(pick.units) ? pick.units : 0);
         }, 0);
-        const sorted = graded.slice().sort(function(a, b) {
-            return new Date(a.locked_at || a.created_at || 0) - new Date(b.locked_at || b.created_at || 0);
-        });
-
-        let bestWin = 0;
-        let worstLoss = 0;
-        let tempWin = 0;
-        let tempLoss = 0;
-        sorted.forEach(function(pick) {
-            if (pick.status === 'won') {
-                tempWin += 1;
-                tempLoss = 0;
-                bestWin = Math.max(bestWin, tempWin);
-            } else if (pick.status === 'lost') {
-                tempLoss += 1;
-                tempWin = 0;
-                worstLoss = Math.max(worstLoss, tempLoss);
-            } else {
-                tempWin = 0;
-                tempLoss = 0;
-            }
-        });
-
-        const recent = sorted.slice().reverse();
-        let currentStreak = 0;
-        let currentType = '';
-        for (const pick of recent) {
-            if (pick.status === 'push') continue;
-            if (!currentType) {
-                currentType = pick.status;
-                currentStreak = 1;
-            } else if (pick.status === currentType) {
-                currentStreak += 1;
-            } else {
-                break;
-            }
-        }
+        const streaks = window.TMR && typeof window.TMR.calculateStreaks === 'function'
+            ? window.TMR.calculateStreaks(normalized)
+            : calculateCanonicalStreaks(normalized);
 
         const oddsSamples = normalized
             .map(function(pick) { return Number(pick.odds_snapshot || pick.odds || pick.price); })
@@ -107,9 +138,9 @@
             winRate: (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0',
             totalUnits: totalUnits,
             roi: risked > 0 ? ((totalUnits / risked) * 100).toFixed(1) : '0.0',
-            currentStreak: currentType === 'won' ? currentStreak : currentType === 'lost' ? -currentStreak : 0,
-            bestStreak: bestWin,
-            worstStreak: worstLoss,
+            currentStreak: streaks.currentStreak,
+            bestStreak: streaks.longestWinStreak,
+            worstStreak: streaks.longestLossStreak,
             avgOdds: oddsSamples.length ? Math.round(oddsSamples.reduce(function(a, b) { return a + b; }, 0) / oddsSamples.length) : null,
             avgUnits: unitSamples.length ? (unitSamples.reduce(function(a, b) { return a + b; }, 0) / unitSamples.length) : 0
         };
@@ -272,28 +303,17 @@
     }
 
     function buildPickDisplay(pick) {
-        if (window.TMR && typeof window.TMR.formatPickDisplayLabel === 'function') {
-            return window.TMR.formatPickDisplayLabel(pick);
+        if (window.TMR && typeof window.TMR.formatPickDisplay === 'function') {
+            return window.TMR.formatPickDisplay(pick);
         }
-        const selection = String(pick.selection_label || pick.selection || pick.team || 'Selection').trim();
-        const market = String(pick.market_type || pick.market || '').toLowerCase();
+        const selection = pick.selection || pick.side || pick.team || 'Selection';
         const line = pick.line_snapshot ?? pick.line;
-        if (market === 'h2h' || market.indexOf('moneyline') !== -1) {
-            return /\bML\b$/i.test(selection) ? selection : selection + ' ML';
-        }
         if (line == null || line === '') return selection;
         // Trim trailing zeros so totals never display 5.50/4.50/9.00.
         const n = Number(line);
-        let s = Number.isFinite(n) ? String(n) : String(line).trim();
+        let s = Number.isFinite(n) ? String(n) : String(line);
         if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
-        const signed = market.indexOf('spread') !== -1 || market.indexOf('run_line') !== -1 || market.indexOf('puck_line') !== -1;
-        if (signed && Number.isFinite(n) && n > 0) s = '+' + s;
-        const escaped = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        if (new RegExp('(?:^|\\s)' + escaped + '$').test(selection)) return selection;
-        const totalSide = market.indexOf('total') !== -1 && !/\b(over|under)\b/i.test(selection)
-            ? (/\bover\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Over' : (/\bunder\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Under' : ''))
-            : '';
-        return selection.replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '').trim() + totalSide + ' ' + s;
+        return selection + ' ' + s;
     }
 
     function formatOdds(odds) {
