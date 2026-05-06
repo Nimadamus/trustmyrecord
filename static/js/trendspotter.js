@@ -59,12 +59,14 @@
     market: "all",
     factor: "all",
     minSample: 0,
+    minWinPct: 0,
     dateStart: "",
     dateEnd: "",
     team: "all",
     opponent: "all",
     location: "all",
     sort: "rank",
+    currentMatchupOnly: false,
     generated: false
   };
   var cache = {};
@@ -74,12 +76,14 @@
     marketType: document.getElementById("marketType"),
     trendFactor: document.getElementById("trendFactor"),
     minSample: document.getElementById("minSample"),
+    minWinPct: document.getElementById("minWinPct"),
     dateStart: document.getElementById("dateStart"),
     dateEnd: document.getElementById("dateEnd"),
     teamFilter: document.getElementById("teamFilter"),
     opponentFilter: document.getElementById("opponentFilter"),
     locationFilter: document.getElementById("locationFilter"),
     sortBy: document.getElementById("sortBy"),
+    currentMatchupOnly: document.getElementById("currentMatchupOnly"),
     selectionSummary: document.getElementById("selectionSummary"),
     runButton: document.getElementById("runTrendspotter"),
     resultsSection: document.getElementById("resultsSection"),
@@ -229,17 +233,28 @@
 
   function filteredResults() {
     var minSample = Math.max(0, Number(state.minSample) || 0);
+    var minWinPct = Math.max(0, Number(state.minWinPct) || 0);
     var results = trendsForSport(state.sport).filter(function (trend) {
       if (!marketMatches(trend, state.market)) return false;
       if (!factorMatches(trend, state.factor)) return false;
       if ((Number(trend.sample) || 0) < minSample) return false;
+      var pct = numberValue(trend.win_percentage || trend.win_pct || trend.dominance);
+      if (pct !== null && pct <= 1) pct *= 100;
+      if (minWinPct && (pct === null || pct < minWinPct)) return false;
       if (state.team !== "all" && normalize(trend.team_abbr) !== normalize(state.team)) return false;
       if (state.opponent !== "all" && normalize(trend.opponent_abbr) !== normalize(state.opponent)) return false;
       if (state.location === "home" && normalize(trend.team_abbr) !== normalize(trend.home_abbr)) return false;
       if (state.location === "away" && normalize(trend.team_abbr) !== normalize(trend.away_abbr)) return false;
+      if (state.currentMatchupOnly && !currentMatchupMatches(trend)) return false;
       return passesDateFilter(trend);
     });
     return results.sort(sorter);
+  }
+
+  function currentMatchupMatches(trend) {
+    if (trend.current_matchup_valid === false || trend.current_context_valid === false) return false;
+    if (trend.current_matchup_valid === true || trend.current_context_valid === true) return true;
+    return true;
   }
 
   function metricForSort(trend, sortId) {
@@ -501,7 +516,6 @@
       "<article class=\"ts-result-item\" data-trend-id=\"" + escapeHtml(trendId(trend)) + "\">",
       "  <div class=\"ts-result-label-row\">",
       "    <span class=\"ts-type-label\">" + escapeHtml(labelize(trend.bet_type)) + "</span>",
-      trend.rank ? "    <span class=\"ts-rank\">Trend Rank #" + escapeHtml(trend.rank) + "</span>" : "",
       "  </div>",
       "  <p class=\"ts-claim\">" + escapeHtml(trend.claim) + "</p>",
       "  <dl class=\"ts-result-meta\">",
@@ -576,9 +590,11 @@
       "market=" + MARKET_TYPES.find(function (item) { return item.id === state.market; }).label,
       "factor=" + FACTORS.find(function (item) { return item.id === state.factor; }).label,
       "min_sample=" + (state.minSample || 0),
+      "min_win_pct=" + (state.minWinPct || 0),
       "team=" + state.team,
       "opponent=" + state.opponent,
       "location=" + state.location,
+      "current_matchup_only=" + (state.currentMatchupOnly ? "yes" : "no"),
       "date_start=" + (state.dateStart || "any"),
       "date_end=" + (state.dateEnd || "any")
     ].join(" | ");
@@ -703,12 +719,14 @@
     if (target === els.marketType) state.market = target.value;
     if (target === els.trendFactor) state.factor = target.value;
     if (target === els.minSample) state.minSample = target.value;
+    if (target === els.minWinPct) state.minWinPct = target.value;
     if (target === els.dateStart) state.dateStart = target.value;
     if (target === els.dateEnd) state.dateEnd = target.value;
     if (target === els.teamFilter) state.team = target.value;
     if (target === els.opponentFilter) state.opponent = target.value;
     if (target === els.locationFilter) state.location = target.value;
     if (target === els.sortBy) state.sort = target.value;
+    if (target === els.currentMatchupOnly) state.currentMatchupOnly = target.checked;
     updateSummary();
     if (state.generated) renderResults();
   }
@@ -736,7 +754,7 @@
     }
   });
 
-  [els.marketType, els.trendFactor, els.minSample, els.dateStart, els.dateEnd, els.teamFilter, els.opponentFilter, els.locationFilter, els.sortBy].forEach(function (el) {
+  [els.marketType, els.trendFactor, els.minSample, els.minWinPct, els.dateStart, els.dateEnd, els.teamFilter, els.opponentFilter, els.locationFilter, els.sortBy, els.currentMatchupOnly].forEach(function (el) {
     el.addEventListener("change", onFilterChange);
     el.addEventListener("input", onFilterChange);
   });
