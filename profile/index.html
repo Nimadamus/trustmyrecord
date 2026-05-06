@@ -5776,6 +5776,22 @@
                 lastError = error;
                 console.warn('[Profile] Profile lookup failed for "' + candidate + '":', error && error.message ? error.message : error);
             }
+            try {
+                if (typeof api.searchUsers === 'function') {
+                    const searchData = await withTimeout(api.searchUsers(candidate, { limit: 8 }), 9000, 'Profile search request');
+                    const users = (searchData && searchData.users) || [];
+                    const match = users.find(function(user) {
+                        return profileLookupMatchesUser(candidate, user);
+                    });
+                    if (match) {
+                        profileUsername = normalizeProfileLookup(match.username || candidate);
+                        return { user: match };
+                    }
+                }
+            } catch (error) {
+                lastError = error;
+                console.warn('[Profile] Profile search fallback failed for "' + candidate + '":', error && error.message ? error.message : error);
+            }
         }
         throw lastError || new Error('Profile not found');
     }
