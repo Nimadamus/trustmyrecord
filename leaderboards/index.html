@@ -1202,17 +1202,17 @@
             const body = document.getElementById('leaderboardBody');
             const count = document.getElementById('resultCount');
 
-            count.textContent = entries.length + ' cappers';
+            count.textContent = entries.length + ' ranked cappers';
             if (!entries.length) {
                 wrap.style.display = 'none';
                 state.style.display = 'block';
                 setStateAsEmpty(state, emptyStateHtml({
                     icon: '★',
-                    title: 'No ranked handicappers yet',
-                    body: 'Lock your first pick to start a public record. Once a capper has graded picks behind their name, they show up here ranked by ROI, units, pick count, and current streak.',
+                    title: 'No eligible ranked handicappers yet',
+                    body: 'Rankings appear after users submit enough graded picks. This official leaderboard stays empty until the integrity threshold is met; use the handicapper directory to discover real public users with submitted picks.',
                     ctas: [
-                        { label: 'Lock Your First Pick', href: '/sportsbook/', primary: true },
-                        { label: 'Invite A Rival', href: '/arena/' }
+                        { label: 'Browse Handicappers', href: '/handicappers/', primary: true },
+                        { label: 'Submit Picks', href: '/sportsbook/' }
                     ]
                 }));
                 return;
