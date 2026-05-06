@@ -290,3 +290,41 @@ Live values verified after deploy:
 - BetLegend profile API: current streak L3, best streak W5.
 - Handicappers summary API: Flintlocktropicks L2, BetLegend L3, mikeybalhansports L2.
 - Public discovery checked response excludes fake/test accounts.
+
+## 2026-05-06 - Canonical Stats Follow-up: Market Grading Reconciliation
+
+Canonical streak/drawdown workstream status: VERIFIED LIVE.
+
+Recorded live stats:
+- BetLegend current streak: L3
+- BetLegend max drawdown: -19.15u
+- BetLegend worst streak: L6
+- Flintlocktropicks current streak: L2
+
+Live URLs previously verified:
+- https://trustmyrecord.com/profile/?user=BetLegend
+- https://trustmyrecord.com/handicappers/
+- /api/users/BetLegend
+- /api/users/BetLegend/metrics
+- /api/users/handicappers/summary?limit=10&sort=units
+
+Manual browser hard-refresh visual confirmation remains the only pending item for the canonical streak/drawdown workstream.
+
+Profile analytics market grading reconciliation status: REGRESSION FOUND.
+
+Observed issue:
+- BetLegend profile analytics market table shows Totals as 3-0, +6.95u.
+- This may indicate market/sport/league analytics are using stale materialized stats, an incorrect net-unit calculation, or a different stat source than the public ledger.
+
+Required next audit:
+- Coordinate with the grading/math terminal to audit the exact three BetLegend Totals picks.
+- Each analytics row must reconcile to the sum of individual settled ledger rows using canonical stake-mode math.
+
+Canonical stake-mode rule:
+- to_win mode: win profits the to_win amount; loss loses the risk amount.
+- risk mode: win profits according to odds from risk amount; loss loses the risk amount.
+- Pending, void, cancelled, and ungraded picks must not affect settled analytics rows.
+
+Operational note:
+- Do not continue backend analytics work from a dirty or stale local checkout.
+- Future backend work must start from a clean current checkout only.
