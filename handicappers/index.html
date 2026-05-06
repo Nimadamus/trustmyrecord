@@ -976,24 +976,14 @@
             const displayName = String(user.display_name || user.displayName || username || 'Member');
             const createdAt = user.created_at || user.createdAt || user.joined_at || user.inserted_at || '';
             const lastActive = firstValidDate(
-                stats.lastActivity,
-                user.last_activity_at,
-                user.lastActivityAt,
-                user.last_active_at,
-                user.lastActiveAt,
-                user.last_active,
-                user.lastActive,
+                user.last_login_date,
+                user.lastLoginDate,
+                user.last_active_date,
+                user.lastActiveDate,
                 user.last_login_at,
                 user.lastLoginAt,
-                user.last_seen_at,
-                user.lastSeenAt,
-                user.profile_updated_at,
-                user.profileUpdatedAt,
-                user.updated_at,
-                user.updatedAt,
-                user.last_pick_at,
-                user.lastPickAt,
-                createdAt
+                user.last_active_at,
+                user.lastActiveAt
             );
             const currentUser = getCurrentUser();
             const localFollowing = currentUser && social ? social.isFollowing(String(currentUser.username || ''), username) : false;
@@ -1219,14 +1209,14 @@
         }
 
         function formatLastActive(value) {
-            if (!value) return 'No recent activity';
+            if (!value) return 'Not available';
             const date = new Date(value);
-            if (!Number.isFinite(date.getTime())) return 'No recent activity';
+            if (!Number.isFinite(date.getTime())) return 'Not available';
             const diff = Date.now() - date.getTime();
             const day = 24 * 60 * 60 * 1000;
             if (diff < day) return 'Today';
             if (diff < day * 2) return 'Yesterday';
-            if (diff < day * 30) return Math.floor(diff / day) + 'd ago';
+            if (diff < day * 30) return Math.floor(diff / day) + ' days ago';
             return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined });
         }
 
