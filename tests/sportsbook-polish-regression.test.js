@@ -47,12 +47,12 @@ test('standard odds buttons keep the canonical pick selection flow', () => {
     includesAll(sportsbookHtml, [
         'function oddsButton(line, price, ctx)',
         'window.selectGameBet && window.selectGameBet(',
-        'ctx.betType',
-        'ctx.team',
-        'ctx.line',
-        'ctx.odds',
-        'ctx.awayTeam',
-        'ctx.homeTeam'
+        "ctx.betType",
+        "ctx.team",
+        "ctx.line",
+        "ctx.odds",
+        "ctx.awayTeam",
+        "ctx.homeTeam"
     ]);
 });
 
@@ -74,16 +74,16 @@ test('spread, moneyline, total, and team-total selections still populate the sli
         '<div class="sportsbook-ticket-preview-row"><span>Sportsbook</span>',
         "var lineInput = document.getElementById('pickLineInput');",
         "var oddsInput = document.getElementById('pickOddsInput');",
-        'summaryGame.textContent',
-        'summaryPick.textContent',
-        'summaryOdds.textContent'
+        "summaryGame.textContent",
+        "summaryPick.textContent",
+        "summaryOdds.textContent"
     ]);
 });
 
 test('selected odds state and signed odds price hierarchy are preserved', () => {
     includesAll(sportsbookHtml, [
-        'var priceClass = Number.isFinite(priceNum)',
-        'var oddsClass = hasReal && Number.isFinite(oddsNum)',
+        "var priceClass = Number.isFinite(priceNum)",
+        "var oddsClass = hasReal && Number.isFinite(oddsNum)",
         "btn.classList.add('selected')",
         "btn.setAttribute('aria-pressed', 'true')",
         "' is-plus'",
@@ -117,13 +117,8 @@ test('MLB and NHL matchup identifiers/logos remain wired', () => {
     includesAll(sportsbookHtml, [
         "MLB:    { kicker: 'MLB Board'",
         "NHL:    { kicker: 'NHL Board'",
-        'window.TMR._teamLogo',
-        'sportsbookTeamLogoMarkup(away',
-        'sportsbookTeamLogoMarkup(home',
-        'sportsbookTeamLogoUrl(game.away_team',
-        'sportsbookTeamLogoUrl(game.home_team',
-        'game.away_abbr || game.awayAbbr',
-        'game.home_abbr || game.homeAbbr'
+        "window.TMR._teamLogo(game.away_logo, game.away_abbr, game.away_team)",
+        "window.TMR._teamLogo(game.home_logo, game.home_abbr, game.home_team)"
     ]);
 });
 
