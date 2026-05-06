@@ -321,7 +321,7 @@
     </main>
 
     <script src="/static/js/config.js?v=20260430a"></script>
-    <script src="/static/js/backend-api.js?v=20260505pendingline2"></script>
+    <script src="/static/js/backend-api.js?v=20260505pendingline3"></script>
     <script>
     (function () {
         var authState = document.getElementById('authState');
@@ -411,10 +411,15 @@
             return (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')) + 'u';
         }
         function pickText(pick) {
-            if (window.TMR && typeof window.TMR.formatPickDisplay === 'function') {
-                return window.TMR.formatPickDisplay(pick);
+            if (window.TMR && typeof window.TMR.formatPickSelection === 'function') {
+                return window.TMR.formatPickSelection(pick);
             }
             var selection = String(pick.selection || 'Pick').trim();
+            var line = fmtPickLine(pick);
+            if (line !== '-') {
+                selection = selection.replace(new RegExp('\\s+' + line.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'), '').trim();
+                selection = selection.replace(new RegExp('\\s+[+-]?' + line.replace(/^\+/, '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'), '').trim();
+            }
             return selection || 'Pick';
         }
         function matchup(pick) {
