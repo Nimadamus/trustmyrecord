@@ -5769,14 +5769,6 @@
         const candidates = profileLookupCandidates();
         for (const candidate of candidates) {
             try {
-                const data = await withTimeout(api.getUserProfile(candidate), 9000, 'Profile request');
-                profileUsername = normalizeProfileLookup((data && data.user && data.user.username) || (data && data.username) || candidate);
-                return data;
-            } catch (error) {
-                lastError = error;
-                console.warn('[Profile] Profile lookup failed for "' + candidate + '":', error && error.message ? error.message : error);
-            }
-            try {
                 if (typeof api.searchUsers === 'function') {
                     const searchData = await withTimeout(api.searchUsers(candidate, { limit: 8 }), 9000, 'Profile search request');
                     const users = (searchData && searchData.users) || [];
@@ -5785,12 +5777,20 @@
                     });
                     if (match) {
                         profileUsername = normalizeProfileLookup(match.username || candidate);
-                        return { user: match };
+                        return { user: Object.assign({}, match, { _fromSearchFallback: true }) };
                     }
                 }
             } catch (error) {
                 lastError = error;
-                console.warn('[Profile] Profile search fallback failed for "' + candidate + '":', error && error.message ? error.message : error);
+                console.warn('[Profile] Profile search lookup failed for "' + candidate + '":', error && error.message ? error.message : error);
+            }
+            try {
+                const data = await withTimeout(api.getUserProfile(candidate), 9000, 'Profile request');
+                profileUsername = normalizeProfileLookup((data && data.user && data.user.username) || (data && data.username) || candidate);
+                return data;
+            } catch (error) {
+                lastError = error;
+                console.warn('[Profile] Profile lookup failed for "' + candidate + '":', error && error.message ? error.message : error);
             }
         }
         throw lastError || new Error('Profile not found');
@@ -5896,7 +5896,11 @@
                 console.warn('[Profile] Secondary pick history unavailable:', error);
                 renderEmptyProfileHistory();
             });
-            loadAdvancedMetrics(profileData.username || profileUsername || '');
+            if (profileData._fromSearchFallback) {
+                setAdvancedMetricsEmpty('Metrics unavailable');
+            } else {
+                loadAdvancedMetrics(profileData.username || profileUsername || '');
+            }
             analyticsTrackPickHistoryView({
                 view_type: isOwnProfile ? 'own' : 'public',
                 username: profileData.username || profileUsername || '',
