@@ -235,8 +235,8 @@ Verification result:
 - Response body included `cache.ttl_seconds` and did not include `cache.fallback`, which indicates the checked response came from cached primary-summary payload rather than cached fallback.
 - No zero-pick users were present in the checked response.
 - No fake/test users were present in the checked response.
-- Fresh primary-summary responses returned `BetLegend` with current streak `-2`, worst streak `-7`, peak units `10.16`, and max drawdown `-22.15`.
-- `/api/users/BetLegend/metrics` matched the summary row for record `11-12`, units `-5.79`, ROI `-8.43`, win rate `47.83`, current streak `-2`, worst streak `-7`, peak units `10.16`, and max drawdown `-22.15`.
+- Fresh primary-summary responses returned `BetLegend` with current streak `-3`, worst streak `-6`, peak units `10.16`, and max drawdown `-19.15`.
+- `/api/users/BetLegend/metrics` matched the summary row for record `11-12`, units `-5.79`, ROI `-8.43`, win rate `47.83`, current streak `-3`, worst streak `-6`, peak units `10.16`, and max drawdown `-19.15`.
 - `/api/users/BetLegend` matched the same canonical public stats.
 - Source path verified: primary SQL path plus canonical profile analytics overlay. Fallback was not used in the checked normal operation requests.
 
