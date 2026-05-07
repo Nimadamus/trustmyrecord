@@ -570,116 +570,6 @@
     window.TMR._cachedGames = [];
     window.TMR._cachedSport = null;
 
-    var LEGACY_TEAM_LOGOS = {
-        baseball_mlb: {
-            'arizona diamondbacks': ['mlb', 'ari'], 'atlanta braves': ['mlb', 'atl'], 'baltimore orioles': ['mlb', 'bal'], 'boston red sox': ['mlb', 'bos'],
-            'chicago cubs': ['mlb', 'chc'], 'chicago white sox': ['mlb', 'chw'], 'cincinnati reds': ['mlb', 'cin'], 'cleveland guardians': ['mlb', 'cle'],
-            'colorado rockies': ['mlb', 'col'], 'detroit tigers': ['mlb', 'det'], 'houston astros': ['mlb', 'hou'], 'kansas city royals': ['mlb', 'kc'],
-            'los angeles angels': ['mlb', 'laa'], 'los angeles dodgers': ['mlb', 'lad'], 'miami marlins': ['mlb', 'mia'], 'milwaukee brewers': ['mlb', 'mil'],
-            'minnesota twins': ['mlb', 'min'], 'new york mets': ['mlb', 'nym'], 'new york yankees': ['mlb', 'nyy'], 'athletics': ['mlb', 'ath'],
-            'oakland athletics': ['mlb', 'ath'], 'philadelphia phillies': ['mlb', 'phi'], 'pittsburgh pirates': ['mlb', 'pit'], 'san diego padres': ['mlb', 'sd'],
-            'san francisco giants': ['mlb', 'sf'], 'seattle mariners': ['mlb', 'sea'], 'st louis cardinals': ['mlb', 'stl'], 'tampa bay rays': ['mlb', 'tb'],
-            'texas rangers': ['mlb', 'tex'], 'toronto blue jays': ['mlb', 'tor'], 'washington nationals': ['mlb', 'wsh']
-        },
-        icehockey_nhl: {
-            'anaheim ducks': ['nhl', 'ana'], 'boston bruins': ['nhl', 'bos'], 'buffalo sabres': ['nhl', 'buf'], 'calgary flames': ['nhl', 'cgy'],
-            'carolina hurricanes': ['nhl', 'car'], 'chicago blackhawks': ['nhl', 'chi'], 'colorado avalanche': ['nhl', 'col'], 'columbus blue jackets': ['nhl', 'cbj'],
-            'dallas stars': ['nhl', 'dal'], 'detroit red wings': ['nhl', 'det'], 'edmonton oilers': ['nhl', 'edm'], 'florida panthers': ['nhl', 'fla'],
-            'los angeles kings': ['nhl', 'la'], 'minnesota wild': ['nhl', 'min'], 'montreal canadiens': ['nhl', 'mtl'], 'nashville predators': ['nhl', 'nsh'],
-            'new jersey devils': ['nhl', 'nj'], 'new york islanders': ['nhl', 'nyi'], 'new york rangers': ['nhl', 'nyr'], 'ottawa senators': ['nhl', 'ott'],
-            'philadelphia flyers': ['nhl', 'phi'], 'pittsburgh penguins': ['nhl', 'pit'], 'san jose sharks': ['nhl', 'sj'], 'seattle kraken': ['nhl', 'sea'],
-            'st louis blues': ['nhl', 'stl'], 'tampa bay lightning': ['nhl', 'tb'], 'toronto maple leafs': ['nhl', 'tor'], 'utah mammoth': ['nhl', 'uta'],
-            'utah hockey club': ['nhl', 'uta'], 'vancouver canucks': ['nhl', 'van'], 'vegas golden knights': ['nhl', 'vgk'], 'washington capitals': ['nhl', 'wsh'],
-            'winnipeg jets': ['nhl', 'wpg']
-        },
-        basketball_nba: {
-            'atlanta hawks': ['nba', 'atl'], 'boston celtics': ['nba', 'bos'], 'brooklyn nets': ['nba', 'bkn'], 'charlotte hornets': ['nba', 'cha'],
-            'chicago bulls': ['nba', 'chi'], 'cleveland cavaliers': ['nba', 'cle'], 'dallas mavericks': ['nba', 'dal'], 'denver nuggets': ['nba', 'den'],
-            'detroit pistons': ['nba', 'det'], 'golden state warriors': ['nba', 'gs'], 'houston rockets': ['nba', 'hou'], 'indiana pacers': ['nba', 'ind'],
-            'la clippers': ['nba', 'lac'], 'los angeles clippers': ['nba', 'lac'], 'los angeles lakers': ['nba', 'lal'], 'memphis grizzlies': ['nba', 'mem'],
-            'miami heat': ['nba', 'mia'], 'milwaukee bucks': ['nba', 'mil'], 'minnesota timberwolves': ['nba', 'min'], 'new orleans pelicans': ['nba', 'no'],
-            'new york knicks': ['nba', 'ny'], 'oklahoma city thunder': ['nba', 'okc'], 'orlando magic': ['nba', 'orl'], 'philadelphia 76ers': ['nba', 'phi'],
-            'phoenix suns': ['nba', 'phx'], 'portland trail blazers': ['nba', 'por'], 'sacramento kings': ['nba', 'sac'], 'san antonio spurs': ['nba', 'sa'],
-            'toronto raptors': ['nba', 'tor'], 'utah jazz': ['nba', 'utah'], 'washington wizards': ['nba', 'wsh']
-        },
-        americanfootball_nfl: {
-            'arizona cardinals': ['nfl', 'ari'], 'atlanta falcons': ['nfl', 'atl'], 'baltimore ravens': ['nfl', 'bal'], 'buffalo bills': ['nfl', 'buf'],
-            'carolina panthers': ['nfl', 'car'], 'chicago bears': ['nfl', 'chi'], 'cincinnati bengals': ['nfl', 'cin'], 'cleveland browns': ['nfl', 'cle'],
-            'dallas cowboys': ['nfl', 'dal'], 'denver broncos': ['nfl', 'den'], 'detroit lions': ['nfl', 'det'], 'green bay packers': ['nfl', 'gb'],
-            'houston texans': ['nfl', 'hou'], 'indianapolis colts': ['nfl', 'ind'], 'jacksonville jaguars': ['nfl', 'jax'], 'kansas city chiefs': ['nfl', 'kc'],
-            'las vegas raiders': ['nfl', 'lv'], 'los angeles chargers': ['nfl', 'lac'], 'los angeles rams': ['nfl', 'lar'], 'miami dolphins': ['nfl', 'mia'],
-            'minnesota vikings': ['nfl', 'min'], 'new england patriots': ['nfl', 'ne'], 'new orleans saints': ['nfl', 'no'], 'new york giants': ['nfl', 'nyg'],
-            'new york jets': ['nfl', 'nyj'], 'philadelphia eagles': ['nfl', 'phi'], 'pittsburgh steelers': ['nfl', 'pit'], 'san francisco 49ers': ['nfl', 'sf'],
-            'seattle seahawks': ['nfl', 'sea'], 'tampa bay buccaneers': ['nfl', 'tb'], 'tennessee titans': ['nfl', 'ten'], 'washington commanders': ['nfl', 'wsh']
-        }
-    };
-
-    var legacyTeamLogoUrl = function(fullName, sportKey) {
-        var normalized = ('' + (fullName == null ? '' : fullName)).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-        var keys = [];
-        if (sportKey && LEGACY_TEAM_LOGOS[sportKey]) keys.push(sportKey);
-        Object.keys(LEGACY_TEAM_LOGOS).forEach(function(key) {
-            if (keys.indexOf(key) === -1) keys.push(key);
-        });
-        for (var i = 0; i < keys.length; i++) {
-            var map = LEGACY_TEAM_LOGOS[keys[i]];
-            var entry = map[normalized];
-            if (!entry) {
-                var names = Object.keys(map);
-                for (var j = 0; j < names.length; j++) {
-                    if (normalized && (normalized === names[j] || normalized.slice(-names[j].length) === names[j])) {
-                        entry = map[names[j]];
-                        break;
-                    }
-                }
-            }
-            if (entry) return 'https://a.espncdn.com/i/teamlogos/' + entry[0] + '/500/' + entry[1] + '.png';
-        }
-        return '';
-    };
-
-    // Build team-logo markup for every sportsbook board path. The odds feed
-    // often omits logo URLs, so resolve by team name before falling to initials.
-    var legacyTeamLogoRenderer = function(logoUrl, abbr, fullName, sportKey) {
-        var safeAttr = function(s) { return ('' + (s == null ? '' : s)).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
-        var resolvedSportKey = sportKey || (window.TMR.sportKeyMap && window.TMR.sportKeyMap[window.TMR.selectedSport]) || '';
-        var resolvedLogoUrl = logoUrl || '';
-        if (!resolvedLogoUrl && typeof window.TMR.resolveSportsbookTeamLogo === 'function') {
-            resolvedLogoUrl = window.TMR.resolveSportsbookTeamLogo(fullName, resolvedSportKey, '');
-        }
-        if (!resolvedLogoUrl) {
-            resolvedLogoUrl = legacyTeamLogoUrl(fullName, resolvedSportKey);
-        }
-        var initials = '';
-        if (abbr) {
-            initials = ('' + abbr).toUpperCase().slice(0, 3);
-        } else if (fullName) {
-            var parts = ('' + fullName).trim().split(/\s+/).filter(Boolean);
-            if (parts.length === 1) initials = parts[0].slice(0, 3).toUpperCase();
-            else initials = (parts[parts.length - 1][0] || '').toUpperCase() + (parts[parts.length - 2] ? parts[parts.length - 2][0].toUpperCase() : '');
-        }
-        var initialsHtml = '<span class="team-logo__initials">' + safeAttr(initials || '?') + '</span>';
-        if (resolvedLogoUrl) {
-            return '<div class="team-logo" aria-hidden="true">'
-                + '<img class="team-logo__img" src="' + safeAttr(resolvedLogoUrl) + '" alt="" loading="lazy" decoding="async"'
-                + ' onerror="this.parentElement.classList.add(\'team-logo--fallback\');this.remove();">'
-                + initialsHtml
-                + '</div>';
-        }
-        return '<div class="team-logo team-logo--fallback" aria-hidden="true">' + initialsHtml + '</div>';
-    };
-    window.TMR._teamLogo = legacyTeamLogoRenderer;
-    try {
-        Object.defineProperty(window.TMR, '_teamLogo', {
-            configurable: false,
-            enumerable: true,
-            get: function() { return legacyTeamLogoRenderer; },
-            set: function() {}
-        });
-    } catch (error) {
-        window.TMR._teamLogo = legacyTeamLogoRenderer;
-    }
-
     window.TMR.renderMarketSubtabs = function(sport, games) {
         var host = document.getElementById('marketSubtabs');
         if (!host) return;
@@ -20532,7 +20422,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: this production script owns team logo rows,
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260506owner1"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260507risktowinlive2"></script>
     <script src="/static/js/effects.js?v=20251208c"></script>
     <script>
     (function() {
