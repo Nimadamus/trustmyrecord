@@ -2463,8 +2463,8 @@ body[data-tmr-test-route="sportsbook"] #picks .games-board-wrap{
 }
 
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout{
-  grid-template-columns: minmax(190px, 218px) minmax(0, 1fr) minmax(260px, 292px) !important;
-  gap: 12px !important;
+  grid-template-columns: minmax(168px, 198px) minmax(0, 1fr) minmax(220px, 246px) !important;
+  gap: 10px !important;
   overflow: visible !important;
 }
 
@@ -2476,8 +2476,58 @@ body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout > *{
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout > aside:last-of-type,
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout > .sportsbook-slip-rail{
   width: 100% !important;
-  max-width: 292px !important;
+  max-width: 246px !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
   justify-self: stretch !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout > aside:last-of-type *,
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout > .sportsbook-slip-rail *{
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-ticket-preview,
+body[data-tmr-test-route="sportsbook"] #picks .tmr-pending-picks-panel,
+body[data-tmr-test-route="sportsbook"] #picks #pickDetails,
+body[data-tmr-test-route="sportsbook"] #picks .pick-slip,
+body[data-tmr-test-route="sportsbook"] #picks .pick-slip-card{
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-ticket-preview-submit,
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-lobby-secondary-btn,
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-lobby-secondary-btn--wide,
+body[data-tmr-test-route="sportsbook"] #picks .submit-pick-btn,
+body[data-tmr-test-route="sportsbook"] #picks .lock-pick-btn{
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  white-space: normal !important;
+  line-height: 1.2 !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-page-shell,
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-page-topbar,
+body[data-tmr-test-route="sportsbook"] #picks .section-header.sportsbook-page-shell{
+  overflow: visible !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-page-shell a,
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-page-shell button,
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-page-topbar a,
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-page-topbar button,
+body[data-tmr-test-route="sportsbook"] #picks .section-header.sportsbook-page-shell a,
+body[data-tmr-test-route="sportsbook"] #picks .section-header.sportsbook-page-shell button{
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
 }
 
 body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-grid,
@@ -2506,35 +2556,42 @@ body[data-tmr-test-route="sportsbook"] #picks .sb-odds{
   min-width: 0 !important;
 }
 
-@media (max-width: 1320px){
+@media (max-width: 1400px){
   body[data-tmr-test-route="sportsbook"] #picks{
     max-width: 100vw !important;
-    padding-left: 10px !important;
-    padding-right: 10px !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
   }
 
   body[data-tmr-test-route="sportsbook"] #picks .picks-container-modern{
-    padding: 10px !important;
+    padding: 8px !important;
   }
 
   body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout{
-    grid-template-columns: minmax(170px, 198px) minmax(0, 1fr) minmax(238px, 270px) !important;
-    gap: 10px !important;
+    grid-template-columns: minmax(150px, 184px) minmax(0, 1fr) minmax(204px, 232px) !important;
+    gap: 8px !important;
   }
 
   body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout > aside:last-of-type,
   body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout > .sportsbook-slip-rail{
-    max-width: 270px !important;
+    max-width: 232px !important;
   }
 }
 
-@media (max-width: 1180px){
+@media (max-width: 1240px){
   body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout{
-    grid-template-columns: 1fr !important;
+    grid-template-columns: minmax(0, 1fr) !important;
   }
 
+  body[data-tmr-test-route="sportsbook"] #picks .sportsbook-league-rail,
   body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout > aside:last-of-type,
   body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout > .sportsbook-slip-rail{
     max-width: none !important;
+    position: static !important;
+  }
+
+  body[data-tmr-test-route="sportsbook"] #picks .sportsbook-rail-list{
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
