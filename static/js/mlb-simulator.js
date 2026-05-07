@@ -1275,10 +1275,17 @@
         var save = byId('saveBoxScoreButton');
         var view = byId('viewBoxScoreLink');
         var viewControl = byId('viewBoxScoreControl');
+        var viewLabel = state.aggregate && state.aggregate.count > 1 ? 'View Summary & Box Score' : 'View Box Score';
         if (copy) copy.disabled = !enabled;
         if (save) save.disabled = !enabled;
-        if (view) view.setAttribute('aria-disabled', enabled ? 'false' : 'true');
-        if (viewControl) viewControl.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+        if (view) {
+            view.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+            view.textContent = viewLabel;
+        }
+        if (viewControl) {
+            viewControl.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+            viewControl.textContent = viewLabel;
+        }
     }
     function selectedSimulationCount() {
         var select = byId('simulationCountSelect');
@@ -1532,7 +1539,7 @@
             setText('projectionNotice', 'Run a simulation first. The box score appears automatically after a completed simulation.');
             return;
         }
-        var panel = byId('boxScorePanel');
+        var panel = state.aggregate && state.aggregate.count > 1 ? byId('aggregatePanel') : byId('boxScorePanel');
         if (!panel) return;
         if (typeof panel.scrollIntoView === 'function') {
             panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
